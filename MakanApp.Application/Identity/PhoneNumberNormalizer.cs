@@ -60,7 +60,7 @@ public static class PhoneNumberNormalizer
         return true;
     }
 
-    private static char ToAsciiDigit(char value) => value switch
+    internal static char ToAsciiDigit(char value) => value switch
     {
         '\u06F0' or '\u0660' => '0',
         '\u06F1' or '\u0661' => '1',

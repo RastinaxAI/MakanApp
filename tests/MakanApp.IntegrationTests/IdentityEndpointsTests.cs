@@ -72,6 +72,33 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         Assert.Equal("Bearer", verified.TokenType);
     }
 
+    [Theory]
+    [InlineData("۰۱۲۳۴۵۶۷۸۹")]
+    [InlineData("٠١٢٣٤٥٦٧٨٩")]
+    public async Task DevelopmentProviderOtpRoundTripAcceptsLocalizedDigits(
+        string localizedDigits)
+    {
+        using var client = factory.CreateClient();
+        const string localPhoneNumber = "۰۹۱۲۰۰۰۰۰۱۶";
+        const string canonicalPhoneNumber = "+989120000016";
+        var challenge = await CreateChallengeAsync(client, localPhoneNumber);
+        var localizedCode = ToLocalizedDigits(
+            factory.GetOtpCode(challenge.ChallengeId),
+            localizedDigits);
+
+        using var response = await VerifyOtpAsync(
+            client,
+            challenge.ChallengeId,
+            canonicalPhoneNumber,
+            localizedCode);
+        var result = await response.Content.ReadFromJsonAsync<VerifyOtpResult>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
+        Assert.Equal(canonicalPhoneNumber, result.User.PhoneNumber);
+    }
+
     [Fact]
     public async Task VerifyOtpRejectsInvalidCode()
     {
@@ -127,6 +154,34 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
         Assert.Equal(IdentityErrorCodes.OtpAlreadyUsed, await ReadProblemCodeAsync(secondResponse));
+    }
+
+    [Fact]
+    public async Task NewDevelopmentChallengeInvalidatesPreviousCodeButAcceptsLatestCode()
+    {
+        using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000017";
+        var firstChallenge = await CreateChallengeAsync(client, phoneNumber);
+        var firstCode = factory.GetOtpCode(firstChallenge.ChallengeId);
+        var latestChallenge = await CreateChallengeAsync(client, phoneNumber);
+        var latestCode = factory.GetOtpCode(latestChallenge.ChallengeId);
+
+        using var supersededResponse = await VerifyOtpAsync(
+            client,
+            firstChallenge.ChallengeId,
+            phoneNumber,
+            firstCode);
+        using var latestResponse = await VerifyOtpAsync(
+            client,
+            latestChallenge.ChallengeId,
+            phoneNumber,
+            latestCode);
+
+        Assert.Equal(HttpStatusCode.Conflict, supersededResponse.StatusCode);
+        Assert.Equal(
+            IdentityErrorCodes.OtpAlreadyUsed,
+            await ReadProblemCodeAsync(supersededResponse));
+        Assert.Equal(HttpStatusCode.OK, latestResponse.StatusCode);
     }
 
     [Fact]
@@ -288,6 +343,12 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
 
     private static void UseBearerToken(HttpClient client, string token) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+    private static string ToLocalizedDigits(string value, string localizedDigits) =>
+        string.Concat(value.Select(character =>
+            character is >= '0' and <= '9'
+                ? localizedDigits[character - '0']
+                : character));
 
     private static async Task<string?> ReadProblemCodeAsync(HttpResponseMessage response)
     {

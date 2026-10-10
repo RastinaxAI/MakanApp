@@ -224,7 +224,7 @@ $otpCode = $null
 $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 ```
 
-پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc` و `user` است. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند `OTP_ALREADY_USED` بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.
+پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc` و `user` است. `challengeId` و شماره باید متعلق به همان درخواست OTP باشند؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد باید شش‌رقمی باشد و ارقام انگلیسی، فارسی و عربی پیش از hash به شکل یکسان normalize می‌شوند. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند `OTP_ALREADY_USED` بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.
 
 ### تکمیل پروفایل و خروج
 

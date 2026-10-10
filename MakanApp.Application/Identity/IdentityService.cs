@@ -83,7 +83,8 @@ public sealed partial class IdentityService(
         CancellationToken cancellationToken)
     {
         var phoneNumber = NormalizePhoneNumber(command.PhoneNumber);
-        if (string.IsNullOrWhiteSpace(command.Code))
+        var code = NormalizeOtpCode(command.Code);
+        if (code is null)
         {
             throw OtpException(OtpVerificationResult.Invalid);
         }
@@ -101,7 +102,7 @@ public sealed partial class IdentityService(
         }
 
         var verificationResult = challenge.Verify(
-            security.HashOtp(command.Code.Trim(), challenge.Salt),
+            security.HashOtp(code, challenge.Salt),
             nowUtc);
 
         if (verificationResult != OtpVerificationResult.Valid)
@@ -272,6 +273,28 @@ public sealed partial class IdentityService(
         }
 
         return normalized;
+    }
+
+    private static string? NormalizeOtpCode(string? value)
+    {
+        var candidate = value?.Trim();
+        if (candidate?.Length != 6)
+        {
+            return null;
+        }
+
+        Span<char> normalized = stackalloc char[candidate.Length];
+        for (var index = 0; index < candidate.Length; index++)
+        {
+            normalized[index] = PhoneNumberNormalizer.ToAsciiDigit(candidate[index]);
+
+            if (normalized[index] is < '0' or > '9')
+            {
+                return null;
+            }
+        }
+
+        return new string(normalized);
     }
 
     private static string NormalizeRequiredName(string? value)
