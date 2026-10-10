@@ -11,7 +11,7 @@
 | کلید .NET | کاربرد | محرمانه |
 |---|---|---|
 | `ConnectionStrings:MakanDatabase` | اتصال runtime به SQL Server | بله |
-| `Identity:SecurityKey` | HMAC مربوط به OTP و session؛ حداقل ۳۲ بایت UTF-8 | بله |
+| `Identity:SecurityKey` | HMAC مربوط به OTP و session؛ پایدار و حداقل ۳۲ بایت UTF-8 | بله |
 | `Sms:Provider` | برای ارسال واقعی برابر `MeliPayamakOtp` | خیر |
 | `Sms:MeliPayamakOtp:BaseUrl` | برابر `https://console.melipayamak.com` | خیر |
 | `Sms:MeliPayamakOtp:ServiceToken` | credential سرویس OTP ملی‌پیامک | بله |
@@ -495,7 +495,9 @@ sudo test -s /etc/makanapp/makanapp.env \
 | نشانه | علت محتمل | اقدام |
 |---|---|---|
 | خطای `ServiceToken must be supplied` | token به process نرسیده یا environment اشتباه است | منبع تنظیم و restart process را بررسی کنید |
+| خطای `Identity:SecurityKey must be supplied` با provider واقعی | کلید پایدار HMAC تنظیم نشده است | یک کلید ثابت حداقل ۳۲ بایتی در secret store همان محیط تنظیم و process را restart کنید |
 | provider برابر `Unavailable` است | `Sms:Provider` در Production تنظیم نشده | مقدار را `MeliPayamakOtp` قرار دهید |
+| SMS می‌رسد ولی کد بعد از restart همیشه invalid است | challenge با `Identity:SecurityKey` قبلی hash شده است | کلید پایدار تنظیم و OTP جدید درخواست کنید؛ challenge قدیمی قابل بازیابی نیست |
 | برنامه بعد از deploy sessionها را رد می‌کند | `Identity:SecurityKey` تغییر کرده است | از کلید پایدار همان محیط استفاده کنید |
 | `Invalid object name` | migration روی database runtime اعمال نشده | connection string migration/runtime را مقایسه کنید |
 | فایل‌های upload بعد از recreate container حذف می‌شوند | storage volume ندارد | مسیر `Storage:RootPath` را روی volume پایدار قرار دهید |

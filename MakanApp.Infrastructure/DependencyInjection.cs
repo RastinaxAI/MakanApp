@@ -96,7 +96,10 @@ public static class DependencyInjection
         services.AddSingleton(storageOptions);
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
-            new IdentityCryptography(CreateSecurityKey(configuration, environmentName)));
+            new IdentityCryptography(CreateSecurityKey(
+                configuration,
+                environmentName,
+                UsesManagedOtpProvider(configuration))));
         AddOtpDeliveryProvider(services, configuration, environmentName);
 
         if (IsDevelopmentLike(environmentName))
@@ -321,7 +324,8 @@ public static class DependencyInjection
 
     private static byte[] CreateSecurityKey(
         IConfiguration configuration,
-        string environmentName)
+        string environmentName,
+        bool requiresPersistentKey)
     {
         var configuredKey = configuration["Identity:SecurityKey"];
         if (!string.IsNullOrWhiteSpace(configuredKey))
@@ -336,6 +340,12 @@ public static class DependencyInjection
             return keyBytes;
         }
 
+        if (requiresPersistentKey)
+        {
+            throw new InvalidOperationException(
+                "Identity:SecurityKey must be supplied by a secret store when MeliPayamakOtp is selected so persisted OTP challenges remain verifiable across process restarts.");
+        }
+
         if (!IsDevelopmentLike(environmentName))
         {
             throw new InvalidOperationException(
@@ -344,6 +354,12 @@ public static class DependencyInjection
 
         return RandomNumberGenerator.GetBytes(32);
     }
+
+    private static bool UsesManagedOtpProvider(IConfiguration configuration) =>
+        string.Equals(
+            configuration["Sms:Provider"]?.Trim(),
+            "MeliPayamakOtp",
+            StringComparison.OrdinalIgnoreCase);
 
     private static int ReadPositiveInt(
         IConfiguration configuration,

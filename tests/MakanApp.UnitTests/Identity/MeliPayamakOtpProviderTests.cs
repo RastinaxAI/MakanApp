@@ -223,9 +223,42 @@ public sealed class MeliPayamakOtpProviderTests
     }
 
     [Fact]
+    public void SelectedMeliPayamakOtpProviderRequiresPersistentSecurityKeyInDevelopment()
+    {
+        var configuration = BaseConfiguration();
+        configuration["Identity:SecurityKey"] = null;
+        configuration["Sms:Provider"] = "MeliPayamakOtp";
+        configuration["Sms:MeliPayamakOtp:ServiceToken"] = ServiceToken;
+        var services = new ServiceCollection();
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            services.AddInfrastructure(configuration, "Development"));
+
+        Assert.Contains("Identity:SecurityKey", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("process restarts", exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(ServiceToken, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SelectedMeliPayamakOtpProviderAcceptsPersistentSecurityKeyInDevelopment()
+    {
+        var configuration = BaseConfiguration();
+        configuration["Sms:Provider"] = "MeliPayamakOtp";
+        configuration["Sms:MeliPayamakOtp:ServiceToken"] = ServiceToken;
+        var services = new ServiceCollection();
+
+        services.AddInfrastructure(configuration, "Development");
+
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IOtpDeliveryProvider));
+    }
+
+    [Fact]
     public void DevelopmentProviderDoesNotRequireMeliPayamakOtpSecret()
     {
         var configuration = BaseConfiguration();
+        configuration["Identity:SecurityKey"] = null;
         configuration["Sms:Provider"] = "Development";
         var services = new ServiceCollection();
 

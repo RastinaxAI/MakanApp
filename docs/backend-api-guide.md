@@ -117,7 +117,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 | کلید | پیش‌فرض یا رفتار |
 |---|---|
 | `ConnectionStrings:MakanDatabase` | در تنظیم پایه خالی است؛ Development نمونه اتصال محلی دارد |
-| `Identity:SecurityKey` | در Development/Testing اگر تنظیم نشود، در هر شروع تصادفی است؛ در محیط دیگر الزامی و حداقل ۳۲ بایت UTF-8 |
+| `Identity:SecurityKey` | حداقل ۳۲ بایت UTF-8؛ خارج از Development/Testing و هنگام انتخاب `MeliPayamakOtp` در هر محیط الزامی است؛ فقط provider محلی توسعه می‌تواند کلید تصادفی process داشته باشد |
 | `Identity:Otp:LifetimeSeconds` | `300`، اعتبار پنج‌دقیقه‌ای OTP |
 | `Identity:Otp:ResendDelaySeconds` | `30`، فاصله ارسال مجدد؛ در Testing صفر |
 | `Identity:Otp:RateLimitWindowSeconds` | `3600` |
@@ -143,7 +143,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 
 مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در `Program.cs` برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.
 
-کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر در توسعه کلید ثابتی از Secret Store تنظیم نشده باشد، توکن نشست قبلی بعد از restart دیگر معتبر نیست. خارج از Development/Testing، provider پیش‌فرض OTP و adapter فایل به‌ترتیب `UnavailableOtpDeliveryProvider` و `UnavailableFileStorage` هستند؛ برای OTP واقعی باید `Sms:Provider=MeliPayamakOtp` و ServiceToken از secret store تنظیم شود.
+کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart دیگر معتبر نیست. انتخاب `MeliPayamakOtp` بدون `Identity:SecurityKey` پایدار در startup رد می‌شود تا کد ارسال‌شده پس از restart به‌اشتباه نامعتبر نشود. خارج از Development/Testing، provider پیش‌فرض OTP و adapter فایل به‌ترتیب `UnavailableOtpDeliveryProvider` و `UnavailableFileStorage` هستند؛ برای OTP واقعی باید `Sms:Provider=MeliPayamakOtp`، `ServiceToken` و `Identity:SecurityKey` از secret store تنظیم شوند.
 
 <a id="http"></a>
 ## قرارداد مشترک HTTP

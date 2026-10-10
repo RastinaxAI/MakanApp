@@ -150,6 +150,14 @@ Content-Type: application/json
 مقادیر محرمانه را برای `MakanApp.Api` با User Secrets ثبت کنید:
 
 ```powershell
+$keyBytes = New-Object byte[] 48
+$rng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($keyBytes)
+$identityKey = [Convert]::ToBase64String($keyBytes)
+dotnet user-secrets set "Identity:SecurityKey" $identityKey --project .\MakanApp.Api\MakanApp.Api.csproj | Out-Null
+[Array]::Clear($keyBytes, 0, $keyBytes.Length)
+$rng.Dispose()
+Remove-Variable identityKey
 dotnet user-secrets set "Sms:Provider" "MeliPayamakOtp" --project .\MakanApp.Api\MakanApp.Api.csproj
 dotnet user-secrets set "Sms:MeliPayamakOtp:ServiceToken" "<SERVICE_TOKEN>" --project .\MakanApp.Api\MakanApp.Api.csproj
 ```
@@ -157,13 +165,14 @@ dotnet user-secrets set "Sms:MeliPayamakOtp:ServiceToken" "<SERVICE_TOKEN>" --pr
 یا در محیط استقرار از متغیرهای زیر استفاده کنید:
 
 ```text
+Identity__SecurityKey=<stable-secret-at-least-32-UTF8-bytes>
 Sms__Provider=MeliPayamakOtp
 Sms__MeliPayamakOtp__BaseUrl=https://console.melipayamak.com
 Sms__MeliPayamakOtp__ServiceToken=<secret>
 Sms__MeliPayamakOtp__TimeoutSeconds=10
 ```
 
-`ServiceToken` هنگام انتخاب `MeliPayamakOtp` در startup اجباری و بخشی محرمانه از path درخواست است. logging پیش‌فرض typed `HttpClient` برای این client حذف شده و adapter نیز URI، token، کد برگشتی، body خام یا شماره کامل را log نمی‌کند. تنظیمات قدیمی `Username`، `Credential`، `From` و endpoint `rest.payamak-panel.com` دیگر برای OTP استفاده نمی‌شوند و حذف شده‌اند.
+`ServiceToken` و `Identity:SecurityKey` پایدار هنگام انتخاب `MeliPayamakOtp` در startup اجباری‌اند. کد برگشتی provider با `Identity:SecurityKey` به‌صورت HMAC محافظت می‌شود؛ تغییر یا تصادفی‌شدن این کلید بین request و verify باعث نامعتبرشدن challenge می‌شود. `ServiceToken` بخشی محرمانه از path درخواست است. logging پیش‌فرض typed `HttpClient` برای این client حذف شده و adapter نیز URI، token، کد برگشتی، body خام یا شماره کامل را log نمی‌کند. تنظیمات قدیمی `Username`، `Credential`، `From` و endpoint `rest.payamak-panel.com` دیگر برای OTP استفاده نمی‌شوند و حذف شده‌اند.
 
 برای نگه‌داشتن provider محلی:
 
@@ -183,7 +192,7 @@ Invoke-RestMethod -Method Post -Uri "https://localhost:7063/api/v1/auth/otp/chal
 
 این عملیات ممکن است هزینه پیامک داشته باشد. شماره آزمایشی، credential یا فایل `.env` حاوی secret را commit نکنید.
 
-کلید `Identity:SecurityKey` باید خارج از Development/Testing از secret store تأمین شود و حداقل ۳۲ بایت UTF-8 داشته باشد. کلید Development/Testing هنگام شروع process به‌صورت تصادفی ساخته می‌شود؛ بنابراین نشست‌های آن محیط‌ها بعد از restart معتبر نمی‌مانند.
+کلید `Identity:SecurityKey` باید خارج از Development/Testing و نیز هنگام استفاده از `MeliPayamakOtp` در هر محیط، از secret store تأمین شود و حداقل ۳۲ بایت UTF-8 داشته باشد. فقط provider محلی Development/Testing می‌تواند بدون این تنظیم از کلید تصادفی process استفاده کند؛ در آن حالت نشست‌ها و challengeهای OTP بعد از restart معتبر نمی‌مانند.
 
 درخواست OTP علاوه بر محدودیت پایدار مبتنی بر شماره تلفن، policy داخلی ASP.NET Core مبتنی بر IP دارد. policy مبتنی بر IP در این مرحله in-memory و تک-instance است؛ استقرار چند-instance در آینده به rate limiter توزیع‌شده نیاز دارد.
 
