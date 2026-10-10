@@ -56,12 +56,21 @@ public sealed partial class IdentityService(
 
         store.Add(challenge);
         await store.SaveChangesAsync(cancellationToken);
-        await smsSender.SendOtpAsync(
-            phoneNumber,
-            challenge.Id,
-            code,
-            expiresAtUtc,
-            cancellationToken);
+        try
+        {
+            await smsSender.SendOtpAsync(
+                phoneNumber,
+                challenge.Id,
+                code,
+                expiresAtUtc,
+                cancellationToken);
+        }
+        catch
+        {
+            challenge.Supersede(timeProvider.GetUtcNow().UtcDateTime);
+            await store.SaveChangesAsync(CancellationToken.None);
+            throw;
+        }
 
         return new RequestOtpResult(
             challenge.Id,

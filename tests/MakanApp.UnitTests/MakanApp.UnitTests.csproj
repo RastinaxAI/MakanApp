@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\MakanApp.Domain\MakanApp.Domain.csproj" />
     <ProjectReference Include="..\..\MakanApp.Application\MakanApp.Application.csproj" />
+    <ProjectReference Include="..\..\MakanApp.Infrastructure\MakanApp.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

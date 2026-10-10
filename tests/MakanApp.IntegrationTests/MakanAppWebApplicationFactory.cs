@@ -38,6 +38,7 @@ public sealed partial class MakanAppWebApplicationFactory :
         Guid.NewGuid().ToString("N"));
 
     public ControllableTimeProvider Clock { get; } = new();
+    public SmsFailureSwitch SmsFailure => Services.GetRequiredService<SmsFailureSwitch>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -54,6 +55,7 @@ public sealed partial class MakanAppWebApplicationFactory :
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:MakanDatabase"] = TestConnectionString,
+                ["Sms:Provider"] = "Development",
                 ["Storage:RootPath"] = StorageRootPath,
                 ["Storage:MaxFileSizeBytes"] = "1024",
                 ["Storage:UnattachedLifetimeHours"] = "1",
@@ -85,6 +87,13 @@ public sealed partial class MakanAppWebApplicationFactory :
             });
             services.AddSingleton<StorageFailureSwitch>();
             services.AddSingleton<RealtimeFailureSwitch>();
+            services.AddSingleton<SmsFailureSwitch>();
+            services.RemoveAll<DevelopmentOtpStore>();
+            services.RemoveAll<DevelopmentSmsSender>();
+            services.AddSingleton<DevelopmentOtpStore>();
+            services.AddSingleton<DevelopmentSmsSender>();
+            services.RemoveAll<ISmsSender>();
+            services.AddSingleton<ISmsSender, FaultInjectingSmsSender>();
             services.RemoveAll<IMessagingRealtimeNotifier>();
             services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
                 new FaultInjectingMessagingRealtimeNotifier(
@@ -192,6 +201,18 @@ public sealed partial class MakanAppWebApplicationFactory :
         var expiredAtUtc = DateTime.UtcNow.AddMinutes(-1);
         await dbContext.Database.ExecuteSqlInterpolatedAsync(
             $"UPDATE [identity].[OtpChallenges] SET [ExpiresAtUtc] = {expiredAtUtc} WHERE [Id] = {challengeId}");
+    }
+
+    public async Task<bool> IsLatestChallengeSupersededAsync(string normalizedPhoneNumber)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var challenge = await dbContext.OtpChallenges
+            .AsNoTracking()
+            .Where(item => item.NormalizedPhoneNumber == normalizedPhoneNumber)
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .FirstAsync();
+        return challenge.SupersededAtUtc.HasValue;
     }
 
     public async Task<int> CountUsersForPhoneAsync(string normalizedPhoneNumber)

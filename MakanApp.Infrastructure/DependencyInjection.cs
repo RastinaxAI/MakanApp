@@ -11,6 +11,7 @@ using MakanApp.Infrastructure.Academic;
 using MakanApp.Infrastructure.Assessment;
 using MakanApp.Infrastructure.Guardian;
 using MakanApp.Infrastructure.Identity;
+using MakanApp.Infrastructure.Identity.Sms;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Storage;
@@ -96,22 +97,93 @@ public static class DependencyInjection
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
             new IdentityCryptography(CreateSecurityKey(configuration, environmentName)));
+        AddSmsProvider(services, configuration, environmentName);
 
         if (IsDevelopmentLike(environmentName))
         {
-            services.AddSingleton<DevelopmentOtpStore>();
-            services.AddSingleton<ISmsSender, DevelopmentSmsSender>();
             services.AddSingleton<LocalFileStorage>();
             services.AddSingleton<IFileStorage>(serviceProvider =>
                 serviceProvider.GetRequiredService<LocalFileStorage>());
         }
         else
         {
-            services.AddSingleton<ISmsSender, UnavailableSmsSender>();
             services.AddSingleton<IFileStorage, UnavailableFileStorage>();
         }
 
         return services;
+    }
+
+    private static void AddSmsProvider(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string environmentName)
+    {
+        const string developmentProvider = "Development";
+        const string unavailableProvider = "Unavailable";
+        const string meliPayamakProvider = "MeliPayamak";
+        var configuredProvider = configuration["Sms:Provider"]?.Trim();
+        var provider = string.IsNullOrWhiteSpace(configuredProvider)
+            ? IsDevelopmentLike(environmentName) ? developmentProvider : unavailableProvider
+            : configuredProvider;
+
+        if (provider.Equals(developmentProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsDevelopmentLike(environmentName))
+            {
+                throw new InvalidOperationException(
+                    "Sms:Provider=Development is allowed only in Development and Testing environments.");
+            }
+
+            services.AddSingleton<DevelopmentOtpStore>();
+            services.AddSingleton<DevelopmentSmsSender>();
+            services.AddSingleton<ISmsSender>(serviceProvider =>
+                serviceProvider.GetRequiredService<DevelopmentSmsSender>());
+            return;
+        }
+
+        if (provider.Equals(meliPayamakProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            var options = CreateMeliPayamakOptions(configuration);
+            var baseUri = options.ValidateAndGetBaseUri();
+            services.AddSingleton(options);
+            services.AddHttpClient<MeliPayamakSmsSender>(client =>
+            {
+                client.BaseAddress = baseUri;
+                client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            });
+            services.AddTransient<ISmsSender>(serviceProvider =>
+                serviceProvider.GetRequiredService<MeliPayamakSmsSender>());
+            return;
+        }
+
+        if (provider.Equals(unavailableProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<ISmsSender, UnavailableSmsSender>();
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "Sms:Provider must be Development, MeliPayamak or Unavailable.");
+    }
+
+    private static MeliPayamakOptions CreateMeliPayamakOptions(IConfiguration configuration)
+    {
+        var timeoutValue = configuration[$"{MeliPayamakOptions.SectionName}:TimeoutSeconds"];
+        var timeoutSeconds = string.IsNullOrWhiteSpace(timeoutValue)
+            ? MeliPayamakOptions.DefaultTimeoutSeconds
+            : int.TryParse(timeoutValue, out var parsedTimeout) ? parsedTimeout : -1;
+        return new MeliPayamakOptions
+        {
+            BaseUrl = configuration[$"{MeliPayamakOptions.SectionName}:BaseUrl"]
+                ?? MeliPayamakOptions.DefaultBaseUrl,
+            Username = configuration[$"{MeliPayamakOptions.SectionName}:Username"]?.Trim()
+                ?? string.Empty,
+            Credential = configuration[$"{MeliPayamakOptions.SectionName}:Credential"]
+                ?? string.Empty,
+            From = configuration[$"{MeliPayamakOptions.SectionName}:From"]?.Trim()
+                ?? string.Empty,
+            TimeoutSeconds = timeoutSeconds
+        };
     }
 
     private static OtpOptions CreateOtpOptions(

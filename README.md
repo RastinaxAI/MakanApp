@@ -118,7 +118,72 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 OTP با مولد تصادفی رمزنگاری تولید و فقط به‌صورت HMAC همراه salt در SQL Server ذخیره می‌شود. کد منقضی می‌شود، یک‌بارمصرف است و محدودیت تلاش و ارسال مجدد دارد. نشست با Bearer token تصادفی کار می‌کند و فقط HMAC توکن در `identity.UserSessions` ذخیره می‌شود؛ logout همان نشست را revoke می‌کند.
 
-`DevelopmentSmsSender` فقط در محیط‌های `Development` و `Testing` ثبت می‌شود. این adapter اتصال واقعی پیامک نیست، OTP را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای تست خودکار است. در محیط‌های دیگر adapter توسعه فعال نمی‌شود و تا زمان پیکربندی سرویس واقعی، درخواست ارسال پیامک با خطای کنترل‌شده رد می‌شود.
+انتخاب adapter پیامک با کلید `Sms:Provider` انجام می‌شود. مقدار `Development` فقط در محیط‌های `Development` و `Testing` مجاز است؛ این adapter اتصال واقعی ندارد، OTP را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای توسعه و تست خودکار است. مقدار `Unavailable` ارسال را با خطای کنترل‌شده رد می‌کند. تست‌های خودکار هیچ پیامک پولی ارسال نمی‌کنند.
+
+### اتصال MeliPayamak
+
+adapter با نام `MeliPayamakSmsSender` از قرارداد REST رسمی [SendOtp ملی‌پیامک](https://www.melipayamak.com/api/sendotp/) استفاده می‌کند:
+
+```text
+POST https://rest.payamak-panel.com/api/SendSMS/SendOtp
+Content-Type: application/x-www-form-urlencoded
+```
+
+کد OTP همچنان داخل MakanApp تولید می‌شود و ملی‌پیامک فقط آن را تحویل می‌دهد. شماره canonical مانند `+989121234567` فقط در مرز provider به `09121234567` تبدیل می‌شود. درخواست retry خودکار ندارد، timeout محدود است و پاسخ HTTP موفق نیز تا زمان parse شدن `recId` یا کد خطای business موفق محسوب نمی‌شود. کدهای مستند provider به دسته‌های امن داخلی authentication، configuration، rejected، unavailable، recipient و rate-limit نگاشت می‌شوند؛ response خام provider به Client برگردانده یا log نمی‌شود.
+
+تنظیمات غیرمحرمانه commit‌شده:
+
+```json
+{
+  "Sms": {
+    "Provider": "MeliPayamak",
+    "MeliPayamak": {
+      "BaseUrl": "https://rest.payamak-panel.com",
+      "TimeoutSeconds": 10
+    }
+  }
+}
+```
+
+مقادیر محرمانه را برای `MakanApp.Api` با User Secrets ثبت کنید:
+
+```powershell
+dotnet user-secrets set "Sms:Provider" "MeliPayamak" --project .\MakanApp.Api\MakanApp.Api.csproj
+dotnet user-secrets set "Sms:MeliPayamak:Username" "<username>" --project .\MakanApp.Api\MakanApp.Api.csproj
+dotnet user-secrets set "Sms:MeliPayamak:Credential" "<password-or-api-key>" --project .\MakanApp.Api\MakanApp.Api.csproj
+dotnet user-secrets set "Sms:MeliPayamak:From" "<sender-number>" --project .\MakanApp.Api\MakanApp.Api.csproj
+```
+
+یا در محیط استقرار از متغیرهای زیر استفاده کنید:
+
+```text
+Sms__Provider=MeliPayamak
+Sms__MeliPayamak__Username=...
+Sms__MeliPayamak__Credential=...
+Sms__MeliPayamak__From=...
+Sms__MeliPayamak__BaseUrl=https://rest.payamak-panel.com
+Sms__MeliPayamak__TimeoutSeconds=10
+```
+
+`Username`، `Credential` و `From` هنگام انتخاب MeliPayamak در startup اجباری‌اند. مقدار `Credential` طبق قرارداد مستند `SendOtp` در field با نام `password` ارسال می‌شود. پاسخ `-110` یعنی حساب به ApiKey نیاز دارد؛ ApiKey همان مقدار configurable در `Credential` است، اما اگر حساب قرارداد دیگری غیر از field مستند `password` مطالبه کرد، endpoint یا header جدید را حدس نزنید و ابتدا قرارداد رسمی حساب را دریافت کنید.
+
+برای نگه‌داشتن provider محلی:
+
+```text
+Sms:Provider=Development
+```
+
+Smoke test زنده خودکار نیست و در `dotnet test` اجرا نمی‌شود. بعد از تنظیم secretها، اجرای API و تعیین صریح شماره آزمایشی، می‌توان آن را به‌صورت opt-in اجرا کرد:
+
+```powershell
+$env:MELIPAYAMAK_LIVE_TEST = "true"
+$env:MELIPAYAMAK_LIVE_TEST_PHONE = "<explicit-test-phone>"
+if ($env:MELIPAYAMAK_LIVE_TEST -ne "true" -or [string]::IsNullOrWhiteSpace($env:MELIPAYAMAK_LIVE_TEST_PHONE)) { throw "Live SMS test is not explicitly enabled." }
+$body = @{ phoneNumber = $env:MELIPAYAMAK_LIVE_TEST_PHONE } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri "https://localhost:7063/api/v1/auth/otp/challenges" -ContentType "application/json" -Body $body
+```
+
+این عملیات ممکن است هزینه پیامک داشته باشد. شماره آزمایشی، credential یا فایل `.env` حاوی secret را commit نکنید.
 
 کلید `Identity:SecurityKey` باید خارج از Development/Testing از secret store تأمین شود و حداقل ۳۲ بایت UTF-8 داشته باشد. کلید Development/Testing هنگام شروع process به‌صورت تصادفی ساخته می‌شود؛ بنابراین نشست‌های آن محیط‌ها بعد از restart معتبر نمی‌مانند.
 

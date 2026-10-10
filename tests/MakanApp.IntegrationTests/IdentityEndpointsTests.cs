@@ -14,6 +14,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
     public async Task RequestOtpAcceptsValidPhone()
     {
         using var client = factory.CreateClient();
+        var invocationCount = factory.SmsFailure.InvocationCount;
 
         using var response = await RequestOtpAsync(client, "+989120000001");
         var result = await response.Content.ReadFromJsonAsync<RequestOtpResult>();
@@ -21,6 +22,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.NotNull(result);
         Assert.NotEqual(Guid.Empty, result.ChallengeId);
+        Assert.Equal(invocationCount + 1, factory.SmsFailure.InvocationCount);
         Assert.DoesNotContain("code", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
     }
 
@@ -33,6 +35,30 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal(IdentityErrorCodes.PhoneInvalid, await ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task RequestOtpProviderFailureDoesNotClaimSuccessAndSupersedesChallenge()
+    {
+        using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000002";
+        var invocationCount = factory.SmsFailure.InvocationCount;
+        factory.SmsFailure.Fail = true;
+        try
+        {
+            using var response = await RequestOtpAsync(client, phoneNumber);
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal(IdentityErrorCodes.SmsProviderUnavailable, await ReadProblemCodeAsync(response));
+            Assert.DoesNotContain(phoneNumber, body, StringComparison.Ordinal);
+            Assert.Equal(invocationCount + 1, factory.SmsFailure.InvocationCount);
+            Assert.True(await factory.IsLatestChallengeSupersededAsync(phoneNumber));
+        }
+        finally
+        {
+            factory.SmsFailure.Fail = false;
+        }
     }
 
     [Fact]

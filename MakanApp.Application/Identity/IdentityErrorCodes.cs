@@ -11,5 +11,11 @@ public static class IdentityErrorCodes
     public const string AuthRequired = "AUTH_REQUIRED";
     public const string UsernameAlreadyExists = "USERNAME_ALREADY_EXISTS";
     public const string ProfileValidationFailed = "PROFILE_VALIDATION_FAILED";
+    public const string SmsProviderAuthenticationFailed = "SMS_PROVIDER_AUTHENTICATION_FAILED";
+    public const string SmsProviderConfigurationError = "SMS_PROVIDER_CONFIGURATION_ERROR";
+    public const string SmsProviderRejected = "SMS_PROVIDER_REJECTED";
     public const string SmsProviderUnavailable = "SMS_PROVIDER_UNAVAILABLE";
+    public const string SmsRecipientInvalid = "SMS_RECIPIENT_INVALID";
+    public const string SmsRecipientBlocked = "SMS_RECIPIENT_BLOCKED";
+    public const string SmsRateLimited = "SMS_RATE_LIMITED";
 }
