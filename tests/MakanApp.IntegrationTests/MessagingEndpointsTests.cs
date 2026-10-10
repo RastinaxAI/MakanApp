@@ -524,7 +524,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
             new VerifyOtpCommand(
                 challenge!.ChallengeId,
                 phone,
-                factory.GetOtpCode(challenge.ChallengeId)),
+                factory.GetLatestOtpCode(phone)),
             JsonOptions);
         verifyResponse.EnsureSuccessStatusCode();
         var verified = await verifyResponse.Content.ReadFromJsonAsync<VerifyOtpResult>(JsonOptions);

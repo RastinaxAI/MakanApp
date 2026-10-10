@@ -11,7 +11,7 @@ using MakanApp.Infrastructure.Academic;
 using MakanApp.Infrastructure.Assessment;
 using MakanApp.Infrastructure.Guardian;
 using MakanApp.Infrastructure.Identity;
-using MakanApp.Infrastructure.Identity.Sms;
+using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Storage;
@@ -97,7 +97,7 @@ public static class DependencyInjection
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
             new IdentityCryptography(CreateSecurityKey(configuration, environmentName)));
-        AddSmsProvider(services, configuration, environmentName);
+        AddOtpDeliveryProvider(services, configuration, environmentName);
 
         if (IsDevelopmentLike(environmentName))
         {
@@ -113,14 +113,14 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddSmsProvider(
+    private static void AddOtpDeliveryProvider(
         IServiceCollection services,
         IConfiguration configuration,
         string environmentName)
     {
         const string developmentProvider = "Development";
         const string unavailableProvider = "Unavailable";
-        const string meliPayamakProvider = "MeliPayamak";
+        const string meliPayamakOtpProvider = "MeliPayamakOtp";
         var configuredProvider = configuration["Sms:Provider"]?.Trim();
         var provider = string.IsNullOrWhiteSpace(configuredProvider)
             ? IsDevelopmentLike(environmentName) ? developmentProvider : unavailableProvider
@@ -135,52 +135,51 @@ public static class DependencyInjection
             }
 
             services.AddSingleton<DevelopmentOtpStore>();
-            services.AddSingleton<DevelopmentSmsSender>();
-            services.AddSingleton<ISmsSender>(serviceProvider =>
-                serviceProvider.GetRequiredService<DevelopmentSmsSender>());
+            services.AddSingleton<DevelopmentOtpProvider>();
+            services.AddSingleton<IOtpDeliveryProvider>(serviceProvider =>
+                serviceProvider.GetRequiredService<DevelopmentOtpProvider>());
             return;
         }
 
-        if (provider.Equals(meliPayamakProvider, StringComparison.OrdinalIgnoreCase))
+        if (provider.Equals(meliPayamakOtpProvider, StringComparison.OrdinalIgnoreCase))
         {
-            var options = CreateMeliPayamakOptions(configuration);
+            var options = CreateMeliPayamakOtpOptions(configuration);
             var baseUri = options.ValidateAndGetBaseUri();
             services.AddSingleton(options);
-            services.AddHttpClient<MeliPayamakSmsSender>(client =>
-            {
-                client.BaseAddress = baseUri;
-                client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
-            });
-            services.AddTransient<ISmsSender>(serviceProvider =>
-                serviceProvider.GetRequiredService<MeliPayamakSmsSender>());
+            services
+                .AddHttpClient<MeliPayamakOtpProvider>(client =>
+                {
+                    client.BaseAddress = baseUri;
+                    client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+                })
+                .RemoveAllLoggers();
+            services.AddTransient<IOtpDeliveryProvider>(serviceProvider =>
+                serviceProvider.GetRequiredService<MeliPayamakOtpProvider>());
             return;
         }
 
         if (provider.Equals(unavailableProvider, StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<ISmsSender, UnavailableSmsSender>();
+            services.AddSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>();
             return;
         }
 
         throw new InvalidOperationException(
-            "Sms:Provider must be Development, MeliPayamak or Unavailable.");
+            "Sms:Provider must be Development, MeliPayamakOtp or Unavailable.");
     }
 
-    private static MeliPayamakOptions CreateMeliPayamakOptions(IConfiguration configuration)
+    private static MeliPayamakOtpOptions CreateMeliPayamakOtpOptions(
+        IConfiguration configuration)
     {
-        var timeoutValue = configuration[$"{MeliPayamakOptions.SectionName}:TimeoutSeconds"];
+        var timeoutValue = configuration[$"{MeliPayamakOtpOptions.SectionName}:TimeoutSeconds"];
         var timeoutSeconds = string.IsNullOrWhiteSpace(timeoutValue)
-            ? MeliPayamakOptions.DefaultTimeoutSeconds
+            ? MeliPayamakOtpOptions.DefaultTimeoutSeconds
             : int.TryParse(timeoutValue, out var parsedTimeout) ? parsedTimeout : -1;
-        return new MeliPayamakOptions
+        return new MeliPayamakOtpOptions
         {
-            BaseUrl = configuration[$"{MeliPayamakOptions.SectionName}:BaseUrl"]
-                ?? MeliPayamakOptions.DefaultBaseUrl,
-            Username = configuration[$"{MeliPayamakOptions.SectionName}:Username"]?.Trim()
-                ?? string.Empty,
-            Credential = configuration[$"{MeliPayamakOptions.SectionName}:Credential"]
-                ?? string.Empty,
-            From = configuration[$"{MeliPayamakOptions.SectionName}:From"]?.Trim()
+            BaseUrl = configuration[$"{MeliPayamakOtpOptions.SectionName}:BaseUrl"]
+                ?? MeliPayamakOtpOptions.DefaultBaseUrl,
+            ServiceToken = configuration[$"{MeliPayamakOtpOptions.SectionName}:ServiceToken"]
                 ?? string.Empty,
             TimeoutSeconds = timeoutSeconds
         };
@@ -188,7 +187,23 @@ public static class DependencyInjection
 
     private static OtpOptions CreateOtpOptions(
         IConfiguration configuration,
-        string environmentName) => new()
+        string environmentName)
+    {
+        var minimumCodeLength = ReadPositiveInt(
+            configuration,
+            "Identity:Otp:MinimumCodeLength",
+            4);
+        var maximumCodeLength = ReadPositiveInt(
+            configuration,
+            "Identity:Otp:MaximumCodeLength",
+            64);
+        if (minimumCodeLength > maximumCodeLength || maximumCodeLength > 256)
+        {
+            throw new InvalidOperationException(
+                "Identity OTP code length must define a valid range up to 256 characters.");
+        }
+
+        return new OtpOptions
         {
             Lifetime = TimeSpan.FromSeconds(ReadPositiveInt(
                 configuration,
@@ -209,8 +224,11 @@ public static class DependencyInjection
             MaxFailedAttempts = ReadPositiveInt(
                 configuration,
                 "Identity:Otp:MaxFailedAttempts",
-                5)
+                5),
+            MinimumCodeLength = minimumCodeLength,
+            MaximumCodeLength = maximumCodeLength
         };
+    }
 
     private static SessionOptions CreateSessionOptions(IConfiguration configuration) => new()
     {

@@ -11,19 +11,33 @@ namespace MakanApp.IntegrationTests;
 public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory)
 {
     [Fact]
-    public async Task RequestOtpAcceptsValidPhone()
+    public async Task RequestOtpProtectsProviderCodeAndNeverReturnsIt()
     {
         using var client = factory.CreateClient();
-        var invocationCount = factory.SmsFailure.InvocationCount;
+        const string phoneNumber = "+989120000001";
+        const string providerCode = "opaque-provider-A7";
+        var invocationCount = factory.OtpProvider.InvocationCount;
+        factory.OtpProvider.OverrideVerificationCode = providerCode;
+        try
+        {
+            using var response = await RequestOtpAsync(client, phoneNumber);
+            var body = await response.Content.ReadAsStringAsync();
+            var result = await response.Content.ReadFromJsonAsync<RequestOtpResult>();
 
-        using var response = await RequestOtpAsync(client, "+989120000001");
-        var result = await response.Content.ReadFromJsonAsync<RequestOtpResult>();
-
-        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
-        Assert.NotNull(result);
-        Assert.NotEqual(Guid.Empty, result.ChallengeId);
-        Assert.Equal(invocationCount + 1, factory.SmsFailure.InvocationCount);
-        Assert.DoesNotContain("code", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+            Assert.NotNull(result);
+            Assert.NotEqual(Guid.Empty, result.ChallengeId);
+            Assert.Equal(invocationCount + 1, factory.OtpProvider.InvocationCount);
+            Assert.DoesNotContain(providerCode, body, StringComparison.Ordinal);
+            Assert.DoesNotContain("\"code\"", body, StringComparison.OrdinalIgnoreCase);
+            Assert.True(await factory.IsChallengeProtectedWithCodeAsync(
+                result.ChallengeId,
+                providerCode));
+        }
+        finally
+        {
+            factory.OtpProvider.OverrideVerificationCode = null;
+        }
     }
 
     [Fact]
@@ -38,12 +52,13 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
     }
 
     [Fact]
-    public async Task RequestOtpProviderFailureDoesNotClaimSuccessAndSupersedesChallenge()
+    public async Task RequestOtpProviderFailureDoesNotClaimSuccessOrCreateChallenge()
     {
         using var client = factory.CreateClient();
         const string phoneNumber = "+989120000002";
-        var invocationCount = factory.SmsFailure.InvocationCount;
-        factory.SmsFailure.Fail = true;
+        var invocationCount = factory.OtpProvider.InvocationCount;
+        var challengeCount = await factory.CountOtpChallengesAsync(phoneNumber);
+        factory.OtpProvider.Fail = true;
         try
         {
             using var response = await RequestOtpAsync(client, phoneNumber);
@@ -52,12 +67,42 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
             Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
             Assert.Equal(IdentityErrorCodes.SmsProviderUnavailable, await ReadProblemCodeAsync(response));
             Assert.DoesNotContain(phoneNumber, body, StringComparison.Ordinal);
-            Assert.Equal(invocationCount + 1, factory.SmsFailure.InvocationCount);
-            Assert.True(await factory.IsLatestChallengeSupersededAsync(phoneNumber));
+            Assert.Equal(invocationCount + 1, factory.OtpProvider.InvocationCount);
+            Assert.Equal(
+                challengeCount,
+                await factory.CountOtpChallengesAsync(phoneNumber));
         }
         finally
         {
-            factory.SmsFailure.Fail = false;
+            factory.OtpProvider.Fail = false;
+        }
+    }
+
+    [Fact]
+    public async Task RequestOtpRejectsUnusableProviderCodeWithoutCreatingChallenge()
+    {
+        using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000020";
+        const string unusableProviderCode = "~";
+        var challengeCount = await factory.CountOtpChallengesAsync(phoneNumber);
+        factory.OtpProvider.OverrideVerificationCode = unusableProviderCode;
+        try
+        {
+            using var response = await RequestOtpAsync(client, phoneNumber);
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal(
+                IdentityErrorCodes.SmsProviderUnavailable,
+                await ReadProblemCodeAsync(response));
+            Assert.DoesNotContain(unusableProviderCode, body, StringComparison.Ordinal);
+            Assert.Equal(
+                challengeCount,
+                await factory.CountOtpChallengesAsync(phoneNumber));
+        }
+        finally
+        {
+            factory.OtpProvider.OverrideVerificationCode = null;
         }
     }
 
@@ -65,11 +110,28 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
     public async Task VerifyOtpAcceptsValidCode()
     {
         using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000003";
+        const string providerCode = "A7-provider-managed-code";
+        factory.OtpProvider.OverrideVerificationCode = providerCode;
+        try
+        {
+            var challenge = await CreateChallengeAsync(client, phoneNumber);
+            using var response = await VerifyOtpAsync(
+                client,
+                challenge.ChallengeId,
+                phoneNumber,
+                providerCode);
+            var verified = await response.Content.ReadFromJsonAsync<VerifyOtpResult>();
 
-        var verified = await CreateAuthenticatedUserAsync(client, "+989120000003");
-
-        Assert.False(string.IsNullOrWhiteSpace(verified.AccessToken));
-        Assert.Equal("Bearer", verified.TokenType);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.NotNull(verified);
+            Assert.False(string.IsNullOrWhiteSpace(verified.AccessToken));
+            Assert.Equal("Bearer", verified.TokenType);
+        }
+        finally
+        {
+            factory.OtpProvider.OverrideVerificationCode = null;
+        }
     }
 
     [Theory]
@@ -83,7 +145,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         const string canonicalPhoneNumber = "+989120000016";
         var challenge = await CreateChallengeAsync(client, localPhoneNumber);
         var localizedCode = ToLocalizedDigits(
-            factory.GetOtpCode(challenge.ChallengeId),
+            factory.GetLatestOtpCode(localPhoneNumber),
             localizedDigits);
 
         using var response = await VerifyOtpAsync(
@@ -126,7 +188,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
             client,
             challenge.ChallengeId,
             "+989120000005",
-            factory.GetOtpCode(challenge.ChallengeId));
+            factory.GetLatestOtpCode("+989120000005"));
 
         Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
         Assert.Equal(IdentityErrorCodes.OtpExpired, await ReadProblemCodeAsync(response));
@@ -138,7 +200,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         using var client = factory.CreateClient();
         const string phoneNumber = "+989120000006";
         var challenge = await CreateChallengeAsync(client, phoneNumber);
-        var code = factory.GetOtpCode(challenge.ChallengeId);
+        var code = factory.GetLatestOtpCode(phoneNumber);
 
         using var firstResponse = await VerifyOtpAsync(
             client,
@@ -162,9 +224,9 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         using var client = factory.CreateClient();
         const string phoneNumber = "+989120000017";
         var firstChallenge = await CreateChallengeAsync(client, phoneNumber);
-        var firstCode = factory.GetOtpCode(firstChallenge.ChallengeId);
+        var firstCode = factory.GetLatestOtpCode(phoneNumber);
         var latestChallenge = await CreateChallengeAsync(client, phoneNumber);
-        var latestCode = factory.GetOtpCode(latestChallenge.ChallengeId);
+        var latestCode = factory.GetLatestOtpCode(phoneNumber);
 
         using var supersededResponse = await VerifyOtpAsync(
             client,
@@ -182,6 +244,65 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
             IdentityErrorCodes.OtpAlreadyUsed,
             await ReadProblemCodeAsync(supersededResponse));
         Assert.Equal(HttpStatusCode.OK, latestResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task VerifyOtpLocksChallengeAtConfiguredAttemptLimit()
+    {
+        using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000018";
+        const string providerCode = "correct-provider-code";
+        factory.OtpProvider.OverrideVerificationCode = providerCode;
+        try
+        {
+            var challenge = await CreateChallengeAsync(client, phoneNumber);
+            for (var attempt = 1; attempt <= 5; attempt++)
+            {
+                using var response = await VerifyOtpAsync(
+                    client,
+                    challenge.ChallengeId,
+                    phoneNumber,
+                    "wrong-provider-code");
+                Assert.Equal(
+                    attempt == 5 ? HttpStatusCode.TooManyRequests : HttpStatusCode.BadRequest,
+                    response.StatusCode);
+            }
+
+            using var correctResponse = await VerifyOtpAsync(
+                client,
+                challenge.ChallengeId,
+                phoneNumber,
+                providerCode);
+            Assert.Equal(HttpStatusCode.TooManyRequests, correctResponse.StatusCode);
+            Assert.Equal(
+                IdentityErrorCodes.OtpTooManyAttempts,
+                await ReadProblemCodeAsync(correctResponse));
+        }
+        finally
+        {
+            factory.OtpProvider.OverrideVerificationCode = null;
+        }
+    }
+
+    [Fact]
+    public async Task RequestOtpKeepsPerPhoneRateLimitBeforeCallingProviderAgain()
+    {
+        using var client = factory.CreateClient();
+        const string phoneNumber = "+989120000019";
+        for (var request = 0; request < 5; request++)
+        {
+            using var acceptedResponse = await RequestOtpAsync(client, phoneNumber);
+            Assert.Equal(HttpStatusCode.Accepted, acceptedResponse.StatusCode);
+        }
+
+        var invocationCount = factory.OtpProvider.InvocationCount;
+        using var limitedResponse = await RequestOtpAsync(client, phoneNumber);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, limitedResponse.StatusCode);
+        Assert.Equal(
+            IdentityErrorCodes.OtpRateLimited,
+            await ReadProblemCodeAsync(limitedResponse));
+        Assert.Equal(invocationCount, factory.OtpProvider.InvocationCount);
     }
 
     [Fact]
@@ -311,7 +432,7 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
             client,
             challenge.ChallengeId,
             phoneNumber,
-            factory.GetOtpCode(challenge.ChallengeId));
+            factory.GetLatestOtpCode(phoneNumber));
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<VerifyOtpResult>())!;
     }

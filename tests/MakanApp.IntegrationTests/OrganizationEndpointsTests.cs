@@ -541,7 +541,7 @@ public sealed class OrganizationEndpointsTests(MakanAppWebApplicationFactory fac
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                factory.GetOtpCode(challenge.ChallengeId)));
+                factory.GetLatestOtpCode(phoneNumber)));
         verifyResponse.EnsureSuccessStatusCode();
         return (await verifyResponse.Content.ReadFromJsonAsync<VerifyOtpResult>())!;
     }

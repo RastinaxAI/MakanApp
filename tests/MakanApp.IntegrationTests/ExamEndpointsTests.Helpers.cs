@@ -143,7 +143,7 @@ public sealed partial class ExamEndpointsTests
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                _factory.GetOtpCode(challenge.ChallengeId)),
+                _factory.GetLatestOtpCode(phoneNumber)),
             JsonOptions);
         verifyResponse.EnsureSuccessStatusCode();
         return await ReadRequiredAsync<VerifyOtpResult>(verifyResponse);

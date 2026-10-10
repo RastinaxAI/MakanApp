@@ -116,29 +116,31 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 | `GET` | `/api/v1/me` | بله |
 | `PATCH` | `/api/v1/me/profile` | بله |
 
-OTP با مولد تصادفی رمزنگاری تولید و فقط به‌صورت HMAC همراه salt در SQL Server ذخیره می‌شود. کد منقضی می‌شود، یک‌بارمصرف است و محدودیت تلاش و ارسال مجدد دارد. هنگام verify باید `challengeId` همان درخواست همراه همان شماره ارسال شود؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد شش‌رقمی با ارقام انگلیسی، فارسی یا عربی پذیرفته و پیش از hash به ارقام ASCII تبدیل می‌شود. نشست با Bearer token تصادفی کار می‌کند و فقط HMAC توکن در `identity.UserSessions` ذخیره می‌شود؛ logout همان نشست را revoke می‌کند.
+کد OTP از `IOtpDeliveryProvider` دریافت و بلافاصله با HMAC و salt محافظت می‌شود؛ plaintext آن در SQL Server ذخیره نمی‌شود. کد منقضی، یک‌بارمصرف و دارای محدودیت تلاش و ارسال مجدد است. هنگام verify باید `challengeId` همان درخواست همراه همان شماره ارسال شود؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. طول کد با `Identity:Otp:MinimumCodeLength` و `Identity:Otp:MaximumCodeLength` کنترل می‌شود و ارقام انگلیسی، فارسی یا عربی پیش از hash به ارقام ASCII تبدیل می‌شوند. نشست با Bearer token تصادفی کار می‌کند و فقط HMAC توکن در `identity.UserSessions` ذخیره می‌شود؛ logout همان نشست را revoke می‌کند.
 
-انتخاب adapter پیامک با کلید `Sms:Provider` انجام می‌شود. مقدار `Development` فقط در محیط‌های `Development` و `Testing` مجاز است؛ این adapter اتصال واقعی ندارد، OTP را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای توسعه و تست خودکار است. مقدار `Unavailable` ارسال را با خطای کنترل‌شده رد می‌کند. تست‌های خودکار هیچ پیامک پولی ارسال نمی‌کنند.
+انتخاب provider با کلید `Sms:Provider` انجام می‌شود. مقدار `Development` فقط در محیط‌های `Development` و `Testing` مجاز است؛ `DevelopmentOtpProvider` یک کد شش‌رقمی محلی می‌سازد، آن را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای توسعه و تست خودکار است. مقدار `Unavailable` درخواست را با خطای کنترل‌شده رد می‌کند. تست‌های خودکار هیچ پیامک پولی ارسال نمی‌کنند.
 
-### اتصال MeliPayamak
+### سرویس OTP مدیریت‌شده MeliPayamak
 
-adapter با نام `MeliPayamakSmsSender` از قرارداد REST رسمی [SendOtp ملی‌پیامک](https://www.melipayamak.com/api/sendotp/) استفاده می‌کند:
+`MeliPayamakOtpProvider` قرارداد OTP مدیریت‌شده را فراخوانی می‌کند:
 
 ```text
-POST https://rest.payamak-panel.com/api/SendSMS/SendOtp
-Content-Type: application/x-www-form-urlencoded
+POST https://console.melipayamak.com/api/send/otp/{service-token}
+Content-Type: application/json
+
+{"to":"09121234567"}
 ```
 
-کد OTP همچنان داخل MakanApp تولید می‌شود و ملی‌پیامک فقط آن را تحویل می‌دهد. شماره canonical مانند `+989121234567` فقط در مرز provider به `09121234567` تبدیل می‌شود. درخواست retry خودکار ندارد، timeout محدود است و پاسخ HTTP موفق نیز تا زمان parse شدن `recId` یا کد خطای business موفق محسوب نمی‌شود. کدهای مستند provider به دسته‌های امن داخلی authentication، configuration، rejected، unavailable، recipient و rate-limit نگاشت می‌شوند؛ response خام provider به Client برگردانده یا log نمی‌شود.
+در این قرارداد MeliPayamak کد را تولید و پیامک می‌کند و پاسخ JSON شامل `code` و `status` را به backend می‌دهد. MakanApp کد را به‌صورت string opaque دریافت، اعتبارسنجی و فوراً hash می‌کند؛ کد provider هرگز به frontend یا log نمی‌رود. شماره canonical مانند `+989121234567` فقط در adapter به `09121234567` تبدیل می‌شود. درخواست retry خودکار ندارد و timeout محدود است، زیرا timeout پس از side effect می‌تواند به معنی ارسال‌شدن پیامک و گم‌شدن response باشد. TTL مستندی از provider در دست نیست؛ بنابراین lifetime پنج‌دقیقه‌ای فعلی Makan حفظ شده است.
 
 تنظیمات غیرمحرمانه commit‌شده:
 
 ```json
 {
   "Sms": {
-    "Provider": "MeliPayamak",
-    "MeliPayamak": {
-      "BaseUrl": "https://rest.payamak-panel.com",
+    "Provider": "MeliPayamakOtp",
+    "MeliPayamakOtp": {
+      "BaseUrl": "https://console.melipayamak.com",
       "TimeoutSeconds": 10
     }
   }
@@ -148,24 +150,20 @@ Content-Type: application/x-www-form-urlencoded
 مقادیر محرمانه را برای `MakanApp.Api` با User Secrets ثبت کنید:
 
 ```powershell
-dotnet user-secrets set "Sms:Provider" "MeliPayamak" --project .\MakanApp.Api\MakanApp.Api.csproj
-dotnet user-secrets set "Sms:MeliPayamak:Username" "<username>" --project .\MakanApp.Api\MakanApp.Api.csproj
-dotnet user-secrets set "Sms:MeliPayamak:Credential" "<password-or-api-key>" --project .\MakanApp.Api\MakanApp.Api.csproj
-dotnet user-secrets set "Sms:MeliPayamak:From" "<sender-number>" --project .\MakanApp.Api\MakanApp.Api.csproj
+dotnet user-secrets set "Sms:Provider" "MeliPayamakOtp" --project .\MakanApp.Api\MakanApp.Api.csproj
+dotnet user-secrets set "Sms:MeliPayamakOtp:ServiceToken" "<SERVICE_TOKEN>" --project .\MakanApp.Api\MakanApp.Api.csproj
 ```
 
 یا در محیط استقرار از متغیرهای زیر استفاده کنید:
 
 ```text
-Sms__Provider=MeliPayamak
-Sms__MeliPayamak__Username=...
-Sms__MeliPayamak__Credential=...
-Sms__MeliPayamak__From=...
-Sms__MeliPayamak__BaseUrl=https://rest.payamak-panel.com
-Sms__MeliPayamak__TimeoutSeconds=10
+Sms__Provider=MeliPayamakOtp
+Sms__MeliPayamakOtp__BaseUrl=https://console.melipayamak.com
+Sms__MeliPayamakOtp__ServiceToken=<secret>
+Sms__MeliPayamakOtp__TimeoutSeconds=10
 ```
 
-`Username`، `Credential` و `From` هنگام انتخاب MeliPayamak در startup اجباری‌اند. مقدار `Credential` طبق قرارداد مستند `SendOtp` در field با نام `password` ارسال می‌شود. پاسخ `-110` یعنی حساب به ApiKey نیاز دارد؛ ApiKey همان مقدار configurable در `Credential` است، اما اگر حساب قرارداد دیگری غیر از field مستند `password` مطالبه کرد، endpoint یا header جدید را حدس نزنید و ابتدا قرارداد رسمی حساب را دریافت کنید.
+`ServiceToken` هنگام انتخاب `MeliPayamakOtp` در startup اجباری و بخشی محرمانه از path درخواست است. logging پیش‌فرض typed `HttpClient` برای این client حذف شده و adapter نیز URI، token، کد برگشتی، body خام یا شماره کامل را log نمی‌کند. تنظیمات قدیمی `Username`، `Credential`، `From` و endpoint `rest.payamak-panel.com` دیگر برای OTP استفاده نمی‌شوند و حذف شده‌اند.
 
 برای نگه‌داشتن provider محلی:
 
@@ -176,10 +174,10 @@ Sms:Provider=Development
 Smoke test زنده خودکار نیست و در `dotnet test` اجرا نمی‌شود. بعد از تنظیم secretها، اجرای API و تعیین صریح شماره آزمایشی، می‌توان آن را به‌صورت opt-in اجرا کرد:
 
 ```powershell
-$env:MELIPAYAMAK_LIVE_TEST = "true"
-$env:MELIPAYAMAK_LIVE_TEST_PHONE = "<explicit-test-phone>"
-if ($env:MELIPAYAMAK_LIVE_TEST -ne "true" -or [string]::IsNullOrWhiteSpace($env:MELIPAYAMAK_LIVE_TEST_PHONE)) { throw "Live SMS test is not explicitly enabled." }
-$body = @{ phoneNumber = $env:MELIPAYAMAK_LIVE_TEST_PHONE } | ConvertTo-Json
+$env:MELIPAYAMAK_OTP_LIVE_TEST = "true"
+$env:MELIPAYAMAK_OTP_LIVE_TEST_PHONE = "<explicit-test-phone>"
+if ($env:MELIPAYAMAK_OTP_LIVE_TEST -ne "true" -or [string]::IsNullOrWhiteSpace($env:MELIPAYAMAK_OTP_LIVE_TEST_PHONE)) { throw "Live OTP test is not explicitly enabled." }
+$body = @{ phoneNumber = $env:MELIPAYAMAK_OTP_LIVE_TEST_PHONE } | ConvertTo-Json
 Invoke-RestMethod -Method Post -Uri "https://localhost:7063/api/v1/auth/otp/challenges" -ContentType "application/json" -Body $body
 ```
 

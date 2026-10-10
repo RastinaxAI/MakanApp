@@ -6,7 +6,7 @@ namespace MakanApp.Application.Identity;
 public sealed partial class IdentityService(
     IIdentityStore store,
     IIdentitySecurity security,
-    ISmsSender smsSender,
+    IOtpDeliveryProvider otpDeliveryProvider,
     TimeProvider timeProvider,
     OtpOptions otpOptions,
     SessionOptions sessionOptions) : IIdentityService
@@ -16,13 +16,13 @@ public sealed partial class IdentityService(
         CancellationToken cancellationToken)
     {
         var phoneNumber = NormalizePhoneNumber(command.PhoneNumber);
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var requestedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
         var latestChallenge = await store.GetLatestOtpChallengeAsync(
             phoneNumber,
             cancellationToken);
 
         if (latestChallenge is not null &&
-            latestChallenge.CreatedAtUtc + otpOptions.ResendDelay > nowUtc)
+            latestChallenge.CreatedAtUtc + otpOptions.ResendDelay > requestedAtUtc)
         {
             throw new IdentityException(
                 IdentityErrorCodes.OtpRateLimited,
@@ -31,7 +31,7 @@ public sealed partial class IdentityService(
 
         var recentCount = await store.CountOtpChallengesAsync(
             phoneNumber,
-            nowUtc - otpOptions.RateLimitWindow,
+            requestedAtUtc - otpOptions.RateLimitWindow,
             cancellationToken);
 
         if (recentCount >= otpOptions.MaxRequestsPerWindow)
@@ -41,41 +41,36 @@ public sealed partial class IdentityService(
                 "تعداد درخواست‌های کد بیش از حد مجاز است.");
         }
 
-        latestChallenge?.Supersede(nowUtc);
+        var delivery = await otpDeliveryProvider.RequestOtpAsync(
+            phoneNumber,
+            cancellationToken);
+        var code = NormalizeOtpCode(delivery.VerificationCode);
+        if (code is null)
+        {
+            throw new IdentityException(
+                IdentityErrorCodes.SmsProviderUnavailable,
+                "سرویس ارسال پیامک پاسخ قابل استفاده‌ای برنگرداند.");
+        }
 
-        var code = security.GenerateOtpCode();
+        var deliveredAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        latestChallenge?.Supersede(deliveredAtUtc);
         var salt = security.GenerateSalt();
-        var expiresAtUtc = nowUtc + otpOptions.Lifetime;
+        var expiresAtUtc = deliveredAtUtc + otpOptions.Lifetime;
         var challenge = OtpChallenge.Create(
             phoneNumber,
             security.HashOtp(code, salt),
             salt,
-            nowUtc,
+            deliveredAtUtc,
             expiresAtUtc,
             otpOptions.MaxFailedAttempts);
 
         store.Add(challenge);
         await store.SaveChangesAsync(cancellationToken);
-        try
-        {
-            await smsSender.SendOtpAsync(
-                phoneNumber,
-                challenge.Id,
-                code,
-                expiresAtUtc,
-                cancellationToken);
-        }
-        catch
-        {
-            challenge.Supersede(timeProvider.GetUtcNow().UtcDateTime);
-            await store.SaveChangesAsync(CancellationToken.None);
-            throw;
-        }
 
         return new RequestOtpResult(
             challenge.Id,
             expiresAtUtc,
-            nowUtc + otpOptions.ResendDelay);
+            deliveredAtUtc + otpOptions.ResendDelay);
     }
 
     public async Task<VerifyOtpResult> VerifyOtpAsync(
@@ -275,10 +270,12 @@ public sealed partial class IdentityService(
         return normalized;
     }
 
-    private static string? NormalizeOtpCode(string? value)
+    private string? NormalizeOtpCode(string? value)
     {
         var candidate = value?.Trim();
-        if (candidate?.Length != 6)
+        if (candidate is null ||
+            candidate.Length < otpOptions.MinimumCodeLength ||
+            candidate.Length > otpOptions.MaximumCodeLength)
         {
             return null;
         }
@@ -288,7 +285,7 @@ public sealed partial class IdentityService(
         {
             normalized[index] = PhoneNumberNormalizer.ToAsciiDigit(candidate[index]);
 
-            if (normalized[index] is < '0' or > '9')
+            if (char.IsControl(normalized[index]))
             {
                 return null;
             }

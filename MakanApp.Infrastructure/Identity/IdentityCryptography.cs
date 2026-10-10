@@ -6,9 +6,6 @@ namespace MakanApp.Infrastructure.Identity;
 
 public sealed class IdentityCryptography(byte[] key) : IIdentitySecurity
 {
-    public string GenerateOtpCode() =>
-        RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
-
     public byte[] GenerateSalt() => RandomNumberGenerator.GetBytes(16);
 
     public byte[] HashOtp(string code, byte[] salt) =>

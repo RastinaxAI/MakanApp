@@ -483,7 +483,7 @@ public sealed class GuardianEndpointsTests(MakanAppWebApplicationFactory factory
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                factory.GetOtpCode(challenge.ChallengeId)));
+                factory.GetLatestOtpCode(phoneNumber)));
         verifyResponse.EnsureSuccessStatusCode();
         return (await verifyResponse.Content.ReadFromJsonAsync<VerifyOtpResult>())!;
     }

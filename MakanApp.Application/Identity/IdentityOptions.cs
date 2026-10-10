@@ -7,6 +7,8 @@ public sealed class OtpOptions
     public TimeSpan RateLimitWindow { get; init; } = TimeSpan.FromHours(1);
     public int MaxRequestsPerWindow { get; init; } = 5;
     public int MaxFailedAttempts { get; init; } = 5;
+    public int MinimumCodeLength { get; init; } = 4;
+    public int MaximumCodeLength { get; init; } = 64;
 }
 
 public sealed class SessionOptions

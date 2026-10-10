@@ -31,19 +31,19 @@ public interface IIdentityService
         CancellationToken cancellationToken);
 }
 
-public interface ISmsSender
+public sealed record OtpDeliveryResult(
+    string VerificationCode,
+    string? ProviderStatus = null);
+
+public interface IOtpDeliveryProvider
 {
-    Task SendOtpAsync(
+    Task<OtpDeliveryResult> RequestOtpAsync(
         string normalizedPhoneNumber,
-        Guid challengeId,
-        string code,
-        DateTime expiresAtUtc,
         CancellationToken cancellationToken);
 }
 
 public interface IIdentitySecurity
 {
-    string GenerateOtpCode();
     byte[] GenerateSalt();
     byte[] HashOtp(string code, byte[] salt);
     string GenerateSessionToken();

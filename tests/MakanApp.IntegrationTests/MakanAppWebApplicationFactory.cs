@@ -38,7 +38,8 @@ public sealed partial class MakanAppWebApplicationFactory :
         Guid.NewGuid().ToString("N"));
 
     public ControllableTimeProvider Clock { get; } = new();
-    public SmsFailureSwitch SmsFailure => Services.GetRequiredService<SmsFailureSwitch>();
+    public OtpProviderTestControl OtpProvider =>
+        Services.GetRequiredService<OtpProviderTestControl>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -56,6 +57,7 @@ public sealed partial class MakanAppWebApplicationFactory :
             {
                 ["ConnectionStrings:MakanDatabase"] = TestConnectionString,
                 ["Sms:Provider"] = "Development",
+                ["Identity:Otp:MaxRequestsPerWindow"] = "5",
                 ["Storage:RootPath"] = StorageRootPath,
                 ["Storage:MaxFileSizeBytes"] = "1024",
                 ["Storage:UnattachedLifetimeHours"] = "1",
@@ -87,13 +89,13 @@ public sealed partial class MakanAppWebApplicationFactory :
             });
             services.AddSingleton<StorageFailureSwitch>();
             services.AddSingleton<RealtimeFailureSwitch>();
-            services.AddSingleton<SmsFailureSwitch>();
+            services.AddSingleton<OtpProviderTestControl>();
             services.RemoveAll<DevelopmentOtpStore>();
-            services.RemoveAll<DevelopmentSmsSender>();
+            services.RemoveAll<DevelopmentOtpProvider>();
             services.AddSingleton<DevelopmentOtpStore>();
-            services.AddSingleton<DevelopmentSmsSender>();
-            services.RemoveAll<ISmsSender>();
-            services.AddSingleton<ISmsSender, FaultInjectingSmsSender>();
+            services.AddSingleton<DevelopmentOtpProvider>();
+            services.RemoveAll<IOtpDeliveryProvider>();
+            services.AddSingleton<IOtpDeliveryProvider, FaultInjectingOtpDeliveryProvider>();
             services.RemoveAll<IMessagingRealtimeNotifier>();
             services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
                 new FaultInjectingMessagingRealtimeNotifier(
@@ -186,12 +188,14 @@ public sealed partial class MakanAppWebApplicationFactory :
         }
     }
 
-    public string GetOtpCode(Guid challengeId)
+    public string GetLatestOtpCode(string phoneNumber)
     {
-        var store = Services.GetRequiredService<DevelopmentOtpStore>();
-        return store.TryGet(challengeId, out var message)
-            ? message!.Code
-            : throw new InvalidOperationException("Development OTP was not captured.");
+        if (!PhoneNumberNormalizer.TryNormalize(phoneNumber, out var normalizedPhoneNumber))
+        {
+            throw new ArgumentException("شماره تست OTP معتبر نیست.", nameof(phoneNumber));
+        }
+
+        return OtpProvider.GetLatestCode(normalizedPhoneNumber);
     }
 
     public async Task ExpireChallengeAsync(Guid challengeId)
@@ -203,16 +207,25 @@ public sealed partial class MakanAppWebApplicationFactory :
             $"UPDATE [identity].[OtpChallenges] SET [ExpiresAtUtc] = {expiredAtUtc} WHERE [Id] = {challengeId}");
     }
 
-    public async Task<bool> IsLatestChallengeSupersededAsync(string normalizedPhoneNumber)
+    public async Task<int> CountOtpChallengesAsync(string normalizedPhoneNumber)
     {
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.OtpChallenges.CountAsync(
+            challenge => challenge.NormalizedPhoneNumber == normalizedPhoneNumber);
+    }
+
+    public async Task<bool> IsChallengeProtectedWithCodeAsync(
+        Guid challengeId,
+        string code)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var security = scope.ServiceProvider.GetRequiredService<IIdentitySecurity>();
         var challenge = await dbContext.OtpChallenges
             .AsNoTracking()
-            .Where(item => item.NormalizedPhoneNumber == normalizedPhoneNumber)
-            .OrderByDescending(item => item.CreatedAtUtc)
-            .FirstAsync();
-        return challenge.SupersededAtUtc.HasValue;
+            .SingleAsync(candidate => candidate.Id == challengeId);
+        return challenge.CodeHash.SequenceEqual(security.HashOtp(code, challenge.Salt));
     }
 
     public async Task<int> CountUsersForPhoneAsync(string normalizedPhoneNumber)

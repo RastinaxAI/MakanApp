@@ -898,7 +898,7 @@ public sealed class SessionAttendanceEndpointsTests(MakanAppWebApplicationFactor
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                factory.GetOtpCode(challenge.ChallengeId)),
+                factory.GetLatestOtpCode(phoneNumber)),
             JsonOptions);
         verifyResponse.EnsureSuccessStatusCode();
         return await ReadRequiredAsync<VerifyOtpResult>(verifyResponse);

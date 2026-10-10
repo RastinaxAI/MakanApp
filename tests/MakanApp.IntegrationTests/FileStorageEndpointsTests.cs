@@ -318,7 +318,7 @@ public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory fact
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                factory.GetOtpCode(challenge.ChallengeId)),
+                factory.GetLatestOtpCode(phoneNumber)),
             JsonOptions);
         verifyResponse.EnsureSuccessStatusCode();
         var user = await ReadRequiredAsync<VerifyOtpResult>(verifyResponse);

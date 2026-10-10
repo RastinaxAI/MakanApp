@@ -123,6 +123,11 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 | `Identity:Otp:RateLimitWindowSeconds` | `3600` |
 | `Identity:Otp:MaxRequestsPerWindow` | `5` درخواست برای شماره در پنجره تعیین‌شده در تنظیم پایه |
 | `Identity:Otp:MaxFailedAttempts` | `5` تلاش ناموفق |
+| `Identity:Otp:MinimumCodeLength` / `MaximumCodeLength` | `4` / `64`؛ کد provider به‌صورت string opaque اعتبارسنجی می‌شود |
+| `Sms:Provider` | `Development` در توسعه، `MeliPayamakOtp` برای سرویس واقعی، یا `Unavailable` |
+| `Sms:MeliPayamakOtp:BaseUrl` | `https://console.melipayamak.com` |
+| `Sms:MeliPayamakOtp:ServiceToken` | secret الزامی برای provider واقعی؛ هرگز commit یا log نشود |
+| `Sms:MeliPayamakOtp:TimeoutSeconds` | `10` ثانیه |
 | `Identity:Session:LifetimeSeconds` | `2592000`، برابر ۳۰ روز |
 | `Storage:RootPath` | در Development برابر `%LOCALAPPDATA%\MakanApp\Storage` |
 | `Storage:MaxFileSizeBytes` | `10485760`، برابر ۱۰ MiB |
@@ -138,7 +143,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 
 مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در `Program.cs` برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.
 
-کلید امنیت را در مخزن یا سند ذخیره نکنید. اگر در توسعه کلید ثابتی از Secret Store تنظیم نشده باشد، توکن نشست قبلی بعد از restart دیگر معتبر نیست. خارج از Development/Testing، adapterهای فعلی پیامک و فایل به‌ترتیب `UnavailableSmsSender` و `UnavailableFileStorage` هستند؛ صرف تنظیم کلید و connection string آن‌ها را به سرویس واقعی تبدیل نمی‌کند.
+کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر در توسعه کلید ثابتی از Secret Store تنظیم نشده باشد، توکن نشست قبلی بعد از restart دیگر معتبر نیست. خارج از Development/Testing، provider پیش‌فرض OTP و adapter فایل به‌ترتیب `UnavailableOtpDeliveryProvider` و `UnavailableFileStorage` هستند؛ برای OTP واقعی باید `Sms:Provider=MeliPayamakOtp` و ServiceToken از secret store تنظیم شود.
 
 <a id="http"></a>
 ## قرارداد مشترک HTTP
@@ -210,7 +215,7 @@ $challenge = Invoke-MakanApi -Method POST -Path '/auth/otp/challenges' -Body @{
 
 پاسخ `202` شامل `challengeId`، `expiresAtUtc` و `resendAvailableAtUtc` است؛ کد در پاسخ نیست.
 
-**محدودیت ورود دستی در توسعه:** `DevelopmentSmsSender` پیامک نمی‌فرستد و کد را فقط در `DevelopmentOtpStore` همان فرایند نگه می‌دارد. API عمومی برای دریافت کد و OTP ثابت وجود ندارد. برای آزمایش دستی، برنامه را با debugger محلی اجرا کنید و در `DevelopmentSmsSender.SendOtpAsync` مقدار پارامتر `code` همان challenge را ببینید؛ آن را در log، فایل یا Git ثبت نکنید. تست خودکار از `MakanAppWebApplicationFactory.GetOtpCode` استفاده می‌کند. در محیط دارای adapter واقعی، کد از پیامک دریافت می‌شود.
+**محدودیت ورود دستی در توسعه:** `DevelopmentOtpProvider` پیامک نمی‌فرستد و کد تولیدشده را فقط در `DevelopmentOtpStore` همان فرایند نگه می‌دارد. API عمومی برای دریافت کد و OTP ثابت وجود ندارد. برای آزمایش دستی، برنامه را با debugger محلی اجرا کنید و نتیجه `DevelopmentOtpProvider.RequestOtpAsync` را برای همان شماره ببینید؛ آن را در log، فایل یا Git ثبت نکنید. تست خودکار از provider ضبط‌کننده استفاده می‌کند. در محیط `MeliPayamakOtp`، provider کد را تولید و از طریق پیامک ارسال می‌کند و backend فقط hash آن را نگه می‌دارد.
 
 ```powershell
 $otpCode = Read-Host 'کد دریافت‌شده برای همین challenge'
@@ -224,7 +229,7 @@ $otpCode = $null
 $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 ```
 
-پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc` و `user` است. `challengeId` و شماره باید متعلق به همان درخواست OTP باشند؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد باید شش‌رقمی باشد و ارقام انگلیسی، فارسی و عربی پیش از hash به شکل یکسان normalize می‌شوند. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند `OTP_ALREADY_USED` بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.
+پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc` و `user` است. `challengeId` و شماره باید متعلق به همان درخواست OTP باشند؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد provider به‌صورت string opaque و در بازه طول تنظیم‌شده پذیرفته می‌شود؛ اگر کد عددی باشد، ارقام انگلیسی، فارسی و عربی پیش از hash به شکل یکسان normalize می‌شوند. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند `OTP_ALREADY_USED` بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.
 
 ### تکمیل پروفایل و خروج
 
