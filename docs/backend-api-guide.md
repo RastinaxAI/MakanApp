@@ -794,6 +794,36 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 
 فیلد AI/Copilot در قرارداد ساخته نشده است. insightهای هوشمند به STEP 10 و widgetهای Plan/Quota/Subscription مدیر به STEP 13 Commerce موکول شده‌اند. معماری و جزئیات privacy در [سند STEP 11A](architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md) آمده است.
 
+<a id="detailed-reports"></a>
+## گزارش‌های تفصیلی نقش‌محور
+
+STEP 11B در کنار داشبوردهای خلاصه، APIهای report خواندنی و صفحه‌بندی‌شده را ارائه می‌کند. Dashboard برای glance سریع است؛ report برای history، filter، sort و drill-down استفاده می‌شود. مسیرهای اصلی:
+
+- Student: `GET /api/v1/reports/student/attendance|assignments|exams|grades`
+- Parent: `GET /api/v1/reports/parent/attendance|assignments|exams`
+- Teacher: `GET /api/v1/reports/teacher/classes/{classId}/attendance|assignments|exams` و `GET /api/v1/reports/teacher/classes/{classId}/learners/{learnerId}`
+- Manager: `GET /api/v1/reports/manager/enrollments|attendance|assessments|teacher-workload` و `GET /api/v1/reports/manager/classes/{classId}`
+
+فهرست‌ها `dataAsOfUtc`، `pageNumber`، `pageSize`، `totalCount` و `items` دارند. پیش‌فرض صفحه ۱ با اندازه ۲۰ و سقف اندازه ۱۰۰ است. `fromUtc`/`toUtc` باید UTC باشند. sort فقط از allowlist هر report پذیرفته می‌شود و مقدار arbitrary با `REPORT_SORT_INVALID` رد می‌شود.
+
+سازمان، نقش Student/Parent/Teacher/Manager و child context از session و `AccessContext` سمت سرور می‌آیند. `classId`، `courseId` و `academicPeriodId` فقط selector هستند. Teacher باید assignment فعال همان کلاس داشته باشد و Parent باید child context معتبر انتخاب کرده باشد. Guid خارج محدوده ممکن است برای جلوگیری از افشای منبع `REPORT_RESOURCE_NOT_FOUND` بدهد.
+
+در گزارش حضور، نبود رکورد رسمی `NotRecorded` است و به `Absent` تبدیل نمی‌شود. پاسخ attendance علاوه بر page، یک `summary` روی کل مجموعه فیلترشده با شمارنده‌های eligible/recorded/status/not-recorded دارد. نمره Student/Parent فقط پس از release رسمی نمایش داده می‌شود. Parent فقط guardian-visible feedback را می‌بیند. گزارش آزمون هیچ سؤال، گزینه صحیح، answer key، پاسخ learner یا note خصوصی ندارد. عملکرد Manager درصد نرمال‌شده `score / maxScore` را برای Assignment و Exam جدا محاسبه می‌کند و سقف سراسری ۲۰ یا GPA فرض نمی‌کند.
+
+نمونه صفحه خالی معتبر:
+
+```json
+{
+  "dataAsOfUtc": "2026-10-11T09:30:00Z",
+  "pageNumber": 3,
+  "pageSize": 20,
+  "totalCount": 0,
+  "items": []
+}
+```
+
+جزئیات endpointها، allowlist مرتب‌سازی و privacy در [سند معماری STEP 11B](architecture/STEP_11B_DETAILED_REPORTS.md) آمده است. Export، گزارش زمان‌بندی‌شده، cache و AI در این مرحله وجود ندارند.
+
 <a id="testing"></a>
 ## تست و عیب‌یابی
 

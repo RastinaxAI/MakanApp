@@ -7,6 +7,7 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Dashboards;
+using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Academic;
 using MakanApp.Infrastructure.Assessment;
@@ -16,6 +17,7 @@ using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Reports.Dashboards;
+using MakanApp.Infrastructure.Reports.Detailed;
 using MakanApp.Infrastructure.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +74,8 @@ public static class DependencyInjection
         services.AddScoped<IExamGradingService, ExamGradingService>();
         services.AddScoped<IDashboardReadService, EfDashboardReadService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IDetailedReportReadService, EfDetailedReportReadService>();
+        services.AddScoped<IDetailedReportService, DetailedReportService>();
         services.AddScoped<EfMessagingStore>();
         services.AddScoped<IMessagingStore>(serviceProvider =>
             serviceProvider.GetRequiredService<EfMessagingStore>());

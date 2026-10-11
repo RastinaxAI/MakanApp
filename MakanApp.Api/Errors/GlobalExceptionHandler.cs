@@ -4,6 +4,7 @@ using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Storage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +43,9 @@ public sealed class GlobalExceptionHandler(
             StorageException storageException => CreateKnownProblem(
                 storageException.Code,
                 storageException.Message),
+            DetailedReportException detailedReportException => CreateKnownProblem(
+                detailedReportException.Code,
+                detailedReportException.Message),
             _ => CreateUnexpectedProblem(exception, httpContext.TraceIdentifier)
         };
 
@@ -223,6 +227,7 @@ public sealed class GlobalExceptionHandler(
             StorageErrorCodes.FileUploadFailed => StatusCodes.Status500InternalServerError,
             StorageErrorCodes.FileAlreadyDeleted => StatusCodes.Status409Conflict,
             StorageErrorCodes.FileInUse => StatusCodes.Status409Conflict,
+            DetailedReportErrorCodes.ResourceNotFound => StatusCodes.Status404NotFound,
             _ => StatusCodes.Status400BadRequest
         };
 

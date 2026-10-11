@@ -7,7 +7,9 @@ using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Dashboards;
+using MakanApp.Application.Reports.Detailed;
 using MakanApp.Domain.Academic;
+using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Organization;
 using Xunit;
@@ -752,6 +754,246 @@ public sealed class DashboardEndpointsTests(MakanAppWebApplicationFactory factor
         Assert.Empty(dashboard.SessionsMissingMeetingLink);
         Assert.Empty(dashboard.AttendancePending);
         Assert.Equal(0, dashboard.PendingInvitationCount);
+    }
+
+    [Fact]
+    public async Task StudentDetailedReportsArePagedOfficialAndReleaseSafe()
+    {
+        var nowUtc = DateTime.UtcNow.AddDays(1);
+        factory.Clock.SetUtcNow(nowUtc);
+        using var client = factory.CreateClient();
+        var organizationId = await factory.CreateOrganizationAsync(NewName("Student Reports"));
+        var academic = await factory.CreateAcademicClassAsync(organizationId);
+        var student = await CreateStudentAsync(client, organizationId, academic.ClassId);
+        var firstSession = await factory.CreateAcademicSessionAsync(organizationId, academic.ClassId, nowUtc.AddHours(-4), nowUtc.AddHours(-3), SessionStatus.Completed);
+        _ = await factory.CreateAcademicSessionAsync(organizationId, academic.ClassId, nowUtc.AddHours(-2), nowUtc.AddHours(-1), SessionStatus.Completed);
+        _ = await factory.CreateAttendanceAsync(organizationId, academic.ClassId, firstSession, student.EnrollmentId, student.MembershipId, AttendanceStatus.Present);
+        var releasedAssignment = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, student.EnrollmentId, student.MembershipId, nowUtc.AddHours(2), "Released report assignment", DashboardAssignmentSeedState.Released);
+        var draftAssignment = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, student.EnrollmentId, student.MembershipId, nowUtc.AddHours(3), "Draft grade assignment", DashboardAssignmentSeedState.DraftEvaluation);
+        await factory.CloseDashboardAssignmentAsync(draftAssignment.AssignmentId);
+        var otherLearnerId = (await factory.CreateOrganizationPersonsAsync(organizationId, 1))[0];
+        var otherEnrollmentId = await factory.CreateEnrollmentAsync(organizationId, academic.ClassId, otherLearnerId);
+        var otherAssignment = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, otherEnrollmentId, student.MembershipId, nowUtc.AddHours(1), "Other learner report assignment", DashboardAssignmentSeedState.Released);
+        var releasedExam = await factory.CreateDashboardExamAsync(organizationId, academic.ClassId, student.EnrollmentId, student.MembershipId, nowUtc.AddHours(-1), nowUtc.AddHours(4), "Released report exam", DashboardExamSeedState.Released);
+        var draftExam = await factory.CreateDashboardExamAsync(organizationId, academic.ClassId, student.EnrollmentId, student.MembershipId, nowUtc.AddHours(-1), nowUtc.AddHours(5), "Draft report exam", DashboardExamSeedState.DraftGrade);
+
+        var attendancePage1 = await client.GetFromJsonAsync<AttendanceReportPage<StudentAttendanceReportItem>>("/api/v1/reports/student/attendance?pageNumber=1&pageSize=1&sort=occurredAsc", JsonOptions);
+        var attendancePage2 = await client.GetFromJsonAsync<AttendanceReportPage<StudentAttendanceReportItem>>("/api/v1/reports/student/attendance?pageNumber=2&pageSize=1&sort=occurredAsc", JsonOptions);
+        var emptyAttendance = await client.GetFromJsonAsync<AttendanceReportPage<StudentAttendanceReportItem>>($"/api/v1/reports/student/attendance?classId={Guid.NewGuid()}", JsonOptions);
+        var filteredAttendance = await client.GetFromJsonAsync<AttendanceReportPage<StudentAttendanceReportItem>>($"/api/v1/reports/student/attendance?fromUtc={Uri.EscapeDataString(nowUtc.AddHours(-3).ToString("O"))}", JsonOptions);
+        using var assignmentsResponse = await client.GetAsync("/api/v1/reports/student/assignments?pageSize=10");
+        var assignmentsJson = await assignmentsResponse.Content.ReadAsStringAsync();
+        assignmentsResponse.EnsureSuccessStatusCode();
+        var assignments = JsonSerializer.Deserialize<ReportPage<StudentAssignmentReportItem>>(assignmentsJson, JsonOptions)!;
+        using var examsResponse = await client.GetAsync("/api/v1/reports/student/exams?pageSize=10");
+        var examsJson = await examsResponse.Content.ReadAsStringAsync();
+        examsResponse.EnsureSuccessStatusCode();
+        var exams = JsonSerializer.Deserialize<ReportPage<StudentExamReportItem>>(examsJson, JsonOptions)!;
+        var grades = await client.GetFromJsonAsync<ReportPage<StudentReleasedGradeReportItem>>("/api/v1/reports/student/grades?pageSize=10", JsonOptions);
+
+        Assert.NotNull(attendancePage1);
+        Assert.NotNull(attendancePage2);
+        Assert.Equal(nowUtc, attendancePage1.DataAsOfUtc);
+        Assert.Equal(2, attendancePage1.TotalCount);
+        Assert.Equal(2, attendancePage1.Summary.EligibleCount);
+        Assert.Equal(1, attendancePage1.Summary.PresentCount);
+        Assert.Equal(1, attendancePage1.Summary.NotRecordedCount);
+        Assert.Equal(AttendanceStatus.Present, Assert.Single(attendancePage1.Items).Status);
+        Assert.Equal(AttendanceStatus.NotRecorded, Assert.Single(attendancePage2!.Items).Status);
+        Assert.NotNull(emptyAttendance);
+        Assert.Equal(0, emptyAttendance.TotalCount);
+        Assert.Empty(emptyAttendance.Items);
+        Assert.NotNull(filteredAttendance);
+        Assert.Equal(1, filteredAttendance.TotalCount);
+        Assert.Equal(2, assignments.TotalCount);
+        Assert.Equal(17.25m, assignments.Items.Single(item => item.AssignmentId == releasedAssignment.AssignmentId).ReleasedScore);
+        Assert.Null(assignments.Items.Single(item => item.AssignmentId == draftAssignment.AssignmentId).ReleasedScore);
+        Assert.Equal(AssignmentStatus.Closed, assignments.Items.Single(item => item.AssignmentId == draftAssignment.AssignmentId).AssignmentStatus);
+        Assert.DoesNotContain(assignments.Items, item => item.AssignmentId == otherAssignment.AssignmentId);
+        Assert.Equal(18m, exams.Items.Single(item => item.ExamId == releasedExam.ExamId).ReleasedScore);
+        Assert.Null(exams.Items.Single(item => item.ExamId == draftExam.ExamId).ReleasedScore);
+        Assert.NotNull(grades);
+        Assert.Equal(2, grades.TotalCount);
+        Assert.Contains(grades.Items, item => item.Kind == DetailedReportGradeKind.Assignment && item.Percentage == 86.25m);
+        Assert.Contains(grades.Items, item => item.Kind == DetailedReportGradeKind.Exam && item.Percentage == 90m);
+        foreach (var forbidden in new[] { "Private question content", "CorrectOption", "Teacher private note", "Evaluator private exam note" })
+        {
+            Assert.DoesNotContain(forbidden, assignmentsJson + examsJson, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task DetailedReportValidationAndRoleGateReturnStableProblems()
+    {
+        using var anonymous = factory.CreateClient();
+        using var anonymousResponse = await anonymous.GetAsync("/api/v1/reports/student/attendance");
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organizationId = await factory.CreateOrganizationAsync(NewName("Report Validation"));
+        var membership = await factory.CreateMembershipAsync(user.User.Id, organizationId, OrganizationRole.Manager);
+        UseBearerToken(client, user.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Manager);
+        using var paginationResponse = await client.GetAsync("/api/v1/reports/manager/enrollments?pageSize=101");
+        using var sortResponse = await client.GetAsync("/api/v1/reports/manager/attendance?sort=dropTable");
+        using var wrongRoleResponse = await client.GetAsync("/api/v1/reports/student/grades");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, anonymousResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, paginationResponse.StatusCode);
+        Assert.Equal(DetailedReportErrorCodes.PaginationInvalid, await ReadProblemCodeAsync(paginationResponse));
+        Assert.Equal(DetailedReportErrorCodes.SortInvalid, await ReadProblemCodeAsync(sortResponse));
+        Assert.Equal(HttpStatusCode.Forbidden, wrongRoleResponse.StatusCode);
+        Assert.Equal(OrganizationErrorCodes.WorkspaceNotAllowed, await ReadProblemCodeAsync(wrongRoleResponse));
+    }
+
+    [Fact]
+    public async Task ParentDetailedReportsUseSelectedChildAndGuardianVisibleFeedbackOnly()
+    {
+        var nowUtc = DateTime.UtcNow.AddDays(1);
+        factory.Clock.SetUtcNow(nowUtc);
+        using var client = factory.CreateClient();
+        var parent = await CreateAuthenticatedUserAsync(client);
+        var organizationId = await factory.CreateOrganizationAsync(NewName("Parent Reports"));
+        var academic = await factory.CreateAcademicClassAsync(organizationId);
+        var membership = await factory.CreateMembershipAsync(parent.User.Id, organizationId, OrganizationRole.Parent);
+        var child = await CreateChildAsync(parent.User.Id, organizationId, academic.ClassId);
+        var otherChild = await CreateChildAsync(parent.User.Id, organizationId, academic.ClassId);
+        var own = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, child.EnrollmentId, membership.MembershipId, nowUtc.AddHours(2), "Selected child", DashboardAssignmentSeedState.Released);
+        var other = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, otherChild.EnrollmentId, membership.MembershipId, nowUtc.AddHours(2), "Other child", DashboardAssignmentSeedState.Released);
+        UseBearerToken(client, parent.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Parent);
+        using var missingChild = await client.GetAsync("/api/v1/reports/parent/assignments");
+        await SelectChildAsync(client, child.OrganizationPersonId);
+        using var response = await client.GetAsync("/api/v1/reports/parent/assignments?pageSize=10");
+        var raw = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        var page = JsonSerializer.Deserialize<ReportPage<ParentAssignmentReportItem>>(raw, JsonOptions)!;
+
+        Assert.Equal(HttpStatusCode.NotFound, missingChild.StatusCode);
+        Assert.Equal(GuardianErrorCodes.ChildContextNotFound, await ReadProblemCodeAsync(missingChild));
+        var item = Assert.Single(page.Items);
+        Assert.Equal(own.AssignmentId, item.AssignmentId);
+        Assert.Equal("Guardian feedback", item.GuardianVisibleFeedback);
+        Assert.DoesNotContain(other.AssignmentId.ToString(), raw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Learner feedback", raw, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Teacher private note", raw, StringComparison.OrdinalIgnoreCase);
+
+        var foreignOrganizationId = await factory.CreateOrganizationAsync(NewName("Parent Reports Foreign"));
+        var foreignAcademic = await factory.CreateAcademicClassAsync(foreignOrganizationId);
+        var foreignMembership = await factory.CreateMembershipAsync(parent.User.Id, foreignOrganizationId, OrganizationRole.Parent);
+        var foreignChild = await CreateChildAsync(parent.User.Id, foreignOrganizationId, foreignAcademic.ClassId);
+        var foreignAssignment = await factory.CreateDashboardAssignmentAsync(foreignOrganizationId, foreignAcademic.ClassId, foreignChild.EnrollmentId, foreignMembership.MembershipId, nowUtc.AddHours(2), "Foreign selected child", DashboardAssignmentSeedState.Released);
+        await SelectWorkspaceAsync(client, foreignMembership.MembershipId, OrganizationRole.Parent);
+        await SelectChildAsync(client, foreignChild.OrganizationPersonId);
+        var foreignPage = await client.GetFromJsonAsync<ReportPage<ParentAssignmentReportItem>>("/api/v1/reports/parent/assignments?pageSize=10", JsonOptions);
+        Assert.Equal(foreignAssignment.AssignmentId, Assert.Single(foreignPage!.Items).AssignmentId);
+        Assert.DoesNotContain(foreignPage.Items, item => item.AssignmentId == own.AssignmentId);
+
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Parent);
+        await SelectChildAsync(client, child.OrganizationPersonId);
+        await factory.RevokeGuardianRelationAsync(child.RelationId);
+        using var revokedResponse = await client.GetAsync("/api/v1/reports/parent/attendance");
+        Assert.Equal(HttpStatusCode.Forbidden, revokedResponse.StatusCode);
+        Assert.Equal(GuardianErrorCodes.ChildContextNotAllowed, await ReadProblemCodeAsync(revokedResponse));
+    }
+
+    [Fact]
+    public async Task TeacherDetailedReportsRequireActiveClassAssignmentAndScopeLearnerOverview()
+    {
+        var nowUtc = DateTime.UtcNow.AddDays(1);
+        factory.Clock.SetUtcNow(nowUtc);
+        using var client = factory.CreateClient();
+        var teacher = await CreateAuthenticatedUserAsync(client);
+        var organizationId = await factory.CreateOrganizationAsync(NewName("Teacher Reports"));
+        var assigned = await factory.CreateAcademicClassAsync(organizationId);
+        var unassigned = await factory.CreateAcademicClassAsync(organizationId);
+        var membership = await factory.CreateMembershipAsync(teacher.User.Id, organizationId, OrganizationRole.Teacher);
+        _ = await factory.CreateTeacherAssignmentAsync(organizationId, assigned.ClassId, membership.MembershipId);
+        var learnerId = (await factory.CreateOrganizationPersonsAsync(organizationId, 1))[0];
+        var enrollmentId = await factory.CreateEnrollmentAsync(organizationId, assigned.ClassId, learnerId);
+        var sessionId = await factory.CreateAcademicSessionAsync(organizationId, assigned.ClassId, nowUtc.AddHours(-2), nowUtc.AddHours(-1), SessionStatus.Completed);
+        _ = await factory.CreateAttendanceAsync(organizationId, assigned.ClassId, sessionId, enrollmentId, membership.MembershipId, AttendanceStatus.Late);
+        _ = await factory.CreateDashboardAssignmentAsync(organizationId, assigned.ClassId, enrollmentId, membership.MembershipId, nowUtc.AddHours(2), "Teacher grading", DashboardAssignmentSeedState.Submitted);
+        _ = await factory.CreateDashboardExamAsync(organizationId, assigned.ClassId, enrollmentId, membership.MembershipId, nowUtc.AddHours(-1), nowUtc.AddHours(3), "Teacher exam", DashboardExamSeedState.DraftGrade);
+        UseBearerToken(client, teacher.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Teacher);
+
+        var attendance = await client.GetFromJsonAsync<AttendanceReportPage<TeacherAttendanceReportItem>>($"/api/v1/reports/teacher/classes/{assigned.ClassId}/attendance", JsonOptions);
+        var assignments = await client.GetFromJsonAsync<ReportPage<TeacherAssignmentReportItem>>($"/api/v1/reports/teacher/classes/{assigned.ClassId}/assignments", JsonOptions);
+        var exams = await client.GetFromJsonAsync<ReportPage<TeacherExamReportItem>>($"/api/v1/reports/teacher/classes/{assigned.ClassId}/exams", JsonOptions);
+        var learner = await client.GetFromJsonAsync<TeacherLearnerOverviewDto>($"/api/v1/reports/teacher/classes/{assigned.ClassId}/learners/{learnerId}", JsonOptions);
+        using var unassignedResponse = await client.GetAsync($"/api/v1/reports/teacher/classes/{unassigned.ClassId}/attendance");
+
+        Assert.Equal(AttendanceStatus.Late, Assert.Single(attendance!.Items).Status);
+        Assert.Equal(1, attendance.Summary.LateCount);
+        Assert.Equal(enrollmentId, Assert.Single(assignments!.Items).EnrollmentId);
+        Assert.Equal(enrollmentId, Assert.Single(exams!.Items).EnrollmentId);
+        Assert.Equal(1, learner!.EligibleSessionCount);
+        Assert.Equal(1, learner.LateCount);
+        Assert.Equal(1, learner.SubmittedAssignmentCount);
+        Assert.Equal(1, learner.FinalizedExamAttemptCount);
+        Assert.Equal(HttpStatusCode.NotFound, unassignedResponse.StatusCode);
+        Assert.Equal(DetailedReportErrorCodes.ResourceNotFound, await ReadProblemCodeAsync(unassignedResponse));
+
+        var organizationB = await factory.CreateOrganizationAsync(NewName("Teacher Reports B"));
+        var classB = await factory.CreateAcademicClassAsync(organizationB);
+        var membershipB = await factory.CreateMembershipAsync(teacher.User.Id, organizationB, OrganizationRole.Teacher);
+        _ = await factory.CreateTeacherAssignmentAsync(organizationB, classB.ClassId, membershipB.MembershipId);
+        var learnerB = (await factory.CreateOrganizationPersonsAsync(organizationB, 1))[0];
+        var enrollmentB = await factory.CreateEnrollmentAsync(organizationB, classB.ClassId, learnerB);
+        var assignmentB = await factory.CreateDashboardAssignmentAsync(organizationB, classB.ClassId, enrollmentB, membershipB.MembershipId, nowUtc.AddHours(2), "Second organization grading", DashboardAssignmentSeedState.Submitted);
+        await SelectWorkspaceAsync(client, membershipB.MembershipId, OrganizationRole.Teacher);
+        var organizationBPage = await client.GetFromJsonAsync<ReportPage<TeacherAssignmentReportItem>>($"/api/v1/reports/teacher/classes/{classB.ClassId}/assignments", JsonOptions);
+        using var previousOrganizationResponse = await client.GetAsync($"/api/v1/reports/teacher/classes/{assigned.ClassId}/assignments");
+        Assert.Equal(assignmentB.AssignmentId, Assert.Single(organizationBPage!.Items).AssignmentId);
+        Assert.Equal(HttpStatusCode.NotFound, previousOrganizationResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task ManagerDetailedReportsFilterWithinTenantAndUseNormalizedPerformance()
+    {
+        var nowUtc = DateTime.UtcNow.AddDays(1);
+        factory.Clock.SetUtcNow(nowUtc);
+        using var client = factory.CreateClient();
+        using var teacherClient = factory.CreateClient();
+        var manager = await CreateAuthenticatedUserAsync(client);
+        var teacher = await CreateAuthenticatedUserAsync(teacherClient);
+        var organizationId = await factory.CreateOrganizationAsync(NewName("Manager Reports"));
+        var academic = await factory.CreateAcademicClassAsync(organizationId);
+        var foreignOrganizationId = await factory.CreateOrganizationAsync(NewName("Foreign Reports"));
+        var foreignAcademic = await factory.CreateAcademicClassAsync(foreignOrganizationId);
+        var managerMembership = await factory.CreateMembershipAsync(manager.User.Id, organizationId, OrganizationRole.Manager);
+        var learnerId = (await factory.CreateOrganizationPersonsAsync(organizationId, 1))[0];
+        var enrollmentId = await factory.CreateEnrollmentAsync(organizationId, academic.ClassId, learnerId);
+        var foreignLearner = (await factory.CreateOrganizationPersonsAsync(foreignOrganizationId, 1))[0];
+        _ = await factory.CreateEnrollmentAsync(foreignOrganizationId, foreignAcademic.ClassId, foreignLearner);
+        var sessionId = await factory.CreateAcademicSessionAsync(organizationId, academic.ClassId, nowUtc.AddHours(-2), nowUtc.AddHours(-1), SessionStatus.Completed);
+        _ = await factory.CreateAttendanceAsync(organizationId, academic.ClassId, sessionId, enrollmentId, managerMembership.MembershipId, AttendanceStatus.Absent);
+        _ = await factory.CreateDashboardAssignmentAsync(organizationId, academic.ClassId, enrollmentId, managerMembership.MembershipId, nowUtc.AddHours(2), "Manager released assignment", DashboardAssignmentSeedState.Released);
+        _ = await factory.CreateDashboardExamAsync(organizationId, academic.ClassId, enrollmentId, managerMembership.MembershipId, nowUtc.AddHours(-1), nowUtc.AddHours(3), "Manager released exam", DashboardExamSeedState.Released);
+        UseBearerToken(teacherClient, teacher.AccessToken);
+        using (var profileResponse = await teacherClient.PatchAsJsonAsync("/api/v1/me/profile", new CompleteProfileCommand("Report", "Teacher", "Report Teacher", $"report.teacher.{Guid.NewGuid():N}"[..28]), JsonOptions))
+        {
+            profileResponse.EnsureSuccessStatusCode();
+        }
+        var teacherMembership = await factory.CreateMembershipAsync(teacher.User.Id, organizationId, OrganizationRole.Teacher);
+        _ = await factory.CreateTeacherAssignmentAsync(organizationId, academic.ClassId, teacherMembership.MembershipId);
+        UseBearerToken(client, manager.AccessToken);
+        await SelectWorkspaceAsync(client, managerMembership.MembershipId, OrganizationRole.Manager);
+
+        var enrollments = await client.GetFromJsonAsync<ReportPage<ManagerEnrollmentReportItem>>($"/api/v1/reports/manager/enrollments?courseId={academic.CourseId}&status=Active", JsonOptions);
+        var attendance = await client.GetFromJsonAsync<ReportPage<ManagerAttendanceReportItem>>($"/api/v1/reports/manager/attendance?classId={academic.ClassId}", JsonOptions);
+        var assessments = await client.GetFromJsonAsync<ReportPage<ManagerAssessmentReportItem>>($"/api/v1/reports/manager/assessments?classId={academic.ClassId}", JsonOptions);
+        var performance = await client.GetFromJsonAsync<ManagerClassPerformanceDto>($"/api/v1/reports/manager/classes/{academic.ClassId}", JsonOptions);
+        var workload = await client.GetFromJsonAsync<ReportPage<ManagerTeacherWorkloadReportItem>>("/api/v1/reports/manager/teacher-workload", JsonOptions);
+        using var foreignClass = await client.GetAsync($"/api/v1/reports/manager/classes/{foreignAcademic.ClassId}");
+
+        Assert.Equal(enrollmentId, Assert.Single(enrollments!.Items).EnrollmentId);
+        Assert.Equal(100m, Assert.Single(attendance!.Items).RecordedAbsencePercentage);
+        Assert.Equal(2, assessments!.TotalCount);
+        Assert.Equal(86.25m, performance!.AssignmentAveragePercentage);
+        Assert.Equal(90m, performance.ExamAveragePercentage);
+        Assert.Contains(workload!.Items, item => item.TeacherMembershipId == teacherMembership.MembershipId && item.ActiveClassCount == 1);
+        Assert.Equal(HttpStatusCode.NotFound, foreignClass.StatusCode);
     }
 
     private async Task<StudentContext> CreateStudentAsync(
