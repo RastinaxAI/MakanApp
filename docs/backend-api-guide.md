@@ -1,6 +1,6 @@
 # راهنمای استفاده از بک‌اند و API ماکان
 
-این راهنما برای توسعه‌دهنده‌ای است که می‌خواهد بک‌اند ماکان را اجرا کند، از APIها در Postman یا یک کلاینت استفاده کند و جریان‌های آموزشی و پیام‌رسانی را بشناسد. مبنای سند، کد موجود در تاریخ ۲۰۲۶/۱۰/۰۷ و قابلیت‌های پیاده‌سازی‌شده تا تصحیح و انتشار نمره آزمون است.
+این راهنما برای توسعه‌دهنده‌ای است که می‌خواهد بک‌اند ماکان را اجرا کند، از APIها در Postman یا یک کلاینت استفاده کند و جریان‌های آموزشی و پیام‌رسانی را بشناسد. مبنای سند، کد موجود تا STEP 11A و داشبوردهای عملیاتی نقش‌محور است.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
@@ -18,6 +18,7 @@
 - [فایل‌ها](#storage)
 - [پیام‌رسانی و همگام‌سازی](#messaging)
 - [خطاها و تلاش مجدد](#errors)
+- [داشبوردهای نقش‌محور](#dashboards)
 - [تست و عیب‌یابی](#testing)
 - [محدودیت‌ها و مسیر مطالعه](#limits)
 
@@ -742,6 +743,57 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 
 هدر عمومی `Idempotency-Key` پیاده‌سازی نشده است. برای عملیات جدید Guid جدید و برای retry همان عملیات همان Guid و payload را نگه دارید. همه POSTها retry-safe نیستند؛ ساخت دوره، درس، کلاس یا تکلیف را با فرض idempotency تکرار نکنید. کنترل نسخه نیز با idempotency یک مفهوم نیست.
 
+<a id="dashboards"></a>
+## داشبوردهای نقش‌محور
+
+داشبوردهای STEP 11A از داده رسمی موجود در SQL Server ساخته می‌شوند و برای چهار مخاطب قرارداد جدا دارند:
+
+| مخاطب | Endpoint | context لازم |
+|---|---|---|
+| Student | `GET /api/v1/dashboards/student` | workspace سازمانی با نقش فعال `Student` |
+| Parent | `GET /api/v1/dashboards/parent` | workspace نقش `Parent` و در صورت مشاهده فرزند، child context انتخاب‌شده |
+| Teacher | `GET /api/v1/dashboards/teacher` | workspace نقش `Teacher` و `TeacherAssignment` فعال |
+| Manager | `GET /api/v1/dashboards/manager` | workspace نقش `Manager` همان سازمان |
+
+درخواست body، OrganizationId، LearnerId یا Role ندارد. نقش و سازمان از نشست و `AccessContext` سمت سرور resolve می‌شوند. Parent باید از `GET /api/v1/guardian/children` و `POST /api/v1/guardian/children/{learnerOrganizationPersonId}/select` موجود استفاده کند؛ dashboard سیستم انتخاب موازی ایجاد نمی‌کند. در نبود child انتخاب‌شده پاسخ Parent موفق اما خالی است و پس از revoke شدن رابطه، درخواست بعدی با `CHILD_CONTEXT_NOT_ALLOWED` متوقف می‌شود.
+
+همه پاسخ‌ها `dataAsOfUtc`، `organizationId` و `audience` دارند. `dataAsOfUtc` زمان آغاز خواندن روی سرور است و به معنی realtime یا snapshot واحد میان تمام queryها نیست. چون timezone سازمان هنوز مدل نشده است، windowهای داشبورد بر UTC تکیه دارند.
+
+قواعد مهم مصرف پاسخ:
+
+- Student و Parent فقط نمره‌ای را می‌بینند که release رسمی متناظر دارد؛ Draft evaluation یا grade آماده انتشار score ندارد.
+- Attendance از رکورد رسمی Attendance می‌آید؛ `notRecordedCount` را Absent نمایش ندهید.
+- Exam summary فقط metadata امن دارد و سؤال، option صحیح، answer key و note خصوصی در آن نیست.
+- Teacher فقط کلاس‌ها و backlogهای دارای assignment معتبر خودش را می‌بیند.
+- Manager summary سازمانی می‌گیرد و محتوای پیام/پاسخ خصوصی در آن وجود ندارد.
+- collectionها bounded هستند؛ این API جایگزین گزارش تفصیلی یا pagination مرحله STEP 11B نیست.
+
+نمونه empty state دانش‌آموز:
+
+```json
+{
+  "dataAsOfUtc": "2026-10-11T09:30:00Z",
+  "organizationId": "00000000-0000-0000-0000-000000000001",
+  "audience": "Student",
+  "nextSession": null,
+  "nearestAssignmentDeadline": null,
+  "recentReleasedFeedback": [],
+  "upcomingExams": [],
+  "attendanceSummary": {
+    "eligibleSessionCount": 0,
+    "recordedCount": 0,
+    "presentCount": 0,
+    "absentCount": 0,
+    "lateCount": 0,
+    "excusedCount": 0,
+    "notRecordedCount": 0
+  },
+  "pendingAssignmentCount": 0
+}
+```
+
+فیلد AI/Copilot در قرارداد ساخته نشده است. insightهای هوشمند به STEP 10 و widgetهای Plan/Quota/Subscription مدیر به STEP 13 Commerce موکول شده‌اند. معماری و جزئیات privacy در [سند STEP 11A](architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md) آمده است.
+
 <a id="testing"></a>
 ## تست و عیب‌یابی
 
@@ -789,7 +841,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 ### مرز قابلیت موجود
 
-در این نسخه، provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، provider واقعی پیامک و فایل در محیط تولید، refresh token، CORS، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و گزارش‌گیری عمومی API قابل استفاده ندارند. وجود مدل یا Enum برای یک وضعیت، به معنی وجود Endpoint انتقال به آن وضعیت نیست.
+در این نسخه، provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، provider واقعی فایل در محیط تولید، refresh token، CORS، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و گزارش‌های تفصیلی/خروجی API قابل استفاده ندارند. داشبوردهای خلاصه نقش‌محور وجود دارند، اما وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
 
 تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.
 
