@@ -13,7 +13,7 @@ public sealed class LocalFileStorage : IFileStorage
         if (string.IsNullOrWhiteSpace(expanded) || !Path.IsPathFullyQualified(expanded))
         {
             throw new InvalidOperationException(
-                "Storage:RootPath must be an absolute path supplied by Development or Testing configuration.");
+                "مقدار Storage:RootPath باید یک مسیر مطلق در تنظیمات محیط اجرا باشد.");
         }
 
         _rootPath = Path.GetFullPath(expanded).TrimEnd(Path.DirectorySeparatorChar);

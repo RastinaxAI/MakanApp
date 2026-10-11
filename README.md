@@ -92,7 +92,8 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 ## API Foundation
 
 - ASP.NET Core Controllers
-- OpenAPI و Swagger UI در Development
+- OpenAPI و Swagger UI در همه محیط‌ها، از جمله Production
+- CORS برای همه originها، متدها و headerها؛ احراز هویت با Bearer token
 - ProblemDetails و exception handling متمرکز
 - HTTPS redirection خارج از Testing
 - health checks
@@ -101,8 +102,8 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 | مسیر | محیط | کاربرد |
 |---|---|---|
 | `GET /health` | همه محیط‌ها | سلامت application |
-| `GET /openapi/v1.json` | Development | سند OpenAPI |
-| `/swagger` | Development | Swagger UI |
+| `GET /openapi/v1.json` | همه محیط‌ها | سند OpenAPI |
+| `/swagger` | همه محیط‌ها | Swagger UI |
 
 ## Identity، OTP و پروفایل
 

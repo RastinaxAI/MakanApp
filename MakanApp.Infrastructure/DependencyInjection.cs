@@ -110,7 +110,7 @@ public static class DependencyInjection
                 UsesManagedOtpProvider(configuration))));
         AddOtpDeliveryProvider(services, configuration, environmentName);
 
-        if (IsDevelopmentLike(environmentName))
+        if (IsDevelopmentLike(environmentName) || !string.IsNullOrWhiteSpace(storageOptions.RootPath))
         {
             services.AddSingleton<LocalFileStorage>();
             services.AddSingleton<IFileStorage>(serviceProvider =>

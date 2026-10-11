@@ -32,6 +32,12 @@ Storage__RootPath
 
 Environment Variable تنظیم هم‌نام داخل JSON را override می‌کند. این رفتار برای نگه‌داشتن تنظیمات عمومی در JSON و secretها خارج از artifact مناسب است.
 
+با تنظیم یک مسیر مطلق در `Storage:RootPath`، ذخیره‌سازی محلی در Production فعال می‌شود. فایل‌ها از طریق endpointهای دارای کنترل دسترسی دریافت می‌شوند؛ این مسیر نباید داخل پوشه publish یا web root باشد. برای اجرای چند نمونه برنامه، دیسک محلی هر سرور به‌تنهایی کافی نیست و باید storage مشترک در نظر گرفته شود.
+
+Swagger UI در `/swagger` و سند OpenAPI در `/openapi/v1.json` در Production نیز بدون ورود در دسترس هستند. احراز هویت و مجوز endpointهای API همچنان اعمال می‌شوند.
+
+CORS برای همه originها، متدها و headerها باز است و تنظیم جداگانه‌ای در appsettings لازم ندارد. درخواست‌های مرورگر باید Bearer token را در header بفرستند و از `credentials: "include"` استفاده نکنند. برای کلاینت مرورگر SignalR در اتصال cross-origin، مقدار `withCredentials: false` لازم است؛ این حالت برای استقرار فعلی روی یک IIS در نظر گرفته شده و وابستگی به cookie برای sticky session ندارد.
+
 ## 2. فایل server-only با appsettings.Production.json
 
 اگر نگه‌داری تنظیمات داخل فایل برای عملیات سرور ساده‌تر است، فایل زیر را **فقط روی سرور و بعد از publish** کنار `MakanApp.Api.dll` بسازید:
@@ -107,7 +113,7 @@ C:\Sites\MakanApp\appsettings.Production.json
 از template بخش ۲ استفاده کنید. برای `Storage:RootPath` یک مسیر خارج از پوشه publish پیشنهاد می‌شود:
 
 ```text
-D:\MakanAppData\Storage
+C:\MakanAppData\Storage
 ```
 
 در نتیجه deploy جدید فایل‌های کاربران را حذف نمی‌کند.
@@ -121,7 +127,8 @@ icacls "C:\Sites\MakanApp\appsettings.Production.json" /inheritance:r
 icacls "C:\Sites\MakanApp\appsettings.Production.json" `
   /grant:r "BUILTIN\Administrators:(F)" "IIS AppPool\MakanApp:(R)"
 
-icacls "D:\MakanAppData\Storage" `
+New-Item -ItemType Directory -Path "C:\MakanAppData\Storage" -Force
+icacls "C:\MakanAppData\Storage" `
   /grant "IIS AppPool\MakanApp:(OI)(CI)(M)"
 ```
 

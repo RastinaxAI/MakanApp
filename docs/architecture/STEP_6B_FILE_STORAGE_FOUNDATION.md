@@ -6,7 +6,7 @@
 
 - SQL Server فقط metadata و چرخه عمر `storage.FileAssets` را نگه می‌دارد؛ محتوای باینری داخل database ذخیره نمی‌شود.
 - قرارداد provider-neutral با نام `IFileStorage` در Application قرار دارد و فقط با `Stream` کار می‌کند.
-- `LocalFileStorage` adapter محیط‌های Development و Testing است. محیط Production باید provider واقعی خود را پیکربندی کند و تا آن زمان `UnavailableFileStorage` خطای کنترل‌شده برمی‌گرداند.
+- `LocalFileStorage` در Development و Testing و در هر محیط دیگری از جمله Production با تنظیم `Storage:RootPath` فعال است. مسیر باید مطلق، پایدار و خارج از پوشه publish و web root باشد و حساب اجرای برنامه مجوز نوشتن روی آن داشته باشد. در Production بدون این تنظیم، `UnavailableFileStorage` همچنان خطای کنترل‌شده برمی‌گرداند.
 - `IFormFile` فقط در `FilesController` استفاده می‌شود و وارد Application یا Domain نمی‌شود.
 
 ## چرخه عمر و سازگاری
