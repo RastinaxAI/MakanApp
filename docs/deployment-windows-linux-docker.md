@@ -2,6 +2,8 @@
 
 این سند روش استقرار backend فعلی MakanApp و تأمین امن تنظیمات محرمانه را توضیح می‌دهد. مثال‌ها برای `.NET 9`، `SQL Server` و provider واقعی `MeliPayamakOtp` نوشته شده‌اند.
 
+مبنای بازبینی: سورس `main@f0b78dd` در `2026-10-12`، شامل OTP مدیریت‌شده، چهار داشبورد، شانزده گزارش تفصیلی و تغییرات میزبانی Production. این سند دستورالعمل استقرار است؛ در این مرحله روی سرور واقعی، IIS، Linux یا Docker استقرار انجام نشده است. [قرارداد فرانت‌اند](frontend-contract/README.md) و [مرجع API](backend-api-reference.md) مکمل این راهنما هستند.
+
 > هیچ `ServiceToken`، connection string، password یا `Identity:SecurityKey` واقعی نباید داخل repository، image، Dockerfile، Compose file یا artifact مشترک قرار بگیرد.
 
 ## 1. تنظیمات الزامی Production
@@ -37,6 +39,26 @@ Environment Variable تنظیم هم‌نام داخل JSON را override می�
 Swagger UI در `/swagger` و سند OpenAPI در `/openapi/v1.json` در Production نیز بدون ورود در دسترس هستند. احراز هویت و مجوز endpointهای API همچنان اعمال می‌شوند.
 
 CORS برای همه originها، متدها و headerها باز است و تنظیم جداگانه‌ای در appsettings لازم ندارد. درخواست‌های مرورگر باید Bearer token را در header بفرستند و از `credentials: "include"` استفاده نکنند. برای کلاینت مرورگر SignalR در اتصال cross-origin، مقدار `withCredentials: false` لازم است؛ این حالت برای استقرار فعلی روی یک IIS در نظر گرفته شده و وابستگی به cookie برای sticky session ندارد.
+
+### 1.1 رفتار واقعی گزینه‌ها و محدودیت‌های میزبان
+
+| مورد | رفتار فعلی |
+|---|---|
+| `Sms:Provider` در appsettings پایه | `Unavailable`؛ صرف Production بودن پیامک واقعی را فعال نمی‌کند |
+| `Sms:Provider` در Development | `Development`؛ ارسال SMS واقعی ندارد و endpoint دریافت کد وجود ندارد |
+| `MeliPayamakOtp` | `ServiceToken` و `Identity:SecurityKey` پایدار حتی در Development الزامی‌اند |
+| `Sms:MeliPayamakOtp:TimeoutSeconds` | پیش‌فرض10؛ فقط1 تا60؛ مقدار نامعتبر startup را رد می‌کند |
+| `Sms:MeliPayamakOtp:BaseUrl` | HTTPS origin بدون credential، path، query یا fragment |
+| `Identity:Otp:MinimumCodeLength` / `MaximumCodeLength` | پیش‌فرض4 / 64؛ بازه معتبر حداکثر256؛ UI نباید کد شش‌رقمی ثابت فرض کند |
+| `Storage:RootPath` خالی در Production | `UnavailableFileStorage`؛ میزبان ممکن است بالا بیاید ولی upload آماده نیست |
+| `Storage:RootPath` غیرخالی | `LocalFileStorage`؛ مسیر باید مطلق و قابل نوشتن باشد؛ خطا ممکن است هنگام resolve سرویس رخ دهد |
+| Storage defaults | سقف فایل10MiB؛ PDF/PNG/JPEG/plain text؛ فایل بدون اتصال24ساعت metadata انقضا دارد، worker پاک‌سازی ندارد |
+| `/health` | فقط liveness؛ SQL، SMS، permission دیسک و outbox را probe نمی‌کند |
+| Swagger/OpenAPI | در Production عمومی؛ CORS تنظیم endpointهای نیازمند Bearer را عمومی نمی‌کند |
+| CORS | `AllowAnyOrigin/AllowAnyHeader/AllowAnyMethod`؛ بدون `AllowCredentials` و بدون گزینه allowlist در config |
+| Multi-instance | shared storage و SignalR backplane در این نسخه فراهم نشده؛ استقرار تک‌instance مبنای این سند است |
+
+کلید HMAC در deploy معمولی ثابت بماند. تغییر آن هم OTP ذخیره‌شده و هم نشست‌های موجود را نامعتبر می‌کند. کد OTP توسط provider تولید و ارسال می‌شود؛ backend همان کد normalize‌شده را hash می‌کند. درخواست SMS retry خودکار ندارد و timeout لزوماً اثبات نرسیدن پیامک نیست. URL provider شامل token است؛ علاوه بر log برنامه، proxy خروجی و ابزار APM نیز نباید URL/body حساس را ثبت کنند.
 
 ## 2. فایل server-only با appsettings.Production.json
 
@@ -256,6 +278,14 @@ sudo journalctl -u makanapp -n 200 --no-pager
 
 برای TLS عمومی، برنامه را پشت reverse proxy مانند Nginx قرار دهید و Kestrel را فقط روی loopback نگه دارید.
 
+### 4.4 TLS termination، آدرس IP و SignalR
+
+`Program.cs` فعلی خارج Testing از HTTPS redirection استفاده می‌کند، اما middleware صریح `UseForwardedHeaders` و trust list پروکسی ندارد. در IIS in-process، integration میزبان با سناریوی Linux/Nginx یکسان نیست. برای Linux یا Docker پشت TLS termination، صحت scheme و IP واقعی باید پیش از انتقال ترافیک بررسی شود؛ redirect loop، scheme اشتباه و تجمیع همه کاربران زیر IP پروکسی از نشانه‌های تنظیم ناقص‌اند. محدودکننده OTP از `RemoteIpAddress` استفاده می‌کند.
+
+نمونه systemd و Compose به‌تنهایی قرارداد trusted proxy را پیاده نمی‌کنند. اگر محیط به Forwarded Headers نیاز دارد، افزودن پشتیبانی با proxy/network مشخص یک تغییر کد جداست؛ اعتماد عمومی به header ارسالی اینترنت راه‌حل این سند نیست. [راهنمای رسمی Forwarded Headers](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-9.0) مبنای تنظیم زیرساخت باشد.
+
+بازبودن CORS پشتیبانی query-token را اضافه نمی‌کند. `SessionAuthenticationHandler` فقط Authorization header را می‌خواند؛ browser WebSocket/SSE که token را در query می‌فرستد با قرارداد فعلی سازگار نیست. مسیر قابل بررسی مرورگر، SignalR LongPolling با `accessTokenFactory` و `withCredentials:false` است؛ نمونه در قرارداد فرانت‌اند آمده است. در proxy، درخواست‌های negotiate/poll/send/delete و timeout اتصال باید عبور کنند. پشتیبانی cookie-based affinity یا چند instance از این مثال قابل نتیجه‌گیری نیست. [ملاحظات رسمی امنیت SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/security?view=aspnetcore-9.0) این تفاوت transport و credential را توضیح می‌دهد.
+
 ## 5. Dockerfile پیشنهادی
 
 این بخش template است و در repository فعلی Dockerfile ایجاد نمی‌کند.
@@ -297,6 +327,8 @@ ENTRYPOINT ["dotnet", "MakanApp.Api.dll"]
 **/bin
 **/obj
 artifacts
+.artifacts
+docs
 appsettings.Production.json
 **/appsettings.Production.json
 secrets
@@ -316,7 +348,7 @@ secrets
 ```yaml
 services:
   makanapp-api:
-    image: registry.example.com/makanapp-api:latest
+    image: registry.example.com/makanapp-api:<IMMUTABLE_RELEASE_TAG>
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -366,7 +398,7 @@ Compose:
 ```yaml
 services:
   makanapp-api:
-    image: registry.example.com/makanapp-api:latest
+    image: registry.example.com/makanapp-api:<IMMUTABLE_RELEASE_TAG>
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -451,6 +483,21 @@ dotnet tool run dotnet-ef database update `
 
 Migration را داخل startup عادی container یا IIS قرار ندهید؛ اجرای هم‌زمان چند instance می‌تواند عملیات schema را مبهم و پرخطر کند.
 
+در مبنای این سند ۲۰ migration وجود دارد. OTP مدیریت‌شده، Dashboard، Detailed Reports و تغییر hosting جدول جدیدی اضافه نکرده‌اند؛ گزارش‌ها projection روی جداول آموزشی موجودند. محیطی که هنوز در مرحله تألیف آزمون بوده، چهار migration بعدی تلاش/پاسخ/نهایی‌سازی/تصحیح را نیز لازم دارد؛ فقط آماده‌بودن provider پیامک نشان‌دهنده آماده‌بودن schema نیست.
+
+برای artifact قابل بازبینی، از ریشه مخزن و SDK سازگار SQL idempotent بسازید؛ این فرمان به‌خودی‌خود آن را روی سرور اجرا نمی‌کند:
+
+```powershell
+dotnet tool run dotnet-ef migrations script --idempotent `
+  --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj `
+  --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj `
+  --output artifacts/makanapp-migrations.sql
+```
+
+پوشه خروجی باید از قبل موجود باشد. script بررسی‌شده را با principal جداگانه migration اجرا کنید؛ runtime account به DDL یا db_owner نیاز پیش‌فرض ندارد. ابزار EF از `MakanDbContextFactory` و متغیر محیطی اتصال می‌خواند، نه فایل secret پروژه Api. فایل ابزار محلی مرجع `.config/dotnet-tools.json` در ریشه مخزن است؛ فرمان‌ها از همان ریشه اجرا شوند.
+
+برای rollback، ابتدا سازگاری نسخه قبلی کد با schema فعلی را بررسی کنید. برگشت image/binary به معنی برگشت دیتابیس نیست؛ migration معکوس یا restore داده به تأیید عملیاتی و ارزیابی از دست‌رفتن داده نیاز دارد. SQL Server و مسیر Storage باید هر دو backup و روش restore آزموده‌شده داشته باشند؛ backup فقط فایل‌های publish کافی نیست.
+
 ## 10. بررسی بعد از استقرار
 
 ### بررسی configuration بدون نمایش secret
@@ -485,6 +532,29 @@ sudo test -s /etc/makanapp/makanapp.env \
 6. پاسخ نباید OTP، `ServiceToken` یا URL provider را نمایش دهد.
 7. کد پیامک‌شده را از endpoint verify بررسی کنید و بعد از تست آن را منتشر یا log نکنید.
 
+### قرارداد فرانت‌اند و تست‌های عملیاتی پس از انتشار
+
+۱. `/swagger/index.html` و `/openapi/v1.json` در Production باید بدون ورود200 بدهند. تعداد عملیات Controller در این مبنا۱۴۱ است؛ Hub و health در این شمارش نیستند.
+
+۲. preflight از origin واقعی فرانت‌اند را روی **HTTPS نهایی** بررسی کنید. در PowerShell برای جلوگیری از alias، `curl.exe` و در Linux `curl` استفاده شود:
+
+```powershell
+curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
+  -H 'Origin: https://app.example.com' `
+  -H 'Access-Control-Request-Method: POST' `
+  -H 'Access-Control-Request-Headers: authorization,content-type'
+```
+
+انتظار قرارداد میزبان:204، `Access-Control-Allow-Origin: *`، method/header مجاز و نبود `Access-Control-Allow-Credentials`. درخواست به منبع محافظت‌شده بدون token همچنان401 است. رفتار مرورگر واقعی و proxy را جدا بررسی کنید؛ موفقیت curl کافی نیست.
+
+۳. با حساب و سازمان آزمایشی از پیش مجاز، workspace نقش متناظر را انتخاب و dashboard همان نقش را باز کنید. Parent بدون فرزند انتخاب‌شده در dashboard پاسخ200 خالی می‌دهد ولی `/reports/parent/...` قبل انتخاب فرزند404 با `CHILD_CONTEXT_NOT_FOUND` دارد. نمره منتشرنشده و یادداشت خصوصی نباید در Student/Parent دیده شوند؛ نقش اشتباه403 است.
+
+۴. با فایل کوچک مجاز، upload، metadata و download را بررسی کنید؛ سپس پس از restart/redeploy همان فایل باید قابل دانلود باشد. مسیر فیزیکی را public/static نکنید؛ مجوز منبع از API اعمال می‌شود. محدودیت body در IIS/proxy باید سربار multipart را هم پوشش دهد؛ حد نهایی اندازه فایل در برنامه10MiB پیش‌فرض است.
+
+۵. با دو نشست آزمایشی مجاز، ارسال پیام، دریافت event، قطع/اتصال و بازیابی از Delta را بررسی کنید. SignalR فقط notification است؛ موفقیت dispatch شرط پایدارشدن پیام نیست. خطا یا backlog `MessagingRealtimeOutbox` را از log/SQL مجاز پیگیری کنید؛ endpoint مانیتورینگ عمومی outbox وجود ندارد.
+
+۶. در ورود واقعی، restart با کلید ثابت را روی محیط آزمایشی بررسی کنید؛ code رشته است و ارقام فارسی/عربی normalize می‌شوند. تست‌های خودکار provider از HTTP stub استفاده می‌کنند و موفقیت آن‌ها اثبات اعتبار token، اعتبار حساب یا تحویل SMS واقعی نیست.
+
 ## 11. Rotation و incident response
 
 اگر `ServiceToken` افشا شد:
@@ -510,6 +580,15 @@ sudo test -s /etc/makanapp/makanapp.env \
 | فایل‌های upload بعد از recreate container حذف می‌شوند | storage volume ندارد | مسیر `Storage:RootPath` را روی volume پایدار قرار دهید |
 | SQL داخل container در دسترس نیست | connection string هنوز `Server=.` یا `localhost` است | hostname قابل‌دسترسی SQL Server را استفاده کنید |
 | تغییر JSON اثر ندارد | environment اشتباه یا process restart نشده است | `ASPNETCORE_ENVIRONMENT` و restart را بررسی کنید |
+| `SMS_PROVIDER_REJECTED` با422 | provider درخواست را نپذیرفته | شماره و وضعیت سرویس را بررسی کنید؛ ارسال کور تکرار نشود |
+| `SMS_RATE_LIMITED` با429 | محدودیت provider، مستقل از محدودیت محلی OTP | فاصله مجاز و وضعیت سرویس را بررسی کنید |
+| `SMS_PROVIDER_AUTHENTICATION_FAILED` با503 | credential سرویس پیامک رد شده | secret سمت backend بررسی شود؛ این خطا logout کاربر نیست |
+| upload با `FILE_STORAGE_FAILED` و503 | RootPath در Production خالی است یا storage آماده نیست | مسیر مطلق پایدار و permission سرویس را تنظیم کنید |
+| مسیر نسبی storage یا access denied | LocalFileStorage نمی‌تواند root را آماده کند | مسیر مطلق و ACL/UID؛ health این خطا را تضمیناً نمی‌بیند |
+| REST کار می‌کند ولی browser SignalR وصل نمی‌شود | query-token WebSocket/SSE یا cookie همراه CORS wildcard | LongPolling دارای header و withCredentials:false در origin واقعی بررسی شود |
+| داشبورد والد خالی ولی گزارش والد404 است | child انتخاب نشده | ابتدا Guardian child context انتخاب و هر دو query تازه شوند |
+| پس از تغییر نقش، گزارش403 است | activeRole با مسیر گزارش یکسان نیست | workspace/role جاری و cache context را بررسی کنید |
+| همه OTPها پشت proxy به محدودیت IP می‌خورند | RemoteIpAddress همان proxy است | trust و forwarded headers متناسب محیط بررسی شود |
 
 ## 13. چک‌لیست نهایی
 
@@ -526,6 +605,11 @@ sudo test -s /etc/makanapp/makanapp.env \
 - [ ] TLS در reverse proxy/IIS تنظیم شده است.
 - [ ] health و OTP smoke test بعد از استقرار انجام شده‌اند.
 - [ ] logها حاوی OTP، token یا connection string نیستند.
+- [ ] preflight و REST واقعی با Bearer و بدون cookie بررسی شده‌اند.
+- [ ] LongPolling، reconnect و Delta در مرورگر محیط هدف بررسی شده‌اند.
+- [ ] Storage پس از restart باقی می‌ماند و backup آن با دیتابیس هماهنگ است.
+- [ ] داشبوردها/گزارش‌ها با نقش و child context معتبر smoke test شده‌اند.
+- [ ] tag نسخه ثابت، artifact قبلی و برنامه rollback سازگار موجود است.
 
 ## 14. منابع رسمی
 

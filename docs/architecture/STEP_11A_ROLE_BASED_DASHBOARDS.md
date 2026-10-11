@@ -43,6 +43,8 @@ GET /api/v1/dashboards/{audience}
 - metadata امن آزمون، وضعیت attempt و نتیجه فقط با `ExamGradeRelease`
 - خلاصه Attendance رسمی با تفکیک `Absent` از `NotRecorded`
 
+در بازبینی `2026-10-12`، actionable دقیقاً به Assignment با وضعیت Published، موعد آینده، بدون submission و بدون grade محدود است. `Closed` در تاریخچه باقی می‌ماند ولی در nearest deadline و pending count نیست؛ allowLateSubmission به‌تنهایی تکلیف گذشته را به این شمارنده اضافه نمی‌کند.
+
 ### Parent
 
 - مشخصات حداقلی فرزند انتخاب‌شده
@@ -145,7 +147,7 @@ Parent بدون child context:
 
 - AI، Copilot، RAG، insight و recommendation در این مرحله وجود ندارند.
 - widgetهای Plan، Quota، Subscription و ظرفیت Manager تا STEP 13 Commerce به تعویق افتاده‌اند.
-- گزارش تفصیلی، export، PDF/Excel، job زمان‌بندی‌شده و materialized dashboard به STEP 11B یا مراحل بعدی تعلق دارند.
+- گزارش تفصیلی اکنون در [STEP 11B](STEP_11B_DETAILED_REPORTS.md) پیاده‌سازی شده است؛ export، PDF/Excel، job زمان‌بندی‌شده و materialized dashboard همچنان خارج از قابلیت فعلی‌اند.
 - Redis و cache برای این read modelها اضافه نشده است؛ correctness مجوز بر cache مقدم است.
 
 ## پوشش تست

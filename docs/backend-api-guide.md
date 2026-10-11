@@ -1,6 +1,6 @@
 # راهنمای استفاده از بک‌اند و API ماکان
 
-این راهنما برای توسعه‌دهنده‌ای است که می‌خواهد بک‌اند ماکان را اجرا کند، از APIها در Postman یا یک کلاینت استفاده کند و جریان‌های آموزشی و پیام‌رسانی را بشناسد. مبنای سند، کد موجود تا STEP 11A و داشبوردهای عملیاتی نقش‌محور است.
+این راهنما برای توسعه‌دهنده‌ای است که می‌خواهد بک‌اند ماکان را اجرا کند، از APIها در Postman یا یک کلاینت استفاده کند و جریان‌های آموزشی و پیام‌رسانی را بشناسد. مبنای بازبینی `main@f0b78dd` در `2026-10-12` است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل داشبوردها، گزارش‌های تفصیلی STEP 11B، OTP مدیریت‌شده و میزبانی Production.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
@@ -19,6 +19,9 @@
 - [پیام‌رسانی و همگام‌سازی](#messaging)
 - [خطاها و تلاش مجدد](#errors)
 - [داشبوردهای نقش‌محور](#dashboards)
+- [گزارش‌های تفصیلی](#detailed-reports)
+- [استقرار و secretهای Production](deployment-windows-linux-docker.md)
+- [قرارداد اتصال React و React Native](frontend-contract/README.md)
 - [تست و عیب‌یابی](#testing)
 - [محدودیت‌ها و مسیر مطالعه](#limits)
 
@@ -35,6 +38,7 @@
 | Exam | نسخه‌بندی آزمون، سؤال تستی و تشریحی، شروع تلاش، ذخیره پاسخ، انتقال حق نوشتن، نهایی‌سازی، تصحیح و انتشار نمره |
 | Storage | بارگذاری، metadata، دانلود مجاز و حذف فایل |
 | Messaging | گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR |
+| Reports | چهار داشبورد مخاطب و شانزده گزارش تفصیلی؛ داده مجاز نقش، pagination، حضور و نمره منتشرشده |
 
 پروژه یک Modular Monolith با Onion Architecture است. همه قابلیت‌ها در یک میزبان API اجرا می‌شوند و SQL Server مرجع داده‌های تراکنشی است.
 
@@ -103,8 +107,8 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 | نشانی محلی | کاربرد |
 |---|---|
 | `https://localhost:7063/health` | زنده‌بودن میزبان؛ بررسی اتصال SQL Server در آن ثبت نشده است |
-| `https://localhost:7063/swagger` | Swagger UI در محیط Development |
-| `https://localhost:7063/openapi/v1.json` | سند OpenAPI در محیط Development |
+| `https://localhost:7063/swagger` | Swagger UI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است |
+| `https://localhost:7063/openapi/v1.json` | سند OpenAPI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است |
 | `https://localhost:7063/api/v1` | پیشوند APIهای کاربردی |
 | `https://localhost:7063/hubs/messaging` | SignalR پیام‌رسانی |
 
@@ -144,7 +148,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 
 مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در `Program.cs` برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.
 
-کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart دیگر معتبر نیست. انتخاب `MeliPayamakOtp` بدون `Identity:SecurityKey` پایدار در startup رد می‌شود تا کد ارسال‌شده پس از restart به‌اشتباه نامعتبر نشود. خارج از Development/Testing، provider پیش‌فرض OTP و adapter فایل به‌ترتیب `UnavailableOtpDeliveryProvider` و `UnavailableFileStorage` هستند؛ برای OTP واقعی باید `Sms:Provider=MeliPayamakOtp`، `ServiceToken` و `Identity:SecurityKey` از secret store تنظیم شوند.
+کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart دیگر معتبر نیست. انتخاب `MeliPayamakOtp` بدون `Identity:SecurityKey` پایدار در startup رد می‌شود. appsettings پایه `Sms:Provider=Unavailable` دارد؛ برای OTP واقعی، provider و ServiceToken و کلید پایدار از secret store تنظیم شوند. در Production، `Storage:RootPath` غیرخالی `LocalFileStorage` را فعال می‌کند؛ مسیر باید مطلق، پایدار و قابل نوشتن باشد. مسیر خالی `UnavailableFileStorage` می‌دهد.
 
 <a id="http"></a>
 ## قرارداد مشترک HTTP
@@ -682,7 +686,7 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 
 پس از اتصال یا reconnect، دسترسی و subscriptionها را برقرار کنید و تغییرات را از آخرین cursor پردازش‌شده با REST بگیرید. صرف دریافت یک اعلان یا cursor جدید، مجوز ردکردن تغییرات بین cursor قبلی و آن اعلان نیست. بعد از پردازش موفق صفحه Delta، cursor ذخیره‌شده را جلو ببرید. تحویل اعلان می‌تواند تکراری باشد؛ `changeId` را برای تشخیص تغییر تکراری نگه دارید.
 
-**محدودیت فعلی احراز هویت Hub:** `SessionAuthenticationHandler` فقط هدر `Authorization: Bearer ...` را می‌خواند و پارامتر Query با نام `access_token` را نمی‌خواند. بنابراین نباید فرض کرد اتصال پیش‌فرض WebSocket/SSE کلاینت مرورگر با توکن Query کار می‌کند. transport یا کلاینتی لازم است که هدر موردنیاز را بفرستد؛ مسیر احراز هویت مرورگر باید پیش از اتکا به آن آزمایش شود. در زمان قطع realtime، REST و Delta همچنان مسیر بازیابی داده‌اند. در `Program.cs` نیز CORS ثبت نشده؛ اتصال cross-origin مرورگر آماده نیست و به تنظیم مجاز جداگانه نیاز دارد.
+**محدودیت فعلی احراز هویت Hub:** `SessionAuthenticationHandler` فقط `Authorization: Bearer ...` را می‌خواند و `access_token` در query را نمی‌خواند. CORS اکنون برای همه origin/header/methodها باز و بدون `AllowCredentials` است؛ این تغییر پشتیبانی query-token WebSocket/SSE مرورگر را اضافه نمی‌کند. REST مرورگر از `credentials: "omit"` و SignalR LongPolling از `accessTokenFactory` و `withCredentials:false` استفاده کند؛ نمونه در قرارداد فرانت‌اند است. transport و reconnect در origin واقعی باید آزمایش شوند. در قطع realtime، REST و Delta مسیر بازیابی‌اند؛ backplane و cookie-based affinity از تنظیم فعلی قابل نتیجه‌گیری نیستند.
 
 ### جست‌وجو، مسدودسازی و گزارش
 
@@ -722,8 +726,9 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 | `412` | `CONCURRENCY_CONFLICT` یا `MESSAGE_EDIT_CONFLICT`؛ داده و نسخه جاری را دوباره بگیرید |
 | `413` | حجم فایل بیش از سقف |
 | `415` | MIME فایل مجاز نیست |
+| `422` | `SMS_PROVIDER_REJECTED`؛ provider درخواست ارسال را رد کرده؛ retry کور انجام نشود |
 | `429` | محدودیت OTP یا تلاش‌ها؛ ارسال خودکار سریع انجام ندهید |
-| `503` | provider پیامک یا storage آماده نیست |
+| `503` | `FILE_STORAGE_FAILED`، provider پیامک در دسترس نیست یا credential سرویس رد شده؛ خطای نشست کاربر نیست |
 | `500` | خطای غیرمنتظره؛ `traceId` را برای بررسی سرور نگه دارید |
 
 ### قراردادهای retry
@@ -795,6 +800,7 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 فیلد AI/Copilot در قرارداد ساخته نشده است. insightهای هوشمند به STEP 10 و widgetهای Plan/Quota/Subscription مدیر به STEP 13 Commerce موکول شده‌اند. معماری و جزئیات privacy در [سند STEP 11A](architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md) آمده است.
 
 <a id="detailed-reports"></a>
+<a id="detailed-reports"></a>
 ## گزارش‌های تفصیلی نقش‌محور
 
 STEP 11B در کنار داشبوردهای خلاصه، APIهای report خواندنی و صفحه‌بندی‌شده را ارائه می‌کند. Dashboard برای glance سریع است؛ report برای history، filter، sort و drill-down استفاده می‌شود. مسیرهای اصلی:
@@ -854,7 +860,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 | برنامه با خطای connection string شروع نمی‌شود | تنظیم `ConnectionStrings:MakanDatabase` در محیط واقعی اجرا |
 | `/health` سالم ولی API داده خطا می‌دهد | health فعلی probe دیتابیس نیست؛ اتصال و migration را بررسی کنید |
 | `Invalid object name` | مقصد migration با مقصد runtime یکسان باشد و migrationهای جاری اعمال شده باشند |
-| Swagger در دسترس نیست | فقط در Development ثبت می‌شود؛ پروفایل و آدرس را بررسی کنید |
+| Swagger در دسترس نیست | در تمام محیط‌ها ثبت می‌شود؛ آدرس، base path و reverse proxy را بررسی کنید |
 | OTP نمی‌رسد | adapter توسعه پیامک واقعی ندارد؛ debugger محلی یا تست خودکار را مطابق بخش ورود به کار ببرید |
 | پس از restart پاسخ `401` می‌گیرید | کلید موقت توسعه عوض شده؛ دوباره وارد شوید یا کلید توسعه را امن و پایدار تنظیم کنید |
 | فضای سازمانی در فهرست نیست | عضویت، سازمان و نقش باید فعال باشند؛ ایجاد حساب جای provisioning را نمی‌گیرد |
@@ -863,7 +869,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 | پاسخ آزمون ذخیره شده ولی رسید نهایی نیست | Finalize مستقل است و باید پیش از deadline موفق شود |
 | ویدئو یا صدا `415` می‌دهد | `Storage:AllowedContentTypes` پیش‌فرض این MIMEها را ندارد |
 | SignalR مرورگر `401` می‌دهد | محدودیت هدر در مقابل `access_token` Query و transport مورد استفاده |
-| مرورگر خطای CORS دارد | CORS در میزبان فعلی ثبت نشده است؛ موفقیت Postman اثبات اتصال cross-origin نیست |
+| مرورگر خطای CORS دارد | CORS wildcard فعال است؛ credentials:include، HTTP redirect، preflight proxy و header را بررسی کنید؛ موفقیت Postman اثبات اتصال مرورگر نیست |
 | Integration شکست می‌خورد | دسترس‌پذیری LocalDB، اجرای موازی suite و مجوز ایجاد دیتابیس تست |
 
 <a id="limits"></a>
@@ -871,7 +877,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 ### مرز قابلیت موجود
 
-در این نسخه، provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، provider واقعی فایل در محیط تولید، refresh token، CORS، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و گزارش‌های تفصیلی/خروجی API قابل استفاده ندارند. داشبوردهای خلاصه نقش‌محور وجود دارند، اما وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
+در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
 
 تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.
 
@@ -879,7 +885,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، `guardian`، `academic`، `assessment`، `storage` و `messaging` سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با `rowversion` و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.
 
-برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationهای جدید بخوانید؛ آن سند لزوماً پوشش migrationهای پس از تاریخ نگارشش را ندارد. مرجع schema جاری، configurationها و migrationهای موجود است.
+برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی فعلی آن ۵۳ جدول و ۲۰ migration موجود تا انتشار نتیجه آزمون را پوشش می‌دهد. مرجع schema جاری، configurationها و migrationهای موجود است.
 
 مسیر مطالعه یک جریان واقعی آزمون:
 

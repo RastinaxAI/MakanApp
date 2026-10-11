@@ -1,6 +1,6 @@
 # ساختار فعلی دیتابیس Makan
 
-این سند برای یادگیری دیتابیس از پایه نوشته شده و تصویر **کد و migrationهای موجود در ۲۰۲۶-۱۰-۰۷** است؛ گزارش اتصال به یک دیتابیس مستقرشده نیست. مبنای بررسی، commit `fb2cd743b3afc086a60e6943e5632b1957c018bf` در شاخه `main` است. اینکه یک محیط واقعاً تا آخرین migration ارتقا یافته باشد، در این بررسی احراز نشده است.
+این سند برای یادگیری دیتابیس از پایه نوشته شده و تصویر **کد و migrationهای موجود در ۲۰۲۶-۱۰-۱۲** است؛ گزارش اتصال به یک دیتابیس مستقرشده نیست. مبنای بررسی، commit `f0b78dd` در شاخه `main` است. اینکه یک محیط واقعاً تا آخرین migration ارتقا یافته باشد، در این بررسی احراز نشده است.
 
 **پیاده‌سازی‌شده اکنون** در این سند یعنی entity، نگاشت EF Core و migration متناظر در repository وجود دارند. وجود جدول یا مقدار enum الزاماً به معنی وجود تمام endpointها و گردش‌های محصول نیست. **برنامه‌ریزی‌شده، هنوز پیاده‌سازی نشده** یعنی در اسناد هدف مطرح شده، اما ساختار یا جریان موردنظر در کد فعلی وجود ندارد.
 
@@ -8,15 +8,15 @@
 
 منابع ساختار واقعی:
 
-- [MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs): فهرست ۴۶ entity ذخیره‌شونده و اعمال configurationهای همان assembly با `ApplyConfigurationsFromAssembly`.
+- [MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs): فهرست ۵۳ entity ذخیره‌شونده و اعمال configurationهای همان assembly با `ApplyConfigurationsFromAssembly`.
 - [تمام configurationها](../MakanApp.Infrastructure/Persistence/Configurations): نام schema/table، نگاشت property، کلید، index، FK و CHECK.
-- [migrationها و snapshot](../MakanApp.Infrastructure/Persistence/Migrations): ۱۶ migration همراه فایل‌های Designer و `MakanDbContextModelSnapshot`؛ آخرین migration برابر `20261006202655_AddExamAuthoringFoundation` است.
+- [migrationها و snapshot](../MakanApp.Infrastructure/Persistence/Migrations): ۲۰ migration همراه فایل‌های Designer و `MakanDbContextModelSnapshot`؛ آخرین migration برابر `20261007075650_AddExamGradingAndRelease` است.
 - [مدل‌های Domain](../MakanApp.Domain): معنای داده، enumها و قواعد تغییر وضعیت. `MessagingRealtimeOutboxMessage` استثناست و به دلیل مسئولیت فنی در [Infrastructure](../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxMessage.cs) قرار دارد.
 - سرویس‌های Application و پیاده‌سازی‌های `Ef*Store` برای توضیح جریان واقعی خواندن، نوشتن، مجوز و تراکنش.
 
 منابع مقایسه معماری: [SQL Server Override](project-context/01_SQLSERVER_ARCHITECTURE_OVERRIDE.md)، [معماری v3](project-context/02_Makan_Architecture_v3_Original_MySQL_Reference.pdf)، [راهنمای پروژه](project-context/00_CODEX_START_HERE.md) و [اسناد مراحل اجرا](architecture). سند وضعیت پروژه و UX مرجع نیاز محصول هستند، نه مدرک وجود جدول backend.
 
-برای شروع، بخش مفاهیم و روابط را بخوانید؛ سپس فرهنگ جدول‌ها را در کنار configuration هر جدول باز کنید. فهرست migrationها تاریخچه تغییر مدل است. بخش آخر، «How data flows through Makan»، هفت سناریوی عملی را به همین جدول‌ها متصل می‌کند.
+برای شروع، بخش مفاهیم و روابط را بخوانید؛ سپس فرهنگ جدول‌ها را در کنار configuration هر جدول باز کنید. فهرست migrationها تاریخچه تغییر مدل است. بخش آخر، «How data flows through Makan»، هشت سناریوی عملی را به همین جدول‌ها متصل می‌کند.
 
 ## ۲. مفاهیم پایه با مثال همین پروژه
 
@@ -25,7 +25,7 @@
 | Database | یک دیتابیس اصلی SQL Server برای داده تراکنشی؛ یک `MakanDbContext` اصلی |
 | Schema | فضای نام جدول‌های یک بخش، مانند `academic`؛ schema به‌تنهایی مجوز مشاهده داده ایجاد نمی‌کند |
 | Table / Entity | مثلاً کلاس C# به نام `Enrollment` به جدول `academic.Enrollments` نگاشت می‌شود |
-| PK | شناسه یکتای ردیف؛ هر ۴۶ جدول فعلی PK تک‌ستونی `Id` از نوع `uniqueidentifier` دارند |
+| PK | شناسه یکتای ردیف؛ هر ۵۳ جدول فعلی PK تک‌ستونی `Id` از نوع `uniqueidentifier` دارند |
 | FK | وجود مرجع را تضمین می‌کند؛ مثلاً ثبت‌نام باید به کلاس موجود وصل باشد |
 | FK مرکب | علاوه بر وجود مرجع، تطابق بافت را هم تضمین می‌کند؛ `(OrganizationId, ClassId)` نمی‌تواند کلاس سازمان دیگری را انتخاب کند |
 | Alternate Key / UQ | کلید یکتای اضافی که مقصد FK مرکب می‌شود؛ با index عادی تفاوت دارد |
@@ -53,12 +53,12 @@ enumها عمدتاً به `int` ذخیره می‌شوند. مثلاً «فعا
 | [organization](#schema-organization) | ۵ | آموزشگاه، پرونده فرد، عضویت حساب، نقش و دعوت |
 | [guardian](#schema-guardian) | ۱ | رابطه مجاز والد با پرونده دانش‌آموز در آموزشگاه |
 | [academic](#schema-academic) | ۹ | ترم، درس، کلاس، ثبت‌نام، انتساب معلم، برنامه، جلسه و حضور |
-| [assessment](#schema-assessment) | ۱۱ | تکلیف و تحویل و نمره؛ تألیف و انتشار نسخه آزمون |
+| [assessment](#schema-assessment) | ۱۸ | تکلیف و تحویل و نمره؛ تألیف، تلاش، پاسخ، نهایی‌سازی و تصحیح آزمون |
 | [storage](#schema-storage) | ۱ | فراداده و چرخه عمر فایل |
 | [messaging](#schema-messaging) | ۱۴ | گفتگو، پیام و تاریخچه، تعامل‌ها، همگام‌سازی و ایمنی |
-| **جمع** | **۴۶** | **۴۵۱ ستون، ۹۶ FK، ۱۰۷ CHECK، ۱۱۶ index مستقل از PK/UQ** |
+| **جمع** | **۵۳** | **۵۴۱ ستون، ۱۲۰ FK، ۱۳۷ CHECK، ۱۵۰ index مستقل از PK/UQ** |
 
-از ۱۱۶ index مدل، ۴۳ مورد unique و ۲۲ مورد فیلترشده‌اند؛ ۲۱ index هر دو ویژگی را دارند. ۳۷ جدول `RowVersion` دارند. جدول داخلی تاریخچه migrationهای EF، entity کسب‌وکاری نیست و در این شمارش نیست؛ وضعیت واقعی آن در هیچ محیطی خوانده نشده است.
+از ۱۵۰ index مدل، ۵۶ مورد unique و ۲۵ مورد فیلترشده‌اند؛ ۲۴ index هر دو ویژگی را دارند. ۴۰ جدول `RowVersion` دارند. جدول داخلی تاریخچه migrationهای EF، entity کسب‌وکاری نیست و در این شمارش نیست؛ وضعیت واقعی آن در هیچ محیطی خوانده نشده است.
 
 schemaهای پیشنهادی `curriculum`، `knowledge`، `intelligence`، `copilot`، `commerce`، `notification`، `audit`، `infra` و `platform` در migrationهای فعلی ایجاد نشده‌اند. نام یک ماژول در معماری دلیل وجود schema یا جدول آن نیست.
 
@@ -120,13 +120,15 @@ schemaهای پیشنهادی `curriculum`، `knowledge`، `intelligence`، `cop
 
 `UserBlock` رابطه جهت‌دار میان دو User است؛ با PersonalCommunicationGrant که زوج بدون جهت و مجوز تماس شخصی است متفاوت است. `AbuseReport` به پیام همان گفتگو، گزارش‌دهنده و کاربر گزارش‌شده وصل است و snapshot محتوا و نسخه گزارش‌شده را حفظ می‌کند. `ReportedMessageVersion` با نوع `binary(8)` یک کپی ثابت از نسخه است؛ rowversion خود گزارش ستون دیگری است. وجود enumهای بررسی/حل گزارش به معنی پیاده‌سازی گردش moderation نیست.
 
-### ۴.۷ آزمون: تألیف و انتشار موجود، اجرای تلاش هنوز غایب
+### ۴.۷ آزمون: تألیف، تلاش، پاسخ، تصحیح و انتشار نتیجه
 
-چهار entity فعلی عبارت‌اند از `Exam`، `ExamVersion`، `QuestionVersion` و `QuestionOption`. Exam به کلاس تعلق دارد؛ نسخه شامل بازه دسترسی، مدت، تعداد تلاش، سقف نمره و سیاست ترتیب سؤال است. نسخه منتشرشده تغییرناپذیر است و ساخت نسخه بعدی سؤال‌ها و گزینه‌ها را با شناسه‌های تازه کپی می‌کند.
+چهار entity تألیف عبارت‌اند از `Exam`، `ExamVersion`، `QuestionVersion` و `QuestionOption`. Exam به کلاس تعلق دارد؛ نسخه شامل بازه دسترسی، مدت، تعداد تلاش، سقف نمره و سیاست ترتیب سؤال است. نسخه منتشرشده تغییرناپذیر است و ساخت نسخه بعدی سؤال‌ها و گزینه‌ها را با شناسه‌های تازه کپی می‌کند.
 
 `CurrentVersionNumber` نسخه editor و `LatestPublishedVersionNumber` نسخه قابل ارائه را نشان می‌دهند. هیچ‌کدام FK به ExamVersions نیستند. سؤال از نوع `ObjectiveSingleChoice=1` یا `Descriptive=2` است. گزینه صحیح با `QuestionOptions.IsCorrect` ذخیره می‌شود. «حداقل دو گزینه و دقیقاً یکی صحیح» و «مجموع امتیاز سؤال‌ها برابر MaxScore» در Domain هنگام اعتبارسنجی/انتشار کنترل می‌شوند؛ CHECKهای SQL فقط مثبت بودن امتیاز، نوع مجاز و ترتیب مثبت را تضمین می‌کنند.
 
-**برنامه‌ریزی‌شده، هنوز پیاده‌سازی نشده:** ExamAttempt، AnswerRevision، timer/deadline اختصاصی تلاش، autosave پاسخ، write lease، finalize، تصحیح و انتشار نتیجه آزمون. `SubmissionAttempt` موجود مخصوص تکلیف است و `GradeRelease` فعلی نیز از EvaluationRevision تکلیف می‌آید؛ نباید آن‌ها را جدول تلاش و نتیجه آزمون معرفی کرد.
+**پیاده‌سازی‌شده:** `ExamAttempt` و `ExamAttemptQuestion` نسخه/ترتیب و مهلت تلاش را freeze می‌کنند؛ `AnswerRevision` ذخیره پاسخ با lease و expected revision را ثبت می‌کند؛ `ExamFinalAnswer` snapshot نهایی و `ExamGradeRevision/ExamQuestionGrade/ExamGradeRelease` تصحیح و انتشار را نگه می‌دارند. `SubmissionAttempt/EvaluationRevision/GradeRelease` همچنان مختص تکلیف‌اند. auto-finalize، grace period و proctoring پیاده نشده‌اند؛ وجود deadline به معنی worker پایان خودکار نیست.
+
+داشبورد و گزارش تفصیلی entity یا schema تازه‌ای ندارند؛ `DashboardService` و `DetailedReportService` از portهای read و projectionهای `EfDashboardReadService/EfDetailedReportReadService` روی همین جداول استفاده می‌کنند. OTP مدیریت‌شده نیز جدول تازه نمی‌خواهد؛ `OtpChallenges` hash کد دریافتی provider را نگه می‌دارد و کد خام ذخیره نمی‌شود.
 
 ## ۵. فرهنگ کامل جدول‌ها بر اساس مدل فعلی
 
@@ -1436,7 +1438,8 @@ filtered index ندارد.
 **کلیدها:**
 
 - `PK_Exams`: `(Id)`؛ کلید اصلی.
-- `UQ_Exams_OrganizationId_Id`: `(OrganizationId, Id)`؛ کلید جایگزین یکتا برای ارجاع مرکب.
+- `UQ_Exams_OrganizationId_Id`: `(OrganizationId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+- `UQ_Exams_Organization_Class_Id`: `(OrganizationId, ClassId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
 
 **Foreign Keyها:**
 
@@ -1452,10 +1455,6 @@ filtered index ندارد.
 | `IX_Exams_OrganizationId_CreatedByMembershipId` | `(OrganizationId, CreatedByMembershipId)` | غیریکتا | بدون فیلتر |
 | `IX_Exams_Organization_Class_Status` | `(OrganizationId, ClassId, Status)` | غیریکتا | بدون فیلتر |
 
-unique index مستقل ندارد.
-
-filtered index ندارد.
-
 **CHECKها:**
 
 - `CK_Exams_CurrentVersionNumber`: `[CurrentVersionNumber] > 0`
@@ -1464,6 +1463,7 @@ filtered index ندارد.
 - `CK_Exams_Status`: `[Status] IN (1, 2)`
 
 **Concurrency:** `RowVersion` از نوع `rowversion` و concurrency token مدل EF Core است.
+
 
 #### `assessment.ExamVersions` — پیاده‌سازی‌شده اکنون
 
@@ -1552,7 +1552,8 @@ filtered index ندارد.
 **کلیدها:**
 
 - `PK_QuestionVersions`: `(Id)`؛ کلید اصلی.
-- `UQ_QuestionVersions_OrganizationId_Id`: `(OrganizationId, Id)`؛ کلید جایگزین یکتا برای ارجاع مرکب.
+- `UQ_QuestionVersions_OrganizationId_Id`: `(OrganizationId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+- `UQ_QuestionVersions_Organization_ExamVersion_Id`: `(OrganizationId, ExamVersionId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
 
 **Foreign Keyها:**
 
@@ -1566,8 +1567,6 @@ filtered index ندارد.
 |---|---|---|---|
 | `UX_QuestionVersions_Organization_ExamVersion_Order` | `(OrganizationId, ExamVersionId, Order)` | یکتا | بدون فیلتر |
 
-filtered index ندارد.
-
 **CHECKها:**
 
 - `CK_QuestionVersions_Order`: `[Order] > 0`
@@ -1575,6 +1574,7 @@ filtered index ندارد.
 - `CK_QuestionVersions_Type`: `[Type] IN (1, 2)`
 
 **Concurrency:** `RowVersion` از نوع `rowversion` و concurrency token مدل EF Core است.
+
 
 #### `assessment.QuestionOptions` — پیاده‌سازی‌شده اکنون
 
@@ -1596,7 +1596,7 @@ filtered index ندارد.
 **کلیدها:**
 
 - `PK_QuestionOptions`: `(Id)`؛ کلید اصلی.
-- کلید جایگزین ندارد.
+- `UQ_QuestionOptions_Organization_QuestionVersion_Id`: `(OrganizationId, QuestionVersionId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
 
 **Foreign Keyها:**
 
@@ -1610,13 +1610,392 @@ filtered index ندارد.
 |---|---|---|---|
 | `UX_QuestionOptions_Organization_Question_Order` | `(OrganizationId, QuestionVersionId, Order)` | یکتا | بدون فیلتر |
 
-filtered index ندارد.
-
 **CHECKها:**
 
 - `CK_QuestionOptions_Order`: `[Order] > 0`
 
-**Concurrency:** ستون `rowversion` یا concurrency token مستقل ندارد؛ کنترل تغییر از قرارداد use case/والد می‌آید.
+**Concurrency:** این جدول RowVersion ندارد؛ append-only بودن، transaction و یکتایی مرتبط قرارداد نوشتن را کنترل می‌کنند.
+
+
+#### `assessment.AnswerRevisions` — پیاده‌سازی‌شده اکنون
+
+revision پذیرفته‌شده هر پاسخ آزمون؛ شماره revision، client operation، hash درخواست، lease و زمان پذیرش سرور را نگه می‌دارد. append-only است؛ retry سازگار همان receipt را بازمی‌گرداند.
+
+منبع: [AnswerRevision](../MakanApp.Domain/Assessment/AnswerRevision.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/AnswerRevisionConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `AcceptedAnswerSetVersion` | `bigint` | خیر |
+| `AcceptedAtUtc` | `datetime2(7)` | خیر |
+| `AcceptedWriteLeaseVersion` | `bigint` | خیر |
+| `AnswerType` | `int` | خیر |
+| `ClientOperationId` | `uniqueidentifier` | خیر |
+| `CreatedBySessionId` | `uniqueidentifier` | خیر |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `ExamAttemptQuestionId` | `uniqueidentifier` | خیر |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `QuestionVersionId` | `uniqueidentifier` | خیر |
+| `RequestHash` | `varchar(64)` | خیر |
+| `RevisionNumber` | `int` | خیر |
+| `SelectedOptionId` | `uniqueidentifier` | بله |
+| `SupersedesAnswerRevisionId` | `uniqueidentifier` | بله |
+| `TextAnswer` | `nvarchar(max)` | بله |
+
+**کلیدها:**
+
+- `PK_AnswerRevisions`: `(Id)`؛ کلید اصلی.
+- `UQ_AnswerRevisions_Organization_Attempt_Question_Id`: `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(CreatedBySessionId)` | `identity.UserSessions` `(Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId)` | `assessment.ExamAttempts` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, QuestionVersionId, SelectedOptionId)` | `assessment.QuestionOptions` `(OrganizationId, QuestionVersionId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | `assessment.ExamAttemptQuestions` `(OrganizationId, ExamAttemptId, Id, QuestionVersionId)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId)` | `assessment.AnswerRevisions` `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `IX_AnswerRevisions_CreatedBySessionId` | `(CreatedBySessionId)` | غیریکتا | بدون فیلتر |
+| `UX_AnswerRevisions_Organization_Attempt_ClientOperation` | `(OrganizationId, ExamAttemptId, ClientOperationId)` | یکتا | بدون فیلتر |
+| `IX_AnswerRevisions_OrganizationId_QuestionVersionId_SelectedOptionId` | `(OrganizationId, QuestionVersionId, SelectedOptionId)` | غیریکتا | بدون فیلتر |
+| `IX_AnswerRevisions_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | غیریکتا | بدون فیلتر |
+| `UX_AnswerRevisions_Organization_AttemptQuestion_Revision` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, RevisionNumber)` | یکتا | بدون فیلتر |
+| `IX_AnswerRevisions_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_SupersedesAnswerRevisionId` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId)` | غیریکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_AnswerRevisions_AnswerSetVersion`: `[AcceptedAnswerSetVersion] > 0`
+- `CK_AnswerRevisions_AnswerShape`: `([AnswerType] = 1 AND [SelectedOptionId] IS NOT NULL AND [TextAnswer] IS NULL) OR ([AnswerType] = 2 AND [SelectedOptionId] IS NULL AND [TextAnswer] IS NOT NULL)`
+- `CK_AnswerRevisions_AnswerType`: `[AnswerType] IN (1, 2)`
+- `CK_AnswerRevisions_RequestHash`: `LEN([RequestHash]) = 64`
+- `CK_AnswerRevisions_RevisionNumber`: `[RevisionNumber] > 0`
+- `CK_AnswerRevisions_TextLength`: `[TextAnswer] IS NULL OR DATALENGTH([TextAnswer]) <= 40000`
+- `CK_AnswerRevisions_WriteLeaseVersion`: `[AcceptedWriteLeaseVersion] > 0`
+
+**Concurrency:** این جدول RowVersion ندارد؛ append-only بودن، transaction و یکتایی مرتبط قرارداد نوشتن را کنترل می‌کنند.
+
+#### `assessment.ExamAttempts` — پیاده‌سازی‌شده اکنون
+
+تلاش یک enrollment روی نسخه تثبیت‌شده آزمون؛ StartedAtUtc، EffectiveDeadlineUtc، وضعیت InProgress/Expired/Finalized، writer session/lease و رسید نهایی در این جدول نگه‌داری می‌شوند. deadline و finalization با زمان سرور تعیین می‌شوند.
+
+منبع: [ExamAttempt](../MakanApp.Domain/Assessment/ExamAttempt.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamAttemptConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `AnswerSetVersion` | `bigint` | خیر |
+| `AttemptNumber` | `int` | خیر |
+| `ClassId` | `uniqueidentifier` | خیر |
+| `ClientOperationId` | `uniqueidentifier` | خیر |
+| `CreatedAtUtc` | `datetime2(7)` | خیر |
+| `EffectiveDeadlineUtc` | `datetime2(7)` | خیر |
+| `EnrollmentId` | `uniqueidentifier` | خیر |
+| `ExamId` | `uniqueidentifier` | خیر |
+| `ExamVersionId` | `uniqueidentifier` | خیر |
+| `ExpiredAtUtc` | `datetime2(7)` | بله |
+| `FinalizeClientOperationId` | `uniqueidentifier` | بله |
+| `FinalizeRequestHash` | `varchar(64)` | بله |
+| `FinalizedAnswerSetVersion` | `bigint` | بله |
+| `FinalizedAtUtc` | `datetime2(7)` | بله |
+| `FinalizedBySessionId` | `uniqueidentifier` | بله |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `RowVersion` | `rowversion` | خیر |
+| `StartedAtUtc` | `datetime2(7)` | خیر |
+| `Status` | `int` | خیر |
+| `WriteLeaseAcquiredAtUtc` | `datetime2(7)` | بله |
+| `WriteLeaseVersion` | `bigint` | خیر |
+| `WriterSessionId` | `uniqueidentifier` | بله |
+
+**کلیدها:**
+
+- `PK_ExamAttempts`: `(Id)`؛ کلید اصلی.
+- `UQ_ExamAttempts_Organization_Id`: `(OrganizationId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+- `UQ_ExamAttempts_Organization_ExamVersion_Id`: `(OrganizationId, ExamVersionId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(FinalizedBySessionId)` | `identity.UserSessions` `(Id)` | `Restrict` |
+| `(WriterSessionId)` | `identity.UserSessions` `(Id)` | `Restrict` |
+| `(OrganizationId, ClassId, EnrollmentId)` | `academic.Enrollments` `(OrganizationId, ClassId, Id)` | `Restrict` |
+| `(OrganizationId, ClassId, ExamId)` | `assessment.Exams` `(OrganizationId, ClassId, Id)` | `Restrict` |
+| `(OrganizationId, ExamId, ExamVersionId)` | `assessment.ExamVersions` `(OrganizationId, ExamId, Id)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `IX_ExamAttempts_FinalizedBySessionId` | `(FinalizedBySessionId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamAttempts_WriterSessionId` | `(WriterSessionId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamAttempts_OrganizationId_ClassId_EnrollmentId` | `(OrganizationId, ClassId, EnrollmentId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamAttempts_OrganizationId_ClassId_ExamId` | `(OrganizationId, ClassId, ExamId)` | غیریکتا | بدون فیلتر |
+| `UX_ExamAttempts_Organization_Enrollment_ClientOperation` | `(OrganizationId, EnrollmentId, ClientOperationId)` | یکتا | بدون فیلتر |
+| `UX_ExamAttempts_Organization_Exam_Enrollment_Active` | `(OrganizationId, ExamId, EnrollmentId)` | یکتا | `[Status] = 1` |
+| `IX_ExamAttempts_OrganizationId_ExamId_ExamVersionId` | `(OrganizationId, ExamId, ExamVersionId)` | غیریکتا | بدون فیلتر |
+| `UX_ExamAttempts_Organization_Exam_Enrollment_Number` | `(OrganizationId, ExamId, EnrollmentId, AttemptNumber)` | یکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_ExamAttempts_AnswerSetVersion`: `[AnswerSetVersion] >= 0`
+- `CK_ExamAttempts_AttemptNumber`: `[AttemptNumber] > 0`
+- `CK_ExamAttempts_Deadline`: `[EffectiveDeadlineUtc] > [StartedAtUtc]`
+- `CK_ExamAttempts_ExpirationState`: `([Status] IN (1, 3) AND [ExpiredAtUtc] IS NULL) OR ([Status] = 2 AND [ExpiredAtUtc] IS NOT NULL)`
+- `CK_ExamAttempts_FinalizationState`: `([Status] = 3 AND [FinalizedAtUtc] IS NOT NULL AND [FinalizedAnswerSetVersion] IS NOT NULL AND [FinalizeClientOperationId] IS NOT NULL AND [FinalizeRequestHash] IS NOT NULL AND [FinalizedBySessionId] IS NOT NULL) OR ([Status] <> 3 AND [FinalizedAtUtc] IS NULL AND [FinalizedAnswerSetVersion] IS NULL AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL)`
+- `CK_ExamAttempts_FinalizeRequestHash`: `[FinalizeRequestHash] IS NULL OR LEN([FinalizeRequestHash]) = 64`
+- `CK_ExamAttempts_FinalizedAnswerSetVersion`: `[FinalizedAnswerSetVersion] IS NULL OR ([FinalizedAnswerSetVersion] >= 0 AND [FinalizedAnswerSetVersion] = [AnswerSetVersion])`
+- `CK_ExamAttempts_FinalizedBeforeDeadline`: `[FinalizedAtUtc] IS NULL OR [FinalizedAtUtc] < [EffectiveDeadlineUtc]`
+- `CK_ExamAttempts_Status`: `[Status] IN (1, 2, 3)`
+- `CK_ExamAttempts_WriteLeaseState`: `([WriterSessionId] IS NULL AND [WriteLeaseVersion] = 0 AND [WriteLeaseAcquiredAtUtc] IS NULL) OR ([WriterSessionId] IS NOT NULL AND [WriteLeaseVersion] > 0 AND [WriteLeaseAcquiredAtUtc] IS NOT NULL)`
+- `CK_ExamAttempts_WriteLeaseVersion`: `[WriteLeaseVersion] >= 0`
+
+**Concurrency:** `RowVersion` از نوع `rowversion` و concurrency token مدل EF Core است.
+
+#### `assessment.ExamAttemptQuestions` — پیاده‌سازی‌شده اکنون
+
+سؤال‌های freezeشده و ترتیب هر تلاش؛ اتصال به QuestionVersion منتشرشده و Order را نگه می‌دارد. انتخاب نسخه یا ترتیب پس از شروع از UI گرفته نمی‌شود.
+
+منبع: [ExamAttemptQuestion](../MakanApp.Domain/Assessment/ExamAttemptQuestion.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamAttemptQuestionConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `CurrentAnswerRevisionId` | `uniqueidentifier` | بله |
+| `DisplayOrder` | `int` | خیر |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `ExamVersionId` | `uniqueidentifier` | خیر |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `QuestionVersionId` | `uniqueidentifier` | خیر |
+| `RowVersion` | `rowversion` | خیر |
+
+**کلیدها:**
+
+- `PK_ExamAttemptQuestions`: `(Id)`؛ کلید اصلی.
+- `UQ_ExamAttemptQuestions_Organization_Attempt_Id_QuestionVersion`: `(OrganizationId, ExamAttemptId, Id, QuestionVersionId)`؛ کلید جایگزین یکتا برای FK مرکب.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(OrganizationId, ExamVersionId, ExamAttemptId)` | `assessment.ExamAttempts` `(OrganizationId, ExamVersionId, Id)` | `Cascade` |
+| `(OrganizationId, ExamVersionId, QuestionVersionId)` | `assessment.QuestionVersions` `(OrganizationId, ExamVersionId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, Id, CurrentAnswerRevisionId)` | `assessment.AnswerRevisions` `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `UX_ExamAttemptQuestions_Organization_Attempt_DisplayOrder` | `(OrganizationId, ExamAttemptId, DisplayOrder)` | یکتا | بدون فیلتر |
+| `UX_ExamAttemptQuestions_Organization_Attempt_Question` | `(OrganizationId, ExamAttemptId, QuestionVersionId)` | یکتا | بدون فیلتر |
+| `IX_ExamAttemptQuestions_OrganizationId_ExamVersionId_ExamAttemptId` | `(OrganizationId, ExamVersionId, ExamAttemptId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamAttemptQuestions_OrganizationId_ExamVersionId_QuestionVersionId` | `(OrganizationId, ExamVersionId, QuestionVersionId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamAttemptQuestions_OrganizationId_ExamAttemptId_Id_CurrentAnswerRevisionId` | `(OrganizationId, ExamAttemptId, Id, CurrentAnswerRevisionId)` | غیریکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_ExamAttemptQuestions_DisplayOrder`: `[DisplayOrder] > 0`
+
+**Concurrency:** `RowVersion` از نوع `rowversion` و concurrency token مدل EF Core است.
+
+#### `assessment.ExamFinalAnswers` — پیاده‌سازی‌شده اکنون
+
+snapshot پاسخ نهایی هر سؤال؛ به revision انتخاب‌شده در finalize و سؤال همان attempt متصل است. نمره یا کلید پاسخ در رسید عمومی این snapshot افشا نمی‌شود.
+
+منبع: [ExamFinalAnswer](../MakanApp.Domain/Assessment/ExamFinalAnswer.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamFinalAnswerConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `ExamAttemptQuestionId` | `uniqueidentifier` | خیر |
+| `AnswerRevisionId` | `uniqueidentifier` | خیر |
+| `QuestionVersionId` | `uniqueidentifier` | خیر |
+
+**کلیدها:**
+
+- `PK_ExamFinalAnswers`: `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId)`؛ کلید اصلی.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(OrganizationId, ExamAttemptId)` | `assessment.ExamAttempts` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId)` | `assessment.AnswerRevisions` `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | `assessment.ExamAttemptQuestions` `(OrganizationId, ExamAttemptId, Id, QuestionVersionId)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `IX_ExamFinalAnswers_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamFinalAnswers_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | غیریکتا | بدون فیلتر |
+
+**CHECKها:**
+
+
+
+**Concurrency:** این جدول RowVersion ندارد؛ append-only بودن، transaction و یکتایی مرتبط قرارداد نوشتن را کنترل می‌کنند.
+
+#### `assessment.ExamGradeReleases` — پیاده‌سازی‌شده اکنون
+
+اشاره انتشار رسمی به revision تصحیح همان تلاش، زمان و عضویت منتشرکننده؛ نتیجه عمومی از همین انتشار خوانده می‌شود و تا انتشار اصلاح جدید، نسخه قبلی حفظ می‌شود.
+
+منبع: [ExamGradeRelease](../MakanApp.Domain/Assessment/ExamGradeRelease.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamGradeReleaseConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `ClientOperationId` | `uniqueidentifier` | خیر |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `ExamGradeRevisionId` | `uniqueidentifier` | خیر |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `ReleasedAtUtc` | `datetime2(7)` | خیر |
+| `ReleasedByMembershipId` | `uniqueidentifier` | خیر |
+| `RequestHash` | `varchar(64)` | خیر |
+
+**کلیدها:**
+
+- `PK_ExamGradeReleases`: `(Id)`؛ کلید اصلی.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(OrganizationId, ReleasedByMembershipId)` | `organization.Memberships` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamGradeRevisionId)` | `assessment.ExamGradeRevisions` `(OrganizationId, ExamAttemptId, Id)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `UX_ExamGradeReleases_Organization_Revision` | `(OrganizationId, ExamGradeRevisionId)` | یکتا | بدون فیلتر |
+| `IX_ExamGradeReleases_OrganizationId_ReleasedByMembershipId` | `(OrganizationId, ReleasedByMembershipId)` | غیریکتا | بدون فیلتر |
+| `UX_ExamGradeReleases_Attempt_ClientOperation` | `(OrganizationId, ExamAttemptId, ClientOperationId)` | یکتا | بدون فیلتر |
+| `IX_ExamGradeReleases_OrganizationId_ExamAttemptId_ExamGradeRevisionId` | `(OrganizationId, ExamAttemptId, ExamGradeRevisionId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamGradeReleases_Attempt_ReleasedAtUtc` | `(OrganizationId, ExamAttemptId, ReleasedAtUtc)` | غیریکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_ExamGradeReleases_RequestHash`: `LEN([RequestHash]) = 64`
+
+**Concurrency:** این جدول RowVersion ندارد؛ append-only بودن، transaction و یکتایی مرتبط قرارداد نوشتن را کنترل می‌کنند.
+
+#### `assessment.ExamGradeRevisions` — پیاده‌سازی‌شده اکنون
+
+revision تصحیح با وضعیت، نمره کل، feedback دانش‌آموز/والد، یادداشت خصوصی و دلیل اصلاح؛ ایجاد پیش‌نویس اصلاح انتشار قبلی را حذف نمی‌کند.
+
+منبع: [ExamGradeRevision](../MakanApp.Domain/Assessment/ExamGradeRevision.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamGradeRevisionConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `CorrectionReason` | `nvarchar(1000)` | بله |
+| `CreatedAtUtc` | `datetime2(7)` | خیر |
+| `CreatedByMembershipId` | `uniqueidentifier` | خیر |
+| `EvaluatorPrivateNote` | `nvarchar(max)` | بله |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `GuardianVisibleFeedback` | `nvarchar(max)` | بله |
+| `LearnerFeedback` | `nvarchar(max)` | بله |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `RevisionNumber` | `int` | خیر |
+| `RowVersion` | `rowversion` | خیر |
+| `Status` | `int` | خیر |
+| `SupersedesExamGradeRevisionId` | `uniqueidentifier` | بله |
+| `TotalScore` | `decimal(9,2)` | خیر |
+| `UpdatedAtUtc` | `datetime2(7)` | خیر |
+
+**کلیدها:**
+
+- `PK_ExamGradeRevisions`: `(Id)`؛ کلید اصلی.
+- `UQ_ExamGradeRevisions_Organization_Attempt_Id`: `(OrganizationId, ExamAttemptId, Id)`؛ کلید جایگزین یکتا برای FK مرکب.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(OrganizationId, CreatedByMembershipId)` | `organization.Memberships` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId)` | `assessment.ExamAttempts` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, SupersedesExamGradeRevisionId)` | `assessment.ExamGradeRevisions` `(OrganizationId, ExamAttemptId, Id)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `IX_ExamGradeRevisions_OrganizationId_CreatedByMembershipId` | `(OrganizationId, CreatedByMembershipId)` | غیریکتا | بدون فیلتر |
+| `UX_ExamGradeRevisions_OneMutable` | `(OrganizationId, ExamAttemptId)` | یکتا | `[Status] IN (1, 2)` |
+| `UX_ExamGradeRevisions_Attempt_RevisionNumber` | `(OrganizationId, ExamAttemptId, RevisionNumber)` | یکتا | بدون فیلتر |
+| `UX_ExamGradeRevisions_OneReleased` | `(OrganizationId, ExamAttemptId, Status)` | یکتا | `[Status] = 3` |
+| `IX_ExamGradeRevisions_OrganizationId_ExamAttemptId_SupersedesExamGradeRevisionId` | `(OrganizationId, ExamAttemptId, SupersedesExamGradeRevisionId)` | غیریکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_ExamGradeRevisions_Correction`: `([RevisionNumber] = 1 AND [SupersedesExamGradeRevisionId] IS NULL AND [CorrectionReason] IS NULL) OR ([RevisionNumber] > 1 AND [SupersedesExamGradeRevisionId] IS NOT NULL AND [CorrectionReason] IS NOT NULL)`
+- `CK_ExamGradeRevisions_RevisionNumber`: `[RevisionNumber] > 0`
+- `CK_ExamGradeRevisions_Status`: `[Status] IN (1, 2, 3, 4)`
+- `CK_ExamGradeRevisions_TotalScore`: `[TotalScore] >= 0`
+- `CK_ExamGradeRevisions_UpdatedAt`: `[UpdatedAtUtc] >= [CreatedAtUtc]`
+
+**Concurrency:** `RowVersion` از نوع `rowversion` و concurrency token مدل EF Core است.
+
+#### `assessment.ExamQuestionGrades` — پیاده‌سازی‌شده اکنون
+
+نمره هر سؤال در یک revision تصحیح؛ نوع سؤال، بارم، awarded score و وضعیت بازبینی را جدا نگه می‌دارد. سؤال objective خودکار و descriptive با review دستی تکمیل می‌شود.
+
+منبع: [ExamQuestionGrade](../MakanApp.Domain/Assessment/ExamQuestionGrade.cs) و [نگاشت EF Core](../MakanApp.Infrastructure/Persistence/Configurations/Assessment/ExamQuestionGradeConfiguration.cs).
+
+| ستون | نوع SQL Server | NULL مجاز؟ |
+|---|---|---|
+| `Id` | `uniqueidentifier` | خیر |
+| `AwardedScore` | `decimal(9,2)` | خیر |
+| `EvaluatorPrivateNote` | `nvarchar(max)` | بله |
+| `ExamAttemptId` | `uniqueidentifier` | خیر |
+| `ExamAttemptQuestionId` | `uniqueidentifier` | خیر |
+| `ExamGradeRevisionId` | `uniqueidentifier` | خیر |
+| `GradingMode` | `int` | خیر |
+| `IsAnswered` | `bit` | خیر |
+| `IsReviewed` | `bit` | خیر |
+| `LearnerFeedback` | `nvarchar(max)` | بله |
+| `MaximumScore` | `decimal(9,2)` | خیر |
+| `OrganizationId` | `uniqueidentifier` | خیر |
+| `QuestionVersionId` | `uniqueidentifier` | خیر |
+| `ReviewedAtUtc` | `datetime2(7)` | بله |
+| `ReviewedByMembershipId` | `uniqueidentifier` | بله |
+
+**کلیدها:**
+
+- `PK_ExamQuestionGrades`: `(Id)`؛ کلید اصلی.
+
+**Foreign Keyها:**
+
+| ستون‌های وابسته | جدول و کلید مرجع | رفتار حذف مرجع |
+|---|---|---|
+| `(OrganizationId, ReviewedByMembershipId)` | `organization.Memberships` `(OrganizationId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamGradeRevisionId)` | `assessment.ExamGradeRevisions` `(OrganizationId, ExamAttemptId, Id)` | `Restrict` |
+| `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | `assessment.ExamAttemptQuestions` `(OrganizationId, ExamAttemptId, Id, QuestionVersionId)` | `Restrict` |
+
+**Indexها (جدا از PK و کلید جایگزین):**
+
+| نام | ستون‌ها | نوع | شرط فیلتر |
+|---|---|---|---|
+| `IX_ExamQuestionGrades_OrganizationId_ReviewedByMembershipId` | `(OrganizationId, ReviewedByMembershipId)` | غیریکتا | بدون فیلتر |
+| `IX_ExamQuestionGrades_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId` | `(OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId)` | غیریکتا | بدون فیلتر |
+| `UX_ExamQuestionGrades_Revision_AttemptQuestion` | `(OrganizationId, ExamAttemptId, ExamGradeRevisionId, ExamAttemptQuestionId)` | یکتا | بدون فیلتر |
+
+**CHECKها:**
+
+- `CK_ExamQuestionGrades_AwardedScore`: `[AwardedScore] >= 0 AND [AwardedScore] <= [MaximumScore]`
+- `CK_ExamQuestionGrades_GradingMode`: `[GradingMode] IN (1, 2)`
+- `CK_ExamQuestionGrades_MaximumScore`: `[MaximumScore] > 0`
+- `CK_ExamQuestionGrades_ObjectiveReviewed`: `[GradingMode] <> 1 OR [IsReviewed] = 1`
+- `CK_ExamQuestionGrades_ReviewState`: `([IsReviewed] = 0 AND [ReviewedByMembershipId] IS NULL AND [ReviewedAtUtc] IS NULL) OR ([IsReviewed] = 1 AND [ReviewedByMembershipId] IS NOT NULL AND [ReviewedAtUtc] IS NOT NULL)`
+
+**Concurrency:** این جدول RowVersion ندارد؛ append-only بودن، transaction و یکتایی مرتبط قرارداد نوشتن را کنترل می‌کنند.
 
 ### Schema `storage`
 
@@ -2554,22 +2933,43 @@ erDiagram
     academic_Enrollments {
         uniqueidentifier Id PK
     }
+    assessment_AnswerRevisions {
+        uniqueidentifier Id PK
+    }
+    assessment_Assignments {
+        uniqueidentifier Id PK
+    }
     assessment_AssignmentRecipients {
         uniqueidentifier Id PK
     }
     assessment_AssignmentVersions {
         uniqueidentifier Id PK
     }
-    assessment_Assignments {
-        uniqueidentifier Id PK
-    }
     assessment_EvaluationRevisions {
         uniqueidentifier Id PK
     }
-    assessment_ExamVersions {
+    assessment_Exams {
         uniqueidentifier Id PK
     }
-    assessment_Exams {
+    assessment_ExamAttempts {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamAttemptQuestions {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamFinalAnswers {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamGradeReleases {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamGradeRevisions {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamQuestionGrades {
+        uniqueidentifier Id PK
+    }
+    assessment_ExamVersions {
         uniqueidentifier Id PK
     }
     assessment_GradeReleases {
@@ -2587,12 +2987,20 @@ erDiagram
     assessment_SubmissionAttempts {
         uniqueidentifier Id PK
     }
+    identity_UserSessions {
+        uniqueidentifier Id PK
+    }
     organization_Memberships {
         uniqueidentifier Id PK
     }
     storage_FileAssets {
         uniqueidentifier Id PK
     }
+    identity_UserSessions ||..o{ assessment_AnswerRevisions : "CreatedBySessionId"
+    assessment_ExamAttempts ||..o{ assessment_AnswerRevisions : "OrganizationId,ExamAttemptId"
+    assessment_QuestionOptions |o..o{ assessment_AnswerRevisions : "OrganizationId,QuestionVersionId,SelectedOptionId"
+    assessment_ExamAttemptQuestions ||..o{ assessment_AnswerRevisions : "OrganizationId,ExamAttemptId,ExamAttemptQuestionId,QuestionVersionId"
+    assessment_AnswerRevisions |o..o{ assessment_AnswerRevisions : "OrganizationId,ExamAttemptId,ExamAttemptQuestionId,SupersedesAnswerRevisionId"
     academic_Classes ||..o{ assessment_Assignments : "OrganizationId,ClassId"
     organization_Memberships ||..o{ assessment_Assignments : "OrganizationId,CreatedByMembershipId"
     academic_Enrollments ||..o{ assessment_AssignmentRecipients : "OrganizationId,ClassId,EnrollmentId"
@@ -2604,10 +3012,29 @@ erDiagram
     assessment_EvaluationRevisions |o..o{ assessment_EvaluationRevisions : "OrganizationId,SubmissionAttemptId,SupersedesEvaluationRevisionId"
     academic_Classes ||..o{ assessment_Exams : "OrganizationId,ClassId"
     organization_Memberships ||..o{ assessment_Exams : "OrganizationId,CreatedByMembershipId"
+    identity_UserSessions |o..o{ assessment_ExamAttempts : "FinalizedBySessionId"
+    identity_UserSessions |o..o{ assessment_ExamAttempts : "WriterSessionId"
+    academic_Enrollments ||..o{ assessment_ExamAttempts : "OrganizationId,ClassId,EnrollmentId"
+    assessment_Exams ||..o{ assessment_ExamAttempts : "OrganizationId,ClassId,ExamId"
+    assessment_ExamVersions ||..o{ assessment_ExamAttempts : "OrganizationId,ExamId,ExamVersionId"
+    assessment_ExamAttempts ||..o{ assessment_ExamAttemptQuestions : "OrganizationId,ExamVersionId,ExamAttemptId"
+    assessment_QuestionVersions ||..o{ assessment_ExamAttemptQuestions : "OrganizationId,ExamVersionId,QuestionVersionId"
+    assessment_AnswerRevisions |o..o{ assessment_ExamAttemptQuestions : "OrganizationId,ExamAttemptId,Id,CurrentAnswerRevisionId"
+    assessment_ExamAttempts ||..o{ assessment_ExamFinalAnswers : "OrganizationId,ExamAttemptId"
+    assessment_AnswerRevisions ||..o{ assessment_ExamFinalAnswers : "OrganizationId,ExamAttemptId,ExamAttemptQuestionId,AnswerRevisionId"
+    assessment_ExamAttemptQuestions ||..o{ assessment_ExamFinalAnswers : "OrganizationId,ExamAttemptId,ExamAttemptQuestionId,QuestionVersionId"
+    organization_Memberships ||..o{ assessment_ExamGradeReleases : "OrganizationId,ReleasedByMembershipId"
+    assessment_ExamGradeRevisions ||..o{ assessment_ExamGradeReleases : "OrganizationId,ExamAttemptId,ExamGradeRevisionId"
+    organization_Memberships ||..o{ assessment_ExamGradeRevisions : "OrganizationId,CreatedByMembershipId"
+    assessment_ExamAttempts ||..o{ assessment_ExamGradeRevisions : "OrganizationId,ExamAttemptId"
+    assessment_ExamGradeRevisions |o..o{ assessment_ExamGradeRevisions : "OrganizationId,ExamAttemptId,SupersedesExamGradeRevisionId"
+    organization_Memberships |o..o{ assessment_ExamQuestionGrades : "OrganizationId,ReviewedByMembershipId"
+    assessment_ExamGradeRevisions ||..o{ assessment_ExamQuestionGrades : "OrganizationId,ExamAttemptId,ExamGradeRevisionId"
+    assessment_ExamAttemptQuestions ||..o{ assessment_ExamQuestionGrades : "OrganizationId,ExamAttemptId,ExamAttemptQuestionId,QuestionVersionId"
     organization_Memberships ||..o{ assessment_ExamVersions : "OrganizationId,CreatedByMembershipId"
     assessment_Exams ||..o{ assessment_ExamVersions : "OrganizationId,ExamId"
     organization_Memberships ||..o{ assessment_GradeReleases : "OrganizationId,ReleasedByMembershipId"
-    assessment_EvaluationRevisions ||..o| assessment_GradeReleases : "OrganizationId,SubmissionAttemptId,EvaluationRevisionId"
+    assessment_EvaluationRevisions ||..o{ assessment_GradeReleases : "OrganizationId,SubmissionAttemptId,EvaluationRevisionId"
     assessment_QuestionVersions ||..o{ assessment_QuestionOptions : "OrganizationId,QuestionVersionId"
     assessment_ExamVersions ||..o{ assessment_QuestionVersions : "OrganizationId,ExamVersionId"
     storage_FileAssets ||..o{ assessment_SubmissionAttachments : "FileAssetId"
@@ -2753,6 +3180,10 @@ erDiagram
 | `20261006170623_AddMessagingRealtimeAndSync` | ChangeEvents و RealtimeOutbox؛ cursorها و NextChangeSequence |
 | `20261006200138_AddMessagingSafetyAndSearch` | UserBlocks، AbuseReports و Messages.SearchText |
 | `20261006202655_AddExamAuthoringFoundation` | چهار جدول تألیف آزمون |
+| `20261007055602_AddExamAttempts` | تلاش آزمون، سؤال‌های تثبیت‌شده، deadline و کلیدهای هم‌سازمانی |
+| `20261007063258_AddExamAnswerRevisions` | revision پاسخ، writer session/lease و answer-set version |
+| `20261007071007_AddExamFinalization` | رسید finalize روی attempt و snapshot ExamFinalAnswers |
+| `20261007075650_AddExamGradingAndRelease` | revision تصحیح، نمره سؤال و انتشار رسمی نتیجه آزمون |
 
 نکات مهم تاریخچه: migration ارزیابی، `MaxScore` قدیمی را ابتدا nullable اضافه می‌کند، مقادیر قدیمی را با ۲۰ backfill و سپس ستون را اجباری می‌کند؛ **۲۰ default نسخه‌های جدید نیست**. migration گروه، `LeftAtUtc` را به `EndedAtUtc` تغییر نام می‌دهد و SenderParticipantId و Role و ManagementPolicy را از داده قبلی پر می‌کند. migration پیام پیشرفته برای پیام‌های موجود revision شماره ۱ می‌سازد. migration sync، NextChangeSequence را با ۱ پر می‌کند. migration جست‌وجو SearchText را از متن جاری پیام‌های حذف‌نشده با نرمال‌سازی حروف و فاصله پر می‌کند؛ این فیلد index Full-Text نیست.
 
@@ -2773,7 +3204,7 @@ erDiagram
 | قرارداد retry ثبت‌نام در معماری | `AcademicService.EnrollLearnerAsync` برای رابطه فعال تکراری `EnrollmentAlreadyActive` برمی‌گرداند | اثر تکراری ایجاد نمی‌شود، ولی تکرار درخواست رسید موفق قبلی را برنمی‌گرداند؛ idempotent response عمومی پیاده نشده است |
 | JoinAttempt، مدرس ویژه جلسه و ساخت خودکار گروه کلاس، PDF صفحه ۱۵ | Session، ScheduleRule و Attendance هست؛ JoinAttempt و FK مدرس روی Session نیست؛ گفتگو FK ClassId ندارد | ثبت کلیک ورود، انتساب مدرس در سطح جلسه و provisioning/sync گروه کلاس هنوز موجود نیست |
 | Rubric، اهداف آموزشی و EvidenceSuperseded، PDF صفحات ۱۵–۱۶ | AssignmentVersion بدون Rubric و هدف آموزشی؛ EvaluationRevision/GradeRelease بدون LearningEvidence | نمره و انتشار دستی موجود است؛ لایه Curriculum/Intelligence و تولید evidence هنوز موجود نیست |
-| ExamAttempt/AnswerRevision/GradeRelease آزمون، PDF صفحات ۱۶ و ۳۹ | فقط تألیف/نسخه/سؤال/گزینه آزمون؛ GradeRelease موجود برای تکلیف | جریان اجرای آزمون هنوز پیاده نشده؛ مطابق محدودیت صریح STEP 8A |
+| ExamAttempt/AnswerRevision/GradeRelease آزمون، PDF صفحات ۱۶ و ۳۹ | تلاش، revision پاسخ، snapshot نهایی و ExamGradeRelease موجودند | STEP 8A صرفاً مرحله تألیف بود؛ مراحل 8B تا تصحیح دامنه اجرا را تکمیل کرده‌اند؛ auto-finalize هنوز موجود نیست |
 | آپلود چندبخشی، قرنطینه، ScanStatus و RetentionClass، PDF صفحه ۱۸ | FileAsset با Pending/Ready/Rejected/Deleted و RetainedAtUtc | مدل کامل pipeline فایل معماری را نباید به جدول فعلی نسبت داد |
 | AnalysisPolicy، Mute و گفتگوی comment وابسته، PDF صفحه ۱۶ | Type/Scope/ManagementPolicy موجود؛ ستون AnalysisPolicy، state Mute و FK گفتگوی comment موجود نیست | این بخش‌های پیام‌رسانی هنوز پیاده نشده‌اند |
 | Delivered در سطح دستگاه و recovery کامل cursor، PDF صفحه ۱۷ | cursor در سطح Participant؛ بدون جدول per-device؛ cleanup/resync کامل هنوز تعریف نشده | محدودیت فعلی با STEP 7D هم‌خوان است |
@@ -2784,13 +3215,13 @@ erDiagram
 
 ## ۹. نتیجه بررسی و مسیر مطالعه
 
-این کار مستندسازی است و قابلیت، endpoint، entity یا migration جدیدی اضافه نمی‌کند. تغییر موردنظر فقط همین فایل است. هیچ migration، فرمان SQL یا تست Integration اجرا نشده و هیچ دیتابیسی تغییر داده نشده است. restore/build/test برنامه برای این بررسی مستنداتی اجرا نشده‌اند؛ هیچ ادعایی درباره موفقیت تست‌ها یا وضعیت دیتابیس مستقر مطرح نیست. commit و push انجام نشده‌اند.
+بازبینی `2026-10-12` تغییر کد اجرایی یا migration ایجاد نکرده است. ده مدل نسبت به مبنای قبلی سند تغییر دارند: هفت جدول تازه و سه جدول تألیف با کلیدهای مرکب تکمیلی. مشخصات ستون/nullable، کلید، FK، index و CHECK از snapshot فعلی استخراج و با بخش‌های همین سند تطبیق شده‌اند: ۵۳ جدول، ۵۴۱ ستون، ۸۲ کلید PK/UQ، ۱۲۰ FK، ۱۵۰ index و ۱۳۷ CHECK. این شمارش schema مخزن است، نه گواه وضعیت دیتابیس مستقر.
 
-در تطبیق ایستا، نام/نوع/nullable بودن ۴۵۱ ستون، ۶۷ کلید شامل PK/UQ، ۹۶ FK، ۱۱۶ index و متن ۱۰۷ CHECK حاصل از زنجیره ۱۶ migration با snapshot یکسان بود. مدل Designer آخرین migration نیز با snapshot یکسان بود و نام CHECKهای configurationها تطبیق داشت. پوشش تمام جدول‌ها و ستون‌ها و قیود در سند، ۱۰۱ لینک محلی و ۹۶ خط رابطه در هفت نمودار نیز بررسی شد. نمودارها از نظر انطباق با مدل بررسی شده‌اند؛ renderer گرافیکی Mermaid اجرا نشده است. این بررسی جای اجرای migration روی SQL Server یا اثبات نبود model drift در runtime را نمی‌گیرد.
+نتیجه restore/build و مجموعه تست‌ها در [شناسنامه قرارداد فرانت‌اند](frontend-contract/README.md) ثبت شده است. تست Integration از LocalDB ایزوله fixture استفاده می‌کند؛ migration روی پایگاه عادی توسعه/Production در این کار اجرا نشده است. نمودارهای Mermaid روابط از مدل استخراج و هر هفت نمودار برای خروجی‌های محلی HTML/PDF دوباره رندر شده‌اند. این خروجی‌های محلی طبق تنظیم موجود مخزن ignore هستند؛ Markdown مرجع نسخه‌بندی‌شده است.
 
 مسیر پیشنهادی مطالعه: `MakanDbContext` → `User` و `Person` → `Membership` و `OrganizationPerson` و configurationهایشان → `AcademicService.EnrollLearnerAsync` → `EfAcademicStore.GetClassForUpdateAsync` → configurationهای `Enrollment` و `TeacherAssignment` → زنجیره Assignment/Submission/Evaluation → `EfMessagingStore` و ChangeEvents/RealtimeOutbox → ExamService → migration همان قابلیت.
 
-مرحله منطقی بعد، اگر اجرای آزمون اولویت محصول است، تعیین قرارداد ExamAttempt، deadline سرور، autosave، finalize و انتشار نتیجه پیش از طراحی جدول‌های آن است؛ این پیشنهاد مجوز پیاده‌سازی محسوب نمی‌شود.
+مرحله پیشنهادی بعد، بررسی execution plan و کارایی گزارش‌ها روی داده نماینده است؛ اضافه‌کردن index بدون evidence یا ساخت auto-finalize خارج این کار مستنداتی است.
 
 ## ۱۰. How data flows through Makan
 
@@ -2883,4 +3314,20 @@ Class -> Exam -> ExamVersion -> QuestionVersion -> QuestionOption
 -> Publish -> student-safe preview / authorized parent metadata
 ```
 
-**جریان فعلی در همین نقطه تمام می‌شود.** شروع تلاش، timer، ذخیره پاسخ، finalize، تصحیح و انتشار نتیجه آزمون هنوز endpoint و جدول اجرایی ندارند؛ هیچ مسیر فرضی برای ExamAttempt یا AnswerRevision در این سند به عنوان قابلیت موجود نمایش داده نشده است.
+سپس `ExamAttemptService` → `EfExamAttemptStore` تلاش و ترتیب سؤال‌ها را در transaction کوتاه ایجاد می‌کند. `ExamAnswerService` → `EfExamAnswerStore` lease نشست و expected revision را بررسی و AnswerRevision جدید append می‌کند. `ExamFinalizationService` → `EfExamFinalizationStore` پاسخ‌های جاری را به ExamFinalAnswers تثبیت و receipt را اتمیک ثبت می‌کند. در deadline دقیق یا بعد از آن finalize رد می‌شود.
+
+`ExamGradingService` → `EfExamGradingStore` revision تصحیح و نمره سؤال‌ها را می‌سازد؛ objective از کلید نسخه freezeشده و descriptive از بازبینی دستی نمره می‌گیرد. `ExamGradeRelease` مرز انتشار است؛ ساخت revision اصلاحی نمره منتشرشده قبلی را تا انتشار جایگزین حفظ می‌کند. Parent فقط خروجی مجاز و feedback مخصوص خود را می‌بیند.
+
+```text
+ExamVersion -> ExamAttempt + ExamAttemptQuestion
+-> AnswerRevision (writer session / lease / expected revision)
+-> ExamFinalAnswer + durable finalization receipt
+-> ExamGradeRevision + ExamQuestionGrade
+-> ExamGradeRelease -> authorized Student/Parent result
+```
+
+### ۸. داشبورد و گزارش نقش‌محور
+
+`DashboardsController/ReportsController` → `DashboardService/DetailedReportService` → `IAccessContextResolver` → port خواندن → `EfDashboardReadService/EfDetailedReportReadService` → projection/aggregate در SQL Server. readها `AsNoTracking` هستند؛ entity گزارش ذخیره‌شده، materialized view یا cache جدیدی ساخته نشده است. Student/Parent فقط نمره دارای release رسمی را می‌بینند. Parent بدون child در dashboard پاسخ خالی200 و در reports خطای404 می‌گیرد؛ Teacher به انتساب فعال همان کلاس نیاز دارد.
+
+`dataAsOfUtc` timestamp شروع خواندن است و snapshot اتمیک چند query را تضمین نمی‌کند. نبود رکورد Attendance برابر NotRecorded است. query گزارش‌ها پایگاه مرجع موجود را مصرف می‌کند و نیازی به اجرای migration اختصاصی Reports ندارد.

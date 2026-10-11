@@ -2,7 +2,7 @@
 
 این مرجع مکمل [راهنمای استفاده از بک‌اند](backend-api-guide.md) است. قراردادهای HTTP از Controllerهای فعلی و مدل‌های متصل به آن‌ها آمده‌اند؛ مدل‌های داخلی persistence در فهرست قراردادها قرار ندارند.
 
-در این نسخه 121 عملیات HTTP در 20 Controller وجود دارد. مسیرهای `/health`، `/openapi/v1.json`، `/swagger` و Hub در این شمارش نیستند.
+در این نسخه 141 عملیات HTTP در 22 Controller وجود دارد. مسیرهای `/health`، `/openapi/v1.json`، `/swagger` و Hub در این شمارش نیستند.
 
 همه مسیرها کامل نوشته شده‌اند. پارامترهای داخل `{...}` از مسیر، موارد ستون Query از URL و Command از بدنه JSON دریافت می‌شوند؛ تنها Upload از form-data استفاده می‌کند. همه عملیات به‌جز درخواست و تأیید OTP نیازمند `Authorization: Bearer <accessToken>` هستند.
 
@@ -30,6 +30,8 @@
 - [جست‌وجوی پیام](#api-messages)
 - [مسدودسازی و رسید گزارش](#api-messagingsafety)
 - [گزارش پیام](#api-messagereports)
+- [داشبوردهای نقش‌محور](#api-dashboards)
+- [گزارش‌های تفصیلی](#api-reports)
 - [قراردادهای ورودی و خروجی](#contracts)
 - [مقادیر Enum](#enums)
 - [کدهای خطا](#error-codes)
@@ -355,6 +357,46 @@
 |---|---|---|---|---|
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reports` | — | [ReportMessageCommand](#type-reportmessagecommand) | `201` [AbuseReportReceiptResult](#type-abusereportreceiptresult) |
 
+<a id="api-dashboards"></a>
+## داشبوردهای نقش‌محور
+
+فضای سازمانی و نقش فعال متناظر Student/Parent/Teacher/Manager؛ Parent بدون فرزند انتخاب‌شده پاسخ خالی 200 می‌گیرد. Teacher فقط کلاس‌های منتسب را می‌بیند.
+
+منبع: [DashboardsController](../MakanApp.Api/Controllers/DashboardsController.cs).
+
+| Method | Route | Query | بدنه | پاسخ موفق |
+|---|---|---|---|---|
+| `GET` | `/api/v1/dashboards/student` | — | — | `200` [StudentDashboardDto](#type-studentdashboarddto) |
+| `GET` | `/api/v1/dashboards/parent` | — | — | `200` [ParentDashboardDto](#type-parentdashboarddto) |
+| `GET` | `/api/v1/dashboards/teacher` | — | — | `200` [TeacherDashboardDto](#type-teacherdashboarddto) |
+| `GET` | `/api/v1/dashboards/manager` | — | — | `200` [ManagerDashboardDto](#type-managerdashboarddto) |
+
+<a id="api-reports"></a>
+## گزارش‌های تفصیلی
+
+فضای سازمانی و نقش فعال متناظر؛ Parent به فرزند انتخاب‌شده نیاز دارد. Teacher فقط کلاس منتسب؛ Manager فقط سازمان جاری. فهرست‌ها pageNumber=1 و pageSize=20 با سقف100 دارند؛ بازه UTC و sort مطابق allowlist هر گزارش است.
+
+منبع: [ReportsController](../MakanApp.Api/Controllers/ReportsController.cs).
+
+| Method | Route | Query | بدنه | پاسخ موفق |
+|---|---|---|---|---|
+| `GET` | `/api/v1/reports/student/attendance` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [AttendanceReportPage&lt;StudentAttendanceReportItem&gt;](#type-attendancereportpage-studentattendancereportitem-) |
+| `GET` | `/api/v1/reports/student/assignments` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;StudentAssignmentReportItem&gt;](#type-reportpage-studentassignmentreportitem-) |
+| `GET` | `/api/v1/reports/student/exams` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;StudentExamReportItem&gt;](#type-reportpage-studentexamreportitem-) |
+| `GET` | `/api/v1/reports/student/grades` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;StudentReleasedGradeReportItem&gt;](#type-reportpage-studentreleasedgradereportitem-) |
+| `GET` | `/api/v1/reports/parent/attendance` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [AttendanceReportPage&lt;ParentAttendanceReportItem&gt;](#type-attendancereportpage-parentattendancereportitem-) |
+| `GET` | `/api/v1/reports/parent/assignments` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;ParentAssignmentReportItem&gt;](#type-reportpage-parentassignmentreportitem-) |
+| `GET` | `/api/v1/reports/parent/exams` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;ParentExamReportItem&gt;](#type-reportpage-parentexamreportitem-) |
+| `GET` | `/api/v1/reports/teacher/classes/{classId}/attendance` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [AttendanceReportPage&lt;TeacherAttendanceReportItem&gt;](#type-attendancereportpage-teacherattendancereportitem-) |
+| `GET` | `/api/v1/reports/teacher/classes/{classId}/assignments` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;TeacherAssignmentReportItem&gt;](#type-reportpage-teacherassignmentreportitem-) |
+| `GET` | `/api/v1/reports/teacher/classes/{classId}/exams` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;TeacherExamReportItem&gt;](#type-reportpage-teacherexamreportitem-) |
+| `GET` | `/api/v1/reports/teacher/classes/{classId}/learners/{learnerId}` | — | — | `200` [TeacherLearnerOverviewDto](#type-teacherlearneroverviewdto) |
+| `GET` | `/api/v1/reports/manager/enrollments` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?`، `courseId`: `Guid?`، `academicPeriodId`: `Guid?`، `status`: [EnrollmentStatus](#type-enrollmentstatus) یا null | — | `200` [ReportPage&lt;ManagerEnrollmentReportItem&gt;](#type-reportpage-managerenrollmentreportitem-) |
+| `GET` | `/api/v1/reports/manager/attendance` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?` | — | `200` [ReportPage&lt;ManagerAttendanceReportItem&gt;](#type-reportpage-managerattendancereportitem-) |
+| `GET` | `/api/v1/reports/manager/assessments` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?`، `courseId`: `Guid?`، `academicPeriodId`: `Guid?`، `kind`: [DetailedReportAssessmentKind](#type-detailedreportassessmentkind) یا null | — | `200` [ReportPage&lt;ManagerAssessmentReportItem&gt;](#type-reportpage-managerassessmentreportitem-) |
+| `GET` | `/api/v1/reports/manager/classes/{classId}` | — | — | `200` [ManagerClassPerformanceDto](#type-managerclassperformancedto) |
+| `GET` | `/api/v1/reports/manager/teacher-workload` | `pageNumber`: `int`، `pageSize`: `int`، `fromUtc`: `DateTime?`، `toUtc`: `DateTime?`، `classId`: `Guid?`، `sort`: `string?`، `courseId`: `Guid?`، `academicPeriodId`: `Guid?` | — | `200` [ReportPage&lt;ManagerTeacherWorkloadReportItem&gt;](#type-reportpage-managerteacherworkloadreportitem-) |
+
 <a id="contracts"></a>
 ## قراردادهای ورودی و خروجی
 
@@ -469,6 +511,17 @@
 |---|---|
 | `teacherMembershipId` | `Guid` |
 
+<a id="type-assignmentgradingqueuesummary"></a>
+### AssignmentGradingQueueSummary
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `awaitingEvaluationCount` | `int` |
+| `draftEvaluationCount` | `int` |
+| `totalPendingCount` | `int` |
+
 <a id="type-assignmentresult"></a>
 ### AssignmentResult
 
@@ -519,6 +572,63 @@
 | `recordedAtUtc` | `DateTime?` |
 | `recordedByMembershipId` | `Guid?` |
 | `rowVersion` | `string?` |
+
+<a id="type-attendancereportpage-parentattendancereportitem-"></a>
+### AttendanceReportPage&lt;ParentAttendanceReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `summary` | [AttendanceReportSummary](#type-attendancereportsummary) |
+| `items` | آرایه [ParentAttendanceReportItem](#type-parentattendancereportitem) |
+
+<a id="type-attendancereportpage-studentattendancereportitem-"></a>
+### AttendanceReportPage&lt;StudentAttendanceReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `summary` | [AttendanceReportSummary](#type-attendancereportsummary) |
+| `items` | آرایه [StudentAttendanceReportItem](#type-studentattendancereportitem) |
+
+<a id="type-attendancereportpage-teacherattendancereportitem-"></a>
+### AttendanceReportPage&lt;TeacherAttendanceReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `summary` | [AttendanceReportSummary](#type-attendancereportsummary) |
+| `items` | آرایه [TeacherAttendanceReportItem](#type-teacherattendancereportitem) |
+
+<a id="type-attendancereportsummary"></a>
+### AttendanceReportSummary
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `eligibleCount` | `int` |
+| `recordedCount` | `int` |
+| `presentCount` | `int` |
+| `absentCount` | `int` |
+| `lateCount` | `int` |
+| `excusedCount` | `int` |
+| `notRecordedCount` | `int` |
 
 <a id="type-attendancerevisionresult"></a>
 ### AttendanceRevisionResult
@@ -935,6 +1045,115 @@
 | `displayName` | `string?` |
 | `username` | `string?` |
 
+<a id="type-dashboardassignmentitem"></a>
+### DashboardAssignmentItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `assignmentId` | `Guid` |
+| `assignmentVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `dueAtUtc` | `DateTime` |
+| `allowLateSubmission` | `bool` |
+| `status` | [StudentAssignmentActionStatus](#type-studentassignmentactionstatus) |
+
+<a id="type-dashboardattendancependingitem"></a>
+### DashboardAttendancePendingItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `sessionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `sessionTitle` | `string` |
+| `startUtc` | `DateTime` |
+| `endUtc` | `DateTime` |
+| `expectedEnrollmentCount` | `int` |
+| `recordedCount` | `int` |
+| `missingCount` | `int` |
+
+<a id="type-dashboardattendancesummary"></a>
+### DashboardAttendanceSummary
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `eligibleSessionCount` | `int` |
+| `recordedCount` | `int` |
+| `presentCount` | `int` |
+| `absentCount` | `int` |
+| `lateCount` | `int` |
+| `excusedCount` | `int` |
+| `notRecordedCount` | `int` |
+
+<a id="type-dashboardclassitem"></a>
+### DashboardClassItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `academicPeriodTitle` | `string` |
+| `activeLearnerCount` | `int` |
+
+<a id="type-dashboardexamitem"></a>
+### DashboardExamItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `examId` | `Guid` |
+| `examVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `availableFromUtc` | `DateTime` |
+| `availableUntilUtc` | `DateTime` |
+| `durationMinutes` | `int` |
+| `latestAttemptStatus` | [ExamAttemptStatus](#type-examattemptstatus) یا null |
+| `resultReleaseStatus` | [ExamResultReleaseStatus](#type-examresultreleasestatus) یا null |
+| `releasedScore` | `decimal?` |
+| `maximumScore` | `decimal?` |
+| `releasedAtUtc` | `DateTime?` |
+
+<a id="type-dashboardlearner"></a>
+### DashboardLearner
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `learnerOrganizationPersonId` | `Guid` |
+| `displayName` | `string` |
+
+<a id="type-dashboardsessionitem"></a>
+### DashboardSessionItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `sessionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `startUtc` | `DateTime` |
+| `endUtc` | `DateTime` |
+| `timeZoneId` | `string` |
+| `meetingUrl` | `string?` |
+| `status` | [SessionStatus](#type-sessionstatus) |
+
 <a id="type-declineinvitationresult"></a>
 ### DeclineInvitationResult
 
@@ -954,6 +1173,20 @@
 |---|---|
 | `expectedVersionRowVersion` | `string` |
 | `expectedQuestionRowVersion` | `string` |
+
+<a id="type-detailedreportquery"></a>
+### DetailedReportQuery
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `fromUtc` | `DateTime?` |
+| `toUtc` | `DateTime?` |
+| `classId` | `Guid?` |
+| `sort` | `string?` |
 
 <a id="type-directconversationresult"></a>
 ### DirectConversationResult
@@ -1217,6 +1450,18 @@
 | `gradeRevisionNumber` | `int?` |
 | `requiresManualReview` | `bool` |
 
+<a id="type-examgradingqueuesummary"></a>
+### ExamGradingQueueSummary
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `awaitingGradingCount` | `int` |
+| `manualReviewCount` | `int` |
+| `readyForReleaseCount` | `int` |
+| `totalPendingCount` | `int` |
+
 <a id="type-examquestiongradedto"></a>
 ### ExamQuestionGradeDto
 
@@ -1427,6 +1672,177 @@
 | `participants` | آرایه [ConversationParticipantResult](#type-conversationparticipantresult) |
 | `alreadyExisted` | `bool` |
 
+<a id="type-managerassessmentreportitem"></a>
+### ManagerAssessmentReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `kind` | [DetailedReportAssessmentKind](#type-detailedreportassessmentkind) |
+| `assessmentId` | `Guid` |
+| `versionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `title` | `string` |
+| `deadlineUtc` | `DateTime` |
+| `maximumScore` | `decimal` |
+| `recipientCount` | `int` |
+| `submittedOrFinalizedCount` | `int` |
+| `releasedResultCount` | `int` |
+| `pendingGradingCount` | `int` |
+
+<a id="type-managerassessmentreportquery"></a>
+### ManagerAssessmentReportQuery
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `fromUtc` | `DateTime?` |
+| `toUtc` | `DateTime?` |
+| `classId` | `Guid?` |
+| `sort` | `string?` |
+| `courseId` | `Guid?` |
+| `academicPeriodId` | `Guid?` |
+| `kind` | [DetailedReportAssessmentKind](#type-detailedreportassessmentkind) یا null |
+
+<a id="type-managerattendancereportitem"></a>
+### ManagerAttendanceReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `eligibleRecordCount` | `int` |
+| `recordedCount` | `int` |
+| `presentCount` | `int` |
+| `absentCount` | `int` |
+| `lateCount` | `int` |
+| `excusedCount` | `int` |
+| `notRecordedCount` | `int` |
+| `recordedAbsencePercentage` | `decimal?` |
+
+<a id="type-managerclassperformancedto"></a>
+### ManagerClassPerformanceDto
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `activeLearnerCount` | `int` |
+| `assignmentReleasedResultCount` | `int` |
+| `assignmentAveragePercentage` | `decimal?` |
+| `examReleasedResultCount` | `int` |
+| `examAveragePercentage` | `decimal?` |
+
+<a id="type-managerdashboarddto"></a>
+### ManagerDashboardDto
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `organizationId` | `Guid` |
+| `audience` | [DashboardAudience](#type-dashboardaudience) |
+| `operationalCounts` | [ManagerOperationalCounts](#type-manageroperationalcounts) |
+| `onboarding` | [ManagerOnboardingChecklist](#type-manageronboardingchecklist) |
+| `upcomingSessions` | آرایه [DashboardSessionItem](#type-dashboardsessionitem) |
+| `sessionsMissingMeetingLink` | آرایه [DashboardSessionItem](#type-dashboardsessionitem) |
+| `attendancePending` | آرایه [DashboardAttendancePendingItem](#type-dashboardattendancependingitem) |
+| `pendingInvitationCount` | `int` |
+| `assignmentGradingQueue` | [AssignmentGradingQueueSummary](#type-assignmentgradingqueuesummary) |
+| `examGradingQueue` | [ExamGradingQueueSummary](#type-examgradingqueuesummary) |
+
+<a id="type-managerenrollmentreportitem"></a>
+### ManagerEnrollmentReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `enrollmentId` | `Guid` |
+| `learnerOrganizationPersonId` | `Guid` |
+| `learnerDisplayName` | `string` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseId` | `Guid` |
+| `courseTitle` | `string` |
+| `academicPeriodId` | `Guid` |
+| `academicPeriodTitle` | `string` |
+| `status` | [EnrollmentStatus](#type-enrollmentstatus) |
+| `enrolledAtUtc` | `DateTime` |
+| `endedAtUtc` | `DateTime?` |
+
+<a id="type-managerenrollmentreportquery"></a>
+### ManagerEnrollmentReportQuery
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `fromUtc` | `DateTime?` |
+| `toUtc` | `DateTime?` |
+| `classId` | `Guid?` |
+| `sort` | `string?` |
+| `courseId` | `Guid?` |
+| `academicPeriodId` | `Guid?` |
+| `status` | [EnrollmentStatus](#type-enrollmentstatus) یا null |
+
+<a id="type-manageronboardingchecklist"></a>
+### ManagerOnboardingChecklist
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `organizationBasicDataAvailable` | `bool` |
+| `hasAcademicPeriod` | `bool` |
+| `hasCourse` | `bool` |
+| `hasTeacher` | `bool` |
+| `hasLearner` | `bool` |
+| `hasClass` | `bool` |
+
+<a id="type-manageroperationalcounts"></a>
+### ManagerOperationalCounts
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `activeClassCount` | `int` |
+| `enrolledLearnerCount` | `int` |
+| `teacherCount` | `int` |
+
+<a id="type-managerteacherworkloadreportitem"></a>
+### ManagerTeacherWorkloadReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `teacherMembershipId` | `Guid` |
+| `teacherUserId` | `Guid` |
+| `teacherDisplayName` | `string` |
+| `activeClassCount` | `int` |
+| `completedSessionCount` | `int` |
+| `attendanceMissingCount` | `int` |
+| `assignmentPendingGradingCount` | `int` |
+| `examPendingGradingCount` | `int` |
+
 <a id="type-messageattachmentresult"></a>
 ### MessageAttachmentResult
 
@@ -1551,6 +1967,101 @@
 | `declinedAtUtc` | `DateTime?` |
 | `alreadyCompleted` | `bool` |
 
+<a id="type-parentassignmentreportitem"></a>
+### ParentAssignmentReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `assignmentId` | `Guid` |
+| `assignmentVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `assignmentStatus` | [AssignmentStatus](#type-assignmentstatus) |
+| `dueAtUtc` | `DateTime` |
+| `maximumScore` | `decimal` |
+| `submissionStatus` | [SubmissionAttemptStatus](#type-submissionattemptstatus) یا null |
+| `submittedAtUtc` | `DateTime?` |
+| `isLate` | `bool?` |
+| `releasedScore` | `decimal?` |
+| `guardianVisibleFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime?` |
+
+<a id="type-parentattendancereportitem"></a>
+### ParentAttendanceReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `sessionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `sessionTitle` | `string` |
+| `startUtc` | `DateTime` |
+| `endUtc` | `DateTime` |
+| `status` | [AttendanceStatus](#type-attendancestatus) |
+| `recordedAtUtc` | `DateTime?` |
+
+<a id="type-parentdashboarddto"></a>
+### ParentDashboardDto
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `organizationId` | `Guid` |
+| `audience` | [DashboardAudience](#type-dashboardaudience) |
+| `selectedLearner` | [DashboardLearner](#type-dashboardlearner) یا null |
+| `upcomingSessions` | آرایه [DashboardSessionItem](#type-dashboardsessionitem) |
+| `assignments` | آرایه [DashboardAssignmentItem](#type-dashboardassignmentitem) |
+| `releasedAssignmentResults` | آرایه [ParentReleasedAssignmentItem](#type-parentreleasedassignmentitem) |
+| `exams` | آرایه [DashboardExamItem](#type-dashboardexamitem) |
+| `attendanceSummary` | [DashboardAttendanceSummary](#type-dashboardattendancesummary) |
+| `attentionItemCount` | `int` |
+
+<a id="type-parentexamreportitem"></a>
+### ParentExamReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `examId` | `Guid` |
+| `examVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `availableFromUtc` | `DateTime` |
+| `availableUntilUtc` | `DateTime` |
+| `durationMinutes` | `int` |
+| `maximumScore` | `decimal` |
+| `attemptCount` | `int` |
+| `latestAttemptStatus` | [ExamAttemptStatus](#type-examattemptstatus) یا null |
+| `latestFinalizedAtUtc` | `DateTime?` |
+| `releasedScore` | `decimal?` |
+| `guardianVisibleFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime?` |
+
+<a id="type-parentreleasedassignmentitem"></a>
+### ParentReleasedAssignmentItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `submissionAttemptId` | `Guid` |
+| `assignmentId` | `Guid` |
+| `assignmentTitle` | `string` |
+| `score` | `decimal` |
+| `maximumScore` | `decimal` |
+| `guardianVisibleFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime` |
+
 <a id="type-parentreleasedresult"></a>
 ### ParentReleasedResult
 
@@ -1645,6 +2156,149 @@
 | `clientReportId` | `Guid` |
 | `reason` | [AbuseReportReason](#type-abusereportreason) |
 | `description` | `string?` |
+
+<a id="type-reportpage-managerassessmentreportitem-"></a>
+### ReportPage&lt;ManagerAssessmentReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ManagerAssessmentReportItem](#type-managerassessmentreportitem) |
+
+<a id="type-reportpage-managerattendancereportitem-"></a>
+### ReportPage&lt;ManagerAttendanceReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ManagerAttendanceReportItem](#type-managerattendancereportitem) |
+
+<a id="type-reportpage-managerenrollmentreportitem-"></a>
+### ReportPage&lt;ManagerEnrollmentReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ManagerEnrollmentReportItem](#type-managerenrollmentreportitem) |
+
+<a id="type-reportpage-managerteacherworkloadreportitem-"></a>
+### ReportPage&lt;ManagerTeacherWorkloadReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ManagerTeacherWorkloadReportItem](#type-managerteacherworkloadreportitem) |
+
+<a id="type-reportpage-parentassignmentreportitem-"></a>
+### ReportPage&lt;ParentAssignmentReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ParentAssignmentReportItem](#type-parentassignmentreportitem) |
+
+<a id="type-reportpage-parentexamreportitem-"></a>
+### ReportPage&lt;ParentExamReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [ParentExamReportItem](#type-parentexamreportitem) |
+
+<a id="type-reportpage-studentassignmentreportitem-"></a>
+### ReportPage&lt;StudentAssignmentReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [StudentAssignmentReportItem](#type-studentassignmentreportitem) |
+
+<a id="type-reportpage-studentexamreportitem-"></a>
+### ReportPage&lt;StudentExamReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [StudentExamReportItem](#type-studentexamreportitem) |
+
+<a id="type-reportpage-studentreleasedgradereportitem-"></a>
+### ReportPage&lt;StudentReleasedGradeReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [StudentReleasedGradeReportItem](#type-studentreleasedgradereportitem) |
+
+<a id="type-reportpage-teacherassignmentreportitem-"></a>
+### ReportPage&lt;TeacherAssignmentReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [TeacherAssignmentReportItem](#type-teacherassignmentreportitem) |
+
+<a id="type-reportpage-teacherexamreportitem-"></a>
+### ReportPage&lt;TeacherExamReportItem&gt;
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `totalCount` | `int` |
+| `items` | آرایه [TeacherExamReportItem](#type-teacherexamreportitem) |
 
 <a id="type-requestotpcommand"></a>
 ### RequestOtpCommand
@@ -1831,6 +2485,45 @@
 |---|---|
 | `targetUserId` | `Guid` |
 
+<a id="type-studentassignmentreportitem"></a>
+### StudentAssignmentReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `assignmentId` | `Guid` |
+| `assignmentVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `assignmentStatus` | [AssignmentStatus](#type-assignmentstatus) |
+| `dueAtUtc` | `DateTime` |
+| `maximumScore` | `decimal` |
+| `submissionStatus` | [SubmissionAttemptStatus](#type-submissionattemptstatus) یا null |
+| `submittedAtUtc` | `DateTime?` |
+| `isLate` | `bool?` |
+| `releasedScore` | `decimal?` |
+| `learnerFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime?` |
+
+<a id="type-studentattendancereportitem"></a>
+### StudentAttendanceReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `sessionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `courseTitle` | `string` |
+| `sessionTitle` | `string` |
+| `startUtc` | `DateTime` |
+| `endUtc` | `DateTime` |
+| `status` | [AttendanceStatus](#type-attendancestatus) |
+| `recordedAtUtc` | `DateTime?` |
+
 <a id="type-studentcurrentexamanswerdto"></a>
 ### StudentCurrentExamAnswerDto
 
@@ -1846,6 +2539,23 @@
 | `selectedOptionId` | `Guid?` |
 | `textAnswer` | `string?` |
 | `acceptedAtUtc` | `DateTime` |
+
+<a id="type-studentdashboarddto"></a>
+### StudentDashboardDto
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `organizationId` | `Guid` |
+| `audience` | [DashboardAudience](#type-dashboardaudience) |
+| `nextSession` | [DashboardSessionItem](#type-dashboardsessionitem) یا null |
+| `nearestAssignmentDeadline` | [DashboardAssignmentItem](#type-dashboardassignmentitem) یا null |
+| `recentReleasedFeedback` | آرایه [StudentReleasedAssignmentItem](#type-studentreleasedassignmentitem) |
+| `upcomingExams` | آرایه [DashboardExamItem](#type-dashboardexamitem) |
+| `attendanceSummary` | [DashboardAttendanceSummary](#type-dashboardattendancesummary) |
+| `pendingAssignmentCount` | `int` |
 
 <a id="type-studentexamanswersdto"></a>
 ### StudentExamAnswersDto
@@ -1917,6 +2627,31 @@
 | `serverNowUtc` | `DateTime` |
 | `status` | [ExamAttemptStatus](#type-examattemptstatus) |
 
+<a id="type-studentexamreportitem"></a>
+### StudentExamReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `examId` | `Guid` |
+| `examVersionId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `availableFromUtc` | `DateTime` |
+| `availableUntilUtc` | `DateTime` |
+| `durationMinutes` | `int` |
+| `maximumAttempts` | `int` |
+| `maximumScore` | `decimal` |
+| `attemptCount` | `int` |
+| `latestAttemptStatus` | [ExamAttemptStatus](#type-examattemptstatus) یا null |
+| `latestStartedAtUtc` | `DateTime?` |
+| `latestFinalizedAtUtc` | `DateTime?` |
+| `releasedScore` | `decimal?` |
+| `learnerFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime?` |
+
 <a id="type-studentexamresultdto"></a>
 ### StudentExamResultDto
 
@@ -1966,6 +2701,38 @@
 | `description` | `string?` |
 | `publicationState` | [ExamVersionStatus](#type-examversionstatus) |
 | `rules` | [StudentExamRules](#type-studentexamrules) |
+
+<a id="type-studentreleasedassignmentitem"></a>
+### StudentReleasedAssignmentItem
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `submissionAttemptId` | `Guid` |
+| `assignmentId` | `Guid` |
+| `assignmentTitle` | `string` |
+| `score` | `decimal` |
+| `maximumScore` | `decimal` |
+| `learnerFeedback` | `string?` |
+| `releasedAtUtc` | `DateTime` |
+
+<a id="type-studentreleasedgradereportitem"></a>
+### StudentReleasedGradeReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `kind` | [DetailedReportGradeKind](#type-detailedreportgradekind) |
+| `assessmentId` | `Guid` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `title` | `string` |
+| `score` | `decimal` |
+| `maximumScore` | `decimal` |
+| `percentage` | `decimal` |
+| `releasedAtUtc` | `DateTime` |
 
 <a id="type-studentreleasedresult"></a>
 ### StudentReleasedResult
@@ -2092,6 +2859,29 @@
 | `status` | [SubmissionAttemptStatus](#type-submissionattemptstatus) |
 | `rowVersion` | `string` |
 
+<a id="type-teacherassignmentreportitem"></a>
+### TeacherAssignmentReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `assignmentId` | `Guid` |
+| `assignmentVersionId` | `Guid` |
+| `title` | `string` |
+| `dueAtUtc` | `DateTime` |
+| `maximumScore` | `decimal` |
+| `enrollmentId` | `Guid` |
+| `learnerOrganizationPersonId` | `Guid` |
+| `learnerDisplayName` | `string` |
+| `submissionAttemptId` | `Guid?` |
+| `submissionStatus` | [SubmissionAttemptStatus](#type-submissionattemptstatus) یا null |
+| `submittedAtUtc` | `DateTime?` |
+| `isLate` | `bool?` |
+| `currentScore` | `decimal?` |
+| `evaluationStatus` | [EvaluationRevisionStatus](#type-evaluationrevisionstatus) یا null |
+| `isReleased` | `bool` |
+
 <a id="type-teacherassignmentresult"></a>
 ### TeacherAssignmentResult
 
@@ -2106,6 +2896,103 @@
 | `status` | [TeacherAssignmentStatus](#type-teacherassignmentstatus) |
 | `assignedAtUtc` | `DateTime` |
 | `endedAtUtc` | `DateTime?` |
+
+<a id="type-teacherattendancereportitem"></a>
+### TeacherAttendanceReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `sessionId` | `Guid` |
+| `sessionTitle` | `string` |
+| `startUtc` | `DateTime` |
+| `endUtc` | `DateTime` |
+| `enrollmentId` | `Guid` |
+| `learnerOrganizationPersonId` | `Guid` |
+| `learnerDisplayName` | `string` |
+| `status` | [AttendanceStatus](#type-attendancestatus) |
+| `recordedAtUtc` | `DateTime?` |
+
+<a id="type-teacherdashboarddto"></a>
+### TeacherDashboardDto
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `organizationId` | `Guid` |
+| `audience` | [DashboardAudience](#type-dashboardaudience) |
+| `assignedClasses` | آرایه [DashboardClassItem](#type-dashboardclassitem) |
+| `upcomingSessions` | آرایه [DashboardSessionItem](#type-dashboardsessionitem) |
+| `attendancePending` | آرایه [DashboardAttendancePendingItem](#type-dashboardattendancependingitem) |
+| `assignmentGradingQueue` | [AssignmentGradingQueueSummary](#type-assignmentgradingqueuesummary) |
+| `examGradingQueue` | [ExamGradingQueueSummary](#type-examgradingqueuesummary) |
+
+<a id="type-teacherexamreportitem"></a>
+### TeacherExamReportItem
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `examId` | `Guid` |
+| `examVersionId` | `Guid` |
+| `title` | `string` |
+| `availableUntilUtc` | `DateTime` |
+| `maximumScore` | `decimal` |
+| `enrollmentId` | `Guid` |
+| `learnerOrganizationPersonId` | `Guid` |
+| `learnerDisplayName` | `string` |
+| `examAttemptId` | `Guid?` |
+| `attemptStatus` | [ExamAttemptStatus](#type-examattemptstatus) یا null |
+| `finalizedAtUtc` | `DateTime?` |
+| `currentScore` | `decimal?` |
+| `gradeStatus` | [ExamGradeRevisionStatus](#type-examgraderevisionstatus) یا null |
+| `isReleased` | `bool` |
+
+<a id="type-teacherlearneroverviewdto"></a>
+### TeacherLearnerOverviewDto
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `dataAsOfUtc` | `DateTime` |
+| `classId` | `Guid` |
+| `classTitle` | `string` |
+| `enrollmentId` | `Guid` |
+| `learnerOrganizationPersonId` | `Guid` |
+| `learnerDisplayName` | `string` |
+| `eligibleSessionCount` | `int` |
+| `presentCount` | `int` |
+| `absentCount` | `int` |
+| `lateCount` | `int` |
+| `excusedCount` | `int` |
+| `notRecordedCount` | `int` |
+| `assignmentCount` | `int` |
+| `submittedAssignmentCount` | `int` |
+| `releasedAssignmentCount` | `int` |
+| `examCount` | `int` |
+| `finalizedExamAttemptCount` | `int` |
+| `releasedExamCount` | `int` |
+
+<a id="type-teacherworkloadreportquery"></a>
+### TeacherWorkloadReportQuery
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+| فیلد | نوع |
+|---|---|
+| `pageNumber` | `int` |
+| `pageSize` | `int` |
+| `fromUtc` | `DateTime?` |
+| `toUtc` | `DateTime?` |
+| `classId` | `Guid?` |
+| `sort` | `string?` |
+| `courseId` | `Guid?` |
+| `academicPeriodId` | `Guid?` |
 
 <a id="type-updateassignmentdraftcommand"></a>
 ### UpdateAssignmentDraftCommand
@@ -2344,10 +3231,31 @@
 
 منبع: [CourseStatus.cs](../MakanApp.Domain/Academic/CourseStatus.cs).
 
+<a id="type-dashboardaudience"></a>
+### DashboardAudience
+
+`Student`، `Parent`، `Teacher`، `Manager`
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
 <a id="type-dayofweek"></a>
 ### DayOfWeek
 
 `Sunday`، `Monday`، `Tuesday`، `Wednesday`، `Thursday`، `Friday`، `Saturday`
+
+<a id="type-detailedreportassessmentkind"></a>
+### DetailedReportAssessmentKind
+
+`Assignment`، `Exam`
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
+
+<a id="type-detailedreportgradekind"></a>
+### DetailedReportGradeKind
+
+`Assignment`، `Exam`
+
+منبع: [DetailedReportContracts.cs](../MakanApp.Application/Reports/Detailed/DetailedReportContracts.cs).
 
 <a id="type-enrollmentstatus"></a>
 ### EnrollmentStatus
@@ -2509,6 +3417,13 @@
 `Scheduled`، `Cancelled`، `Completed`
 
 منبع: [SessionStatus.cs](../MakanApp.Domain/Academic/SessionStatus.cs).
+
+<a id="type-studentassignmentactionstatus"></a>
+### StudentAssignmentActionStatus
+
+`NotStarted`، `Draft`، `Submitted`، `SubmittedLate`، `Graded`
+
+منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
 
 <a id="type-submissionattemptstatus"></a>
 ### SubmissionAttemptStatus
@@ -2708,9 +3623,13 @@
 | `REACTION_NOT_ALLOWED` | `403` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `READ_CURSOR_INVALID` | `400` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `REALTIME_SUBSCRIPTION_NOT_ALLOWED` | `403` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `REPORT_DATE_RANGE_INVALID` | `400` | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `REPORT_IDEMPOTENCY_CONFLICT` | `409` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `REPORT_MESSAGE_NOT_FOUND` | `404` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `REPORT_NOT_ALLOWED` | `403` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `REPORT_PAGINATION_INVALID` | `400` | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
+| `REPORT_RESOURCE_NOT_FOUND` | `404` | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
+| `REPORT_SORT_INVALID` | `400` | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `ROLE_NOT_ACTIVE` | `403` | [OrganizationErrorCodes](../MakanApp.Application/Organization/OrganizationErrorCodes.cs) |
 | `SCHEDULE_RULE_NOT_FOUND` | `404` | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `SEARCH_CURSOR_INVALID` | `400` | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
@@ -2722,7 +3641,13 @@
 | `SESSION_NOT_FOUND` | `404` | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `SESSION_TIME_CONFLICT` | `409` | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `SESSION_TIME_INVALID` | `400` | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `SMS_PROVIDER_AUTHENTICATION_FAILED` | `503` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
+| `SMS_PROVIDER_CONFIGURATION_ERROR` | `503` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
+| `SMS_PROVIDER_REJECTED` | `422` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `SMS_PROVIDER_UNAVAILABLE` | `503` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
+| `SMS_RATE_LIMITED` | `429` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
+| `SMS_RECIPIENT_BLOCKED` | `422` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
+| `SMS_RECIPIENT_INVALID` | `400` | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `SUBMISSION_ANSWER_INVALID` | `400` | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `SUBMISSION_ATTEMPTS_EXHAUSTED` | `409` | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `SUBMISSION_DEADLINE_PASSED` | `409` | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |

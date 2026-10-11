@@ -109,6 +109,14 @@ Manager فقط داده همان سازمان workspace را می‌بیند. wo
 
 مقدار خارج allowlist با `REPORT_SORT_INVALID` رد می‌شود. Guidهای فیلتر selector هستند و هرگز جای authorization را نمی‌گیرند.
 
+### نکات دقیق مصرف فیلترها؛ بازبینی 2026-10-12
+
+- `classId` در route گزارش Teacher منبع انتخاب کلاس است؛ property هم‌نام query آن را تغییر نمی‌دهد. دو endpoint خلاصه learner معلم و عملکرد کلاس مدیر query صفحه‌بندی یا بازه زمانی ندارند.
+- fromUtc/toUtc در Attendance روی StartUtc جلسه، در Assignment روی DueAtUtc، در Exam Student/Parent/Teacher روی AvailableFromUtc، در نمره Student روی ReleasedAtUtc و در enrollment روی EnrolledAtUtc اعمال می‌شود. Manager assessments برای آزمون از AvailableUntilUtc و برای تکلیف از DueAtUtc استفاده می‌کند.
+- در teacher-workload، بازه زمانی فقط completedSessionCount را محدود می‌کند؛ شمارنده کلاس، حضور ناقص و backlog نمره به همین بازه محدود نیستند. attendanceMissingCount تعداد **جلسه با ثبت ناقص** است، نه تعداد فراگیران غایب. scope کلاس/درس/دوره روی شمارنده‌ها اعمال می‌شود ولی معلم دارای count صفر الزاماً از فهرست حذف نمی‌شود.
+- Dashboard والد بدون child context پاسخ خالی200 دارد، اما report والد در همین حالت404 با CHILD_CONTEXT_NOT_FOUND می‌دهد. فیلتر list خارج scope می‌تواند پاسخ خالی200 بدهد؛ 404 پنهان‌سازی منبع را برای تمام فیلترها تعمیم ندهید.
+- Student/Parent exam/assignment report شناسه assessment و version را می‌دهد ولی examAttemptId یا submissionAttemptId ندارد؛ summary نتیجه را مستقیم نمایش دهید و برای drill-down شناسه فرضی نسازید. Export یا بازسازی پاسخ سؤال‌ها از این DTO مجاز/ممکن تلقی نشود.
+
 ## privacy و semantics داده
 
 - نبود رکورد Attendance برابر `NotRecorded` است، نه `Absent`.
