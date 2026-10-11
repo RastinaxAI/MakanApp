@@ -93,6 +93,14 @@ public sealed class DashboardEndpointsTests(MakanAppWebApplicationFactory factor
             student.MembershipId,
             nowUtc.AddHours(1),
             "Another learner assignment");
+        var closedAssignment = await factory.CreateDashboardAssignmentAsync(
+            organizationId,
+            academic.ClassId,
+            student.EnrollmentId,
+            student.MembershipId,
+            nowUtc.AddHours(2),
+            "Closed assignment");
+        await factory.CloseDashboardAssignmentAsync(closedAssignment.AssignmentId);
         var releasedAssignment = await factory.CreateDashboardAssignmentAsync(
             organizationId,
             academic.ClassId,

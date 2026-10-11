@@ -39,6 +39,7 @@ public sealed partial class EfDashboardReadService
             cancellationToken);
         var actionableAssignments = CreateAssignmentsQuery(organizationId, learnerId.Value)
             .Where(item =>
+                item.IsActionable &&
                 item.DueAtUtc > dataAsOfUtc &&
                 !item.HasSubmission &&
                 !item.IsGraded);

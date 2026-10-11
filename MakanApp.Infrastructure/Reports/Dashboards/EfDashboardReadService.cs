@@ -146,6 +146,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 Title = version.Title,
                 DueAtUtc = version.DueAtUtc,
                 AllowLateSubmission = version.AllowLateSubmission,
+                IsActionable = assignment.Status == AssignmentStatus.Published,
                 IsGraded = isGraded,
                 HasLateSubmission = hasLateSubmission,
                 HasSubmission = hasSubmission,
@@ -473,6 +474,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
         public required string Title { get; init; }
         public DateTime DueAtUtc { get; init; }
         public bool AllowLateSubmission { get; init; }
+        public bool IsActionable { get; init; }
         public bool IsGraded { get; init; }
         public bool HasLateSubmission { get; init; }
         public bool HasSubmission { get; init; }

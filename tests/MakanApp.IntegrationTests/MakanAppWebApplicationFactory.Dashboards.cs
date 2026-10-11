@@ -248,6 +248,19 @@ public sealed partial class MakanAppWebApplicationFactory
         await dbContext.SaveChangesAsync();
         return new DashboardExamSeed(exam.Id, version.Id, attempt.Id, gradeRevision.Id);
     }
+
+    public async Task CloseDashboardAssignmentAsync(Guid assignmentId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var updatedAtUtc = DateTime.UtcNow;
+        await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE [assessment].[Assignments]
+            SET [Status] = {(int)AssignmentStatus.Closed},
+                [UpdatedAtUtc] = {updatedAtUtc}
+            WHERE [Id] = {assignmentId}
+            """);
+    }
 }
 
 public enum DashboardAssignmentSeedState
