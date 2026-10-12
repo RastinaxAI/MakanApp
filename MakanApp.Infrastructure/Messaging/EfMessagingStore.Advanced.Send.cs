@@ -47,6 +47,7 @@ public sealed partial class EfMessagingStore
             participant,
             userId,
             accessContext,
+            command.Kind,
             nowUtc,
             cancellationToken);
         var created = await CreateMessageAsync(
@@ -109,14 +110,6 @@ public sealed partial class EfMessagingStore
             userId,
             accessContext,
             cancellationToken);
-        await EnsureCanSendAdvancedAsync(
-            destinationConversation,
-            destinationParticipant,
-            userId,
-            accessContext,
-            nowUtc,
-            cancellationToken);
-
         if (sourceConversation.Scope != destinationConversation.Scope ||
             sourceConversation.OrganizationId != destinationConversation.OrganizationId)
         {
@@ -135,6 +128,25 @@ public sealed partial class EfMessagingStore
                 MessagingErrorCodes.MessageForwardNotAllowed,
                 "پیام حذف‌شده قابل فوروارد نیست.");
         }
+
+        if (source.Sequence < sourceParticipant.HistoryVisibleFromSequence ||
+            await dbContext.MessageUserVisibilities.AnyAsync(
+                hidden => hidden.MessageId == source.Id && hidden.UserId == userId,
+                cancellationToken))
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.MessageForwardNotAllowed,
+                "پیام مبدا برای فوروارد در دسترس نیست.");
+        }
+
+        await EnsureCanSendAdvancedAsync(
+            destinationConversation,
+            destinationParticipant,
+            userId,
+            accessContext,
+            source.Kind,
+            nowUtc,
+            cancellationToken);
 
         var attachmentIds = await dbContext.MessageAttachments
             .Where(attachment => attachment.MessageId == source.Id)
@@ -202,7 +214,10 @@ public sealed partial class EfMessagingStore
         {
             var replyExists = await dbContext.Messages.AnyAsync(
                 message => message.Id == command.ReplyToMessageId.Value &&
-                           message.ConversationId == conversation.Id,
+                           message.ConversationId == conversation.Id &&
+                           message.Sequence >= participant.HistoryVisibleFromSequence &&
+                           !dbContext.MessageUserVisibilities.Any(hidden =>
+                               hidden.MessageId == message.Id && hidden.UserId == userId),
                 cancellationToken);
             if (!replyExists)
             {
@@ -379,6 +394,7 @@ public sealed partial class EfMessagingStore
         ConversationParticipant participant,
         Guid userId,
         AccessContext accessContext,
+        MessageKind messageKind,
         DateTime nowUtc,
         CancellationToken cancellationToken)
     {
@@ -397,8 +413,16 @@ public sealed partial class EfMessagingStore
 
         if (conversation.Type is ConversationType.Group or ConversationType.Channel)
         {
-            if (conversation.ManagementPolicy != ConversationManagementPolicy.UserManaged ||
-                !managementPolicy.CanPublish(conversation.Type, participant.Role))
+            var canPublish = conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
+                (conversation.Type == ConversationType.Channel
+                    ? participant.Role == ConversationParticipantRole.Owner ||
+                      participant.Role == ConversationParticipantRole.Admin &&
+                      participant.AdminPermissions.HasFlag(ConversationAdminPermission.PublishMessages)
+                    : participant.Role == ConversationParticipantRole.Owner ||
+                      (messageKind == MessageKind.Text
+                          ? conversation.MemberCapabilities.HasFlag(GroupMemberCapability.SendMessages)
+                          : conversation.MemberCapabilities.HasFlag(GroupMemberCapability.SendMedia)));
+            if (!canPublish)
             {
                 throw new MessagingException(
                     MessagingErrorCodes.MessagePublishNotAllowed,

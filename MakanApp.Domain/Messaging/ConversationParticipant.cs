@@ -11,12 +11,18 @@ public sealed class ConversationParticipant
         Guid conversationId,
         Guid userId,
         ConversationParticipantRole role,
+        long historyVisibleFromSequence,
+        ConversationAdminPermission adminPermissions,
         DateTime joinedAtUtc)
     {
         Id = id;
         ConversationId = conversationId;
         UserId = userId;
         Role = role;
+        HistoryVisibleFromSequence = historyVisibleFromSequence;
+        AdminPermissions = role == ConversationParticipantRole.Admin
+            ? adminPermissions
+            : ConversationAdminPermission.None;
         Status = ConversationParticipantStatus.Active;
         JoinedAtUtc = joinedAtUtc;
     }
@@ -32,6 +38,8 @@ public sealed class ConversationParticipant
     public long LastDeliveredMessageSequence { get; private set; }
     public long LastReadMessageSequence { get; private set; }
     public DateTime? CursorUpdatedAtUtc { get; private set; }
+    public long HistoryVisibleFromSequence { get; private set; }
+    public ConversationAdminPermission AdminPermissions { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
     public bool IsActive => Status == ConversationParticipantStatus.Active && !EndedAtUtc.HasValue;
@@ -40,7 +48,9 @@ public sealed class ConversationParticipant
         Guid conversationId,
         Guid userId,
         DateTime joinedAtUtc,
-        ConversationParticipantRole role = ConversationParticipantRole.Member)
+        ConversationParticipantRole role = ConversationParticipantRole.Member,
+        long historyVisibleFromSequence = 1,
+        ConversationAdminPermission adminPermissions = ConversationAdminPermission.None)
     {
         if (conversationId == Guid.Empty || userId == Guid.Empty)
         {
@@ -57,7 +67,21 @@ public sealed class ConversationParticipant
             throw new ArgumentOutOfRangeException(nameof(role));
         }
 
-        return new ConversationParticipant(Guid.NewGuid(), conversationId, userId, role, joinedAtUtc);
+        if (historyVisibleFromSequence <= 0 ||
+            (adminPermissions & ~ConversationAdminPermission.All) != 0 ||
+            role != ConversationParticipantRole.Admin && adminPermissions != ConversationAdminPermission.None)
+        {
+            throw new ArgumentOutOfRangeException(nameof(historyVisibleFromSequence));
+        }
+
+        return new ConversationParticipant(
+            Guid.NewGuid(),
+            conversationId,
+            userId,
+            role,
+            historyVisibleFromSequence,
+            adminPermissions,
+            joinedAtUtc);
     }
 
     public void Remove(Guid endedByUserId, DateTime endedAtUtc)
@@ -73,7 +97,9 @@ public sealed class ConversationParticipant
     public void Leave(DateTime endedAtUtc) =>
         End(ConversationParticipantStatus.Left, UserId, endedAtUtc);
 
-    public void ChangeRole(ConversationParticipantRole role)
+    public void ChangeRole(
+        ConversationParticipantRole role,
+        ConversationAdminPermission adminPermissions = ConversationAdminPermission.None)
     {
         if (!IsActive)
         {
@@ -85,7 +111,31 @@ public sealed class ConversationParticipant
             throw new ArgumentOutOfRangeException(nameof(role));
         }
 
+        if ((adminPermissions & ~ConversationAdminPermission.All) != 0 ||
+            role != ConversationParticipantRole.Admin && adminPermissions != ConversationAdminPermission.None)
+        {
+            throw new ArgumentOutOfRangeException(nameof(adminPermissions));
+        }
+
         Role = role;
+        AdminPermissions = role == ConversationParticipantRole.Admin
+            ? adminPermissions
+            : ConversationAdminPermission.None;
+    }
+
+    public void UpdateAdminPermissions(ConversationAdminPermission permissions)
+    {
+        if (!IsActive || Role != ConversationParticipantRole.Admin)
+        {
+            throw new InvalidOperationException("فقط permission عضو Admin فعال قابل تغییر است.");
+        }
+
+        if ((permissions & ~ConversationAdminPermission.All) != 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(permissions));
+        }
+
+        AdminPermissions = permissions;
     }
 
     public bool AdvanceDelivery(long upToMessageSequence, DateTime updatedAtUtc)

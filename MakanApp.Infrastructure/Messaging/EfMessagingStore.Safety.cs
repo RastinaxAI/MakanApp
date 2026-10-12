@@ -32,6 +32,9 @@ public sealed partial class EfMessagingStore
             where participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   message.DeletedAtUtc == null &&
+                  message.Sequence >= participant.HistoryVisibleFromSequence &&
+                  !dbContext.MessageUserVisibilities.Any(hidden =>
+                      hidden.MessageId == message.Id && hidden.UserId == userId) &&
                   (workspaceType == WorkspaceType.Personal &&
                    conversation.Scope == ConversationScope.Personal &&
                    organizationId == null ||
@@ -258,7 +261,11 @@ public sealed partial class EfMessagingStore
         }
 
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken);
-        if (message is null || message.IsDeleted)
+        if (message is null || message.IsDeleted ||
+            message.Sequence < participant.HistoryVisibleFromSequence ||
+            await dbContext.MessageUserVisibilities.AnyAsync(
+                hidden => hidden.MessageId == message.Id && hidden.UserId == reporterUserId,
+                cancellationToken))
         {
             throw ReportMessageNotFound();
         }

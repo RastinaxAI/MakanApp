@@ -20,6 +20,25 @@ public sealed record DirectConversationResult(
     DateTime CreatedAtUtc,
     bool AlreadyExisted);
 
+public enum ConversationListFilter
+{
+    All = 1,
+    Direct = 2,
+    Group = 3,
+    Channel = 4,
+    Unread = 5,
+    Archived = 6
+}
+
+public sealed record GetConversationListQuery(
+    ConversationListFilter Filter = ConversationListFilter.All,
+    int Page = 1,
+    int PageSize = 30);
+
+public sealed record ConversationOrganizationBadgeResult(
+    Guid OrganizationId,
+    string OrganizationName);
+
 public sealed record ConversationSummaryResult(
     Guid ConversationId,
     ConversationType Type,
@@ -32,7 +51,14 @@ public sealed record ConversationSummaryResult(
     long? LastMessageSequence,
     long LastDeliveredMessageSequence,
     long LastReadMessageSequence,
-    int UnreadCount);
+    int UnreadCount,
+    bool IsArchived,
+    bool IsMuted,
+    ConversationMuteMode MuteMode,
+    DateTime? MutedUntilUtc,
+    bool IsPinned,
+    bool IsManuallyUnread,
+    ConversationOrganizationBadgeResult? Organization);
 
 public sealed record GetConversationMessagesQuery(
     long? BeforeSequence,
@@ -40,10 +66,11 @@ public sealed record GetConversationMessagesQuery(
 
 public sealed record MessageReplySummaryResult(
     Guid MessageId,
-    Guid SenderUserId,
+    Guid? SenderUserId,
     MessageKind? Kind,
     string? Text,
-    bool IsDeleted);
+    bool IsDeleted,
+    bool IsUnavailable);
 
 public sealed record MessageReactionSummaryResult(
     MessageReactionType Reaction,
@@ -123,6 +150,27 @@ public sealed record MessageMutationResult(
     DateTime? EditedAtUtc,
     DateTime? DeletedAtUtc,
     bool IsDeleted,
+    string Version);
+
+public sealed record DeleteMessageForMeResult(
+    Guid MessageId,
+    Guid ConversationId,
+    DateTime HiddenAtUtc,
+    bool AlreadyHidden);
+
+public sealed record SetConversationMuteCommand(
+    ConversationMuteMode Mode,
+    DateTime? MutedUntilUtc);
+
+public sealed record ConversationUserStateResult(
+    Guid ConversationId,
+    bool IsArchived,
+    bool IsMuted,
+    ConversationMuteMode MuteMode,
+    DateTime? MutedUntilUtc,
+    bool IsPinned,
+    bool IsManuallyUnread,
+    DateTime UpdatedAtUtc,
     string Version);
 
 public sealed record GetConversationMediaQuery(

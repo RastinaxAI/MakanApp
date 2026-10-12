@@ -65,4 +65,10 @@ public static class MessagingErrorCodes
     public const string PrivacyInvalid = "MESSAGING_PRIVACY_INVALID";
     public const string PrivacyConflict = "MESSAGING_PRIVACY_CONFLICT";
     public const string DiscoveryRateLimited = "MESSAGING_DISCOVERY_RATE_LIMITED";
+    public const string MessageEditWindowExpired = "MESSAGE_EDIT_WINDOW_EXPIRED";
+    public const string MessageDeleteWindowExpired = "MESSAGE_DELETE_WINDOW_EXPIRED";
+    public const string ConversationHistoryNotVisible = "CONVERSATION_HISTORY_NOT_VISIBLE";
+    public const string ConversationPermissionRequired = "CONVERSATION_PERMISSION_REQUIRED";
+    public const string ConversationNotJoinable = "CONVERSATION_NOT_JOINABLE";
+    public const string ConversationStateConflict = "CONVERSATION_STATE_CONFLICT";
 }

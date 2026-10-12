@@ -21,10 +21,14 @@ public sealed record ConversationSummaryStoreRecord(
     string? LastMessagePreview,
     DateTime? LastMessageAtUtc,
     long? LastMessageSequence,
-    int UnreadCount);
+    int UnreadCount,
+    ConversationUserState? State,
+    string? OrganizationName);
 
 public sealed record MessageReplySummaryStoreRecord(
-    Message Message);
+    Guid MessageId,
+    Message? Message,
+    bool IsUnavailable);
 
 public sealed record MessageAttachmentStoreRecord(
     MessageAttachment Attachment,
@@ -89,6 +93,9 @@ public interface IMessagingStore
     Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> GetMyConversationsAsync(
         Guid userId,
         AccessContext accessContext,
+        ConversationListFilter filter,
+        int page,
+        int pageSize,
         CancellationToken cancellationToken);
 
     Task<ConversationMessagePageStoreResult> GetConversationMessagesAsync(
@@ -125,6 +132,46 @@ public interface IMessagingStore
         Guid messageId,
         AccessContext accessContext,
         byte[] expectedVersion,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<(MessageUserVisibility Visibility, bool AlreadyHidden)> DeleteMessageForMeAsync(
+        Guid userId,
+        Guid conversationId,
+        Guid messageId,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserState> SetConversationArchivedAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        bool archived,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserState> SetConversationPinnedAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        bool pinned,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserState> SetConversationMuteAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        ConversationMuteMode mode,
+        DateTime? mutedUntilUtc,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserState> MarkConversationUnreadAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
         DateTime nowUtc,
         CancellationToken cancellationToken);
 
@@ -241,6 +288,7 @@ public interface IMessagingService
     Task<IReadOnlyCollection<ConversationSummaryResult>> GetMyConversationsAsync(
         Guid userId,
         Guid sessionId,
+        GetConversationListQuery query,
         CancellationToken cancellationToken);
 
     Task<ConversationMessagePageResult> GetConversationMessagesAsync(
@@ -278,6 +326,56 @@ public interface IMessagingService
         Guid conversationId,
         Guid messageId,
         string expectedVersion,
+        CancellationToken cancellationToken);
+
+    Task<DeleteMessageForMeResult> DeleteMessageForMeAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        Guid messageId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> ArchiveConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> UnarchiveConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> PinConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> UnpinConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> SetConversationMuteAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        SetConversationMuteCommand command,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> UnmuteConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> MarkConversationUnreadAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
         CancellationToken cancellationToken);
 
     Task<MessageReceiptResult> ForwardMessageAsync(

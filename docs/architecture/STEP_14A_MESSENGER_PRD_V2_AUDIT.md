@@ -488,3 +488,25 @@ Validation پس از تکمیل اسناد روی `MakanApp.sln` اجرا شد:
 Migration افزوده‌شده `20261012203821_AddMessengerContactsPrivacyDiscovery` فقط schema
 دو جدول `messaging.UserContacts` و `messaging.MessagingPrivacySettings` را تعریف می‌کند؛
 در STEP 14B روی دیتابیس production یا developer اعمال نشده است.
+
+## 19. Addendum پس از STEP 14C
+
+این addendum نتیجه ممیزی تاریخی STEP 14A را بازنویسی نمی‌کند؛ وضعیت requirementهای سخت‌سازی‌شده را
+پس از پیاده‌سازی `Messaging Behavior Hardening & Conversation State` ثبت می‌کند. قرارداد کامل در
+`STEP_14C_MESSAGING_BEHAVIOR_HARDENING.md` است.
+
+| حوزه | وضعیت پس از 14C | شاهد و مرز باقی‌مانده |
+|---|---|---|
+| Edit/Delete window | `IMPLEMENTED` | مرز دقیق یک ساعت با TimeProvider؛ moderator edit وجود ندارد |
+| Delete For Me | `IMPLEMENTED` | visibility یکتای Message/User در History/Search/Media/File/Reply/Forward/Delta |
+| Group History | `IMPLEMENTED` | FullHistory/FromJoin و boundary sequence پایدار؛ Channel policy مستقل deferred |
+| Public/Private | `IMPLEMENTED` | discovery/join bounded و organization-scoped؛ system-managed غیرقابل join |
+| Admin permissions | `IMPLEMENTED` | flags صریح، جلوگیری از privilege escalation و rowversion |
+| Member capabilities | `IMPLEMENTED` | SendMessages/SendMedia/InviteMembers؛ Poll/Link اختراع نشده‌اند |
+| Conversation state | `IMPLEMENTED` | archive/mute/pin/manual-unread per-user و sync با audience خصوصی |
+| Chat list | `IMPLEMENTED` | فیلتر، pagination، pinned-first/activity order و badge امن سازمان |
+| Saved Messages | `DEFERRED` | نیازمند ConversationType/uniqueness و audit سراسری switchها؛ منتقل به 14E |
+
+Migration این مرحله `20261012212650_HardenMessengerConversationBehavior` است. archiveهای global
+قدیمی به state شخصی حدس‌زده و تبدیل نشده‌اند؛ `Conversation.Status.Archived` برای lifecycle
+legacy/internal باقی مانده، ولی endpoint عمومی archive از `ConversationUserState` استفاده می‌کند.

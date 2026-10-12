@@ -863,7 +863,7 @@ People Search به query حداقل دوکاراکتری و صفحه حداکث�
 }
 ```
 
-ایجاد گروه/کانال سازمانی به workspace معتبر با نقش Manager یا Teacher نیاز دارد؛ ایجاد شخصی به workspace شخصی و وضعیت سنی Adult. افزودن عضو نیز policy ارتباط با مخاطب را طی می‌کند. نقش‌های داخل گفت‌وگو `Owner`، `Admin` و `Member` از نقش‌های سازمانی جدا هستند. در Group اعضای فعال مجاز به ارسال‌اند؛ در Channel انتشار به Owner/Admin محدود است. مالک باید پیش از خروج، مالکیت را با جریان درخواست انتقال و پذیرش مقصد واگذار کند. archive با حذف تاریخچه یکی نیست.
+ایجاد گروه/کانال سازمانی به workspace معتبر با نقش Manager یا Teacher نیاز دارد؛ ایجاد شخصی در workspace شخصی برای حساب معتبر انجام می‌شود و safety policy حساب کودک همچنان release gate مستقل است. افزودن عضو توسط شخص دیگر policy دعوت مخاطب را طی می‌کند، اما self-join یک Public Group دعوت ناخواسته محسوب نمی‌شود. نقش‌های داخل گفتگو `Owner`، `Admin` و `Member` از نقش‌های سازمانی جدا هستند. Admin فقط permissionهای صریح خود را دارد و در Channel فقط Owner یا Admin دارای `PublishMessages` می‌تواند منتشر کند. مالک باید پیش از خروج، مالکیت را با جریان درخواست انتقال و پذیرش مقصد واگذار کند.
 
 برای ارسال `POST /conversations/{conversationId}/messages`:
 
@@ -882,7 +882,26 @@ People Search به query حداقل دوکاراکتری و صفحه حداکث�
 
 برای پیام رسانه‌ای `kind` مناسب و `attachmentIds` فایل‌های آماده لازم است. Reply با شناسه پیام همان گفت‌وگو، Mention با UserId عضو مجاز و Forward با `destinationConversationId` و یک `clientMessageId` جدید انجام می‌شود؛ دسترسی به هر دو طرف و محدودیت Scope کنترل می‌شود.
 
-ویرایش پیام `text` و `expectedVersion` می‌گیرد؛ حذف پیام `expectedVersion` در Query می‌خواهد. حذف یک tombstone ایجاد می‌کند؛ در نمایش `isDeleted` و محتوای پنهان‌شده را رعایت کنید. واکنش‌های موجود `Like`، `Love`، `Laugh`، `Wow` و `Sad` هستند. مسیرهای Pin، اعضا، انتقال مالکیت و رسانه در مرجع Endpointها آمده‌اند.
+ویرایش پیام `text` و `expectedVersion` می‌گیرد و فقط برای فرستنده تا مرز دقیق `SentAtUtc + 1h` مجاز است. حذف عمومی صریح با `DELETE /conversations/{id}/messages/{messageId}/for-everyone?expectedVersion=...` انجام می‌شود؛ مسیر قدیمی حذف برای سازگاری همین معنی را دارد. فرستنده همان deadline را دارد، ولی Owner یا Admin دارای `DeleteMessages` برای moderation محدود به یک ساعت نیست. حذف یک tombstone می‌سازد و متن/رسانه/دانلود عادی را می‌بندد. `DELETE .../for-me` بدون deadline فقط برای همان کاربر پیام را از History، Search، Media، Reply، Pin و File authorization مخفی می‌کند و retry آن idempotent است. واکنش‌های موجود `Like`، `Love`، `Laugh`، `Wow` و `Sad` هستند.
+
+### رفتار و state گفتگو در STEP 14C
+
+بدنه ساخت Group می‌تواند `visibility` برابر `Private/Public`، `groupHistoryPolicy` برابر `FullHistory/FromJoin` و flags مربوط به `memberCapabilities` را بفرستد. Channel فقط FullHistory و capability صفر می‌پذیرد. در FromJoin، boundary عضو هنگام join snapshot می‌شود و تغییر بعدی setting تاریخچه اعضای قبلی را بازنویسی نمی‌کند.
+
+| Method | Route | کاربرد |
+|---|---|---|
+| `GET` | `/conversations?filter=All&page=1&pageSize=30` | فهرست bounded؛ فیلترهای Direct/Group/Channel/Unread/Archived نیز پذیرفته می‌شوند |
+| `GET` | `/conversations/discover?type=Group&q=...&page=1&pageSize=30` | کشف Public در context شخصی یا همان سازمان |
+| `POST` | `/conversations/{id}/join` | عضویت داوطلبانه در Public user-managed |
+| `PATCH` | `/conversations/{id}/settings` | Visibility/History/Capabilities با `expectedVersion` |
+| `GET` | `/conversations/{id}/members?page=1&pageSize=30` | member list صفحه‌بندی‌شده |
+| `PATCH` | `/conversations/{id}/members/{userId}/permissions` | permissionهای Admin با `expectedVersion` |
+| `POST/DELETE` | `/conversations/{id}/archive` | archive/unarchive فقط برای caller |
+| `POST/DELETE` | `/conversations/{id}/state/pin` | pin/unpin گفتگو فقط برای caller |
+| `PUT/DELETE` | `/conversations/{id}/mute` | mute دائم یا تا timestamp صریح UTC / unmute |
+| `POST` | `/conversations/{id}/mark-unread` | unread نمایشی بدون کاهش read cursor |
+
+فهرست گفتگو state کاربر جاری (`isArchived`, `isMuted`, `mutedUntilUtc`, `isPinned`, `isManuallyUnread`) و badge امن سازمان (`organizationId`, `organizationName`) را برمی‌گرداند. پیام جدید archive را خودکار باز نمی‌کند. Mute جلوی ذخیره پیام، unread یا Delta/SignalR را نمی‌گیرد و فقط برای notification policy آینده است. جزئیات کامل در [سند STEP 14C](architecture/STEP_14C_MESSAGING_BEHAVIOR_HARDENING.md) ثبت شده است.
 
 ### تاریخچه، Delta و رسید خواندن
 

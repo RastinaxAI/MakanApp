@@ -61,9 +61,11 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
+    public DbSet<ConversationUserState> ConversationUserStates => Set<ConversationUserState>();
     public DbSet<ConversationOwnershipTransfer> ConversationOwnershipTransfers =>
         Set<ConversationOwnershipTransfer>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<MessageUserVisibility> MessageUserVisibilities => Set<MessageUserVisibility>();
     public DbSet<MessageRevision> MessageRevisions => Set<MessageRevision>();
     public DbSet<MessageAttachment> MessageAttachments => Set<MessageAttachment>();
     public DbSet<MessageReaction> MessageReactions => Set<MessageReaction>();

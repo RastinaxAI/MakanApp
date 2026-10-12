@@ -20,6 +20,9 @@ public sealed class Conversation
     public string? Description { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
     public ConversationManagementPolicy ManagementPolicy { get; private set; }
+    public ConversationVisibility Visibility { get; private set; }
+    public GroupHistoryPolicy GroupHistoryPolicy { get; private set; }
+    public GroupMemberCapability MemberCapabilities { get; private set; }
     public Guid? ClientOperationId { get; private set; }
     public byte[]? CreationPayloadHash { get; private set; }
     public long NextMessageSequence { get; private set; }
@@ -48,6 +51,9 @@ public sealed class Conversation
             DirectUserLowId = pair.LowerUserId,
             DirectUserHighId = pair.HigherUserId,
             ManagementPolicy = ConversationManagementPolicy.None,
+            Visibility = ConversationVisibility.Private,
+            GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,
+            MemberCapabilities = GroupMemberCapability.None,
             NextMessageSequence = 1,
             NextChangeSequence = 1,
             Status = ConversationStatus.Active,
@@ -64,6 +70,35 @@ public sealed class Conversation
         Guid createdByUserId,
         Guid clientOperationId,
         byte[] creationPayloadHash,
+        DateTime createdAtUtc) =>
+        CreateUserManaged(
+            type,
+            scope,
+            organizationId,
+            title,
+            description,
+            createdByUserId,
+            clientOperationId,
+            creationPayloadHash,
+            ConversationVisibility.Private,
+            GroupHistoryPolicy.FullHistory,
+            type == ConversationType.Group
+                ? GroupMemberCapability.LegacyMemberDefault
+                : GroupMemberCapability.None,
+            createdAtUtc);
+
+    public static Conversation CreateUserManaged(
+        ConversationType type,
+        ConversationScope scope,
+        Guid? organizationId,
+        string title,
+        string? description,
+        Guid createdByUserId,
+        Guid clientOperationId,
+        byte[] creationPayloadHash,
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities,
         DateTime createdAtUtc)
     {
         ValidateManagedType(type);
@@ -79,6 +114,8 @@ public sealed class Conversation
             throw new ArgumentException("اثر انگشت عملیات ایجاد معتبر نیست.", nameof(creationPayloadHash));
         }
 
+        ValidateBehaviorSettings(type, visibility, groupHistoryPolicy, memberCapabilities);
+
         return new Conversation
         {
             Id = Guid.NewGuid(),
@@ -89,6 +126,9 @@ public sealed class Conversation
             Description = NormalizeDescription(description),
             CreatedByUserId = createdByUserId,
             ManagementPolicy = ConversationManagementPolicy.UserManaged,
+            Visibility = visibility,
+            GroupHistoryPolicy = groupHistoryPolicy,
+            MemberCapabilities = memberCapabilities,
             ClientOperationId = clientOperationId,
             CreationPayloadHash = creationPayloadHash.ToArray(),
             NextMessageSequence = 1,
@@ -117,6 +157,9 @@ public sealed class Conversation
             Title = NormalizeTitle(title),
             Description = NormalizeDescription(description),
             ManagementPolicy = ConversationManagementPolicy.SystemManagedAcademic,
+            Visibility = ConversationVisibility.Private,
+            GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,
+            MemberCapabilities = GroupMemberCapability.None,
             NextMessageSequence = 1,
             NextChangeSequence = 1,
             Status = ConversationStatus.Active,
@@ -177,6 +220,22 @@ public sealed class Conversation
         ArchivedAtUtc = archivedAtUtc;
     }
 
+    public void UpdateBehaviorSettings(
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities)
+    {
+        if (ManagementPolicy != ConversationManagementPolicy.UserManaged)
+        {
+            throw new InvalidOperationException("تنظیمات گفتگوی مدیریت‌شده سیستمی قابل تغییر دستی نیست.");
+        }
+
+        ValidateBehaviorSettings(Type, visibility, groupHistoryPolicy, memberCapabilities);
+        Visibility = visibility;
+        GroupHistoryPolicy = groupHistoryPolicy;
+        MemberCapabilities = memberCapabilities;
+    }
+
     public static string NormalizeTitle(string? title)
     {
         var normalized = title?.Trim();
@@ -208,6 +267,26 @@ public sealed class Conversation
         if (type is not ConversationType.Group and not ConversationType.Channel)
         {
             throw new ArgumentOutOfRangeException(nameof(type));
+        }
+    }
+
+    private static void ValidateBehaviorSettings(
+        ConversationType type,
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities)
+    {
+        if (!Enum.IsDefined(visibility) || !Enum.IsDefined(groupHistoryPolicy) ||
+            (memberCapabilities & ~GroupMemberCapability.All) != 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(visibility));
+        }
+
+        if (type == ConversationType.Channel &&
+            (groupHistoryPolicy != GroupHistoryPolicy.FullHistory ||
+             memberCapabilities != GroupMemberCapability.None))
+        {
+            throw new ArgumentException("سیاست تاریخچه و capability عضو فقط برای Group قابل تنظیم است.");
         }
     }
 

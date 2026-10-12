@@ -23,6 +23,12 @@ public sealed class ConversationParticipantConfiguration :
             table.HasCheckConstraint(
                 "CK_ConversationParticipants_CursorTimestamp",
                 "([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)");
+            table.HasCheckConstraint(
+                "CK_ConversationParticipants_HistoryBoundary",
+                "[HistoryVisibleFromSequence] > 0");
+            table.HasCheckConstraint(
+                "CK_ConversationParticipants_AdminPermissions",
+                "[AdminPermissions] BETWEEN 0 AND 255 AND (([Role] = 2) OR [AdminPermissions] = 0)");
         });
         builder.HasKey(participant => participant.Id);
         builder.HasAlternateKey(participant => new
@@ -37,6 +43,12 @@ public sealed class ConversationParticipantConfiguration :
         builder.Property(participant => participant.RowVersion).IsRowVersion();
 
         builder.HasIndex(participant => new { participant.UserId, participant.Status });
+        builder.HasIndex(participant => new
+        {
+            participant.ConversationId,
+            participant.UserId,
+            participant.HistoryVisibleFromSequence
+        });
         builder.HasIndex(participant => new { participant.ConversationId, participant.UserId })
             .IsUnique()
             .HasFilter("[Status] = 1 AND [EndedAtUtc] IS NULL")

@@ -40,6 +40,9 @@ public sealed partial class EfMessagingStore
             .AsNoTracking()
             .Where(message => message.ConversationId == conversationId &&
                               message.DeletedAtUtc == null &&
+                              message.Sequence >= participant.HistoryVisibleFromSequence &&
+                              !dbContext.MessageUserVisibilities.Any(hidden =>
+                                  hidden.MessageId == message.Id && hidden.UserId == userId) &&
                               (!beforeSequence.HasValue || message.Sequence < beforeSequence.Value) &&
                               (!kind.HasValue || message.Kind == kind.Value) &&
                               message.Kind != MessageKind.Text &&
@@ -77,6 +80,9 @@ public sealed partial class EfMessagingStore
         if (await dbContext.Messages.AnyAsync(
                 message => message.ConversationId == conversationId &&
                            message.DeletedAtUtc == null &&
+                           message.Sequence >= participant.HistoryVisibleFromSequence &&
+                           !dbContext.MessageUserVisibilities.Any(hidden =>
+                               hidden.MessageId == message.Id && hidden.UserId == userId) &&
                            message.Sequence < firstSequence &&
                            (!kind.HasValue || message.Kind == kind.Value) &&
                            message.Kind != MessageKind.Text &&
@@ -167,11 +173,23 @@ public sealed partial class EfMessagingStore
             .Select(message => message.ReplyToMessageId!.Value)
             .Distinct()
             .ToArray();
+        var conversationId = messages.First().ConversationId;
+        var historyVisibleFromSequence = await dbContext.ConversationParticipants
+            .AsNoTracking()
+            .Where(participant => participant.ConversationId == conversationId &&
+                                  participant.UserId == currentUserId &&
+                                  participant.Status == ConversationParticipantStatus.Active &&
+                                  participant.EndedAtUtc == null)
+            .Select(participant => participant.HistoryVisibleFromSequence)
+            .SingleAsync(cancellationToken);
         var replyMessages = replyIds.Length == 0
             ? new Dictionary<Guid, Message>()
             : await dbContext.Messages
                 .AsNoTracking()
-                .Where(message => replyIds.Contains(message.Id))
+                .Where(message => replyIds.Contains(message.Id) &&
+                                  message.Sequence >= historyVisibleFromSequence &&
+                                  !dbContext.MessageUserVisibilities.Any(hidden =>
+                                      hidden.MessageId == message.Id && hidden.UserId == currentUserId))
                 .ToDictionaryAsync(message => message.Id, cancellationToken);
         var pinnedMessageIds = await dbContext.ConversationPins
             .AsNoTracking()
@@ -185,8 +203,13 @@ public sealed partial class EfMessagingStore
                 identities[message.SenderUserId],
                 message.ReplyToMessageId.HasValue &&
                 replyMessages.TryGetValue(message.ReplyToMessageId.Value, out var reply)
-                    ? new MessageReplySummaryStoreRecord(reply)
-                    : null,
+                    ? new MessageReplySummaryStoreRecord(reply.Id, reply, false)
+                    : message.ReplyToMessageId.HasValue
+                        ? new MessageReplySummaryStoreRecord(
+                            message.ReplyToMessageId.Value,
+                            null,
+                            true)
+                        : null,
                 reactions.GetValueOrDefault(message.Id, []),
                 mentions.GetValueOrDefault(message.Id, []),
                 attachments.GetValueOrDefault(message.Id, []),

@@ -34,8 +34,7 @@ public sealed class ConversationManagementAuthorizationPolicy : IConversationMan
         {
             ConversationScope.Personal =>
                 accessContext.WorkspaceType == WorkspaceType.Personal &&
-                !accessContext.OrganizationId.HasValue &&
-                actorAgeCategory == CommunicationAgeCategory.Adult,
+                !accessContext.OrganizationId.HasValue,
             ConversationScope.Organization =>
                 accessContext.WorkspaceType == WorkspaceType.Organization &&
                 accessContext.OrganizationId.HasValue &&

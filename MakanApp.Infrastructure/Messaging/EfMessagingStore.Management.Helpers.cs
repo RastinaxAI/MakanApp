@@ -180,6 +180,7 @@ public sealed partial class EfMessagingStore
                                   participant.EndedAtUtc == null)
             .OrderBy(participant => participant.Role)
             .ThenBy(participant => participant.JoinedAtUtc)
+            .Take(100)
             .ToArrayAsync(cancellationToken);
         var result = new List<ConversationParticipantStoreRecord>(participants.Length);
         foreach (var participant in participants)

@@ -7,11 +7,32 @@ public sealed record CreateManagedConversationCommand(
     ConversationScope Scope,
     string Title,
     string? Description,
-    IReadOnlyCollection<Guid>? InitialParticipantUserIds);
+    IReadOnlyCollection<Guid>? InitialParticipantUserIds,
+    ConversationVisibility Visibility = ConversationVisibility.Private,
+    GroupHistoryPolicy GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,
+    GroupMemberCapability? MemberCapabilities = null);
 
 public sealed record AddConversationMemberCommand(Guid UserId);
 
-public sealed record ChangeConversationMemberRoleCommand(ConversationParticipantRole Role);
+public sealed record ChangeConversationMemberRoleCommand(
+    ConversationParticipantRole Role,
+    ConversationAdminPermission AdminPermissions = ConversationAdminPermission.None);
+
+public sealed record UpdateConversationPermissionsCommand(
+    ConversationAdminPermission Permissions,
+    string ExpectedVersion);
+
+public sealed record UpdateConversationSettingsCommand(
+    ConversationVisibility Visibility,
+    GroupHistoryPolicy GroupHistoryPolicy,
+    GroupMemberCapability MemberCapabilities,
+    string ExpectedVersion);
+
+public sealed record DiscoverConversationsQuery(
+    ConversationType? Type,
+    string? Query,
+    int Page = 1,
+    int PageSize = 30);
 
 public sealed record StartOwnershipTransferCommand(Guid TargetUserId);
 
@@ -21,7 +42,10 @@ public sealed record ConversationParticipantResult(
     ConversationParticipantRole Role,
     ConversationParticipantStatus Status,
     DateTime JoinedAtUtc,
-    DateTime? EndedAtUtc);
+    DateTime? EndedAtUtc,
+    long HistoryVisibleFromSequence,
+    ConversationAdminPermission AdminPermissions,
+    string Version);
 
 public sealed record ManagedConversationResult(
     Guid ConversationId,
@@ -31,11 +55,37 @@ public sealed record ManagedConversationResult(
     string Title,
     string? Description,
     ConversationManagementPolicy ManagementPolicy,
+    ConversationVisibility Visibility,
+    GroupHistoryPolicy GroupHistoryPolicy,
+    GroupMemberCapability MemberCapabilities,
     ConversationStatus Status,
     DateTime CreatedAtUtc,
     DateTime? ArchivedAtUtc,
+    string Version,
     IReadOnlyCollection<ConversationParticipantResult> Participants,
     bool AlreadyExisted);
+
+public sealed record DiscoverableConversationResult(
+    Guid ConversationId,
+    ConversationType Type,
+    ConversationScope Scope,
+    string Title,
+    string? Description,
+    ConversationOrganizationBadgeResult? Organization,
+    bool IsJoined,
+    DateTime CreatedAtUtc);
+
+public sealed record DiscoverableConversationPageResult(
+    IReadOnlyCollection<DiscoverableConversationResult> Items,
+    int Page,
+    int PageSize,
+    bool HasMore);
+
+public sealed record ConversationParticipantPageResult(
+    IReadOnlyCollection<ConversationParticipantResult> Items,
+    int Page,
+    int PageSize,
+    bool HasMore);
 
 public sealed record OwnershipTransferResult(
     Guid TransferId,

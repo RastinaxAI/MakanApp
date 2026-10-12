@@ -3,6 +3,7 @@ namespace MakanApp.Domain.Messaging;
 public sealed class Message
 {
     public const int StorageMaximumTextLength = 4000;
+    public static readonly TimeSpan SenderMutationWindow = TimeSpan.FromHours(1);
 
     private Message()
     {
@@ -56,6 +57,12 @@ public sealed class Message
 
     public bool IsDeleted => DeletedAtUtc.HasValue;
     public bool IsEdited => CurrentRevisionNumber > 1;
+
+    public bool IsWithinSenderMutationWindow(DateTime nowUtc)
+    {
+        ValidateUtc(nowUtc, nameof(nowUtc));
+        return nowUtc <= SentAtUtc.Add(SenderMutationWindow);
+    }
 
     public static Message Create(
         Guid conversationId,

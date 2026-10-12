@@ -93,14 +93,30 @@ public sealed partial class MessagingEndpointsTests
 
         using var promote = await ownerClient.PatchAsJsonAsync(
             $"/api/v1/conversations/{channel.ConversationId}/members/{admin.UserId}/role",
-            new ChangeConversationMemberRoleCommand(ConversationParticipantRole.Admin),
+            new ChangeConversationMemberRoleCommand(
+                ConversationParticipantRole.Admin,
+                ConversationAdminPermission.ManageMembers),
             JsonOptions);
         promote.EnsureSuccessStatusCode();
+        var promoted = await promote.Content.ReadFromJsonAsync<ManagedConversationResult>(JsonOptions);
+        var adminVersion = promoted!.Participants.Single(item => item.User.UserId == admin.UserId).Version;
         using var memberSend = await SendMessageAsync(
             memberClient,
             channel.ConversationId,
             Guid.NewGuid(),
             "عضو نباید منتشر کند");
+        using var adminWithoutPublishSend = await SendMessageAsync(
+            adminClient,
+            channel.ConversationId,
+            Guid.NewGuid(),
+            "مدیریت عضو مجوز انتشار نیست");
+        using var grantPublish = await ownerClient.PatchAsJsonAsync(
+            $"/api/v1/conversations/{channel.ConversationId}/members/{admin.UserId}/permissions",
+            new UpdateConversationPermissionsCommand(
+                ConversationAdminPermission.PublishMessages,
+                adminVersion),
+            JsonOptions);
+        grantPublish.EnsureSuccessStatusCode();
         using var adminSend = await SendMessageAsync(
             adminClient,
             channel.ConversationId,
@@ -111,6 +127,10 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(
             MessagingErrorCodes.MessagePublishNotAllowed,
             await ReadProblemCodeAsync(memberSend));
+        Assert.Equal(HttpStatusCode.Forbidden, adminWithoutPublishSend.StatusCode);
+        Assert.Equal(
+            MessagingErrorCodes.MessagePublishNotAllowed,
+            await ReadProblemCodeAsync(adminWithoutPublishSend));
         Assert.Equal(HttpStatusCode.OK, adminSend.StatusCode);
     }
 
@@ -217,7 +237,10 @@ public sealed partial class MessagingEndpointsTests
                 new[] { admin.UserId, member.UserId }));
         using var promote = await ownerClient.PatchAsJsonAsync(
             $"/api/v1/conversations/{group.ConversationId}/members/{admin.UserId}/role",
-            new ChangeConversationMemberRoleCommand(ConversationParticipantRole.Admin),
+            new ChangeConversationMemberRoleCommand(
+                ConversationParticipantRole.Admin,
+                ConversationAdminPermission.ManageMembers |
+                ConversationAdminPermission.RemoveMembers),
             JsonOptions);
         promote.EnsureSuccessStatusCode();
 
@@ -413,7 +436,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task ArchiveRejectsNewMessagesButPreservesCommittedHistory()
+    public async Task ArchiveIsPerUserAndDoesNotBlockMessagesOrOtherParticipants()
     {
         using var ownerClient = factory.CreateClient();
         using var memberClient = factory.CreateClient();
@@ -434,18 +457,32 @@ public sealed partial class MessagingEndpointsTests
             null);
         archive.EnsureSuccessStatusCode();
 
-        using var blocked = await SendMessageAsync(
+        using var sentWhileArchived = await SendMessageAsync(
             ownerClient,
             group.ConversationId,
             Guid.NewGuid(),
             "پس از بایگانی");
+        var ownerInbox = await ownerClient.GetFromJsonAsync<ConversationSummaryResult[]>(
+            "/api/v1/conversations",
+            JsonOptions);
+        var ownerArchive = await ownerClient.GetFromJsonAsync<ConversationSummaryResult[]>(
+            "/api/v1/conversations?filter=Archived",
+            JsonOptions);
+        var memberInbox = await memberClient.GetFromJsonAsync<ConversationSummaryResult[]>(
+            "/api/v1/conversations",
+            JsonOptions);
         using var history = await memberClient.GetAsync(
             $"/api/v1/conversations/{group.ConversationId}/messages");
+        using var unarchive = await ownerClient.DeleteAsync(
+            $"/api/v1/conversations/{group.ConversationId}/archive");
 
-        Assert.Equal(HttpStatusCode.Conflict, blocked.StatusCode);
-        Assert.Equal(MessagingErrorCodes.ConversationArchived, await ReadProblemCodeAsync(blocked));
+        Assert.Equal(HttpStatusCode.OK, sentWhileArchived.StatusCode);
+        Assert.DoesNotContain(ownerInbox!, item => item.ConversationId == group.ConversationId);
+        Assert.Contains(ownerArchive!, item => item.ConversationId == group.ConversationId && item.IsArchived);
+        Assert.Contains(memberInbox!, item => item.ConversationId == group.ConversationId && !item.IsArchived);
         Assert.Equal(HttpStatusCode.OK, history.StatusCode);
-        Assert.Single(await factory.GetMessagesAsync(group.ConversationId));
+        Assert.Equal(2, (await factory.GetMessagesAsync(group.ConversationId)).Length);
+        Assert.Equal(HttpStatusCode.OK, unarchive.StatusCode);
     }
 
     [Fact]

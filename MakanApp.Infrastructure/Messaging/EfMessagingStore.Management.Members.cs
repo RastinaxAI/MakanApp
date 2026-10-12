@@ -12,6 +12,56 @@ namespace MakanApp.Infrastructure.Messaging;
 
 public sealed partial class EfMessagingStore
 {
+    public async Task<(IReadOnlyCollection<ConversationParticipantStoreRecord> Items, bool HasMore)> GetMembersAsync(
+        Guid actorUserId,
+        Guid conversationId,
+        int page,
+        int pageSize,
+        AccessContext accessContext,
+        CancellationToken cancellationToken)
+    {
+        var conversation = await dbContext.Conversations
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == conversationId, cancellationToken)
+            ?? throw ConversationNotFound();
+        if (conversation.Type is not ConversationType.Group and not ConversationType.Channel ||
+            await LoadActiveParticipantAsync(conversationId, actorUserId, cancellationToken) is null ||
+            !await CanAccessScopeAsync(conversation, actorUserId, accessContext, cancellationToken))
+        {
+            throw ConversationNotFound();
+        }
+
+        var rows = await (
+            from participant in dbContext.ConversationParticipants.AsNoTracking()
+            join user in dbContext.Users.AsNoTracking() on participant.UserId equals user.Id
+            join person in dbContext.Persons.AsNoTracking() on user.PersonId equals (Guid?)person.Id
+            where participant.ConversationId == conversationId &&
+                  participant.Status == ConversationParticipantStatus.Active &&
+                  participant.EndedAtUtc == null &&
+                  user.Username != null &&
+                  user.ProfileCompletedAtUtc != null
+            orderby participant.Role, participant.JoinedAtUtc, participant.Id
+            select new
+            {
+                Participant = participant,
+                Username = user.Username!,
+                DisplayName = person.DisplayName ?? person.FirstName + " " + person.LastName
+            })
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize + 1)
+            .ToArrayAsync(cancellationToken);
+        return (
+            rows.Take(pageSize)
+                .Select(row => new ConversationParticipantStoreRecord(
+                    row.Participant,
+                    new SafeMessagingIdentityRecord(
+                        row.Participant.UserId,
+                        row.Username,
+                        row.DisplayName)))
+                .ToArray(),
+            rows.Length > pageSize);
+    }
+
     public async Task<ManagedConversationStoreResult> GetDetailsAsync(
         Guid actorUserId,
         Guid conversationId,
@@ -51,7 +101,13 @@ public sealed partial class EfMessagingStore
             conversationId,
             accessContext,
             cancellationToken);
-        if (!managementPolicy.CanAddMember(actor.Role))
+        var canAdd = actor.Role == ConversationParticipantRole.Owner ||
+                     actor.Role == ConversationParticipantRole.Admin &&
+                     actor.AdminPermissions.HasFlag(ConversationAdminPermission.ManageMembers) ||
+                     conversation.Type == ConversationType.Group &&
+                     actor.Role == ConversationParticipantRole.Member &&
+                     conversation.MemberCapabilities.HasFlag(GroupMemberCapability.InviteMembers);
+        if (!canAdd)
         {
             throw ManagementNotAllowed();
         }
@@ -75,7 +131,11 @@ public sealed partial class EfMessagingStore
                 conversation.Id,
                 targetUserId,
                 nowUtc,
-                ConversationParticipantRole.Member);
+                ConversationParticipantRole.Member,
+                conversation.Type == ConversationType.Group &&
+                conversation.GroupHistoryPolicy == GroupHistoryPolicy.FromJoin
+                    ? conversation.NextMessageSequence
+                    : 1);
         dbContext.ConversationParticipants.Add(added);
         await SaveManagementAsync(cancellationToken);
         await AppendChangeAsync(
@@ -109,7 +169,14 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var target = await LoadActiveParticipantAsync(conversationId, targetUserId, cancellationToken)
             ?? throw ParticipantNotFound();
-        if (!managementPolicy.CanRemoveMember(actor.Role, target.Role))
+        var canRemove = actor.Role == ConversationParticipantRole.Owner &&
+                        target.Role != ConversationParticipantRole.Owner ||
+                        actor.Role == ConversationParticipantRole.Admin &&
+                        actor.AdminPermissions.HasFlag(ConversationAdminPermission.RemoveMembers) &&
+                        (target.Role == ConversationParticipantRole.Member ||
+                         target.Role == ConversationParticipantRole.Admin &&
+                         actor.AdminPermissions.HasFlag(ConversationAdminPermission.ManageAdmins));
+        if (!canRemove)
         {
             throw ManagementNotAllowed();
         }
@@ -173,6 +240,7 @@ public sealed partial class EfMessagingStore
         Guid conversationId,
         Guid targetUserId,
         ConversationParticipantRole role,
+        ConversationAdminPermission adminPermissions,
         AccessContext accessContext,
         DateTime nowUtc,
         CancellationToken cancellationToken)
@@ -185,12 +253,21 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var target = await LoadActiveParticipantAsync(conversationId, targetUserId, cancellationToken)
             ?? throw ParticipantNotFound();
-        if (!managementPolicy.CanChangeRole(actor.Role, target.Role, role))
+        var canManageAdmins = actor.Role == ConversationParticipantRole.Owner ||
+                              actor.Role == ConversationParticipantRole.Admin &&
+                              actor.AdminPermissions.HasFlag(ConversationAdminPermission.ManageAdmins);
+        var canGrantPermissions = actor.Role == ConversationParticipantRole.Owner ||
+                                  (adminPermissions & ~actor.AdminPermissions) == 0;
+        if (!canManageAdmins || !canGrantPermissions ||
+            target.Role == ConversationParticipantRole.Owner ||
+            role is not ConversationParticipantRole.Admin and not ConversationParticipantRole.Member)
         {
             throw ManagementNotAllowed();
         }
 
-        target.ChangeRole(role);
+        target.ChangeRole(role, role == ConversationParticipantRole.Admin
+            ? adminPermissions
+            : ConversationAdminPermission.None);
         await SaveManagementAsync(cancellationToken);
         await AppendChangeAsync(
             conversation,

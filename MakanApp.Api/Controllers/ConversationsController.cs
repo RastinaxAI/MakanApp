@@ -57,10 +57,28 @@ public sealed class ConversationsController(
     [HttpGet]
     [ProducesResponseType<IReadOnlyCollection<ConversationSummaryResult>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<ConversationSummaryResult>>> GetMine(
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        [FromQuery] ConversationListFilter filter = ConversationListFilter.All,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 30) =>
         Ok(await messagingService.GetMyConversationsAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
+            new GetConversationListQuery(filter, page, pageSize),
+            cancellationToken));
+
+    [HttpGet("discover")]
+    [ProducesResponseType<DiscoverableConversationPageResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<DiscoverableConversationPageResult>> Discover(
+        CancellationToken cancellationToken,
+        [FromQuery] ConversationType? type,
+        [FromQuery(Name = "q")] string? query,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 30) =>
+        Ok(await managementService.DiscoverAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            new DiscoverConversationsQuery(type, query, page, pageSize),
             cancellationToken));
 
     [HttpGet("{conversationId:guid}/messages")]
@@ -118,6 +136,34 @@ public sealed class ConversationsController(
             conversationId,
             messageId,
             expectedVersion,
+            cancellationToken));
+
+    [HttpDelete("{conversationId:guid}/messages/{messageId:guid}/for-everyone")]
+    [ProducesResponseType<MessageMutationResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<MessageMutationResult>> DeleteMessageForEveryone(
+        Guid conversationId,
+        Guid messageId,
+        [FromQuery] string expectedVersion,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.DeleteMessageAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            messageId,
+            expectedVersion,
+            cancellationToken));
+
+    [HttpDelete("{conversationId:guid}/messages/{messageId:guid}/for-me")]
+    [ProducesResponseType<DeleteMessageForMeResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<DeleteMessageForMeResult>> DeleteMessageForMe(
+        Guid conversationId,
+        Guid messageId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.DeleteMessageForMeAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            messageId,
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/messages/{messageId:guid}/forward")]
@@ -273,6 +319,21 @@ public sealed class ConversationsController(
             command,
             cancellationToken));
 
+    [HttpGet("{conversationId:guid}/members")]
+    [ProducesResponseType<ConversationParticipantPageResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationParticipantPageResult>> GetMembers(
+        Guid conversationId,
+        CancellationToken cancellationToken,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 30) =>
+        Ok(await managementService.GetMembersAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            page,
+            pageSize,
+            cancellationToken));
+
     [HttpDelete("{conversationId:guid}/members/{targetUserId:guid}")]
     [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ManagedConversationResult>> RemoveMember(
@@ -310,6 +371,45 @@ public sealed class ConversationsController(
             conversationId,
             targetUserId,
             command,
+            cancellationToken));
+
+    [HttpPatch("{conversationId:guid}/members/{targetUserId:guid}/permissions")]
+    [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ManagedConversationResult>> UpdateMemberPermissions(
+        Guid conversationId,
+        Guid targetUserId,
+        UpdateConversationPermissionsCommand command,
+        CancellationToken cancellationToken) =>
+        Ok(await managementService.UpdateMemberPermissionsAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            targetUserId,
+            command,
+            cancellationToken));
+
+    [HttpPatch("{conversationId:guid}/settings")]
+    [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ManagedConversationResult>> UpdateSettings(
+        Guid conversationId,
+        UpdateConversationSettingsCommand command,
+        CancellationToken cancellationToken) =>
+        Ok(await managementService.UpdateSettingsAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            command,
+            cancellationToken));
+
+    [HttpPost("{conversationId:guid}/join")]
+    [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ManagedConversationResult>> JoinPublic(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await managementService.JoinPublicAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/ownership-transfers")]
@@ -355,11 +455,79 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/archive")]
-    [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
-    public async Task<ActionResult<ManagedConversationResult>> Archive(
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> Archive(
         Guid conversationId,
         CancellationToken cancellationToken) =>
-        Ok(await managementService.ArchiveAsync(
+        Ok(await messagingService.ArchiveConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpDelete("{conversationId:guid}/archive")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> Unarchive(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.UnarchiveConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpPost("{conversationId:guid}/state/pin")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> PinConversation(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.PinConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpDelete("{conversationId:guid}/state/pin")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> UnpinConversation(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.UnpinConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpPut("{conversationId:guid}/mute")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> SetMute(
+        Guid conversationId,
+        SetConversationMuteCommand command,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.SetConversationMuteAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            command,
+            cancellationToken));
+
+    [HttpDelete("{conversationId:guid}/mute")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> Unmute(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.UnmuteConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpPost("{conversationId:guid}/mark-unread")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> MarkUnread(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.MarkConversationUnreadAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             conversationId,

@@ -12,7 +12,7 @@ public sealed class ConversationManagementPolicyTests
     private readonly ConversationManagementAuthorizationPolicy _policy = new();
 
     [Fact]
-    public void PersonalCreationRequiresAdultInPersonalWorkspace()
+    public void PersonalCreationAllowsAuthenticatedAgeCategoriesInPersonalWorkspace()
     {
         var personal = Context(WorkspaceType.Personal, null, null);
 
@@ -20,7 +20,7 @@ public sealed class ConversationManagementPolicyTests
             ConversationScope.Personal,
             personal,
             CommunicationAgeCategory.Adult));
-        Assert.False(_policy.CanCreate(
+        Assert.True(_policy.CanCreate(
             ConversationScope.Personal,
             personal,
             CommunicationAgeCategory.Minor));

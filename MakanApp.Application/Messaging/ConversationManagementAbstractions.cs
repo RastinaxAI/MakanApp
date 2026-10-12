@@ -16,6 +16,15 @@ public sealed record OwnershipTransferStoreResult(
     ConversationOwnershipTransfer Transfer,
     bool AlreadyCompleted);
 
+public sealed record DiscoverableConversationStoreRecord(
+    Conversation Conversation,
+    string? OrganizationName,
+    bool IsJoined);
+
+public sealed record DiscoverableConversationStorePage(
+    IReadOnlyCollection<DiscoverableConversationStoreRecord> Items,
+    bool HasMore);
+
 public interface IConversationManagementStore
 {
     Task<ManagedConversationStoreResult> CreateAsync(
@@ -27,6 +36,9 @@ public interface IConversationManagementStore
         IReadOnlyCollection<Guid> initialParticipantUserIds,
         Guid clientOperationId,
         byte[] creationPayloadHash,
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities,
         AccessContext accessContext,
         DateTime nowUtc,
         CancellationToken cancellationToken);
@@ -34,6 +46,14 @@ public interface IConversationManagementStore
     Task<ManagedConversationStoreResult> GetDetailsAsync(
         Guid actorUserId,
         Guid conversationId,
+        AccessContext accessContext,
+        CancellationToken cancellationToken);
+
+    Task<(IReadOnlyCollection<ConversationParticipantStoreRecord> Items, bool HasMore)> GetMembersAsync(
+        Guid actorUserId,
+        Guid conversationId,
+        int page,
+        int pageSize,
         AccessContext accessContext,
         CancellationToken cancellationToken);
 
@@ -65,6 +85,44 @@ public interface IConversationManagementStore
         Guid conversationId,
         Guid targetUserId,
         ConversationParticipantRole role,
+        ConversationAdminPermission adminPermissions,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationStoreResult> UpdateMemberPermissionsAsync(
+        Guid actorUserId,
+        Guid conversationId,
+        Guid targetUserId,
+        ConversationAdminPermission permissions,
+        byte[] expectedVersion,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationStoreResult> UpdateSettingsAsync(
+        Guid actorUserId,
+        Guid conversationId,
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities,
+        byte[] expectedVersion,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<DiscoverableConversationStorePage> DiscoverAsync(
+        Guid actorUserId,
+        ConversationType? type,
+        string? query,
+        int page,
+        int pageSize,
+        AccessContext accessContext,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationStoreResult> JoinPublicAsync(
+        Guid actorUserId,
+        Guid conversationId,
         AccessContext accessContext,
         DateTime nowUtc,
         CancellationToken cancellationToken);
@@ -121,6 +179,14 @@ public interface IConversationManagementService
         Guid conversationId,
         CancellationToken cancellationToken);
 
+    Task<ConversationParticipantPageResult> GetMembersAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken);
+
     Task<ManagedConversationResult> AddMemberAsync(
         Guid userId,
         Guid sessionId,
@@ -147,6 +213,33 @@ public interface IConversationManagementService
         Guid conversationId,
         Guid targetUserId,
         ChangeConversationMemberRoleCommand command,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationResult> UpdateMemberPermissionsAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        Guid targetUserId,
+        UpdateConversationPermissionsCommand command,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationResult> UpdateSettingsAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        UpdateConversationSettingsCommand command,
+        CancellationToken cancellationToken);
+
+    Task<DiscoverableConversationPageResult> DiscoverAsync(
+        Guid userId,
+        Guid sessionId,
+        DiscoverConversationsQuery query,
+        CancellationToken cancellationToken);
+
+    Task<ManagedConversationResult> JoinPublicAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
         CancellationToken cancellationToken);
 
     Task<OwnershipTransferResult> StartOwnershipTransferAsync(

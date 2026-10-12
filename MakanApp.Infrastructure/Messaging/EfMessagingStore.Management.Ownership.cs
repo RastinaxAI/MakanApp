@@ -192,7 +192,9 @@ public sealed partial class EfMessagingStore
 
         if (accept)
         {
-            from.ChangeRole(ConversationParticipantRole.Admin);
+            from.ChangeRole(
+                ConversationParticipantRole.Admin,
+                ConversationAdminPermission.LegacyAdminDefault);
             await SaveManagementAsync(cancellationToken);
             to.ChangeRole(ConversationParticipantRole.Owner);
             transfer.Accept(nowUtc);

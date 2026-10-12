@@ -47,7 +47,17 @@ public sealed partial class EfMessagingStore
             .AsNoTracking()
             .Where(change => change.ConversationId == conversationId &&
                              change.ChangeSequence > afterChangeSequence &&
-                             (!change.AudienceUserId.HasValue || change.AudienceUserId == userId))
+                             (!change.AudienceUserId.HasValue || change.AudienceUserId == userId) &&
+                             (change.ChangeType != MessagingChangeType.MessageCreated &&
+                              change.ChangeType != MessagingChangeType.MessageEdited &&
+                              change.ChangeType != MessagingChangeType.MessageDeleted &&
+                              change.ChangeType != MessagingChangeType.ReactionChanged &&
+                              change.ChangeType != MessagingChangeType.PinChanged ||
+                              dbContext.Messages.Any(message =>
+                                  message.Id == change.ResourceId &&
+                                  message.Sequence >= participant.HistoryVisibleFromSequence &&
+                                  !dbContext.MessageUserVisibilities.Any(hidden =>
+                                      hidden.MessageId == message.Id && hidden.UserId == userId))))
             .OrderBy(change => change.ChangeSequence)
             .Take(limit + 1)
             .ToArrayAsync(cancellationToken);
@@ -145,7 +155,10 @@ public sealed partial class EfMessagingStore
 
         var messageExists = await dbContext.Messages.AnyAsync(
             message => message.ConversationId == conversationId &&
-                       message.Sequence == upToMessageSequence,
+                       message.Sequence == upToMessageSequence &&
+                       message.Sequence >= participant.HistoryVisibleFromSequence &&
+                       !dbContext.MessageUserVisibilities.Any(hidden =>
+                           hidden.MessageId == message.Id && hidden.UserId == userId),
             cancellationToken);
         if (!messageExists)
         {
@@ -157,7 +170,13 @@ public sealed partial class EfMessagingStore
         var changed = read
             ? participant.AdvanceRead(upToMessageSequence, nowUtc)
             : participant.AdvanceDelivery(upToMessageSequence, nowUtc);
-        if (changed)
+        var personalState = read
+            ? await dbContext.ConversationUserStates.SingleOrDefaultAsync(
+                state => state.ConversationId == conversationId && state.UserId == userId,
+                cancellationToken)
+            : null;
+        var manualUnreadCleared = personalState?.ClearManualUnread(nowUtc) ?? false;
+        if (changed || manualUnreadCleared)
         {
             await SaveSyncAsync(cancellationToken);
             await AppendChangeAsync(
@@ -175,9 +194,10 @@ public sealed partial class EfMessagingStore
             conversationId,
             userId,
             participant.LastReadMessageSequence,
+            participant.HistoryVisibleFromSequence,
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        if (changed)
+        if (changed || manualUnreadCleared)
         {
             outboxWakeSignal.Signal();
         }
@@ -189,12 +209,16 @@ public sealed partial class EfMessagingStore
         Guid conversationId,
         Guid userId,
         long afterMessageSequence,
+        long historyVisibleFromSequence,
         CancellationToken cancellationToken) =>
         dbContext.Messages.CountAsync(
             message => message.ConversationId == conversationId &&
+                       message.Sequence >= historyVisibleFromSequence &&
                        message.Sequence > afterMessageSequence &&
                        message.SenderUserId != userId &&
-                       message.DeletedAtUtc == null,
+                       message.DeletedAtUtc == null &&
+                       !dbContext.MessageUserVisibilities.Any(hidden =>
+                           hidden.MessageId == message.Id && hidden.UserId == userId),
             cancellationToken);
 
     private async Task<MessagingChangeEvent> AppendChangeAsync(

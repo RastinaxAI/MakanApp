@@ -38,6 +38,9 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
                   participant.UserId == accessContext.UserId &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
+                  message.Sequence >= participant.HistoryVisibleFromSequence &&
+                  !dbContext.MessageUserVisibilities.Any(hidden =>
+                      hidden.MessageId == message.Id && hidden.UserId == accessContext.UserId) &&
                   (conversation.Scope == ConversationScope.Personal &&
                    accessContext.WorkspaceType == WorkspaceType.Personal &&
                    accessContext.OrganizationId == null ||

@@ -37,10 +37,23 @@ public sealed class MessagingService(
     public async Task<IReadOnlyCollection<ConversationSummaryResult>> GetMyConversationsAsync(
         Guid userId,
         Guid sessionId,
+        GetConversationListQuery query,
         CancellationToken cancellationToken)
     {
+        if (!Enum.IsDefined(query.Filter) || query.Page is <= 0 or > 100_000 ||
+            query.PageSize is <= 0 or > 100)
+        {
+            throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی فهرست گفتگو معتبر نیست.");
+        }
+
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        var records = await store.GetMyConversationsAsync(userId, context, cancellationToken);
+        var records = await store.GetMyConversationsAsync(
+            userId,
+            context,
+            query.Filter,
+            query.Page,
+            query.PageSize,
+            cancellationToken);
         return records.Select(Map).ToArray();
     }
 
@@ -153,6 +166,124 @@ public sealed class MessagingService(
             UtcNow(),
             cancellationToken);
         return ToMutation(message);
+    }
+
+    public async Task<DeleteMessageForMeResult> DeleteMessageForMeAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        Guid messageId,
+        CancellationToken cancellationToken)
+    {
+        ValidateMessageIds(conversationId, messageId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var result = await store.DeleteMessageForMeAsync(
+            userId,
+            conversationId,
+            messageId,
+            context,
+            UtcNow(),
+            cancellationToken);
+        return new DeleteMessageForMeResult(
+            result.Visibility.MessageId,
+            conversationId,
+            result.Visibility.HiddenAtUtc,
+            result.AlreadyHidden);
+    }
+
+    public Task<ConversationUserStateResult> ArchiveConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        SetArchivedAsync(userId, sessionId, conversationId, true, cancellationToken);
+
+    public Task<ConversationUserStateResult> UnarchiveConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        SetArchivedAsync(userId, sessionId, conversationId, false, cancellationToken);
+
+    public Task<ConversationUserStateResult> PinConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        SetPinnedAsync(userId, sessionId, conversationId, true, cancellationToken);
+
+    public Task<ConversationUserStateResult> UnpinConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        SetPinnedAsync(userId, sessionId, conversationId, false, cancellationToken);
+
+    public async Task<ConversationUserStateResult> SetConversationMuteAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        SetConversationMuteCommand command,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        if (command.Mode is not ConversationMuteMode.Permanent and not ConversationMuteMode.Until ||
+            command.Mode == ConversationMuteMode.Permanent && command.MutedUntilUtc.HasValue ||
+            command.Mode == ConversationMuteMode.Until &&
+            (!command.MutedUntilUtc.HasValue || command.MutedUntilUtc.Value.Kind != DateTimeKind.Utc))
+        {
+            throw Error(MessagingErrorCodes.ConversationStateConflict, "تنظیم بی‌صدا معتبر نیست.");
+        }
+
+        var nowUtc = UtcNow();
+        if (command.Mode == ConversationMuteMode.Until && command.MutedUntilUtc <= nowUtc)
+        {
+            throw Error(MessagingErrorCodes.ConversationStateConflict, "زمان پایان بی‌صدا باید در آینده باشد.");
+        }
+
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.SetConversationMuteAsync(
+            userId,
+            conversationId,
+            context,
+            command.Mode,
+            command.MutedUntilUtc,
+            nowUtc,
+            cancellationToken));
+    }
+
+    public async Task<ConversationUserStateResult> UnmuteConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.SetConversationMuteAsync(
+            userId,
+            conversationId,
+            context,
+            ConversationMuteMode.None,
+            null,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    public async Task<ConversationUserStateResult> MarkConversationUnreadAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.MarkConversationUnreadAsync(
+            userId,
+            conversationId,
+            context,
+            UtcNow(),
+            cancellationToken));
     }
 
     public async Task<MessageReceiptResult> ForwardMessageAsync(
@@ -519,7 +650,7 @@ public sealed class MessagingService(
             message.DeletedAtUtc,
             message.IsEdited,
             isDeleted,
-            isDeleted || record.Reply is null ? null : MapReply(record.Reply.Message),
+            isDeleted || record.Reply is null ? null : MapReply(record.Reply),
             !isDeleted && message.ForwardedFromMessageId.HasValue,
             isDeleted
                 ? []
@@ -535,13 +666,16 @@ public sealed class MessagingService(
             Convert.ToBase64String(message.RowVersion));
     }
 
-    private static MessageReplySummaryResult MapReply(Message source) =>
-        new(
-            source.Id,
-            source.SenderUserId,
-            source.IsDeleted ? null : source.Kind,
-            source.IsDeleted ? null : source.Text,
-            source.IsDeleted);
+    private static MessageReplySummaryResult MapReply(MessageReplySummaryStoreRecord reply) =>
+        reply.Message is null
+            ? new(reply.MessageId, null, null, null, false, true)
+            : new(
+                reply.Message.Id,
+                reply.Message.SenderUserId,
+                reply.Message.IsDeleted ? null : reply.Message.Kind,
+                reply.Message.IsDeleted ? null : reply.Message.Text,
+                reply.Message.IsDeleted,
+                reply.IsUnavailable);
 
     private static MessageAttachmentResult Map(
         MessageAttachment attachment,
@@ -564,7 +698,7 @@ public sealed class MessagingService(
             result.Conversation.CreatedAtUtc,
             result.AlreadyExisted);
 
-    private static ConversationSummaryResult Map(ConversationSummaryStoreRecord result) =>
+    private ConversationSummaryResult Map(ConversationSummaryStoreRecord result) =>
         new(
             result.Conversation.Id,
             result.Conversation.Type,
@@ -577,7 +711,66 @@ public sealed class MessagingService(
             result.LastMessageSequence,
             result.Participant.LastDeliveredMessageSequence,
             result.Participant.LastReadMessageSequence,
-            result.UnreadCount);
+            result.UnreadCount,
+            result.State?.IsArchived ?? false,
+            result.State?.IsMutedAt(UtcNow()) ?? false,
+            result.State?.MuteMode ?? ConversationMuteMode.None,
+            result.State?.MutedUntilUtc,
+            result.State?.IsPinned ?? false,
+            result.State?.IsManuallyUnread ?? false,
+            result.Conversation.OrganizationId.HasValue && result.OrganizationName is not null
+                ? new ConversationOrganizationBadgeResult(
+                    result.Conversation.OrganizationId.Value,
+                    result.OrganizationName)
+                : null);
+
+    private async Task<ConversationUserStateResult> SetArchivedAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        bool archived,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.SetConversationArchivedAsync(
+            userId,
+            conversationId,
+            context,
+            archived,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    private async Task<ConversationUserStateResult> SetPinnedAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        bool pinned,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.SetConversationPinnedAsync(
+            userId,
+            conversationId,
+            context,
+            pinned,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    private ConversationUserStateResult Map(ConversationUserState state) =>
+        new(
+            state.ConversationId,
+            state.IsArchived,
+            state.IsMutedAt(UtcNow()),
+            state.MuteMode,
+            state.MutedUntilUtc,
+            state.IsPinned,
+            state.IsManuallyUnread,
+            state.UpdatedAtUtc,
+            Convert.ToBase64String(state.RowVersion));
 
     private static ConversationCursorStateResult Map(ConversationCursorStoreResult result) =>
         new(

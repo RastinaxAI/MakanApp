@@ -2622,7 +2622,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("DirectUserLowId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("GroupHistoryPolicy")
+                        .HasColumnType("int");
+
                     b.Property<int>("ManagementPolicy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MemberCapabilities")
                         .HasColumnType("int");
 
                     b.Property<long>("NextChangeSequence")
@@ -2653,6 +2659,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
+                    b.Property<int>("Visibility")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DirectUserHighId");
@@ -2671,13 +2680,22 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UX_Conversations_Direct_Scope_Organization_Pair")
                         .HasFilter("[Type] = 1");
 
+                    b.HasIndex("Scope", "OrganizationId", "Visibility", "Type", "Status", "CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_Conversations_PublicDiscovery");
+
                     b.ToTable("Conversations", "messaging", t =>
                         {
+                            t.HasCheckConstraint("CK_Conversations_BehaviorShape", "([Type] = 1 AND [Visibility] = 1 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0) OR ([Type] = 2) OR ([Type] = 3 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0)");
+
                             t.HasCheckConstraint("CK_Conversations_DirectPair", "[Type] <> 1 OR ([DirectUserLowId] IS NOT NULL AND [DirectUserHighId] IS NOT NULL AND [DirectUserLowId] <> [DirectUserHighId])");
+
+                            t.HasCheckConstraint("CK_Conversations_GroupHistoryPolicy", "[GroupHistoryPolicy] IN (1, 2)");
 
                             t.HasCheckConstraint("CK_Conversations_ManagedShape", "([Type] = 1 AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] IN (2, 3) AND [ManagementPolicy] IN (1, 2) AND LEN(LTRIM(RTRIM([Title]))) > 0 AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL)");
 
                             t.HasCheckConstraint("CK_Conversations_ManagementPolicy", "[ManagementPolicy] IN (0, 1, 2)");
+
+                            t.HasCheckConstraint("CK_Conversations_MemberCapabilities", "[MemberCapabilities] BETWEEN 0 AND 7");
 
                             t.HasCheckConstraint("CK_Conversations_NextChangeSequence", "[NextChangeSequence] > 0");
 
@@ -2691,9 +2709,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Conversations_SystemManagedAcademic", "([ManagementPolicy] <> 2) OR ([Scope] = 2 AND [CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationPayloadHash] IS NULL)");
 
+                            t.HasCheckConstraint("CK_Conversations_SystemManagedVisibility", "[ManagementPolicy] <> 2 OR [Visibility] = 1");
+
                             t.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3)");
 
                             t.HasCheckConstraint("CK_Conversations_UserManagedCreation", "([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Conversations_Visibility", "[Visibility] IN (1, 2)");
                         });
                 });
 
@@ -2763,6 +2785,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("AdminPermissions")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("ConversationId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2774,6 +2799,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("EndedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("HistoryVisibleFromSequence")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("JoinedAtUtc")
                         .HasColumnType("datetime2(7)");
@@ -2818,11 +2846,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId", "Status");
 
+                    b.HasIndex("ConversationId", "UserId", "HistoryVisibleFromSequence");
+
                     b.ToTable("ConversationParticipants", "messaging", t =>
                         {
+                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 255 AND (([Role] = 2) OR [AdminPermissions] = 0)");
+
                             t.HasCheckConstraint("CK_ConversationParticipants_CursorTimestamp", "([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_ConversationParticipants_Cursors", "[LastDeliveredMessageSequence] >= 0 AND [LastReadMessageSequence] >= 0 AND [LastReadMessageSequence] <= [LastDeliveredMessageSequence]");
+
+                            t.HasCheckConstraint("CK_ConversationParticipants_HistoryBoundary", "[HistoryVisibleFromSequence] > 0");
 
                             t.HasCheckConstraint("CK_ConversationParticipants_Lifecycle", "([Status] = 1 AND [EndedAtUtc] IS NULL AND [EndedByUserId] IS NULL) OR ([Status] IN (2, 3) AND [EndedAtUtc] IS NOT NULL AND [EndedByUserId] IS NOT NULL)");
 
@@ -2878,6 +2912,51 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("ConversationPins", "messaging", t =>
                         {
                             t.HasCheckConstraint("CK_ConversationPins_Lifecycle", "([UnpinnedAtUtc] IS NULL AND [UnpinnedByUserId] IS NULL) OR ([UnpinnedAtUtc] IS NOT NULL AND [UnpinnedByUserId] IS NOT NULL AND [UnpinnedAtUtc] >= [PinnedAtUtc])");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationUserState", b =>
+                {
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<bool>("IsManuallyUnread")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MuteMode")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("MutedUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("PinnedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("ConversationId", "UserId");
+
+                    b.HasIndex("UserId", "ArchivedAtUtc", "PinnedAtUtc", "UpdatedAtUtc")
+                        .HasDatabaseName("IX_ConversationUserStates_User_List");
+
+                    b.ToTable("ConversationUserStates", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationUserStates_MuteMode", "[MuteMode] IN (0, 1, 2)");
+
+                            t.HasCheckConstraint("CK_ConversationUserStates_MuteShape", "([MuteMode] IN (0, 1) AND [MutedUntilUtc] IS NULL) OR ([MuteMode] = 2 AND [MutedUntilUtc] IS NOT NULL)");
                         });
                 });
 
@@ -3119,6 +3198,25 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.MessageUserVisibility", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("HiddenAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("MessageId", "UserId");
+
+                    b.HasIndex("UserId", "MessageId")
+                        .HasDatabaseName("IX_MessageUserVisibilities_User_Message");
+
+                    b.ToTable("MessageUserVisibilities", "messaging");
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.MessagingChangeEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3172,7 +3270,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
 
-                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9)");
+                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)");
                         });
                 });
 
@@ -5015,6 +5113,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationUserState", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.Message", b =>
                 {
                     b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
@@ -5103,6 +5216,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Messaging.Message", null)
                         .WithMany()
                         .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.MessageUserVisibility", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

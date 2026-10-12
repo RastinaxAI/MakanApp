@@ -35,6 +35,35 @@ public sealed class ConversationManagementService(
         return Map(await store.GetDetailsAsync(userId, conversationId, context, cancellationToken));
     }
 
+    public async Task<ConversationParticipantPageResult> GetMembersAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        EnsureConversationId(conversationId);
+        if (page is <= 0 or > 100_000 || pageSize is <= 0 or > 100)
+        {
+            throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی اعضای گفتگو معتبر نیست.");
+        }
+
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var result = await store.GetMembersAsync(
+            userId,
+            conversationId,
+            page,
+            pageSize,
+            context,
+            cancellationToken);
+        return new ConversationParticipantPageResult(
+            result.Items.Select(MapParticipant).ToArray(),
+            page,
+            pageSize,
+            result.HasMore);
+    }
+
     public async Task<ManagedConversationResult> AddMemberAsync(
         Guid userId,
         Guid sessionId,
@@ -112,6 +141,116 @@ public sealed class ConversationManagementService(
             conversationId,
             targetUserId,
             command.Role,
+            command.AdminPermissions,
+            context,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    public async Task<ManagedConversationResult> UpdateMemberPermissionsAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        Guid targetUserId,
+        UpdateConversationPermissionsCommand command,
+        CancellationToken cancellationToken)
+    {
+        EnsureConversationAndTarget(conversationId, targetUserId);
+        if ((command.Permissions & ~ConversationAdminPermission.All) != 0)
+        {
+            throw Error(MessagingErrorCodes.ConversationPermissionRequired, "مجموعه مجوزها معتبر نیست.");
+        }
+
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.UpdateMemberPermissionsAsync(
+            userId,
+            conversationId,
+            targetUserId,
+            command.Permissions,
+            DecodeVersion(command.ExpectedVersion),
+            context,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    public async Task<ManagedConversationResult> UpdateSettingsAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        UpdateConversationSettingsCommand command,
+        CancellationToken cancellationToken)
+    {
+        EnsureConversationId(conversationId);
+        if (!Enum.IsDefined(command.Visibility) || !Enum.IsDefined(command.GroupHistoryPolicy) ||
+            (command.MemberCapabilities & ~GroupMemberCapability.All) != 0)
+        {
+            throw Error(MessagingErrorCodes.ManagedConversationInvalid, "تنظیمات گفتگو معتبر نیست.");
+        }
+
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.UpdateSettingsAsync(
+            userId,
+            conversationId,
+            command.Visibility,
+            command.GroupHistoryPolicy,
+            command.MemberCapabilities,
+            DecodeVersion(command.ExpectedVersion),
+            context,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    public async Task<DiscoverableConversationPageResult> DiscoverAsync(
+        Guid userId,
+        Guid sessionId,
+        DiscoverConversationsQuery query,
+        CancellationToken cancellationToken)
+    {
+        if (query.Type is not null and not ConversationType.Group and not ConversationType.Channel ||
+            query.Page <= 0 || query.PageSize is <= 0 or > 100 || query.Query?.Length > 160)
+        {
+            throw Error(MessagingErrorCodes.MessagePageInvalid, "فیلتر یا صفحه‌بندی کشف گفتگو معتبر نیست.");
+        }
+
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var page = await store.DiscoverAsync(
+            userId,
+            query.Type,
+            string.IsNullOrWhiteSpace(query.Query) ? null : query.Query.Trim(),
+            query.Page,
+            query.PageSize,
+            context,
+            cancellationToken);
+        return new DiscoverableConversationPageResult(
+            page.Items.Select(item => new DiscoverableConversationResult(
+                item.Conversation.Id,
+                item.Conversation.Type,
+                item.Conversation.Scope,
+                item.Conversation.Title ?? string.Empty,
+                item.Conversation.Description,
+                item.Conversation.OrganizationId.HasValue && item.OrganizationName is not null
+                    ? new ConversationOrganizationBadgeResult(
+                        item.Conversation.OrganizationId.Value,
+                        item.OrganizationName)
+                    : null,
+                item.IsJoined,
+                item.Conversation.CreatedAtUtc)).ToArray(),
+            query.Page,
+            query.PageSize,
+            page.HasMore);
+    }
+
+    public async Task<ManagedConversationResult> JoinPublicAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        EnsureConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.JoinPublicAsync(
+            userId,
+            conversationId,
             context,
             UtcNow(),
             cancellationToken));
@@ -217,8 +356,29 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ManagedConversationInvalid, "اعضای اولیه باید شناسه‌های یکتا و معتبر داشته باشند و شامل سازنده نباشند.");
         }
 
+        var memberCapabilities = type == ConversationType.Group
+            ? command.MemberCapabilities ?? GroupMemberCapability.LegacyMemberDefault
+            : GroupMemberCapability.None;
+        var historyPolicy = type == ConversationType.Group
+            ? command.GroupHistoryPolicy
+            : GroupHistoryPolicy.FullHistory;
+        if (!Enum.IsDefined(command.Visibility) || !Enum.IsDefined(historyPolicy) ||
+            (memberCapabilities & ~GroupMemberCapability.All) != 0)
+        {
+            throw Error(MessagingErrorCodes.ManagedConversationInvalid, "تنظیمات گفتگو معتبر نیست.");
+        }
+
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        var hash = CreatePayloadHash(type, command.Scope, context.OrganizationId, title, description, participantIds);
+        var hash = CreatePayloadHash(
+            type,
+            command.Scope,
+            context.OrganizationId,
+            title,
+            description,
+            participantIds,
+            command.Visibility,
+            historyPolicy,
+            memberCapabilities);
         return Map(await store.CreateAsync(
             userId,
             type,
@@ -228,6 +388,9 @@ public sealed class ConversationManagementService(
             participantIds,
             command.ClientOperationId,
             hash,
+            command.Visibility,
+            historyPolicy,
+            memberCapabilities,
             context,
             UtcNow(),
             cancellationToken));
@@ -263,20 +426,31 @@ public sealed class ConversationManagementService(
             result.Conversation.Title ?? string.Empty,
             result.Conversation.Description,
             result.Conversation.ManagementPolicy,
+            result.Conversation.Visibility,
+            result.Conversation.GroupHistoryPolicy,
+            result.Conversation.MemberCapabilities,
             result.Conversation.Status,
             result.Conversation.CreatedAtUtc,
             result.Conversation.ArchivedAtUtc,
-            result.Participants.Select(item => new ConversationParticipantResult(
-                item.Participant.Id,
-                new SafeMessagingIdentityResult(
-                    item.Identity.UserId,
-                    item.Identity.Username,
-                    item.Identity.DisplayName),
-                item.Participant.Role,
-                item.Participant.Status,
-                item.Participant.JoinedAtUtc,
-                item.Participant.EndedAtUtc)).ToArray(),
+            Convert.ToBase64String(result.Conversation.RowVersion),
+            result.Participants.Select(MapParticipant).ToArray(),
             result.AlreadyExisted);
+
+    private static ConversationParticipantResult MapParticipant(
+        ConversationParticipantStoreRecord item) =>
+        new(
+            item.Participant.Id,
+            new SafeMessagingIdentityResult(
+                item.Identity.UserId,
+                item.Identity.Username,
+                item.Identity.DisplayName),
+            item.Participant.Role,
+            item.Participant.Status,
+            item.Participant.JoinedAtUtc,
+            item.Participant.EndedAtUtc,
+            item.Participant.HistoryVisibleFromSequence,
+            item.Participant.AdminPermissions,
+            Convert.ToBase64String(item.Participant.RowVersion));
 
     private static OwnershipTransferResult Map(OwnershipTransferStoreResult result) =>
         new(
@@ -296,7 +470,10 @@ public sealed class ConversationManagementService(
         Guid? organizationId,
         string title,
         string? description,
-        IReadOnlyCollection<Guid> participantIds)
+        IReadOnlyCollection<Guid> participantIds,
+        ConversationVisibility visibility,
+        GroupHistoryPolicy groupHistoryPolicy,
+        GroupMemberCapability memberCapabilities)
     {
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         Append(hash, ((int)type).ToString());
@@ -304,6 +481,9 @@ public sealed class ConversationManagementService(
         Append(hash, organizationId?.ToString("N") ?? string.Empty);
         Append(hash, title);
         Append(hash, description ?? string.Empty);
+        Append(hash, ((int)visibility).ToString());
+        Append(hash, ((int)groupHistoryPolicy).ToString());
+        Append(hash, ((int)memberCapabilities).ToString());
         foreach (var participantId in participantIds)
         {
             Append(hash, participantId.ToString("N"));
@@ -333,6 +513,27 @@ public sealed class ConversationManagementService(
         if (conversationId == Guid.Empty)
         {
             throw Error(MessagingErrorCodes.ConversationNotFound, "گفتگو یافت نشد.");
+        }
+    }
+
+    private static byte[] DecodeVersion(string value)
+    {
+        try
+        {
+            var decoded = Convert.FromBase64String(value);
+            if (decoded.Length != 8)
+            {
+                throw new FormatException();
+            }
+
+            return decoded;
+        }
+        catch (FormatException exception)
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.ConversationStateConflict,
+                "نسخه مورد انتظار معتبر نیست.",
+                exception);
         }
     }
 

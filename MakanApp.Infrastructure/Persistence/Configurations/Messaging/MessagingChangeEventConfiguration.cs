@@ -12,7 +12,7 @@ public sealed class MessagingChangeEventConfiguration : IEntityTypeConfiguration
         builder.ToTable("ChangeEvents", "messaging", table =>
         {
             table.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
-            table.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9)");
+            table.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)");
             table.HasCheckConstraint("CK_ChangeEvents_PayloadVersion", "[PayloadVersion] = 1");
         });
         builder.HasKey(change => change.Id);

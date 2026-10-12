@@ -44,6 +44,13 @@ public sealed partial class EfMessagingStore
                 "فقط فرستنده اصلی می‌تواند پیام را ویرایش کند.");
         }
 
+        if (!message.IsWithinSenderMutationWindow(nowUtc))
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.MessageEditWindowExpired,
+                "مهلت یک‌ساعته ویرایش پیام پایان یافته است.");
+        }
+
         int revisionNumber;
         try
         {
@@ -98,11 +105,24 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         EnsureMutableConversation(conversation);
         ApplyExpectedMessageVersion(message, expectedVersion);
-        if (message.SenderUserId != userId)
+        var isSender = message.SenderUserId == userId;
+        var canModerate = conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
+                          conversation.Type is ConversationType.Group or ConversationType.Channel &&
+                          (participant.Role == ConversationParticipantRole.Owner ||
+                           participant.Role == ConversationParticipantRole.Admin &&
+                           participant.AdminPermissions.HasFlag(ConversationAdminPermission.DeleteMessages));
+        if (!isSender && !canModerate)
         {
             throw new MessagingException(
-                MessagingErrorCodes.MessageNotAllowed,
-                "فقط فرستنده اصلی می‌تواند پیام را برای همه حذف کند.");
+                MessagingErrorCodes.ConversationPermissionRequired,
+                "مجوز حذف این پیام وجود ندارد.");
+        }
+
+        if (isSender && !message.IsWithinSenderMutationWindow(nowUtc))
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.MessageDeleteWindowExpired,
+                "مهلت یک‌ساعته حذف پیام برای همه پایان یافته است.");
         }
 
         if (message.IsDeleted)
@@ -334,6 +354,13 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken)
             ?? throw MessageNotFound();
+        if (message.Sequence < participant.HistoryVisibleFromSequence ||
+            await dbContext.MessageUserVisibilities.AnyAsync(
+                hidden => hidden.MessageId == message.Id && hidden.UserId == userId,
+                cancellationToken))
+        {
+            throw MessageNotFound();
+        }
         return (conversation, participant, message);
     }
 
@@ -364,7 +391,9 @@ public sealed partial class EfMessagingStore
         EnsureMutableConversation(conversation);
         var allowed = conversation.Type == ConversationType.Direct ||
             conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
-            participant.Role is ConversationParticipantRole.Owner or ConversationParticipantRole.Admin;
+            (participant.Role == ConversationParticipantRole.Owner ||
+             participant.Role == ConversationParticipantRole.Admin &&
+             participant.AdminPermissions.HasFlag(ConversationAdminPermission.PinMessages));
         if (!allowed)
         {
             throw new MessagingException(
