@@ -175,7 +175,7 @@ ProblemDetails جزئیات SQL، exception داخلی، secret یا payload pro
 
 در این مرحله پیام موفقیت کاربر تولید نشده است؛ Outbox فقط handoff durable اشتراک را حمل می‌کند تا duplicate notification ساخته نشود. notification پرداخت باید بعداً با متن privacy-safe و SourceEvent پایدار به infrastructure موجود اضافه شود.
 
-هیچ secret پرداختی در appsettings نیست. Provider واقعی آینده باید credential را از Environment Variable، User Secrets یا Secret Manager بگیرد. DTOها merchant key، signature و payload خام ندارند. logging فعلی exceptionهای dispatcher و MessageId را ثبت می‌کند؛ adapter آینده فقط OrderId، PaymentAttemptId، Provider، reference امن و TraceId را structured log می‌کند.
+هیچ secret پرداختی در appsettings نیست. Provider واقعی آینده باید credential را از Environment Variable، User Secrets یا Secret Manager بگیرد. DTOها merchant key، signature و payload خام ندارند. مسیر persistence ایجاد Order/Attempt، initiation، verification، settlement تکراری و mismatch را با `OrderId`، `PaymentAttemptId`، Provider و وضعیت به‌صورت structured log ثبت می‌کند؛ payload خام، credential و secret log نمی‌شوند. adapter آینده نیز فقط correlationهای امن و TraceId را اضافه می‌کند.
 
 ## تست‌ها و مرزهای آینده
 

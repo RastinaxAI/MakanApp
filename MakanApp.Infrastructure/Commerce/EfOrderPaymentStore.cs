@@ -5,12 +5,14 @@ using MakanApp.Application.Outbox;
 using MakanApp.Domain.Commerce;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Commerce;
 
 public sealed class EfOrderPaymentStore(
     MakanDbContext dbContext,
-    IOutbox outbox) : IOrderPaymentStore
+    IOutbox outbox,
+    ILogger<EfOrderPaymentStore> logger) : IOrderPaymentStore
 {
     public async Task<CreateOrderStoreResult> CreateOrderAsync(
         Guid purchaserUserId,
@@ -59,6 +61,11 @@ public sealed class EfOrderPaymentStore(
         await dbContext.SaveChangesAsync(cancellationToken);
         var created = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        logger.LogInformation(
+            "سفارش {OrderId} برای سازمان {OrganizationId} و نسخه پلن {PlanVersionId} ایجاد شد.",
+            order.Id,
+            order.OrganizationId,
+            order.PlanVersionId);
         return new CreateOrderStoreResult(CreateOrderStoreStatus.Created, created);
     }
 
@@ -175,6 +182,11 @@ public sealed class EfOrderPaymentStore(
         await dbContext.SaveChangesAsync(cancellationToken);
         var createdOrder = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        logger.LogInformation(
+            "تلاش پرداخت {PaymentAttemptId} برای سفارش {OrderId} و provider {Provider} ایجاد شد.",
+            attempt.Id,
+            order.Id,
+            attempt.Provider);
         return new CreatePaymentAttemptStoreResult(
             CreatePaymentAttemptStoreStatus.Created,
             createdOrder,
@@ -243,6 +255,10 @@ public sealed class EfOrderPaymentStore(
                 cancellationToken);
             var conflictSnapshot = await CreateSnapshotAsync(conflictOrder, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            logger.LogWarning(
+                "مرجع provider برای تلاش پرداخت {PaymentAttemptId} سفارش {OrderId} تکراری بود.",
+                attempt.Id,
+                conflictOrder.Id);
             return new CompletePaymentInitiationStoreResult(
                 CompletePaymentInitiationStoreStatus.ReferenceConflict,
                 conflictSnapshot,
@@ -287,6 +303,12 @@ public sealed class EfOrderPaymentStore(
             cancellationToken);
         var snapshot = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        logger.LogInformation(
+            "initiation تلاش پرداخت {PaymentAttemptId} سفارش {OrderId} با وضعیت {PaymentStatus} و provider {Provider} ثبت شد.",
+            attempt.Id,
+            order.Id,
+            attempt.Status,
+            attempt.Provider);
         return new CompletePaymentInitiationStoreResult(
             CompletePaymentInitiationStoreStatus.Completed,
             snapshot,
@@ -339,6 +361,10 @@ public sealed class EfOrderPaymentStore(
         {
             var existingSnapshot = await CreateSnapshotAsync(order, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            logger.LogInformation(
+                "settlement تکراری سفارش {OrderId} و تلاش پرداخت {PaymentAttemptId} بدون اثر جدید بازگردانده شد.",
+                order.Id,
+                attempt.Id);
             return new RecordPaymentVerificationStoreResult(
                 RecordPaymentVerificationStoreStatus.AlreadySettled,
                 existingSnapshot,
@@ -464,6 +490,27 @@ public sealed class EfOrderPaymentStore(
         await dbContext.SaveChangesAsync(cancellationToken);
         var snapshot = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        if (status is RecordPaymentVerificationStoreStatus.AmountMismatch or
+            RecordPaymentVerificationStoreStatus.CurrencyMismatch or
+            RecordPaymentVerificationStoreStatus.ReferenceConflict)
+        {
+            logger.LogWarning(
+                "verification تلاش پرداخت {PaymentAttemptId} سفارش {OrderId} با نتیجه {VerificationStatus} و provider {Provider} ثبت شد.",
+                attempt.Id,
+                order.Id,
+                status,
+                attempt.Provider);
+        }
+        else
+        {
+            logger.LogInformation(
+                "verification تلاش پرداخت {PaymentAttemptId} سفارش {OrderId} با نتیجه {VerificationStatus} و provider {Provider} ثبت شد.",
+                attempt.Id,
+                order.Id,
+                status,
+                attempt.Provider);
+        }
+
         return new RecordPaymentVerificationStoreResult(
             status,
             snapshot,
