@@ -1,5 +1,6 @@
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Commerce;
 using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
@@ -43,6 +44,12 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<ExamGradeRevision> ExamGradeRevisions => Set<ExamGradeRevision>();
     public DbSet<ExamQuestionGrade> ExamQuestionGrades => Set<ExamQuestionGrade>();
     public DbSet<ExamGradeRelease> ExamGradeReleases => Set<ExamGradeRelease>();
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<PlanVersion> PlanVersions => Set<PlanVersion>();
+    public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
+    public DbSet<PlanQuotaDefinition> PlanQuotaDefinitions => Set<PlanQuotaDefinition>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<UsageLedgerEntry> UsageLedgerEntries => Set<UsageLedgerEntry>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<UserCredential> UserCredentials => Set<UserCredential>();

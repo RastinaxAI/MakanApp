@@ -1,5 +1,6 @@
 using MakanApp.Application.Academic;
 using MakanApp.Application.Assessment;
+using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
@@ -27,6 +28,9 @@ public sealed class GlobalExceptionHandler(
             AssessmentException assessmentException => CreateKnownProblem(
                 assessmentException.Code,
                 assessmentException.Message),
+            CommerceException commerceException => CreateKnownProblem(
+                commerceException.Code,
+                commerceException.Message),
             AcademicException academicException => CreateKnownProblem(
                 academicException.Code,
                 academicException.Message),
@@ -87,6 +91,14 @@ public sealed class GlobalExceptionHandler(
             IdentityErrorCodes.SmsRecipientInvalid => StatusCodes.Status400BadRequest,
             IdentityErrorCodes.SmsRecipientBlocked => StatusCodes.Status422UnprocessableEntity,
             IdentityErrorCodes.SmsRateLimited => StatusCodes.Status429TooManyRequests,
+            CommerceErrorCodes.SummaryNotAllowed => StatusCodes.Status403Forbidden,
+            CommerceErrorCodes.SubscriptionRequired => StatusCodes.Status409Conflict,
+            CommerceErrorCodes.SubscriptionInactive => StatusCodes.Status409Conflict,
+            CommerceErrorCodes.EntitlementRequired => StatusCodes.Status403Forbidden,
+            CommerceErrorCodes.QuotaRequired => StatusCodes.Status409Conflict,
+            CommerceErrorCodes.QuotaExceeded => StatusCodes.Status409Conflict,
+            CommerceErrorCodes.UsageInvalid => StatusCodes.Status400BadRequest,
+            CommerceErrorCodes.UsageConflict => StatusCodes.Status409Conflict,
             NotificationErrorCodes.NotFound => StatusCodes.Status404NotFound,
             NotificationErrorCodes.InvalidQuery => StatusCodes.Status400BadRequest,
             NotificationErrorCodes.ConcurrencyConflict => StatusCodes.Status409Conflict,

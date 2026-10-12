@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Academic;
 using MakanApp.Application.Assessment;
+using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
@@ -14,6 +15,7 @@ using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Academic;
 using MakanApp.Infrastructure.Assessment;
+using MakanApp.Infrastructure.Commerce;
 using MakanApp.Infrastructure.Guardian;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
@@ -78,6 +80,12 @@ public static class DependencyInjection
         services.AddScoped<IExamFinalizationService, ExamFinalizationService>();
         services.AddScoped<IExamGradingStore, EfExamGradingStore>();
         services.AddScoped<IExamGradingService, ExamGradingService>();
+        services.AddScoped<ICommerceStore, EfCommerceStore>();
+        services.AddScoped<CommerceService>();
+        services.AddScoped<ICommerceService>(serviceProvider =>
+            serviceProvider.GetRequiredService<CommerceService>());
+        services.AddScoped<IEntitlementService>(serviceProvider =>
+            serviceProvider.GetRequiredService<CommerceService>());
         services.AddScoped<IDashboardReadService, EfDashboardReadService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IDetailedReportReadService, EfDetailedReportReadService>();

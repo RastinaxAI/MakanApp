@@ -1278,7 +1278,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 ### مرز قابلیت موجود
 
-در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
+در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider واقعی، backplane چندinstance SignalR، Copilot، AI، Payment/Order و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. Commerce فقط Summary خواندنی مدیر و foundation داخلی Entitlement/Quota دارد؛ مدیریت Plan و Subscription به Backoffice آینده موکول شده است. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
 
 تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.
 
@@ -1386,3 +1386,22 @@ Push provider واقعی انتخاب نشده و فقط providerهای `Develop
 `NotificationDeliveryDispatcher` تلاش‌های `Pending/Deferred` را با lease و قفل SQL Server claim می‌کند. timeout، transient retry محدود، permanent failure و suppression علت‌های جدا دارند. unique index بر `(NotificationId, Channel, DestinationReference)` از ساخت effect تکراری جلوگیری می‌کند. preview خارجی privacy-safe و deep link فقط navigation hint است؛ authorization مقصد باید دوباره اجرا شود.
 
 schema، indexها، lifecycle، تنظیمات provider و محدودیت‌های دقیق در [سند معماری STEP 12B](architecture/STEP_12B_NOTIFICATION_PREFERENCES_DELIVERY.md) آمده است.
+
+<a id="commerce-foundation"></a>
+## اشتراک، دسترسی تجاری و ظرفیت — STEP 13A
+
+Commerce وضعیت جاری اشتراک سازمان، قابلیت‌های فعال و ظرفیت‌ها را از PlanVersion منتشرشده resolve می‌کند. نام نمایشی Plan در authorization استفاده نمی‌شود و Subscriptionهای قدیمی با انتشار نسخه جدید خودکار تغییر نمی‌کنند.
+
+| عملیات | مسیر | نتیجه |
+|---|---|---|
+| خلاصه اشتراک مدیر | `GET /api/v1/commerce/summary` | Plan/Version، وضعیت اشتراک، Entitlementها، quota، usage، remaining و over-quota |
+
+این endpoint به Bearer session معتبر، workspace سازمانی، Membership فعال و نقش جاری `Manager` نیاز دارد. OrganizationId از frontend دریافت نمی‌شود و از `AccessContext` resolve می‌شود. نبود اشتراک خطای سرور نیست و با `state=NoSubscription` و HTTP 200 نمایش داده می‌شود؛ اشتراک خارج از بازه یا لغوشده `Inactive` است.
+
+کلیدهای Entitlement شامل Academic، Assignments، Exams، Messaging، Reports و Storage هستند. quotaهای فعلی `ActiveLearners`، `ActiveClasses`، `StorageBytes` و `ReportExports` هستند. سه مورد نخست مصرف را از ماژول مالک می‌خوانند؛ فقط `ReportExports` در UsageLedger metered است. `null` برای Limit به معنی unlimited صریح است و نبود definition به معنی unlimited نیست.
+
+برای مصرف metered، `SourceOperationId` و unique index retry را idempotent می‌کنند. Transaction سریال‌پذیر و `UPDLOCK/HOLDLOCK` روی Subscription مانع مصرف هم‌زمان بیش از آخرین واحد ظرفیت می‌شود. `CheckCapacityAsync` به‌تنهایی رزرو نیست؛ write pathهای authoritative آینده باید lock quota و write ماژول مالک را در یک transaction کوتاه ترکیب کنند.
+
+Downgrade داده‌های آموزشی یا فایل را حذف نمی‌کند. مصرف بالاتر از سقف با `isOverQuota=true` دیده می‌شود و عملیات ظرفیت‌ساز آینده باید مسدود شود؛ workflow از قبل شروع‌شده کورکورانه قطع نمی‌شود.
+
+هیچ endpoint مدیر برای ایجاد Plan، انتشار PlanVersion، تغییر quota یا فعال‌سازی Subscription وجود ندارد. Manager سازمانی Platform Admin نیست. Order، Payment، gateway، callback، Backoffice، Contacts و AI integration در این مرحله ساخته نشده‌اند. جزئیات مدل، schema، concurrency، خطاها و مرزهای آینده در [سند معماری STEP 13A](architecture/STEP_13A_COMMERCE_FOUNDATION.md) آمده است.
