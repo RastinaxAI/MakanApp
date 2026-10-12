@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using MakanApp.Application.Assessment;
+using MakanApp.Application.Notification;
 using MakanApp.Domain.Assessment;
 using Xunit;
 
@@ -149,9 +150,17 @@ public sealed partial class AssignmentEndpointsTests
         var scenario = await CreateEvaluationScenarioAsync(managerClient, studentClient);
         var draft = await SaveEvaluationAsync(managerClient, scenario.Attempt.Id);
 
+        var outboxCountBefore = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.AssignmentGradeReleasedMessageType);
         var first = await ReleaseEvaluationAsync(managerClient, scenario.Attempt.Id, draft.RowVersion);
+        var outboxCountAfterFirstRelease = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.AssignmentGradeReleasedMessageType);
         var retry = await ReleaseEvaluationAsync(managerClient, scenario.Attempt.Id, draft.RowVersion);
+        var outboxCountAfterRetry = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.AssignmentGradeReleasedMessageType);
 
+        Assert.True(outboxCountAfterFirstRelease > outboxCountBefore);
+        Assert.Equal(outboxCountAfterFirstRelease, outboxCountAfterRetry);
         Assert.Equal(first.GradeReleaseId, retry.GradeReleaseId);
         Assert.Equal(first.EvaluationRevisionId, retry.EvaluationRevisionId);
         Assert.Equal(first.ReleasedAtUtc, retry.ReleasedAtUtc);

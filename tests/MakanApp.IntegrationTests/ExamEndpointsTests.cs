@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using MakanApp.Application.Assessment;
+using MakanApp.Application.Notification;
 using MakanApp.Domain.Assessment;
 using Xunit;
 
@@ -277,12 +278,17 @@ public sealed partial class ExamEndpointsTests
         var exam = await AddObjectiveQuestionAsync(
             managerClient,
             await CreateDraftAsync(managerClient, academicClass.ClassId));
-        _ = await PublishAsync(managerClient, exam);
         using var studentClient = _factory.CreateClient();
         _ = await CreateStudentAsync(
             studentClient,
             manager.OrganizationId,
             academicClass.ClassId);
+        var outboxCountBefore = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.ExamPublishedMessageType);
+        _ = await PublishAsync(managerClient, exam);
+        var outboxCountAfter = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.ExamPublishedMessageType);
+        Assert.True(outboxCountAfter > outboxCountBefore);
 
         var exams = await studentClient.GetFromJsonAsync<StudentExamSummary[]>(
             "/api/v1/academic/exams",

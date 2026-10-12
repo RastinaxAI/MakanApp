@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using MakanApp.Application.Assessment;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Notification;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 using Xunit;
@@ -304,10 +305,15 @@ public sealed partial class ExamEndpointsTests
                 PrivateEvaluatorNote,
                 grade.RowVersion));
         Assert.Equal(ExamGradeRevisionStatus.ReadyForRelease, grade.Status);
+        var outboxCountBefore = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.ExamGradeReleasedMessageType);
         var release = await ReleaseGradeAsync(
             teacherClient,
             attempt.ExamAttemptId,
             new ReleaseExamGradeCommand(Guid.NewGuid(), grade.RowVersion));
+        var outboxCountAfter = await _factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.ExamGradeReleasedMessageType);
+        Assert.True(outboxCountAfter > outboxCountBefore);
         Assert.Equal(6m, release.TotalScore);
         Assert.Equal(10m, release.MaximumScore);
 

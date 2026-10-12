@@ -28,6 +28,11 @@ public sealed record NotificationOutboxPayload(
 
 public static class NotificationOutboxContract
 {
+    public const string AssignmentPublishedMessageType = "notification.assignment-published.v1";
+    public const string AssignmentGradeReleasedMessageType = "notification.assignment-grade-released.v1";
+    public const string ExamPublishedMessageType = "notification.exam-published.v1";
+    public const string ExamGradeReleasedMessageType = "notification.exam-grade-released.v1";
+
     public static IReadOnlyCollection<OutboxEnvelope> Create(NotificationIntent intent) =>
         intent.Recipients
             .Where(recipient => recipient.UserId != Guid.Empty)
@@ -53,10 +58,10 @@ public static class NotificationOutboxContract
 
     private static string GetMessageType(NotificationType type) => type switch
     {
-        NotificationType.AssignmentPublished => "notification.assignment-published.v1",
-        NotificationType.AssignmentGradeReleased => "notification.assignment-grade-released.v1",
-        NotificationType.ExamPublished => "notification.exam-published.v1",
-        NotificationType.ExamGradeReleased => "notification.exam-grade-released.v1",
+        NotificationType.AssignmentPublished => AssignmentPublishedMessageType,
+        NotificationType.AssignmentGradeReleased => AssignmentGradeReleasedMessageType,
+        NotificationType.ExamPublished => ExamPublishedMessageType,
+        NotificationType.ExamGradeReleased => ExamGradeReleasedMessageType,
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 }

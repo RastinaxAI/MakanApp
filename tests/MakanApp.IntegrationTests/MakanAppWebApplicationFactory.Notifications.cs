@@ -174,4 +174,13 @@ public sealed partial class MakanAppWebApplicationFactory
             .AsNoTracking()
             .CountAsync(message => message.ProcessedAtUtc == null);
     }
+
+    public async Task<int> CountOutboxMessagesAsync(string messageType)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.OutboxMessages
+            .AsNoTracking()
+            .CountAsync(message => message.MessageType == messageType);
+    }
 }
