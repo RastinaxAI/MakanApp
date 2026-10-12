@@ -34,6 +34,7 @@ public sealed class CommerceDomainTests
         var version = CreateDraftVersion(1);
         version.SetEntitlement(EntitlementKey.Messaging, true);
         version.SetQuota(QuotaKey.ActiveLearners, 100);
+        version.SetPrice(1_000_000m, CurrencyCode.Irr);
         version.Publish(NowUtc.AddMinutes(1));
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -41,7 +42,94 @@ public sealed class CommerceDomainTests
         Assert.Throws<InvalidOperationException>(() =>
             version.SetQuota(QuotaKey.ActiveLearners, 50));
         Assert.Throws<InvalidOperationException>(() =>
+            version.SetPrice(2_000_000m, CurrencyCode.Irr));
+        Assert.Throws<InvalidOperationException>(() =>
             version.Publish(NowUtc.AddMinutes(2)));
+    }
+
+    [Fact]
+    public void PlanVersionPriceRejectsInvalidAmounts()
+    {
+        var version = CreateDraftVersion(1);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            version.SetPrice(0m, CurrencyCode.Irr));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            version.SetPrice(-1m, CurrencyCode.Irr));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            version.SetPrice(10.001m, CurrencyCode.Irr));
+    }
+
+    [Fact]
+    public void OrderFreezesPublishedPlanVersionPrice()
+    {
+        var version = CreateDraftVersion(1);
+        version.SetPrice(1_250_000m, CurrencyCode.Irr);
+        version.Publish(NowUtc);
+
+        var order = Order.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            version,
+            Guid.NewGuid(),
+            new byte[Order.RequestPayloadHashLength],
+            NowUtc);
+
+        Assert.Equal(1_250_000m, order.Amount);
+        Assert.Equal(CurrencyCode.Irr, order.Currency);
+        Assert.Equal(OrderStatus.PendingPayment, order.Status);
+    }
+
+    [Fact]
+    public void PaymentTimeoutRemainsRecoverableAndDoesNotSettleOrder()
+    {
+        var version = CreateDraftVersion(1);
+        version.SetPrice(500_000m, CurrencyCode.Irr);
+        version.Publish(NowUtc);
+        var order = Order.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            version,
+            Guid.NewGuid(),
+            new byte[Order.RequestPayloadHashLength],
+            NowUtc);
+        var attempt = PaymentAttempt.Create(
+            order,
+            "Test",
+            Guid.NewGuid(),
+            new byte[PaymentAttempt.RequestPayloadHashLength],
+            NowUtc);
+        var claim = Guid.NewGuid();
+
+        Assert.True(attempt.TryClaimInitiation(claim, NowUtc, NowUtc.AddMinutes(1)));
+        attempt.MarkInitiationUnknown(claim, "PAYMENT_PENDING_VERIFICATION", NowUtc);
+
+        Assert.Equal(PaymentAttemptStatus.Unknown, attempt.Status);
+        Assert.Equal(OrderStatus.PendingPayment, order.Status);
+        Assert.Null(order.PaidAtUtc);
+    }
+
+    [Fact]
+    public void PaymentRequiresSucceededAttempt()
+    {
+        var version = CreateDraftVersion(1);
+        version.SetPrice(500_000m, CurrencyCode.Irr);
+        version.Publish(NowUtc);
+        var order = Order.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            version,
+            Guid.NewGuid(),
+            new byte[Order.RequestPayloadHashLength],
+            NowUtc);
+        var attempt = PaymentAttempt.Create(
+            order,
+            "Test",
+            Guid.NewGuid(),
+            new byte[PaymentAttempt.RequestPayloadHashLength],
+            NowUtc);
+
+        Assert.Throws<InvalidOperationException>(() => Payment.Create(attempt, NowUtc));
     }
 
     [Fact]

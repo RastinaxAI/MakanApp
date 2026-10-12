@@ -50,6 +50,10 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<PlanQuotaDefinition> PlanQuotaDefinitions => Set<PlanQuotaDefinition>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<UsageLedgerEntry> UsageLedgerEntries => Set<UsageLedgerEntry>();
+    public DbSet<PlanVersionPrice> PlanVersionPrices => Set<PlanVersionPrice>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
+    public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<UserCredential> UserCredentials => Set<UserCredential>();

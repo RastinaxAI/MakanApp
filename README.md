@@ -90,7 +90,9 @@ ConnectionStrings:MakanDatabase
 dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=MakanApp;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project MakanApp.Api/MakanApp.Api.csproj
 ~~~
 
-در محیط‌های دیگر مقدار باید از secret store یا `ConnectionStrings__MakanDatabase` تأمین شود. migrationهای نسخه‌بندی‌شده در Infrastructure قرار دارند و آخرین migration موجود `AddExamGradingAndRelease` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال migration یک عملیات کنترل‌شده و جداگانه است.
+در محیط‌های دیگر مقدار باید از secret store یا `ConnectionStrings__MakanDatabase` تأمین شود. migrationهای نسخه‌بندی‌شده در Infrastructure قرار دارند و آخرین migration موجود `AddOrderAndPaymentFoundation` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال migration یک عملیات کنترل‌شده و جداگانه است.
+
+زیرساخت Order/Payment فعلاً provider واقعی ندارد. مقدار commit‌شده `Payments:Provider=Unavailable` است و secret پرداختی در appsettings نگهداری نمی‌شود. Integration Testها `RecordingPaymentGateway` داخلی را جایگزین می‌کنند و هیچ تماس مالی واقعی ندارند. جزئیات در `docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md` ثبت شده است.
 
 ## API Foundation
 
@@ -301,8 +303,8 @@ dotnet build MakanApp.sln --configuration Debug --nologo
 dotnet test MakanApp.sln --configuration Debug --nologo
 ~~~
 
-- Unit Tests علاوه بر قواعد Identity و Organization، lifecycle رکوردهای `OrganizationPerson` و `GuardianRelation`، مدل‌های Academic/Assessment و قواعد Domain و eligibility در Messaging را بررسی می‌کنند.
-- Integration Tests migration واقعی، endpointهای Identity/Profile/Organization/Guardian/Academic/Assessment/Messaging، SignalR، Delta Sync، حریم خصوصی، tenant isolation، idempotency و concurrency را روی LocalDB اختصاصی `MakanApp_MessagingSafety_IntegrationTests_Step7E` بررسی و آن database را در پایان حذف می‌کنند؛ EF Core InMemory استفاده نمی‌شود.
+- Unit Tests علاوه بر قواعد Identity و Organization، lifecycle رکوردهای `OrganizationPerson` و `GuardianRelation`، مدل‌های Academic/Assessment/Commerce و قواعد Domain و eligibility در Messaging را بررسی می‌کنند.
+- Integration Tests migration واقعی، endpointهای Identity/Profile/Organization/Guardian/Academic/Assessment/Messaging/Commerce، Outbox، SignalR، Delta Sync، حریم خصوصی، tenant isolation، idempotency و concurrency را روی LocalDB اختصاصی `MakanApp_MessagingSafety_IntegrationTests_Step7E` بررسی و آن database را در پایان حذف می‌کنند؛ EF Core InMemory استفاده نمی‌شود.
 - Architecture Tests جهت وابستگی Onion و نبود EF Core/ASP.NET Core در لایه‌های داخلی را enforce می‌کنند.
 
 ## اجرا

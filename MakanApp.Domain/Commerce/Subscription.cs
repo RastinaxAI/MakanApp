@@ -10,11 +10,14 @@ public sealed class Subscription
         Guid id,
         Guid organizationId,
         Guid planVersionId,
+        Guid? sourceOrderId,
         DateTime startsAtUtc,
         DateTime? endsAtUtc,
         DateTime createdAtUtc)
     {
-        if (organizationId == Guid.Empty || planVersionId == Guid.Empty)
+        if (organizationId == Guid.Empty ||
+            planVersionId == Guid.Empty ||
+            sourceOrderId == Guid.Empty)
         {
             throw new ArgumentException("سازمان و نسخه پلن اشتراک الزامی هستند.");
         }
@@ -33,6 +36,7 @@ public sealed class Subscription
         Id = id;
         OrganizationId = organizationId;
         PlanVersionId = planVersionId;
+        SourceOrderId = sourceOrderId;
         Status = SubscriptionStatus.Pending;
         StartsAtUtc = startsAtUtc;
         EndsAtUtc = endsAtUtc;
@@ -42,6 +46,7 @@ public sealed class Subscription
     public Guid Id { get; private set; }
     public Guid OrganizationId { get; private set; }
     public Guid PlanVersionId { get; private set; }
+    public Guid? SourceOrderId { get; private set; }
     public SubscriptionStatus Status { get; private set; }
     public DateTime StartsAtUtc { get; private set; }
     public DateTime? EndsAtUtc { get; private set; }
@@ -55,7 +60,8 @@ public sealed class Subscription
         PlanVersion planVersion,
         DateTime startsAtUtc,
         DateTime? endsAtUtc,
-        DateTime createdAtUtc)
+        DateTime createdAtUtc,
+        Guid? sourceOrderId = null)
     {
         ArgumentNullException.ThrowIfNull(planVersion);
         if (!planVersion.IsPublished)
@@ -67,6 +73,7 @@ public sealed class Subscription
             Guid.NewGuid(),
             organizationId,
             planVersion.Id,
+            sourceOrderId,
             startsAtUtc,
             endsAtUtc,
             createdAtUtc);

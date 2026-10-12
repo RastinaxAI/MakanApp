@@ -1,3 +1,4 @@
+using MakanApp.Application.Commerce;
 using MakanApp.Domain.Commerce;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,9 @@ public sealed partial class MakanAppWebApplicationFactory
         Guid planId,
         int versionNumber,
         IReadOnlyDictionary<EntitlementKey, bool>? entitlements = null,
-        IReadOnlyDictionary<QuotaKey, long?>? quotas = null)
+        IReadOnlyDictionary<QuotaKey, long?>? quotas = null,
+        decimal? price = null,
+        CurrencyCode currency = CurrencyCode.Irr)
     {
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
@@ -40,10 +43,63 @@ public sealed partial class MakanAppWebApplicationFactory
             version.SetQuota(quota.Key, quota.Value);
         }
 
+        if (price.HasValue)
+        {
+            version.SetPrice(price.Value, currency);
+        }
+
         version.Publish(nowUtc.AddHours(-1));
         dbContext.PlanVersions.Add(version);
         await dbContext.SaveChangesAsync();
         return version.Id;
+    }
+
+    public async Task<Guid> CreateDraftPricedPlanVersionAsync(
+        Guid planId,
+        int versionNumber,
+        decimal price)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var version = PlanVersion.CreateDraft(
+            planId,
+            versionNumber,
+            Clock.GetUtcNow().UtcDateTime.AddMinutes(-1));
+        version.SetPrice(price, CurrencyCode.Irr);
+        dbContext.PlanVersions.Add(version);
+        await dbContext.SaveChangesAsync();
+        return version.Id;
+    }
+
+    public async Task<int> CountPaymentsAsync(Guid orderId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.Payments.CountAsync(payment => payment.OrderId == orderId);
+    }
+
+    public async Task<int> CountPaymentAttemptsAsync(Guid orderId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.PaymentAttempts.CountAsync(attempt => attempt.OrderId == orderId);
+    }
+
+    public async Task<int> CountSubscriptionsForOrderAsync(Guid orderId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.Subscriptions.CountAsync(subscription => subscription.SourceOrderId == orderId);
+    }
+
+    public async Task<int> CountCommerceActivationOutboxAsync(Guid orderId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var orderToken = orderId.ToString();
+        return await dbContext.OutboxMessages.CountAsync(message =>
+            message.MessageType == SubscriptionActivationOutboxContract.MessageType &&
+            message.Payload.Contains(orderToken));
     }
 
     public async Task<Guid> CreateSubscriptionAsync(

@@ -1,4 +1,5 @@
 using MakanApp.Application.Identity;
+using MakanApp.Application.Commerce;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Storage;
@@ -47,6 +48,8 @@ public sealed partial class MakanAppWebApplicationFactory :
         Services.GetRequiredService<OtpProviderTestControl>();
     public NotificationDeliveryProviderTestControl NotificationDeliveryProvider =>
         Services.GetRequiredService<NotificationDeliveryProviderTestControl>();
+    public PaymentGatewayTestControl PaymentGateway =>
+        Services.GetRequiredService<PaymentGatewayTestControl>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -122,6 +125,7 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<RealtimeFailureSwitch>();
             services.AddSingleton<OtpProviderTestControl>();
             services.AddSingleton<NotificationDeliveryProviderTestControl>();
+            services.AddSingleton<PaymentGatewayTestControl>();
             services.RemoveAll<DevelopmentOtpStore>();
             services.RemoveAll<DevelopmentOtpProvider>();
             services.AddSingleton<DevelopmentOtpStore>();
@@ -132,6 +136,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<IPushNotificationProvider, RecordingPushNotificationProvider>();
             services.RemoveAll<INotificationSmsProvider>();
             services.AddSingleton<INotificationSmsProvider, RecordingNotificationSmsProvider>();
+            services.RemoveAll<IPaymentGateway>();
+            services.AddSingleton<IPaymentGateway, RecordingPaymentGateway>();
             services.RemoveAll<NotificationDeliveryOptions>();
             services.AddSingleton(new NotificationDeliveryOptions
             {

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MakanApp.Application.Commerce;
 using MakanApp.Application.Notification;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -51,6 +52,7 @@ public sealed class OutboxDispatcher(
 public sealed class OutboxProcessor(
     MakanDbContext dbContext,
     INotificationDeliveryCoordinator deliveryCoordinator,
+    ISubscriptionActivationHandler subscriptionActivationHandler,
     TimeProvider timeProvider,
     ILogger<OutboxProcessor> logger)
 {
@@ -113,33 +115,42 @@ public sealed class OutboxProcessor(
                 return;
             }
 
-            var payload = JsonSerializer.Deserialize<NotificationOutboxPayload>(message.Payload)
-                ?? throw new JsonException("payload اعلان خالی است.");
-            if (!NotificationOutboxContract.Matches(message.MessageType, payload.Type))
+            if (SubscriptionActivationOutboxContract.Matches(message.MessageType))
             {
-                throw new JsonException("قرارداد پیام Outbox اعلان معتبر نیست.");
+                var activation = JsonSerializer.Deserialize<SubscriptionActivationRequested>(message.Payload)
+                    ?? throw new JsonException("payload فعال‌سازی اشتراک خالی است.");
+                await subscriptionActivationHandler.HandleAsync(activation, cancellationToken);
             }
-
-            var existingRecipients = await dbContext.Notifications
-                .Where(notification => notification.SourceEventId == payload.SourceEventId)
-                .Select(notification => notification.RecipientUserId)
-                .ToArrayAsync(cancellationToken);
-            var existing = existingRecipients.ToHashSet();
-            if (payload.Recipient.UserId != Guid.Empty && !existing.Contains(payload.Recipient.UserId))
+            else
             {
-                var notification = Domain.Notification.Notification.Create(
-                    payload.SourceEventId,
-                    payload.Recipient.UserId,
-                    payload.OrganizationId,
-                    payload.Category,
-                    payload.Type,
-                    payload.Recipient.Title,
-                    payload.Recipient.Body,
-                    payload.ResourceType,
-                    payload.ResourceId,
-                    payload.OccurredAtUtc);
-                dbContext.Notifications.Add(notification);
-                await deliveryCoordinator.ScheduleAsync(notification, cancellationToken);
+                var payload = JsonSerializer.Deserialize<NotificationOutboxPayload>(message.Payload)
+                    ?? throw new JsonException("payload اعلان خالی است.");
+                if (!NotificationOutboxContract.Matches(message.MessageType, payload.Type))
+                {
+                    throw new JsonException("قرارداد پیام Outbox اعلان معتبر نیست.");
+                }
+
+                var existingRecipients = await dbContext.Notifications
+                    .Where(notification => notification.SourceEventId == payload.SourceEventId)
+                    .Select(notification => notification.RecipientUserId)
+                    .ToArrayAsync(cancellationToken);
+                var existing = existingRecipients.ToHashSet();
+                if (payload.Recipient.UserId != Guid.Empty && !existing.Contains(payload.Recipient.UserId))
+                {
+                    var notification = Domain.Notification.Notification.Create(
+                        payload.SourceEventId,
+                        payload.Recipient.UserId,
+                        payload.OrganizationId,
+                        payload.Category,
+                        payload.Type,
+                        payload.Recipient.Title,
+                        payload.Recipient.Body,
+                        payload.ResourceType,
+                        payload.ResourceId,
+                        payload.OccurredAtUtc);
+                    dbContext.Notifications.Add(notification);
+                    await deliveryCoordinator.ScheduleAsync(notification, cancellationToken);
+                }
             }
 
             message.MarkProcessed(claimToken, timeProvider.GetUtcNow().UtcDateTime);

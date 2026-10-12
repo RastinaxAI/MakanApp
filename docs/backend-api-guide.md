@@ -1405,3 +1405,21 @@ Commerce وضعیت جاری اشتراک سازمان، قابلیت‌های �
 Downgrade داده‌های آموزشی یا فایل را حذف نمی‌کند. مصرف بالاتر از سقف با `isOverQuota=true` دیده می‌شود و عملیات ظرفیت‌ساز آینده باید مسدود شود؛ workflow از قبل شروع‌شده کورکورانه قطع نمی‌شود.
 
 هیچ endpoint مدیر برای ایجاد Plan، انتشار PlanVersion، تغییر quota یا فعال‌سازی Subscription وجود ندارد. Manager سازمانی Platform Admin نیست. Order، Payment، gateway، callback، Backoffice، Contacts و AI integration در این مرحله ساخته نشده‌اند. جزئیات مدل، schema، concurrency، خطاها و مرزهای آینده در [سند معماری STEP 13A](architecture/STEP_13A_COMMERCE_FOUNDATION.md) آمده است.
+
+<a id="order-payment-foundation"></a>
+## سفارش و پرداخت — STEP 13B
+
+قیمت قابل خرید یک جزء immutable از `PlanVersion` منتشرشده است. Order مبلغ و currency آن نسخه را در لحظه ایجاد freeze می‌کند؛ body ایجاد Order هیچ Amount یا Currency معتبری از client نمی‌گیرد. واحد canonical فعلی `IRR` و precision مبلغ `decimal(18,2)` است. PlanVersionهای قدیمی که قیمت ندارند قابل خرید نیستند و backfill حدسی نشده‌اند.
+
+| عملیات | مسیر | ورودی/نتیجه |
+|---|---|---|
+| ایجاد سفارش | `POST /api/v1/commerce/orders` | `planVersionId`, `clientOperationId`؛ پاسخ 201 یا retry برابر 200 |
+| آغاز پرداخت | `POST /api/v1/commerce/orders/{orderId}/payments` | `clientOperationId`؛ PaymentAttempt، وضعیت، reference/URL امن |
+| جزئیات | `GET /api/v1/commerce/orders/{orderId}` | Order، تاریخچه attemptها و fulfillment state |
+| فهرست | `GET /api/v1/commerce/orders?limit=20` | حداکثر ۱۰۰ مورد برای مدیر و سازمان جاری |
+
+تمام مسیرها به Bearer session، workspace سازمانی، Membership فعال و `Manager` جاری نیاز دارند. OrganizationId از `AccessContext` می‌آید. Order سازمان دیگر 404 است؛ Manager نمی‌تواند amount/currency را عوض کند، پرداخت را موفق اعلام کند یا Subscription را مستقیم فعال کند. POSTها rate limit مستقل دارند و idempotency همچنان با ClientOperationId و payload hash enforce می‌شود.
+
+تماس `IPaymentGateway` بیرون SQL transaction انجام می‌شود. timeout به `Unknown` می‌رود و Failed فرض نمی‌شود. Verification server-to-server مبلغ، IRR و reference را تطبیق می‌دهد؛ settlement موفق PaymentAttempt، Payment، Paid Order و پیام activation Outbox را اتمیک ثبت می‌کند. worker Outbox Subscription قبلی را بدون حذف تاریخچه لغو و نسخه خریداری‌شده را دقیقاً یک بار فعال می‌کند. بنابراین Order پرداخت‌شده ممکن است موقتاً `SubscriptionActivationPending` باشد.
+
+Provider واقعی و قرارداد callback هنوز تأیید نشده‌اند. runtime فقط `Payments:Provider=Unavailable` دارد و endpoint callback عمومی ساخته نشده است؛ provider تست فقط در Integration Test ثبت شده و تماس واقعی ندارد. Refund، reconciliation/Finance، Order expiration، billing period، provisioning سازمان جدید، Backoffice، frontend و Notification پرداخت خارج از این مرحله‌اند. جزئیات lifecycle، schema، locking، error codeها و محدودیت‌ها در [سند معماری STEP 13B](architecture/STEP_13B_ORDER_AND_PAYMENT.md) آمده است.

@@ -86,6 +86,13 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<CommerceService>());
         services.AddScoped<IEntitlementService>(serviceProvider =>
             serviceProvider.GetRequiredService<CommerceService>());
+        services.AddScoped<IOrderPaymentStore, EfOrderPaymentStore>();
+        services.AddScoped<OrderPaymentService>();
+        services.AddScoped<IOrderPaymentService>(serviceProvider =>
+            serviceProvider.GetRequiredService<OrderPaymentService>());
+        services.AddScoped<IPaymentVerificationService>(serviceProvider =>
+            serviceProvider.GetRequiredService<OrderPaymentService>());
+        services.AddScoped<ISubscriptionActivationHandler, EfSubscriptionActivationHandler>();
         services.AddScoped<IDashboardReadService, EfDashboardReadService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IDetailedReportReadService, EfDetailedReportReadService>();
@@ -147,6 +154,7 @@ public static class DependencyInjection
         services.AddSingleton(storageOptions);
         services.AddSingleton(CreateReportExportOptions(configuration));
         services.AddSingleton(CreateNotificationDeliveryOptions(configuration));
+        services.AddSingleton(CreatePaymentOptions(configuration));
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
             new IdentityCryptography(CreateSecurityKey(
@@ -155,6 +163,7 @@ public static class DependencyInjection
                 UsesManagedOtpProvider(configuration))));
         AddOtpDeliveryProvider(services, configuration, environmentName);
         AddNotificationDeliveryProviders(services, configuration, environmentName);
+        AddPaymentGateway(services, configuration);
 
         if (IsDevelopmentLike(environmentName) || !string.IsNullOrWhiteSpace(storageOptions.RootPath))
         {
@@ -168,6 +177,21 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    private static void AddPaymentGateway(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var provider = configuration[$"{PaymentOptions.SectionName}:Provider"]?.Trim()
+            ?? "Unavailable";
+        if (!provider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Payments:Provider is not supported. A real provider requires an approved adapter contract.");
+        }
+
+        services.AddSingleton<IPaymentGateway, UnavailablePaymentGateway>();
     }
 
     private static void AddNotificationDeliveryProviders(
@@ -488,6 +512,14 @@ public static class DependencyInjection
             configuration,
             $"{NotificationDeliveryOptions.SectionName}:MaximumAttempts",
             3))
+    };
+
+    private static PaymentOptions CreatePaymentOptions(IConfiguration configuration) => new()
+    {
+        InitiationClaimLease = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{PaymentOptions.SectionName}:InitiationClaimLeaseSeconds",
+            30))
     };
 
     private static byte[] CreateSecurityKey(

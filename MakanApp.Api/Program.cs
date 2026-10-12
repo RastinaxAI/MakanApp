@@ -5,6 +5,7 @@ using MakanApp.Api.Authentication;
 using MakanApp.Api.Errors;
 using MakanApp.Api.Realtime;
 using MakanApp.Application.Identity;
+using MakanApp.Application.Commerce;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure;
@@ -49,8 +50,21 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("payment", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
     options.OnRejected = async (context, cancellationToken) =>
     {
+        var isPayment = context.HttpContext.Request.Path.StartsWithSegments(
+            "/api/v1/commerce/orders",
+            StringComparison.OrdinalIgnoreCase);
         var problemDetailsService = context.HttpContext.RequestServices
             .GetRequiredService<IProblemDetailsService>();
         await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
@@ -60,11 +74,17 @@ builder.Services.AddRateLimiter(options =>
             {
                 Status = StatusCodes.Status429TooManyRequests,
                 Title = "Too many requests",
-                Detail = "تعداد درخواست‌های کد بیش از حد مجاز است.",
-                Type = "urn:makan:problem:otp-rate-limited",
+                Detail = isPayment
+                    ? "تعداد درخواست‌های پرداخت بیش از حد مجاز است."
+                    : "تعداد درخواست‌های کد بیش از حد مجاز است.",
+                Type = isPayment
+                    ? "urn:makan:problem:payment-rate-limited"
+                    : "urn:makan:problem:otp-rate-limited",
                 Extensions =
                 {
-                    ["code"] = IdentityErrorCodes.OtpRateLimited
+                    ["code"] = isPayment
+                        ? CommerceErrorCodes.PaymentRateLimited
+                        : IdentityErrorCodes.OtpRateLimited
                 }
             }
         });

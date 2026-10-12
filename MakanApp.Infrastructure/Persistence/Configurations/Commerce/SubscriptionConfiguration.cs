@@ -32,6 +32,10 @@ public sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subscri
             .HasDatabaseName("UX_Subscriptions_Organization_Active");
         builder.HasIndex(subscription => new { subscription.OrganizationId, subscription.CreatedAtUtc })
             .HasDatabaseName("IX_Subscriptions_Organization_CreatedAt");
+        builder.HasIndex(subscription => subscription.SourceOrderId)
+            .IsUnique()
+            .HasFilter("[SourceOrderId] IS NOT NULL")
+            .HasDatabaseName("UX_Subscriptions_SourceOrder");
         builder.HasOne<MakanApp.Domain.Organization.Organization>()
             .WithMany()
             .HasForeignKey(subscription => subscription.OrganizationId)
@@ -39,6 +43,10 @@ public sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subscri
         builder.HasOne<PlanVersion>()
             .WithMany()
             .HasForeignKey(subscription => subscription.PlanVersionId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Order>()
+            .WithMany()
+            .HasForeignKey(subscription => subscription.SourceOrderId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -39,6 +39,7 @@ public sealed class PlanVersion
     public PlanVersionStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
+    public PlanVersionPrice? Price { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
     public IReadOnlyCollection<PlanEntitlement> Entitlements => _entitlements;
     public IReadOnlyCollection<PlanQuotaDefinition> QuotaDefinitions => _quotaDefinitions;
@@ -81,6 +82,18 @@ public sealed class PlanVersion
         }
 
         current.SetLimit(limit);
+    }
+
+    public void SetPrice(decimal amount, CurrencyCode currency)
+    {
+        EnsureDraft();
+        if (Price is null)
+        {
+            Price = new PlanVersionPrice(Id, amount, currency);
+            return;
+        }
+
+        Price.Change(amount, currency);
     }
 
     public void Publish(DateTime publishedAtUtc)

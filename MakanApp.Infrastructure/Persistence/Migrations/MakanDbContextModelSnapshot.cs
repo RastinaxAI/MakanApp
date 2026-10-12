@@ -1716,6 +1716,233 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Commerce.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("PaidAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PurchaserUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RequestPayloadHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("PurchaserUserId", "ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Orders_Purchaser_ClientOperation");
+
+                    b.HasIndex("PurchaserUserId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Orders_Purchaser_CreatedAt");
+
+                    b.HasIndex("OrganizationId", "Status", "CreatedAtUtc")
+                        .HasDatabaseName("IX_Orders_Organization_Status_CreatedAt");
+
+                    b.ToTable("Orders", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_Amount", "[Amount] > 0");
+
+                            t.HasCheckConstraint("CK_Orders_Currency", "[Currency] = 'IRR'");
+
+                            t.HasCheckConstraint("CK_Orders_Lifecycle", "([Status] = 1 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NULL) OR ([Status] = 2 AND [PaidAtUtc] IS NOT NULL AND [CancelledAtUtc] IS NULL) OR ([Status] = 3 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Orders_RequestPayloadHash", "DATALENGTH([RequestPayloadHash]) = 32");
+
+                            t.HasCheckConstraint("CK_Orders_Status", "[Status] BETWEEN 1 AND 3");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PaidAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("PaymentAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProviderReference")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Payments_Order");
+
+                    b.HasIndex("PaymentAttemptId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Payments_Attempt");
+
+                    b.HasIndex("Provider", "ProviderReference")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Payments_Provider_Reference");
+
+                    b.ToTable("Payments", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_Payments_Amount", "[Amount] > 0");
+
+                            t.HasCheckConstraint("CK_Payments_Currency", "[Currency] = 'IRR'");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PaymentAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)");
+
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("InitiatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("InitiationClaimToken")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("InitiationClaimedUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PaymentUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProviderReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RequestPayloadHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("VerifiedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId", "ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PaymentAttempts_Order_ClientOperation");
+
+                    b.HasIndex("OrderId", "Status")
+                        .HasDatabaseName("IX_PaymentAttempts_Order_Status");
+
+                    b.HasIndex("Provider", "ProviderReference")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PaymentAttempts_Provider_Reference")
+                        .HasFilter("[ProviderReference] IS NOT NULL");
+
+                    b.ToTable("PaymentAttempts", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentAttempts_Amount", "[Amount] > 0");
+
+                            t.HasCheckConstraint("CK_PaymentAttempts_Claim", "([Status] = 2 AND [InitiationClaimToken] IS NOT NULL AND [InitiationClaimedUntilUtc] IS NOT NULL) OR ([Status] <> 2 AND [InitiationClaimToken] IS NULL AND [InitiationClaimedUntilUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_PaymentAttempts_Currency", "[Currency] = 'IRR'");
+
+                            t.HasCheckConstraint("CK_PaymentAttempts_RequestPayloadHash", "DATALENGTH([RequestPayloadHash]) = 32");
+
+                            t.HasCheckConstraint("CK_PaymentAttempts_Status", "[Status] BETWEEN 1 AND 6");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Commerce.Plan", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1861,6 +2088,35 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PlanVersionPrice", b =>
+                {
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("PlanVersionId");
+
+                    b.ToTable("PlanVersionPrices", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_PlanVersionPrices_Amount", "[Amount] > 0");
+
+                            t.HasCheckConstraint("CK_PlanVersionPrices_Currency", "[Currency] = 'IRR'");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Commerce.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1891,6 +2147,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid?>("SourceOrderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("StartsAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -1908,6 +2167,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasFilter("[Status] = 2");
 
                     b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("SourceOrderId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Subscriptions_SourceOrder")
+                        .HasFilter("[SourceOrderId] IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "CreatedAtUtc")
                         .HasDatabaseName("IX_Subscriptions_Organization_CreatedAt");
@@ -4372,6 +4636,50 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Commerce.Order", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("PurchaserUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.Payment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Commerce.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.PaymentAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentAttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PaymentAttempt", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Commerce.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Commerce.PlanEntitlement", b =>
                 {
                     b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
@@ -4399,6 +4707,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PlanVersionPrice", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithOne("Price")
+                        .HasForeignKey("MakanApp.Domain.Commerce.PlanVersionPrice", "PlanVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Commerce.Subscription", b =>
                 {
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
@@ -4412,6 +4729,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PlanVersionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.Order", null)
+                        .WithMany()
+                        .HasForeignKey("SourceOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.UsageLedgerEntry", b =>
@@ -4920,6 +5242,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("MakanApp.Domain.Commerce.PlanVersion", b =>
                 {
                     b.Navigation("Entitlements");
+
+                    b.Navigation("Price");
 
                     b.Navigation("QuotaDefinitions");
                 });
