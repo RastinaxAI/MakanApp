@@ -1,5 +1,6 @@
 using MakanApp.Api.Authentication;
 using MakanApp.Application.Reports.Detailed;
+using MakanApp.Application.Reports.Exports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,8 +9,38 @@ namespace MakanApp.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/reports")]
-public sealed class ReportsController(IDetailedReportService reportService) : ControllerBase
+public sealed class ReportsController(
+    IDetailedReportService reportService,
+    IReportExportService reportExportService) : ControllerBase
 {
+    [HttpPost("exports")]
+    [ProducesResponseType<ReportExportJobResult>(StatusCodes.Status202Accepted)]
+    public async Task<ActionResult<ReportExportJobResult>> CreateExport(
+        [FromBody] CreateReportExportCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await reportExportService.CreateAsync(UserId(), SessionId(), command, cancellationToken);
+        return AcceptedAtAction(nameof(GetExportStatus), new { jobId = result.JobId }, result);
+    }
+
+    [HttpGet("exports/{jobId:guid}")]
+    [ProducesResponseType<ReportExportJobResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ReportExportJobResult>> GetExportStatus(
+        Guid jobId,
+        CancellationToken cancellationToken) =>
+        Ok(await reportExportService.GetStatusAsync(UserId(), SessionId(), jobId, cancellationToken));
+
+    [HttpGet("exports/{jobId:guid}/download")]
+    [ProducesResponseType<FileStreamResult>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DownloadExport(
+        Guid jobId,
+        CancellationToken cancellationToken)
+    {
+        var result = await reportExportService.DownloadAsync(UserId(), SessionId(), jobId, cancellationToken);
+        Response.ContentLength = result.SizeBytes;
+        return File(result.Content, result.ContentType, result.DownloadFileName);
+    }
+
     [HttpGet("student/attendance")]
     public async Task<ActionResult<AttendanceReportPage<StudentAttendanceReportItem>>> GetStudentAttendance([FromQuery] DetailedReportQuery query, CancellationToken cancellationToken) => Ok(await reportService.GetStudentAttendanceAsync(UserId(), SessionId(), query, cancellationToken));
 

@@ -2997,6 +2997,152 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Reports.ReportExportJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AcademicPeriodId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("AssessmentKind")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DataAsOfUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int?>("EnrollmentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExpectedRowCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FailedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FromUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("LeaseExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("OutputFileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ReportType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RequestedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("RequestedBySessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Sort")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTime?>("StartedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SubjectOrganizationPersonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ToUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OutputFileAssetId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ReportExportJobs_OutputFileAsset")
+                        .HasFilter("[OutputFileAssetId] IS NOT NULL");
+
+                    b.HasIndex("RequestedByUserId", "OrganizationId", "RequestedAtUtc")
+                        .HasDatabaseName("IX_ReportExportJobs_Owner_Organization_Requested");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc", "RequestedAtUtc")
+                        .HasDatabaseName("IX_ReportExportJobs_Status_NextAttempt_Requested");
+
+                    b.ToTable("ReportExportJobs", "reports", t =>
+                        {
+                            t.HasCheckConstraint("CK_ReportExportJobs_AssessmentKind", "[AssessmentKind] IS NULL OR [AssessmentKind] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_AttemptCount", "[AttemptCount] >= 0");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_Audience", "[Audience] IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_CompletedState", "([Status] = 3 AND [CompletedAtUtc] IS NOT NULL AND [OutputFileAssetId] IS NOT NULL AND [FailureCode] IS NULL) OR [Status] <> 3");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_DateRange", "[FromUtc] IS NULL OR [ToUtc] IS NULL OR [FromUtc] <= [ToUtc]");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_ExpectedRowCount", "[ExpectedRowCount] >= 0");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_EnrollmentStatus", "[EnrollmentStatus] IS NULL OR [EnrollmentStatus] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_FailedState", "([Status] = 4 AND [FailedAtUtc] IS NOT NULL AND [FailureCode] IS NOT NULL AND [OutputFileAssetId] IS NULL) OR [Status] <> 4");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_Format", "[Format] = 1");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_ProcessingLease", "([Status] = 2 AND [LeaseExpiresAtUtc] IS NOT NULL) OR [Status] <> 2");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_ReportType", "[ReportType] BETWEEN 1 AND 14");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_Status", "[Status] IN (1, 2, 3, 4)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Storage.FileAsset", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4023,6 +4169,32 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Organization.Membership", null)
                         .WithMany()
                         .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Reports.ReportExportJob", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("OutputFileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

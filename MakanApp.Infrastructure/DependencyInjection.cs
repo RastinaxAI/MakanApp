@@ -8,6 +8,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Dashboards;
 using MakanApp.Application.Reports.Detailed;
+using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Academic;
 using MakanApp.Infrastructure.Assessment;
@@ -18,6 +19,7 @@ using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Reports.Dashboards;
 using MakanApp.Infrastructure.Reports.Detailed;
+using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -75,7 +77,18 @@ public static class DependencyInjection
         services.AddScoped<IDashboardReadService, EfDashboardReadService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IDetailedReportReadService, EfDetailedReportReadService>();
-        services.AddScoped<IDetailedReportService, DetailedReportService>();
+        services.AddScoped<DetailedReportService>();
+        services.AddScoped<IDetailedReportService>(serviceProvider =>
+            serviceProvider.GetRequiredService<DetailedReportService>());
+        services.AddScoped<IReportExportDataSource>(serviceProvider =>
+            serviceProvider.GetRequiredService<DetailedReportService>());
+        services.AddScoped<IReportExportJobStore, EfReportExportJobStore>();
+        services.AddScoped<IReportExportService, ReportExportService>();
+        services.AddScoped<IReportExporter, CsvReportExporter>();
+        services.AddScoped<IReportExportOutputStore, ReportExportOutputStore>();
+        services.AddScoped<ReportExportProcessor>();
+        services.AddSingleton<IReportExportQueueSignal, ReportExportQueueSignal>();
+        services.AddHostedService<ReportExportDispatcher>();
         services.AddScoped<EfMessagingStore>();
         services.AddScoped<IMessagingStore>(serviceProvider =>
             serviceProvider.GetRequiredService<EfMessagingStore>());
@@ -102,6 +115,7 @@ public static class DependencyInjection
         services.AddSingleton<IConversationManagementPolicy, ConversationManagementAuthorizationPolicy>();
         var storageOptions = CreateStorageOptions(configuration);
         services.AddSingleton(storageOptions);
+        services.AddSingleton(CreateReportExportOptions(configuration));
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
             new IdentityCryptography(CreateSecurityKey(
@@ -329,6 +343,38 @@ public static class DependencyInjection
                 50)
         };
     }
+
+    private static ReportExportOptions CreateReportExportOptions(IConfiguration configuration) => new()
+    {
+        MaximumRows = ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:MaximumRows",
+            10_000),
+        PageSize = Math.Min(100, ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:PageSize",
+            100)),
+        MaximumFileSizeBytes = ReadPositiveLong(
+            configuration,
+            $"{ReportExportOptions.SectionName}:MaximumFileSizeBytes",
+            20 * 1024 * 1024),
+        ClaimLease = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:ClaimLeaseSeconds",
+            120)),
+        IdlePollingInterval = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:IdlePollingSeconds",
+            2)),
+        RetryDelay = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:RetryDelaySeconds",
+            10)),
+        MaximumAttempts = ReadPositiveInt(
+            configuration,
+            $"{ReportExportOptions.SectionName}:MaximumAttempts",
+            3)
+    };
 
     private static byte[] CreateSecurityKey(
         IConfiguration configuration,

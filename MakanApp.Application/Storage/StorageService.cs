@@ -172,15 +172,20 @@ public sealed class StorageService(
         CancellationToken cancellationToken)
     {
         var fileAsset = await store.GetAsync(fileAssetId, cancellationToken) ?? throw NotFound();
-        if (FileAccessPolicy.IsUploader(fileAsset, context))
+        var isBound = await boundAccessResolver.IsBoundAsync(fileAsset.Id, cancellationToken);
+        if (isBound)
+        {
+            if (!FileAccessPolicy.IsCurrentScope(fileAsset, context) ||
+                !await boundAccessResolver.CanReadBoundFileAsync(fileAsset, context, cancellationToken))
+            {
+                throw NotFound();
+            }
+        }
+        else if (FileAccessPolicy.IsUploader(fileAsset, context))
         {
             EnsureCurrentScope(fileAsset, context);
         }
-        else if (!FileAccessPolicy.IsCurrentScope(fileAsset, context) ||
-                 !await boundAccessResolver.CanReadBoundFileAsync(
-                     fileAsset,
-                     context,
-                     cancellationToken))
+        else
         {
             throw NotFound();
         }

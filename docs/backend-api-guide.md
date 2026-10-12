@@ -1328,3 +1328,20 @@ restore موفق بود؛ build اولیه و نهایی هر دو صفر warnin
 ۱۴۱ عملیات و پارامترهای query با Controller و OpenAPI تازه میزبان تطبیق داده شدند؛ ۱۸۲ schema JSON و چهار مدل query کنترل شدند. ۱۹۰ نمونه JSON درخواست/پاسخ از نظر فیلد، nesting، type، enum، nullable، UUID، زمان و نسخه بررسی شدند. لینک‌های داخلی/مسیرهای source و تعداد ستون جدول‌ها نیز کنترل شدند. PDF هر کتاب با مرورگر رندر، شماره صفحه و نشانک اضافه و برای صفحه خالی و متن خارج صفحه بررسی شد؛ صفحات نماینده نیز بصری بازبینی شدند.
 
 این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.
+
+<a id="asynchronous-report-exports"></a>
+## خروجی غیرهم‌زمان گزارش‌ها — STEP 11C
+
+گزارش‌های جدولی STEP 11B اکنون با یک job پایدار SQL Server به خروجی خصوصی CSV تبدیل می‌شوند. فرمت‌های PDF و Excel پیاده‌سازی نشده‌اند، چون سند محصول فرمت اجباری تعیین نکرده و CSV UTF-8 بدون وابستگی تازه نیاز فعلی را پوشش می‌دهد.
+
+| عملیات | مسیر | نتیجه |
+|---|---|---|
+| ایجاد | `POST /api/v1/reports/exports` | اعتبارسنجی/authorization، ثبت `Queued` و پاسخ `202` |
+| وضعیت | `GET /api/v1/reports/exports/{jobId}` | وضعیت امن فقط برای مالک و scope فعلی |
+| دانلود | `GET /api/v1/reports/exports/{jobId}/download` | stream خصوصی فقط در `Completed` |
+
+body ایجاد شامل `reportType` بسته، `format=Csv` و `filters` typed متناظر گزارش است. سقف پیش‌فرض ۱۰هزار سطر و ۲۰MiB است. jobهای `Queued` پس از restart از SQL Server دوباره دیده می‌شوند؛ `Processing` دارای lease منقضی recover می‌شود و retry حداکثر سه بار است. claim با lockهای سازگار SQL Server انجام می‌شود و wake signal حافظه‌ای منبع حقیقت نیست.
+
+در ایجاد، پردازش و دانلود دسترسی دوباره کنترل می‌شود. Parent به GuardianRelation و فرزند snapshot‌شده، Teacher به TeacherAssignment همان کلاس، Student به شخص حساب و Manager به همان سازمان محدود است. تغییر دسترسی می‌تواند تولید را با `REPORT_DATA_NO_LONGER_AUTHORIZED` متوقف یا دانلود را رد کند. فایل از `storage.FileAssets` و storage provider موجود استفاده می‌کند و physical path برنمی‌گرداند.
+
+CSV quote/newline/comma را escape می‌کند و متن user-controlled با پیشوندهای `= + - @` را با apostrophe خنثی می‌کند تا spreadsheet formula injection رخ ندهد. قرارداد کامل lifecycle، typeها، migration، indexها، retry و محدودیت‌ها در [سند معماری STEP 11C](architecture/STEP_11C_REPORT_EXPORTS.md) آمده است.

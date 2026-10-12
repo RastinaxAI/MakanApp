@@ -26,6 +26,10 @@ public interface IFileAssetStore
 
 public interface IFileAssetBoundAccessResolver
 {
+    Task<bool> IsBoundAsync(
+        Guid fileAssetId,
+        CancellationToken cancellationToken);
+
     Task<bool> CanReadBoundFileAsync(
         FileAsset fileAsset,
         Organization.AccessContext accessContext,

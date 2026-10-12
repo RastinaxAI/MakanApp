@@ -5,6 +5,7 @@ using MakanApp.Api.Realtime;
 using MakanApp.Domain.Identity;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Persistence;
+using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace MakanApp.IntegrationTests;
@@ -70,6 +72,14 @@ public sealed partial class MakanAppWebApplicationFactory :
         });
         builder.ConfigureTestServices(services =>
         {
+            var reportDispatcher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(ReportExportDispatcher));
+            if (reportDispatcher is not null)
+            {
+                services.Remove(reportDispatcher);
+            }
+
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
             services.RemoveAll<StorageOptions>();

@@ -4,6 +4,7 @@ using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -69,6 +70,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<FileAsset> FileAssets => Set<FileAsset>();
+    public DbSet<ReportExportJob> ReportExportJobs => Set<ReportExportJob>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -2,6 +2,7 @@ using MakanApp.Application.Organization;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,11 +12,22 @@ namespace MakanApp.Infrastructure.Storage;
 public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
     : IFileAssetBoundAccessResolver
 {
-    public Task<bool> CanReadBoundFileAsync(
+    public async Task<bool> IsBoundAsync(
+        Guid fileAssetId,
+        CancellationToken cancellationToken) =>
+        await dbContext.MessageAttachments.AnyAsync(
+            attachment => attachment.FileAssetId == fileAssetId,
+            cancellationToken) ||
+        await dbContext.ReportExportJobs.AnyAsync(
+            job => job.Id == fileAssetId || job.OutputFileAssetId == fileAssetId,
+            cancellationToken);
+
+    public async Task<bool> CanReadBoundFileAsync(
         FileAsset fileAsset,
         AccessContext accessContext,
-        CancellationToken cancellationToken) =>
-        (
+        CancellationToken cancellationToken)
+    {
+        var canReadMessage = await (
             from attachment in dbContext.MessageAttachments
             join message in dbContext.Messages on attachment.MessageId equals message.Id
             join conversation in dbContext.Conversations on message.ConversationId equals conversation.Id
@@ -41,4 +53,29 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
                        membership.EndedAtUtc == null))
             select attachment)
             .AnyAsync(cancellationToken);
+        if (canReadMessage)
+        {
+            return true;
+        }
+
+        return await dbContext.ReportExportJobs.AnyAsync(
+            job =>
+                (job.Id == fileAsset.Id || job.OutputFileAssetId == fileAsset.Id) &&
+                job.Status == ReportExportJobStatus.Completed &&
+                job.OutputFileAssetId == fileAsset.Id &&
+                job.RequestedByUserId == accessContext.UserId &&
+                job.OrganizationId == accessContext.OrganizationId &&
+                job.MembershipId == accessContext.MembershipId &&
+                job.Audience == accessContext.ActiveRole &&
+                job.SubjectOrganizationPersonId == accessContext.SubjectOrganizationPersonId &&
+                (job.Audience != OrganizationRole.Teacher ||
+                 job.ClassId != null &&
+                 dbContext.TeacherAssignments.Any(assignment =>
+                     assignment.OrganizationId == job.OrganizationId &&
+                     assignment.ClassId == job.ClassId &&
+                     assignment.TeacherMembershipId == job.MembershipId &&
+                     assignment.Status == MakanApp.Domain.Academic.TeacherAssignmentStatus.Active &&
+                     assignment.EndedAtUtc == null)),
+            cancellationToken);
+    }
 }

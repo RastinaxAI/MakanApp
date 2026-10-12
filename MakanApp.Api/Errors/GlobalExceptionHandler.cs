@@ -5,6 +5,7 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Detailed;
+using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +47,9 @@ public sealed class GlobalExceptionHandler(
             DetailedReportException detailedReportException => CreateKnownProblem(
                 detailedReportException.Code,
                 detailedReportException.Message),
+            ReportExportException reportExportException => CreateKnownProblem(
+                reportExportException.Code,
+                reportExportException.Message),
             _ => CreateUnexpectedProblem(exception, httpContext.TraceIdentifier)
         };
 
@@ -228,6 +232,10 @@ public sealed class GlobalExceptionHandler(
             StorageErrorCodes.FileAlreadyDeleted => StatusCodes.Status409Conflict,
             StorageErrorCodes.FileInUse => StatusCodes.Status409Conflict,
             DetailedReportErrorCodes.ResourceNotFound => StatusCodes.Status404NotFound,
+            ReportExportErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            ReportExportErrorCodes.NotReady => StatusCodes.Status409Conflict,
+            ReportExportErrorCodes.RowLimitExceeded => StatusCodes.Status422UnprocessableEntity,
+            ReportExportErrorCodes.UnsupportedFormat => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status400BadRequest
         };
 
