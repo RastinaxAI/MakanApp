@@ -53,4 +53,16 @@ public static class MessagingErrorCodes
     public const string ReportNotAllowed = "REPORT_NOT_ALLOWED";
     public const string ReportMessageNotFound = "REPORT_MESSAGE_NOT_FOUND";
     public const string ReportIdempotencyConflict = "REPORT_IDEMPOTENCY_CONFLICT";
+    public const string ContactInvalid = "CONTACT_INVALID";
+    public const string ContactSelfNotAllowed = "CONTACT_SELF_NOT_ALLOWED";
+    public const string ContactTargetNotAvailable = "CONTACT_TARGET_NOT_AVAILABLE";
+    public const string ContactNotFound = "CONTACT_NOT_FOUND";
+    public const string ContactConflict = "CONTACT_CONFLICT";
+    public const string DirectoryPageInvalid = "DIRECTORY_PAGE_INVALID";
+    public const string PeopleSearchInvalid = "PEOPLE_SEARCH_INVALID";
+    public const string PeopleResolveInvalid = "PEOPLE_RESOLVE_INVALID";
+    public const string PersonNotDiscoverable = "PERSON_NOT_DISCOVERABLE";
+    public const string PrivacyInvalid = "MESSAGING_PRIVACY_INVALID";
+    public const string PrivacyConflict = "MESSAGING_PRIVACY_CONFLICT";
+    public const string DiscoveryRateLimited = "MESSAGING_DISCOVERY_RATE_LIMITED";
 }

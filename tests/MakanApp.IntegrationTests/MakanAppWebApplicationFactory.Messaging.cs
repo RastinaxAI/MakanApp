@@ -43,6 +43,20 @@ public sealed partial class MakanAppWebApplicationFactory
         await dbContext.SaveChangesAsync();
     }
 
+    public async Task<int> CountActivePersonalCommunicationGrantsAsync(
+        Guid firstUserId,
+        Guid secondUserId)
+    {
+        var pair = DirectUserPair.Create(firstUserId, secondUserId);
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.PersonalCommunicationGrants.CountAsync(
+            grant => grant.LowerUserId == pair.LowerUserId &&
+                     grant.HigherUserId == pair.HigherUserId &&
+                     grant.Status == PersonalCommunicationGrantStatus.Active &&
+                     grant.EndedAtUtc == null);
+    }
+
     public async Task<int> CountDirectConversationsAsync(
         Guid firstUserId,
         Guid secondUserId,

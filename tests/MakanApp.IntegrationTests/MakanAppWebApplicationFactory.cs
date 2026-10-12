@@ -50,6 +50,8 @@ public sealed partial class MakanAppWebApplicationFactory :
         Services.GetRequiredService<NotificationDeliveryProviderTestControl>();
     public PaymentGatewayTestControl PaymentGateway =>
         Services.GetRequiredService<PaymentGatewayTestControl>();
+    public SensitiveLogTestControl SensitiveLogs =>
+        Services.GetRequiredService<SensitiveLogTestControl>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -126,6 +128,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<OtpProviderTestControl>();
             services.AddSingleton<NotificationDeliveryProviderTestControl>();
             services.AddSingleton<PaymentGatewayTestControl>();
+            services.AddSingleton<SensitiveLogTestControl>();
+            services.AddSingleton<Microsoft.Extensions.Logging.ILoggerProvider, RecordingTestLoggerProvider>();
             services.RemoveAll<DevelopmentOtpStore>();
             services.RemoveAll<DevelopmentOtpProvider>();
             services.AddSingleton<DevelopmentOtpStore>();

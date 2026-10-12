@@ -12,6 +12,7 @@ namespace MakanApp.Infrastructure.Messaging;
 public sealed partial class EfMessagingStore(
     MakanDbContext dbContext,
     ICommunicationEligibilityPolicy eligibilityPolicy,
+    IMessagingPrivacyResolver privacyResolver,
     IConversationManagementPolicy managementPolicy,
     MessagingOutboxWakeSignal outboxWakeSignal) :
     IMessagingStore,

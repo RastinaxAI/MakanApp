@@ -3176,6 +3176,49 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.MessagingPrivacySettings", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("DirectMessagesAudience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GroupInvitesAudience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PhoneNumberDiscoveryAudience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PhoneNumberVisibilityAudience")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("MessagingPrivacySettings", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_DirectMessagesAudience", "[DirectMessagesAudience] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_GroupInvitesAudience", "[GroupInvitesAudience] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_PhoneNumberDiscoveryAudience", "[PhoneNumberDiscoveryAudience] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_PhoneNumberVisibilityAudience", "[PhoneNumberVisibilityAudience] IN (1, 2, 3)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.PersonalCommunicationGrant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3265,6 +3308,57 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_UserBlocks_Lifecycle", "([Status] = 1 AND [EndedAtUtc] IS NULL) OR ([Status] = 2 AND [EndedAtUtc] IS NOT NULL AND [EndedAtUtc] >= [CreatedAtUtc])");
 
                             t.HasCheckConstraint("CK_UserBlocks_Status", "[Status] IN (1, 2)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.UserContact", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ContactUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SavedName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactUserId");
+
+                    b.HasIndex("OwnerUserId", "ContactUserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserContacts_Owner_Contact");
+
+                    b.HasIndex("OwnerUserId", "IsFavorite")
+                        .HasDatabaseName("IX_UserContacts_Owner_IsFavorite");
+
+                    b.HasIndex("OwnerUserId", "UpdatedAtUtc")
+                        .HasDatabaseName("IX_UserContacts_Owner_UpdatedAtUtc");
+
+                    b.ToTable("UserContacts", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_UserContacts_DistinctUsers", "[OwnerUserId] <> [ContactUserId]");
                         });
                 });
 
@@ -5032,6 +5126,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.MessagingPrivacySettings", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithOne()
+                        .HasForeignKey("MakanApp.Domain.Messaging.MessagingPrivacySettings", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.PersonalCommunicationGrant", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -5058,6 +5161,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("BlockerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.UserContact", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ContactUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

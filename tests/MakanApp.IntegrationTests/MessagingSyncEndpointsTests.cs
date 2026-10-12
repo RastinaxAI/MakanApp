@@ -114,7 +114,7 @@ public sealed partial class MessagingEndpointsTests
         using var memberClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",

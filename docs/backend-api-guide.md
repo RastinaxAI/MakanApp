@@ -46,7 +46,7 @@
 | Assignment | پیش‌نویس و انتشار تکلیف، پاسخ متنی و فایل، تحویل نهایی، ارزیابی و انتشار یا اصلاح نمره |
 | Exam | نسخه‌بندی آزمون، سؤال تستی و تشریحی، شروع تلاش، ذخیره پاسخ، انتقال حق نوشتن، نهایی‌سازی، تصحیح و انتشار نمره |
 | Storage | بارگذاری، metadata، دانلود مجاز و حذف فایل |
-| Messaging | گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR |
+| Messaging | Contact، Privacy و Discovery، گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR |
 | Reports | چهار داشبورد مخاطب و شانزده گزارش تفصیلی؛ داده مجاز نقش، pagination، حضور و نمره منتشرشده |
 
 پروژه یک Modular Monolith با Onion Architecture است. همه قابلیت‌ها در یک میزبان API اجرا می‌شوند و SQL Server مرجع داده‌های تراکنشی است.
@@ -810,7 +810,7 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 
 Scope یکی از `Personal` یا `Organization` است. در Scope سازمانی، سازمان از workspace جاری به دست می‌آید. ایجاد گفت‌وگوی تازه `201` و بازیابی زوج موجود `200` با `alreadyExisted=true` دارد.
 
-در فضای شخصی، شروع تماس به دو حساب با وضعیت سنی `Adult` و `PersonalCommunicationGrant` فعال نیاز دارد؛ ثبت‌نام ساده این شرایط را تأمین نمی‌کند. برای وضعیت سنی و ایجاد grant، API عمومی وجود ندارد.
+در فضای شخصی، Direct به‌صورت سراسری و مستقل از Organization قابل شروع است. مقصد باید بر اساس `DirectMessagesAudience` فعلی خود (`Everyone`، `Contacts` یا `Nobody`) درخواست‌کننده را مجاز کند و Block دوطرفه نیز برقرار نباشد. حالت `Contacts` یک‌طرفه و از دید مقصد است: مقصد باید درخواست‌کننده را در Contacts خود ذخیره کرده باشد. وضعیت سنی و `PersonalCommunicationGrant` دیگر شرط Personal Direct نیستند؛ grant قدیمی فقط برای سازگاری schema/history باقی مانده است. سیاست ایمنی حساب کودک هنوز release gate مستقل دارد.
 
 در فضای سازمانی، عضویت‌ها و نقش‌ها فعال‌اند و policy فعلی این روابط را کنترل می‌کند:
 
@@ -821,7 +821,33 @@ Scope یکی از `Personal` یا `Organization` است. در Scope سازمان
 | Student | با ثبت‌نام فعال: Manager و Teacher مرتبط |
 | Parent | Manager و Teacher مرتبط با فرزند |
 
-شناسه مخاطب ناشناخته یا غیرمجاز می‌تواند خطای عمومی `DIRECT_RECIPIENT_NOT_AVAILABLE` بدهد. API عمومی جست‌وجوی کاربران با شماره تلفن وجود ندارد.
+شناسه مخاطب ناشناخته، Blockشده یا غیرمجاز خطای عمومی `DIRECT_RECIPIENT_NOT_AVAILABLE` می‌دهد و علت داخلی افشا نمی‌شود. Organization Direct و روابط سازمانی این جدول در STEP 14B تغییر نکرده‌اند.
+
+### Contacts، Privacy و Discovery
+
+| Method | Route | کاربرد |
+|---|---|---|
+| `GET` | `/contacts?q=&favoritesOnly=&page=&pageSize=` | فهرست خصوصی Contacts؛ SavedName فقط برای مالک |
+| `GET` | `/contacts/recent?page=&pageSize=` | مخاطبان اخیر بر اساس فعالیت Personal Direct |
+| `POST` | `/contacts` | ذخیره idempotent با `contactUserId` و `savedName` |
+| `PATCH` | `/contacts/{contactUserId}` | تغییر SavedName/Favorite با `expectedVersion` |
+| `DELETE` | `/contacts/{contactUserId}` | حذف Contact بدون حذف chat، history یا Block |
+| `GET` | `/people/search?q=&page=&pageSize=` | جست‌وجوی محدود Username/DisplayName |
+| `POST` | `/people/resolve` | resolve دقیق Username یا Phone Number در body |
+| `GET` | `/people/{userId}` | پروفایل عمومی حداقلی و privacy-aware |
+| `GET` | `/messaging/privacy` | settings مؤثر کاربر |
+| `PUT` | `/messaging/privacy` | ایجاد/ویرایش settings با optimistic concurrency |
+
+مقادیر پیش‌فرض بدون ایجاد ردیف دیتابیس عبارت‌اند از Direct=`Everyone`، نمایش شماره=`Nobody`، کشف با شماره=`Nobody` و دعوت گروه شخصی=`Contacts`. کشف شماره و نمایش شماره دو مجوز مستقل‌اند. Phone resolve فقط exact match است، شماره در URL قرار نمی‌گیرد و نتیجه شماره مخفی با شماره ناموجود یکسان است:
+
+```json
+{
+  "isDiscoverable": false,
+  "profile": null
+}
+```
+
+People Search به query حداقل دوکاراکتری و صفحه حداکثر ۵۰تایی محدود است. endpointهای `/people` علاوه بر authentication، rate limit دارند. DTO عمومی فقط اطلاعات حداقلی مانند `userId`، `username`، `displayName`، شماره مجازشده، `isSavedContact`، `isFavorite` و `canStartDirect` را دارد؛ داده سازمانی، نقش، سن، grant و جزئیات Privacy افشا نمی‌شوند. قرارداد کامل در [سند STEP 14B](architecture/STEP_14B_CONTACTS_PRIVACY_DISCOVERY.md) ثبت شده است.
 
 ### گروه، کانال و پیام
 

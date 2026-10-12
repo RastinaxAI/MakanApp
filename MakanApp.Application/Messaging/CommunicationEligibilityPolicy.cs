@@ -21,7 +21,8 @@ public sealed record CommunicationEligibilityFacts(
     bool TargetAccountAvailable,
     CommunicationAgeCategory ActorAgeCategory,
     CommunicationAgeCategory TargetAgeCategory,
-    bool HasActivePersonalGrant,
+    bool TargetAllowsPersonalDirect,
+    bool TargetAllowsPersonalGroupInvite,
     bool ActorMembershipActive,
     bool ActorRoleActive,
     bool TargetMembershipActive,
@@ -44,6 +45,8 @@ public interface ICommunicationEligibilityPolicy
         CommunicationEligibilityFacts facts,
         MessagingEligibilityOperation operation);
 
+    bool CanInviteToManagedConversation(CommunicationEligibilityFacts facts);
+
     bool CanRead(ConversationReadFacts facts);
 }
 
@@ -65,6 +68,28 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
         return facts.Scope switch
         {
             ConversationScope.Personal => CanUsePersonal(facts, operation),
+            ConversationScope.Organization => CanUseOrganization(facts),
+            _ => false
+        };
+    }
+
+    public bool CanInviteToManagedConversation(CommunicationEligibilityFacts facts)
+    {
+        if (facts.ActorUserId == Guid.Empty ||
+            facts.TargetUserId == Guid.Empty ||
+            facts.ActorUserId == facts.TargetUserId ||
+            !facts.ActorAccountAvailable ||
+            !facts.TargetAccountAvailable)
+        {
+            return false;
+        }
+
+        return facts.Scope switch
+        {
+            ConversationScope.Personal =>
+                facts.AccessContext.WorkspaceType == WorkspaceType.Personal &&
+                !facts.OrganizationId.HasValue &&
+                facts.TargetAllowsPersonalGroupInvite,
             ConversationScope.Organization => CanUseOrganization(facts),
             _ => false
         };
@@ -95,9 +120,7 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
         (!operation.Equals(MessagingEligibilityOperation.Start) ||
          facts.AccessContext.WorkspaceType == WorkspaceType.Personal) &&
         !facts.OrganizationId.HasValue &&
-        facts.ActorAgeCategory == CommunicationAgeCategory.Adult &&
-        facts.TargetAgeCategory == CommunicationAgeCategory.Adult &&
-        facts.HasActivePersonalGrant;
+        facts.TargetAllowsPersonalDirect;
 
     private static bool CanUseOrganization(CommunicationEligibilityFacts facts)
     {

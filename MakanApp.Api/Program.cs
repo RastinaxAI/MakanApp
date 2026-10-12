@@ -60,10 +60,23 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("messaging-discovery", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
     options.OnRejected = async (context, cancellationToken) =>
     {
         var isPayment = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/commerce/orders",
+            StringComparison.OrdinalIgnoreCase);
+        var isMessagingDiscovery = context.HttpContext.Request.Path.StartsWithSegments(
+            "/api/v1/people",
             StringComparison.OrdinalIgnoreCase);
         var problemDetailsService = context.HttpContext.RequestServices
             .GetRequiredService<IProblemDetailsService>();
@@ -76,15 +89,21 @@ builder.Services.AddRateLimiter(options =>
                 Title = "Too many requests",
                 Detail = isPayment
                     ? "تعداد درخواست‌های پرداخت بیش از حد مجاز است."
-                    : "تعداد درخواست‌های کد بیش از حد مجاز است.",
+                    : isMessagingDiscovery
+                        ? "تعداد درخواست‌های جست‌وجوی کاربر بیش از حد مجاز است."
+                        : "تعداد درخواست‌های کد بیش از حد مجاز است.",
                 Type = isPayment
                     ? "urn:makan:problem:payment-rate-limited"
-                    : "urn:makan:problem:otp-rate-limited",
+                    : isMessagingDiscovery
+                        ? "urn:makan:problem:messaging-discovery-rate-limited"
+                        : "urn:makan:problem:otp-rate-limited",
                 Extensions =
                 {
                     ["code"] = isPayment
                         ? CommerceErrorCodes.PaymentRateLimited
-                        : IdentityErrorCodes.OtpRateLimited
+                        : isMessagingDiscovery
+                            ? MessagingErrorCodes.DiscoveryRateLimited
+                            : IdentityErrorCodes.OtpRateLimited
                 }
             }
         });

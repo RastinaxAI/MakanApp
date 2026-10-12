@@ -17,7 +17,7 @@ public sealed partial class MessagingEndpointsTests
         using var memberClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var operationId = Guid.NewGuid();
         var command = new CreateManagedConversationCommand(
             operationId,
@@ -74,8 +74,8 @@ public sealed partial class MessagingEndpointsTests
         var owner = await CreateMessagingUserAsync(ownerClient);
         var admin = await CreateMessagingUserAsync(adminClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, admin.UserId);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, admin.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var command = new CreateManagedConversationCommand(
             Guid.NewGuid(),
             ConversationScope.Personal,
@@ -121,7 +121,7 @@ public sealed partial class MessagingEndpointsTests
         using var memberClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var operationId = Guid.NewGuid();
         var command = new CreateManagedConversationCommand(
             operationId,
@@ -176,7 +176,7 @@ public sealed partial class MessagingEndpointsTests
         using var memberClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
@@ -203,9 +203,9 @@ public sealed partial class MessagingEndpointsTests
         var admin = await CreateMessagingUserAsync(adminClient);
         var member = await CreateMessagingUserAsync(memberClient);
         var newMember = await CreateMessagingUserAsync(newMemberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, admin.UserId);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
-        await factory.CreatePersonalCommunicationGrantAsync(admin.UserId, newMember.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, admin.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(admin.UserId, newMember.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
@@ -278,7 +278,7 @@ public sealed partial class MessagingEndpointsTests
         using var targetClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var target = await CreateMessagingUserAsync(targetClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, target.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, target.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
@@ -334,7 +334,7 @@ public sealed partial class MessagingEndpointsTests
         using var targetClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var target = await CreateMessagingUserAsync(targetClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, target.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, target.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
@@ -362,7 +362,7 @@ public sealed partial class MessagingEndpointsTests
         using var targetClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var target = await CreateMessagingUserAsync(targetClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, target.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, target.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
@@ -419,7 +419,7 @@ public sealed partial class MessagingEndpointsTests
         using var memberClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient);
         var member = await CreateMessagingUserAsync(memberClient);
-        await factory.CreatePersonalCommunicationGrantAsync(owner.UserId, member.UserId);
+        await factory.AllowPersonalGroupInviteAsync(owner.UserId, member.UserId);
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",

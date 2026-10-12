@@ -115,9 +115,12 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IMessagingSafetyStore>(serviceProvider =>
             serviceProvider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<IMessagingPrivacyResolver, EfMessagingPrivacyResolver>();
+        services.AddScoped<IMessagingDirectoryStore, EfMessagingDirectoryStore>();
         services.AddScoped<IMessagingService, MessagingService>();
         services.AddScoped<IConversationManagementService, ConversationManagementService>();
         services.AddScoped<IMessagingSafetyService, MessagingSafetyService>();
+        services.AddScoped<IMessagingDirectoryService, MessagingDirectoryService>();
         services.AddScoped<IMessagingRealtimeAudienceResolver, MessagingRealtimeAudienceResolver>();
         services.AddSingleton<MessagingOutboxWakeSignal>();
         services.AddScoped<MessagingRealtimeOutboxProcessor>();
@@ -407,6 +410,30 @@ public static class DependencyInjection
                 $"Messaging:MaximumTextLength cannot exceed {MakanApp.Domain.Messaging.Message.StorageMaximumTextLength}.");
         }
 
+        var minimumPeopleSearchLength = ReadPositiveInt(
+            configuration,
+            $"{MessagingOptions.SectionName}:MinimumPeopleSearchLength",
+            2);
+        var maximumPeopleSearchLength = ReadPositiveInt(
+            configuration,
+            $"{MessagingOptions.SectionName}:MaximumPeopleSearchLength",
+            100);
+        var maximumDirectoryPageSize = ReadPositiveInt(
+            configuration,
+            $"{MessagingOptions.SectionName}:MaximumDirectoryPageSize",
+            50);
+        var defaultDirectoryPageSize = ReadPositiveInt(
+            configuration,
+            $"{MessagingOptions.SectionName}:DefaultDirectoryPageSize",
+            20);
+        if (minimumPeopleSearchLength > maximumPeopleSearchLength ||
+            defaultDirectoryPageSize > maximumDirectoryPageSize ||
+            maximumDirectoryPageSize > 200)
+        {
+            throw new InvalidOperationException(
+                "Messaging directory search and page-size settings are inconsistent.");
+        }
+
         return new MessagingOptions
         {
             MaximumTextLength = maximumTextLength,
@@ -445,7 +472,11 @@ public static class DependencyInjection
             MaximumSearchLimit = ReadPositiveInt(
                 configuration,
                 $"{MessagingOptions.SectionName}:MaximumSearchLimit",
-                50)
+                50),
+            MinimumPeopleSearchLength = minimumPeopleSearchLength,
+            MaximumPeopleSearchLength = maximumPeopleSearchLength,
+            DefaultDirectoryPageSize = defaultDirectoryPageSize,
+            MaximumDirectoryPageSize = maximumDirectoryPageSize
         };
     }
 

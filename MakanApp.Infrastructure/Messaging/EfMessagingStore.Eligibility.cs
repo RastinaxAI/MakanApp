@@ -22,13 +22,21 @@ public sealed partial class EfMessagingStore
     {
         var actor = await LoadUserSnapshotAsync(actorUserId, cancellationToken);
         var target = await LoadUserSnapshotAsync(targetUserId, cancellationToken);
-        var pair = DirectUserPair.Create(actorUserId, targetUserId);
-        var hasPersonalGrant = await dbContext.PersonalCommunicationGrants.AnyAsync(
-            grant => grant.LowerUserId == pair.LowerUserId &&
-                     grant.HigherUserId == pair.HigherUserId &&
-                     grant.Status == PersonalCommunicationGrantStatus.Active &&
-                     grant.EndedAtUtc == null,
-            cancellationToken);
+        var targetAllowsPersonalDirect = false;
+        var targetAllowsPersonalGroupInvite = false;
+        if (scope == ConversationScope.Personal)
+        {
+            var privacy = await privacyResolver.ResolveAsync(
+                actorUserId,
+                targetUserId,
+                cancellationToken);
+            targetAllowsPersonalDirect = MessagingPrivacyPolicy.Allows(
+                privacy.Settings.DirectMessagesAudience,
+                privacy.TargetHasSavedRequester);
+            targetAllowsPersonalGroupInvite = MessagingPrivacyPolicy.Allows(
+                privacy.Settings.GroupInvitesAudience,
+                privacy.TargetHasSavedRequester);
+        }
 
         var actorMembershipActive = false;
         var actorRoleActive = false;
@@ -138,7 +146,8 @@ public sealed partial class EfMessagingStore
             target is not null,
             actor?.AgeCategory ?? CommunicationAgeCategory.Unknown,
             target?.AgeCategory ?? CommunicationAgeCategory.Unknown,
-            hasPersonalGrant,
+            targetAllowsPersonalDirect,
+            targetAllowsPersonalGroupInvite,
             actorMembershipActive,
             actorRoleActive,
             targetMembershipActive,

@@ -153,19 +153,32 @@ public sealed class CommunicationEligibilityPolicyTests
     private readonly CommunicationEligibilityPolicy _policy = new();
 
     [Fact]
-    public void PersonalConversationRequiresTwoAdultsAndActiveGrant()
+    public void PersonalConversationUsesTargetPrivacyWithoutAdultOrGrantPrerequisites()
     {
         var allowed = CreateFacts(
             ConversationScope.Personal,
             actorAge: CommunicationAgeCategory.Adult,
             targetAge: CommunicationAgeCategory.Adult,
-            hasGrant: true);
-        var noGrant = allowed with { HasActivePersonalGrant = false };
+            targetAllowsDirect: true);
+        var privacyDenied = allowed with { TargetAllowsPersonalDirect = false };
         var minor = allowed with { TargetAgeCategory = CommunicationAgeCategory.Minor };
 
         Assert.True(_policy.CanStartOrSend(allowed, MessagingEligibilityOperation.Start));
-        Assert.False(_policy.CanStartOrSend(noGrant, MessagingEligibilityOperation.Start));
-        Assert.False(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
+        Assert.False(_policy.CanStartOrSend(privacyDenied, MessagingEligibilityOperation.Start));
+        Assert.True(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
+    }
+
+    [Fact]
+    public void PersonalGroupInviteUsesSeparateTargetAudience()
+    {
+        var allowed = CreateFacts(
+            ConversationScope.Personal,
+            targetAllowsDirect: false,
+            targetAllowsGroupInvite: true);
+
+        Assert.True(_policy.CanInviteToManagedConversation(allowed));
+        Assert.False(_policy.CanInviteToManagedConversation(
+            allowed with { TargetAllowsPersonalGroupInvite = false }));
     }
 
     [Fact]
@@ -230,7 +243,8 @@ public sealed class CommunicationEligibilityPolicyTests
         ConversationScope scope,
         CommunicationAgeCategory actorAge = CommunicationAgeCategory.Unknown,
         CommunicationAgeCategory targetAge = CommunicationAgeCategory.Unknown,
-        bool hasGrant = false,
+        bool targetAllowsDirect = true,
+        bool targetAllowsGroupInvite = true,
         OrganizationRole actorRole = OrganizationRole.Manager,
         OrganizationRole targetRole = OrganizationRole.Teacher,
         bool actorHasEnrollment = false,
@@ -261,7 +275,8 @@ public sealed class CommunicationEligibilityPolicyTests
             true,
             actorAge,
             targetAge,
-            hasGrant,
+            targetAllowsDirect,
+            targetAllowsGroupInvite,
             scope == ConversationScope.Organization,
             scope == ConversationScope.Organization,
             scope == ConversationScope.Organization,

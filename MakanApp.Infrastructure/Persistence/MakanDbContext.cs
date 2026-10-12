@@ -75,6 +75,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<PersonalCommunicationGrant> PersonalCommunicationGrants =>
         Set<PersonalCommunicationGrant>();
     public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
+    public DbSet<UserContact> UserContacts => Set<UserContact>();
+    public DbSet<MessagingPrivacySettings> MessagingPrivacySettings => Set<MessagingPrivacySettings>();
     public DbSet<AbuseReport> AbuseReports => Set<AbuseReport>();
     public DbSet<GuardianRelation> GuardianRelations => Set<GuardianRelation>();
     public DbSet<MakanApp.Domain.Organization.Organization> Organizations => Set<MakanApp.Domain.Organization.Organization>();

@@ -129,7 +129,7 @@ public sealed partial class EfMessagingStore
             accessContext,
             nowUtc,
             cancellationToken);
-        if (!eligibilityPolicy.CanStartOrSend(facts, MessagingEligibilityOperation.Start))
+        if (!eligibilityPolicy.CanInviteToManagedConversation(facts))
         {
             throw new MessagingException(
                 MessagingErrorCodes.DirectRecipientNotAvailable,

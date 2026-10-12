@@ -20,14 +20,12 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
     private static int _phoneSequence = 81_000_000;
 
     [Fact]
-    public async Task EligibleAdultsCreateOneCanonicalPersonalConversationWithoutPhoneDisclosure()
+    public async Task ValidAccountsCreateOneCanonicalPersonalConversationWithoutPhoneDisclosure()
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
         var first = await CreateMessagingUserAsync(firstClient);
         var second = await CreateMessagingUserAsync(secondClient);
-        await factory.CreatePersonalCommunicationGrantAsync(first.UserId, second.UserId);
-
         using var firstResponse = await StartDirectAsync(
             firstClient,
             second.UserId,
@@ -59,35 +57,25 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
     }
 
     [Fact]
-    public async Task PersonalConversationRequiresGrantAndAdultParticipantsUsingGenericFailure()
+    public async Task PersonalConversationDoesNotRequireGrantOrAdultParticipants()
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
         var first = await CreateMessagingUserAsync(firstClient);
         var second = await CreateMessagingUserAsync(secondClient);
 
-        using var missingGrant = await StartDirectAsync(
-            firstClient,
-            second.UserId,
-            ConversationScope.Personal);
-        Assert.Equal(HttpStatusCode.NotFound, missingGrant.StatusCode);
-        Assert.Equal(
-            MessagingErrorCodes.DirectRecipientNotAvailable,
-            await ReadProblemCodeAsync(missingGrant));
-
-        await factory.CreatePersonalCommunicationGrantAsync(first.UserId, second.UserId);
         await factory.SetCommunicationAgeCategoryAsync(
             second.UserId,
             CommunicationAgeCategory.Minor);
-        using var minor = await StartDirectAsync(
+        using var response = await StartDirectAsync(
             firstClient,
             second.UserId,
             ConversationScope.Personal);
 
-        Assert.Equal(HttpStatusCode.NotFound, minor.StatusCode);
-        Assert.Equal(
-            MessagingErrorCodes.DirectRecipientNotAvailable,
-            await ReadProblemCodeAsync(minor));
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(0, await factory.CountActivePersonalCommunicationGrantsAsync(
+            first.UserId,
+            second.UserId));
     }
 
     [Fact]
@@ -292,7 +280,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
     }
 
     [Fact]
-    public async Task PersonalGrantRevocationBlocksNewMessagesButPreservesHistory()
+    public async Task PersonalGrantRevocationDoesNotControlNewMessagesOrHistory()
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
@@ -318,7 +306,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
             conversation.ConversationId,
             clientMessageId,
             "قبل از لغو");
-        using var blocked = await SendMessageAsync(
+        var afterRevocation = await SendMessageAndReadAsync(
             firstClient,
             conversation.ConversationId,
             Guid.NewGuid(),
@@ -327,11 +315,10 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
             $"/api/v1/conversations/{conversation.ConversationId}/messages");
 
         Assert.Equal(committed, retried);
-        Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
-        Assert.Equal(MessagingErrorCodes.MessageNotAllowed, await ReadProblemCodeAsync(blocked));
         Assert.Equal(HttpStatusCode.OK, history.StatusCode);
+        Assert.Equal(2, afterRevocation.Sequence);
         var page = await history.Content.ReadFromJsonAsync<ConversationMessagePageResult>(JsonOptions);
-        Assert.Single(page!.Messages);
+        Assert.Equal(2, page!.Messages.Count);
     }
 
     [Fact]
@@ -538,7 +525,12 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
         await factory.SetCommunicationAgeCategoryAsync(
             verified.User.Id,
             CommunicationAgeCategory.Adult);
-        return new MessagingUser(verified.User.Id, verified.AccessToken);
+        return new MessagingUser(
+            verified.User.Id,
+            verified.AccessToken,
+            phone,
+            $"msg.{suffix}",
+            $"کاربر {suffix}");
     }
 
     private static async Task SelectOrganizationAsync(
@@ -620,7 +612,12 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
         return options;
     }
 
-    private sealed record MessagingUser(Guid UserId, string AccessToken);
+    private sealed record MessagingUser(
+        Guid UserId,
+        string AccessToken,
+        string PhoneNumber,
+        string Username,
+        string DisplayName);
 
     private sealed record TeacherStudentSetup(
         HttpClient TeacherClient,

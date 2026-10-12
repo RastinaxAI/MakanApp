@@ -16,4 +16,8 @@ public sealed class MessagingOptions
     public int MaximumSearchQueryLength { get; init; } = 200;
     public int DefaultSearchLimit { get; init; } = 20;
     public int MaximumSearchLimit { get; init; } = 50;
+    public int MinimumPeopleSearchLength { get; init; } = 2;
+    public int MaximumPeopleSearchLength { get; init; } = 100;
+    public int DefaultDirectoryPageSize { get; init; } = 20;
+    public int MaximumDirectoryPageSize { get; init; } = 50;
 }

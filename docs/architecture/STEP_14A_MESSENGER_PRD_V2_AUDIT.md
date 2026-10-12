@@ -449,3 +449,42 @@ Validation پس از تکمیل اسناد روی `MakanApp.sln` اجرا شد:
 | Migration | هیچ migration ساخته یا اجرا نشد و model/schema تغییر نکرد. |
 
 در STEP 14A هیچ فایل product code یا test تغییر نکرد. این نتیجه baseline موجود را تأیید می‌کند و ادعای پیاده‌سازی gapهای Messenger v2 نیست.
+
+## 18. Addendum پس از STEP 14B
+
+این بخش تاریخچه ممیزی STEP 14A را بازنویسی نمی‌کند؛ فقط requirementهایی را که با
+پیاده‌سازی `Contacts + Profile Privacy + Discovery + Global Personal Direct` تغییر
+وضعیت داده‌اند، به‌صورت versioned ثبت می‌کند. جزئیات قرارداد در
+`STEP_14B_CONTACTS_PRIVACY_DISCOVERY.md` آمده است.
+
+| ID | وضعیت پس از 14B | شواهد و مرز باقیمانده |
+|---|---|---|
+| CNT-01 | `IMPLEMENTED` | `UserContact`، unique index مالک/مخاطب و save idempotent |
+| CNT-02 | `IMPLEMENTED` | جست‌وجوی SavedName، Username و DisplayName؛ Phone فقط exact resolve امن و مستقل است |
+| CNT-03 | `PARTIAL` | Recent از فعالیت Personal Direct پیاده شد؛ Frequent ranking عمداً deferred است |
+| CNT-04 | `IMPLEMENTED` | loading/empty/pagination contract و پاسخ امن not-discoverable مستند و تست شدند |
+| CNT-05 | `IMPLEMENTED` | ذخیره با UserId مقصد و SavedName خصوصی، بدون نیاز به شماره |
+| CNT-06 | `IMPLEMENTED` | نتیجه discovery قابل ذخیره با ContactUserId است |
+| CNT-07 تا CNT-10 | `IMPLEMENTED` | SavedName خصوصی، Favorite/unfavorite، edit و delete مستقل از history |
+| CNT-11 | `PARTIAL` | safe profile projection وجود دارد؛ Contact card message خارج از 14B است |
+| CNT-12 | `PARTIAL` | Contacts و GroupInvites privacy backend موجود است؛ UX انتخاب عضو و 14C باقی است |
+| CNT-13 | `PARTIAL` | مقصد غیرمجاز/ناموجود امن است؛ SMS invite پیاده نشده است |
+| CNT-14 تا CNT-16 | `MISSING` | Contact sync و revoke عمداً deferred هستند |
+| CNT-17 | `IMPLEMENTED` | هویت Contact برابر UserId است و Phone فقط credential کشف است |
+| CNT-18 | `MISSING` | merge/dedup مربوط به sync هنوز مدل نشده است |
+| CNT-19 | `IMPLEMENTED` | profile/discovery/contact entry به Direct با Privacy و Block متصل شد |
+| CNT-20 | `IMPLEMENTED` | Block مستقل باقی مانده و Contact آن را دور نمی‌زند |
+| CNT-21 تا CNT-23 | `IMPLEMENTED` | مالکیت خصوصی، one-way Contacts semantics و pagination/limits enforce شدند |
+| PRF-01 | `PARTIAL` | پروفایل امن Username/DisplayName موجود است؛ Avatar و Bio پیاده نشده‌اند |
+| PRF-02، PRF-03، PRF-06، PRF-07 | `IMPLEMENTED` | Privacyهای Direct/Phone/Group Invite، defaults و enforcement فعلی موجودند؛ child safety همچنان release gate است |
+| PRF-04، PRF-05 | `MISSING` | Avatar/Bio و Presence خارج از 14B هستند |
+| DM-01 | `IMPLEMENTED` | Personal Direct سراسری، بدون Organization/Adult/grant و با Privacy/Block برقرار است |
+| DM-02 | `IMPLEMENTED` | Organization Direct با authorization قبلی بدون تغییر باقی مانده است |
+| GRP-03 | `PARTIAL` | Privacy دعوت Personal Group اعمال شد؛ child/group policyهای حل‌نشده باقی‌اند |
+| AC-01 تا AC-04 | `IMPLEMENTED` | uniqueness همزمان، استقلال delete/history، Block و جلوگیری از phone leakage تست شدند |
+| AC-13 | `PARTIAL` | Contact privacy/ownership بسته شد؛ reviewer/moderation authority در 14D باقی است |
+| AC-14 | `MISSING` | Contact sync پیاده نشده و بنابراین revoke آن نیز deferred است |
+
+Migration افزوده‌شده `20261012203821_AddMessengerContactsPrivacyDiscovery` فقط schema
+دو جدول `messaging.UserContacts` و `messaging.MessagingPrivacySettings` را تعریف می‌کند؛
+در STEP 14B روی دیتابیس production یا developer اعمال نشده است.
