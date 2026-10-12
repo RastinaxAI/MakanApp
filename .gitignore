@@ -451,5 +451,4 @@ appsettings.*.local.json
 /docs/database-current-structure.html
 /docs/database-current-structure.pdf
 
-# خروجی قابل تولید از راهنمای بک‌اند و API
-/docs/backend-api-guide.html
+# HTML و PDF دو کتاب backend-api-guide و backend-api-reference کنار منبع نسخه‌بندی می‌شوند.

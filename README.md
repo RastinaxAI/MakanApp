@@ -6,12 +6,14 @@
 
 ## راهنمای استفاده از بک‌اند و API
 
-- [راهنمای راه‌اندازی و استفاده از API](docs/backend-api-guide.md): تنظیمات، ورود، فضای کاری، جریان‌های آموزشی، فایل، پیام‌رسانی، خطاها و محدودیت‌های فعلی.
-- [مرجع کامل Endpointها و قراردادها](docs/backend-api-reference.md): مسیرها، پارامترها، بدنه درخواست، پاسخ، Enumها و کدهای خطا.
+- [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
+- [مرجع کامل Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): جدول و کارت تفصیلی ۱۴۱ عملیات، مجوز و قواعد شاخص، مسیر service/port/adapter، نمونه HTTP/JSON، معنی فیلدها، Enumها و کدهای خطا.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 
 بازبینی اسناد در `2026-10-12` بر مبنای `f0b78dd` انجام شده است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل چهار داشبورد و شانزده گزارش تفصیلی، OTP مدیریت‌شده و تنظیمات جدید میزبانی. قرارداد فرانت‌اند رفتار فعلی را از قابلیت‌های آینده جدا می‌کند. بخش‌های مرحله‌ای پایین گزارش همان مرحله توسعه‌اند؛ برای وضعیت جاری، راهنماهای بالا را مبنا قرار دهید.
+
+دو کتاب بک‌اند در همین تاریخ بر مبنای `f0ff3be` برای تحویل به توسعه‌دهنده دیگر تکمیل شده‌اند. Markdown منبع نگهداری و HTML/PDF هر کتاب خروجی مستقل نسخه‌بندی‌شده است؛ روش بازتولید با `tools/docs/build_backend_docs.py` در پایان راهنما آمده است.
 
 ## مسیرها
 

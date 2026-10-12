@@ -1,12 +1,16 @@
-# راهنمای استفاده از بک‌اند و API ماکان
+# راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای توسعه‌دهنده‌ای است که می‌خواهد بک‌اند ماکان را اجرا کند، از APIها در Postman یا یک کلاینت استفاده کند و جریان‌های آموزشی و پیام‌رسانی را بشناسد. مبنای بازبینی `main@f0b78dd` در `2026-10-12` است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل داشبوردها، گزارش‌های تفصیلی STEP 11B، OTP مدیریت‌شده و میزبانی Production.
+این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است: شناخت محصول و مدل، معماری و مسئولیت فایل‌ها، راه‌اندازی، استفاده از API، مطالعه مسیر اجرا، persistence، تست و ادامه توسعه. مبنای بازبینی `main@f0ff3be` در `2026-10-12` است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل داشبوردها، گزارش‌های تفصیلی STEP 11B، OTP مدیریت‌شده و میزبانی Production.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
 ## فهرست مطالب
 
 - [قابلیت‌ها و معماری](#overview)
+- [شروع مطالعه و هدف پروژه](#orientation)
+- [واژه‌نامه مدل و شناسه‌ها](#glossary)
+- [نقشه کد و مسئولیت لایه‌ها](#code-map)
+- [startup، DI و pipeline](#host-pipeline)
 - [راه‌اندازی محلی](#setup)
 - [تنظیمات](#configuration)
 - [قرارداد مشترک HTTP](#http)
@@ -22,7 +26,12 @@
 - [گزارش‌های تفصیلی](#detailed-reports)
 - [استقرار و secretهای Production](deployment-windows-linux-docker.md)
 - [قرارداد اتصال React و React Native](frontend-contract/README.md)
+- [persistence و تراکنش](#persistence)
+- [شش مسیر واقعی مطالعه کد](#runtime-walkthroughs)
+- [روش توسعه و عیب‌یابی](#developer-workflow)
 - [تست و عیب‌یابی](#testing)
+- [نگهداری و ساخت HTML/PDF](#document-maintenance)
+- [نتیجه اعتبارسنجی](#handoff-validation)
 - [محدودیت‌ها و مسیر مطالعه](#limits)
 
 <a id="overview"></a>
@@ -56,6 +65,187 @@ HTTP -> Controller -> Application Service -> Domain rules / Application port
 ```
 
 وابستگی کامپایل از بیرون به داخل است: `Api -> Application`، `Api -> Infrastructure`، `Infrastructure -> Application/Domain` و `Application -> Domain`. مسیر اجرای درخواست با جهت وابستگی یکسان نیست؛ Application از interface استفاده می‌کند و DI پیاده‌سازی Infrastructure را به آن می‌دهد.
+
+<a id="orientation"></a>
+## از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟
+
+MakanApp یک backend مشترک برای ارتباط و فعالیت آموزشی در سازمان است. یک شخص می‌تواند حساب ورود داشته باشد، عضو چند سازمان باشد، در هر سازمان چند نقش داشته باشد و در نشست جاری فقط یک فضای کاری و نقش را انتخاب کند. مدرسه/آموزشگاه، کلاس، حضور، تکلیف و آزمون داده رسمی آموزشی‌اند؛ پیام‌رسان مسیر ارتباط افراد است. داشبورد و گزارش، وضعیت همین داده رسمی را برای مخاطب مجاز خلاصه می‌کنند.
+
+در این نسخه ناحیه School و Messenger جریان‌های واقعی دارند. نام Copilot، Knowledge، Intelligence، Commerce، Notification و Platform Operations در معماری هدف آمده است، اما وجود آن نام‌ها به معنی وجود API اجرایی آن‌ها نیست. مدیر مدرسه `Manager` با ادمین پلتفرم یک مفهوم نیست؛ endpoint عمومی مدیریت پلتفرم یا provisioning سازمان در این مخزن وجود ندارد.
+
+### نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد
+
+۱. بتواند solution را بسازد، دیتابیس توسعه را آگاهانه انتخاب کند و API را اجرا کند.
+
+۲. فرق حساب ورود، شخص، پرونده سازمانی، عضویت، نقش، ثبت‌نام و رابطه والد را بداند.
+
+۳. از یک endpoint به Controller، Application service، port، implementation و configuration برسد.
+
+۴. بداند کدام تغییر به Domain، Application، Infrastructure یا Api تعلق دارد.
+
+۵. خطای ورودی، نداشتن مجوز، تضاد وضعیت، تضاد نسخه و خرابی provider را تفکیک کند.
+
+۶. یک تغییر کوچک را با تست مناسب، migration بررسی‌شده و قرارداد HTTP روشن تحویل دهد.
+
+### برنامه مطالعه و اولین کار عملی
+
+| ترتیب | مطالعه/عمل | نشانه فهم درست |
+|---|---|---|
+| ۱ | همین بخش، معماری و واژه‌نامه | می‌توانید مدل یک Student و Parent در دو سازمان را توضیح دهید |
+| ۲ | راه‌اندازی و تنظیمات | host بالا می‌آید و OpenAPI از همان build خوانده می‌شود |
+| ۳ | ورود، workspace و child context | context از نشست معتبر سرور می‌آید؛ role ورودی مجوز مستقل نیست |
+| ۴ | یک جریان Academic یا Assignment | از HTTP تا ذخیره و برگشت DTO را در کد دنبال می‌کنید |
+| ۵ | تراکنش، نسخه و idempotency | می‌دانید دو درخواست هم‌زمان یا retry چه اثری دارند |
+| ۶ | Messaging و outbox، سپس آزمون | فرق commit، notification، draft، finalize و release روشن است |
+| ۷ | تست‌ها، عیب‌یابی، راهنمای توسعه | می‌توانید تستی بنویسید که رفتار واقعی مورد تغییر را ثابت کند |
+
+اجرای نخست را با `/health`، OpenAPI و تست‌ها شروع کنید. پایگاه تازه بعد از migration سازمان، عضویت یا کلاس آماده ندارد. ورود OTP یک حساب ایجاد می‌کند، اما نقش مدیر سازمان به آن نمی‌دهد. برای یادگیری جریان کامل سازمانی از fixture و تست‌ها استفاده کنید؛ داده fixture را با seed عمومی محصول اشتباه نگیرید.
+
+<a id="glossary"></a>
+## واژه‌نامه مدل و شناسه‌ها
+
+| اصطلاح واقعی | معنی و محل | اشتباه رایج |
+|---|---|---|
+| `User` | حساب سراسری ورود در Identity | یک نقش سازمانی ثابت روی User وجود ندارد |
+| `UserCredential` | اتصال روش ورود، فعلاً موبایل، به User | شماره موبایل شناسه پرونده دانش‌آموز نیست |
+| `Person` | مشخصات شخص مانند نام؛ مستقل از سازمان | ممکن است پرونده آموزشی وجود داشته باشد ولی حساب ورود متصل هنوز نداشته باشد |
+| `OrganizationPerson` | پرونده همان Person در یک Organization | شناسه آن با PersonId و UserId قابل جایگزینی نیست |
+| `Membership` | رابطه User با سازمان | پرونده شخص و اجازه استفاده حساب دو رابطه متفاوت‌اند |
+| `RoleAssignment` | نقش معتبر یک Membership؛ مثل Student/Teacher/Parent/Manager | داشتن نقش در سازمان A مجوز سازمان B نیست |
+| `UserSession` | نشست دارای hash توکن، زمان انقضا و workspace/child منتخب | Bearer این پروژه JWT خودبسنده نیست |
+| `AccessContext` | نتیجه معتبر resolve نشست، سازمان، عضویت، نقش و subject | DTO context یا مقدار ذخیره‌شده در کلاینت اثبات مجوز درخواست بعدی نیست |
+| `GuardianRelation` | رابطه زمان‌دار والد/سرپرست با پرونده فراگیر در سازمان | Parent بودن به‌تنهایی مجوز همه دانش‌آموزان نیست |
+| `AcademicPeriod` / `Course` | دوره زمانی آموزشی / درس سازمان | هیچ‌کدام جای Class را نمی‌گیرند |
+| `AcademicClass` | کلاس با درس، دوره، ظرفیت و وضعیت | enrollment به کلاس مشخص تعلق دارد |
+| `Enrollment` | ثبت‌نام پرونده فراگیر در کلاس | UserId را به جای LearnerOrganizationPersonId نفرستید |
+| `TeacherAssignment` | انتساب Membership معلم به کلاس | role Teacher به‌تنهایی دسترسی به همه کلاس‌ها نمی‌دهد |
+| `Session` | جلسه آموزشی با StartUtc/EndUtc | با UserSession ورود اشتباه نشود |
+| `ScheduleRule` | الگوی تکرار با ساعت محلی و TimeZoneId | زمان محلی الگو با زمان UTC رخداد یکی نیست |
+| `AssignmentVersion` / `AssignmentRecipient` | نسخه تکلیف و گیرندگان تثبیت‌شده انتشار | تغییر enrollment بعدی، گیرنده تاریخی را خودکار بازنویسی نمی‌کند |
+| `SubmissionAttempt` | پاسخ/تلاش تحویل تکلیف | جدول تلاش آزمون نیست |
+| `EvaluationRevision` / `GradeRelease` | نسخه ارزیابی تکلیف / انتشار رسمی آن | draft ارزیابی نتیجه عمومی دانش‌آموز نیست |
+| `ExamVersion` / `QuestionVersion` | تعریف نسخه‌دار آزمون و سؤال | نسخه منتشرشده را برای اصلاح پاسخ یک دانش‌آموز تغییر ندهید |
+| `ExamAttempt` / `ExamAttemptQuestion` | تلاش دانش‌آموز و مجموعه/ترتیب سؤال تثبیت‌شده | تلاش با deadline و شمارنده نسخه خود کار می‌کند |
+| `AnswerRevision` / `ExamFinalAnswer` | تاریخچه پاسخ پذیرفته‌شده / snapshot پاسخ نهایی | autosave با finalize یک عملیات نیست |
+| `ExamGradeRevision` / `ExamGradeRelease` | نسخه تصحیح آزمون / انتشار رسمی آن | با جدول نمره تکلیف یکسان نیست |
+| `FileAsset` | metadata و scope فایل؛ bytes در IFileStorage | FileId بدون مجوز منبع اجازه دانلود نمی‌دهد |
+| `ConversationParticipant` | عضویت و نقش ارتباطی در گفتگو | Owner/Admin/Member گفتگو با نقش آموزشی سازمان متفاوت است |
+| `MessagingChangeEvent` / `RealtimeOutbox` | تغییر پایدار برای Delta / کار ارسال notification | دریافت SignalR شرط ثبت پیام نیست |
+
+### مثال چندسازمانی
+
+یک User می‌تواند در سازمان A نقش Teacher و در سازمان B نقش Parent داشته باشد. انتخاب workspace A/Teacher در نشست فقط عملیات مجاز Teacher در A را فعال می‌کند. برای مشاهده فرزند در B باید workspace B/Parent و child معتبر آن انتخاب شود. حتی اگر ClassId معتبر A در درخواست B ارسال شود، سرویس باید scope جاری و رابطه منبع را کنترل کند. FK مرکب از اتصال داده دو سازمان جلوگیری می‌کند؛ مجوز خواندن HTTP همچنان وظیفه سرویس است.
+
+<a id="code-map"></a>
+## نقشه کد و مسئولیت لایه‌ها
+
+پروژه‌های اصلی در ریشه solution هستند؛ پوشه `src` وجود ندارد. namespaceها و نام کلاس‌ها انگلیسی‌اند؛ توضیحات توسعه‌دهنده فارسی است. هر حوزه پوشه‌های متناظر خودش را دارد، اما میزبان و دیتابیس مشترک‌اند.
+
+```text
+MakanApp.Api/Controllers          HTTP transport
+MakanApp.Application/{Area}       Use cases + DTOs + ports + policies
+MakanApp.Domain/{Area}            Entities + enums + rules
+MakanApp.Infrastructure/{Area}    Adapters + EF stores
+MakanApp.Infrastructure/Persistence/Configurations/{Area}
+MakanApp.Infrastructure/Persistence/Migrations
+tests/MakanApp.UnitTests
+tests/MakanApp.IntegrationTests
+tests/MakanApp.ArchitectureTests
+```
+
+### از Controller به implementation
+
+| حوزه/عملیات | Application service | port و implementation اصلی |
+|---|---|---|
+| OTP، پروفایل، نشست | `IdentityService` | `IIdentityStore → EfIdentityStore`؛ `IIdentitySecurity → IdentityCryptography`؛ `IOtpDeliveryProvider` |
+| workspace و دعوت | `OrganizationService` | `IOrganizationStore → EfOrganizationStore` |
+| والد و انتخاب فرزند | `GuardianService` | `IGuardianStore → EfGuardianStore` |
+| context مشترک | `GuardianAccessContextResolver` | `IAccessContextResolver`؛ ابتدا OrganizationService، سپس اعتبار child |
+| دوره، درس، کلاس و ثبت‌نام | `AcademicService` | `IAcademicStore → EfAcademicStore` |
+| جلسات، الگو و حضور | `AcademicSessionService` | `IAcademicSessionStore → EfAcademicSessionStore` |
+| تألیف و انتشار تکلیف | `AssignmentService` | `IAssignmentStore → EfAssignmentStore` |
+| پاسخ و تحویل تکلیف | `SubmissionService` | `ISubmissionStore → EfSubmissionStore` |
+| تصحیح تکلیف | `EvaluationService` | `IEvaluationStore → EfEvaluationStore` |
+| تألیف آزمون | `ExamService` | `IExamStore → EfExamStore` |
+| شروع تلاش آزمون | `ExamAttemptService` | `IExamAttemptStore → EfExamAttemptStore` |
+| lease و پاسخ آزمون | `ExamAnswerService` | `IExamAnswerStore → EfExamAnswerStore` |
+| نهایی‌سازی آزمون | `ExamFinalizationService` | `IExamFinalizationStore → EfExamFinalizationStore` |
+| تصحیح آزمون | `ExamGradingService` | `IExamGradingStore → EfExamGradingStore` |
+| گفتگو و پیام | `MessagingService` | `IMessagingStore → EfMessagingStore` |
+| گروه، کانال و مدیریت اعضا | `ConversationManagementService` | `IConversationManagementStore → EfMessagingStore` |
+| Block و Report | `MessagingSafetyService` | `IMessagingSafetyStore → EfMessagingStore` |
+| فایل | `StorageService` | `IFileAssetStore → EfFileAssetStore`؛ `IFileStorage`؛ `IFileAssetBoundAccessResolver` |
+| داشبورد | `DashboardService` | `IDashboardReadService → EfDashboardReadService` |
+| گزارش تفصیلی | `DetailedReportService` | `IDetailedReportReadService → EfDetailedReportReadService` |
+
+فایل‌های `*Abstractions.cs` قرارداد میان use case و ابزار فنی را نگه می‌دارند. فایل‌های `*Contracts.cs` شکل ورودی/خروجی‌اند؛ entity EF را مستقیم به کلاینت برنمی‌گردانیم. بعضی کلاس‌ها `partial` هستند: هنگام مطالعه یک service یا store همه فایل‌های هم‌نام آن را بررسی کنید؛ پیاده‌سازی ممکن است در فایل اصلی تمام نشود.
+
+### جای درست یک تغییر
+
+| تغییر موردنیاز | محل معمول | دلیل |
+|---|---|---|
+| قانون وضعیت، اعتبار ذاتی entity، محاسبه خالص | Domain | مستقل از HTTP و persistence قابل استفاده و تست باشد |
+| ترتیب use case، مجوز منبع، DTO و اعتبارسنجی ترکیبی | Application | عملیات کسب‌وکاری و portهای لازم را تعیین می‌کند |
+| SQL، EF mapping، locking، فایل و provider | Infrastructure | وابستگی ابزار فنی از لایه داخلی جدا می‌ماند |
+| route، binding، status، header، authentication handler | Api | قرارداد انتقال و composition root است |
+| schema جدید | Configuration + Migration | تغییر باید نسخه‌بندی‌شده و قابل بازتولید باشد |
+
+در این مخزن GenericRepository، MediatR، Event Sourcing یا سرویس‌های مستقل برای هر حوزه استفاده نشده‌اند. برای افزودن رفتار، ابتدا الگوی همان service و port موجود را دنبال کنید. interface تازه زمانی لازم است که یک وابستگی واقعی را جدا کند.
+
+<a id="host-pipeline"></a>
+## startup، Dependency Injection و مسیر هر درخواست
+
+دو نقطه اصلی ترکیب سیستم [Program.cs](../MakanApp.Api/Program.cs) و [DependencyInjection.cs](../MakanApp.Infrastructure/DependencyInjection.cs) هستند. Program سرویس‌های HTTP را اضافه می‌کند؛ AddInfrastructure اتصال SQL، portها، serviceها، options و adapterها را متصل می‌کند. Controller فقط interface سرویس را دریافت می‌کند؛ Controller از EF query استفاده نمی‌کند.
+
+### طول عمر سرویس‌ها
+
+- `MakanDbContext` و بیشتر service/storeها Scoped هستند: در scope درخواست از context مشترک استفاده می‌کنند؛ context بین درخواست‌ها share نمی‌شود.
+- `TimeProvider.System`، options، policyهای بدون state درخواست و بعضی adapterها Singleton هستند. user/context درخواست را داخل singleton ذخیره نکنید.
+- `MeliPayamakOtpProvider` از HttpClient ثبت‌شده و lifetime فنی خودش استفاده می‌کند؛ HttpClient را برای هر درخواست دستی نسازید.
+- `EfMessagingStore` یک‌بار در scope ثبت و برای سه interface resolve می‌شود. سه interface به معنی سه DbContext مستقل نیست.
+- dispatcher پس‌زمینه Singleton میزبان است ولی برای هر دور `CreateAsyncScope` می‌سازد تا processor و DbContext Scoped را درست دریافت کند.
+
+### ترتیب pipeline
+
+```text
+Request
+-> Exception handling / technical endpoints
+-> HTTPS redirection (outside Testing)
+-> Routing
+-> CORS
+-> Rate limiter
+-> Session authentication
+-> ASP.NET authorization
+-> Controller -> Application -> Domain/port -> Infrastructure
+-> DTO / HTTP result
+```
+
+`[Authorize]` فقط الزام ورود را در transport اعمال می‌کند. کنترل نقش، سازمان و رابطه کلاس/فرزند داخل Application ادامه دارد. CORS قبل از authentication است تا preflight مرورگر پردازش شود. محدودیت OTP یک bucket حافظه‌ای بر IP است؛ محدودیت شماره موبایل از challengeهای persisted نیز بررسی می‌شود. این دو محدودیت یک شمارنده نیستند.
+
+### نشست این پروژه چگونه کار می‌کند؟
+
+`SessionAuthenticationHandler` مقدار header `Authorization: Bearer ...` را به `IdentityService.AuthenticateAsync` می‌دهد. `IdentityCryptography` از توکن تصادفی ۳۲ بایتی، hash HMAC-SHA256 می‌سازد؛ فقط hash در `UserSessions` نگه‌داری می‌شود. احراز هویت، نشست فعال/منقضی/لغوشده و User مربوط را از سمت سرور بررسی می‌کند. claims شامل UserId و SessionId هستند؛ role سازمانی از claims ثابت استخراج نمی‌شود.
+
+توکن جاری JWT نیست؛ decode کردن آن با ابزار JWT یا نگه‌داری role کلاینت مبنای تصمیم سرور نیست. refresh token جدا وجود ندارد. خروج نشست را revoke می‌کند؛ تغییر `Identity:SecurityKey` هم hash OTPها و هم نشست‌های قبلی را نامعتبر می‌کند.
+
+### مجوز به صورت مرحله‌ای
+
+```text
+Bearer -> active UserSession -> UserId + SessionId
+-> OrganizationService: workspace + organization + membership + active role
+-> GuardianAccessContextResolver: selected child relation if present
+-> use case: resource organization + ownership/enrollment/teacher assignment
+-> authorized projection or mutation
+```
+
+`GuardianAccessContextResolver` در Application قرار دارد؛ به پیاده‌سازی SQL وابسته نیست. انتخاب workspace در `OrganizationService`، child قبلی نشست را پاک می‌کند. رابطه منتخب در درخواست بعدی دوباره بررسی می‌شود؛ revoke شدن رابطه نباید با cache قبلی دور زده شود.
+
+### خطا چگونه به HTTP تبدیل می‌شود؟
+
+`GlobalExceptionHandler` exceptionهای حوزه را به ProblemDetails با `code` پایدار و status تبدیل می‌کند. خطای ناشناخته با `UNEXPECTED_ERROR` و پیام عمومی500 برمی‌گردد؛ stack trace پاسخ عمومی نیست. `traceId` به پاسخ اضافه می‌شود تا بتوان درخواست را در log پیدا کرد. خطای model binding قبل از رسیدن به use case ممکن است ValidationProblemDetails دارای `errors` بدهد؛ وجود `code` اختصاصی برای همه خطاهای binding تضمین نشده است.
+
+`CancellationToken` از RequestAborted/پارامتر Controller تا I/O عبور می‌کند. لغو درخواست، retry موفق یا rollback همه side effectهای بیرونی را به‌تنهایی تضمین نمی‌کند؛ ارسال SMS و نوشتن فایل باید با قرارداد هر عملیات بررسی شوند.
+
 
 <a id="setup"></a>
 ## راه‌اندازی محلی
@@ -800,7 +990,6 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 فیلد AI/Copilot در قرارداد ساخته نشده است. insightهای هوشمند به STEP 10 و widgetهای Plan/Quota/Subscription مدیر به STEP 13 Commerce موکول شده‌اند. معماری و جزئیات privacy در [سند STEP 11A](architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md) آمده است.
 
 <a id="detailed-reports"></a>
-<a id="detailed-reports"></a>
 ## گزارش‌های تفصیلی نقش‌محور
 
 STEP 11B در کنار داشبوردهای خلاصه، APIهای report خواندنی و صفحه‌بندی‌شده را ارائه می‌کند. Dashboard برای glance سریع است؛ report برای history، filter، sort و drill-down استفاده می‌شود. مسیرهای اصلی:
@@ -829,6 +1018,218 @@ STEP 11B در کنار داشبوردهای خلاصه، APIهای report خوا
 ```
 
 جزئیات endpointها، allowlist مرتب‌سازی و privacy در [سند معماری STEP 11B](architecture/STEP_11B_DETAILED_REPORTS.md) آمده است. Export، گزارش زمان‌بندی‌شده، cache و AI در این مرحله وجود ندارند.
+
+<a id="persistence"></a>
+## نقشه persistence و مرز تراکنش‌ها
+
+[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) از configurationهای همان assembly استفاده می‌کند. ۵۳ جدول در هفت schema وجود دارد؛ Reports داده جدید ذخیره نمی‌کند. برای ستون‌ها، FKها، indexها و CHECKهای کامل، [فرهنگ دیتابیس](database-current-structure.md) مرجع تکمیلی است.
+
+| schema | تعداد جدول | گروه داده |
+|---|---:|---|
+| `identity` | ۵ | User، Person، Credential، OTP و UserSession |
+| `organization` | ۵ | Organization، OrganizationPerson، Membership، RoleAssignment و Invitation |
+| `guardian` | ۱ | GuardianRelation |
+| `academic` | ۹ | دوره، درس، کلاس، Enrollment، TeacherAssignment، ScheduleRule، Session و تاریخچه حضور |
+| `assessment` | ۱۸ | تکلیف/نسخه/گیرنده، پاسخ و نمره تکلیف؛ تعریف/تلاش/پاسخ/نمره آزمون |
+| `messaging` | ۱۴ | گفتگو/عضو/پیام/فایل/واکنش، تغییرات، outbox، Block، Report و مجوز ارتباط |
+| `storage` | ۱ | FileAsset؛ محتوای باینری در storage adapter است |
+
+### سه لایه تضمین درستی داده
+
+۱. Domain قوانین محلی و تغییر وضعیت entity را کنترل می‌کند؛ مثل معتبر بودن نمره و غیرقابل ویرایش بودن نسخه منتشرشده.
+
+۲. Application context و چند منبع را کنار هم بررسی می‌کند؛ مثل معلم مجاز کلاس، enrollment معتبر و موعد تحویل.
+
+۳. SQL Server با FK، unique/filtered index، CHECK، transaction و rowversion از invariant پایدار محافظت می‌کند. این لایه برای رقابت دو درخواست ضروری است؛ صرف بررسی سرویس کافی نیست.
+
+FKهای مرکب مانند `(OrganizationId, ClassId)` تطابق بافت را الزام می‌کنند. این FKها حق خواندن یک endpoint را اثبات نمی‌کنند. filtered unique indexها معمولاً یکتایی رابطه فعال را نگه می‌دارند تا سابقه پایان‌یافته حفظ شود. CHECK SQL نیز فقط محدودیت تعریف‌شده خود را تضمین می‌کند؛ lifecycle کامل محصول یک CHECK واحد نیست.
+
+### rowversion، revision و operationId سه چیز متفاوت‌اند
+
+| ابزار | سؤال پاسخ‌داده‌شده | رفتار مصرف‌کننده |
+|---|---|---|
+| SQL `rowversion`، در API به شکل Base64 | آیا ردیف از آخرین خواندن من عوض شده؟ | نسخه response جاری را برای write بعدی بفرستید؛ در412 دوباره بخوانید |
+| `expectedRevisionNumber` / `expectedAnswerSetVersion` | آیا مجموعه/پاسخ آزمون همان revision مورد انتظار است؟ | receipt آخرین ذخیره پذیرفته‌شده را نگه دارید؛ conflict را با merge/refetch حل کنید |
+| `clientOperationId` / `clientMessageId` / `clientReportId` | آیا این همان عملیات قبلی است که پاسخ آن گم شده؟ | در retry همان شناسه و همان payload؛ برای عملیات تازه شناسه تازه |
+| `writeLeaseVersion` | آیا نشست جاری با نسخه درست حق نوشتن روی تلاش را دارد؟ | acquire/transfer طبق API؛ داشتن Bearer جای lease را نمی‌گیرد |
+
+rowversion زمان رویداد نیست. پارامتر expected version در body/query همان endpoint قرار دارد؛ هدر عمومی If-Match یا Idempotency-Key برای همه APIها وجود ندارد. همه POSTها retry-safe نیستند.
+
+### نمونه‌های واقعی تراکنش و locking
+
+| عملیات | مرز واقعی | نکته |
+|---|---|---|
+| Verify OTP | `IdentityService` + `EfIdentityStore`، Serializable | مصرف challenge و ساخت account/session در یک عملیات تراکنشی؛ خطای verify نیز وضعیت تلاش ناموفق را ثبت می‌کند |
+| قبول دعوت | `OrganizationService` + `EfOrganizationStore` | Invitation برای حساب مقصد با `UPDLOCK/HOLDLOCK` خوانده و وضعیت مجدداً بررسی می‌شود |
+| ثبت‌نام/پایان ثبت‌نام | `AcademicService` + `EfAcademicStore`، Serializable | قفل کلاس و بازخوانی ظرفیت/رابطه فعال؛ جلوگیری از مصرف آخرین ظرفیت توسط دو درخواست |
+| save answer / finalize | `ExamAnswerService/ExamFinalizationService` + store متناظر | قفل تلاش، مجوز مالک، session/lease/deadline و version پیش از write/commit |
+| mutation پیام | `EfMessagingStore` و فایل‌های partial آن | داده پیام، change و outbox در مرز مربوط به mutation پایدار می‌شوند |
+| dispatch اعلان | `MessagingRealtimeOutboxProcessor` | claim در transaction کوتاه؛ تماس notifier پس از commit claim انجام می‌شود |
+
+ارسال SMS در `RequestOtpAsync` قبل از ذخیره challenge است و در transaction طولانی SQL انجام نمی‌شود. اگر provider موفق شود ولی ذخیره SQL شکست بخورد، SMS رسیده الزاماً challenge قابل تأیید در backend ندارد. retry کور ارسال پیامک را پیشنهاد نکنید. storage فایل هم transaction مشترک اتمیک با SQL Server ندارد؛ مسیرهای جبران و وضعیت FileAsset در `StorageService` بررسی شوند.
+
+### migration و محیط توسعه
+
+۲۰ migration موجود از foundation تا `AddExamGradingAndRelease` مدل فعلی را می‌سازند. Dashboard، Detailed Reports و adapter OTP migration اختصاصی جدید ندارند. runtime هنگام startup `Migrate` یا `EnsureCreated` اجرا نمی‌کند. `MakanDbContextFactory` برای ابزار EF از متغیر `ConnectionStrings__MakanDatabase` استفاده می‌کند؛ connection runtime پروژه Api را خودکار از User Secrets نمی‌گیرد.
+
+برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر **الگوی توسعه** است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:
+
+```powershell
+dotnet tool restore
+dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj
+```
+
+نام نمونه بالا migration موجود نیست. این مرحله مستندسازی migration نساخته است. اجرای migration روی Production یک عملیات جدا با artifact بررسی‌شده و برنامه backup/rollback است؛ [سند استقرار](deployment-windows-linux-docker.md) مسیر آن را توضیح می‌دهد.
+
+<a id="runtime-walkthroughs"></a>
+## شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها
+
+### ۱. درخواست و تأیید OTP
+
+```text
+AuthController.RequestOtp
+-> IdentityService.RequestOtpAsync
+-> NormalizePhoneNumber + persisted rate/resend checks
+-> IOtpDeliveryProvider.RequestOtpAsync
+-> MeliPayamakOtpProvider OR DevelopmentOtpProvider
+-> normalize returned code + IdentityCryptography.HashOtp
+-> OtpChallenge + EfIdentityStore.SaveChangesAsync
+-> RequestOtpResult (202)
+```
+
+provider مدیریت‌شده کد را تولید می‌کند؛ backend همان کد را hash می‌کند و کد موازی محلی نمی‌سازد. latest challenge پس از پاسخ قابل استفاده provider supersede می‌شود و زمان expiry از زمان بعد از تحویل provider محاسبه می‌شود. در verify، `OtpChallenge.Verify` مصرف/انقضا/تعداد تلاش را تعیین می‌کند؛ credential موجود User را resolve می‌کند یا User تازه ساخته می‌شود، سپس UserSession با hash توکن ساخته می‌شود. token خام فقط در response ساخت نشست تحویل داده می‌شود.
+
+مسیر مطالعه: [AuthController](../MakanApp.Api/Controllers/AuthController.cs) → [IdentityService](../MakanApp.Application/Identity/IdentityService.cs) → [OtpChallenge](../MakanApp.Domain/Identity/OtpChallenge.cs) → [IdentityAbstractions](../MakanApp.Application/Identity/IdentityAbstractions.cs) → [EfIdentityStore](../MakanApp.Infrastructure/Identity/EfIdentityStore.cs) → [IdentityEndpointsTests](../tests/MakanApp.IntegrationTests/IdentityEndpointsTests.cs).
+
+### ۲. آخرین ظرفیت کلاس
+
+```text
+ClassesController.EnrollLearner
+-> AcademicService.EnrollLearnerAsync
+-> resolve Organization / Manager
+-> Serializable transaction -> lock Class
+-> validate learner OrganizationPerson + existing active enrollment + capacity
+-> Enrollment.CreateActive / store.Add
+-> SaveChanges + Commit -> EnrollmentResult
+```
+
+هدف قفل کلاس این است که دو درخواست آخرین جای خالی را هم‌زمان آزاد نبینند. یکتایی enrollment فعال در SQL نیز مکمل کنترل سرویس است. پایان enrollment سابقه را حذف نمی‌کند؛ status و زمان پایان ثبت می‌شوند. API ثبت‌نام LearnerOrganizationPersonId می‌گیرد، نه شناسه حساب User.
+
+مسیر مطالعه: [ClassesController](../MakanApp.Api/Controllers/ClassesController.cs) → [AcademicService](../MakanApp.Application/Academic/AcademicService.cs) → [Enrollment](../MakanApp.Domain/Academic/Enrollment.cs) → [EfAcademicStore](../MakanApp.Infrastructure/Academic/EfAcademicStore.cs) → [EnrollmentConfiguration](../MakanApp.Infrastructure/Persistence/Configurations/Academic/EnrollmentConfiguration.cs) → [AcademicEndpointsTests](../tests/MakanApp.IntegrationTests/AcademicEndpointsTests.cs).
+
+### ۳. تحویل تکلیف و انتشار نمره
+
+انتشار تکلیف، نسخه و گیرندگان رسمی آن را مشخص می‌کند. Student draft خودش را می‌سازد/بازیابی می‌کند، متن و فایل مجاز را ذخیره می‌کند و FinalSubmit می‌زند. پاسخ موفق تحویل با حفظ clientOperationId قابل بازیابی است؛ ذخیره draft به معنی Submitted نیست. فایل ابتدا upload می‌شود و attach مجاز به submission مرحله جداست.
+
+ارزیاب از `EvaluationService` یک `EvaluationRevision` draft می‌سازد، سپس release رسمی `GradeRelease` را ایجاد می‌کند. Student و Parent projection نتیجه منتشرشده خود را می‌گیرند؛ TeacherPrivateNote در خروجی عمومی قرار نمی‌گیرد. اصلاح نمره منتشرشده revision اصلاحی و دلیل می‌خواهد و سابقه رسمی را بی‌صدا overwrite نمی‌کند.
+
+مسیر مطالعه: [SubmissionsController](../MakanApp.Api/Controllers/SubmissionsController.cs) → [SubmissionService](../MakanApp.Application/Assessment/SubmissionService.cs) → [SubmissionAttempt](../MakanApp.Domain/Assessment/SubmissionAttempt.cs) → [EfSubmissionStore](../MakanApp.Infrastructure/Assessment/EfSubmissionStore.cs)؛ سپس [EvaluationService](../MakanApp.Application/Assessment/EvaluationService.cs) → [EfEvaluationStore](../MakanApp.Infrastructure/Assessment/EfEvaluationStore.cs) → [EvaluationLifecycleEndpointsTests](../tests/MakanApp.IntegrationTests/EvaluationLifecycleEndpointsTests.cs).
+
+### ۴. پاسخ آزمون تا نتیجه رسمی
+
+```text
+ExamService: published version
+-> ExamAttemptService: freeze questions/order + server deadline
+-> ExamAnswerService: lease + expected revision + accepted AnswerRevision
+-> ExamFinalizationService: final snapshot + receipt
+-> ExamGradingService: objective scoring + descriptive review
+-> ReadyForRelease -> ExamGradeRelease
+-> authorized Student/Guardian result
+```
+
+هر تلاش به نسخه و مجموعه سؤال خودش وابسته است. زمان دستگاه مرجع مهلت نیست. ذخیره پاسخ، revision جدید قابل پیگیری تولید می‌کند؛ finalize مجموعه پاسخ پذیرفته‌شده را تثبیت می‌کند و receipt دارد. حق نوشتن به نشست مربوط است تا دو دستگاه بی‌صدا پاسخ همدیگر را overwrite نکنند. تصحیح تستی و تکمیل ارزیابی با انتشار عمومی یک مرحله نیستند. وجود deadline به معنی worker نهایی‌سازی خودکار نیست؛ auto-finalize در این نسخه وجود ندارد.
+
+مسیر مطالعه: [ExamsController](../MakanApp.Api/Controllers/ExamsController.cs) → [ExamAttemptService](../MakanApp.Application/Assessment/ExamAttemptService.cs) → [ExamAnswerService](../MakanApp.Application/Assessment/ExamAnswerService.cs) → [ExamFinalizationService](../MakanApp.Application/Assessment/ExamFinalizationService.cs) → [ExamGradingService](../MakanApp.Application/Assessment/ExamGradingService.cs) → [ExamFinalizationEndpointsTests](../tests/MakanApp.IntegrationTests/ExamFinalizationEndpointsTests.cs) و [ExamGradingEndpointsTests](../tests/MakanApp.IntegrationTests/ExamGradingEndpointsTests.cs).
+
+### ۵. ارسال پیام، Delta و SignalR
+
+```text
+ConversationsController.SendMessage
+-> MessagingService + communication/participant policy
+-> EfMessagingStore: message + stable change event + outbox
+-> commit -> MessageReceiptResult
+-> MessagingRealtimeOutboxDispatcher
+-> MessagingRealtimeOutboxProcessor -> SignalRMessagingRealtimeNotifier
+-> ConversationChanged notification -> client fetches Delta
+```
+
+`clientMessageId` اثر retry را محدود می‌کند. receipt HTTP نتیجه commit است؛ SignalR می‌تواند دیرتر برسد یا اتصال قطع باشد. notification یک اشاره به تغییر است، نه payload کامل پیام خصوصی. Delta از `MessagingChangeEvent` مرجع بازیابی تغییرات بعد از cursor است. cursor delivered/read وضعیت خود کاربر است؛ از آن رسید خواندن همه مخاطبان نتیجه نگیرید.
+
+processor در [MessagingRealtimeOutboxDispatcher.cs](../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs) تعریف شده است. claim با `UPDLOCK/READPAST/ROWLOCK`، batch حداکثر۵۰ و lease۳۰ثانیه‌ای انجام می‌شود؛ ارسال notifier خارج transaction claim است. از lease، retry و crash باید امکان ارسال تکراری notification را نتیجه گرفت؛ مصرف‌کننده با شناسه/نسخه و Delta باید تکرار را تحمل کند. backplane چند instance در این نسخه ثبت نشده است.
+
+مسیر مطالعه: [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) → [MessagingService](../MakanApp.Application/Messaging/MessagingService.cs) → [EfMessagingStore](../MakanApp.Infrastructure/Messaging/EfMessagingStore.cs) و فایل‌های partial → [dispatcher/processor](../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs) → [SignalRMessagingRealtimeNotifier](../MakanApp.Api/Realtime/SignalRMessagingRealtimeNotifier.cs) → [MessagingSyncEndpointsTests](../tests/MakanApp.IntegrationTests/MessagingSyncEndpointsTests.cs).
+
+### ۶. یک گزارش نقش‌محور
+
+`ReportsController` query را bind می‌کند. `DetailedReportService` context و نقش مسیر، page size، sort allowlist و بازه UTC را بررسی می‌کند. `EfDetailedReportReadService` query/projection را روی جداول رسمی همان scope اجرا می‌کند. تغییر وضعیت entity یا جدول گزارش تازه‌ای لازم نیست. این تفاوت یک read use case با mutation است.
+
+Student/Parent فقط release رسمی نتیجه را می‌بینند. مقدار `dataAsOfUtc` زمان شروع خواندن است و مجموعه چند query را به snapshot اتمیک تبدیل نمی‌کند. برای teacher-workload بازه زمانی فقط completedSessionCount را محدود می‌کند؛ مراجعه به کارت دقیق endpoint برای معنی فیلترها ضروری است.
+
+مسیر مطالعه: [ReportsController](../MakanApp.Api/Controllers/ReportsController.cs) → [DetailedReportService](../MakanApp.Application/Reports/Detailed/DetailedReportService.cs) → [DetailedReportAbstractions](../MakanApp.Application/Reports/Detailed/DetailedReportAbstractions.cs) → [EfDetailedReportReadService](../MakanApp.Infrastructure/Reports/Detailed/EfDetailedReportReadService.cs) → [DetailedReportServiceTests](../tests/MakanApp.UnitTests/Reports/DetailedReportServiceTests.cs).
+
+<a id="developer-workflow"></a>
+## روش توسعه و عیب‌یابی برای عضو جدید تیم
+
+### یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟
+
+۱. مسئله، endpoint/رفتار، نقش مجاز و scope منبع را دقیق بنویسید. AGENTS و اسناد مرتبط را بخوانید؛ وضعیت Git و تغییرات از قبل موجود را بررسی کنید.
+
+۲. مسیر Controller → service → domain → port → store را پیدا کنید. برای یک قانون خالص، تست Unit؛ برای API/SQL/مجوز/رقابت، تست Integration انتخاب کنید.
+
+۳. قرارداد request/result و خطاها را تعیین کنید. قبل از افزودن فیلد actor/organization از کلاینت، بررسی کنید آیا باید از context معتبر سرور resolve شود.
+
+۴. قانون را در لایه مناسب تغییر دهید. Controller فقط transport را map کند. I/O و EF در Infrastructure؛ async و CancellationToken تا انتهای عملیات عبور کنند.
+
+۵. اگر persistence تغییر کرد، configuration، constraints و migration را کامل و بررسی کنید. برای concurrency، فقط check اولیه ننویسید؛ race condition و transaction/locking را مشخص کنید.
+
+۶. retry را بررسی کنید: payload یکسان و operationId یکسان باید چه پاسخ/اثر داشته باشند؟ همان شناسه با payload متفاوت چه خطایی می‌دهد؟ کار شبکه‌ای طولانی داخل transaction نباشد.
+
+۷. restore، build، test و validation نهایی را اجرا کنید؛ سپس diff، اسناد و artifactهای لازم را بررسی و فقط فایل‌های مرتبط را commit کنید. endpoint جدید را در مرجع و مسیر استفاده‌اش را در راهنما ثبت کنید.
+
+### تست‌ها چه چیزی را ثابت می‌کنند؟
+
+| مجموعه | نمونه فایل واقعی | مورد اثبات |
+|---|---|---|
+| Unit | `OtpChallengeTests`، `ExamAnswerModelTests`، `DetailedReportServiceTests` | قانون خالص، state، normalization و orchestration بدون ادعای رفتار SQL |
+| Integration | `AcademicEndpointsTests`، `EvaluationConcurrencyEndpointsTests`، `ExamAnswerEndpointsTests` | HTTP واقعی host، SQL Server، constraints، مجوز، نسخه، retry و transaction |
+| Architecture | `OnionDependencyTests`، `LayerPlacementTests` | جهت وابستگی و محل درست لایه‌ها |
+| Hosting | `ProductionHostingTests` | رفتار تنظیمات میزبان در Production در چارچوب تست؛ اثبات استقرار IIS واقعی نیست |
+
+`MakanAppWebApplicationFactory` از Windows LocalDB و نام اختصاصی `MakanApp_MessagingSafety_IntegrationTests_Step7E` استفاده می‌کند. `SqlServerCollection` fixture مشترک مجموعه را تعریف می‌کند. initialize دیتابیس تست را پاک و migrationها را اجرا می‌کند؛ dispose نیز همان پایگاه ایزوله را پاک می‌کند. از این نام برای داده شخصی/توسعه استفاده نکنید و هم‌زمان دو اجرای مستقل کل suite را روی همان fixture شروع نکنید.
+
+fixture زمان کنترل‌شده، storage موقت و fault injection برای SMS/file/realtime دارد. از همین ابزارها برای تست زمان/خطای provider استفاده کنید؛ ساعت سیستم را دستکاری یا SMS واقعی در تست ارسال نکنید. تست seedهای داخلی fixture را برای ساخت نقش‌ها و روابط استفاده می‌کند؛ این helperها endpoint محصول نیستند.
+
+فرمان‌های متمرکز زیر فقط برای بازخورد سریع هنگام توسعه‌اند؛ قبل از تحویل، suite کامل قواعد مخزن اجرا شود:
+
+```powershell
+dotnet test tests/MakanApp.UnitTests/MakanApp.UnitTests.csproj --configuration Debug --filter FullyQualifiedName~ExamAnswerModelTests
+dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --configuration Debug --filter FullyQualifiedName~AcademicEndpointsTests
+dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj --configuration Debug
+```
+
+### مسیر عیب‌یابی یک درخواست ناموفق
+
+| نشانه | نقطه شروع | اقدام بعدی |
+|---|---|---|
+| host بالا نمی‌آید | Program/DependencyInjection و setting name | خطای validation تنظیمات را بررسی کنید؛ secret را log نکنید |
+| 400 با errors | binding و request schema | نوع، فیلد، UUID، enum و format زمان را پیش از service کنترل کنید |
+| 401 AUTH_REQUIRED | SessionAuthenticationHandler/IdentityService | header، hash key، expiry و revoke نشست |
+| 403 پس از انتخاب role | AccessContext و use case | workspace، membership، role، انتساب کلاس یا رابطه child |
+| 404 برای شناسه‌ای که می‌دانید وجود دارد | query scope و سیاست پنهان‌سازی | جست‌وجوی وجود جهانی منبع را جای authorization نگذارید |
+| 409 | code اختصاصی و state جاری | تضاد lifecycle، ظرفیت، lease، deadline یا operationId متفاوت را تفکیک کنید |
+| 412 | expected rowversion و store | نسخه جاری را بخوانید؛ داده ورودی کاربر را برای بازبینی حفظ کنید |
+| 503 در OTP یا upload | adapter/options | اعتبار سرویس، timeout، مسیر مطلق و permission؛ با500 عمومی یکی نیست |
+| پیام ثبت شده ولی event نرسیده | outbox، notifier و اتصال Hub | receipt/Delta را مرجع قرار دهید و backlog/خطا را بررسی کنید |
+| تست SQL شکست می‌خورد | fixture/LocalDB/restore | مشکل محیط را از regression کد جدا گزارش کنید |
+
+برای خطای ناشناخته، traceId پاسخ را با log متناظر دنبال کنید. connection string، token، OTP و URL حاوی ServiceToken را در گزارش مشترک قرار ندهید. در EF store مربوط query scope، SQL exception و تغییرات tracked را بررسی کنید؛ نسخه و شناسه مصنوعی مثال‌های این کتاب، داده واقعی پایگاه شما نیستند.
+
+### مرز میزبانی و موارد لازم برای تحویل عملیاتی
+
+میزبان migrations را اجرا نمی‌کند؛ health فقط liveness است؛ Swagger/OpenAPI در همه محیط‌ها عمومی‌اند. فایل upload برای دوام بین deploy به RootPath مطلق، permission و storage پایدار نیاز دارد. CORS فعلی wildcard بدون credentials است. handler فقط Bearer header را می‌خواند؛ SignalR WebSocket/SSE مرورگر با query-token از آن پشتیبانی نمی‌گیرد. برای transport قابل آزمایش مرورگر به نمونه LongPolling قرارداد فرانت و [راهنمای استقرار](deployment-windows-linux-docker.md) مراجعه کنید.
+
+UseForwardedHeaders/trusted proxy صریح در Program ثبت نشده است؛ TLS termination و RemoteIpAddress پشت reverse proxy باید در محیط هدف بررسی شوند. runtime account SQL و principal migration مسئولیت جدا دارند. backup دیتابیس بدون backup فایل‌های referenced کافی نیست. هیچ‌یک از موفقیت تست‌ها یا دستورهای این کتاب به معنی استقرار واقعی، تحویل SMS یا آماده‌بودن چند instance نیست.
+
 
 <a id="testing"></a>
 ## تست و عیب‌یابی
@@ -898,3 +1299,32 @@ Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، 
 7. [ExamGradingEndpointsTests](../tests/MakanApp.IntegrationTests/ExamGradingEndpointsTests.cs) و سایر تست‌های آزمون برای نمونه درخواست و سناریوهای مجاز/غیرمجاز.
 
 برای قرارداد دقیق هر عملیات به [مرجع API](backend-api-reference.md) و برای قواعد کلی مخزن به [AGENTS.md](../AGENTS.md) مراجعه کنید.
+
+<a id="document-maintenance"></a>
+## نگهداری همین راهنما و مرجع
+
+Markdownهای `backend-api-guide.md` و `backend-api-reference.md` منابع اصلی‌اند. HTML/PDF هر سند خروجی جداگانه‌اند و برای تحویل کنار منبع نسخه‌بندی می‌شوند. تغییر route، قرارداد، code خطا، مجوز، DI، option یا migration باید در بخش متناظر منعکس شود؛ سپس خروجی‌ها دوباره تولید شوند.
+
+برای تولید خروجی‌ها ابزار مستندسازی مستقل از build محصول است. از ریشه مخزن با Python و مرورگر Edge اجرا کنید؛ وابستگی‌های Python فقط ابزار Markdown/PDF هستند:
+
+```powershell
+python -m pip install --target .artifacts/docs-python -r tools/docs/requirements.txt
+python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --pdf
+```
+
+ابزار Markdown را به HTML مستقل RTL تبدیل می‌کند، هر HTML را با Edge مخفی چاپ می‌کند و PDF دارای شماره صفحه/نشانک می‌سازد. ورودی و خروجی‌ها هر دو در `docs` هستند؛ فایل‌های موقت، گزارش audit و تصاویر کنترل در `.artifacts/backend-handbook` می‌مانند. برای HTML تنها، `--pdf` را حذف کنید. ابزار به SQL Server وصل نمی‌شود و schema یا داده محصول را تغییر نمی‌دهد.
+
+پس از تولید، فهرست، لینک داخلی، فارسی، جدول بلند، نمونه کد و صفحات نماینده PDF را بررسی کنید. اگر سورس محصول تغییر کرده، علاوه بر renderer باید محتوای Markdown با Controller/DTO/سرویس و OpenAPI تازه تطبیق داده شود؛ چاپ دوباره به‌تنهایی سند را به‌روز نمی‌کند.
+
+
+
+<a id="handoff-validation"></a>
+## شناسنامه بازبینی و نتیجه اعتبارسنجی
+
+این تحویل در `2026-10-12` بر مبنای سورس `main@f0ff3be` انجام شده است. تغییرات این مرحله مستندات و ابزار ساخت خروجی‌اند؛ کد محصول، frontend و schema تغییر نکرده‌اند. هیچ migration تازه ساخته یا روی دیتابیس عادی/Production اعمال نشده است.
+
+restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.
+
+۱۴۱ عملیات و پارامترهای query با Controller و OpenAPI تازه میزبان تطبیق داده شدند؛ ۱۸۲ schema JSON و چهار مدل query کنترل شدند. ۱۹۰ نمونه JSON درخواست/پاسخ از نظر فیلد، nesting، type، enum، nullable، UUID، زمان و نسخه بررسی شدند. لینک‌های داخلی/مسیرهای source و تعداد ستون جدول‌ها نیز کنترل شدند. PDF هر کتاب با مرورگر رندر، شماره صفحه و نشانک اضافه و برای صفحه خالی و متن خارج صفحه بررسی شد؛ صفحات نماینده نیز بصری بازبینی شدند.
+
+این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.
