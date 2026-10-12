@@ -795,6 +795,8 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 <a id="messaging"></a>
 ## پیام‌رسانی و همگام‌سازی
 
+> **مرز قرارداد Messenger v2:** توضیحات این بخش رفتار runtime فعلی را مستند می‌کنند و نباید با تصمیم‌های محصول مرحله 14 اشتباه شوند. اختلاف کامل کد موجود با ۱۲۷ requirement در [ممیزی STEP 14A](architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md) ثبت شده و تصمیم‌های freeze‌شده، از جمله Personal Direct عمومی تابع Privacy/Block/Safety، window یک‌ساعته Edit/Delete For Everyone و Group History قابل تنظیم، در [Messenger v2 Product Decisions](architecture/MESSENGER_V2_PRODUCT_DECISIONS.md) آمده‌اند. STEP 14A این رفتارها را پیاده‌سازی نکرده است.
+
 ### آغاز گفت‌وگو و مجوز ارتباط
 
 `POST /conversations/direct`:
