@@ -86,6 +86,23 @@ public sealed class EfExamStore(
             select enrollment.Id)
             .AnyAsync(cancellationToken);
 
+    public async Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(
+        Guid organizationId,
+        Guid classId,
+        CancellationToken cancellationToken) =>
+        await (
+            from enrollment in dbContext.Enrollments.FromSqlInterpolated(
+                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
+            join organizationPerson in dbContext.OrganizationPersons
+                on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
+                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
+            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
+            where organizationPerson.Status == OrganizationPersonStatus.Active &&
+                  organizationPerson.EndedAtUtc == null
+            select user.Id)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+
     public async Task<IReadOnlyCollection<ExamSummaryRecord>> GetForManagerAsync(
         Guid organizationId,
         CancellationToken cancellationToken) =>

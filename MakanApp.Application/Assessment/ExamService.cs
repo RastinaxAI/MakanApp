@@ -1,6 +1,9 @@
 using MakanApp.Application.Academic;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Notification;
+using MakanApp.Application.Outbox;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Notification;
 
 namespace MakanApp.Application.Assessment;
 
@@ -9,15 +12,18 @@ public sealed partial class ExamService : IExamService
     private readonly IAccessContextResolver _accessContextResolver;
     private readonly IExamStore _store;
     private readonly TimeProvider _timeProvider;
+    private readonly IOutbox _outbox;
 
     public ExamService(
         IAccessContextResolver accessContextResolver,
         IExamStore store,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IOutbox outbox)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
+        _outbox = outbox;
     }
 
     public async Task<ExamEditorDto> CreateDraftAsync(
@@ -236,6 +242,10 @@ public sealed partial class ExamService : IExamService
         _store.SetOriginalRowVersion(record.Exam, DecodeRowVersion(command.ExpectedExamRowVersion));
         _store.SetOriginalRowVersion(record.Version, DecodeRowVersion(command.ExpectedVersionRowVersion));
         var nowUtc = UtcNow();
+        var recipientUserIds = await _store.GetActiveLearnerUserIdsForUpdateAsync(
+            record.Exam.OrganizationId,
+            record.Exam.ClassId,
+            cancellationToken);
         if (record.Version.AvailableUntilUtc <= nowUtc)
         {
             throw new AssessmentException(
@@ -253,6 +263,18 @@ public sealed partial class ExamService : IExamService
             throw MapValidationException(exception);
         }
 
+        _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
+            Guid.NewGuid(),
+            record.Exam.OrganizationId,
+            NotificationCategory.Educational,
+            NotificationType.ExamPublished,
+            NotificationResourceType.Exam,
+            record.Exam.Id,
+            nowUtc,
+            recipientUserIds.Select(recipientUserId => new NotificationRecipientIntent(
+                recipientUserId,
+                "آزمون جدید منتشر شد",
+                "یک آزمون جدید برای شما منتشر شده است.")).ToArray())));
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToEditor(record);

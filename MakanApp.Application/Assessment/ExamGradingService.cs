@@ -1,14 +1,18 @@
 using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Notification;
+using MakanApp.Application.Outbox;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Notification;
 
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamGradingService(
     IAccessContextResolver accessContextResolver,
     IExamGradingStore store,
-    TimeProvider timeProvider) : IExamGradingService
+    TimeProvider timeProvider,
+    IOutbox outbox) : IExamGradingService
 {
     public async Task<ExamGradeDto> CreateOrGetDraftAsync(
         Guid userId,
@@ -217,7 +221,32 @@ public sealed partial class ExamGradingService(
             command.ClientOperationId,
             requestHash,
             nowUtc);
+        var guardianUserIds = await store.GetActiveGuardianUserIdsAsync(
+            aggregate.Source.Attempt.OrganizationId,
+            aggregate.Source.Enrollment.LearnerOrganizationPersonId,
+            nowUtc,
+            cancellationToken);
         store.Add(release);
+        var recipients = new List<NotificationRecipientIntent>
+        {
+            new(
+                aggregate.Source.StudentUserId,
+                "نتیجه آزمون منتشر شد",
+                "نتیجه جدید یک آزمون برای شما منتشر شده است.")
+        };
+        recipients.AddRange(guardianUserIds.Select(guardianUserId => new NotificationRecipientIntent(
+            guardianUserId,
+            "نتیجه آموزشی منتشر شد",
+            "نتیجه جدید آموزشی برای فرزند شما منتشر شده است.")));
+        outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
+            release.Id,
+            aggregate.Source.Attempt.OrganizationId,
+            NotificationCategory.Educational,
+            NotificationType.ExamGradeReleased,
+            NotificationResourceType.ExamAttempt,
+            aggregate.Source.Attempt.Id,
+            nowUtc,
+            recipients)));
         await store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToReleaseDto(release, revision, aggregate.Source.Version.MaxScore);

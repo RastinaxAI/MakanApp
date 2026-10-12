@@ -6,6 +6,7 @@ using MakanApp.Domain.Identity;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Reports.Exports;
+using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -78,6 +79,14 @@ public sealed partial class MakanAppWebApplicationFactory :
             if (reportDispatcher is not null)
             {
                 services.Remove(reportDispatcher);
+            }
+
+            var outboxDispatcher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(OutboxDispatcher));
+            if (outboxDispatcher is not null)
+            {
+                services.Remove(outboxDispatcher);
             }
 
             services.RemoveAll<TimeProvider>();

@@ -1,5 +1,8 @@
 using MakanApp.Application.Organization;
+using MakanApp.Application.Notification;
+using MakanApp.Application.Outbox;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Notification;
 
 namespace MakanApp.Application.Assessment;
 
@@ -8,15 +11,18 @@ public sealed partial class EvaluationService : IEvaluationService
     private readonly IAccessContextResolver _accessContextResolver;
     private readonly IEvaluationStore _store;
     private readonly TimeProvider _timeProvider;
+    private readonly IOutbox _outbox;
 
     public EvaluationService(
         IAccessContextResolver accessContextResolver,
         IEvaluationStore store,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IOutbox outbox)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
+        _outbox = outbox;
     }
 
     public async Task<EvaluatorEvaluationResult> CreateOrUpdateDraftAsync(
@@ -158,7 +164,32 @@ public sealed partial class EvaluationService : IEvaluationService
             evaluation.Id,
             context.MembershipId!.Value,
             nowUtc);
+        var guardianUserIds = await _store.GetActiveGuardianUserIdsAsync(
+            evaluation.OrganizationId,
+            aggregate.Submission.Enrollment.LearnerOrganizationPersonId,
+            nowUtc,
+            cancellationToken);
         _store.Add(gradeRelease);
+        var recipients = new List<NotificationRecipientIntent>
+        {
+            new(
+                aggregate.Submission.StudentUserId,
+                "نتیجه تکلیف منتشر شد",
+                "نتیجه جدید یک تکلیف برای شما منتشر شده است.")
+        };
+        recipients.AddRange(guardianUserIds.Select(guardianUserId => new NotificationRecipientIntent(
+            guardianUserId,
+            "نتیجه آموزشی منتشر شد",
+            "نتیجه جدید آموزشی برای فرزند شما منتشر شده است.")));
+        _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
+            gradeRelease.Id,
+            evaluation.OrganizationId,
+            NotificationCategory.Educational,
+            NotificationType.AssignmentGradeReleased,
+            NotificationResourceType.SubmissionAttempt,
+            evaluation.SubmissionAttemptId,
+            nowUtc,
+            recipients)));
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToReleaseResult(gradeRelease, evaluation);

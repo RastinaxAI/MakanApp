@@ -54,6 +54,7 @@ public interface IAssignmentStore
     Task<AssignmentWithVersionRecord?> GetAssignmentAsync(Guid organizationId, Guid assignmentId, CancellationToken cancellationToken);
     Task<AssignmentWithVersionRecord?> GetAssignmentForUpdateAsync(Guid organizationId, Guid assignmentId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<Guid>> GetActiveEnrollmentIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
     Task<bool> IsRecipientForStudentAsync(Guid organizationId, Guid assignmentVersionId, Guid userId, CancellationToken cancellationToken);
     Task<bool> IsRecipientForLearnerAsync(Guid organizationId, Guid assignmentVersionId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForManagerAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);

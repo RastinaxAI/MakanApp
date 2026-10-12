@@ -89,6 +89,7 @@ public interface IExamStore
     Task<ExamAggregateRecord?> GetCurrentForUpdateAsync(Guid organizationId, Guid examId, CancellationToken cancellationToken);
     Task<ExamAggregateRecord?> GetLatestPublishedAsync(Guid organizationId, Guid examId, CancellationToken cancellationToken);
     Task<bool> IsStudentActivelyEnrolledAsync(Guid organizationId, Guid classId, Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ExamSummaryRecord>> GetForManagerAsync(Guid organizationId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ExamSummaryRecord>> GetForTeacherAsync(Guid organizationId, Guid membershipId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ExamSummaryRecord>> GetForStudentAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);

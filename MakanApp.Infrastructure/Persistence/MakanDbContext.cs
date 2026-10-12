@@ -7,6 +7,7 @@ using MakanApp.Domain.Organization;
 using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Messaging;
+using MakanApp.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Persistence;
@@ -71,6 +72,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<FileAsset> FileAssets => Set<FileAsset>();
     public DbSet<ReportExportJob> ReportExportJobs => Set<ReportExportJob>();
+    public DbSet<MakanApp.Domain.Notification.Notification> Notifications => Set<MakanApp.Domain.Notification.Notification>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

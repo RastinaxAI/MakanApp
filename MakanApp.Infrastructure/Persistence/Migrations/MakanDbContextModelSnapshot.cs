@@ -2757,6 +2757,82 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Notification.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReadAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ResourceType")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SourceEventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("RecipientUserId", "CreatedAtUtc")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_Notifications_Recipient_Created");
+
+                    b.HasIndex("RecipientUserId", "ReadAtUtc")
+                        .HasDatabaseName("IX_Notifications_Recipient_ReadAt");
+
+                    b.HasIndex("SourceEventId", "RecipientUserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Notifications_SourceEvent_Recipient");
+
+                    b.ToTable("Notifications", "notification", t =>
+                        {
+                            t.HasCheckConstraint("CK_Notifications_Category", "[Category] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_Notifications_ReadAt", "[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Organization.Invitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3127,9 +3203,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ReportExportJobs_DateRange", "[FromUtc] IS NULL OR [ToUtc] IS NULL OR [FromUtc] <= [ToUtc]");
 
-                            t.HasCheckConstraint("CK_ReportExportJobs_ExpectedRowCount", "[ExpectedRowCount] >= 0");
-
                             t.HasCheckConstraint("CK_ReportExportJobs_EnrollmentStatus", "[EnrollmentStatus] IS NULL OR [EnrollmentStatus] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_ExpectedRowCount", "[ExpectedRowCount] >= 0");
 
                             t.HasCheckConstraint("CK_ReportExportJobs_FailedState", "([Status] = 4 AND [FailedAtUtc] IS NOT NULL AND [FailureCode] IS NOT NULL AND [OutputFileAssetId] IS NULL) OR [Status] <> 4");
 
@@ -3285,6 +3361,64 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_RealtimeOutbox_AttemptCount", "[AttemptCount] >= 0");
 
                             t.HasCheckConstraint("CK_RealtimeOutbox_Lifecycle", "[DispatchedAtUtc] IS NULL OR ([ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Infrastructure.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ClaimToken")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClaimedUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasMaxLength(16000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ProcessedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessedAtUtc", "NextAttemptAtUtc", "ClaimedUntilUtc", "OccurredAtUtc")
+                        .HasDatabaseName("IX_Outbox_Pending")
+                        .HasFilter("[ProcessedAtUtc] IS NULL");
+
+                    b.ToTable("OutboxMessages", "platform", t =>
+                        {
+                            t.HasCheckConstraint("CK_Outbox_AttemptCount", "[AttemptCount] >= 0");
+
+                            t.HasCheckConstraint("CK_Outbox_Lifecycle", "[ProcessedAtUtc] IS NULL OR ([ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NULL)");
                         });
                 });
 
@@ -4099,6 +4233,20 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("BlockerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.Notification", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RecipientUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

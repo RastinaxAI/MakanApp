@@ -97,6 +97,11 @@ public interface IExamGradingStore
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveGuardianUserIdsAsync(
+        Guid organizationId,
+        Guid learnerOrganizationPersonId,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
 
     void Add(ExamGradeRevision revision);
     void AddRange(IEnumerable<ExamQuestionGrade> questionGrades);

@@ -81,6 +81,11 @@ public interface IEvaluationStore
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveGuardianUserIdsAsync(
+        Guid organizationId,
+        Guid learnerOrganizationPersonId,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
     void Add(EvaluationRevision evaluationRevision);
     void Add(GradeRelease gradeRelease);
     void SetOriginalRowVersion(EvaluationRevision evaluationRevision, byte[] rowVersion);

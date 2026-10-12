@@ -2,6 +2,7 @@ using System.Data;
 using MakanApp.Application.Assessment;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -103,6 +104,23 @@ public sealed partial class EfAssignmentStore : IAssignmentStore
             .FromSqlInterpolated(
                 $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
             .Select(enrollment => enrollment.Id)
+            .ToArrayAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(
+        Guid organizationId,
+        Guid classId,
+        CancellationToken cancellationToken) =>
+        await (
+            from enrollment in _dbContext.Enrollments.FromSqlInterpolated(
+                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
+            join organizationPerson in _dbContext.OrganizationPersons
+                on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
+                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
+            join user in _dbContext.Users on organizationPerson.PersonId equals user.PersonId
+            where organizationPerson.Status == OrganizationPersonStatus.Active &&
+                  organizationPerson.EndedAtUtc == null
+            select user.Id)
+            .Distinct()
             .ToArrayAsync(cancellationToken);
 
     public void SetOriginalRowVersion(Assignment assignment, byte[] rowVersion) =>

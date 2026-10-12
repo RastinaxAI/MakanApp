@@ -1,6 +1,9 @@
 using MakanApp.Application.Academic;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Notification;
+using MakanApp.Application.Outbox;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
@@ -10,15 +13,18 @@ public sealed partial class AssignmentService : IAssignmentService
     private readonly IAccessContextResolver _accessContextResolver;
     private readonly IAssignmentStore _store;
     private readonly TimeProvider _timeProvider;
+    private readonly IOutbox _outbox;
 
     public AssignmentService(
         IAccessContextResolver accessContextResolver,
         IAssignmentStore store,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IOutbox outbox)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
+        _outbox = outbox;
     }
 
     public async Task<AssignmentResult> CreateDraftAsync(
@@ -125,6 +131,10 @@ public sealed partial class AssignmentService : IAssignmentService
             record.Assignment.OrganizationId,
             record.Assignment.ClassId,
             cancellationToken);
+        var recipientUserIds = await _store.GetActiveLearnerUserIdsForUpdateAsync(
+            record.Assignment.OrganizationId,
+            record.Assignment.ClassId,
+            cancellationToken);
         var recipients = enrollmentIds
             .Distinct()
             .Select(enrollmentId => AssignmentRecipient.Create(
@@ -149,6 +159,18 @@ public sealed partial class AssignmentService : IAssignmentService
         }
 
         _store.AddRange(recipients);
+        _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
+            Guid.NewGuid(),
+            record.Assignment.OrganizationId,
+            NotificationCategory.Educational,
+            NotificationType.AssignmentPublished,
+            NotificationResourceType.Assignment,
+            record.Assignment.Id,
+            nowUtc,
+            recipientUserIds.Select(recipientUserId => new NotificationRecipientIntent(
+                recipientUserId,
+                "تکلیف جدید منتشر شد",
+                "یک تکلیف جدید برای شما منتشر شده است.")).ToArray())));
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PublishAssignmentResult(

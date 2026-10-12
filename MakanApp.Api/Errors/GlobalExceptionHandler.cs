@@ -3,6 +3,7 @@ using MakanApp.Application.Assessment;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
+using MakanApp.Application.Notification;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
@@ -35,6 +36,9 @@ public sealed class GlobalExceptionHandler(
             MessagingException messagingException => CreateKnownProblem(
                 messagingException.Code,
                 messagingException.Message),
+            NotificationException notificationException => CreateKnownProblem(
+                notificationException.Code,
+                notificationException.Message),
             OrganizationException organizationException => CreateKnownProblem(
                 organizationException.Code,
                 organizationException.Message),
@@ -80,6 +84,9 @@ public sealed class GlobalExceptionHandler(
             IdentityErrorCodes.SmsRecipientInvalid => StatusCodes.Status400BadRequest,
             IdentityErrorCodes.SmsRecipientBlocked => StatusCodes.Status422UnprocessableEntity,
             IdentityErrorCodes.SmsRateLimited => StatusCodes.Status429TooManyRequests,
+            NotificationErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            NotificationErrorCodes.InvalidQuery => StatusCodes.Status400BadRequest,
+            NotificationErrorCodes.ConcurrencyConflict => StatusCodes.Status409Conflict,
             MessagingErrorCodes.ConversationNotFound => StatusCodes.Status404NotFound,
             MessagingErrorCodes.DirectRecipientNotAvailable => StatusCodes.Status404NotFound,
             MessagingErrorCodes.ConversationNotAllowed => StatusCodes.Status403Forbidden,

@@ -1345,3 +1345,20 @@ body ایجاد شامل `reportType` بسته، `format=Csv` و `filters` typed
 در ایجاد، پردازش و دانلود دسترسی دوباره کنترل می‌شود. Parent به GuardianRelation و فرزند snapshot‌شده، Teacher به TeacherAssignment همان کلاس، Student به شخص حساب و Manager به همان سازمان محدود است. تغییر دسترسی می‌تواند تولید را با `REPORT_DATA_NO_LONGER_AUTHORIZED` متوقف یا دانلود را رد کند. فایل از `storage.FileAssets` و storage provider موجود استفاده می‌کند و physical path برنمی‌گرداند.
 
 CSV quote/newline/comma را escape می‌کند و متن user-controlled با پیشوندهای `= + - @` را با apostrophe خنثی می‌کند تا spreadsheet formula injection رخ ندهد. قرارداد کامل lifecycle، typeها، migration، indexها، retry و محدودیت‌ها در [سند معماری STEP 11C](architecture/STEP_11C_REPORT_EXPORTS.md) آمده است.
+
+<a id="internal-notifications"></a>
+## اعلان‌های داخلی — STEP 12A
+
+Notification Center از رکوردهای پایدار schema `notification` می‌خواند. اعلان فقط reference مقصد است و مجوز دسترسی محسوب نمی‌شود؛ endpoint تکلیف، آزمون یا نتیجه باید Membership، Enrollment و GuardianRelation جاری را طبق policy خودش دوباره بررسی کند.
+
+| عملیات | مسیر | ورودی/نتیجه |
+|---|---|---|
+| فهرست | `GET /api/v1/notifications` | `page`، `pageSize<=100`، `unreadOnly`، `category` و `organizationId`؛ پاسخ `NotificationPage` |
+| شمارش نخوانده | `GET /api/v1/notifications/unread-count` | `organizationId` اختیاری؛ پاسخ `NotificationUnreadCount` |
+| خواندن | `POST /api/v1/notifications/{notificationId}/read` | idempotent؛ پاسخ `NotificationItem` |
+
+هر سه endpoint به Bearer session معتبر نیاز دارند و فقط رکوردهای recipient جاری را می‌بینند. شناسه کاربر از client گرفته نمی‌شود و شناسه اعلان متعلق به دیگری با `notification_not_found` و 404 پنهان می‌شود. inbox می‌تواند notificationهای چند سازمان را همراه `OrganizationId` نشان دهد و با organization فیلتر شود.
+
+انتشار تکلیف/آزمون و انتشار رسمی نتیجه آن‌ها event نسخه‌دار Outbox را در همان transaction کسب‌وکاری ثبت می‌کند. worker پس از commit اعلان learner و، فقط برای نتیجه منتشرشده، GuardianRelation فعال را materialize می‌کند. متن نتیجه score، answer و note خصوصی ندارد. پیام‌رسانی chat همچنان unread/delta/outbox خودش را دارد و هر پیام به Notification تبدیل نمی‌شود.
+
+Push، SMS عمومی، Email، preferences، Quiet Hours و realtime اعلان در این مرحله وجود ندارند. OTP ملی‌پیامک کانال جداگانه Identity است. جزئیات entity، قفل SQL Server، deduplication، retry، migration و privacy والد در [سند معماری STEP 12A](architecture/STEP_12A_NOTIFICATION_FOUNDATION.md) آمده است.

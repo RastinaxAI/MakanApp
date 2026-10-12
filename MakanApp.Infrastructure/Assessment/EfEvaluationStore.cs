@@ -2,6 +2,7 @@ using System.Data;
 using MakanApp.Application.Assessment;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -82,6 +83,21 @@ public sealed class EfEvaluationStore(MakanDbContext dbContext) : IEvaluationSto
                           assignment.Status == TeacherAssignmentStatus.Active &&
                           assignment.EndedAtUtc == null,
             cancellationToken);
+
+    public async Task<IReadOnlyCollection<Guid>> GetActiveGuardianUserIdsAsync(
+        Guid organizationId,
+        Guid learnerOrganizationPersonId,
+        DateTime nowUtc,
+        CancellationToken cancellationToken) =>
+        await dbContext.GuardianRelations
+            .Where(relation => relation.OrganizationId == organizationId &&
+                               relation.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
+                               relation.Status == GuardianRelationStatus.Active &&
+                               relation.ValidFromUtc <= nowUtc &&
+                               relation.EndedAtUtc == null)
+            .Select(relation => relation.GuardianUserId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
 
     public void Add(EvaluationRevision evaluationRevision) =>
         dbContext.EvaluationRevisions.Add(evaluationRevision);
