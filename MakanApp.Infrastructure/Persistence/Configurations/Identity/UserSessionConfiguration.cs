@@ -20,6 +20,7 @@ public sealed class UserSessionConfiguration : IEntityTypeConfiguration<UserSess
         builder.HasIndex(session => session.TokenHash)
             .IsUnique()
             .HasDatabaseName("UX_UserSessions_TokenHash");
+        builder.HasAlternateKey(session => new { session.Id, session.UserId });
 
         builder.HasOne<User>()
             .WithMany()

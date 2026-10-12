@@ -2,7 +2,9 @@ using MakanApp.Application.Notification;
 using MakanApp.Application.Assessment;
 using MakanApp.Application.Outbox;
 using MakanApp.Domain.Notification;
+using MakanApp.Domain.Identity;
 using MakanApp.Infrastructure.Outbox;
+using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -183,4 +185,78 @@ public sealed partial class MakanAppWebApplicationFactory
             .AsNoTracking()
             .CountAsync(message => message.MessageType == messageType);
     }
+
+    public async Task<int> ProcessNotificationDeliveriesAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider
+            .GetRequiredService<NotificationDeliveryProcessor>()
+            .DispatchBatchAsync(CancellationToken.None);
+    }
+
+    public async Task<int[]> ProcessNotificationDeliveriesConcurrentlyAsync()
+    {
+        var first = ProcessNotificationDeliveriesAsync();
+        var second = ProcessNotificationDeliveriesAsync();
+        return await Task.WhenAll(first, second);
+    }
+
+    public async Task<Guid> GetNotificationIdAsync(Guid sourceEventId, Guid userId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.Notifications
+            .Where(notification => notification.SourceEventId == sourceEventId &&
+                                   notification.RecipientUserId == userId)
+            .Select(notification => notification.Id)
+            .SingleAsync();
+    }
+
+    public async Task<IReadOnlyCollection<DeliveryAttemptState>> GetDeliveryAttemptsAsync(
+        Guid notificationId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.NotificationDeliveryAttempts
+            .AsNoTracking()
+            .Where(attempt => attempt.NotificationId == notificationId)
+            .OrderBy(attempt => attempt.Channel)
+            .ThenBy(attempt => attempt.DestinationReference)
+            .Select(attempt => new DeliveryAttemptState(
+                attempt.Id,
+                attempt.Channel,
+                attempt.Status,
+                attempt.AttemptCount,
+                attempt.NextAttemptAtUtc,
+                attempt.FailureReason))
+            .ToArrayAsync();
+    }
+
+    public async Task<bool> IsPushDeviceTokenStoredAsync(Guid registrationId, string pushToken)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.PushDeviceRegistrations.AnyAsync(registration =>
+            registration.Id == registrationId && registration.PushToken == pushToken);
+    }
+
+    public async Task RemoveVerifiedMobileCredentialAsync(Guid userId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var credentials = await dbContext.UserCredentials
+            .Where(credential => credential.UserId == userId &&
+                                 credential.Kind == CredentialKind.MobilePhone)
+            .ToArrayAsync();
+        dbContext.UserCredentials.RemoveRange(credentials);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public sealed record DeliveryAttemptState(
+        Guid Id,
+        NotificationDeliveryChannel Channel,
+        NotificationDeliveryStatus Status,
+        int AttemptCount,
+        DateTime? NextAttemptAtUtc,
+        NotificationDeliveryFailureReason? FailureReason);
 }

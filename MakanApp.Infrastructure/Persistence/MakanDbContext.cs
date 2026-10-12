@@ -3,6 +3,7 @@ using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
+using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
@@ -73,6 +74,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<FileAsset> FileAssets => Set<FileAsset>();
     public DbSet<ReportExportJob> ReportExportJobs => Set<ReportExportJob>();
     public DbSet<MakanApp.Domain.Notification.Notification> Notifications => Set<MakanApp.Domain.Notification.Notification>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<PushDeviceRegistration> PushDeviceRegistrations => Set<PushDeviceRegistration>();
+    public DbSet<NotificationDeliveryAttempt> NotificationDeliveryAttempts => Set<NotificationDeliveryAttempt>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -109,9 +109,22 @@ public static class DependencyInjection
         services.AddHostedService<MessagingRealtimeOutboxDispatcher>();
         services.AddScoped<INotificationStore, EfNotificationStore>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<EfNotificationPreferenceStore>();
+        services.AddScoped<INotificationPreferenceStore>(serviceProvider =>
+            serviceProvider.GetRequiredService<EfNotificationPreferenceStore>());
+        services.AddScoped<IPushDeviceStore>(serviceProvider =>
+            serviceProvider.GetRequiredService<EfNotificationPreferenceStore>());
+        services.AddScoped<INotificationDeliveryStore>(serviceProvider =>
+            serviceProvider.GetRequiredService<EfNotificationPreferenceStore>());
+        services.AddScoped<INotificationPreferenceResolver, NotificationPreferenceResolver>();
+        services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
+        services.AddScoped<IPushDeviceService, PushDeviceService>();
+        services.AddScoped<INotificationDeliveryCoordinator, NotificationDeliveryCoordinator>();
         services.AddScoped<IOutbox, EfOutbox>();
         services.AddScoped<OutboxProcessor>();
         services.AddHostedService<OutboxDispatcher>();
+        services.AddScoped<NotificationDeliveryProcessor>();
+        services.AddHostedService<NotificationDeliveryDispatcher>();
         services.AddScoped<IFileAssetStore, EfFileAssetStore>();
         services.AddScoped<IFileAssetBoundAccessResolver, EfFileAssetBoundAccessResolver>();
         services.AddScoped<IStorageService, StorageService>();
@@ -125,6 +138,7 @@ public static class DependencyInjection
         var storageOptions = CreateStorageOptions(configuration);
         services.AddSingleton(storageOptions);
         services.AddSingleton(CreateReportExportOptions(configuration));
+        services.AddSingleton(CreateNotificationDeliveryOptions(configuration));
         services.AddSingleton<FileUploadPolicy>();
         services.AddSingleton<IIdentitySecurity>(
             new IdentityCryptography(CreateSecurityKey(
@@ -132,6 +146,7 @@ public static class DependencyInjection
                 environmentName,
                 UsesManagedOtpProvider(configuration))));
         AddOtpDeliveryProvider(services, configuration, environmentName);
+        AddNotificationDeliveryProviders(services, configuration, environmentName);
 
         if (IsDevelopmentLike(environmentName) || !string.IsNullOrWhiteSpace(storageOptions.RootPath))
         {
@@ -145,6 +160,55 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    private static void AddNotificationDeliveryProviders(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string environmentName)
+    {
+        var defaultProvider = IsDevelopmentLike(environmentName) ? "Development" : "Unavailable";
+        var pushProvider = configuration["Notifications:PushProvider"]?.Trim() ?? defaultProvider;
+        if (pushProvider.Equals("Development", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsDevelopmentLike(environmentName))
+            {
+                throw new InvalidOperationException(
+                    "Notifications:PushProvider=Development is allowed only in Development and Testing environments.");
+            }
+
+            services.AddSingleton<IPushNotificationProvider, DevelopmentPushNotificationProvider>();
+        }
+        else if (pushProvider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IPushNotificationProvider, UnavailablePushNotificationProvider>();
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                "Notifications:PushProvider must be Development or Unavailable until an approved provider contract exists.");
+        }
+
+        var smsProvider = configuration["Notifications:SmsProvider"]?.Trim() ?? defaultProvider;
+        if (smsProvider.Equals("Development", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsDevelopmentLike(environmentName))
+            {
+                throw new InvalidOperationException(
+                    "Notifications:SmsProvider=Development is allowed only in Development and Testing environments.");
+            }
+
+            services.AddSingleton<INotificationSmsProvider, DevelopmentNotificationSmsProvider>();
+        }
+        else if (smsProvider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<INotificationSmsProvider, UnavailableNotificationSmsProvider>();
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                "Notifications:SmsProvider must be Development or Unavailable until an approved general SMS contract exists.");
+        }
     }
 
     private static void AddOtpDeliveryProvider(
@@ -383,6 +447,39 @@ public static class DependencyInjection
             configuration,
             $"{ReportExportOptions.SectionName}:MaximumAttempts",
             3)
+    };
+
+    private static NotificationDeliveryOptions CreateNotificationDeliveryOptions(
+        IConfiguration configuration) => new()
+    {
+        BatchSize = Math.Min(200, ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:BatchSize",
+            50)),
+        ClaimLease = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:ClaimLeaseSeconds",
+            30)),
+        IdlePollingInterval = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:IdlePollingSeconds",
+            2)),
+        InitialRetryDelay = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:InitialRetryDelaySeconds",
+            5)),
+        MaximumRetryDelay = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:MaximumRetryDelaySeconds",
+            300)),
+        ProviderTimeout = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:ProviderTimeoutSeconds",
+            10)),
+        MaximumAttempts = Math.Min(10, ReadPositiveInt(
+            configuration,
+            $"{NotificationDeliveryOptions.SectionName}:MaximumAttempts",
+            3))
     };
 
     private static byte[] CreateSecurityKey(

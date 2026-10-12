@@ -39,6 +39,9 @@ public sealed class GlobalExceptionHandler(
             NotificationException notificationException => CreateKnownProblem(
                 notificationException.Code,
                 notificationException.Message),
+            NotificationPreferenceException preferenceException => CreateKnownProblem(
+                preferenceException.Code,
+                preferenceException.Message),
             OrganizationException organizationException => CreateKnownProblem(
                 organizationException.Code,
                 organizationException.Message),
@@ -87,6 +90,12 @@ public sealed class GlobalExceptionHandler(
             NotificationErrorCodes.NotFound => StatusCodes.Status404NotFound,
             NotificationErrorCodes.InvalidQuery => StatusCodes.Status400BadRequest,
             NotificationErrorCodes.ConcurrencyConflict => StatusCodes.Status409Conflict,
+            NotificationPreferenceErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            NotificationPreferenceErrorCodes.ScopeNotFound => StatusCodes.Status404NotFound,
+            NotificationPreferenceErrorCodes.Mandatory => StatusCodes.Status422UnprocessableEntity,
+            NotificationPreferenceErrorCodes.ConcurrencyConflict => StatusCodes.Status409Conflict,
+            NotificationPreferenceErrorCodes.DeviceNotFound => StatusCodes.Status404NotFound,
+            NotificationPreferenceErrorCodes.DeviceConflict => StatusCodes.Status409Conflict,
             MessagingErrorCodes.ConversationNotFound => StatusCodes.Status404NotFound,
             MessagingErrorCodes.DirectRecipientNotAvailable => StatusCodes.Status404NotFound,
             MessagingErrorCodes.ConversationNotAllowed => StatusCodes.Status403Forbidden,

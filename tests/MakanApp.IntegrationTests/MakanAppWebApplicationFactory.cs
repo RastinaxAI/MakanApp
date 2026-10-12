@@ -1,5 +1,6 @@
 using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
+using MakanApp.Application.Notification;
 using MakanApp.Application.Storage;
 using MakanApp.Api.Realtime;
 using MakanApp.Domain.Identity;
@@ -7,6 +8,7 @@ using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Outbox;
+using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -43,6 +45,8 @@ public sealed partial class MakanAppWebApplicationFactory :
     public ControllableTimeProvider Clock { get; } = new();
     public OtpProviderTestControl OtpProvider =>
         Services.GetRequiredService<OtpProviderTestControl>();
+    public NotificationDeliveryProviderTestControl NotificationDeliveryProvider =>
+        Services.GetRequiredService<NotificationDeliveryProviderTestControl>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -89,6 +93,14 @@ public sealed partial class MakanAppWebApplicationFactory :
                 services.Remove(outboxDispatcher);
             }
 
+            var notificationDeliveryDispatcher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(NotificationDeliveryDispatcher));
+            if (notificationDeliveryDispatcher is not null)
+            {
+                services.Remove(notificationDeliveryDispatcher);
+            }
+
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
             services.RemoveAll<StorageOptions>();
@@ -109,12 +121,28 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<StorageFailureSwitch>();
             services.AddSingleton<RealtimeFailureSwitch>();
             services.AddSingleton<OtpProviderTestControl>();
+            services.AddSingleton<NotificationDeliveryProviderTestControl>();
             services.RemoveAll<DevelopmentOtpStore>();
             services.RemoveAll<DevelopmentOtpProvider>();
             services.AddSingleton<DevelopmentOtpStore>();
             services.AddSingleton<DevelopmentOtpProvider>();
             services.RemoveAll<IOtpDeliveryProvider>();
             services.AddSingleton<IOtpDeliveryProvider, FaultInjectingOtpDeliveryProvider>();
+            services.RemoveAll<IPushNotificationProvider>();
+            services.AddSingleton<IPushNotificationProvider, RecordingPushNotificationProvider>();
+            services.RemoveAll<INotificationSmsProvider>();
+            services.AddSingleton<INotificationSmsProvider, RecordingNotificationSmsProvider>();
+            services.RemoveAll<NotificationDeliveryOptions>();
+            services.AddSingleton(new NotificationDeliveryOptions
+            {
+                BatchSize = 50,
+                ClaimLease = TimeSpan.FromSeconds(1),
+                IdlePollingInterval = TimeSpan.FromMilliseconds(10),
+                InitialRetryDelay = TimeSpan.FromSeconds(1),
+                MaximumRetryDelay = TimeSpan.FromSeconds(5),
+                ProviderTimeout = TimeSpan.FromMilliseconds(100),
+                MaximumAttempts = 3
+            });
             services.RemoveAll<IMessagingRealtimeNotifier>();
             services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
                 new FaultInjectingMessagingRealtimeNotifier(

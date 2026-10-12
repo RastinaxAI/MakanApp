@@ -2833,6 +2833,210 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Notification.NotificationDeliveryAttempt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ClaimToken")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClaimedUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("DeliveredAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("DestinationReference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int?>("FailureReason")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastAttemptAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("NotificationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProviderMessageId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NotificationId", "Channel", "DestinationReference")
+                        .IsUnique()
+                        .HasDatabaseName("UX_NotificationDeliveryAttempts_StableDestination");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc", "ClaimedUntilUtc", "CreatedAtUtc")
+                        .HasDatabaseName("IX_NotificationDeliveryAttempts_Pending")
+                        .HasFilter("[Status] IN (1, 2, 3)");
+
+                    b.ToTable("NotificationDeliveryAttempts", "notification", t =>
+                        {
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_AttemptCount", "[AttemptCount] >= 0");
+
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Channel", "[Channel] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Delivered", "([Status] = 4 AND [DeliveredAtUtc] IS NOT NULL) OR ([Status] <> 4 AND [DeliveredAtUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_FailureReason", "[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 8");
+
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Lifecycle", "([Status] = 2 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL) OR ([Status] <> 2 AND [ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Status", "[Status] BETWEEN 1 AND 6");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.NotificationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("PushEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("QuietHoursEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<TimeOnly?>("QuietHoursEndLocal")
+                        .HasColumnType("time(0)");
+
+                    b.Property<TimeOnly?>("QuietHoursStartLocal")
+                        .HasColumnType("time(0)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<bool>("SmsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TimeZoneId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("UserId", "Category")
+                        .IsUnique()
+                        .HasDatabaseName("UX_NotificationPreferences_User_Personal_Category")
+                        .HasFilter("[OrganizationId] IS NULL");
+
+                    b.HasIndex("UserId", "OrganizationId", "Category")
+                        .IsUnique()
+                        .HasDatabaseName("UX_NotificationPreferences_User_Organization_Category")
+                        .HasFilter("[OrganizationId] IS NOT NULL");
+
+                    b.ToTable("NotificationPreferences", "notification", t =>
+                        {
+                            t.HasCheckConstraint("CK_NotificationPreferences_Category", "[Category] BETWEEN 1 AND 7");
+
+                            t.HasCheckConstraint("CK_NotificationPreferences_QuietHours", "([QuietHoursEnabled] = 0 AND [QuietHoursStartLocal] IS NULL AND [QuietHoursEndLocal] IS NULL AND [TimeZoneId] IS NULL) OR ([QuietHoursEnabled] = 1 AND [QuietHoursStartLocal] IS NOT NULL AND [QuietHoursEndLocal] IS NOT NULL AND [QuietHoursStartLocal] <> [QuietHoursEndLocal] AND [TimeZoneId] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.PushDeviceRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PushToken")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PushDeviceRegistrations_ActiveToken")
+                        .HasFilter("[RevokedAtUtc] IS NULL");
+
+                    b.HasIndex("UserId", "RevokedAtUtc")
+                        .HasDatabaseName("IX_PushDeviceRegistrations_User_Active");
+
+                    b.HasIndex("UserSessionId", "UserId");
+
+                    b.ToTable("PushDeviceRegistrations", "notification", t =>
+                        {
+                            t.HasCheckConstraint("CK_PushDeviceRegistrations_Platform", "[Platform] IN (1, 2, 3)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Organization.Invitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4247,6 +4451,45 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.NotificationDeliveryAttempt", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Notification.Notification", null)
+                        .WithMany()
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.NotificationPreference", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Notification.PushDeviceRegistration", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithMany()
+                        .HasForeignKey("UserSessionId", "UserId")
+                        .HasPrincipalKey("Id", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

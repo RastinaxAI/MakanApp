@@ -50,6 +50,7 @@ public sealed class OutboxDispatcher(
 
 public sealed class OutboxProcessor(
     MakanDbContext dbContext,
+    INotificationDeliveryCoordinator deliveryCoordinator,
     TimeProvider timeProvider,
     ILogger<OutboxProcessor> logger)
 {
@@ -126,7 +127,7 @@ public sealed class OutboxProcessor(
             var existing = existingRecipients.ToHashSet();
             if (payload.Recipient.UserId != Guid.Empty && !existing.Contains(payload.Recipient.UserId))
             {
-                dbContext.Notifications.Add(Domain.Notification.Notification.Create(
+                var notification = Domain.Notification.Notification.Create(
                     payload.SourceEventId,
                     payload.Recipient.UserId,
                     payload.OrganizationId,
@@ -136,7 +137,9 @@ public sealed class OutboxProcessor(
                     payload.Recipient.Body,
                     payload.ResourceType,
                     payload.ResourceId,
-                    payload.OccurredAtUtc));
+                    payload.OccurredAtUtc);
+                dbContext.Notifications.Add(notification);
+                await deliveryCoordinator.ScheduleAsync(notification, cancellationToken);
             }
 
             message.MarkProcessed(claimToken, timeProvider.GetUtcNow().UtcDateTime);

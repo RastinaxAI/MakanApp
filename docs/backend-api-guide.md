@@ -1361,4 +1361,28 @@ Notification Center از رکوردهای پایدار schema `notification` م�
 
 انتشار تکلیف/آزمون و انتشار رسمی نتیجه آن‌ها event نسخه‌دار Outbox را در همان transaction کسب‌وکاری ثبت می‌کند. worker پس از commit اعلان learner و، فقط برای نتیجه منتشرشده، GuardianRelation فعال را materialize می‌کند. متن نتیجه score، answer و note خصوصی ندارد. پیام‌رسانی chat همچنان unread/delta/outbox خودش را دارد و هر پیام به Notification تبدیل نمی‌شود.
 
-Push، SMS عمومی، Email، preferences، Quiet Hours و realtime اعلان در این مرحله وجود ندارند. OTP ملی‌پیامک کانال جداگانه Identity است. جزئیات entity، قفل SQL Server، deduplication، retry، migration و privacy والد در [سند معماری STEP 12A](architecture/STEP_12A_NOTIFICATION_FOUNDATION.md) آمده است.
+در محدوده STEP 12A، Push، SMS عمومی، Email، preferences، Quiet Hours و realtime اعلان وجود نداشتند. OTP ملی‌پیامک کانال جداگانه Identity است. جزئیات entity، قفل SQL Server، deduplication، retry، migration و privacy والد در [سند معماری STEP 12A](architecture/STEP_12A_NOTIFICATION_FOUNDATION.md) آمده است.
+
+<a id="notification-preferences-delivery"></a>
+## تنظیمات و کانال‌های ارسال اعلان — STEP 12B
+
+اعلان داخلی STEP 12A همچنان منبع حقیقت durable است. پس از materialize شدن `Notification`، سرویس `NotificationDeliveryCoordinator` با توجه به scope شخصی/سازمانی، category، preference، ساعات سکوت، عضویت جاری، device فعال و موبایل تأییدشده، تلاش‌های Push/SMS را در SQL Server ثبت می‌کند. provider بیرونی داخل transaction کسب‌وکاری فراخوانی نمی‌شود.
+
+| عملیات | مسیر | ورودی/نتیجه |
+|---|---|---|
+| دریافت تنظیمات | `GET /api/v1/notification-preferences` | `organizationId` اختیاری؛ هفت دسته effective با default/explicit، mandatory و rowversion |
+| تغییر یک دسته | `PUT /api/v1/notification-preferences/{category}` | کانال‌ها، Quiet Hours، `TimeZoneId` و `ExpectedRowVersion`؛ فقط کاربر جاری |
+| ثبت دستگاه | `POST /api/v1/notifications/devices` | `platform` و `pushToken`؛ پاسخ فاقد token |
+| لغو دستگاه | `DELETE /api/v1/notifications/devices/{registrationId}` | فقط device متعلق به کاربر جاری؛ پاسخ 204 |
+
+Scope سازمانی فقط با Membership فعال قابل مشاهده/تغییر است. ردیف scope شخصی و هر سازمان مستقل است. In-app خاموش‌شدنی نیست. Default کانال اختیاری `Push=true` و `Sms=false` است. category امنیت حساب mandatory است و server خاموش‌کردن Push/SMS آن را رد می‌کند؛ producer امنیتی تازه‌ای در این مرحله افزوده نشده است.
+
+Quiet Hours فقط با timezone صریح همان preference اجرا می‌شود، زیرا User/Organization هنوز timezone مرجع ندارند. بازه روزانه و عبوری از نیمه‌شب پشتیبانی می‌شود؛ اعلان داخلی حتی در ساعات سکوت فوراً ایجاد می‌شود و delivery خارجی تا پایان بازه `Deferred` می‌ماند.
+
+Push provider واقعی انتخاب نشده و فقط providerهای `Development/Unavailable` موجودند. رجیستری device از session token جدا است؛ token در API/log برنمی‌گردد و تلاش ارسال فقط شناسه device را ذخیره می‌کند. logout، انقضای session یا revoke دستگاه مانع resolve شدن آن برای Push آینده می‌شود.
+
+`INotificationSmsProvider` کاملاً از OTP جدا است. شماره موبایل از credential تأییدشده Identity resolve می‌شود و body دلخواه frontend پذیرفته نمی‌شود. `MeliPayamakOtpProvider` و endpoint اختصاصی OTP تغییر نکرده‌اند؛ adapter ملی‌پیامک برای SMS عمومی تا دریافت قرارداد رسمی provider عمداً وجود ندارد.
+
+`NotificationDeliveryDispatcher` تلاش‌های `Pending/Deferred` را با lease و قفل SQL Server claim می‌کند. timeout، transient retry محدود، permanent failure و suppression علت‌های جدا دارند. unique index بر `(NotificationId, Channel, DestinationReference)` از ساخت effect تکراری جلوگیری می‌کند. preview خارجی privacy-safe و deep link فقط navigation hint است؛ authorization مقصد باید دوباره اجرا شود.
+
+schema، indexها، lifecycle، تنظیمات provider و محدودیت‌های دقیق در [سند معماری STEP 12B](architecture/STEP_12B_NOTIFICATION_PREFERENCES_DELIVERY.md) آمده است.
