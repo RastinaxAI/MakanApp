@@ -1470,3 +1470,27 @@ Downgrade داده‌های آموزشی یا فایل را حذف نمی‌کن
 تماس `IPaymentGateway` بیرون SQL transaction انجام می‌شود. timeout به `Unknown` می‌رود و Failed فرض نمی‌شود. Verification server-to-server مبلغ، IRR و reference را تطبیق می‌دهد؛ settlement موفق PaymentAttempt، Payment، Paid Order و پیام activation Outbox را اتمیک ثبت می‌کند. worker Outbox Subscription قبلی را بدون حذف تاریخچه لغو و نسخه خریداری‌شده را دقیقاً یک بار فعال می‌کند. بنابراین Order پرداخت‌شده ممکن است موقتاً `SubscriptionActivationPending` باشد.
 
 Provider واقعی و قرارداد callback هنوز تأیید نشده‌اند. runtime فقط `Payments:Provider=Unavailable` دارد و endpoint callback عمومی ساخته نشده است؛ provider تست فقط در Integration Test ثبت شده و تماس واقعی ندارد. Refund، reconciliation/Finance، Order expiration، billing period، provisioning سازمان جدید، Backoffice، frontend و Notification پرداخت خارج از این مرحله‌اند. جزئیات lifecycle، schema، locking، error codeها و محدودیت‌ها در [سند معماری STEP 13B](architecture/STEP_13B_ORDER_AND_PAYMENT.md) آمده است.
+
+<a id="messaging-moderation-child-safety"></a>
+## تعدیل پیام و ایمنی کودک — STEP 14D
+
+ثبت report قبلی حفظ شده است، اما هر گزارش اکنون یک `ModerationCase` و action اولیه دارد. گزارش عادی Group/Channel کاربرمدیریت‌شده در صف بازبین همان گفتگو قرار می‌گیرد؛ Personal Direct، گفتگوی SystemManagedAcademic و هر `ChildSafetyConcern` به صف داخلی `PlatformSafety` می‌روند. API PlatformSafety تا STEP 15 ارائه نشده است.
+
+| عملیات | مسیر | ورودی/نتیجه |
+|---|---|---|
+| فهرست پرونده گفتگو | `GET /api/v1/conversations/{conversationId}/moderation/cases` | filter اختیاری `status`/`priority` و صفحه‌بندی حداکثر ۱۰۰ |
+| جزئیات | `GET /api/v1/conversations/{conversationId}/moderation/cases/{caseId}` | فقط snapshot همان پیام و safe identity |
+| شروع بررسی | `POST .../{caseId}/start-review` | `expectedVersion`؛ claim اتمیک |
+| حل | `POST .../{caseId}/resolve` | `expectedVersion` و `internalNote` اختیاری |
+| رد | `POST .../{caseId}/dismiss` | `expectedVersion` و `internalNote` اختیاری |
+| فایل شاهد | `GET .../{caseId}/evidence/files/{fileAssetId}` | re-authorization در هر درخواست |
+
+Owner مجوز ضمنی review دارد. Admin فقط با flag مستقل `ReviewReports` مجاز است؛ `DeleteMessages` معادل آن نیست. Member، Manager سازمان بدون participant/permission، participant لغوشده و کاربر گزارش‌شده دسترسی ندارند. note داخلی در پاسخ API یا receipt گزارش‌دهنده نیست. status گزارش‌دهنده از مسیر موجود `GET /api/v1/messaging/reports/{reportId}` به Submitted/UnderReview/Resolved/Dismissed همگام می‌شود.
+
+ارسال محتوای user-generated در گفتگویی که participant فعال Minor یا Unknown دارد پیش از persistence از `IContentSafetyProvider` عبور می‌کند. Adult-only provider را صدا نمی‌زند. `Allowed` مسیر عادی Message را ادامه می‌دهد؛ `Blocked` و `ReviewRequired` Message نمی‌سازند و `SafetyIncident` و پرونده Critical داخلی می‌سازند. خطا/timeout/پاسخ نامعتبر provider با `MESSAGE_SAFETY_UNAVAILABLE` و 503 fail-closed است، اما incident تخلف کاذب ایجاد نمی‌کند.
+
+مسیرهای Send و Forward در هر گفتگوی child-sensitive هر دو مشمول این gate هستند؛ در
+Direct دو طرف و در Group/Channel participantهای فعال بررسی می‌شوند. بررسی دوباره پیش
+از commit، تغییر هم‌زمان participantها را پوشش می‌دهد.
+
+Provider واقعی هنوز انتخاب نشده است. `Messaging:ContentSafetyProvider` فقط `DevelopmentAllow` در Development/Testing یا `Unavailable` را می‌پذیرد؛ محیط production به‌صورت پیش‌فرض Unavailable و امن است. MakanApp-AI در این مسیر استفاده نمی‌شود. جزئیات privacy، idempotency، schema و محدودیت‌ها در [سند معماری STEP 14D](architecture/STEP_14D_MODERATION_CHILD_SAFETY.md) آمده است.

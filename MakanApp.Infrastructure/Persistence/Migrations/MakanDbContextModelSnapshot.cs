@@ -2583,7 +2583,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_AbuseReports_MessageKind", "[ReportedMessageKind] IN (1, 2, 3, 4, 5)");
 
-                            t.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6)");
+                            t.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6, 7)");
 
                             t.HasCheckConstraint("CK_AbuseReports_Status", "[Status] IN (1, 2, 3, 4)");
                         });
@@ -2850,7 +2850,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ConversationParticipants", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 255 AND (([Role] = 2) OR [AdminPermissions] = 0)");
+                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 511 AND (([Role] = 2) OR [AdminPermissions] = 0)");
 
                             t.HasCheckConstraint("CK_ConversationParticipants_CursorTimestamp", "([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)");
 
@@ -3317,6 +3317,157 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("ModerationCaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ModerationCaseId", "CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_ModerationActions_Case_Created");
+
+                    b.ToTable("ModerationActions", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ModerationActions_Type", "[Type] IN (1, 2, 3, 4, 5)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationCase", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AbuseReportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssignedReviewerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("DismissedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("InternalNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QueueScope")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("ReviewStartedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SafetyIncidentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AbuseReportId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModerationCases_AbuseReportId")
+                        .HasFilter("[AbuseReportId] IS NOT NULL");
+
+                    b.HasIndex("SafetyIncidentId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModerationCases_SafetyIncidentId")
+                        .HasFilter("[SafetyIncidentId] IS NOT NULL");
+
+                    b.HasIndex("AssignedReviewerUserId", "Status")
+                        .HasDatabaseName("IX_ModerationCases_Assigned_Status")
+                        .HasFilter("[AssignedReviewerUserId] IS NOT NULL");
+
+                    b.HasIndex("ConversationId", "Status", "CreatedAtUtc")
+                        .HasDatabaseName("IX_ModerationCases_Conversation_Status_Created");
+
+                    b.HasIndex("QueueScope", "Status", "Priority", "CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_ModerationCases_Queue_Status_Priority_Created");
+
+                    b.ToTable("ModerationCases", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ModerationCases_Lifecycle", "([Status] = 1 AND [AssignedReviewerUserId] IS NULL AND [ReviewStartedAtUtc] IS NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 2 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 3 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NOT NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 4 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ModerationCases_Priority", "[Priority] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_ModerationCases_QueueScope", "[QueueScope] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_ModerationCases_Source", "[Source] IN (1, 2)");
+
+                            t.HasCheckConstraint("CK_ModerationCases_SourceShape", "([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL) OR ([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ModerationCases_Status", "[Status] IN (1, 2, 3, 4)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationEvidenceAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ModerationCaseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileAssetId")
+                        .HasDatabaseName("IX_ModerationEvidenceAttachments_FileAssetId");
+
+                    b.HasIndex("ModerationCaseId", "FileAssetId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModerationEvidenceAttachments_Case_File");
+
+                    b.ToTable("ModerationEvidenceAttachments", "messaging");
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.PersonalCommunicationGrant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3357,6 +3508,89 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_PersonalCommunicationGrants_DistinctUsers", "[LowerUserId] <> [HigherUserId]");
 
                             t.HasCheckConstraint("CK_PersonalCommunicationGrants_Status", "[Status] IN (1, 2, 3)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SafetyIncident", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClosedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("ContentHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<int>("ContentKind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContentSnapshot")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PolicyCodes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ProviderReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RequestPayloadHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<string>("RiskLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc")
+                        .HasDatabaseName("IX_SafetyIncidents_Conversation_Created");
+
+                    b.HasIndex("ConversationId", "ActorUserId", "ClientMessageId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SafetyIncidents_Conversation_Actor_ClientMessageId");
+
+                    b.ToTable("SafetyIncidents", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5)");
+
+                            t.HasCheckConstraint("CK_SafetyIncidents_Decision", "[Decision] IN (2, 3)");
+
+                            t.HasCheckConstraint("CK_SafetyIncidents_Lifecycle", "([Status] = 1 AND [ClosedAtUtc] IS NULL) OR ([Status] IN (2, 3) AND [ClosedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_SafetyIncidents_Status", "[Status] IN (1, 2, 3)");
                         });
                 });
 
@@ -5263,6 +5497,59 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationAction", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.ModerationCase", null)
+                        .WithMany()
+                        .HasForeignKey("ModerationCaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationCase", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.AbuseReport", null)
+                        .WithMany()
+                        .HasForeignKey("AbuseReportId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedReviewerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.SafetyIncident", null)
+                        .WithMany()
+                        .HasForeignKey("SafetyIncidentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ModerationEvidenceAttachment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ModerationCase", null)
+                        .WithMany()
+                        .HasForeignKey("ModerationCaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.PersonalCommunicationGrant", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -5274,6 +5561,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("LowerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SafetyIncident", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

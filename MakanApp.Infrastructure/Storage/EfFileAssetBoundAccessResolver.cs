@@ -18,6 +18,9 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
         await dbContext.MessageAttachments.AnyAsync(
             attachment => attachment.FileAssetId == fileAssetId,
             cancellationToken) ||
+        await dbContext.ModerationEvidenceAttachments.AnyAsync(
+            evidence => evidence.FileAssetId == fileAssetId,
+            cancellationToken) ||
         await dbContext.ReportExportJobs.AnyAsync(
             job => job.Id == fileAssetId || job.OutputFileAssetId == fileAssetId,
             cancellationToken);

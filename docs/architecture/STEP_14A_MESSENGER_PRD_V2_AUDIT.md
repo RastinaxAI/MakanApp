@@ -510,3 +510,22 @@ Migration افزوده‌شده `20261012203821_AddMessengerContactsPrivacyDisco
 Migration این مرحله `20261012212650_HardenMessengerConversationBehavior` است. archiveهای global
 قدیمی به state شخصی حدس‌زده و تبدیل نشده‌اند؛ `Conversation.Status.Archived` برای lifecycle
 legacy/internal باقی مانده، ولی endpoint عمومی archive از `ConversationUserState` استفاده می‌کند.
+
+## 20. Addendum پس از STEP 14D
+
+این addendum ممیزی تاریخی 14A را بازنویسی نمی‌کند. پس از پیاده‌سازی
+`Moderation + Child Safety Foundation` وضعیت gapهای مربوط چنین است:
+
+| حوزه | وضعیت پس از 14D | شاهد و مرز باقی‌مانده |
+|---|---|---|
+| report routing | `IMPLEMENTED` | ConversationModerators برای Group/Channel کاربرمدیریت‌شده؛ PlatformSafety برای Direct/SystemManaged/ChildSafetyConcern |
+| reviewer authorization | `IMPLEMENTED` | Owner یا Admin دارای `ReviewReports`؛ Manager سازمان به‌تنهایی مجاز نیست |
+| minimum evidence | `IMPLEMENTED` | snapshot همان پیام و پیوست‌ها؛ بدون history همسایه یا داده هویتی حساس |
+| moderation lifecycle/audit | `IMPLEMENTED` | case دارای rowversion و actionهای append-only؛ status reporter همگام است |
+| child-safety release gate | `IMPLEMENTED` | Minor/Unknown با SQL EXISTS؛ Allowed commit و Block/Review بدون Message |
+| provider integration | `PARTIAL` | port، Unavailable و development/test adapter موجود؛ vendor واقعی انتخاب نشده است |
+| Platform Safety operations | `DEFERRED` | داده و queue آماده است؛ role/API/Backoffice در STEP 15 |
+| retention/appeal/SLA | `UNRESOLVED_PRODUCT_POLICY` | هیچ مدت یا workflow حدسی hard-code نشده است |
+
+Migration این مرحله `20261012222340_AddMessagingModerationAndChildSafety` است و قرارداد کامل در
+`STEP_14D_MODERATION_CHILD_SAFETY.md` ثبت شده است.

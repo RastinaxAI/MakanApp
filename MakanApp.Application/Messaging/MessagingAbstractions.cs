@@ -62,6 +62,16 @@ public sealed record SendMessageStoreCommand(
     Guid? ForwardedFromMessageId = null,
     bool AllowSourceAttachments = false);
 
+public sealed record MessageSafetyPreparationStoreResult(
+    Message? ExistingMessage,
+    ContentSafetyDecision? ExistingSafetyDecision,
+    bool RequiresEvaluation,
+    IReadOnlyCollection<ContentSafetyAttachment> Attachments);
+
+public sealed record SafetyIncidentStoreResult(
+    Message? ExistingMessage,
+    ContentSafetyDecision Decision);
+
 public sealed record ConversationMediaStoreRecord(
     Message Message,
     MessageAttachment Attachment,
@@ -111,7 +121,37 @@ public interface IMessagingStore
         Guid conversationId,
         AccessContext accessContext,
         SendMessageStoreCommand command,
+        bool safetyEvaluated,
         int maximumTextLength,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<MessageSafetyPreparationStoreResult> PrepareMessageSafetyAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        SendMessageStoreCommand command,
+        byte[] requestPayloadHash,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<SafetyIncidentStoreResult> RecordSafetyIncidentAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        SendMessageStoreCommand command,
+        byte[] requestPayloadHash,
+        ContentSafetyResult result,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<SendMessageStoreCommand> PrepareForwardMessageSafetyAsync(
+        Guid userId,
+        Guid sourceConversationId,
+        Guid sourceMessageId,
+        AccessContext accessContext,
+        Guid destinationConversationId,
+        Guid clientMessageId,
         DateTime nowUtc,
         CancellationToken cancellationToken);
 
@@ -181,7 +221,8 @@ public interface IMessagingStore
         Guid sourceMessageId,
         AccessContext accessContext,
         Guid destinationConversationId,
-        Guid clientMessageId,
+        SendMessageStoreCommand command,
+        bool safetyEvaluated,
         int maximumTextLength,
         DateTime nowUtc,
         CancellationToken cancellationToken);

@@ -115,11 +115,14 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IMessagingSafetyStore>(serviceProvider =>
             serviceProvider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<IModerationStore>(serviceProvider =>
+            serviceProvider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IMessagingPrivacyResolver, EfMessagingPrivacyResolver>();
         services.AddScoped<IMessagingDirectoryStore, EfMessagingDirectoryStore>();
         services.AddScoped<IMessagingService, MessagingService>();
         services.AddScoped<IConversationManagementService, ConversationManagementService>();
         services.AddScoped<IMessagingSafetyService, MessagingSafetyService>();
+        services.AddScoped<IModerationService, ModerationService>();
         services.AddScoped<IMessagingDirectoryService, MessagingDirectoryService>();
         services.AddScoped<IMessagingRealtimeAudienceResolver, MessagingRealtimeAudienceResolver>();
         services.AddSingleton<MessagingOutboxWakeSignal>();
@@ -153,6 +156,7 @@ public static class DependencyInjection
         services.AddSingleton(CreateMessagingOptions(configuration));
         services.AddSingleton<ICommunicationEligibilityPolicy, CommunicationEligibilityPolicy>();
         services.AddSingleton<IConversationManagementPolicy, ConversationManagementAuthorizationPolicy>();
+        AddContentSafetyProvider(services, configuration, environmentName);
         var storageOptions = CreateStorageOptions(configuration);
         services.AddSingleton(storageOptions);
         services.AddSingleton(CreateReportExportOptions(configuration));
@@ -180,6 +184,35 @@ public static class DependencyInjection
         }
 
         return services;
+    }
+
+    private static void AddContentSafetyProvider(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string environmentName)
+    {
+        var defaultProvider = IsDevelopmentLike(environmentName) ? "DevelopmentAllow" : "Unavailable";
+        var provider = configuration["Messaging:ContentSafetyProvider"]?.Trim() ?? defaultProvider;
+        if (provider.Equals("DevelopmentAllow", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!IsDevelopmentLike(environmentName))
+            {
+                throw new InvalidOperationException(
+                    "Messaging:ContentSafetyProvider=DevelopmentAllow is allowed only in Development and Testing environments.");
+            }
+
+            services.AddSingleton<IContentSafetyProvider, DevelopmentAllowContentSafetyProvider>();
+            return;
+        }
+
+        if (provider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IContentSafetyProvider, UnavailableContentSafetyProvider>();
+            return;
+        }
+
+        throw new InvalidOperationException(
+            "Messaging:ContentSafetyProvider must be DevelopmentAllow or Unavailable until an approved provider adapter exists.");
     }
 
     private static void AddPaymentGateway(

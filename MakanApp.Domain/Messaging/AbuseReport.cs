@@ -55,6 +55,36 @@ public sealed class AbuseReport
     public DateTime CreatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
+    public void MarkUnderReview()
+    {
+        if (Status != AbuseReportStatus.Submitted)
+        {
+            throw new InvalidOperationException("فقط گزارش ثبت‌شده می‌تواند وارد بررسی شود.");
+        }
+
+        Status = AbuseReportStatus.UnderReview;
+    }
+
+    public void Resolve()
+    {
+        if (Status != AbuseReportStatus.UnderReview)
+        {
+            throw new InvalidOperationException("فقط گزارش در حال بررسی قابل حل است.");
+        }
+
+        Status = AbuseReportStatus.Resolved;
+    }
+
+    public void Dismiss()
+    {
+        if (Status != AbuseReportStatus.UnderReview)
+        {
+            throw new InvalidOperationException("فقط گزارش در حال بررسی قابل رد است.");
+        }
+
+        Status = AbuseReportStatus.Dismissed;
+    }
+
     public static AbuseReport Create(
         Guid reporterUserId,
         Guid reportedUserId,

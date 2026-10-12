@@ -156,6 +156,51 @@ public sealed partial class MakanAppWebApplicationFactory
         await dbContext.SaveChangesAsync();
         return conversation.Id;
     }
+
+    public async Task AddConversationParticipantAsync(Guid conversationId, Guid userId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        dbContext.ConversationParticipants.Add(ConversationParticipant.CreateActive(
+            conversationId,
+            userId,
+            DateTime.UtcNow));
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<Guid> CreateCommittedMessageAsync(
+        Guid conversationId,
+        Guid senderUserId,
+        string text)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var conversation = await dbContext.Conversations.SingleAsync(item => item.Id == conversationId);
+        var participant = await dbContext.ConversationParticipants.SingleAsync(item =>
+            item.ConversationId == conversationId &&
+            item.UserId == senderUserId &&
+            item.Status == ConversationParticipantStatus.Active &&
+            item.EndedAtUtc == null);
+        var nowUtc = DateTime.UtcNow;
+        var message = Message.CreateText(
+            conversationId,
+            participant.Id,
+            senderUserId,
+            Guid.NewGuid(),
+            conversation.AllocateNextMessageSequence(),
+            text,
+            Message.StorageMaximumTextLength,
+            nowUtc);
+        dbContext.Messages.Add(message);
+        dbContext.MessageRevisions.Add(MessageRevision.Create(
+            message.Id,
+            message.CurrentRevisionNumber,
+            message.Text,
+            senderUserId,
+            nowUtc));
+        await dbContext.SaveChangesAsync();
+        return message.Id;
+    }
 }
 
 public sealed record ConversationParticipantDatabaseRecord(

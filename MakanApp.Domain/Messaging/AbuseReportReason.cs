@@ -7,5 +7,6 @@ public enum AbuseReportReason
     Threat = 3,
     InappropriateContent = 4,
     Impersonation = 5,
-    Other = 6
+    Other = 6,
+    ChildSafetyConcern = 7
 }

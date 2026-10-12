@@ -15,6 +15,7 @@ public sealed partial class EfMessagingStore
         Guid conversationId,
         AccessContext accessContext,
         SendMessageStoreCommand command,
+        bool safetyEvaluated,
         int maximumTextLength,
         DateTime nowUtc,
         CancellationToken cancellationToken)
@@ -50,6 +51,10 @@ public sealed partial class EfMessagingStore
             command.Kind,
             nowUtc,
             cancellationToken);
+        await EnsureSafetyGateSatisfiedAsync(
+            conversation,
+            safetyEvaluated,
+            cancellationToken);
         var created = await CreateMessageAsync(
             conversation,
             participant,
@@ -79,7 +84,8 @@ public sealed partial class EfMessagingStore
         Guid sourceMessageId,
         AccessContext accessContext,
         Guid destinationConversationId,
-        Guid clientMessageId,
+        SendMessageStoreCommand command,
+        bool safetyEvaluated,
         int maximumTextLength,
         DateTime nowUtc,
         CancellationToken cancellationToken)
@@ -147,21 +153,17 @@ public sealed partial class EfMessagingStore
             source.Kind,
             nowUtc,
             cancellationToken);
+        await EnsureSafetyGateSatisfiedAsync(
+            destinationConversation,
+            safetyEvaluated,
+            cancellationToken);
 
         var attachmentIds = await dbContext.MessageAttachments
             .Where(attachment => attachment.MessageId == source.Id)
             .OrderBy(attachment => attachment.FileAssetId)
             .Select(attachment => attachment.FileAssetId)
             .ToArrayAsync(cancellationToken);
-        var command = new SendMessageStoreCommand(
-            clientMessageId,
-            source.Kind,
-            source.Text,
-            attachmentIds,
-            null,
-            [],
-            source.Id,
-            true);
+        EnsureForwardPreparationStillMatches(source, attachmentIds, command);
         var forwarded = await CreateMessageAsync(
             destinationConversation,
             destinationParticipant,
@@ -190,6 +192,25 @@ public sealed partial class EfMessagingStore
         }
 
         return forwarded.Message;
+    }
+
+    private static void EnsureForwardPreparationStillMatches(
+        Message source,
+        IReadOnlyCollection<Guid> attachmentIds,
+        SendMessageStoreCommand command)
+    {
+        if (command.ForwardedFromMessageId != source.Id ||
+            command.Kind != source.Kind ||
+            !string.Equals(command.Text, source.Text, StringComparison.Ordinal) ||
+            command.ReplyToMessageId.HasValue ||
+            command.MentionedUserIds.Count != 0 ||
+            !command.AllowSourceAttachments ||
+            !attachmentIds.Order().SequenceEqual(command.AttachmentIds.Order()))
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.MessageSafetyUnavailable,
+                "محتوای پیام مبدأ هنگام بررسی تغییر کرد؛ دوباره تلاش کنید.");
+        }
     }
 
     private async Task<(Message Message, bool Created)> CreateMessageAsync(

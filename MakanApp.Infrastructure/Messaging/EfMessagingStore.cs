@@ -17,7 +17,8 @@ public sealed partial class EfMessagingStore(
     MessagingOutboxWakeSignal outboxWakeSignal) :
     IMessagingStore,
     IConversationManagementStore,
-    IMessagingSafetyStore
+    IMessagingSafetyStore,
+    IModerationStore
 {
     public Task<DirectConversationStoreResult> StartOrGetDirectConversationAsync(
         Guid actorUserId,

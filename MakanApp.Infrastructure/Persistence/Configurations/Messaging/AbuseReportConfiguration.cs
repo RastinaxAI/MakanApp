@@ -11,7 +11,7 @@ public sealed class AbuseReportConfiguration : IEntityTypeConfiguration<AbuseRep
     {
         builder.ToTable("AbuseReports", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6)");
+            table.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6, 7)");
             table.HasCheckConstraint("CK_AbuseReports_Status", "[Status] IN (1, 2, 3, 4)");
             table.HasCheckConstraint(
                 "CK_AbuseReports_MessageKind",

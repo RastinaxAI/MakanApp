@@ -71,4 +71,10 @@ public static class MessagingErrorCodes
     public const string ConversationPermissionRequired = "CONVERSATION_PERMISSION_REQUIRED";
     public const string ConversationNotJoinable = "CONVERSATION_NOT_JOINABLE";
     public const string ConversationStateConflict = "CONVERSATION_STATE_CONFLICT";
+    public const string ModerationCaseNotFound = "MODERATION_CASE_NOT_FOUND";
+    public const string ModerationPermissionRequired = "MODERATION_PERMISSION_REQUIRED";
+    public const string ModerationStateConflict = "MODERATION_STATE_CONFLICT";
+    public const string MessageSafetyBlocked = "MESSAGE_SAFETY_BLOCKED";
+    public const string MessageSafetyReviewRequired = "MESSAGE_SAFETY_REVIEW_REQUIRED";
+    public const string MessageSafetyUnavailable = "MESSAGE_SAFETY_UNAVAILABLE";
 }

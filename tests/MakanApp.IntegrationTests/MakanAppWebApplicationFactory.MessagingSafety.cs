@@ -66,6 +66,61 @@ public sealed partial class MakanAppWebApplicationFactory
             report.ReporterUserId == reporterUserId &&
             report.ClientReportId == clientReportId);
     }
+
+    public async Task<ModerationCase> GetModerationCaseForReportAsync(Guid reportId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.ModerationCases
+            .AsNoTracking()
+            .SingleAsync(item => item.AbuseReportId == reportId);
+    }
+
+    public async Task<SafetyIncidentDatabaseRecord?> GetSafetyIncidentAsync(
+        Guid conversationId,
+        Guid actorUserId,
+        Guid clientMessageId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.SafetyIncidents
+            .AsNoTracking()
+            .Where(item =>
+                item.ConversationId == conversationId &&
+                item.ActorUserId == actorUserId &&
+                item.ClientMessageId == clientMessageId)
+            .Select(item => new SafetyIncidentDatabaseRecord(
+                item.Id,
+                item.Decision,
+                item.Status,
+                item.ContentSnapshot,
+                item.RequestPayloadHash))
+            .SingleOrDefaultAsync();
+    }
+
+    public async Task<ModerationCase> GetModerationCaseForIncidentAsync(Guid incidentId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.ModerationCases
+            .AsNoTracking()
+            .SingleAsync(item => item.SafetyIncidentId == incidentId);
+    }
+
+    public async Task<int> CountModerationActionsAsync(Guid caseId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.ModerationActions.CountAsync(item => item.ModerationCaseId == caseId);
+    }
+
+    public async Task<int> CountModerationEvidenceAttachmentsAsync(Guid caseId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.ModerationEvidenceAttachments.CountAsync(
+            item => item.ModerationCaseId == caseId);
+    }
 }
 
 public sealed record AbuseReportEvidenceDatabaseRecord(
@@ -77,3 +132,10 @@ public sealed record AbuseReportEvidenceDatabaseRecord(
     byte[] MessageVersion,
     string? Description,
     AbuseReportStatus Status);
+
+public sealed record SafetyIncidentDatabaseRecord(
+    Guid Id,
+    ContentSafetyDecision Decision,
+    SafetyIncidentStatus Status,
+    string? ContentSnapshot,
+    byte[] RequestPayloadHash);

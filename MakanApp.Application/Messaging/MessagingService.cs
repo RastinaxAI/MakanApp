@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
 
@@ -6,6 +8,7 @@ namespace MakanApp.Application.Messaging;
 public sealed class MessagingService(
     IAccessContextResolver accessContextResolver,
     IMessagingStore store,
+    IContentSafetyProvider contentSafetyProvider,
     MessagingOptions options,
     TimeProvider timeProvider) : IMessagingService
 {
@@ -89,11 +92,25 @@ public sealed class MessagingService(
         ValidateConversationId(conversationId);
         var storeCommand = ValidateSend(command);
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var payloadHash = HashSendPayload(conversationId, storeCommand);
+        var safety = await ApplySafetyGateAsync(
+            userId,
+            conversationId,
+            context,
+            storeCommand,
+            payloadHash,
+            cancellationToken);
+        if (safety.ExistingMessage is not null)
+        {
+            return ToReceipt(safety.ExistingMessage);
+        }
+
         var message = await store.SendMessageAsync(
             userId,
             conversationId,
             context,
             storeCommand,
+            safety.Evaluated,
             options.MaximumTextLength,
             UtcNow(),
             cancellationToken);
@@ -302,13 +319,35 @@ public sealed class MessagingService(
         }
 
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        var message = await store.ForwardMessageAsync(
+        var storeCommand = await store.PrepareForwardMessageSafetyAsync(
             userId,
             sourceConversationId,
             sourceMessageId,
             context,
             command.DestinationConversationId,
             command.ClientMessageId,
+            UtcNow(),
+            cancellationToken);
+        var safety = await ApplySafetyGateAsync(
+            userId,
+            command.DestinationConversationId,
+            context,
+            storeCommand,
+            HashSendPayload(command.DestinationConversationId, storeCommand),
+            cancellationToken);
+        if (safety.ExistingMessage is not null)
+        {
+            return ToReceipt(safety.ExistingMessage);
+        }
+
+        var message = await store.ForwardMessageAsync(
+            userId,
+            sourceConversationId,
+            sourceMessageId,
+            context,
+            command.DestinationConversationId,
+            storeCommand,
+            safety.Evaluated,
             options.MaximumTextLength,
             UtcNow(),
             cancellationToken);
@@ -600,6 +639,149 @@ public sealed class MessagingService(
             command.ReplyToMessageId,
             mentionedUserIds);
     }
+
+    private static byte[] HashSendPayload(
+        Guid conversationId,
+        SendMessageStoreCommand command)
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
+        {
+            writer.Write(conversationId.ToByteArray());
+            writer.Write(command.ClientMessageId.ToByteArray());
+            writer.Write((int)command.Kind);
+            writer.Write(command.Text ?? string.Empty);
+            writer.Write(command.ReplyToMessageId?.ToByteArray() ?? []);
+            foreach (var attachmentId in command.AttachmentIds.Order())
+            {
+                writer.Write(attachmentId.ToByteArray());
+            }
+
+            foreach (var mentionedUserId in command.MentionedUserIds.Order())
+            {
+                writer.Write(mentionedUserId.ToByteArray());
+            }
+
+            writer.Write(command.ForwardedFromMessageId?.ToByteArray() ?? []);
+            writer.Write(command.AllowSourceAttachments);
+        }
+
+        return SHA256.HashData(stream.ToArray());
+    }
+
+    private async Task<(Message? ExistingMessage, bool Evaluated)> ApplySafetyGateAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        SendMessageStoreCommand command,
+        byte[] payloadHash,
+        CancellationToken cancellationToken)
+    {
+        var preparation = await store.PrepareMessageSafetyAsync(
+            userId,
+            conversationId,
+            accessContext,
+            command,
+            payloadHash,
+            UtcNow(),
+            cancellationToken);
+        if (preparation.ExistingMessage is not null)
+        {
+            return (preparation.ExistingMessage, false);
+        }
+
+        if (preparation.ExistingSafetyDecision.HasValue)
+        {
+            throw SafetyDecisionError(preparation.ExistingSafetyDecision.Value);
+        }
+
+        if (!preparation.RequiresEvaluation)
+        {
+            return (null, false);
+        }
+
+        ContentSafetyResult safetyResult;
+        try
+        {
+            safetyResult = await contentSafetyProvider.EvaluateAsync(
+                new ContentSafetyRequest(
+                    conversationId,
+                    userId,
+                    command.ClientMessageId,
+                    command.Kind,
+                    command.Text,
+                    preparation.Attachments),
+                cancellationToken);
+            ValidateSafetyResult(safetyResult);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw SafetyUnavailable();
+        }
+        catch (ContentSafetyProviderUnavailableException)
+        {
+            throw SafetyUnavailable();
+        }
+        catch (MessagingException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            throw SafetyUnavailable();
+        }
+
+        if (safetyResult.Decision == ContentSafetyDecision.Allowed)
+        {
+            return (null, true);
+        }
+
+        var incidentResult = await store.RecordSafetyIncidentAsync(
+            userId,
+            conversationId,
+            accessContext,
+            command,
+            payloadHash,
+            safetyResult,
+            UtcNow(),
+            cancellationToken);
+        if (incidentResult.ExistingMessage is not null)
+        {
+            return (incidentResult.ExistingMessage, false);
+        }
+
+        throw SafetyDecisionError(incidentResult.Decision);
+    }
+
+    private static void ValidateSafetyResult(ContentSafetyResult result)
+    {
+        if (result is null || !Enum.IsDefined(result.Decision) ||
+            result.RiskLevel?.Trim().Length > SafetyIncident.MaximumRiskLevelLength ||
+            result.ProviderReference?.Trim().Length > SafetyIncident.MaximumProviderReferenceLength ||
+            (result.PolicyCodes ?? []).Any(code =>
+                string.IsNullOrWhiteSpace(code) || code.Trim().Length > 100) ||
+            string.Join(',', (result.PolicyCodes ?? []).Select(code => code.Trim()).Distinct())
+                .Length > SafetyIncident.MaximumPolicyCodesLength)
+        {
+            throw new ContentSafetyProviderUnavailableException("پاسخ سرویس ایمنی محتوا معتبر نیست.");
+        }
+    }
+
+    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision) =>
+        decision switch
+        {
+            ContentSafetyDecision.Blocked => Error(
+                MessagingErrorCodes.MessageSafetyBlocked,
+                "ارسال این پیام مجاز نیست."),
+            ContentSafetyDecision.ReviewRequired => Error(
+                MessagingErrorCodes.MessageSafetyReviewRequired,
+                "این پیام قابل ارسال نیست."),
+            _ => SafetyUnavailable()
+        };
+
+    private static MessagingException SafetyUnavailable() => Error(
+        MessagingErrorCodes.MessageSafetyUnavailable,
+        "بررسی ایمنی پیام موقتاً ممکن نیست؛ دوباره تلاش کنید.");
 
     private int ValidatePage(long? beforeSequence, int? requestedLimit)
     {

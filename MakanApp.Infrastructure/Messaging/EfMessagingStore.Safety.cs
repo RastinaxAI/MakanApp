@@ -284,6 +284,38 @@ public sealed partial class EfMessagingStore
             command.RequestPayloadHash,
             nowUtc);
         dbContext.AbuseReports.Add(report);
+        var routeToPlatform = command.Reason == AbuseReportReason.ChildSafetyConcern ||
+            conversation.Type == ConversationType.Direct ||
+            conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic;
+        var moderationCase = ModerationCase.CreateForReport(
+            conversationId,
+            report.Id,
+            routeToPlatform
+                ? ModerationQueueScope.PlatformSafety
+                : ModerationQueueScope.ConversationModerators,
+            command.Reason == AbuseReportReason.ChildSafetyConcern
+                ? ModerationPriority.Critical
+                : ModerationPriority.Normal,
+            nowUtc);
+        dbContext.ModerationCases.Add(moderationCase);
+        dbContext.ModerationActions.Add(ModerationAction.Create(
+            moderationCase.Id,
+            ModerationActionType.Created,
+            reporterUserId,
+            nowUtc));
+        var evidenceFiles = await (
+            from attachment in dbContext.MessageAttachments
+            join file in dbContext.FileAssets on attachment.FileAssetId equals file.Id
+            where attachment.MessageId == messageId
+            select file)
+            .ToArrayAsync(cancellationToken);
+        foreach (var file in evidenceFiles)
+        {
+            file.Retain(nowUtc);
+            dbContext.ModerationEvidenceAttachments.Add(
+                ModerationEvidenceAttachment.Create(moderationCase.Id, file.Id, nowUtc));
+        }
+
         await SaveSafetyAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return report;
