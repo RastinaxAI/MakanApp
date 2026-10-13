@@ -25,4 +25,8 @@ public static class PlatformErrorCodes
     public const string EducationResourceNotFound = "PLATFORM_EDUCATION_RESOURCE_NOT_FOUND";
     public const string ModerationCaseNotFound = "PLATFORM_MODERATION_CASE_NOT_FOUND";
     public const string ModerationStateConflict = "PLATFORM_MODERATION_STATE_CONFLICT";
+    public const string PlanNotFound = "PLATFORM_PLAN_NOT_FOUND";
+    public const string PlanConflict = "PLATFORM_PLAN_CONFLICT";
+    public const string SubscriptionConflict = "PLATFORM_SUBSCRIPTION_CONFLICT";
+    public const string OrderNotFound = "PLATFORM_ORDER_NOT_FOUND";
 }

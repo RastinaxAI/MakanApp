@@ -33,7 +33,15 @@ public sealed class PlatformPermissionConfiguration : IEntityTypeConfiguration<P
             Permission(PlatformCatalogIds.EducationManagePermission, PlatformPermissionKeys.EducationManage, "Manage approved education operations"),
             Permission(PlatformCatalogIds.MessagingReadMetadataPermission, PlatformPermissionKeys.MessagingReadMetadata, "Read safe messaging metadata"),
             Permission(PlatformCatalogIds.ModerationReviewPermission, PlatformPermissionKeys.ModerationReview, "Review platform safety cases"),
-            Permission(PlatformCatalogIds.ModerationEnforcePermission, PlatformPermissionKeys.ModerationEnforce, "Enforce case-scoped platform moderation decisions"));
+            Permission(PlatformCatalogIds.ModerationEnforcePermission, PlatformPermissionKeys.ModerationEnforce, "Enforce case-scoped platform moderation decisions"),
+            Permission(PlatformCatalogIds.CommerceReadPermission, PlatformPermissionKeys.CommerceRead, "Read plan and subscription operations"),
+            Permission(PlatformCatalogIds.CommerceManagePermission, PlatformPermissionKeys.CommerceManage, "Manage plan and subscription operations"),
+            Permission(PlatformCatalogIds.FinanceReadPermission, PlatformPermissionKeys.FinanceRead, "Read safe order and payment operations"),
+            Permission(PlatformCatalogIds.FinanceManagePermission, PlatformPermissionKeys.FinanceManage, "Manage provider-backed finance operations"),
+            Permission(PlatformCatalogIds.OperationsReadPermission, PlatformPermissionKeys.OperationsRead, "Read system and background work operations"),
+            Permission(PlatformCatalogIds.OperationsManagePermission, PlatformPermissionKeys.OperationsManage, "Manage approved system operations"),
+            Permission(PlatformCatalogIds.NotificationsReadPermission, PlatformPermissionKeys.NotificationsRead, "Read safe notification delivery operations"),
+            Permission(PlatformCatalogIds.AiReadPermission, PlatformPermissionKeys.AiRead, "Read backend-owned AI operational state when integrated"));
     }
 
     private static object Permission(Guid id, string key, string description) => new

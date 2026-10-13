@@ -71,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<IPlatformOperationsService, PlatformOperationsService>();
         services.AddScoped<IPlatformEducationSafetyStore, EfPlatformEducationSafetyStore>();
         services.AddScoped<IPlatformEducationSafetyService, PlatformEducationSafetyService>();
+        services.AddScoped<IPlatformCommerceOperationsStore, EfPlatformCommerceOperationsStore>();
+        services.AddScoped<IPlatformCommerceOperationsService, PlatformCommerceOperationsService>();
         services.AddScoped<IGuardianStore, EfGuardianStore>();
         services.AddScoped<IGuardianService, GuardianService>();
         services.AddScoped<IAcademicStore, EfAcademicStore>();

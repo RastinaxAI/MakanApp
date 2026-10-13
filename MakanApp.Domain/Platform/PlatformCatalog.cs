@@ -41,6 +41,14 @@ public static class PlatformPermissionKeys
     public const string MessagingReadMetadata = "platform.messaging.read_metadata";
     public const string ModerationReview = "platform.moderation.review";
     public const string ModerationEnforce = "platform.moderation.enforce";
+    public const string CommerceRead = "platform.commerce.read";
+    public const string CommerceManage = "platform.commerce.manage";
+    public const string FinanceRead = "platform.finance.read";
+    public const string FinanceManage = "platform.finance.manage";
+    public const string OperationsRead = "platform.operations.read";
+    public const string OperationsManage = "platform.operations.manage";
+    public const string NotificationsRead = "platform.notifications.read";
+    public const string AiRead = "platform.ai.read";
 
     public static readonly IReadOnlyCollection<string> Step15A =
     [
@@ -65,7 +73,15 @@ public static class PlatformPermissionKeys
         EducationManage,
         MessagingReadMetadata,
         ModerationReview,
-        ModerationEnforce
+        ModerationEnforce,
+        CommerceRead,
+        CommerceManage,
+        FinanceRead,
+        FinanceManage,
+        OperationsRead,
+        OperationsManage,
+        NotificationsRead,
+        AiRead
     ];
 }
 
@@ -96,4 +112,12 @@ public static class PlatformCatalogIds
     public static readonly Guid MessagingReadMetadataPermission = Guid.Parse("20000000-0000-0000-0000-000000000015");
     public static readonly Guid ModerationReviewPermission = Guid.Parse("20000000-0000-0000-0000-000000000016");
     public static readonly Guid ModerationEnforcePermission = Guid.Parse("20000000-0000-0000-0000-000000000017");
+    public static readonly Guid CommerceReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000018");
+    public static readonly Guid CommerceManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000019");
+    public static readonly Guid FinanceReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000020");
+    public static readonly Guid FinanceManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000021");
+    public static readonly Guid OperationsReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000022");
+    public static readonly Guid OperationsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000023");
+    public static readonly Guid NotificationsReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000024");
+    public static readonly Guid AiReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000025");
 }

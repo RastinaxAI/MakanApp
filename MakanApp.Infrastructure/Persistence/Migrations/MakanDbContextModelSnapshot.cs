@@ -4463,6 +4463,54 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             Id = new Guid("20000000-0000-0000-0000-000000000017"),
                             Description = "Enforce case-scoped platform moderation decisions",
                             Key = "platform.moderation.enforce"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000018"),
+                            Description = "Read plan and subscription operations",
+                            Key = "platform.commerce.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000019"),
+                            Description = "Manage plan and subscription operations",
+                            Key = "platform.commerce.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000020"),
+                            Description = "Read safe order and payment operations",
+                            Key = "platform.finance.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000021"),
+                            Description = "Manage provider-backed finance operations",
+                            Key = "platform.finance.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000022"),
+                            Description = "Read system and background work operations",
+                            Key = "platform.operations.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000023"),
+                            Description = "Manage approved system operations",
+                            Key = "platform.operations.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000024"),
+                            Description = "Read safe notification delivery operations",
+                            Key = "platform.notifications.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000025"),
+                            Description = "Read backend-owned AI operational state when integrated",
+                            Key = "platform.ai.read"
                         });
                 });
 
@@ -4781,6 +4829,46 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000021")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000023")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000025")
+                        },
+                        new
+                        {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
                         },
@@ -4836,6 +4924,36 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000023")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000025")
+                        },
+                        new
+                        {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
                         },
@@ -4871,6 +4989,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
                         },
@@ -4878,6 +5006,26 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000021")
                         },
                         new
                         {
@@ -4903,6 +5051,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000006"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000006"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000006"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000024")
                         },
                         new
                         {
