@@ -172,7 +172,11 @@ public static class DependencyInjection
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(CreateAiServiceAuthenticationOptions(configuration));
+        services.AddSingleton(CreateAiServiceOptions(configuration));
+        services.AddSingleton<AiServiceCircuitBreaker>();
         services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
+        services.AddHttpClient<IAiServiceClient, AiServiceClient>(client =>
+            client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton(CreateOtpOptions(configuration, environmentName));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
@@ -691,6 +695,27 @@ public static class DependencyInjection
             configuration,
             $"{AiServiceAuthenticationOptions.SectionName}:TokenLifetimeSeconds",
             120)
+    };
+
+    private static AiServiceOptions CreateAiServiceOptions(IConfiguration configuration) => new()
+    {
+        Enabled = bool.TryParse(configuration[$"{AiServiceOptions.SectionName}:Enabled"], out var enabled) && enabled,
+        BaseUrl = configuration[$"{AiServiceOptions.SectionName}:BaseUrl"]?.Trim()
+            ?? "http://localhost:8000",
+        TimeoutSeconds = ReadPositiveInt(
+            configuration,
+            $"{AiServiceOptions.SectionName}:TimeoutSeconds",
+            15),
+        ContractVersion = configuration[$"{AiServiceOptions.SectionName}:ContractVersion"]?.Trim()
+            ?? "v1",
+        CircuitBreakerFailureThreshold = ReadPositiveInt(
+            configuration,
+            $"{AiServiceOptions.SectionName}:CircuitBreakerFailureThreshold",
+            3),
+        CircuitBreakerBreakSeconds = ReadPositiveInt(
+            configuration,
+            $"{AiServiceOptions.SectionName}:CircuitBreakerBreakSeconds",
+            30)
     };
 
     private static int ReadPositiveInt(
