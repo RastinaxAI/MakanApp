@@ -67,6 +67,8 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<PlatformIamService>());
         services.AddScoped<IPlatformBootstrapService, PlatformBootstrapService>();
         services.AddScoped<IPlatformStepUpAuthorization, UnavailablePlatformStepUpAuthorization>();
+        services.AddScoped<IPlatformOperationsStore, EfPlatformOperationsStore>();
+        services.AddScoped<IPlatformOperationsService, PlatformOperationsService>();
         services.AddScoped<IGuardianStore, EfGuardianStore>();
         services.AddScoped<IGuardianService, GuardianService>();
         services.AddScoped<IAcademicStore, EfAcademicStore>();

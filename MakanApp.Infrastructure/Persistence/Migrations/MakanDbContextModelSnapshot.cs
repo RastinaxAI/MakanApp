@@ -2373,6 +2373,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("AccountStatus")
+                        .HasColumnType("int");
+
                     b.Property<int>("CommunicationAgeCategory")
                         .HasColumnType("int");
 
@@ -2395,6 +2398,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<DateTime?>("SuspendedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -2415,7 +2421,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("Users", "identity", t =>
                         {
+                            t.HasCheckConstraint("CK_Users_AccountStatus", "[AccountStatus] IN (1, 2)");
+
                             t.HasCheckConstraint("CK_Users_CommunicationAgeCategory", "[CommunicationAgeCategory] IN (0, 1, 2)");
+
+                            t.HasCheckConstraint("CK_Users_Suspension", "([AccountStatus] = 1 AND [SuspendedAtUtc] IS NULL) OR ([AccountStatus] = 2 AND [SuspendedAtUtc] IS NOT NULL)");
                         });
                 });
 
@@ -4381,6 +4391,139 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             Id = new Guid("20000000-0000-0000-0000-000000000005"),
                             Description = "Read platform security metadata",
                             Key = "platform.security.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000006"),
+                            Description = "Read global organization operations",
+                            Key = "platform.organizations.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000007"),
+                            Description = "Manage global organization operations",
+                            Key = "platform.organizations.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000008"),
+                            Description = "Read safe global user operations",
+                            Key = "platform.users.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000009"),
+                            Description = "Manage global user account state",
+                            Key = "platform.users.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000010"),
+                            Description = "Revoke user sessions",
+                            Key = "platform.sessions.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000011"),
+                            Description = "Read organization provisioning state",
+                            Key = "platform.provisioning.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000012"),
+                            Description = "Manage organization provisioning",
+                            Key = "platform.provisioning.manage"
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformProvisioningRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ClientOperationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("FailureCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("InitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("InvitationExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("ManagerInvitationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SubscriptionEndsAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProvisioningRequests_ClientOperationId");
+
+                    b.HasIndex("InitialManagerUserId");
+
+                    b.HasIndex("ManagerInvitationId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.HasIndex("Status", "UpdatedAtUtc")
+                        .HasDatabaseName("IX_ProvisioningRequests_Status_UpdatedAtUtc");
+
+                    b.ToTable("ProvisioningRequests", "platform", t =>
+                        {
+                            t.HasCheckConstraint("CK_ProvisioningRequests_Status", "[Status] BETWEEN 1 AND 6");
                         });
                 });
 
@@ -4548,8 +4691,78 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000012")
                         },
                         new
                         {
@@ -4558,8 +4771,33 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000006")
                         },
                         new
                         {
@@ -6137,6 +6375,40 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformProvisioningRequest", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("InitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Invitation", null)
+                        .WithMany()
+                        .HasForeignKey("ManagerInvitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

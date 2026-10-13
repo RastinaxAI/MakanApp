@@ -1,5 +1,6 @@
 using System.Data;
 using MakanApp.Application.Platform;
+using MakanApp.Domain.Identity;
 using MakanApp.Domain.Platform;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ public sealed class EfPlatformIamStore(MakanDbContext dbContext) : IPlatformIamS
             join person in dbContext.Persons.AsNoTracking()
                 on user.PersonId equals (Guid?)person.Id into people
             from person in people.DefaultIfEmpty()
-            where user.Id == userId
+            where user.Id == userId && user.AccountStatus == UserAccountStatus.Active
             select new
             {
                 user.Id,
@@ -349,7 +350,16 @@ public sealed class EfPlatformIamStore(MakanDbContext dbContext) : IPlatformIamS
         if (role.Key == PlatformRoleKeys.PlatformOwner)
         {
             var activeOwners = await LockActiveAssignmentsAsync(role.Id, cancellationToken);
-            if (activeOwners.Count <= 1)
+            var ownerUserIds = activeOwners.Select(item => item.UserId).ToArray();
+            var activeOwnerCount = await dbContext.Users.CountAsync(
+                item => ownerUserIds.Contains(item.Id) &&
+                        item.AccountStatus == UserAccountStatus.Active,
+                cancellationToken);
+            var targetIsActive = await dbContext.Users.AnyAsync(
+                item => item.Id == assignment.UserId &&
+                        item.AccountStatus == UserAccountStatus.Active,
+                cancellationToken);
+            if (targetIsActive && activeOwnerCount <= 1)
             {
                 throw Error(
                     PlatformErrorCodes.LastOwnerRequired,
@@ -438,9 +448,11 @@ public sealed class EfPlatformIamStore(MakanDbContext dbContext) : IPlatformIamS
 
     private async Task EnsureUserExistsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (!await dbContext.Users.AnyAsync(user => user.Id == userId, cancellationToken))
+        if (!await dbContext.Users.AnyAsync(
+                user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active,
+                cancellationToken))
         {
-            throw Error(PlatformErrorCodes.UserNotFound, "کاربر هدف یافت نشد.");
+            throw Error(PlatformErrorCodes.UserNotFound, "کاربر هدف فعال یافت نشد.");
         }
     }
 

@@ -12,7 +12,7 @@ public sealed class PlatformIamService(
         string permission,
         CancellationToken cancellationToken)
     {
-        if (userId == Guid.Empty || !PlatformPermissionKeys.Step15A.Contains(permission, StringComparer.Ordinal))
+        if (userId == Guid.Empty || !PlatformPermissionKeys.All.Contains(permission, StringComparer.Ordinal))
         {
             return false;
         }

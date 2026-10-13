@@ -29,6 +29,13 @@ public static class PlatformPermissionKeys
     public const string RolesManage = "platform.roles.manage";
     public const string AuditRead = "platform.audit.read";
     public const string SecurityRead = "platform.security.read";
+    public const string OrganizationsRead = "platform.organizations.read";
+    public const string OrganizationsManage = "platform.organizations.manage";
+    public const string UsersRead = "platform.users.read";
+    public const string UsersManage = "platform.users.manage";
+    public const string SessionsManage = "platform.sessions.manage";
+    public const string ProvisioningRead = "platform.provisioning.read";
+    public const string ProvisioningManage = "platform.provisioning.manage";
 
     public static readonly IReadOnlyCollection<string> Step15A =
     [
@@ -37,6 +44,18 @@ public static class PlatformPermissionKeys
         RolesManage,
         AuditRead,
         SecurityRead
+    ];
+
+    public static readonly IReadOnlyCollection<string> All =
+    [
+        .. Step15A,
+        OrganizationsRead,
+        OrganizationsManage,
+        UsersRead,
+        UsersManage,
+        SessionsManage,
+        ProvisioningRead,
+        ProvisioningManage
     ];
 }
 
@@ -55,4 +74,11 @@ public static class PlatformCatalogIds
     public static readonly Guid RolesManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000003");
     public static readonly Guid AuditReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000004");
     public static readonly Guid SecurityReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000005");
+    public static readonly Guid OrganizationsReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000006");
+    public static readonly Guid OrganizationsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000007");
+    public static readonly Guid UsersReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000008");
+    public static readonly Guid UsersManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000009");
+    public static readonly Guid SessionsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000010");
+    public static readonly Guid ProvisioningReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000011");
+    public static readonly Guid ProvisioningManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000012");
 }

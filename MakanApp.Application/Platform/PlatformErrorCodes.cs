@@ -12,4 +12,14 @@ public static class PlatformErrorCodes
     public const string StepUpRequired = "PLATFORM_STEP_UP_REQUIRED";
     public const string ReasonRequired = "PLATFORM_REASON_REQUIRED";
     public const string QueryInvalid = "PLATFORM_QUERY_INVALID";
+    public const string OrganizationNotFound = "PLATFORM_ORGANIZATION_NOT_FOUND";
+    public const string OrganizationConflict = "PLATFORM_ORGANIZATION_CONFLICT";
+    public const string ProvisioningNotFound = "PLATFORM_PROVISIONING_NOT_FOUND";
+    public const string ProvisioningConflict = "PLATFORM_PROVISIONING_CONFLICT";
+    public const string PlanVersionNotPublished = "PLATFORM_PLAN_VERSION_NOT_PUBLISHED";
+    public const string MembershipNotFound = "PLATFORM_MEMBERSHIP_NOT_FOUND";
+    public const string MembershipConflict = "PLATFORM_MEMBERSHIP_CONFLICT";
+    public const string LastManagerRequired = "PLATFORM_LAST_MANAGER_REQUIRED";
+    public const string AccountSuspended = "PLATFORM_ACCOUNT_SUSPENDED";
+    public const string SessionNotFound = "PLATFORM_SESSION_NOT_FOUND";
 }

@@ -9,6 +9,7 @@ public static class IdentityErrorCodes
     public const string OtpTooManyAttempts = "OTP_TOO_MANY_ATTEMPTS";
     public const string OtpRateLimited = "OTP_RATE_LIMITED";
     public const string AuthRequired = "AUTH_REQUIRED";
+    public const string AccountSuspended = "ACCOUNT_SUSPENDED";
     public const string UsernameAlreadyExists = "USERNAME_ALREADY_EXISTS";
     public const string ProfileValidationFailed = "PROFILE_VALIDATION_FAILED";
     public const string SmsProviderAuthenticationFailed = "SMS_PROVIDER_AUTHENTICATION_FAILED";

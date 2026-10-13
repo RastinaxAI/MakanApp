@@ -34,4 +34,6 @@ public sealed class Organization
     }
 
     public void Suspend() => Status = OrganizationStatus.Suspended;
+
+    public void Reactivate() => Status = OrganizationStatus.Active;
 }

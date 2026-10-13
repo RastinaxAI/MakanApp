@@ -31,7 +31,7 @@ builder.Services
         _ => { });
 builder.Services.AddAuthorization(options =>
 {
-    foreach (var permission in PlatformPermissionKeys.Step15A)
+    foreach (var permission in PlatformPermissionKeys.All)
     {
         options.AddPolicy(permission, policy =>
         {

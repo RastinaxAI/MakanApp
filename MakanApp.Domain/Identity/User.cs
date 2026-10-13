@@ -9,6 +9,7 @@ public sealed class User
     private User(Guid id, DateTime createdAtUtc)
     {
         Id = id;
+        AccountStatus = UserAccountStatus.Active;
         CreatedAtUtc = createdAtUtc;
     }
 
@@ -17,6 +18,8 @@ public sealed class User
     public string? Username { get; private set; }
     public string? NormalizedUsername { get; private set; }
     public CommunicationAgeCategory CommunicationAgeCategory { get; private set; }
+    public UserAccountStatus AccountStatus { get; private set; }
+    public DateTime? SuspendedAtUtc { get; private set; }
     public DateTime? ProfileCompletedAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
@@ -27,6 +30,40 @@ public sealed class User
 
     public static User Create(DateTime createdAtUtc) =>
         new(Guid.NewGuid(), createdAtUtc);
+
+    public void Suspend(DateTime suspendedAtUtc)
+    {
+        if (suspendedAtUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException("زمان تعلیق حساب باید UTC باشد.", nameof(suspendedAtUtc));
+        }
+
+        if (AccountStatus == UserAccountStatus.Suspended)
+        {
+            return;
+        }
+
+        AccountStatus = UserAccountStatus.Suspended;
+        SuspendedAtUtc = suspendedAtUtc;
+        UpdatedAtUtc = suspendedAtUtc;
+    }
+
+    public void Reactivate(DateTime reactivatedAtUtc)
+    {
+        if (reactivatedAtUtc.Kind != DateTimeKind.Utc)
+        {
+            throw new ArgumentException("زمان فعال‌سازی حساب باید UTC باشد.", nameof(reactivatedAtUtc));
+        }
+
+        if (AccountStatus == UserAccountStatus.Active)
+        {
+            return;
+        }
+
+        AccountStatus = UserAccountStatus.Active;
+        SuspendedAtUtc = null;
+        UpdatedAtUtc = reactivatedAtUtc;
+    }
 
     public void SetCommunicationAgeCategory(
         CommunicationAgeCategory communicationAgeCategory,

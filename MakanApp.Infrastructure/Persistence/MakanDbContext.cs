@@ -97,6 +97,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<PlatformRolePermission> PlatformRolePermissions => Set<PlatformRolePermission>();
     public DbSet<PlatformRoleAssignment> PlatformRoleAssignments => Set<PlatformRoleAssignment>();
     public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
+    public DbSet<PlatformProvisioningRequest> PlatformProvisioningRequests => Set<PlatformProvisioningRequest>();
     public DbSet<FileAsset> FileAssets => Set<FileAsset>();
     public DbSet<ReportExportJob> ReportExportJobs => Set<ReportExportJob>();
     public DbSet<MakanApp.Domain.Notification.Notification> Notifications => Set<MakanApp.Domain.Notification.Notification>();

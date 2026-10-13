@@ -122,6 +122,15 @@ public sealed partial class IdentityService(
                 ?? throw new InvalidOperationException("کاربر مرتبط با روش ورود پیدا نشد.");
         }
 
+        if (user.AccountStatus == UserAccountStatus.Suspended)
+        {
+            await store.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            throw new IdentityException(
+                IdentityErrorCodes.AccountSuspended,
+                "حساب کاربری معلق است.");
+        }
+
         var rawToken = security.GenerateSessionToken();
         var expiresAtUtc = nowUtc + sessionOptions.Lifetime;
         var session = UserSession.Create(
@@ -155,7 +164,13 @@ public sealed partial class IdentityService(
             cancellationToken);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
 
-        return session is not null && session.IsActive(nowUtc)
+        if (session is null || !session.IsActive(nowUtc))
+        {
+            return null;
+        }
+
+        var user = await store.GetUserAsync(session.UserId, cancellationToken);
+        return user?.AccountStatus == UserAccountStatus.Active
             ? new SessionIdentity(session.UserId, session.Id)
             : null;
     }
