@@ -16,6 +16,7 @@ public sealed class MessagesController(IMessagingSafetyService safetyService) : 
     public async Task<ActionResult<MessageSearchPageResult>> Search(
         [FromQuery(Name = "q")] string? query,
         [FromQuery] Guid? conversationId,
+        [FromQuery] Guid? senderUserId,
         [FromQuery] MessageKind? kind,
         [FromQuery] DateTime? fromUtc,
         [FromQuery] DateTime? toUtc,
@@ -32,6 +33,7 @@ public sealed class MessagesController(IMessagingSafetyService safetyService) : 
                 fromUtc,
                 toUtc,
                 cursor,
-                limit),
+                limit,
+                senderUserId),
             cancellationToken));
 }

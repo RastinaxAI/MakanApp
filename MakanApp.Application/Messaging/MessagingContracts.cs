@@ -20,6 +20,13 @@ public sealed record DirectConversationResult(
     DateTime CreatedAtUtc,
     bool AlreadyExisted);
 
+public sealed record SavedConversationResult(
+    Guid ConversationId,
+    ConversationType Type,
+    ConversationScope Scope,
+    DateTime CreatedAtUtc,
+    bool AlreadyExisted);
+
 public enum ConversationListFilter
 {
     All = 1,
@@ -27,13 +34,15 @@ public enum ConversationListFilter
     Group = 3,
     Channel = 4,
     Unread = 5,
-    Archived = 6
+    Archived = 6,
+    Saved = 7
 }
 
 public sealed record GetConversationListQuery(
     ConversationListFilter Filter = ConversationListFilter.All,
     int Page = 1,
-    int PageSize = 30);
+    int PageSize = 30,
+    string? Search = null);
 
 public sealed record ConversationOrganizationBadgeResult(
     Guid OrganizationId,
@@ -52,6 +61,7 @@ public sealed record ConversationSummaryResult(
     long LastDeliveredMessageSequence,
     long LastReadMessageSequence,
     int UnreadCount,
+    int UnreadMentionCount,
     bool IsArchived,
     bool IsMuted,
     ConversationMuteMode MuteMode,
@@ -85,6 +95,11 @@ public sealed record MessageAttachmentResult(
     long SizeBytes,
     DateTime CreatedAtUtc);
 
+public sealed record ContactCardResult(
+    Guid UserId,
+    string Username,
+    string DisplayName);
+
 public sealed record ConversationMessageResult(
     Guid MessageId,
     Guid ConversationId,
@@ -104,6 +119,7 @@ public sealed record ConversationMessageResult(
     IReadOnlyCollection<MessageReactionSummaryResult> Reactions,
     IReadOnlyCollection<SafeMessagingIdentityResult> Mentions,
     IReadOnlyCollection<MessageAttachmentResult> Attachments,
+    ContactCardResult? ContactCard,
     bool IsPinned,
     string Version);
 
@@ -119,6 +135,7 @@ public sealed class SendMessageCommand
     public IReadOnlyCollection<Guid>? AttachmentIds { get; init; }
     public Guid? ReplyToMessageId { get; init; }
     public IReadOnlyCollection<Guid>? MentionedUserIds { get; init; }
+    public Guid? ContactUserId { get; init; }
 }
 
 // این قرارداد برای سازگاری کلاینت‌های STEP 7A باقی می‌ماند؛ مسیر اجرا مشترک است.
@@ -170,6 +187,7 @@ public sealed record ConversationUserStateResult(
     DateTime? MutedUntilUtc,
     bool IsPinned,
     bool IsManuallyUnread,
+    long HistoryHiddenThroughSequence,
     DateTime UpdatedAtUtc,
     string Version);
 

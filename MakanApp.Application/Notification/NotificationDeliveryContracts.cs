@@ -67,6 +67,9 @@ public static class NotificationExternalContentPolicy
         NotificationType.AssignmentGradeReleased or NotificationType.ExamGradeReleased =>
             ("نتیجه آموزشی جدید", "نتیجه آموزشی جدید در ماکان منتشر شده است.",
                 $"makan://notifications/{notification.Id:D}"),
+        NotificationType.MessageReceived or NotificationType.MessageReply or NotificationType.MessageMention =>
+            ("پیام جدید", "پیام جدیدی در ماکان دارید.",
+                $"makan://notifications/{notification.Id:D}"),
         _ => ("اعلان جدید", "اعلان جدیدی در ماکان دارید.",
             $"makan://notifications/{notification.Id:D}")
     };
@@ -80,6 +83,8 @@ public static class NotificationExternalContentPolicy
             NotificationType.AssignmentGradeReleased => "assignment_result_published",
             NotificationType.ExamPublished => "exam_published",
             NotificationType.ExamGradeReleased => "exam_result_published",
+            NotificationType.MessageReceived or NotificationType.MessageReply or NotificationType.MessageMention =>
+                "message_available",
             _ => "notification_available"
         };
         return (templateKey, new Dictionary<string, string>

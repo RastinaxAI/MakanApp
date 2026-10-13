@@ -149,7 +149,10 @@ public sealed class OutboxProcessor(
                         payload.ResourceId,
                         payload.OccurredAtUtc);
                     dbContext.Notifications.Add(notification);
-                    await deliveryCoordinator.ScheduleAsync(notification, cancellationToken);
+                    await deliveryCoordinator.ScheduleAsync(
+                        notification,
+                        payload.Recipient.SuppressExternalDelivery,
+                        cancellationToken);
                 }
             }
 

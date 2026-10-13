@@ -29,10 +29,16 @@ public sealed partial class EfMessagingStore
             join participant in dbContext.ConversationParticipants.AsNoTracking()
                 on new { ConversationId = conversation.Id, UserId = userId }
                 equals new { participant.ConversationId, participant.UserId }
+            join stateValue in dbContext.ConversationUserStates.AsNoTracking()
+                on new { ConversationId = conversation.Id, UserId = userId }
+                equals new { stateValue.ConversationId, stateValue.UserId }
+                into states
+            from state in states.DefaultIfEmpty()
             where participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   message.DeletedAtUtc == null &&
                   message.Sequence >= participant.HistoryVisibleFromSequence &&
+                  message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
                   !dbContext.MessageUserVisibilities.Any(hidden =>
                       hidden.MessageId == message.Id && hidden.UserId == userId) &&
                   (workspaceType == WorkspaceType.Personal &&
@@ -50,10 +56,11 @@ public sealed partial class EfMessagingStore
                        membership.EndedAtUtc == null)) &&
                   (!query.ConversationId.HasValue ||
                    conversation.Id == query.ConversationId.Value) &&
+                  (!query.SenderUserId.HasValue || message.SenderUserId == query.SenderUserId.Value) &&
                   (!query.Kind.HasValue || message.Kind == query.Kind.Value) &&
                   (!query.FromUtc.HasValue || message.SentAtUtc >= query.FromUtc.Value) &&
                   (!query.ToUtc.HasValue || message.SentAtUtc < query.ToUtc.Value) &&
-                  (message.SearchText != null && message.SearchText.Contains(normalizedQuery) ||
+                  ((message.SearchText ?? string.Empty).Contains(normalizedQuery) ||
                    (from attachment in dbContext.MessageAttachments
                     join file in dbContext.FileAssets on attachment.FileAssetId equals file.Id
                     where attachment.MessageId == message.Id &&
@@ -261,8 +268,13 @@ public sealed partial class EfMessagingStore
         }
 
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken);
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            reporterUserId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
         if (message is null || message.IsDeleted ||
-            message.Sequence < participant.HistoryVisibleFromSequence ||
+            message.Sequence < visibleFromSequence ||
             await dbContext.MessageUserVisibilities.AnyAsync(
                 hidden => hidden.MessageId == message.Id && hidden.UserId == reporterUserId,
                 cancellationToken))

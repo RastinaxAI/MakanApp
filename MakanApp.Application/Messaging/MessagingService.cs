@@ -12,6 +12,27 @@ public sealed class MessagingService(
     MessagingOptions options,
     TimeProvider timeProvider) : IMessagingService
 {
+    private const string SavedConversationTitle = "پیام‌های ذخیره‌شده";
+
+    public async Task<SavedConversationResult> GetOrCreateSavedConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var result = await store.GetOrCreateSavedConversationAsync(
+            userId,
+            context,
+            UtcNow(),
+            cancellationToken);
+        return new SavedConversationResult(
+            result.Conversation.Id,
+            result.Conversation.Type,
+            result.Conversation.Scope,
+            result.Conversation.CreatedAtUtc,
+            result.AlreadyExisted);
+    }
+
     public async Task<DirectConversationResult> StartOrGetDirectConversationAsync(
         Guid userId,
         Guid sessionId,
@@ -44,7 +65,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         if (!Enum.IsDefined(query.Filter) || query.Page is <= 0 or > 100_000 ||
-            query.PageSize is <= 0 or > 100)
+            query.PageSize is <= 0 or > 100 || query.Search?.Trim().Length > 100)
         {
             throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی فهرست گفتگو معتبر نیست.");
         }
@@ -56,6 +77,7 @@ public sealed class MessagingService(
             query.Filter,
             query.Page,
             query.PageSize,
+            string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
             cancellationToken);
         return records.Select(Map).ToArray();
     }
@@ -296,6 +318,22 @@ public sealed class MessagingService(
         ValidateConversationId(conversationId);
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
         return Map(await store.MarkConversationUnreadAsync(
+            userId,
+            conversationId,
+            context,
+            UtcNow(),
+            cancellationToken));
+    }
+
+    public async Task<ConversationUserStateResult> ClearConversationHistoryAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return Map(await store.ClearConversationHistoryAsync(
             userId,
             conversationId,
             context,
@@ -622,6 +660,14 @@ public sealed class MessagingService(
                 throw Error(MessagingErrorCodes.MessageKindInvalid, "پیام متنی نمی‌تواند پیوست رسانه‌ای داشته باشد.");
             }
         }
+        else if (command.Kind == MessageKind.ContactCard)
+        {
+            if (!command.ContactUserId.HasValue || command.ContactUserId == Guid.Empty ||
+                command.Text is not null || attachmentIds.Length != 0)
+            {
+                throw Error(MessagingErrorCodes.MessageKindInvalid, "کارت مخاطب باید فقط شناسه کاربر معتبر داشته باشد.");
+            }
+        }
         else if (attachmentIds.Length == 0)
         {
             throw Error(MessagingErrorCodes.MessageAttachmentRequired, "این نوع پیام حداقل یک پیوست می‌خواهد.");
@@ -637,7 +683,8 @@ public sealed class MessagingService(
             command.Text,
             attachmentIds,
             command.ReplyToMessageId,
-            mentionedUserIds);
+            mentionedUserIds,
+            ContactUserId: command.ContactUserId);
     }
 
     private static byte[] HashSendPayload(
@@ -664,6 +711,7 @@ public sealed class MessagingService(
 
             writer.Write(command.ForwardedFromMessageId?.ToByteArray() ?? []);
             writer.Write(command.AllowSourceAttachments);
+            writer.Write(command.ContactUserId?.ToByteArray() ?? []);
         }
 
         return SHA256.HashData(stream.ToArray());
@@ -844,6 +892,14 @@ public sealed class MessagingService(
             isDeleted
                 ? []
                 : record.Attachments.Select(item => Map(item.Attachment, item.FileAsset)).ToArray(),
+            !isDeleted && message.Kind == MessageKind.ContactCard &&
+            message.SharedContactUserId.HasValue && message.SharedContactUsername is not null &&
+            message.SharedContactDisplayName is not null
+                ? new ContactCardResult(
+                    message.SharedContactUserId.Value,
+                    message.SharedContactUsername,
+                    message.SharedContactDisplayName)
+                : null,
             record.IsPinned,
             Convert.ToBase64String(message.RowVersion));
     }
@@ -886,7 +942,9 @@ public sealed class MessagingService(
             result.Conversation.Type,
             result.Conversation.Scope,
             result.Conversation.OrganizationId,
-            result.Conversation.Title,
+            result.Conversation.Type == ConversationType.Saved
+                ? SavedConversationTitle
+                : result.Conversation.Title,
             result.OtherParticipant is null ? null : Map(result.OtherParticipant),
             result.LastMessagePreview,
             result.LastMessageAtUtc,
@@ -894,6 +952,7 @@ public sealed class MessagingService(
             result.Participant.LastDeliveredMessageSequence,
             result.Participant.LastReadMessageSequence,
             result.UnreadCount,
+            result.UnreadMentionCount,
             result.State?.IsArchived ?? false,
             result.State?.IsMutedAt(UtcNow()) ?? false,
             result.State?.MuteMode ?? ConversationMuteMode.None,
@@ -951,6 +1010,7 @@ public sealed class MessagingService(
             state.MutedUntilUtc,
             state.IsPinned,
             state.IsManuallyUnread,
+            state.HistoryHiddenThroughSequence,
             state.UpdatedAtUtc,
             Convert.ToBase64String(state.RowVersion));
 

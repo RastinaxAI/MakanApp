@@ -4,7 +4,11 @@ using System.Text.Json;
 
 namespace MakanApp.Application.Notification;
 
-public sealed record NotificationRecipientIntent(Guid UserId, string Title, string Body);
+public sealed record NotificationRecipientIntent(
+    Guid UserId,
+    string Title,
+    string Body,
+    bool SuppressExternalDelivery = false);
 
 public sealed record NotificationIntent(
     Guid EventId,
@@ -32,6 +36,9 @@ public static class NotificationOutboxContract
     public const string AssignmentGradeReleasedMessageType = "notification.assignment-grade-released.v1";
     public const string ExamPublishedMessageType = "notification.exam-published.v1";
     public const string ExamGradeReleasedMessageType = "notification.exam-grade-released.v1";
+    public const string MessageReceivedMessageType = "notification.message-received.v1";
+    public const string MessageReplyMessageType = "notification.message-reply.v1";
+    public const string MessageMentionMessageType = "notification.message-mention.v1";
 
     public static IReadOnlyCollection<OutboxEnvelope> Create(NotificationIntent intent) =>
         intent.Recipients
@@ -62,6 +69,9 @@ public static class NotificationOutboxContract
         NotificationType.AssignmentGradeReleased => AssignmentGradeReleasedMessageType,
         NotificationType.ExamPublished => ExamPublishedMessageType,
         NotificationType.ExamGradeReleased => ExamGradeReleasedMessageType,
+        NotificationType.MessageReceived => MessageReceivedMessageType,
+        NotificationType.MessageReply => MessageReplyMessageType,
+        NotificationType.MessageMention => MessageMentionMessageType,
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 }

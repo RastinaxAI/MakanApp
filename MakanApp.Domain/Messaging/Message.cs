@@ -3,6 +3,8 @@ namespace MakanApp.Domain.Messaging;
 public sealed class Message
 {
     public const int StorageMaximumTextLength = 4000;
+    public const int ContactUsernameMaximumLength = 32;
+    public const int ContactDisplayNameMaximumLength = 200;
     public static readonly TimeSpan SenderMutationWindow = TimeSpan.FromHours(1);
 
     private Message()
@@ -48,6 +50,9 @@ public sealed class Message
     public string? SearchText { get; private set; }
     public Guid? ReplyToMessageId { get; private set; }
     public Guid? ForwardedFromMessageId { get; private set; }
+    public Guid? SharedContactUserId { get; private set; }
+    public string? SharedContactUsername { get; private set; }
+    public string? SharedContactDisplayName { get; private set; }
     public int CurrentRevisionNumber { get; private set; }
     public DateTime SentAtUtc { get; private set; }
     public DateTime? EditedAtUtc { get; private set; }
@@ -132,6 +137,20 @@ public sealed class Message
             null,
             maximumTextLength,
             sentAtUtc);
+
+    public void SetContactCardSnapshot(Guid userId, string username, string displayName)
+    {
+        if (Kind != MessageKind.ContactCard || userId == Guid.Empty ||
+            string.IsNullOrWhiteSpace(username) || username.Trim().Length > ContactUsernameMaximumLength ||
+            string.IsNullOrWhiteSpace(displayName) || displayName.Trim().Length > ContactDisplayNameMaximumLength)
+        {
+            throw new InvalidOperationException("snapshot کارت مخاطب معتبر نیست.");
+        }
+
+        SharedContactUserId = userId;
+        SharedContactUsername = username.Trim();
+        SharedContactDisplayName = displayName.Trim();
+    }
 
     public int EditText(string? text, int maximumTextLength, DateTime editedAtUtc)
     {
@@ -221,6 +240,13 @@ public sealed class Message
             if (attachmentCount != 0)
             {
                 throw new ArgumentException("پیام متنی نباید پیوست رسانه‌ای داشته باشد.", nameof(attachmentCount));
+            }
+        }
+        else if (kind == MessageKind.ContactCard)
+        {
+            if (attachmentCount != 0 || text is not null)
+            {
+                throw new ArgumentException("کارت مخاطب متن یا پیوست رسانه‌ای نمی‌پذیرد.");
             }
         }
         else

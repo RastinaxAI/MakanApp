@@ -13,6 +13,8 @@ public static class NotificationPreferencePolicy
             NotificationPreferenceCategory.Assignments,
         NotificationType.AssignmentGradeReleased or NotificationType.ExamGradeReleased =>
             NotificationPreferenceCategory.Results,
+        NotificationType.MessageReceived or NotificationType.MessageReply or NotificationType.MessageMention =>
+            NotificationPreferenceCategory.Messages,
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 

@@ -44,6 +44,7 @@ public interface INotificationDeliveryCoordinator
 {
     Task ScheduleAsync(
         Domain.Notification.Notification notification,
+        bool suppressExternalDelivery,
         CancellationToken cancellationToken);
 }
 

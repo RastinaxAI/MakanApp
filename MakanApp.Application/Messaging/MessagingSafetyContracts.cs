@@ -9,7 +9,8 @@ public sealed record SearchMessagesQuery(
     DateTime? FromUtc,
     DateTime? ToUtc,
     string? Cursor,
-    int? Limit);
+    int? Limit,
+    Guid? SenderUserId = null);
 
 public sealed record MessageSearchItemResult(
     Guid MessageId,

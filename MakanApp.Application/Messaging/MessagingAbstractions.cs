@@ -14,6 +14,10 @@ public sealed record DirectConversationStoreResult(
     SafeMessagingIdentityRecord OtherParticipant,
     bool AlreadyExisted);
 
+public sealed record SavedConversationStoreResult(
+    Conversation Conversation,
+    bool AlreadyExisted);
+
 public sealed record ConversationSummaryStoreRecord(
     Conversation Conversation,
     ConversationParticipant Participant,
@@ -22,6 +26,7 @@ public sealed record ConversationSummaryStoreRecord(
     DateTime? LastMessageAtUtc,
     long? LastMessageSequence,
     int UnreadCount,
+    int UnreadMentionCount,
     ConversationUserState? State,
     string? OrganizationName);
 
@@ -60,7 +65,8 @@ public sealed record SendMessageStoreCommand(
     Guid? ReplyToMessageId,
     IReadOnlyCollection<Guid> MentionedUserIds,
     Guid? ForwardedFromMessageId = null,
-    bool AllowSourceAttachments = false);
+    bool AllowSourceAttachments = false,
+    Guid? ContactUserId = null);
 
 public sealed record MessageSafetyPreparationStoreResult(
     Message? ExistingMessage,
@@ -100,12 +106,19 @@ public interface IMessagingStore
         DateTime nowUtc,
         CancellationToken cancellationToken);
 
+    Task<SavedConversationStoreResult> GetOrCreateSavedConversationAsync(
+        Guid userId,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> GetMyConversationsAsync(
         Guid userId,
         AccessContext accessContext,
         ConversationListFilter filter,
         int page,
         int pageSize,
+        string? search,
         CancellationToken cancellationToken);
 
     Task<ConversationMessagePageStoreResult> GetConversationMessagesAsync(
@@ -209,6 +222,13 @@ public interface IMessagingStore
         CancellationToken cancellationToken);
 
     Task<ConversationUserState> MarkConversationUnreadAsync(
+        Guid userId,
+        Guid conversationId,
+        AccessContext accessContext,
+        DateTime nowUtc,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserState> ClearConversationHistoryAsync(
         Guid userId,
         Guid conversationId,
         AccessContext accessContext,
@@ -320,6 +340,11 @@ public interface IMessagingRealtimeAudienceResolver
 
 public interface IMessagingService
 {
+    Task<SavedConversationResult> GetOrCreateSavedConversationAsync(
+        Guid userId,
+        Guid sessionId,
+        CancellationToken cancellationToken);
+
     Task<DirectConversationResult> StartOrGetDirectConversationAsync(
         Guid userId,
         Guid sessionId,
@@ -414,6 +439,12 @@ public interface IMessagingService
         CancellationToken cancellationToken);
 
     Task<ConversationUserStateResult> MarkConversationUnreadAsync(
+        Guid userId,
+        Guid sessionId,
+        Guid conversationId,
+        CancellationToken cancellationToken);
+
+    Task<ConversationUserStateResult> ClearConversationHistoryAsync(
         Guid userId,
         Guid sessionId,
         Guid conversationId,

@@ -16,11 +16,14 @@ public sealed partial class EfMessagingStore
         ConversationListFilter filter,
         int page,
         int pageSize,
+        string? search,
         CancellationToken cancellationToken)
     {
         var workspaceType = accessContext.WorkspaceType;
         var organizationId = accessContext.OrganizationId;
         var membershipId = accessContext.MembershipId;
+        var savedTitleMatches = search is not null &&
+            "پیام‌های ذخیره‌شده".Contains(search, StringComparison.OrdinalIgnoreCase);
         var query =
             from participant in dbContext.ConversationParticipants
             join conversation in dbContext.Conversations
@@ -44,11 +47,31 @@ public sealed partial class EfMessagingStore
                   (filter != ConversationListFilter.Direct || conversation.Type == ConversationType.Direct) &&
                   (filter != ConversationListFilter.Group || conversation.Type == ConversationType.Group) &&
                   (filter != ConversationListFilter.Channel || conversation.Type == ConversationType.Channel) &&
+                  (filter != ConversationListFilter.Saved || conversation.Type == ConversationType.Saved) &&
+                  (search == null ||
+                   (conversation.Type == ConversationType.Group ||
+                    conversation.Type == ConversationType.Channel) &&
+                   (conversation.Title ?? string.Empty).Contains(search) ||
+                   conversation.Type == ConversationType.Direct &&
+                   (dbContext.Users.Any(candidate =>
+                        candidate.Id == conversation.DirectUserLowId && candidate.Id != userId &&
+                        ((candidate.Username ?? string.Empty).Contains(search) ||
+                         dbContext.Persons.Any(person => person.Id == candidate.PersonId &&
+                             ((person.DisplayName != null && person.DisplayName.Contains(search)) ||
+                              (person.FirstName + " " + person.LastName).Contains(search))))) ||
+                    dbContext.Users.Any(candidate =>
+                        candidate.Id == conversation.DirectUserHighId && candidate.Id != userId &&
+                        ((candidate.Username ?? string.Empty).Contains(search) ||
+                         dbContext.Persons.Any(person => person.Id == candidate.PersonId &&
+                             ((person.DisplayName != null && person.DisplayName.Contains(search)) ||
+                              (person.FirstName + " " + person.LastName).Contains(search)))))) ||
+                   conversation.Type == ConversationType.Saved && savedTitleMatches) &&
                   (filter != ConversationListFilter.Unread ||
                    state != null && state.IsManuallyUnread ||
                    dbContext.Messages.Any(message =>
                        message.ConversationId == conversation.Id &&
                        message.Sequence >= participant.HistoryVisibleFromSequence &&
+                       message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
                        message.Sequence > participant.LastReadMessageSequence &&
                        message.SenderUserId != userId &&
                        message.DeletedAtUtc == null &&
@@ -70,6 +93,7 @@ public sealed partial class EfMessagingStore
             let lastMessage = dbContext.Messages
                 .Where(message => message.ConversationId == conversation.Id &&
                                   message.Sequence >= participant.HistoryVisibleFromSequence &&
+                                  message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
                                   !dbContext.MessageUserVisibilities.Any(hidden =>
                                       hidden.MessageId == message.Id && hidden.UserId == userId))
                 .OrderByDescending(message => message.Sequence)
@@ -80,7 +104,27 @@ public sealed partial class EfMessagingStore
                 Participant = participant,
                 State = state,
                 OrganizationName = organization == null ? null : organization.Name,
-                LastMessage = lastMessage
+                LastMessage = lastMessage,
+                UnreadCount = dbContext.Messages.Count(message =>
+                    message.ConversationId == conversation.Id &&
+                    message.Sequence >= participant.HistoryVisibleFromSequence &&
+                    message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
+                    message.Sequence > participant.LastReadMessageSequence &&
+                    message.SenderUserId != userId &&
+                    message.DeletedAtUtc == null &&
+                    !dbContext.MessageUserVisibilities.Any(hidden =>
+                        hidden.MessageId == message.Id && hidden.UserId == userId)),
+                UnreadMentionCount = dbContext.MessageMentions.Count(mention =>
+                    mention.MentionedUserId == userId &&
+                    dbContext.Messages.Any(message =>
+                        message.Id == mention.MessageId &&
+                        message.ConversationId == conversation.Id &&
+                        message.Sequence >= participant.HistoryVisibleFromSequence &&
+                        message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
+                        message.Sequence > participant.LastReadMessageSequence &&
+                        message.DeletedAtUtc == null &&
+                        !dbContext.MessageUserVisibilities.Any(hidden =>
+                            hidden.MessageId == message.Id && hidden.UserId == userId)))
             };
 
         var conversationRows = await query
@@ -94,6 +138,12 @@ public sealed partial class EfMessagingStore
             .Take(pageSize)
             .ToArrayAsync(cancellationToken);
 
+        var directOtherUserIds = conversationRows
+            .Where(row => row.Conversation.Type == ConversationType.Direct)
+            .Select(row => row.Conversation.GetDirectPair().Other(userId))
+            .Distinct()
+            .ToArray();
+        var identities = await LoadSafeIdentitiesAsync(directOtherUserIds, cancellationToken);
         var results = new List<ConversationSummaryStoreRecord>(conversationRows.Length);
         foreach (var row in conversationRows)
         {
@@ -102,7 +152,7 @@ public sealed partial class EfMessagingStore
             if (conversation.Type == ConversationType.Direct)
             {
                 var otherUserId = conversation.GetDirectPair().Other(userId);
-                identity = await LoadSafeIdentityAsync(otherUserId, cancellationToken);
+                identity = identities[otherUserId];
             }
             var lastMessage = row.LastMessage;
             results.Add(new ConversationSummaryStoreRecord(
@@ -112,12 +162,8 @@ public sealed partial class EfMessagingStore
                 CreatePreview(lastMessage?.Text),
                 lastMessage?.SentAtUtc,
                 lastMessage?.Sequence,
-                await GetUnreadCountAsync(
-                    conversation.Id,
-                    userId,
-                    row.Participant.LastReadMessageSequence,
-                    row.Participant.HistoryVisibleFromSequence,
-                    cancellationToken),
+                row.UnreadCount,
+                row.UnreadMentionCount,
                 row.State,
                 row.OrganizationName));
         }
@@ -154,6 +200,12 @@ public sealed partial class EfMessagingStore
             throw ConversationNotFound();
         }
 
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
+
         var hasActiveOrganizationMembership = conversation.Scope == ConversationScope.Personal ||
             conversation.OrganizationId.HasValue &&
             accessContext.MembershipId.HasValue &&
@@ -181,7 +233,7 @@ public sealed partial class EfMessagingStore
         var descending = await dbContext.Messages
             .AsNoTracking()
             .Where(message => message.ConversationId == conversationId &&
-                              message.Sequence >= participant.HistoryVisibleFromSequence &&
+                              message.Sequence >= visibleFromSequence &&
                               !dbContext.MessageUserVisibilities.Any(hidden =>
                                   hidden.MessageId == message.Id && hidden.UserId == userId) &&
                               (!beforeSequence.HasValue || message.Sequence < beforeSequence.Value))
@@ -195,7 +247,7 @@ public sealed partial class EfMessagingStore
             var firstSequence = messages[0].Sequence;
             if (await dbContext.Messages.AnyAsync(
                     message => message.ConversationId == conversationId &&
-                               message.Sequence >= participant.HistoryVisibleFromSequence &&
+                               message.Sequence >= visibleFromSequence &&
                                !dbContext.MessageUserVisibilities.Any(hidden =>
                                    hidden.MessageId == message.Id && hidden.UserId == userId) &&
                                message.Sequence < firstSequence,

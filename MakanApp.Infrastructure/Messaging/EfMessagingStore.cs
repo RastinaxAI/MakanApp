@@ -1,5 +1,6 @@
 using System.Data;
 using MakanApp.Application.Messaging;
+using MakanApp.Application.Outbox;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
@@ -14,6 +15,7 @@ public sealed partial class EfMessagingStore(
     ICommunicationEligibilityPolicy eligibilityPolicy,
     IMessagingPrivacyResolver privacyResolver,
     IConversationManagementPolicy managementPolicy,
+    IOutbox outbox,
     MessagingOutboxWakeSignal outboxWakeSignal) :
     IMessagingStore,
     IConversationManagementStore,

@@ -16,6 +16,7 @@ public sealed class Conversation
     public Guid? OrganizationId { get; private set; }
     public Guid? DirectUserLowId { get; private set; }
     public Guid? DirectUserHighId { get; private set; }
+    public Guid? SavedOwnerUserId { get; private set; }
     public string? Title { get; private set; }
     public string? Description { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
@@ -50,6 +51,31 @@ public sealed class Conversation
             OrganizationId = organizationId,
             DirectUserLowId = pair.LowerUserId,
             DirectUserHighId = pair.HigherUserId,
+            ManagementPolicy = ConversationManagementPolicy.None,
+            Visibility = ConversationVisibility.Private,
+            GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,
+            MemberCapabilities = GroupMemberCapability.None,
+            NextMessageSequence = 1,
+            NextChangeSequence = 1,
+            Status = ConversationStatus.Active,
+            CreatedAtUtc = createdAtUtc
+        };
+    }
+
+    public static Conversation CreateSaved(Guid ownerUserId, DateTime createdAtUtc)
+    {
+        if (ownerUserId == Guid.Empty)
+        {
+            throw new ArgumentException("شناسه مالک پیام‌های ذخیره‌شده الزامی است.", nameof(ownerUserId));
+        }
+
+        ValidateUtc(createdAtUtc, nameof(createdAtUtc));
+        return new Conversation
+        {
+            Id = Guid.NewGuid(),
+            Type = ConversationType.Saved,
+            Scope = ConversationScope.Personal,
+            SavedOwnerUserId = ownerUserId,
             ManagementPolicy = ConversationManagementPolicy.None,
             Visibility = ConversationVisibility.Private,
             GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,

@@ -35,12 +35,17 @@ public sealed partial class EfMessagingStore
             userId,
             accessContext,
             cancellationToken);
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
 
         var messageQuery = dbContext.Messages
             .AsNoTracking()
             .Where(message => message.ConversationId == conversationId &&
                               message.DeletedAtUtc == null &&
-                              message.Sequence >= participant.HistoryVisibleFromSequence &&
+                              message.Sequence >= visibleFromSequence &&
                               !dbContext.MessageUserVisibilities.Any(hidden =>
                                   hidden.MessageId == message.Id && hidden.UserId == userId) &&
                               (!beforeSequence.HasValue || message.Sequence < beforeSequence.Value) &&
@@ -80,7 +85,7 @@ public sealed partial class EfMessagingStore
         if (await dbContext.Messages.AnyAsync(
                 message => message.ConversationId == conversationId &&
                            message.DeletedAtUtc == null &&
-                           message.Sequence >= participant.HistoryVisibleFromSequence &&
+                           message.Sequence >= visibleFromSequence &&
                            !dbContext.MessageUserVisibilities.Any(hidden =>
                                hidden.MessageId == message.Id && hidden.UserId == userId) &&
                            message.Sequence < firstSequence &&
@@ -174,14 +179,25 @@ public sealed partial class EfMessagingStore
             .Distinct()
             .ToArray();
         var conversationId = messages.First().ConversationId;
-        var historyVisibleFromSequence = await dbContext.ConversationParticipants
-            .AsNoTracking()
-            .Where(participant => participant.ConversationId == conversationId &&
-                                  participant.UserId == currentUserId &&
-                                  participant.Status == ConversationParticipantStatus.Active &&
-                                  participant.EndedAtUtc == null)
-            .Select(participant => participant.HistoryVisibleFromSequence)
+        var visibility = await (from participant in dbContext.ConversationParticipants.AsNoTracking()
+            join stateValue in dbContext.ConversationUserStates.AsNoTracking()
+                on new { participant.ConversationId, UserId = currentUserId }
+                equals new { stateValue.ConversationId, stateValue.UserId }
+                into states
+            from state in states.DefaultIfEmpty()
+            where participant.ConversationId == conversationId &&
+                  participant.UserId == currentUserId &&
+                  participant.Status == ConversationParticipantStatus.Active &&
+                  participant.EndedAtUtc == null
+            select new
+            {
+                participant.HistoryVisibleFromSequence,
+                HiddenThrough = state == null ? 0 : state.HistoryHiddenThroughSequence
+            })
             .SingleAsync(cancellationToken);
+        var historyVisibleFromSequence = Math.Max(
+            visibility.HistoryVisibleFromSequence,
+            visibility.HiddenThrough + 1);
         var replyMessages = replyIds.Length == 0
             ? new Dictionary<Guid, Message>()
             : await dbContext.Messages

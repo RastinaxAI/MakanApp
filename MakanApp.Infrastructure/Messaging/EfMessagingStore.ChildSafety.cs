@@ -158,7 +158,12 @@ public sealed partial class EfMessagingStore
                 "پیام حذف‌شده قابل فوروارد نیست.");
         }
 
-        if (source.Sequence < sourceParticipant.HistoryVisibleFromSequence ||
+        var sourceVisibleFromSequence = await GetVisibleFromSequenceAsync(
+            sourceConversationId,
+            userId,
+            sourceParticipant.HistoryVisibleFromSequence,
+            cancellationToken);
+        if (source.Sequence < sourceVisibleFromSequence ||
             await dbContext.MessageUserVisibilities.AsNoTracking().AnyAsync(
                 hidden => hidden.MessageId == source.Id && hidden.UserId == userId,
                 cancellationToken))
@@ -190,7 +195,8 @@ public sealed partial class EfMessagingStore
             null,
             [],
             source.Id,
-            true);
+            true,
+            source.SharedContactUserId);
     }
 
     public async Task<SafetyIncidentStoreResult> RecordSafetyIncidentAsync(

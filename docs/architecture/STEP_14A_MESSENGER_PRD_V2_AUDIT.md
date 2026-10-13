@@ -529,3 +529,27 @@ legacy/internal باقی مانده، ولی endpoint عمومی archive از `C
 
 Migration این مرحله `20261012222340_AddMessagingModerationAndChildSafety` است و قرارداد کامل در
 `STEP_14D_MODERATION_CHILD_SAFETY.md` ثبت شده است.
+
+## 21. Addendum پس از STEP 14E
+
+این addendum ماتریس تاریخی STEP 14A را بازنویسی نمی‌کند. ممیزی نهایی هر ۱۲۷
+requirement، وضعیت نهایی، شواهد API/Code/DB/Test و release verdict در
+[`STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md`](STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md)
+ثبت شده است.
+
+خلاصه تغییر وضعیت پس از STEP 14E:
+
+| حوزه | وضعیت | شاهد اصلی |
+|---|---|---|
+| Saved Messages | `IMPLEMENTED` | Conversation شخصی یکتا و lazy، owner-only، text/file/forward |
+| Clear History | `IMPLEMENTED` | watermark خصوصی و monotonic در تمام read surfaceهای پیام |
+| Messaging Notification | `IMPLEMENTED` | Outbox durable، recipient فعلی، dedupe، preview امن و mute خارجی |
+| Unread Mention | `IMPLEMENTED` | projection server-side و هماهنگ با read/clear-history |
+| Search completion | `IMPLEMENTED` | sender filter و جست‌وجوی نام Conversation با authorization جاری |
+| Contact Card | `IMPLEMENTED` | snapshot typed بدون Phone و بدون side effect روی Contact/Direct |
+| Contact Sync | `DEFERRED_SECURE_DESIGN` | consent/upload/provenance/revoke هنوز قرارداد مصوب ندارد |
+| Avatar و Presence | `DEFERRED_SECURE_DESIGN` | lifecycle فایل و semantics چند-instance/privacy هنوز freeze نشده است |
+
+Migration این مرحله `20261013042337_CompleteMessengerV2` است. این migration ستون‌ها
+و constraintهای Saved، Clear History، Contact Card و enumهای Notification را ثبت
+می‌کند؛ Contact Sync، Avatar و Presence هیچ schema ساختگی دریافت نکرده‌اند.

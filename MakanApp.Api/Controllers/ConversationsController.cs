@@ -54,17 +54,33 @@ public sealed class ConversationsController(
             : StatusCode(StatusCodes.Status201Created, result);
     }
 
+    [HttpGet("saved")]
+    [ProducesResponseType<SavedConversationResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType<SavedConversationResult>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<SavedConversationResult>> GetSaved(
+        CancellationToken cancellationToken)
+    {
+        var result = await messagingService.GetOrCreateSavedConversationAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            cancellationToken);
+        return result.AlreadyExisted
+            ? Ok(result)
+            : StatusCode(StatusCodes.Status201Created, result);
+    }
+
     [HttpGet]
     [ProducesResponseType<IReadOnlyCollection<ConversationSummaryResult>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<ConversationSummaryResult>>> GetMine(
         CancellationToken cancellationToken,
         [FromQuery] ConversationListFilter filter = ConversationListFilter.All,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 30) =>
+        [FromQuery] int pageSize = 30,
+        [FromQuery(Name = "q")] string? search = null) =>
         Ok(await messagingService.GetMyConversationsAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
-            new GetConversationListQuery(filter, page, pageSize),
+            new GetConversationListQuery(filter, page, pageSize, search),
             cancellationToken));
 
     [HttpGet("discover")]
@@ -528,6 +544,17 @@ public sealed class ConversationsController(
         Guid conversationId,
         CancellationToken cancellationToken) =>
         Ok(await messagingService.MarkConversationUnreadAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
+            conversationId,
+            cancellationToken));
+
+    [HttpPost("{conversationId:guid}/clear-history")]
+    [ProducesResponseType<ConversationUserStateResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationUserStateResult>> ClearHistory(
+        Guid conversationId,
+        CancellationToken cancellationToken) =>
+        Ok(await messagingService.ClearConversationHistoryAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             conversationId,

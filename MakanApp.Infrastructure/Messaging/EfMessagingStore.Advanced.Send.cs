@@ -64,6 +64,12 @@ public sealed partial class EfMessagingStore
             nowUtc,
             cancellationToken);
         await SaveAdvancedAsync(cancellationToken);
+        await EnqueueMessageNotificationsAsync(
+            conversation,
+            created.Message,
+            userId,
+            nowUtc,
+            cancellationToken);
         await AppendChangeAsync(
             conversation,
             MessagingChangeType.MessageCreated,
@@ -135,7 +141,12 @@ public sealed partial class EfMessagingStore
                 "پیام حذف‌شده قابل فوروارد نیست.");
         }
 
-        if (source.Sequence < sourceParticipant.HistoryVisibleFromSequence ||
+        var sourceVisibleFromSequence = await GetVisibleFromSequenceAsync(
+            sourceConversationId,
+            userId,
+            sourceParticipant.HistoryVisibleFromSequence,
+            cancellationToken);
+        if (source.Sequence < sourceVisibleFromSequence ||
             await dbContext.MessageUserVisibilities.AnyAsync(
                 hidden => hidden.MessageId == source.Id && hidden.UserId == userId,
                 cancellationToken))
@@ -175,6 +186,12 @@ public sealed partial class EfMessagingStore
         if (forwarded.Created)
         {
             await SaveAdvancedAsync(cancellationToken);
+            await EnqueueMessageNotificationsAsync(
+                destinationConversation,
+                forwarded.Message,
+                userId,
+                nowUtc,
+                cancellationToken);
             await AppendChangeAsync(
                 destinationConversation,
                 MessagingChangeType.MessageCreated,
@@ -205,6 +222,7 @@ public sealed partial class EfMessagingStore
             command.ReplyToMessageId.HasValue ||
             command.MentionedUserIds.Count != 0 ||
             !command.AllowSourceAttachments ||
+            command.ContactUserId != source.SharedContactUserId ||
             !attachmentIds.Order().SequenceEqual(command.AttachmentIds.Order()))
         {
             throw new MessagingException(
@@ -233,10 +251,15 @@ public sealed partial class EfMessagingStore
 
         if (command.ReplyToMessageId.HasValue)
         {
+            var visibleFromSequence = await GetVisibleFromSequenceAsync(
+                conversation.Id,
+                userId,
+                participant.HistoryVisibleFromSequence,
+                cancellationToken);
             var replyExists = await dbContext.Messages.AnyAsync(
                 message => message.Id == command.ReplyToMessageId.Value &&
                            message.ConversationId == conversation.Id &&
-                           message.Sequence >= participant.HistoryVisibleFromSequence &&
+                           message.Sequence >= visibleFromSequence &&
                            !dbContext.MessageUserVisibilities.Any(hidden =>
                                hidden.MessageId == message.Id && hidden.UserId == userId),
                 cancellationToken);
@@ -302,6 +325,14 @@ public sealed partial class EfMessagingStore
                 command.ForwardedFromMessageId,
                 maximumTextLength,
                 nowUtc);
+            if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
+            {
+                var identity = await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
+                message.SetContactCardSnapshot(
+                    identity.UserId,
+                    identity.Username,
+                    identity.DisplayName);
+            }
         }
         catch (ArgumentException exception)
         {
@@ -365,6 +396,7 @@ public sealed partial class EfMessagingStore
             !string.Equals(existing.Text, command.Text, StringComparison.Ordinal) ||
             existing.ReplyToMessageId != command.ReplyToMessageId ||
             existing.ForwardedFromMessageId != command.ForwardedFromMessageId ||
+            existing.SharedContactUserId != command.ContactUserId ||
             !attachments.SequenceEqual(command.AttachmentIds.Distinct().Order()) ||
             !mentions.SequenceEqual(command.MentionedUserIds.Distinct().Order()))
         {
@@ -453,6 +485,18 @@ public sealed partial class EfMessagingStore
             return;
         }
 
+        if (conversation.Type == ConversationType.Saved)
+        {
+            if (conversation.SavedOwnerUserId != userId)
+            {
+                throw new MessagingException(
+                    MessagingErrorCodes.MessagePublishNotAllowed,
+                    "انتشار پیام در این گفتگو مجاز نیست.");
+            }
+
+            return;
+        }
+
         if (conversation.Type != ConversationType.Direct)
         {
             throw new MessagingException(
@@ -492,6 +536,7 @@ public sealed partial class EfMessagingStore
         CancellationToken cancellationToken)
     {
         if (!participant.IsActive ||
+            conversation.Type == ConversationType.Saved && conversation.SavedOwnerUserId != userId ||
             !await CanAccessScopeAsync(conversation, userId, accessContext, cancellationToken))
         {
             throw ConversationNotFound();

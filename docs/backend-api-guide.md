@@ -795,7 +795,7 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 <a id="messaging"></a>
 ## پیام‌رسانی و همگام‌سازی
 
-> **مرز قرارداد Messenger v2:** توضیحات این بخش رفتار runtime فعلی را مستند می‌کنند و نباید با تصمیم‌های محصول مرحله 14 اشتباه شوند. اختلاف کامل کد موجود با ۱۲۷ requirement در [ممیزی STEP 14A](architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md) ثبت شده و تصمیم‌های freeze‌شده، از جمله Personal Direct عمومی تابع Privacy/Block/Safety، window یک‌ساعته Edit/Delete For Everyone و Group History قابل تنظیم، در [Messenger v2 Product Decisions](architecture/MESSENGER_V2_PRODUCT_DECISIONS.md) آمده‌اند. STEP 14A این رفتارها را پیاده‌سازی نکرده است.
+> **مرز قرارداد Messenger v2:** توضیحات این بخش رفتار runtime فعلی را مستند می‌کنند. ممیزی تاریخی ۱۲۷ requirement در [STEP 14A](architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md)، تصمیم‌های freeze‌شده در [Messenger v2 Product Decisions](architecture/MESSENGER_V2_PRODUCT_DECISIONS.md) و نتیجه re-audit نهایی در [STEP 14E](architecture/STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md) ثبت شده‌اند.
 
 ### آغاز گفت‌وگو و مجوز ارتباط
 
@@ -874,7 +874,8 @@ People Search به query حداقل دوکاراکتری و صفحه حداکث�
   "text": "سلام، زمان جلسه تأیید شد.",
   "attachmentIds": [],
   "replyToMessageId": null,
-  "mentionedUserIds": []
+  "mentionedUserIds": [],
+  "contactUserId": null
 }
 ```
 
@@ -927,12 +928,50 @@ Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی 
 
 ### جست‌وجو، مسدودسازی و گزارش
 
-`GET /messages/search?q=...` از فیلترهای اختیاری `conversationId`، `kind`، `fromUtc`، `toUtc`، `cursor` و `limit` پشتیبانی می‌کند. پاسخ شامل `items`، `totalCount` و `nextCursor` است. Query و cursor را URL-encode کنید؛ نتایج بر اساس دسترسی جاری محدود می‌شوند.
+`GET /messages/search?q=...` از فیلترهای اختیاری `conversationId`، `senderUserId`، `kind`، `fromUtc`، `toUtc`، `cursor` و `limit` پشتیبانی می‌کند. پاسخ شامل `items`، `totalCount` و `nextCursor` است. Query و cursor را URL-encode کنید؛ نتایج بر اساس دسترسی جاری و watermark خصوصی Clear History محدود می‌شوند. `GET /conversations?q=...` نیز title گروه/کانال، هویت امن طرف Direct و عنوان Saved Messages را جست‌وجو می‌کند.
 
 - `POST /messaging/blocks/{userId}` حساب را مسدود می‌کند؛ `DELETE` همان مسیر رفع مسدودسازی است؛ `GET /messaging/blocks` فهرست خود کاربر را می‌دهد.
 - `POST /conversations/{conversationId}/messages/{messageId}/reports` بدنه `clientReportId`، `reason` و `description` می‌گیرد.
 - دلیل گزارش یکی از `Harassment`، `Spam`، `Threat`، `InappropriateContent`، `Impersonation` یا `Other` است.
 - `GET /messaging/reports/{reportId}` رسید گزارش متعلق به خود کاربر را می‌دهد. این API پنل رسیدگی مدیر یا تضمین اقدام خودکار روی گزارش نیست.
+
+### تکمیل Messenger در STEP 14E
+
+| Method | Route | قرارداد |
+|---|---|---|
+| `GET` | `/conversations/saved` | Saved Conversation شخصی را lazy می‌سازد؛ بار اول `201` و دفعات بعد `200` با `alreadyExisted=true` |
+| `GET` | `/conversations?filter=Saved&q=&page=&pageSize=` | Saved را در list/filter می‌آورد؛ هر summary دارای `unreadMentionCount` است |
+| `POST` | `/conversations/{id}/clear-history` | watermark خصوصی را تا آخرین Sequence committed جلو می‌برد و `ConversationUserStateResult` برمی‌گرداند |
+| `GET` | `/messages/search?...&senderUserId=` | فیلتر sender را همراه فیلترهای قبلی اعمال می‌کند |
+
+Saved Messages فقط در workspace شخصی قابل resolve است، در SQL Server برای هر User
+یک Conversation یکتا دارد، notification تولید نمی‌کند و فقط مالک می‌تواند آن را
+بخواند یا در آن پیام بفرستد. متن، فایل، Search و Shared Media از pipeline عادی
+استفاده می‌کنند. Forward به Saved یک Message مستقل می‌سازد و تغییر یا حذف آن منبع
+را mutate نمی‌کند.
+
+Clear History حذف فیزیکی Message نیست. مقدار `historyHiddenThroughSequence` در state
+خصوصی کاربر ثبت می‌شود و History، Search، Shared Media، File، Reply، Forward، Delta،
+preview و unread را برای پیام‌های قدیمی همان کاربر محدود می‌کند. تکرار درخواست
+idempotent است و پیام‌های بعدی دیده می‌شوند. طرف دیگر Conversation هیچ تغییری نمی‌بیند.
+
+برای ارسال Contact Card، `kind="ContactCard"` و `contactUserId` معتبر بدهید و `text`
+و `attachmentIds` را خالی نگه دارید. پاسخ پیام فقط snapshot امن `userId`، `username`
+و `displayName` را در `contactCard` دارد؛ Phone Number برنمی‌گردد و card به‌تنهایی
+Contact یا Direct Conversation ایجاد نمی‌کند.
+
+هر Message committed در Direct/Group/Channel برای participantهای فعال به‌جز فرستنده
+یک intent اعلان durable می‌سازد. type مؤثر هر گیرنده با اولویت
+`MessageMention > MessageReply > MessageReceived` تعیین می‌شود. preview Push/SMS فقط
+متن عمومی «پیام جدیدی در ماکان دارید.» است. Mute موقت یا دائم فقط Push/SMS را
+suppress می‌کند؛ Notification داخلی، خود پیام، unread، Delta و SignalR باقی می‌مانند.
+provider خارجی داخل transaction ارسال پیام فراخوانی نمی‌شود و retry همان
+`clientMessageId` اعلان تکراری ایجاد نمی‌کند.
+
+Contact Sync، Avatar/Bio و Presence/LastSeen/Typing در این نسخه endpoint یا schema
+ندارند؛ قرارداد consent/provenance فایل و semantics privacy/multi-instance هنوز
+تصویب نشده است. برای production دارای کودک نیز انتخاب adapter واقعی Child Safety و
+policy دقیق ساخت/عضویت Personal Group/Channel release blocker باقی مانده است.
 
 <a id="errors"></a>
 ## خطاها و تلاش مجدد
@@ -1406,7 +1445,7 @@ Notification Center از رکوردهای پایدار schema `notification` م�
 
 هر سه endpoint به Bearer session معتبر نیاز دارند و فقط رکوردهای recipient جاری را می‌بینند. شناسه کاربر از client گرفته نمی‌شود و شناسه اعلان متعلق به دیگری با `notification_not_found` و 404 پنهان می‌شود. inbox می‌تواند notificationهای چند سازمان را همراه `OrganizationId` نشان دهد و با organization فیلتر شود.
 
-انتشار تکلیف/آزمون و انتشار رسمی نتیجه آن‌ها event نسخه‌دار Outbox را در همان transaction کسب‌وکاری ثبت می‌کند. worker پس از commit اعلان learner و، فقط برای نتیجه منتشرشده، GuardianRelation فعال را materialize می‌کند. متن نتیجه score، answer و note خصوصی ندارد. پیام‌رسانی chat همچنان unread/delta/outbox خودش را دارد و هر پیام به Notification تبدیل نمی‌شود.
+انتشار تکلیف/آزمون، انتشار رسمی نتیجه و پیام‌های Direct/Group/Channel event نسخه‌دار Outbox را در همان transaction کسب‌وکاری ثبت می‌کنند. worker پس از commit اعلان مجاز را materialize می‌کند. متن نتیجه score، answer و note خصوصی ندارد و اعلان بیرونی پیام نیز متن خام، نام فایل یا Phone Number ندارد. Saved Messages اعلان تولید نمی‌کند.
 
 در محدوده STEP 12A، Push، SMS عمومی، Email، preferences، Quiet Hours و realtime اعلان وجود نداشتند. OTP ملی‌پیامک کانال جداگانه Identity است. جزئیات entity، قفل SQL Server، deduplication، retry، migration و privacy والد در [سند معماری STEP 12A](architecture/STEP_12A_NOTIFICATION_FOUNDATION.md) آمده است.
 

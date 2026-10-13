@@ -354,7 +354,12 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken)
             ?? throw MessageNotFound();
-        if (message.Sequence < participant.HistoryVisibleFromSequence ||
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
+        if (message.Sequence < visibleFromSequence ||
             await dbContext.MessageUserVisibilities.AnyAsync(
                 hidden => hidden.MessageId == message.Id && hidden.UserId == userId,
                 cancellationToken))
@@ -389,7 +394,7 @@ public sealed partial class EfMessagingStore
         ConversationParticipant participant)
     {
         EnsureMutableConversation(conversation);
-        var allowed = conversation.Type == ConversationType.Direct ||
+        var allowed = conversation.Type is ConversationType.Direct or ConversationType.Saved ||
             conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
             (participant.Role == ConversationParticipantRole.Owner ||
              participant.Role == ConversationParticipantRole.Admin &&

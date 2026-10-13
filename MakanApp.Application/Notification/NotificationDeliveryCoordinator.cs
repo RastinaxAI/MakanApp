@@ -13,6 +13,7 @@ public sealed class NotificationDeliveryCoordinator(
 
     public async Task ScheduleAsync(
         Domain.Notification.Notification notification,
+        bool suppressExternalDelivery,
         CancellationToken cancellationToken)
     {
         var category = NotificationPreferencePolicy.Map(notification.Type);
@@ -23,6 +24,24 @@ public sealed class NotificationDeliveryCoordinator(
             cancellationToken);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var attempts = new List<NotificationDeliveryAttempt>();
+        if (suppressExternalDelivery)
+        {
+            attempts.Add(NotificationDeliveryAttempt.Suppress(
+                notification.Id,
+                NotificationDeliveryChannel.Push,
+                PolicyDestination,
+                NotificationDeliveryFailureReason.SuppressedByPreference,
+                nowUtc));
+            attempts.Add(NotificationDeliveryAttempt.Suppress(
+                notification.Id,
+                NotificationDeliveryChannel.Sms,
+                PolicyDestination,
+                NotificationDeliveryFailureReason.SuppressedByPreference,
+                nowUtc));
+            store.AddRange(attempts);
+            return;
+        }
+
         if (!preference.ScopeAvailable)
         {
             attempts.Add(NotificationDeliveryAttempt.Suppress(

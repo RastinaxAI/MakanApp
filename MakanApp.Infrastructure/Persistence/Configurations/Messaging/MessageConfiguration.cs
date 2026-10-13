@@ -11,7 +11,7 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
     {
         builder.ToTable("Messages", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5)");
+            table.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6)");
             table.HasCheckConstraint("CK_Messages_Sequence", "[Sequence] > 0");
             table.HasCheckConstraint("CK_Messages_CurrentRevision", "[CurrentRevisionNumber] > 0");
             table.HasCheckConstraint(
@@ -19,7 +19,12 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
                 "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR " +
                 "([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND " +
                 "(([Kind] = 1 AND LEN(LTRIM(RTRIM([Text]))) > 0) OR " +
-                "([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0))))");
+                "([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR " +
+                "([Kind] = 6 AND [Text] IS NULL)))");
+            table.HasCheckConstraint(
+                "CK_Messages_ContactCardShape",
+                "([Kind] = 6 AND [SharedContactUserId] IS NOT NULL AND LEN(LTRIM(RTRIM([SharedContactUsername]))) > 0 AND LEN(LTRIM(RTRIM([SharedContactDisplayName]))) > 0) OR " +
+                "([Kind] <> 6 AND [SharedContactUserId] IS NULL AND [SharedContactUsername] IS NULL AND [SharedContactDisplayName] IS NULL)");
         });
         builder.HasKey(message => message.Id);
         builder.HasAlternateKey(message => new { message.Id, message.ConversationId })
@@ -28,6 +33,10 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .HasMaxLength(Message.StorageMaximumTextLength);
         builder.Property(message => message.SearchText)
             .HasMaxLength(Message.StorageMaximumTextLength);
+        builder.Property(message => message.SharedContactUsername)
+            .HasMaxLength(Message.ContactUsernameMaximumLength);
+        builder.Property(message => message.SharedContactDisplayName)
+            .HasMaxLength(Message.ContactDisplayNameMaximumLength);
         builder.Property(message => message.SentAtUtc).HasColumnType("datetime2(7)");
         builder.Property(message => message.EditedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(message => message.DeletedAtUtc).HasColumnType("datetime2(7)");
@@ -82,6 +91,10 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(message => message.DeletedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(message => message.SharedContactUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

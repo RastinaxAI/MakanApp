@@ -27,6 +27,7 @@ public sealed class MessagingSafetyService(
 
         if (normalizedQuery.Length > options.MaximumSearchQueryLength ||
             query.ConversationId == Guid.Empty ||
+            query.SenderUserId == Guid.Empty ||
             query.Kind.HasValue && !Enum.IsDefined(query.Kind.Value) ||
             !IsUtc(query.FromUtc) || !IsUtc(query.ToUtc) ||
             query.FromUtc.HasValue && query.ToUtc.HasValue && query.FromUtc >= query.ToUtc)
@@ -53,6 +54,7 @@ public sealed class MessagingSafetyService(
             new MessageSearchStoreQuery(
                 normalizedQuery,
                 query.ConversationId,
+                query.SenderUserId,
                 query.Kind,
                 query.FromUtc,
                 query.ToUtc,

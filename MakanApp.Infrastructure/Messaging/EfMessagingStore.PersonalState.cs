@@ -26,7 +26,12 @@ public sealed partial class EfMessagingStore
         await EnsureCanReadAdvancedAsync(conversation, participant, userId, accessContext, cancellationToken);
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken)
             ?? throw MessageNotFound();
-        if (message.Sequence < participant.HistoryVisibleFromSequence)
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
+        if (message.Sequence < visibleFromSequence)
         {
             throw new MessagingException(
                 MessagingErrorCodes.ConversationHistoryNotVisible,

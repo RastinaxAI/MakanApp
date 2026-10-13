@@ -67,3 +67,38 @@
 2. اثر حریم خصوصی، authorization، migration و قرارداد فرانت‌اند را مشخص کند؛
 3. تست Unit/Integration متناسب و migration قابل بازتولید داشته باشد؛
 4. رفتار ناسازگار قبلی را به‌صورت آگاهانه و قابل ردیابی جایگزین کند.
+
+## Addendum تصمیم‌های STEP 14E
+
+این بخش تصمیم‌های تکمیلی و صریح STEP 14E را ثبت می‌کند و تصمیم‌های قبلی را
+بازنویسی نمی‌کند.
+
+1. **Saved Messages یک Conversation شخصی یکتا است:** برای هر User حداکثر یک
+   Conversation از نوع `Saved` به‌صورت lazy ساخته می‌شود. فقط همان مالک participant
+   آن است؛ Organization، عضو دوم و notification پیام ندارد. متن، فایل و Forward در
+   آن از همان pipeline امن پیام استفاده می‌کنند و Forward یک copy مستقل می‌سازد.
+2. **Clear History حذف فیزیکی نیست:** این عملیات یک watermark خصوصی و monotonic
+   برای User/Conversation ثبت می‌کند. پیام‌های قبلی از History، Search، Shared Media،
+   File، Reply، Forward، Delta و unread همان کاربر خارج می‌شوند؛ copy دیگران و rows
+   مشترک حذف نمی‌شوند و پیام‌های بعدی قابل مشاهده می‌مانند. retry idempotent است.
+3. **اعلان پیام durable و کمینه است:** بعد از commit پیام، intent همان transaction
+   در Outbox ثبت می‌شود. فرستنده اعلان نمی‌گیرد، participant لغوشده گیرنده نیست و
+   برای هر `(MessageId, RecipientUserId)` فقط یک Notification ساخته می‌شود. اولویت
+   type برابر `Mention > Reply > MessageReceived` است.
+4. **Mute فقط delivery خارجی را suppress می‌کند:** پیام، unread، Notification داخلی،
+   Delta و SignalR همچنان ثبت می‌شوند. preview بیرونی هیچ متن پیام، نام فایل، شماره
+   تلفن یا metadata حساس ندارد.
+5. **Contact Card snapshot امن است:** payload ذخیره‌شده فقط `UserId`، `Username` و
+   `DisplayName` دارد. Phone Number ذخیره یا برگردانده نمی‌شود و دریافت card به‌تنهایی
+   Contact یا Direct Conversation نمی‌سازد.
+6. **Contact Sync هنوز مجوز پیاده‌سازی ندارد:** تا زمانی که consent، پروتکل upload
+   حداقلی/hashed، provenance، revoke/delete، collision و failure isolation به‌صورت
+   end-to-end تصویب نشوند، endpoint یا table آن ساخته نمی‌شود.
+7. **Avatar و Presence فعلاً deferred هستند:** Avatar به قرارداد lifecycle/authorization
+   فایل و Presence/LastSeen/Typing به semantics چند-instance، privacy و expiry نیاز
+   دارند. نبود این تصمیم‌ها با مقدار ساختگی یا state پایدار حدس زده نمی‌شود.
+
+نتیجه release در STEP 14E برای production دارای کودک همچنان
+`BLOCKED_BY_PRODUCT_POLICY` است: adapter واقعی Child Safety و policy دقیق ساخت/عضویت
+Personal Group/Channel برای حساب کودک تصویب نشده‌اند. runtime فعلی در نبود provider
+واقعی برای Conversation حساس به کودک fail-closed است.

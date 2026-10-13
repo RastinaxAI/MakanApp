@@ -8,6 +8,7 @@ public sealed record MessageSearchPosition(DateTime SentAtUtc, Guid MessageId);
 public sealed record MessageSearchStoreQuery(
     string NormalizedQuery,
     Guid? ConversationId,
+    Guid? SenderUserId,
     MessageKind? Kind,
     DateTime? FromUtc,
     DateTime? ToUtc,

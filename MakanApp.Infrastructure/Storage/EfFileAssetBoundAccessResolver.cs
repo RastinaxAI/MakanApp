@@ -36,12 +36,18 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
             join conversation in dbContext.Conversations on message.ConversationId equals conversation.Id
             join participant in dbContext.ConversationParticipants
                 on conversation.Id equals participant.ConversationId
+            join stateValue in dbContext.ConversationUserStates
+                on new { ConversationId = conversation.Id, UserId = accessContext.UserId }
+                equals new { stateValue.ConversationId, stateValue.UserId }
+                into states
+            from state in states.DefaultIfEmpty()
             where attachment.FileAssetId == fileAsset.Id &&
                   message.DeletedAtUtc == null &&
                   participant.UserId == accessContext.UserId &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   message.Sequence >= participant.HistoryVisibleFromSequence &&
+                  message.Sequence > (state == null ? 0 : state.HistoryHiddenThroughSequence) &&
                   !dbContext.MessageUserVisibilities.Any(hidden =>
                       hidden.MessageId == message.Id && hidden.UserId == accessContext.UserId) &&
                   (conversation.Scope == ConversationScope.Personal &&

@@ -13,8 +13,8 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<DomainN
         builder.ToTable("Notifications", "notification", table =>
         {
             table.HasCheckConstraint("CK_Notifications_Category", "[Category] IN (1, 2, 3)");
-            table.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4)");
-            table.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4)");
+            table.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7)");
+            table.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4, 5)");
             table.HasCheckConstraint("CK_Notifications_ReadAt", "[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]");
         });
         builder.HasKey(notification => notification.Id);

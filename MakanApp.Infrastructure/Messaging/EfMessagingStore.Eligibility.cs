@@ -171,6 +171,26 @@ public sealed partial class EfMessagingStore
         return new SafeMessagingIdentityRecord(user.UserId, user.Username, user.DisplayName);
     }
 
+    private async Task<IReadOnlyDictionary<Guid, SafeMessagingIdentityRecord>> LoadSafeIdentitiesAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<Guid, SafeMessagingIdentityRecord>();
+        }
+
+        return await (from user in dbContext.Users.AsNoTracking()
+                      join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
+                      where userIds.Contains(user.Id) && user.PersonId != null &&
+                            user.Username != null && user.ProfileCompletedAtUtc != null
+                      select new SafeMessagingIdentityRecord(
+                          user.Id,
+                          user.Username!,
+                          person.DisplayName ?? person.FirstName + " " + person.LastName))
+            .ToDictionaryAsync(identity => identity.UserId, cancellationToken);
+    }
+
     private Task<UserMessagingSnapshot?> LoadUserSnapshotAsync(
         Guid userId,
         CancellationToken cancellationToken) =>

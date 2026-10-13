@@ -34,6 +34,11 @@ public sealed partial class EfMessagingStore
             userId,
             accessContext,
             cancellationToken);
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
 
         var currentSequence = conversation.NextChangeSequence - 1;
         if (afterChangeSequence > currentSequence)
@@ -55,7 +60,7 @@ public sealed partial class EfMessagingStore
                               change.ChangeType != MessagingChangeType.PinChanged ||
                               dbContext.Messages.Any(message =>
                                   message.Id == change.ResourceId &&
-                                  message.Sequence >= participant.HistoryVisibleFromSequence &&
+                                  message.Sequence >= visibleFromSequence &&
                                   !dbContext.MessageUserVisibilities.Any(hidden =>
                                       hidden.MessageId == message.Id && hidden.UserId == userId))))
             .OrderBy(change => change.ChangeSequence)
@@ -152,11 +157,16 @@ public sealed partial class EfMessagingStore
             userId,
             accessContext,
             cancellationToken);
+        var visibleFromSequence = await GetVisibleFromSequenceAsync(
+            conversationId,
+            userId,
+            participant.HistoryVisibleFromSequence,
+            cancellationToken);
 
         var messageExists = await dbContext.Messages.AnyAsync(
             message => message.ConversationId == conversationId &&
                        message.Sequence == upToMessageSequence &&
-                       message.Sequence >= participant.HistoryVisibleFromSequence &&
+                       message.Sequence >= visibleFromSequence &&
                        !dbContext.MessageUserVisibilities.Any(hidden =>
                            hidden.MessageId == message.Id && hidden.UserId == userId),
             cancellationToken);
@@ -194,7 +204,7 @@ public sealed partial class EfMessagingStore
             conversationId,
             userId,
             participant.LastReadMessageSequence,
-            participant.HistoryVisibleFromSequence,
+            visibleFromSequence,
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         if (changed || manualUnreadCleared)

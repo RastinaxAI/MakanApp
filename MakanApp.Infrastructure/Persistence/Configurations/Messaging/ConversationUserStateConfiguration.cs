@@ -13,6 +13,9 @@ public sealed class ConversationUserStateConfiguration : IEntityTypeConfiguratio
         {
             table.HasCheckConstraint("CK_ConversationUserStates_MuteMode", "[MuteMode] IN (0, 1, 2)");
             table.HasCheckConstraint(
+                "CK_ConversationUserStates_HistoryHiddenThroughSequence",
+                "[HistoryHiddenThroughSequence] >= 0");
+            table.HasCheckConstraint(
                 "CK_ConversationUserStates_MuteShape",
                 "([MuteMode] IN (0, 1) AND [MutedUntilUtc] IS NULL) OR ([MuteMode] = 2 AND [MutedUntilUtc] IS NOT NULL)");
         });

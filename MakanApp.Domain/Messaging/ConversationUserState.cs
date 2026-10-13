@@ -21,6 +21,7 @@ public sealed class ConversationUserState
     public ConversationMuteMode MuteMode { get; private set; }
     public DateTime? MutedUntilUtc { get; private set; }
     public bool IsManuallyUnread { get; private set; }
+    public long HistoryHiddenThroughSequence { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
@@ -111,6 +112,25 @@ public sealed class ConversationUserState
             return false;
         }
 
+        IsManuallyUnread = false;
+        UpdatedAtUtc = nowUtc;
+        return true;
+    }
+
+    public bool HideHistoryThrough(long sequence, DateTime nowUtc)
+    {
+        ValidateUtc(nowUtc, nameof(nowUtc));
+        if (sequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sequence));
+        }
+
+        if (sequence <= HistoryHiddenThroughSequence)
+        {
+            return false;
+        }
+
+        HistoryHiddenThroughSequence = sequence;
         IsManuallyUnread = false;
         UpdatedAtUtc = nowUtc;
         return true;

@@ -13,7 +13,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
     {
         builder.ToTable("Conversations", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3)");
+            table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3, 4)");
             table.HasCheckConstraint("CK_Conversations_Scope", "[Scope] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_Status", "[Status] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_ManagementPolicy", "[ManagementPolicy] IN (0, 1, 2)");
@@ -27,8 +27,11 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
                 "CK_Conversations_DirectPair",
                 "[Type] <> 1 OR ([DirectUserLowId] IS NOT NULL AND [DirectUserHighId] IS NOT NULL AND [DirectUserLowId] <> [DirectUserHighId])");
             table.HasCheckConstraint(
+                "CK_Conversations_SavedShape",
+                "([Type] = 4 AND [Scope] = 1 AND [OrganizationId] IS NULL AND [SavedOwnerUserId] IS NOT NULL AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] <> 4 AND [SavedOwnerUserId] IS NULL)");
+            table.HasCheckConstraint(
                 "CK_Conversations_ManagedShape",
-                "([Type] = 1 AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] IN (2, 3) AND [ManagementPolicy] IN (1, 2) AND LEN(LTRIM(RTRIM([Title]))) > 0 AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL)");
+                "([Type] IN (1, 4) AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] IN (2, 3) AND [ManagementPolicy] IN (1, 2) AND LEN(LTRIM(RTRIM([Title]))) > 0 AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL)");
             table.HasCheckConstraint(
                 "CK_Conversations_UserManagedCreation",
                 "([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)");
@@ -39,7 +42,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             table.HasCheckConstraint("CK_Conversations_NextChangeSequence", "[NextChangeSequence] > 0");
             table.HasCheckConstraint(
                 "CK_Conversations_BehaviorShape",
-                "([Type] = 1 AND [Visibility] = 1 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0) OR " +
+                "([Type] IN (1, 4) AND [Visibility] = 1 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0) OR " +
                 "([Type] = 2) OR " +
                 "([Type] = 3 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0)");
             table.HasCheckConstraint(
@@ -68,6 +71,10 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             .IsUnique()
             .HasFilter("[Type] = 1")
             .HasDatabaseName("UX_Conversations_Direct_Scope_Organization_Pair");
+        builder.HasIndex(conversation => conversation.SavedOwnerUserId)
+            .IsUnique()
+            .HasFilter("[Type] = 4")
+            .HasDatabaseName("UX_Conversations_Saved_Owner");
         builder.HasIndex(conversation => new
         {
             conversation.CreatedByUserId,
@@ -94,6 +101,10 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(conversation => conversation.DirectUserLowId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(conversation => conversation.SavedOwnerUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<User>()
             .WithMany()
