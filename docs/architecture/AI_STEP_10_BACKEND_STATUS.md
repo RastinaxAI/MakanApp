@@ -15,9 +15,9 @@ AI audited branch/commit: `main` / `c80fdb90c2fe5101a7b3ff193a02d3120bf7e5f9`
 | 10C | COMPLETE | `0176820ced5553dece01b0635a36fedd6f889f18` | port و HTTP adapter سرویس AI پیاده‌سازی شد. |
 | 10D | COMPLETE | `4cf79b9c8b84ff91a76d8fda2810916d40edd0e2` | Generic Chat، authorization، rate limit و خطاهای امن با 924 تست موفق تکمیل شد. |
 | 10E | COMPLETE | `7f6e4c2f7b307587c9d2df723803a2000e286772` | هفت Builder، یازده API نقش‌محور و Fake-AI E2E با 951 تست موفق تکمیل شد. |
-| 10F-BE | DEFERRED | `docs(ai): define backend RAG authorization boundary` | `RAG_BACKEND_SOURCE_LIFECYCLE_DEFERRED`: FileAsset فقط blob lifecycle دارد و Product/Domain هنوز source category، publication، audience، supersession و delete propagation را تعریف نکرده است. |
-| AI-HANDOFF | NOT_STARTED | — | پس از تکمیل Backend ساخته می‌شود. |
-| 10G | NOT_STARTED | — | فقط پس از تحویل commit نهایی تیم AI اجرا می‌شود. |
+| 10F-BE | DEFERRED | `9bc412189c0cf892d81d9801dd3e88bcf078d5f5` | `RAG_BACKEND_SOURCE_LIFECYCLE_DEFERRED`: FileAsset فقط blob lifecycle دارد و Product/Domain هنوز source category، publication، audience، supersession و delete propagation را تعریف نکرده است. |
+| AI-HANDOFF | COMPLETE | `docs(ai): prepare AI team integration handoff` | بسته ۹‌سندی قرارداد، privacy، resilience، RAG، test matrix و prompt آماده تحویل شد. |
+| 10G | WAITING_FOR_AI | — | فقط پس از commit نهایی تیم AI و `GO_FOR_BACKEND_STEP_10G` اجرا می‌شود. |
 
 ## قواعد وضعیت
 
