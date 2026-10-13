@@ -141,6 +141,11 @@ public sealed class AiChatServiceTests
             Guid organizationId,
             Guid userId,
             CancellationToken cancellationToken) => Task.FromResult(LearnerId);
+
+        public Task<AiSelectedHomework?> GetPublishedHomeworkAsync(Guid organizationId, Guid learnerOrganizationPersonId, Guid assignmentId, CancellationToken cancellationToken) => Task.FromResult<AiSelectedHomework?>(null);
+        public Task<AiSelectedExam?> GetPublishedExamAsync(Guid organizationId, Guid learnerOrganizationPersonId, Guid examId, CancellationToken cancellationToken) => Task.FromResult<AiSelectedExam?>(null);
+        public Task<AiLearnerClassScope?> GetActiveLearnerClassAsync(Guid organizationId, Guid learnerOrganizationPersonId, Guid classId, CancellationToken cancellationToken) => Task.FromResult<AiLearnerClassScope?>(null);
+        public Task<IReadOnlyCollection<AiLearnerClassScope>> GetActiveLearnerClassesAsync(Guid organizationId, Guid learnerOrganizationPersonId, int maximumCount, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyCollection<AiLearnerClassScope>>([]);
     }
 
     private sealed class RecordingClient : IAiServiceClient
@@ -163,5 +168,17 @@ public sealed class AiChatServiceTests
                 [],
                 new AiResponseMetadata("test", 1)));
         }
+
+        public Task<AiStudentAnalysisResponse> AnalyzeStudentAsync(AiStudentAnalysisRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiStudyPlanResponse> CreateStudyPlanAsync(AiStudyPlanRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiHomeworkExplanationResponse> ExplainHomeworkAsync(AiHomeworkExplanationRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiExamPreparationResponse> PrepareExamAsync(AiExamPreparationRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiParentChildSummaryResponse> SummarizeChildAsync(AiParentChildSummaryRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiRoleInsightResponse> SummarizeTeacherClassAsync(AiTeacherClassSummaryRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiRoleInsightResponse> GetTeacherStudentInsightAsync(AiTeacherStudentInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiActivitySuggestionsResponse> SuggestTeacherActivitiesAsync(AiTeacherActivitySuggestionsRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiRoleInsightResponse> SummarizeManagerSchoolAsync(AiManagerSchoolSummaryRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiRoleInsightResponse> GetManagerClassInsightAsync(AiManagerClassInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(AiManagerStudentInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

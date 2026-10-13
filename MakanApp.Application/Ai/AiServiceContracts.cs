@@ -3,6 +3,20 @@ using System.Text.Json.Serialization;
 
 namespace MakanApp.Application.Ai;
 
+public interface IAiServiceRequest
+{
+    string RequestId { get; }
+    string? CorrelationId { get; }
+    AiActor Actor { get; }
+}
+
+public interface IAiServiceResponse
+{
+    string RequestId { get; }
+    string? CorrelationId { get; }
+    AiResponseMetadata Metadata { get; }
+}
+
 public sealed record AiActor(string UserId, string Role);
 
 public sealed record AiScope(
@@ -30,7 +44,7 @@ public sealed record AiChatRequest(
     AiActor Actor,
     AiScope Scope,
     AiMessage Message,
-    AiAuthorizedContext Context);
+    AiAuthorizedContext Context) : IAiServiceRequest;
 
 [JsonConverter(typeof(JsonStringEnumConverter<AiSeverity>))]
 public enum AiSeverity
@@ -64,4 +78,4 @@ public sealed record AiChatResponse(
     IReadOnlyCollection<AiInsight> Risks,
     IReadOnlyCollection<AiRecommendation> Recommendations,
     IReadOnlyCollection<AiSourceReference> Sources,
-    AiResponseMetadata Metadata);
+    AiResponseMetadata Metadata) : IAiServiceResponse;

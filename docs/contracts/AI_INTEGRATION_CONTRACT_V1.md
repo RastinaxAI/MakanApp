@@ -1,6 +1,6 @@
-# AI Integration Contract v1 — Freeze Candidate
+# AI Integration Contract v1 — Frozen Backend Target
 
-وضعیت عملیات generic chat: **Frozen**. عملیات role-specific فعلاً route/schema استخراج‌شده دارند، اما Backend integration آن‌ها تا STEP 10E کامل نیست.
+وضعیت: **Frozen**. Generic Chat و عملیات role-specific در Backend پیاده‌سازی شده‌اند. این سند target الزام‌آور handoff تیم AI است.
 
 ## مرز و شناسه‌ها
 
@@ -27,20 +27,34 @@
 
 ## عملیات فعلی AI
 
-| عملیات | Method/Path | Request اختصاصی | Response | Role | وضعیت |
+| عملیات | Backend public route | AI internal route | Request اختصاصی | Response | Role |
 |---|---|---|---|---|---|
-| Generic Chat | `POST /api/v1/ai/chat` | `conversationId?`, `message{text,language}`, `context{subjects,grades,homeworks,exams,activity}` | `ChatResponse` | هر چهار نقش | Frozen |
-| Student Analyze | `POST /api/v1/ai/students/analyze` | StudentScope + `studentData` | `StudentAnalysisResponse` | Student | Backend mapping required |
-| Study Plan | `POST /api/v1/ai/study-plan` | StudentScope + goal/preferences/studentData | `StudyPlanResponse` | Student | Backend mapping required |
-| Homework Explain | `POST /api/v1/ai/homeworks/explain` | StudentScope + homework/question/context | `HomeworkExplanationResponse` | Student | Backend mapping required |
-| Exam Prepare | `POST /api/v1/ai/exams/prepare` | StudentScope + exam/studentData/context | `ExamPreparationResponse` | Student | Backend mapping required |
-| Parent Child Summary | `POST /api/v1/ai/parents/child-summary` | Parent actor + StudentScope + `childData` | `ChildSummaryResponse` | Parent | Backend mapping required |
-| Teacher Class Summary | `POST /api/v1/ai/teachers/class-summary` | TeacherClassScope + `classData` | `ClassSummaryResponse` | Teacher | Backend mapping required |
-| Teacher Student Insight | `POST /api/v1/ai/teachers/student-insight` | TeacherStudentScope + `studentData` | `StudentInsightResponse` | Teacher | Backend mapping required |
-| Teacher Activity Suggestions | `POST /api/v1/ai/teachers/activity-suggestions` | TeacherClassScope + objective/constraints/classData | `ActivitySuggestionsResponse` | Teacher | Backend mapping required |
-| Manager School Summary | `POST /api/v1/ai/managers/school-summary` | ManagerSchoolScope + `schoolData` | `SchoolSummaryResponse` | Manager | Backend mapping required |
-| Manager Class Insight | `POST /api/v1/ai/managers/class-insight` | ManagerClassScope + `classData` | `ClassInsightResponse` | Manager | Backend mapping required |
-| Manager Student Insight | `POST /api/v1/ai/managers/student-insight` | ManagerStudentScope + `studentData` | `ManagerStudentInsightResponse` | Manager | Backend mapping required |
+| Generic Chat | `POST /api/v1/ai/chat` | `POST /api/v1/ai/chat` | `conversationId?`, `message`, `context` | `ChatResponse` | چهار نقش |
+| Student Analyze | `POST /api/v1/ai/students/analyze` | همان | StudentScope + `studentData` | `StudentAnalysisResponse` | Student |
+| Study Plan | `POST /api/v1/ai/study-plan` | همان | StudentScope + goals/preferences/studentData | `StudyPlanResponse` | Student |
+| Homework Explain | `POST /api/v1/ai/homeworks/{assignmentId}/explain` | `POST /api/v1/ai/homeworks/explain` | StudentScope + homework/question/context | `HomeworkExplanationResponse` | Student |
+| Exam Prepare | `POST /api/v1/ai/exams/{examId}/prepare` | `POST /api/v1/ai/exams/prepare` | StudentScope + exam/studentData/context | `ExamPreparationResponse` | Student |
+| Parent Child Summary | `POST /api/v1/ai/parents/child-summary` | همان | Parent actor + ParentChildScope + `childData` | `ChildSummaryResponse` | Parent |
+| Teacher Class Summary | `POST /api/v1/ai/teachers/classes/{classId}/summary` | `POST /api/v1/ai/teachers/class-summary` | TeacherClassScope + `classData` | `ClassSummaryResponse` | Teacher |
+| Teacher Student Insight | `POST /api/v1/ai/teachers/classes/{classId}/students/{studentId}/insight` | `POST /api/v1/ai/teachers/student-insight` | TeacherStudentScope + `studentData` | `StudentInsightResponse` | Teacher |
+| Teacher Activity Suggestions | `POST /api/v1/ai/teachers/classes/{classId}/activity-suggestions` | `POST /api/v1/ai/teachers/activity-suggestions` | TeacherClassScope + objective/constraints/classData | `ActivitySuggestionsResponse` | Teacher |
+| Manager School Summary | `POST /api/v1/ai/managers/school-summary` | همان | ManagerSchoolScope + `schoolData` | `SchoolSummaryResponse` | Manager |
+| Manager Class Insight | `POST /api/v1/ai/managers/classes/{classId}/insight` | `POST /api/v1/ai/managers/class-insight` | ManagerClassScope + `classData` | `ClassInsightResponse` | Manager |
+| Manager Student Insight | `POST /api/v1/ai/managers/classes/{classId}/students/{studentId}/insight` | `POST /api/v1/ai/managers/student-insight` | ManagerStudentScope + `studentData` | `ManagerStudentInsightResponse` | Manager |
+
+## ساختار context آموزشی
+
+`studentData` و `childData` دقیقاً شامل `subjects`، `grades`، `homeworks`، `exams` و `activity` هستند. `classData` و `schoolData` همین مجموعه را همراه aggregateهای محدود و شناسه scope دارند. رکوردهای داخلی projection صریح Backend هستند و entity یا navigation graph نیستند.
+
+- `grades[]`: فقط نتیجه release‌شده، شامل `score` و `maxScore` همان AssignmentVersion/ExamVersion.
+- `homeworks[]`: فقط تکلیف published/closed با version منتشرشده.
+- `exams[]`: فقط Exam و ExamVersion منتشرشده.
+- `activity[]`: حضور/رویدادهای آموزشی bounded؛ بدون متن پیام یا تاریخچه AI.
+- Teacher/Manager فقط context همان class/student مجاز را دریافت می‌کنند.
+
+حدود v1: حداکثر ۱۰ subject، ۱۰ assignment، ۱۰ exam، ۱۰ grade، ۲۰ activity و ۳۰ student reference برای aggregate کلاس. متن آزاد حداکثر ۲۰۰۰ نویسه است.
+
+Backend header `X-AI-Contract-Version: v1` و `X-Correlation-ID` را می‌فرستد. `requestId` و `correlationId` پاسخ باید دقیقاً با درخواست برابر باشند.
 
 ## ChatResponse
 

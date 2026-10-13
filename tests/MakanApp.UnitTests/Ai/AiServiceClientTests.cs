@@ -9,6 +9,39 @@ namespace MakanApp.UnitTests.Ai;
 public sealed class AiServiceClientTests
 {
     [Fact]
+    public async Task AnalyzeStudentAsync_UsesFrozenRouteAndParsesStrictResponse()
+    {
+        HttpRequestMessage? captured = null;
+        string? body = null;
+        var handler = new StubHandler(async (request, cancellationToken) =>
+        {
+            captured = request;
+            body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            return JsonResponse(
+                HttpStatusCode.OK,
+                "{\"requestId\":\"req-role-1\",\"correlationId\":\"corr-role-1\"," +
+                "\"summary\":\"خلاصه\",\"strengths\":[],\"weaknesses\":[],\"risks\":[]," +
+                "\"recommendations\":[],\"sources\":[]," +
+                "\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":3}}");
+        });
+        var client = CreateClient(handler);
+        var request = new AiStudentAnalysisRequest(
+            "req-role-1",
+            "corr-role-1",
+            new AiActor("user-1", "Student"),
+            new AiScope("org-1", "org-1", null, "student-1"),
+            AiAuthorizedContext.Empty);
+
+        var result = await client.AnalyzeStudentAsync(request, CancellationToken.None);
+
+        Assert.Equal("خلاصه", result.Summary);
+        Assert.Equal("/api/v1/ai/students/analyze", captured!.RequestUri!.AbsolutePath);
+        Assert.Contains("\"studentData\"", body);
+        Assert.DoesNotContain("accessToken", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("service-token", captured.Headers.Authorization?.Parameter);
+    }
+
+    [Fact]
     public async Task ChatAsync_SendsCredentialCorrelationAndContract_AndParsesResponse()
     {
         HttpRequestMessage? captured = null;

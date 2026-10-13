@@ -11,11 +11,15 @@ internal static class AiServiceTelemetry
         "makan.ai.client.duration",
         "ms");
 
-    public static void Record(string outcome, string errorCode, TimeSpan duration)
+    public static void Record(
+        string operation,
+        string outcome,
+        string errorCode,
+        TimeSpan duration)
     {
         var tags = new TagList
         {
-            { "operation", "chat" },
+            { "operation", operation },
             { "outcome", outcome },
             { "error.code", errorCode }
         };

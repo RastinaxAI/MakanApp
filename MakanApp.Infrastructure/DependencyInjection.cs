@@ -179,6 +179,14 @@ public static class DependencyInjection
             client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
         services.AddScoped<IAiChatService, AiChatService>();
+        services.AddScoped<IStudentContextBuilder, StudentContextBuilder>();
+        services.AddScoped<IParentChildContextBuilder, ParentChildContextBuilder>();
+        services.AddScoped<ITeacherClassContextBuilder, TeacherClassContextBuilder>();
+        services.AddScoped<ITeacherStudentContextBuilder, TeacherStudentContextBuilder>();
+        services.AddScoped<IManagerSchoolContextBuilder, ManagerSchoolContextBuilder>();
+        services.AddScoped<IManagerClassContextBuilder, ManagerClassContextBuilder>();
+        services.AddScoped<IManagerStudentContextBuilder, ManagerStudentContextBuilder>();
+        services.AddScoped<IAiRoleContextService, AiRoleContextService>();
         services.AddSingleton(CreateOtpOptions(configuration, environmentName));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
