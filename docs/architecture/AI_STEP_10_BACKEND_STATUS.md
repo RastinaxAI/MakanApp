@@ -14,8 +14,8 @@ AI audited branch/commit: `main` / `c80fdb90c2fe5101a7b3ff193a02d3120bf7e5f9`
 | 10B-BE | COMPLETE | `d4742e2fc7a1902c376407659d2adc60cbd4f65e` | service identity سمت Backend پیاده‌سازی شد. |
 | 10C | COMPLETE | `0176820ced5553dece01b0635a36fedd6f889f18` | port و HTTP adapter سرویس AI پیاده‌سازی شد. |
 | 10D | COMPLETE | `4cf79b9c8b84ff91a76d8fda2810916d40edd0e2` | Generic Chat، authorization، rate limit و خطاهای امن با 924 تست موفق تکمیل شد. |
-| 10E | COMPLETE | `feat(ai): integrate authorized role contexts` | هفت Builder، یازده API نقش‌محور و Fake-AI E2E با 951 تست موفق تکمیل شد. |
-| 10F-BE | NOT_STARTED | — | سیاست source lifecycle باید از Product/domain موجود ممیزی شود. |
+| 10E | COMPLETE | `7f6e4c2f7b307587c9d2df723803a2000e286772` | هفت Builder، یازده API نقش‌محور و Fake-AI E2E با 951 تست موفق تکمیل شد. |
+| 10F-BE | DEFERRED | `docs(ai): define backend RAG authorization boundary` | `RAG_BACKEND_SOURCE_LIFECYCLE_DEFERRED`: FileAsset فقط blob lifecycle دارد و Product/Domain هنوز source category، publication، audience، supersession و delete propagation را تعریف نکرده است. |
 | AI-HANDOFF | NOT_STARTED | — | پس از تکمیل Backend ساخته می‌شود. |
 | 10G | NOT_STARTED | — | فقط پس از تحویل commit نهایی تیم AI اجرا می‌شود. |
 
