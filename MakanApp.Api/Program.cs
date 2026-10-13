@@ -2,14 +2,18 @@ using System.Diagnostics;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
 using MakanApp.Api.Authentication;
+using MakanApp.Api.Authorization;
 using MakanApp.Api.Errors;
+using MakanApp.Api.Platform;
 using MakanApp.Api.Realtime;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Storage;
+using MakanApp.Domain.Platform;
 using MakanApp.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -25,7 +29,18 @@ builder.Services
     .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
         SessionAuthenticationDefaults.Scheme,
         _ => { });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var permission in PlatformPermissionKeys.Step15A)
+    {
+        options.AddPolicy(permission, policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new PlatformPermissionRequirement(permission));
+        });
+    }
+});
+builder.Services.AddScoped<IAuthorizationHandler, PlatformPermissionAuthorizationHandler>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy => policy
@@ -133,6 +148,11 @@ builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOption
 });
 
 var app = builder.Build();
+
+if (await PlatformOwnerBootstrapRunner.TryRunAsync(app, args))
+{
+    return;
+}
 
 app.UseExceptionHandler();
 

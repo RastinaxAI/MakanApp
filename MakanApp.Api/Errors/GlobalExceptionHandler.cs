@@ -6,6 +6,7 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Platform;
 using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
@@ -49,6 +50,9 @@ public sealed class GlobalExceptionHandler(
             OrganizationException organizationException => CreateKnownProblem(
                 organizationException.Code,
                 organizationException.Message),
+            PlatformException platformException => CreateKnownProblem(
+                platformException.Code,
+                platformException.Message),
             GuardianException guardianException => CreateKnownProblem(
                 guardianException.Code,
                 guardianException.Message),
@@ -199,6 +203,16 @@ public sealed class GlobalExceptionHandler(
             OrganizationErrorCodes.RoleNotActive => StatusCodes.Status403Forbidden,
             OrganizationErrorCodes.WorkspaceNotAllowed => StatusCodes.Status403Forbidden,
             OrganizationErrorCodes.ConcurrencyConflict => StatusCodes.Status412PreconditionFailed,
+            PlatformErrorCodes.AccessDenied => StatusCodes.Status403Forbidden,
+            PlatformErrorCodes.UserNotFound => StatusCodes.Status404NotFound,
+            PlatformErrorCodes.RoleNotFound => StatusCodes.Status404NotFound,
+            PlatformErrorCodes.AssignmentNotFound => StatusCodes.Status404NotFound,
+            PlatformErrorCodes.AssignmentConflict => StatusCodes.Status409Conflict,
+            PlatformErrorCodes.LastOwnerRequired => StatusCodes.Status409Conflict,
+            PlatformErrorCodes.BootstrapClosed => StatusCodes.Status409Conflict,
+            PlatformErrorCodes.StepUpRequired => StatusCodes.Status403Forbidden,
+            PlatformErrorCodes.ReasonRequired => StatusCodes.Status400BadRequest,
+            PlatformErrorCodes.QueryInvalid => StatusCodes.Status400BadRequest,
             GuardianErrorCodes.GuardianRelationNotFound => StatusCodes.Status404NotFound,
             GuardianErrorCodes.ChildContextNotFound => StatusCodes.Status404NotFound,
             GuardianErrorCodes.ParentRoleRequired => StatusCodes.Status403Forbidden,

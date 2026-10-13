@@ -2,6 +2,7 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
+using MakanApp.Application.Platform;
 using MakanApp.Application.Storage;
 using MakanApp.Api.Realtime;
 using MakanApp.Domain.Identity;
@@ -54,6 +55,8 @@ public sealed partial class MakanAppWebApplicationFactory :
         Services.GetRequiredService<SensitiveLogTestControl>();
     public ContentSafetyProviderTestControl ContentSafetyProvider =>
         Services.GetRequiredService<ContentSafetyProviderTestControl>();
+    public PlatformStepUpTestControl PlatformStepUp =>
+        Services.GetRequiredService<PlatformStepUpTestControl>();
 
     public MakanAppWebApplicationFactory()
     {
@@ -132,6 +135,7 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<PaymentGatewayTestControl>();
             services.AddSingleton<SensitiveLogTestControl>();
             services.AddSingleton<ContentSafetyProviderTestControl>();
+            services.AddSingleton<PlatformStepUpTestControl>();
             services.AddSingleton<Microsoft.Extensions.Logging.ILoggerProvider, RecordingTestLoggerProvider>();
             services.RemoveAll<DevelopmentOtpStore>();
             services.RemoveAll<DevelopmentOtpProvider>();
@@ -147,6 +151,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<IPaymentGateway, RecordingPaymentGateway>();
             services.RemoveAll<IContentSafetyProvider>();
             services.AddSingleton<IContentSafetyProvider, RecordingContentSafetyProvider>();
+            services.RemoveAll<IPlatformStepUpAuthorization>();
+            services.AddSingleton<IPlatformStepUpAuthorization, TestPlatformStepUpAuthorization>();
             services.RemoveAll<NotificationDeliveryOptions>();
             services.AddSingleton(new NotificationDeliveryOptions
             {

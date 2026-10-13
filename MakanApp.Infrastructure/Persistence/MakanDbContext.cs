@@ -6,6 +6,7 @@ using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Platform;
 using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Messaging;
@@ -91,6 +92,11 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<PlatformRole> PlatformRoles => Set<PlatformRole>();
+    public DbSet<PlatformPermission> PlatformPermissions => Set<PlatformPermission>();
+    public DbSet<PlatformRolePermission> PlatformRolePermissions => Set<PlatformRolePermission>();
+    public DbSet<PlatformRoleAssignment> PlatformRoleAssignments => Set<PlatformRoleAssignment>();
+    public DbSet<AdminAuditLog> AdminAuditLogs => Set<AdminAuditLog>();
     public DbSet<FileAsset> FileAssets => Set<FileAsset>();
     public DbSet<ReportExportJob> ReportExportJobs => Set<ReportExportJob>();
     public DbSet<MakanApp.Domain.Notification.Notification> Notifications => Set<MakanApp.Domain.Notification.Notification>();
@@ -102,5 +108,28 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MakanDbContext).Assembly);
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnsureAdminAuditIsAppendOnly();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        EnsureAdminAuditIsAppendOnly();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void EnsureAdminAuditIsAppendOnly()
+    {
+        if (ChangeTracker.Entries<AdminAuditLog>().Any(entry =>
+                entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("رویداد ممیزی مدیریتی فقط قابل افزودن است.");
+        }
     }
 }

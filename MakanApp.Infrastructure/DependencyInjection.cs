@@ -9,6 +9,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Outbox;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Platform;
 using MakanApp.Application.Reports.Dashboards;
 using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
@@ -23,6 +24,7 @@ using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Organization;
+using MakanApp.Infrastructure.Platform;
 using MakanApp.Infrastructure.Reports.Dashboards;
 using MakanApp.Infrastructure.Reports.Detailed;
 using MakanApp.Infrastructure.Reports.Exports;
@@ -57,6 +59,14 @@ public static class DependencyInjection
         services.AddScoped<OrganizationService>();
         services.AddScoped<IOrganizationService>(serviceProvider =>
             serviceProvider.GetRequiredService<OrganizationService>());
+        services.AddScoped<IPlatformIamStore, EfPlatformIamStore>();
+        services.AddScoped<PlatformIamService>();
+        services.AddScoped<IPlatformIamService>(serviceProvider =>
+            serviceProvider.GetRequiredService<PlatformIamService>());
+        services.AddScoped<IPlatformPermissionResolver>(serviceProvider =>
+            serviceProvider.GetRequiredService<PlatformIamService>());
+        services.AddScoped<IPlatformBootstrapService, PlatformBootstrapService>();
+        services.AddScoped<IPlatformStepUpAuthorization, UnavailablePlatformStepUpAuthorization>();
         services.AddScoped<IGuardianStore, EfGuardianStore>();
         services.AddScoped<IGuardianService, GuardianService>();
         services.AddScoped<IAcademicStore, EfAcademicStore>();
