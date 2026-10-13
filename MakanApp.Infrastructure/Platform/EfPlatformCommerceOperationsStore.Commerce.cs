@@ -55,11 +55,51 @@ public sealed partial class EfPlatformCommerceOperationsStore
             .Where(version => version.PlanId == planId)
             .OrderByDescending(version => version.VersionNumber)
             .ToArrayAsync(cancellationToken);
-        var mapped = new List<PlatformPlanVersionItem>(versions.Length);
-        foreach (var version in versions)
+        var versionIds = versions.Select(version => version.Id).ToArray();
+        var prices = await _dbContext.PlanVersionPrices.AsNoTracking()
+            .Where(price => versionIds.Contains(price.PlanVersionId))
+            .ToDictionaryAsync(price => price.PlanVersionId, cancellationToken);
+        var entitlementRows = await _dbContext.PlanEntitlements.AsNoTracking()
+            .Where(entitlement => versionIds.Contains(entitlement.PlanVersionId))
+            .OrderBy(entitlement => entitlement.Key)
+            .Select(entitlement => new
+            {
+                entitlement.PlanVersionId,
+                Item = new PlatformPlanEntitlementItem(entitlement.Key, entitlement.Enabled)
+            })
+            .ToArrayAsync(cancellationToken);
+        var quotaRows = await _dbContext.PlanQuotaDefinitions.AsNoTracking()
+            .Where(quota => versionIds.Contains(quota.PlanVersionId))
+            .OrderBy(quota => quota.Key)
+            .Select(quota => new
+            {
+                quota.PlanVersionId,
+                Item = new PlatformPlanQuotaItem(quota.Key, quota.Limit)
+            })
+            .ToArrayAsync(cancellationToken);
+        var subscriptionCounts = await _dbContext.Subscriptions.AsNoTracking()
+            .Where(subscription => versionIds.Contains(subscription.PlanVersionId))
+            .GroupBy(subscription => subscription.PlanVersionId)
+            .Select(group => new { PlanVersionId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.PlanVersionId, item => item.Count, cancellationToken);
+        var entitlements = entitlementRows.ToLookup(item => item.PlanVersionId, item => item.Item);
+        var quotas = quotaRows.ToLookup(item => item.PlanVersionId, item => item.Item);
+        var mapped = versions.Select(version =>
         {
-            mapped.Add(await MapPlanVersionAsync(version, cancellationToken));
-        }
+            prices.TryGetValue(version.Id, out var price);
+            return new PlatformPlanVersionItem(
+                version.Id,
+                version.VersionNumber,
+                version.Status,
+                price?.Amount,
+                price?.Currency,
+                entitlements[version.Id].ToArray(),
+                quotas[version.Id].ToArray(),
+                subscriptionCounts.GetValueOrDefault(version.Id),
+                version.CreatedAtUtc,
+                version.PublishedAtUtc,
+                Convert.ToBase64String(version.RowVersion));
+        }).ToArray();
 
         return new PlatformPlanDetail(
             plan.Id,
@@ -200,17 +240,104 @@ public sealed partial class EfPlatformCommerceOperationsStore
         }
 
         var totalCount = await subscriptions.CountAsync(cancellationToken);
-        var rows = await subscriptions
-            .OrderByDescending(item => item.CreatedAtUtc)
-            .ThenBy(item => item.Id)
+        var rows = await (
+            from subscription in subscriptions
+            join version in _dbContext.PlanVersions.AsNoTracking()
+                on subscription.PlanVersionId equals version.Id
+            join plan in _dbContext.Plans.AsNoTracking() on version.PlanId equals plan.Id
+            join organization in _dbContext.Organizations.AsNoTracking()
+                on subscription.OrganizationId equals organization.Id
+            orderby subscription.CreatedAtUtc descending, subscription.Id
+            select new SubscriptionPageRow(
+                subscription.Id,
+                organization.Id,
+                organization.Name,
+                plan.Id,
+                plan.Code,
+                version.Id,
+                version.VersionNumber,
+                subscription.Status,
+                subscription.StartsAtUtc,
+                subscription.EndsAtUtc,
+                subscription.CreatedAtUtc))
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToArrayAsync(cancellationToken);
-        var items = new List<PlatformSubscriptionItem>(rows.Length);
-        foreach (var row in rows)
-        {
-            items.Add(await MapSubscriptionAsync(row, cancellationToken));
-        }
+        var planVersionIds = rows.Select(item => item.PlanVersionId).Distinct().ToArray();
+        var quotaRows = await _dbContext.PlanQuotaDefinitions.AsNoTracking()
+            .Where(item => planVersionIds.Contains(item.PlanVersionId))
+            .OrderBy(item => item.Key)
+            .ToArrayAsync(cancellationToken);
+        var quotas = quotaRows.ToLookup(item => item.PlanVersionId);
+        var organizationIds = rows.Select(item => item.OrganizationId).Distinct().ToArray();
+        var requiredKeys = quotaRows.Select(item => item.Key).Distinct().ToHashSet();
+        var activeLearners = requiredKeys.Contains(QuotaKey.ActiveLearners)
+            ? await _dbContext.Enrollments.AsNoTracking()
+                .Where(item => organizationIds.Contains(item.OrganizationId) &&
+                               item.Status == MakanApp.Domain.Academic.EnrollmentStatus.Active &&
+                               item.EndedAtUtc == null)
+                .GroupBy(item => item.OrganizationId)
+                .Select(group => new
+                {
+                    OrganizationId = group.Key,
+                    Count = group.Select(item => item.LearnerOrganizationPersonId).Distinct().LongCount()
+                })
+                .ToDictionaryAsync(item => item.OrganizationId, item => item.Count, cancellationToken)
+            : [];
+        var activeClasses = requiredKeys.Contains(QuotaKey.ActiveClasses)
+            ? await _dbContext.Classes.AsNoTracking()
+                .Where(item => organizationIds.Contains(item.OrganizationId) &&
+                               item.Status == MakanApp.Domain.Academic.ClassStatus.Active &&
+                               item.EndedAtUtc == null)
+                .GroupBy(item => item.OrganizationId)
+                .Select(group => new { OrganizationId = group.Key, Count = group.LongCount() })
+                .ToDictionaryAsync(item => item.OrganizationId, item => item.Count, cancellationToken)
+            : [];
+        var storageBytes = requiredKeys.Contains(QuotaKey.StorageBytes)
+            ? await _dbContext.FileAssets.AsNoTracking()
+                .Where(item => item.OrganizationId.HasValue &&
+                               organizationIds.Contains(item.OrganizationId.Value) &&
+                               item.Status == MakanApp.Domain.Storage.FileAssetStatus.Ready)
+                .GroupBy(item => item.OrganizationId!.Value)
+                .Select(group => new { OrganizationId = group.Key, Bytes = group.Sum(item => item.SizeBytes) })
+                .ToDictionaryAsync(item => item.OrganizationId, item => item.Bytes, cancellationToken)
+            : [];
+        var subscriptionIds = rows.Select(item => item.SubscriptionId).ToArray();
+        var reportExports = requiredKeys.Contains(QuotaKey.ReportExports)
+            ? await _dbContext.UsageLedgerEntries.AsNoTracking()
+                .Where(item => subscriptionIds.Contains(item.SubscriptionId) &&
+                               item.QuotaKey == QuotaKey.ReportExports)
+                .GroupBy(item => item.SubscriptionId)
+                .Select(group => new { SubscriptionId = group.Key, Usage = group.Sum(item => item.Amount) })
+                .ToDictionaryAsync(item => item.SubscriptionId, item => item.Usage, cancellationToken)
+            : [];
+        var items = rows.Select(row => new PlatformSubscriptionItem(
+            row.SubscriptionId,
+            new PlatformOrganizationContext(row.OrganizationId, row.OrganizationName),
+            row.PlanId,
+            row.PlanCode,
+            row.PlanVersionId,
+            row.PlanVersionNumber,
+            row.Status,
+            row.StartsAtUtc,
+            row.EndsAtUtc,
+            quotas[row.PlanVersionId].Select(quota =>
+            {
+                var currentUsage = quota.Key switch
+                {
+                    QuotaKey.ActiveLearners => activeLearners.GetValueOrDefault(row.OrganizationId),
+                    QuotaKey.ActiveClasses => activeClasses.GetValueOrDefault(row.OrganizationId),
+                    QuotaKey.StorageBytes => storageBytes.GetValueOrDefault(row.OrganizationId),
+                    QuotaKey.ReportExports => reportExports.GetValueOrDefault(row.SubscriptionId),
+                    _ => 0
+                };
+                return new PlatformSubscriptionUsageItem(
+                    quota.Key,
+                    quota.Limit,
+                    currentUsage,
+                    quota.Limit.HasValue && currentUsage > quota.Limit.Value);
+            }).ToArray(),
+            row.CreatedAtUtc)).ToArray();
 
         return new PlatformSubscriptionPage(items, query.Page, query.PageSize, totalCount);
     }
@@ -347,6 +474,19 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 item.Limit.HasValue && usage.GetValueOrDefault(item.Key) > item.Limit.Value)).ToArray(),
             subscription.CreatedAtUtc);
     }
+
+    private sealed record SubscriptionPageRow(
+        Guid SubscriptionId,
+        Guid OrganizationId,
+        string OrganizationName,
+        Guid PlanId,
+        string PlanCode,
+        Guid PlanVersionId,
+        int PlanVersionNumber,
+        SubscriptionStatus Status,
+        DateTime StartsAtUtc,
+        DateTime? EndsAtUtc,
+        DateTime CreatedAtUtc);
 
     private void EnsureVersion(PlanVersion version, byte[] expectedVersion)
     {

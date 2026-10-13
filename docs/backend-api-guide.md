@@ -1,6 +1,6 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است: شناخت محصول و مدل، معماری و مسئولیت فایل‌ها، راه‌اندازی، استفاده از API، مطالعه مسیر اجرا، persistence، تست و ادامه توسعه. مبنای بازبینی `main@f0ff3be` در `2026-10-12` است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل داشبوردها، گزارش‌های تفصیلی STEP 11B، OTP مدیریت‌شده و میزبانی Production.
+این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است: شناخت محصول و مدل، معماری و مسئولیت فایل‌ها، راه‌اندازی، استفاده از API، مطالعه مسیر اجرا، persistence، تست و ادامه توسعه. بازبینی STEP 15E از baseline ورودی `main@eebf02c` در `2026-10-13` انجام شده و قرارداد نهایی Backoffice را نیز پوشش می‌دهد. اظهارات تاریخی مراحل قبلی درباره نبود Backoffice فقط وضعیت همان مرحله را توصیف می‌کنند و بخش «Backoffice پلتفرم» در انتهای این راهنما مرجع جاری است.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
@@ -1533,3 +1533,94 @@ Direct دو طرف و در Group/Channel participantهای فعال بررسی �
 از commit، تغییر هم‌زمان participantها را پوشش می‌دهد.
 
 Provider واقعی هنوز انتخاب نشده است. `Messaging:ContentSafetyProvider` فقط `DevelopmentAllow` در Development/Testing یا `Unavailable` را می‌پذیرد؛ محیط production به‌صورت پیش‌فرض Unavailable و امن است. MakanApp-AI در این مسیر استفاده نمی‌شود. جزئیات privacy، idempotency، schema و محدودیت‌ها در [سند معماری STEP 14D](architecture/STEP_14D_MODERATION_CHILD_SAFETY.md) آمده است.
+
+<a id="platform-backoffice"></a>
+## Backoffice پلتفرم — STEP 15E
+
+Backoffice زیر مسیر مستقل `/api/admin/v1` قرار دارد. `OrganizationRole.Manager` هیچ مجوزی برای این مسیر ایجاد نمی‌کند؛ هر درخواست به Bearer session فعال و permission جاری Platform از SQL Server نیاز دارد. revoke نقش بدون انتظار برای انقضای token مؤثر می‌شود. جزئیات ماتریس نقش‌ها و نتیجه پذیرش در [سند STEP 15E](architecture/STEP_15E_BACKOFFICE_FINAL_ACCEPTANCE.md) و قرارداد UX در [تحویل Frontend](platform/BACKOFFICE_FRONTEND_HANDOFF.md) ثبت شده است.
+
+### قرارداد IAM و Audit
+
+| Method و Route | Permission | Request | Response |
+|---|---|---|---|
+| `GET /api/admin/v1/me` | `platform.access` | بدون body | `PlatformMeResult` با هویت امن، نقش‌ها و permissionهای مؤثر |
+| `GET /api/admin/v1/roles` | `platform.roles.read` | بدون body | مجموعه `PlatformRoleCatalogItem` |
+| `GET /api/admin/v1/role-assignments` | `platform.roles.read` | `userId`, `roleKey`, `activeOnly`, `page`, `pageSize` | `PlatformRoleAssignmentPage` |
+| `POST /api/admin/v1/role-assignments` | `platform.roles.manage` | `GrantPlatformRoleCommand` | `PlatformRoleMutationResult`؛ ایجاد 201 و retry هم‌ارز 200 |
+| `DELETE /api/admin/v1/role-assignments/{assignmentId}` | `platform.roles.manage` | `EndPlatformRoleAssignmentCommand` در body | `PlatformRoleMutationResult` |
+| `GET /api/admin/v1/audit-logs` | `platform.audit.read` | filterهای actor/action/target/result/time، sort allowlist و page | `AdminAuditLogPage` |
+
+grant/revoke نقش به `Reason` و step-up نیاز دارد. آخرین `PlatformOwner` با transaction و SQL Server lock قابل پایان‌دادن نیست. bootstrap مالک اول یک ابزار عملیاتی خارج HTTP است و پس از ایجاد اولین مالک بسته می‌شود. Audit append-only است و هیچ API برای update/delete ندارد.
+
+### Organization، User و Provisioning
+
+| Method و Route | Permission | Request | Response |
+|---|---|---|---|
+| `GET /api/admin/v1/organizations` | `platform.organizations.read` | search/status/page/pageSize و sort allowlist | `PlatformOrganizationPage` |
+| `GET /api/admin/v1/organizations/{organizationId}` | `platform.organizations.read` | شناسه مسیر | `PlatformOrganizationDetail` |
+| `GET /api/admin/v1/organizations/{organizationId}/suspension-impact` | `platform.organizations.read` | شناسه مسیر | `PlatformOrganizationImpactPreview` |
+| `POST /api/admin/v1/organizations` | `platform.organizations.manage` | `CreatePlatformOrganizationCommand` | `PlatformProvisioningResult`؛ 201 یا replay برابر 200 |
+| `POST /api/admin/v1/organizations/{organizationId}/suspend` | `platform.organizations.manage` | `PlatformOrganizationStateCommand` | `PlatformOrganizationMutationResult` |
+| `POST /api/admin/v1/organizations/{organizationId}/reactivate` | `platform.organizations.manage` | `PlatformOrganizationStateCommand` | `PlatformOrganizationMutationResult` |
+| `GET /api/admin/v1/organizations/{organizationId}/memberships` | `platform.organizations.read` | `activeOnly`, page/pageSize | `PlatformMembershipPage` |
+| `POST /api/admin/v1/organizations/{organizationId}/invitations` | `platform.organizations.manage` | `CreatePlatformInvitationCommand` | `PlatformInvitationResult`؛ 201 یا replay برابر 200 |
+| `PUT /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}/role` | `platform.organizations.manage` | `ChangePlatformMembershipRoleCommand` | `PlatformMembershipMutationResult` |
+| `DELETE /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}` | `platform.organizations.manage` | `EndPlatformMembershipCommand` در body | `PlatformMembershipMutationResult` |
+| `GET /api/admin/v1/provisioning` | `platform.provisioning.read` | status و page/pageSize | `PlatformProvisioningPage` |
+| `POST /api/admin/v1/provisioning` | `platform.provisioning.manage` | `ProvisionOrganizationCommand` | `PlatformProvisioningResult`؛ 201 یا replay برابر 200 |
+| `GET /api/admin/v1/users` | `platform.users.read` | search/status/page/pageSize و sort allowlist | `PlatformUserPage` با phone mask‌شده |
+| `GET /api/admin/v1/users/{userId}` | `platform.users.read` | شناسه مسیر | `PlatformUserDetail` با PII محدود |
+| `POST /api/admin/v1/users/{userId}/suspend` | `platform.users.manage` | `PlatformUserStateCommand` | `PlatformUserMutationResult` |
+| `POST /api/admin/v1/users/{userId}/reactivate` | `platform.users.manage` | `PlatformUserStateCommand` | `PlatformUserMutationResult` |
+| `POST /api/admin/v1/users/{userId}/sessions/revoke` | `platform.sessions.manage` | `RevokePlatformSessionsCommand` | `PlatformSessionRevocationResult` |
+| `POST /api/admin/v1/users/{userId}/sessions/{sessionId}/revoke` | `platform.sessions.manage` | `RevokePlatformSessionsCommand` | `PlatformSessionRevocationResult` |
+
+تعلیق/فعال‌سازی Organization یا User به step-up نیاز دارد. provisioning حاوی `PlanVersionId` نیز step-up می‌خواهد؛ ساخت صرف Organization بدون subscription چنین الزامی ندارد. mutationها `Reason` می‌گیرند و audit می‌شوند. تعلیق User نشست‌های فعال او را revoke می‌کند. قاعده آخرین Manager و استقلال membershipهای چند سازمان در لایه persistence و transaction حفظ می‌شود.
+
+### Education، Messaging Metadata و PlatformSafety
+
+| Method و Route | Permission | Request | Response |
+|---|---|---|---|
+| `GET /api/admin/v1/education/classes` | `platform.education.read` | organization/status/search/page | `PlatformClassPage` |
+| `GET /api/admin/v1/education/classes/{classId}` | `platform.education.read` | شناسه مسیر | `PlatformClassDetail` |
+| `GET /api/admin/v1/education/teachers` | `platform.education.read` | organization/class/search/page | `PlatformTeacherAssignmentPage` |
+| `GET /api/admin/v1/education/enrollments` | `platform.education.read` | organization/class/search/page | `PlatformEnrollmentPage` |
+| `GET /api/admin/v1/education/assignments` | `platform.education.read` | organization/class/search/page | `PlatformAssignmentPage` |
+| `GET /api/admin/v1/education/exams` | `platform.education.read` | organization/class/search/page | `PlatformExamPage` |
+| `GET /api/admin/v1/messaging/conversations` | `platform.messaging.read_metadata` | organization/type/scope/visibility/status/page | `PlatformConversationMetadataPage` بدون message body |
+| `GET /api/admin/v1/moderation/cases` | `platform.moderation.review` | status/priority/page | `PlatformModerationCasePage` |
+| `GET /api/admin/v1/moderation/cases/{caseId}` | `platform.moderation.review` | شناسه مسیر | `PlatformModerationCaseDetail` با evidence همان پرونده |
+| `POST /api/admin/v1/moderation/cases/{caseId}/start-review` | `platform.moderation.review` | `PlatformModerationVersionCommand` | `PlatformModerationCaseDetail` |
+| `POST /api/admin/v1/moderation/cases/{caseId}/resolve` | `platform.moderation.review` | `PlatformCompleteModerationCommand` | `PlatformModerationCaseDetail` |
+| `POST /api/admin/v1/moderation/cases/{caseId}/dismiss` | `platform.moderation.review` | `PlatformCompleteModerationCommand` | `PlatformModerationCaseDetail` |
+| `POST /api/admin/v1/moderation/cases/{caseId}/enforce-content-removal` | هر دو `platform.moderation.review` و `platform.moderation.enforce` | `PlatformModerationVersionCommand` | `PlatformModerationCaseDetail` |
+| `GET /api/admin/v1/moderation/cases/{caseId}/evidence/files/{fileAssetId}` | `platform.moderation.review` | شناسه پرونده و فایل | stream فقط اگر فایل به همان پرونده متصل باشد |
+
+Platform permission مجوز خواندن دلخواه Direct، Contacts یا فایل را ایجاد نمی‌کند. metadata پیام‌رسان فاقد متن پیام است و evidence فقط از Case مجاز resolve می‌شود. mutationهای moderation optimistic concurrency دارند و هم AdminAudit و هم سابقه دامنه‌ای مربوط را حفظ می‌کنند.
+
+### Commerce، Finance و Operations
+
+| Method و Route | Permission | Request | Response |
+|---|---|---|---|
+| `GET /api/admin/v1/commerce/plans` | `platform.commerce.read` | search/page/pageSize | `PlatformPlanPage` |
+| `GET /api/admin/v1/commerce/plans/{planId}` | `platform.commerce.read` | شناسه مسیر | `PlatformPlanDetail` با version history |
+| `POST /api/admin/v1/commerce/plans` | `platform.commerce.manage` | `CreatePlatformPlanCommand` | `PlatformPlanDetail` با 201 |
+| `POST /api/admin/v1/commerce/plans/{planId}/versions` | `platform.commerce.manage` | `CreatePlatformPlanVersionCommand` | `PlatformPlanVersionItem` با 201 |
+| `POST /api/admin/v1/commerce/plan-versions/{planVersionId}/publish` | `platform.commerce.manage` | `PublishPlatformPlanVersionCommand` | `PlatformPlanVersionItem` |
+| `GET /api/admin/v1/commerce/subscriptions` | `platform.commerce.read` | organization/status/page/pageSize | `PlatformSubscriptionPage` |
+| `POST /api/admin/v1/commerce/organizations/{organizationId}/subscription-override` | `platform.commerce.manage` | `OverridePlatformSubscriptionCommand` | `PlatformSubscriptionOverrideResult` |
+| `GET /api/admin/v1/finance/orders` | `platform.finance.read` | organization/status/page/pageSize | `PlatformOrderPage` با referenceهای mask‌شده |
+| `GET /api/admin/v1/finance/orders/{orderId}` | `platform.finance.read` | شناسه مسیر | `PlatformOrderItem` و تاریخچه امن attempt/payment |
+| `GET /api/admin/v1/operations/notifications` | `platform.notifications.read` | بدون body | `PlatformNotificationOperations` فقط counter/state/provider availability |
+| `GET /api/admin/v1/operations/jobs` | `platform.operations.read` | بدون body | `PlatformJobOperations` |
+| `GET /api/admin/v1/operations/health` | `platform.operations.read` | بدون body | `PlatformSystemHealth` بدون secret/config خام |
+
+انتشار PlanVersion و override اشتراک به step-up و `Reason` نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه Subscription را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API برای «موفق اعلام‌کردن دستی پرداخت»، refund یا provider reconciliation ساختگی وجود ندارد. عملیات notification/job نیز فعلاً read-only و بدون token، شماره کامل یا متن notification هستند. endpoint AI ساخته نشده و وضعیت واقعی `NotIntegrated/DependencyPending` است.
+
+### صفحه‌بندی، خطا و رفتار حساس
+
+- listها server-side هستند؛ مقدار پیش‌فرض اغلب `page=1&pageSize=30` است، membership/audit پیش‌فرض ۵۰ دارند و سقف معتبر در Application enforce می‌شود. sort فقط در مسیرهایی که صریحاً ارائه شده و فقط از allowlist پذیرفته می‌شود.
+- پاسخ خطا `ProblemDetails` با کد پایدار دارد. `401` یعنی Bearer session نامعتبر/منقضی، `403` یعنی permission یا step-up ناکافی، `404` برای resource غیرقابل مشاهده/ناموجود، `409` برای conflict یا last-owner/last-manager، `412` برای concurrency/version mismatch، `422` برای validation، `429` برای rate limit و `503` برای dependency fail-closed است.
+- در runtime تولید فعلی `UnavailablePlatformStepUpAuthorization` فعال است؛ بنابراین عملیات حساس بالا با `PLATFORM_STEP_UP_REQUIRED` و 403 fail-closed می‌شوند. این رفتار جای MFA واقعی را نمی‌گیرد و مانع اعلام آمادگی کامل Production است.
+- تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.
+- OpenAPI جاری در `/openapi/v1.json` قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.
