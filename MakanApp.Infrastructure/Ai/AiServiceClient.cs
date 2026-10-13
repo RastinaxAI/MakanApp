@@ -210,6 +210,8 @@ public sealed class AiServiceClient(
     {
         if (response is null ||
             response.RequestId != request.RequestId ||
+            response.CorrelationId != request.CorrelationId ||
+            response.ConversationId != request.ConversationId ||
             string.IsNullOrWhiteSpace(response.Answer?.Text) ||
             string.IsNullOrWhiteSpace(response.Answer.Language) ||
             response.Insights is null || response.Risks is null ||

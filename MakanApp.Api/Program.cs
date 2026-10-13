@@ -11,6 +11,7 @@ using MakanApp.Api.Hosting;
 using MakanApp.Api.Observability;
 using MakanApp.Api.Platform;
 using MakanApp.Api.Realtime;
+using MakanApp.Application.Ai;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Messaging;
@@ -126,6 +127,10 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 10)));
+    options.AddPolicy("ai-chat", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 20)));
     options.OnRejected = async (context, cancellationToken) =>
     {
         var isPayment = context.HttpContext.Request.Path.StartsWithSegments(
@@ -140,6 +145,9 @@ builder.Services.AddRateLimiter(options =>
         var isOtp = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/auth/otp",
             StringComparison.OrdinalIgnoreCase);
+        var isAi = context.HttpContext.Request.Path.StartsWithSegments(
+            "/api/v1/ai",
+            StringComparison.OrdinalIgnoreCase);
         var problemDetailsService = context.HttpContext.RequestServices
             .GetRequiredService<IProblemDetailsService>();
         await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
@@ -149,14 +157,18 @@ builder.Services.AddRateLimiter(options =>
             {
                 Status = StatusCodes.Status429TooManyRequests,
                 Title = "Too many requests",
-                Detail = isPayment
+                Detail = isAi
+                    ? "تعداد درخواست‌های هوش مصنوعی بیش از حد مجاز است."
+                    : isPayment
                     ? "تعداد درخواست‌های پرداخت بیش از حد مجاز است."
                     : isMessagingDiscovery
                         ? "تعداد درخواست‌های جست‌وجوی کاربر بیش از حد مجاز است."
                         : isOtp
                             ? "تعداد درخواست‌های کد بیش از حد مجاز است."
                             : "تعداد درخواست‌ها بیش از حد مجاز است.",
-                Type = isPayment
+                Type = isAi
+                    ? "urn:makan:problem:ai-rate-limited"
+                    : isPayment
                     ? "urn:makan:problem:payment-rate-limited"
                     : isMessagingDiscovery
                         ? "urn:makan:problem:messaging-discovery-rate-limited"
@@ -165,7 +177,9 @@ builder.Services.AddRateLimiter(options =>
                             : "urn:makan:problem:rate-limited",
                 Extensions =
                 {
-                    ["code"] = isPayment
+                    ["code"] = isAi
+                        ? AiServiceErrorCodes.RateLimited
+                        : isPayment
                         ? CommerceErrorCodes.PaymentRateLimited
                         : isMessagingDiscovery
                             ? MessagingErrorCodes.DiscoveryRateLimited

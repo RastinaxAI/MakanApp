@@ -177,6 +177,8 @@ public static class DependencyInjection
         services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
         services.AddHttpClient<IAiServiceClient, AiServiceClient>(client =>
             client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddScoped<IAiScopeStore, EfAiScopeStore>();
+        services.AddScoped<IAiChatService, AiChatService>();
         services.AddSingleton(CreateOtpOptions(configuration, environmentName));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));

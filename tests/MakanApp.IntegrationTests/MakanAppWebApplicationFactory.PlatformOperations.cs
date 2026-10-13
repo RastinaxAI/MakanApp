@@ -49,6 +49,15 @@ public sealed partial class MakanAppWebApplicationFactory
             .SingleAsync();
     }
 
+    public async Task SuspendUserAsync(Guid userId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var user = await dbContext.Users.SingleAsync(item => item.Id == userId);
+        user.Suspend(DateTime.UtcNow);
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task<bool> IsSessionActiveAsync(Guid sessionId)
     {
         await using var scope = Services.CreateAsyncScope();

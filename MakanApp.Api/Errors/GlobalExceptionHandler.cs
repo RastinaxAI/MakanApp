@@ -1,4 +1,5 @@
 using MakanApp.Application.Academic;
+using MakanApp.Application.Ai;
 using MakanApp.Application.Assessment;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
@@ -29,6 +30,9 @@ public sealed class GlobalExceptionHandler(
             AssessmentException assessmentException => CreateKnownProblem(
                 assessmentException.Code,
                 assessmentException.Message),
+            AiServiceException aiException => CreateKnownProblem(
+                aiException.Code,
+                aiException.Message),
             CommerceException commerceException => CreateKnownProblem(
                 commerceException.Code,
                 commerceException.Message),
@@ -83,6 +87,15 @@ public sealed class GlobalExceptionHandler(
         var status = code switch
         {
             IdentityErrorCodes.AuthRequired => StatusCodes.Status401Unauthorized,
+            AiServiceErrorCodes.InvalidRequest => StatusCodes.Status400BadRequest,
+            AiServiceErrorCodes.ContextNotAllowed => StatusCodes.Status403Forbidden,
+            AiServiceErrorCodes.RateLimited => StatusCodes.Status429TooManyRequests,
+            AiServiceErrorCodes.ResponseInvalid => StatusCodes.Status502BadGateway,
+            AiServiceErrorCodes.ServiceTimeout => StatusCodes.Status504GatewayTimeout,
+            AiServiceErrorCodes.FeatureDisabled => StatusCodes.Status503ServiceUnavailable,
+            AiServiceErrorCodes.ServiceUnauthorized => StatusCodes.Status503ServiceUnavailable,
+            AiServiceErrorCodes.ServiceForbidden => StatusCodes.Status503ServiceUnavailable,
+            AiServiceErrorCodes.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
             IdentityErrorCodes.RefreshTokenInvalid => StatusCodes.Status401Unauthorized,
             IdentityErrorCodes.RefreshTokenReused => StatusCodes.Status401Unauthorized,
             IdentityErrorCodes.SessionNotFound => StatusCodes.Status404NotFound,
