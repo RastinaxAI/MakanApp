@@ -10,7 +10,7 @@ public sealed class ModerationActionConfiguration : IEntityTypeConfiguration<Mod
     public void Configure(EntityTypeBuilder<ModerationAction> builder)
     {
         builder.ToTable("ModerationActions", "messaging", table =>
-            table.HasCheckConstraint("CK_ModerationActions_Type", "[Type] IN (1, 2, 3, 4, 5)"));
+            table.HasCheckConstraint("CK_ModerationActions_Type", "[Type] IN (1, 2, 3, 4, 5, 6)"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(item => new { item.ModerationCaseId, item.CreatedAtUtc, item.Id })

@@ -28,7 +28,12 @@ public sealed class PlatformPermissionConfiguration : IEntityTypeConfiguration<P
             Permission(PlatformCatalogIds.UsersManagePermission, PlatformPermissionKeys.UsersManage, "Manage global user account state"),
             Permission(PlatformCatalogIds.SessionsManagePermission, PlatformPermissionKeys.SessionsManage, "Revoke user sessions"),
             Permission(PlatformCatalogIds.ProvisioningReadPermission, PlatformPermissionKeys.ProvisioningRead, "Read organization provisioning state"),
-            Permission(PlatformCatalogIds.ProvisioningManagePermission, PlatformPermissionKeys.ProvisioningManage, "Manage organization provisioning"));
+            Permission(PlatformCatalogIds.ProvisioningManagePermission, PlatformPermissionKeys.ProvisioningManage, "Manage organization provisioning"),
+            Permission(PlatformCatalogIds.EducationReadPermission, PlatformPermissionKeys.EducationRead, "Read global education operations"),
+            Permission(PlatformCatalogIds.EducationManagePermission, PlatformPermissionKeys.EducationManage, "Manage approved education operations"),
+            Permission(PlatformCatalogIds.MessagingReadMetadataPermission, PlatformPermissionKeys.MessagingReadMetadata, "Read safe messaging metadata"),
+            Permission(PlatformCatalogIds.ModerationReviewPermission, PlatformPermissionKeys.ModerationReview, "Review platform safety cases"),
+            Permission(PlatformCatalogIds.ModerationEnforcePermission, PlatformPermissionKeys.ModerationEnforce, "Enforce case-scoped platform moderation decisions"));
     }
 
     private static object Permission(Guid id, string key, string description) => new

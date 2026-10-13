@@ -97,6 +97,27 @@ public sealed partial class MakanAppWebApplicationFactory
         await dbContext.SaveChangesAsync();
         return moderationCase.Id;
     }
+
+    public async Task AttachPlatformSafetyEvidenceAsync(Guid caseId, Guid fileAssetId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        dbContext.ModerationEvidenceAttachments.Add(ModerationEvidenceAttachment.Create(
+            caseId,
+            fileAssetId,
+            DateTime.UtcNow));
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task<bool> IsMessageDeletedAsync(Guid messageId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.Messages.AsNoTracking()
+            .Where(message => message.Id == messageId)
+            .Select(message => message.DeletedAtUtc != null)
+            .SingleAsync();
+    }
 }
 
 public sealed class PlatformStepUpTestControl

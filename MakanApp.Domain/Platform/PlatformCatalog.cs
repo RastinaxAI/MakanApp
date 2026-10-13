@@ -36,6 +36,11 @@ public static class PlatformPermissionKeys
     public const string SessionsManage = "platform.sessions.manage";
     public const string ProvisioningRead = "platform.provisioning.read";
     public const string ProvisioningManage = "platform.provisioning.manage";
+    public const string EducationRead = "platform.education.read";
+    public const string EducationManage = "platform.education.manage";
+    public const string MessagingReadMetadata = "platform.messaging.read_metadata";
+    public const string ModerationReview = "platform.moderation.review";
+    public const string ModerationEnforce = "platform.moderation.enforce";
 
     public static readonly IReadOnlyCollection<string> Step15A =
     [
@@ -55,7 +60,12 @@ public static class PlatformPermissionKeys
         UsersManage,
         SessionsManage,
         ProvisioningRead,
-        ProvisioningManage
+        ProvisioningManage,
+        EducationRead,
+        EducationManage,
+        MessagingReadMetadata,
+        ModerationReview,
+        ModerationEnforce
     ];
 }
 
@@ -81,4 +91,9 @@ public static class PlatformCatalogIds
     public static readonly Guid SessionsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000010");
     public static readonly Guid ProvisioningReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000011");
     public static readonly Guid ProvisioningManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000012");
+    public static readonly Guid EducationReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000013");
+    public static readonly Guid EducationManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000014");
+    public static readonly Guid MessagingReadMetadataPermission = Guid.Parse("20000000-0000-0000-0000-000000000015");
+    public static readonly Guid ModerationReviewPermission = Guid.Parse("20000000-0000-0000-0000-000000000016");
+    public static readonly Guid ModerationEnforcePermission = Guid.Parse("20000000-0000-0000-0000-000000000017");
 }

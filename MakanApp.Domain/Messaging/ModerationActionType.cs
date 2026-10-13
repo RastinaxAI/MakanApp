@@ -6,5 +6,6 @@ public enum ModerationActionType
     ReviewStarted = 2,
     Resolved = 3,
     Dismissed = 4,
-    Escalated = 5
+    Escalated = 5,
+    ContentRemoved = 6
 }
