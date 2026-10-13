@@ -400,6 +400,70 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
     }
 
     [Fact]
+    public async Task RefreshRotatesBothTokensAndReplayRevokesTheSessionFamily()
+    {
+        factory.SensitiveLogs.Clear();
+        using var client = factory.CreateClient();
+        var verified = await CreateAuthenticatedUserAsync(client, "+989120000021", "Windows laptop");
+
+        using var refreshResponse = await client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RefreshSessionCommand(verified.RefreshToken));
+        var rotated = await refreshResponse.Content.ReadFromJsonAsync<RefreshSessionResult>();
+
+        Assert.True(
+            refreshResponse.StatusCode == HttpStatusCode.OK,
+            $"status={refreshResponse.StatusCode};body={await refreshResponse.Content.ReadAsStringAsync()};logs={string.Join(" | ", factory.SensitiveLogs.Snapshot().TakeLast(10))}");
+        Assert.NotNull(rotated);
+        Assert.NotEqual(verified.AccessToken, rotated.AccessToken);
+        Assert.NotEqual(verified.RefreshToken, rotated.RefreshToken);
+        Assert.True(rotated.RefreshExpiresAtUtc > rotated.ExpiresAtUtc);
+
+        UseBearerToken(client, verified.AccessToken);
+        using var oldAccess = await client.GetAsync("/api/v1/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, oldAccess.StatusCode);
+
+        UseBearerToken(client, rotated.AccessToken);
+        using var activeAccess = await client.GetAsync("/api/v1/me");
+        Assert.Equal(HttpStatusCode.OK, activeAccess.StatusCode);
+
+        using var replay = await client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RefreshSessionCommand(verified.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
+        Assert.Equal(IdentityErrorCodes.RefreshTokenReused, await ReadProblemCodeAsync(replay));
+
+        using var revokedAccess = await client.GetAsync("/api/v1/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, revokedAccess.StatusCode);
+    }
+
+    [Fact]
+    public async Task UserCanListOwnDevicesAndRevokeAllExceptCurrentSession()
+    {
+        const string phoneNumber = "+989120000022";
+        using var firstClient = factory.CreateClient();
+        var first = await CreateAuthenticatedUserAsync(firstClient, phoneNumber, "First device");
+        UseBearerToken(firstClient, first.AccessToken);
+        using var secondClient = factory.CreateClient();
+        var second = await CreateAuthenticatedUserAsync(secondClient, phoneNumber, "Second device");
+        UseBearerToken(secondClient, second.AccessToken);
+
+        var sessions = await secondClient.GetFromJsonAsync<UserSessionResult[]>("/api/v1/auth/sessions");
+
+        Assert.NotNull(sessions);
+        Assert.Equal(2, sessions.Length);
+        Assert.Contains(sessions, session => session.DeviceName == "First device" && !session.IsCurrent);
+        Assert.Contains(sessions, session => session.DeviceName == "Second device" && session.IsCurrent);
+
+        using var revoke = await secondClient.PostAsync("/api/v1/auth/sessions/revoke-others", null);
+        Assert.Equal(HttpStatusCode.NoContent, revoke.StatusCode);
+        using var firstProfile = await firstClient.GetAsync("/api/v1/me");
+        using var secondProfile = await secondClient.GetAsync("/api/v1/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, firstProfile.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondProfile.StatusCode);
+    }
+
+    [Fact]
     public async Task UsernameMustBeUniqueIgnoringCase()
     {
         using var firstClient = factory.CreateClient();
@@ -425,14 +489,16 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
 
     private async Task<VerifyOtpResult> CreateAuthenticatedUserAsync(
         HttpClient client,
-        string phoneNumber)
+        string phoneNumber,
+        string? deviceName = null)
     {
         var challenge = await CreateChallengeAsync(client, phoneNumber);
         using var response = await VerifyOtpAsync(
             client,
             challenge.ChallengeId,
             phoneNumber,
-            factory.GetLatestOtpCode(phoneNumber));
+            factory.GetLatestOtpCode(phoneNumber),
+            deviceName);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<VerifyOtpResult>())!;
     }
@@ -457,10 +523,11 @@ public sealed class IdentityEndpointsTests(MakanAppWebApplicationFactory factory
         HttpClient client,
         Guid challengeId,
         string phoneNumber,
-        string code) =>
+        string code,
+        string? deviceName = null) =>
         client.PostAsJsonAsync(
             "/api/v1/auth/otp/verify",
-            new VerifyOtpCommand(challengeId, phoneNumber, code));
+            new VerifyOtpCommand(challengeId, phoneNumber, code, deviceName));
 
     private static void UseBearerToken(HttpClient client, string token) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);

@@ -69,6 +69,8 @@ public sealed record PlatformClassDetail(
     PlatformClassItem Class,
     IReadOnlyCollection<PlatformClassPerson> ActiveTeachers,
     IReadOnlyCollection<PlatformClassPerson> ActiveLearners,
+    bool ActiveTeachersTruncated,
+    bool ActiveLearnersTruncated,
     PlatformClassSessionSummary Sessions,
     PlatformClassAssessmentSummary Assessments,
     PlatformClassAttendanceSummary Attendance);

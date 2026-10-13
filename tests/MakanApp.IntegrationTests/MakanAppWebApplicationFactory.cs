@@ -75,6 +75,8 @@ public sealed partial class MakanAppWebApplicationFactory :
                 ["ConnectionStrings:MakanDatabase"] = TestConnectionString,
                 ["Sms:Provider"] = "Development",
                 ["Identity:Otp:MaxRequestsPerWindow"] = "5",
+                ["Identity:Session:AccessLifetimeSeconds"] = "86400",
+                ["Identity:Session:RefreshLifetimeSeconds"] = "2592000",
                 ["Storage:RootPath"] = StorageRootPath,
                 ["Storage:MaxFileSizeBytes"] = "1024",
                 ["Storage:UnattachedLifetimeHours"] = "1",
@@ -113,6 +115,13 @@ public sealed partial class MakanAppWebApplicationFactory :
 
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
+            services.RemoveAll<SessionOptions>();
+            services.AddSingleton(new SessionOptions
+            {
+                AccessLifetime = TimeSpan.FromDays(1),
+                RefreshLifetime = TimeSpan.FromDays(30),
+                MaximumDeviceNameLength = 100
+            });
             services.RemoveAll<StorageOptions>();
             services.AddSingleton(new StorageOptions
             {

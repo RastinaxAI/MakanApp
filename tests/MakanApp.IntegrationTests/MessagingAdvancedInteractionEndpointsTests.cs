@@ -325,11 +325,20 @@ public sealed partial class MessagingEndpointsTests
         string fileName)
     {
         using var form = new MultipartFormDataContent();
-        using var content = new ByteArrayContent([1, 2, 3, 4]);
+        using var content = new ByteArrayContent(ValidFileBytes(contentType));
         content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         form.Add(content, "File", fileName);
         using var response = await client.PostAsync("/api/v1/files", form);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<FileAssetResult>(JsonOptions))!;
     }
+
+    private static byte[] ValidFileBytes(string contentType) => contentType switch
+    {
+        "application/pdf" => "%PDF-1.7\n"u8.ToArray(),
+        "image/png" => [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1],
+        "audio/mpeg" => "ID3audio"u8.ToArray(),
+        "video/mp4" => [0, 0, 0, 16, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6F, 0x6D],
+        _ => "valid text"u8.ToArray()
+    };
 }

@@ -8,6 +8,7 @@ public static class StorageErrorCodes
     public const string FileEmpty = "FILE_EMPTY";
     public const string FileTooLarge = "FILE_TOO_LARGE";
     public const string FileTypeNotAllowed = "FILE_TYPE_NOT_ALLOWED";
+    public const string FileContentInvalid = "FILE_CONTENT_INVALID";
     public const string FileUploadFailed = "FILE_UPLOAD_FAILED";
     public const string FileStorageFailed = "FILE_STORAGE_FAILED";
     public const string FileAlreadyDeleted = "FILE_ALREADY_DELETED";

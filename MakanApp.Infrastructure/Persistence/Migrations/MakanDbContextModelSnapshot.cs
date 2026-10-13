@@ -2367,6 +2367,60 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("Persons", "identity");
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Identity.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("ReplacedByTokenId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<DateTime?>("UsedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReplacedByTokenId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("UX_RefreshTokens_TokenHash");
+
+                    b.HasIndex("SessionId", "ExpiresAtUtc")
+                        .HasDatabaseName("IX_RefreshTokens_Session_ExpiresAtUtc");
+
+                    b.ToTable("RefreshTokens", "identity", t =>
+                        {
+                            t.HasCheckConstraint("CK_RefreshTokens_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_RefreshTokens_Lifecycle", "[UsedAtUtc] IS NULL OR [ReplacedByTokenId] IS NOT NULL");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2475,8 +2529,18 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("AbsoluteExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("AssuranceLevel")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
+
+                    b.Property<string>("DeviceName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("datetime2(7)");
@@ -2500,6 +2564,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("SelectedSubjectOrganizationPersonId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("StepUpAtUtc")
+                        .HasColumnType("datetime2(7)");
+
                     b.Property<byte[]>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -2514,9 +2581,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_UserSessions_TokenHash");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "RevokedAtUtc", "AbsoluteExpiresAtUtc")
+                        .HasDatabaseName("IX_UserSessions_User_Revoked_AbsoluteExpiry");
 
-                    b.ToTable("UserSessions", "identity");
+                    b.ToTable("UserSessions", "identity", t =>
+                        {
+                            t.HasCheckConstraint("CK_UserSessions_AssuranceLevel", "[AssuranceLevel] IN (1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.AbuseReport", b =>
@@ -6056,6 +6127,20 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId", "LearnerOrganizationPersonId")
                         .HasPrincipalKey("OrganizationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Identity.RefreshToken", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.RefreshToken", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacedByTokenId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

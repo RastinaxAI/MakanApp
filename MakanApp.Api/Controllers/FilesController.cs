@@ -2,6 +2,7 @@ using MakanApp.Api.Authentication;
 using MakanApp.Application.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MakanApp.Api.Controllers;
 
@@ -11,6 +12,7 @@ namespace MakanApp.Api.Controllers;
 public sealed class FilesController(IStorageService storageService) : ControllerBase
 {
     [HttpPost]
+    [EnableRateLimiting("file-upload")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType<FileAssetResult>(StatusCodes.Status201Created)]
     public async Task<ActionResult<FileAssetResult>> Upload(
@@ -53,7 +55,11 @@ public sealed class FilesController(IStorageService storageService) : Controller
             fileId,
             cancellationToken);
         Response.ContentLength = result.SizeBytes;
-        return File(result.Content, result.ContentType, result.DownloadFileName);
+        return File(
+            result.Content,
+            result.ContentType,
+            result.DownloadFileName,
+            enableRangeProcessing: true);
     }
 
     [HttpDelete("{fileId:guid}")]

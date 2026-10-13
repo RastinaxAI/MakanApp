@@ -57,6 +57,7 @@ public sealed class OutboxProcessor(
     ILogger<OutboxProcessor> logger)
 {
     public const int BatchSize = 50;
+    public const int MaximumAttempts = 10;
     private static readonly TimeSpan ClaimLease = TimeSpan.FromSeconds(30);
     private const string ProcessingErrorCode = "notification_processing_failed";
 
@@ -81,6 +82,7 @@ public sealed class OutboxProcessor(
                 SELECT TOP ({BatchSize}) *
                 FROM [platform].[OutboxMessages] WITH (UPDLOCK, READPAST, ROWLOCK)
                 WHERE [ProcessedAtUtc] IS NULL
+                  AND [AttemptCount] < {MaximumAttempts}
                   AND ([ClaimedUntilUtc] IS NULL OR [ClaimedUntilUtc] <= {nowUtc})
                   AND ([NextAttemptAtUtc] IS NULL OR [NextAttemptAtUtc] <= {nowUtc})
                 ORDER BY [OccurredAtUtc], [Id]
@@ -168,7 +170,20 @@ public sealed class OutboxProcessor(
         {
             dbContext.ChangeTracker.Clear();
             await ScheduleRetryAsync(messageId, claimToken, CancellationToken.None);
-            logger.LogWarning(exception, "پردازش پیام اعلان {MessageId} ناموفق بود و دوباره تلاش می‌شود.", messageId);
+            if (await HasReachedAttemptLimitAsync(messageId, CancellationToken.None))
+            {
+                logger.LogError(
+                    exception,
+                    "پردازش پیام اعلان {MessageId} پس از سقف تلاش متوقف شد.",
+                    messageId);
+            }
+            else
+            {
+                logger.LogWarning(
+                    exception,
+                    "پردازش پیام اعلان {MessageId} ناموفق بود و دوباره تلاش می‌شود.",
+                    messageId);
+            }
         }
         finally
         {
@@ -196,6 +211,13 @@ public sealed class OutboxProcessor(
             ProcessingErrorCode);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    private Task<bool> HasReachedAttemptLimitAsync(
+        Guid messageId,
+        CancellationToken cancellationToken) =>
+        dbContext.OutboxMessages.AsNoTracking().AnyAsync(
+            message => message.Id == messageId && message.AttemptCount >= MaximumAttempts,
+            cancellationToken);
 
     private sealed record OutboxClaim(Guid Id, Guid Token);
 }

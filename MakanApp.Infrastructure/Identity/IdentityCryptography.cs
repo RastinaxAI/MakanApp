@@ -20,6 +20,15 @@ public sealed class IdentityCryptography(byte[] key) : IIdentitySecurity
     public byte[] HashSessionToken(string rawToken) =>
         ComputeHash("session", rawToken, []);
 
+    public string GenerateRefreshToken()
+    {
+        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+        return token.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+    }
+
+    public byte[] HashRefreshToken(string rawToken) =>
+        ComputeHash("refresh", rawToken, []);
+
     private byte[] ComputeHash(string purpose, string value, byte[] salt)
     {
         using var hmac = new HMACSHA256(key);

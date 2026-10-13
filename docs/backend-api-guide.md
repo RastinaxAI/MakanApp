@@ -1624,3 +1624,35 @@ Platform permission مجوز خواندن دلخواه Direct، Contacts یا ف
 - در runtime تولید فعلی `UnavailablePlatformStepUpAuthorization` فعال است؛ بنابراین عملیات حساس بالا با `PLATFORM_STEP_UP_REQUIRED` و 403 fail-closed می‌شوند. این رفتار جای MFA واقعی را نمی‌گیرد و مانع اعلام آمادگی کامل Production است.
 - تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.
 - OpenAPI جاری در `/openapi/v1.json` قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.
+
+<a id="production-hardening"></a>
+## سخت‌سازی Production — STEP 16
+
+### نشست و refresh token
+
+ورود OTP اکنون access token opaque کوتاه‌عمر و refresh token چرخشی برمی‌گرداند. raw refresh token فقط در پاسخ صدور/rotation دیده می‌شود و در SQL Server فقط HMAC/hash ذخیره می‌شود. هر refresh، access token قبلی و refresh token قبلی را نامعتبر می‌کند؛ replay توکن مصرف‌شده کل نشست را revoke می‌کند.
+
+| Method و Route | Authentication | Request | Response |
+|---|---|---|---|
+| `POST /api/v1/auth/refresh` | بدون access token | `RefreshSessionCommand` | `RefreshSessionResult` با access/refresh جدید |
+| `GET /api/v1/auth/sessions` | Bearer | بدون body | نشست‌های فعال خود کاربر، بدون token/hash |
+| `DELETE /api/v1/auth/sessions/{sessionId}` | Bearer | شناسه نشست متعلق به خود کاربر | `204` |
+| `POST /api/v1/auth/sessions/revoke-others` | Bearer | بدون body | `204` و حفظ نشست جاری |
+
+`VerifyOtpCommand` فیلد اختیاری `DeviceName` دارد. access پیش‌فرض ۳۶۰۰ ثانیه و absolute/refresh پیش‌فرض ۲۵۹۲۰۰۰ ثانیه است و از configuration خوانده می‌شود. OTP ورود assurance اولیه است و به‌تنهایی MFA محسوب نمی‌شود.
+
+### Health و رفتار میزبانی
+
+| Route | کاربرد | جزئیات عمومی |
+|---|---|---|
+| `GET /health` | alias سازگار liveness | فقط Healthy/Unhealthy |
+| `GET /health/live` | زنده‌بودن process | dependency را probe نمی‌کند |
+| `GET /health/ready` | آمادگی دریافت traffic | SQL Server و persistent storage |
+
+Production در startup به connection string امن SQL، security key، storage root مطلق، `AllowedHosts` محدود، CORS HTTPS allowlist و trusted proxy صریح نیاز دارد. Swagger/OpenAPI در Production پیش‌فرض خاموش است. پاسخ‌ها `X-Correlation-ID` و security headerهای ثابت دارند و `ProblemDetails` شامل `traceId` امن است.
+
+آپلود فقط با content type مجاز، پسوند سازگار و signature حداقلی معتبر پذیرفته می‌شود. mismatch با `FILE_CONTENT_INVALID` و `415` برمی‌گردد. دانلود همچنان authorization منبع را resolve می‌کند و content disposition از نوع attachment است.
+
+در backoffice، `PlatformPlanDetail.Versions` به ۱۰۰ مورد و افراد فعال `PlatformClassDetail` به ۲۰۰ teacher و ۲۰۰ learner محدود شده‌اند. flagهای `VersionsTruncated`، `ActiveTeachersTruncated` و `ActiveLearnersTruncated` نشان می‌دهند client باید برای داده‌ی کامل از listهای paginated متناظر استفاده کند.
+
+جزئیات deployment، blockerها و ماتریس محیط در [Production Readiness](production/PRODUCTION_READINESS.md) و [IIS Deployment](production/DEPLOYMENT_IIS.md) ثبت شده‌اند.

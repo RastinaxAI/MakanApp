@@ -83,6 +83,9 @@ public sealed class GlobalExceptionHandler(
         var status = code switch
         {
             IdentityErrorCodes.AuthRequired => StatusCodes.Status401Unauthorized,
+            IdentityErrorCodes.RefreshTokenInvalid => StatusCodes.Status401Unauthorized,
+            IdentityErrorCodes.RefreshTokenReused => StatusCodes.Status401Unauthorized,
+            IdentityErrorCodes.SessionNotFound => StatusCodes.Status404NotFound,
             IdentityErrorCodes.AccountSuspended => StatusCodes.Status403Forbidden,
             IdentityErrorCodes.UsernameAlreadyExists => StatusCodes.Status409Conflict,
             IdentityErrorCodes.OtpAlreadyUsed => StatusCodes.Status409Conflict,
@@ -327,6 +330,7 @@ public sealed class GlobalExceptionHandler(
             StorageErrorCodes.FileNotAllowed => StatusCodes.Status403Forbidden,
             StorageErrorCodes.FileTooLarge => StatusCodes.Status413PayloadTooLarge,
             StorageErrorCodes.FileTypeNotAllowed => StatusCodes.Status415UnsupportedMediaType,
+            StorageErrorCodes.FileContentInvalid => StatusCodes.Status415UnsupportedMediaType,
             StorageErrorCodes.FileStorageFailed => StatusCodes.Status503ServiceUnavailable,
             StorageErrorCodes.FileUploadFailed => StatusCodes.Status500InternalServerError,
             StorageErrorCodes.FileAlreadyDeleted => StatusCodes.Status409Conflict,

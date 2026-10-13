@@ -3,6 +3,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Domain.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MakanApp.Api.Controllers;
 
@@ -12,6 +13,7 @@ namespace MakanApp.Api.Controllers;
 public sealed class MessagesController(IMessagingSafetyService safetyService) : ControllerBase
 {
     [HttpGet("search")]
+    [EnableRateLimiting("messaging-search")]
     [ProducesResponseType<MessageSearchPageResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<MessageSearchPageResult>> Search(
         [FromQuery(Name = "q")] string? query,

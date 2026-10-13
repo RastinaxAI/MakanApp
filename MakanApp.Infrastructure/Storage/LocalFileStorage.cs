@@ -3,7 +3,7 @@ using MakanApp.Application.Storage;
 
 namespace MakanApp.Infrastructure.Storage;
 
-public sealed class LocalFileStorage : IFileStorage
+public sealed class LocalFileStorage : IFileStorage, IStorageReadinessProbe
 {
     private readonly string _rootPath;
 
@@ -121,6 +121,24 @@ public sealed class LocalFileStorage : IFileStorage
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(File.Exists(ResolvePath(storageKey)));
+    }
+
+    public async Task<bool> IsReadyAsync(CancellationToken cancellationToken)
+    {
+        var probePath = Path.Combine(_rootPath, $".readiness-{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await File.WriteAllBytesAsync(probePath, [0x4D], cancellationToken);
+            return File.Exists(probePath);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+        finally
+        {
+            DeleteIfPresent(probePath);
+        }
     }
 
     private string ResolvePath(string storageKey)

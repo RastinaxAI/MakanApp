@@ -9,6 +9,10 @@ public static class IdentityErrorCodes
     public const string OtpTooManyAttempts = "OTP_TOO_MANY_ATTEMPTS";
     public const string OtpRateLimited = "OTP_RATE_LIMITED";
     public const string AuthRequired = "AUTH_REQUIRED";
+    public const string RefreshTokenInvalid = "REFRESH_TOKEN_INVALID";
+    public const string RefreshTokenReused = "REFRESH_TOKEN_REUSED";
+    public const string SessionNotFound = "IDENTITY_SESSION_NOT_FOUND";
+    public const string SessionDeviceInvalid = "SESSION_DEVICE_INVALID";
     public const string AccountSuspended = "ACCOUNT_SUSPENDED";
     public const string UsernameAlreadyExists = "USERNAME_ALREADY_EXISTS";
     public const string ProfileValidationFailed = "PROFILE_VALIDATION_FAILED";

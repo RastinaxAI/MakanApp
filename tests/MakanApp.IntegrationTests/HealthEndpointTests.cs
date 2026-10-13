@@ -28,4 +28,21 @@ public sealed class HealthEndpointTests(MakanAppWebApplicationFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("Healthy", content);
     }
+
+    [Theory]
+    [InlineData("/health/live")]
+    [InlineData("/health/ready")]
+    public async Task HealthEndpointsAreSeparatedAndDoNotExposeDependencyDetails(string path)
+    {
+        using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var client = factory.CreateClient();
+
+        using var response = await client.GetAsync(path, cancellationTokenSource.Token);
+        var content = await response.Content.ReadAsStringAsync(cancellationTokenSource.Token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("Healthy", content);
+        Assert.DoesNotContain("MakanDatabase", content, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
+    }
 }

@@ -1,0 +1,28 @@
+# امنیت SQL Server
+
+## اصل least privilege
+
+برنامه نباید با `sa`، Windows Administrator یا `db_owner` اجرا شود. دو principal جدا لازم است:
+
+- Runtime principal: فقط `CONNECT` و DML روی schemaهای برنامه؛ بدون `ALTER` و `CONTROL`.
+- Migration principal: credential جدا با دسترسی DDL فقط در پنجره‌ی deployment؛ در connection string runtime قرار نمی‌گیرد.
+
+اسکریپت‌های template در `tools/production/sql/create-runtime-user.sql` و `create-migration-user.sql` قرار دارند. loginها باید پیش‌تر توسط DBA و با secret خارج repository ساخته شوند. پس از migration، سایت فقط با runtime principal بالا می‌آید.
+
+## TLS و شبکه
+
+- connection string Production: `Encrypt=True;TrustServerCertificate=False`.
+- certificate SQL Server باید SAN درست و trust chain معتبر روی Windows Server داشته باشد.
+- پورت 1433/instance port فقط از subnet یا host برنامه و مسیر مدیریت خصوصی مجاز باشد؛ exposure عمومی ممنوع است.
+- SSMS فقط از RDP/local/private management path استفاده کند.
+- login auditing و failed login monitoring فعال شود؛ password و connection string وارد log نشوند.
+
+## اجرای migration
+
+```powershell
+$env:ConnectionStrings__MakanDatabase = '<migration-principal-connection-string>'
+dotnet ef database update --project MakanApp.Infrastructure --startup-project MakanApp.Infrastructure --context MakanDbContext --configuration Release
+dotnet ef migrations has-pending-model-changes --project MakanApp.Infrastructure --startup-project MakanApp.Infrastructure --context MakanDbContext --configuration Release
+```
+
+قبل و بعد از اجرا نام migration در `__EFMigrationsHistory` بررسی شود. migration principal فقط در job امن deployment در دسترس باشد و سپس secret آن از process پاک شود.

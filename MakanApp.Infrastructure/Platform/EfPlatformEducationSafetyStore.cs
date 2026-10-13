@@ -14,6 +14,8 @@ namespace MakanApp.Infrastructure.Platform;
 public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
     : IPlatformEducationSafetyStore
 {
+    private const int MaximumClassDetailPeople = 200;
+
     public async Task<PlatformClassPage> GetClassesAsync(
         PlatformClassQuery query,
         CancellationToken cancellationToken)
@@ -141,7 +143,10 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
                 person == null
                     ? user.Username ?? "User"
                     : person.DisplayName ?? person.FirstName + " " + person.LastName))
+            .Take(MaximumClassDetailPeople + 1)
             .ToArrayAsync(cancellationToken);
+        var teachersTruncated = teachers.Length > MaximumClassDetailPeople;
+        teachers = teachers.Take(MaximumClassDetailPeople).ToArray();
         var learners = await (
             from enrollment in dbContext.Enrollments.AsNoTracking()
             join organizationPerson in dbContext.OrganizationPersons.AsNoTracking()
@@ -160,7 +165,10 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
                 person.Id,
                 user == null ? null : user.Id,
                 person.DisplayName ?? person.FirstName + " " + person.LastName))
+            .Take(MaximumClassDetailPeople + 1)
             .ToArrayAsync(cancellationToken);
+        var learnersTruncated = learners.Length > MaximumClassDetailPeople;
+        learners = learners.Take(MaximumClassDetailPeople).ToArray();
         var sessionRows = await dbContext.AcademicSessions.AsNoTracking()
             .Where(session => session.OrganizationId == item.Organization.Id && session.ClassId == classId)
             .GroupBy(_ => 1)
@@ -193,7 +201,15 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
                 group.Count(value => value.Status == AttendanceStatus.Excused)))
             .SingleOrDefaultAsync(cancellationToken)
             ?? new PlatformClassAttendanceSummary(0, 0, 0, 0, 0);
-        return new PlatformClassDetail(item, teachers, learners, sessionRows, assessment, attendance);
+        return new PlatformClassDetail(
+            item,
+            teachers,
+            learners,
+            teachersTruncated,
+            learnersTruncated,
+            sessionRows,
+            assessment,
+            attendance);
     }
 
     public async Task<PlatformTeacherAssignmentPage> GetTeachersAsync(

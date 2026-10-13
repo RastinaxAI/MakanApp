@@ -1,9 +1,14 @@
 using System.Diagnostics;
+using System.Net;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 using System.Text.Json.Serialization;
 using MakanApp.Api.Authentication;
 using MakanApp.Api.Authorization;
+using MakanApp.Api.Configuration;
 using MakanApp.Api.Errors;
+using MakanApp.Api.Hosting;
+using MakanApp.Api.Observability;
 using MakanApp.Api.Platform;
 using MakanApp.Api.Realtime;
 using MakanApp.Application.Identity;
@@ -14,11 +19,18 @@ using MakanApp.Domain.Platform;
 using MakanApp.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+ProductionConfigurationValidator.Validate(
+    builder.Configuration,
+    builder.Environment.EnvironmentName);
+builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -43,10 +55,23 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<IAuthorizationHandler, PlatformPermissionAuthorizationHandler>();
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy => policy
-        .AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod());
+    var allowedOrigins = builder.Configuration
+        .GetSection("Cors:AllowedOrigins")
+        .Get<string[]>() ?? [];
+    options.AddDefaultPolicy(policy =>
+    {
+        if (allowedOrigins.Length == 0 &&
+            (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")))
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            return;
+        }
+
+        policy.WithOrigins(allowedOrigins)
+            .WithHeaders("authorization", "content-type", "x-client-version", CorrelationIdMiddleware.HeaderName)
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+            .SetPreflightMaxAge(TimeSpan.FromHours(1));
+    });
 });
 builder.Services.AddSignalR().AddJsonProtocol(options =>
 {
@@ -55,36 +80,52 @@ builder.Services.AddSignalR().AddJsonProtocol(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var isAdminMutation = httpContext.Request.Path.StartsWithSegments(
+                                  "/api/admin/v1",
+                                  StringComparison.OrdinalIgnoreCase) &&
+                              !HttpMethods.IsGet(httpContext.Request.Method) &&
+                              !HttpMethods.IsHead(httpContext.Request.Method) &&
+                              !HttpMethods.IsOptions(httpContext.Request.Method);
+        return isAdminMutation
+            ? RateLimitPartition.GetFixedWindowLimiter(
+                GetAuthenticatedPartitionKey(httpContext),
+                _ => FixedWindow(builder.Environment, 30))
+            : RateLimitPartition.GetNoLimiter("unlimited");
+    });
     options.AddPolicy("otp", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
+            GetIpPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 10)));
+    options.AddPolicy("otp-verify", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetIpPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 20)));
+    options.AddPolicy("session-refresh", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetIpPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 30)));
     options.AddPolicy("payment", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 20,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 20)));
     options.AddPolicy("messaging-discovery", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 60,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            }));
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("messaging-search", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("file-upload", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 20)));
+    options.AddPolicy("report-export", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 10)));
     options.OnRejected = async (context, cancellationToken) =>
     {
         var isPayment = context.HttpContext.Request.Path.StartsWithSegments(
@@ -92,6 +133,12 @@ builder.Services.AddRateLimiter(options =>
             StringComparison.OrdinalIgnoreCase);
         var isMessagingDiscovery = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/people",
+            StringComparison.OrdinalIgnoreCase) ||
+            context.HttpContext.Request.Path.StartsWithSegments(
+                "/api/v1/messages/search",
+                StringComparison.OrdinalIgnoreCase);
+        var isOtp = context.HttpContext.Request.Path.StartsWithSegments(
+            "/api/v1/auth/otp",
             StringComparison.OrdinalIgnoreCase);
         var problemDetailsService = context.HttpContext.RequestServices
             .GetRequiredService<IProblemDetailsService>();
@@ -106,23 +153,50 @@ builder.Services.AddRateLimiter(options =>
                     ? "تعداد درخواست‌های پرداخت بیش از حد مجاز است."
                     : isMessagingDiscovery
                         ? "تعداد درخواست‌های جست‌وجوی کاربر بیش از حد مجاز است."
-                        : "تعداد درخواست‌های کد بیش از حد مجاز است.",
+                        : isOtp
+                            ? "تعداد درخواست‌های کد بیش از حد مجاز است."
+                            : "تعداد درخواست‌ها بیش از حد مجاز است.",
                 Type = isPayment
                     ? "urn:makan:problem:payment-rate-limited"
                     : isMessagingDiscovery
                         ? "urn:makan:problem:messaging-discovery-rate-limited"
-                        : "urn:makan:problem:otp-rate-limited",
+                        : isOtp
+                            ? "urn:makan:problem:otp-rate-limited"
+                            : "urn:makan:problem:rate-limited",
                 Extensions =
                 {
                     ["code"] = isPayment
                         ? CommerceErrorCodes.PaymentRateLimited
                         : isMessagingDiscovery
                             ? MessagingErrorCodes.DiscoveryRateLimited
-                            : IdentityErrorCodes.OtpRateLimited
+                            : isOtp
+                                ? IdentityErrorCodes.OtpRateLimited
+                                : ApiErrorCodes.RateLimited
                 }
             }
         });
     };
+});
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedHost;
+    options.ForwardLimit = 1;
+    options.KnownProxies.Clear();
+    foreach (var value in builder.Configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
+    {
+        if (IPAddress.TryParse(value, out var address))
+        {
+            options.KnownProxies.Add(address);
+        }
+    }
+});
+builder.Services.AddHsts(options =>
+{
+    options.Preload = true;
+    options.IncludeSubDomains = true;
+    options.MaxAge = TimeSpan.FromDays(builder.Configuration.GetValue("Hosting:HstsDays", 365));
 });
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails(options =>
@@ -135,7 +209,10 @@ builder.Services.AddProblemDetails(options =>
     };
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddHealthChecks();
+builder.Services.AddMetrics();
+builder.Services.AddSingleton<MakanApiMetrics>();
+builder.Services.AddHealthChecks()
+    .AddCheck<CoreReadinessHealthCheck>("core-readiness", tags: ["ready"]);
 builder.Services.AddInfrastructure(
     builder.Configuration,
     builder.Environment.EnvironmentName);
@@ -154,29 +231,73 @@ if (await PlatformOwnerBootstrapRunner.TryRunAsync(app, args))
     return;
 }
 
-app.UseExceptionHandler();
-
-app.MapOpenApi();
-app.UseSwaggerUI(options =>
+if (builder.Configuration.GetValue("ReverseProxy:Enabled", false))
 {
-    options.SwaggerEndpoint("../openapi/v1.json", "MakanApp API v1");
-});
+    app.UseForwardedHeaders();
+}
 
-if (!app.Environment.IsEnvironment("Testing"))
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseExceptionHandler();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<HttpRequestMetricsMiddleware>();
+
+var exposeOpenApi = !app.Environment.IsProduction() ||
+                    builder.Configuration.GetValue("Swagger:Enabled", false);
+if (exposeOpenApi)
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("../openapi/v1.json", "MakanApp API v1");
+    });
+}
+
+if (app.Environment.IsProduction())
+{
+    app.UseHsts();
+}
+
+if (!app.Environment.IsEnvironment("Testing") &&
+    builder.Configuration.GetValue("Hosting:RequireHttps", true))
 {
     app.UseHttpsRedirection();
 }
 
 app.UseRouting();
 app.UseCors();
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready")
+});
 app.MapControllers();
 app.MapHub<MessagingHub>("/hubs/messaging");
 
 app.Run();
+
+static string GetIpPartitionKey(HttpContext context) =>
+    context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+static string GetAuthenticatedPartitionKey(HttpContext context) =>
+    context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? GetIpPartitionKey(context);
+
+static FixedWindowRateLimiterOptions FixedWindow(IHostEnvironment environment, int permitLimit) => new()
+{
+    PermitLimit = environment.IsEnvironment("Testing") ? 10_000 : permitLimit,
+    Window = TimeSpan.FromMinutes(1),
+    QueueLimit = 0,
+    AutoReplenishment = true
+};
 
 public partial class Program;

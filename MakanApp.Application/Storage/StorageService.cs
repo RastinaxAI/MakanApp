@@ -8,6 +8,7 @@ public sealed class StorageService(
     IFileAssetStore store,
     IFileAssetBoundAccessResolver boundAccessResolver,
     IFileStorage fileStorage,
+    IFileContentValidator fileContentValidator,
     FileUploadPolicy uploadPolicy,
     StorageOptions options,
     TimeProvider timeProvider) : IStorageService
@@ -20,6 +21,10 @@ public sealed class StorageService(
     {
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
         var validated = uploadPolicy.Validate(command);
+        await fileContentValidator.ValidateAsync(
+            command.Content,
+            validated.ContentType,
+            cancellationToken);
         var nowUtc = UtcNow();
         var id = Guid.NewGuid();
         var fileAsset = FileAsset.CreatePending(

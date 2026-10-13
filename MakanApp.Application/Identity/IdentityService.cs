@@ -7,6 +7,7 @@ public sealed partial class IdentityService(
     IIdentityStore store,
     IIdentitySecurity security,
     IOtpDeliveryProvider otpDeliveryProvider,
+    IIdentitySecurityEventRecorder securityEventRecorder,
     TimeProvider timeProvider,
     OtpOptions otpOptions,
     SessionOptions sessionOptions) : IIdentityService
@@ -132,13 +133,23 @@ public sealed partial class IdentityService(
         }
 
         var rawToken = security.GenerateSessionToken();
-        var expiresAtUtc = nowUtc + sessionOptions.Lifetime;
+        var rawRefreshToken = security.GenerateRefreshToken();
+        var expiresAtUtc = nowUtc + sessionOptions.AccessLifetime;
+        var refreshExpiresAtUtc = nowUtc + sessionOptions.RefreshLifetime;
         var session = UserSession.Create(
             user.Id,
             security.HashSessionToken(rawToken),
             nowUtc,
-            expiresAtUtc);
+            expiresAtUtc,
+            refreshExpiresAtUtc,
+            NormalizeDeviceName(command.DeviceName));
+        var refreshToken = RefreshToken.Create(
+            session.Id,
+            security.HashRefreshToken(rawRefreshToken),
+            nowUtc,
+            refreshExpiresAtUtc);
         store.Add(session);
+        store.Add(refreshToken);
 
         await store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -147,7 +158,95 @@ public sealed partial class IdentityService(
             rawToken,
             "Bearer",
             expiresAtUtc,
+            rawRefreshToken,
+            refreshExpiresAtUtc,
             await BuildCurrentUserAsync(user, phoneNumber, cancellationToken));
+    }
+
+    public async Task<RefreshSessionResult> RefreshSessionAsync(
+        RefreshSessionCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(command.RefreshToken) || command.RefreshToken.Length > 512)
+        {
+            throw RefreshInvalid();
+        }
+
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        var currentToken = await store.GetRefreshTokenForUpdateAsync(
+            security.HashRefreshToken(command.RefreshToken.Trim()),
+            cancellationToken);
+        if (currentToken is null)
+        {
+            throw RefreshInvalid();
+        }
+
+        var session = await store.GetSessionByIdAsync(currentToken.SessionId, cancellationToken)
+            ?? throw RefreshInvalid();
+        var familyTokens = await store.GetRefreshTokensAsync(session.Id, cancellationToken);
+        if (currentToken.UsedAtUtc.HasValue)
+        {
+            session.Revoke(nowUtc);
+            foreach (var familyToken in familyTokens)
+            {
+                familyToken.Revoke(nowUtc);
+            }
+
+            await store.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            await securityEventRecorder.RecordRefreshTokenReuseAsync(
+                session.UserId,
+                session.Id,
+                nowUtc,
+                cancellationToken);
+            throw new IdentityException(
+                IdentityErrorCodes.RefreshTokenReused,
+                "refresh token قبلاً استفاده شده و نشست برای حفاظت از حساب لغو شد.");
+        }
+
+        var user = await store.GetUserAsync(session.UserId, cancellationToken);
+        var absoluteExpiresAtUtc = AsUtc(session.AbsoluteExpiresAtUtc);
+        if (!currentToken.IsUsable(nowUtc) ||
+            session.RevokedAtUtc.HasValue ||
+            nowUtc >= absoluteExpiresAtUtc ||
+            user?.AccountStatus != UserAccountStatus.Active)
+        {
+            session.Revoke(nowUtc);
+            foreach (var familyToken in familyTokens)
+            {
+                familyToken.Revoke(nowUtc);
+            }
+
+            await store.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            throw RefreshInvalid();
+        }
+
+        var rawAccessToken = security.GenerateSessionToken();
+        var rawRefreshToken = security.GenerateRefreshToken();
+        var accessExpiresAtUtc = Min(
+            nowUtc + sessionOptions.AccessLifetime,
+            absoluteExpiresAtUtc);
+        var replacement = RefreshToken.Create(
+            session.Id,
+            security.HashRefreshToken(rawRefreshToken),
+            nowUtc,
+            absoluteExpiresAtUtc);
+        currentToken.MarkUsed(replacement.Id, nowUtc);
+        session.RotateAccessToken(
+            security.HashSessionToken(rawAccessToken),
+            accessExpiresAtUtc);
+        store.Add(replacement);
+        await store.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return new RefreshSessionResult(
+            rawAccessToken,
+            "Bearer",
+            accessExpiresAtUtc,
+            rawRefreshToken,
+            absoluteExpiresAtUtc);
     }
 
     public async Task<SessionIdentity?> AuthenticateAsync(
@@ -249,6 +348,68 @@ public sealed partial class IdentityService(
         }
 
         session.Revoke(timeProvider.GetUtcNow().UtcDateTime);
+        foreach (var refreshToken in await store.GetRefreshTokensAsync(session.Id, cancellationToken))
+        {
+            refreshToken.Revoke(timeProvider.GetUtcNow().UtcDateTime);
+        }
+        await store.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<UserSessionResult>> GetSessionsAsync(
+        Guid userId,
+        Guid currentSessionId,
+        CancellationToken cancellationToken)
+    {
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var sessions = await store.GetSessionsAsync(userId, cancellationToken);
+        return sessions
+            .Where(session => !session.RevokedAtUtc.HasValue && nowUtc < AsUtc(session.AbsoluteExpiresAtUtc))
+            .OrderByDescending(session => session.CreatedAtUtc)
+            .Select(session => new UserSessionResult(
+                session.Id,
+                session.DeviceName,
+                AsUtc(session.CreatedAtUtc),
+                AsUtc(session.ExpiresAtUtc),
+                AsUtc(session.AbsoluteExpiresAtUtc),
+                session.Id == currentSessionId))
+            .ToArray();
+    }
+
+    public async Task RevokeSessionAsync(
+        Guid userId,
+        Guid sessionId,
+        CancellationToken cancellationToken)
+    {
+        var session = await store.GetSessionAsync(sessionId, userId, cancellationToken)
+            ?? throw new IdentityException(
+                IdentityErrorCodes.SessionNotFound,
+                "نشست پیدا نشد.");
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        session.Revoke(nowUtc);
+        foreach (var refreshToken in await store.GetRefreshTokensAsync(session.Id, cancellationToken))
+        {
+            refreshToken.Revoke(nowUtc);
+        }
+
+        await store.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RevokeOtherSessionsAsync(
+        Guid userId,
+        Guid currentSessionId,
+        CancellationToken cancellationToken)
+    {
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var sessions = await store.GetSessionsAsync(userId, cancellationToken);
+        foreach (var session in sessions.Where(session => session.Id != currentSessionId))
+        {
+            session.Revoke(nowUtc);
+            foreach (var refreshToken in await store.GetRefreshTokensAsync(session.Id, cancellationToken))
+            {
+                refreshToken.Revoke(nowUtc);
+            }
+        }
+
         await store.SaveChangesAsync(cancellationToken);
     }
 
@@ -364,6 +525,36 @@ public sealed partial class IdentityService(
 
     private static IdentityException AuthRequiredException() =>
         new(IdentityErrorCodes.AuthRequired, "برای ادامه باید وارد شوید.");
+
+    private static IdentityException RefreshInvalid() =>
+        new(IdentityErrorCodes.RefreshTokenInvalid, "refresh token معتبر یا فعال نیست.");
+
+    private string? NormalizeDeviceName(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        if (normalized is null)
+        {
+            return null;
+        }
+
+        if (normalized.Length > sessionOptions.MaximumDeviceNameLength ||
+            normalized.Any(char.IsControl))
+        {
+            throw new IdentityException(
+                IdentityErrorCodes.SessionDeviceInvalid,
+                "نام دستگاه معتبر نیست.");
+        }
+
+        return normalized;
+    }
+
+    private static DateTime Min(DateTime first, DateTime second) =>
+        first <= second ? first : second;
+
+    private static DateTime AsUtc(DateTime value) =>
+        value.Kind == DateTimeKind.Utc
+            ? value
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 
     private static IdentityException ProfileValidationException() =>
         new(

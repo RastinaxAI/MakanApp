@@ -46,6 +46,14 @@ public sealed partial class MakanAppWebApplicationFactory
         return await GetFileAssetAsync(id);
     }
 
+    public async Task<int> CountFileAssetsForUserAsync(Guid userId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return await dbContext.FileAssets.CountAsync(
+            fileAsset => fileAsset.UploadedByUserId == userId);
+    }
+
     public async Task<bool> StoredBytesExistAsync(Guid fileAssetId)
     {
         await using var scope = Services.CreateAsyncScope();

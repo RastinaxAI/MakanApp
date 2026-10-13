@@ -15,6 +15,19 @@ public interface IFileStorage
     Task<bool> ExistsAsync(string storageKey, CancellationToken cancellationToken);
 }
 
+public interface IFileContentValidator
+{
+    Task ValidateAsync(
+        Stream content,
+        string contentType,
+        CancellationToken cancellationToken);
+}
+
+public interface IStorageReadinessProbe
+{
+    Task<bool> IsReadyAsync(CancellationToken cancellationToken);
+}
+
 public interface IFileAssetStore
 {
     Task<FileAsset?> GetAsync(Guid fileAssetId, CancellationToken cancellationToken);

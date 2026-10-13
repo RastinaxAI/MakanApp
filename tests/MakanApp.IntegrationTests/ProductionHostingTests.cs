@@ -1,6 +1,5 @@
 using System.Net;
 using System.Text;
-using System.Text.Json;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
@@ -15,45 +14,57 @@ namespace MakanApp.IntegrationTests;
 public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory)
 {
     [Fact]
-    public async Task SwaggerAndOpenApiAreAvailableInProduction()
+    public async Task SwaggerAndOpenApiAreDisabledByDefaultInProduction()
     {
         using var production = CreateProductionFactory();
         using var client = CreateClient(production);
         Assert.Equal("Production", production.Services.GetRequiredService<IHostEnvironment>().EnvironmentName);
 
         using var swagger = await client.GetAsync("/swagger/index.html");
-        Assert.Equal(HttpStatusCode.OK, swagger.StatusCode);
-        Assert.Contains("Swagger UI", await swagger.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.NotFound, swagger.StatusCode);
 
         using var response = await client.GetAsync("/openapi/v1.json");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.True(document.RootElement.GetProperty("paths").TryGetProperty("/api/v1/files", out _));
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
-    [InlineData("https://arbitrary.example", "/api/v1/files")]
-    [InlineData("http://localhost:5173", "/api/v1/files")]
-    [InlineData("https://arbitrary.example", "/hubs/messaging/negotiate")]
-    public async Task PreflightAllowsAnyOriginAndBearerHeaders(string origin, string path)
+    [InlineData("/api/v1/files")]
+    [InlineData("/hubs/messaging/negotiate")]
+    public async Task PreflightAllowsConfiguredOriginAndBearerHeaders(string path)
     {
         using var production = CreateProductionFactory();
         using var client = CreateClient(production);
         using var request = new HttpRequestMessage(HttpMethod.Options, path);
-        request.Headers.Add("Origin", origin);
+        request.Headers.Add("Origin", "https://app.example.test");
         request.Headers.Add("Access-Control-Request-Method", "POST");
         request.Headers.Add("Access-Control-Request-Headers", "authorization,content-type,x-client-version");
 
         using var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal("*", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+        Assert.Equal(
+            "https://app.example.test",
+            Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
         Assert.Contains("POST", string.Join(",", response.Headers.GetValues("Access-Control-Allow-Methods")));
         var allowedHeaders = string.Join(",", response.Headers.GetValues("Access-Control-Allow-Headers"));
         Assert.Contains("authorization", allowedHeaders, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("content-type", allowedHeaders, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("x-client-version", allowedHeaders, StringComparison.OrdinalIgnoreCase);
         Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
+    }
+
+    [Fact]
+    public async Task PreflightDoesNotGrantAnUnlistedOrigin()
+    {
+        using var production = CreateProductionFactory();
+        using var client = CreateClient(production);
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/files");
+        request.Headers.Add("Origin", "https://arbitrary.example");
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+
+        using var response = await client.SendAsync(request);
+
+        Assert.False(response.Headers.Contains("Access-Control-Allow-Origin"));
     }
 
     [Theory]
@@ -64,12 +75,14 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         using var production = CreateProductionFactory();
         using var client = CreateClient(production);
         using var request = new HttpRequestMessage(HttpMethod.Post, path);
-        request.Headers.Add("Origin", "https://arbitrary.example");
+        request.Headers.Add("Origin", "https://app.example.test");
 
         using var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Equal("*", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+        Assert.Equal(
+            "https://app.example.test",
+            Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
         Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
     }
 
@@ -104,11 +117,14 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
     }
 
     [Fact]
-    public void UnconfiguredProductionStorageRemainsUnavailable()
+    public void UnconfiguredProductionStorageFailsStartupValidation()
     {
         using var production = CreateProductionFactory(string.Empty);
 
-        Assert.IsType<UnavailableFileStorage>(production.Services.GetRequiredService<IFileStorage>());
+        var exception = Assert.ThrowsAny<Exception>(() =>
+            production.Services.GetRequiredService<IFileStorage>());
+
+        Assert.Contains("Storage:RootPath", exception.ToString());
     }
 
     [Fact]
@@ -122,14 +138,43 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.Contains("Storage:RootPath", exception.Message);
     }
 
+    [Fact]
+    public async Task ProductionResponsesIncludeSecurityAndCorrelationHeadersWithoutDetails()
+    {
+        using var production = CreateProductionFactory();
+        using var client = CreateClient(production);
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/health/live");
+        request.Headers.Add("X-Correlation-ID", "release-smoke-1");
+
+        using var response = await client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
+        Assert.Equal("release-smoke-1", Assert.Single(response.Headers.GetValues("X-Correlation-ID")));
+        Assert.True(response.Headers.Contains("Content-Security-Policy"));
+        Assert.DoesNotContain("ConnectionStrings", content, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
+    }
+
     private WebApplicationFactory<Program> CreateProductionFactory(string? rootPath = null)
     {
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Production");
+            builder.UseSetting(
+                "ConnectionStrings:MakanDatabase",
+                "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False");
             builder.UseSetting("Identity:SecurityKey", new string('P', 32));
             builder.UseSetting("Sms:Provider", "Unavailable");
             builder.UseSetting("Storage:RootPath", rootPath ?? factory.StorageRootPath);
+            builder.UseSetting("AllowedHosts", "localhost");
+            builder.UseSetting("Cors:AllowedOrigins:0", "https://app.example.test");
+            builder.UseSetting("Hosting:RequireHttps", "true");
+            builder.UseSetting("ReverseProxy:Enabled", "true");
+            builder.UseSetting("ReverseProxy:KnownProxies:0", "127.0.0.1");
+            builder.UseSetting("Swagger:Enabled", "false");
         });
     }
 

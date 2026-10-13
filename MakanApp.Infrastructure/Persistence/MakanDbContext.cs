@@ -60,6 +60,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<UserCredential> UserCredentials => Set<UserCredential>();
     public DbSet<OtpChallenge> OtpChallenges => Set<OtpChallenge>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<ConversationUserState> ConversationUserStates => Set<ConversationUserState>();

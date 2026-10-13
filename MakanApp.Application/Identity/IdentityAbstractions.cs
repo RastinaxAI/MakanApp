@@ -12,6 +12,10 @@ public interface IIdentityService
         VerifyOtpCommand command,
         CancellationToken cancellationToken);
 
+    Task<RefreshSessionResult> RefreshSessionAsync(
+        RefreshSessionCommand command,
+        CancellationToken cancellationToken);
+
     Task<SessionIdentity?> AuthenticateAsync(
         string rawToken,
         CancellationToken cancellationToken);
@@ -28,6 +32,21 @@ public interface IIdentityService
     Task LogoutAsync(
         Guid userId,
         Guid sessionId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<UserSessionResult>> GetSessionsAsync(
+        Guid userId,
+        Guid currentSessionId,
+        CancellationToken cancellationToken);
+
+    Task RevokeSessionAsync(
+        Guid userId,
+        Guid sessionId,
+        CancellationToken cancellationToken);
+
+    Task RevokeOtherSessionsAsync(
+        Guid userId,
+        Guid currentSessionId,
         CancellationToken cancellationToken);
 }
 
@@ -48,6 +67,17 @@ public interface IIdentitySecurity
     byte[] HashOtp(string code, byte[] salt);
     string GenerateSessionToken();
     byte[] HashSessionToken(string rawToken);
+    string GenerateRefreshToken();
+    byte[] HashRefreshToken(string rawToken);
+}
+
+public interface IIdentitySecurityEventRecorder
+{
+    Task RecordRefreshTokenReuseAsync(
+        Guid userId,
+        Guid sessionId,
+        DateTime occurredAtUtc,
+        CancellationToken cancellationToken);
 }
 
 public interface IIdentityTransaction : IAsyncDisposable
@@ -94,6 +124,22 @@ public interface IIdentityStore
         Guid userId,
         CancellationToken cancellationToken);
 
+    Task<UserSession?> GetSessionByIdAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<UserSession>> GetSessionsAsync(
+        Guid userId,
+        CancellationToken cancellationToken);
+
+    Task<RefreshToken?> GetRefreshTokenForUpdateAsync(
+        byte[] tokenHash,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<RefreshToken>> GetRefreshTokensAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken);
+
     Task<bool> UsernameExistsAsync(
         string normalizedUsername,
         Guid exceptUserId,
@@ -104,5 +150,6 @@ public interface IIdentityStore
     void Add(Person person);
     void Add(UserCredential credential);
     void Add(UserSession session);
+    void Add(RefreshToken refreshToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

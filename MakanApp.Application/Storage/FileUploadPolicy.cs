@@ -22,7 +22,15 @@ public sealed class FileUploadPolicy(StorageOptions options)
             throw Error(StorageErrorCodes.FileTypeNotAllowed, "نوع محتوای فایل مجاز نیست.");
         }
 
-        return new ValidatedFileUpload(SanitizeFileName(command.OriginalFileName), contentType);
+        var fileName = SanitizeFileName(command.OriginalFileName);
+        if (!HasExpectedExtension(fileName, contentType))
+        {
+            throw Error(
+                StorageErrorCodes.FileTypeNotAllowed,
+                "پسوند فایل با نوع محتوای مجاز سازگار نیست.");
+        }
+
+        return new ValidatedFileUpload(fileName, contentType);
     }
 
     public static string CreateStorageKey(Guid fileAssetId, DateTime createdAtUtc) =>
@@ -52,6 +60,21 @@ public sealed class FileUploadPolicy(StorageOptions options)
 
     private static string NormalizeContentType(string? value) =>
         (value ?? string.Empty).Split(';', 2)[0].Trim().ToLowerInvariant();
+
+    private static bool HasExpectedExtension(string fileName, string contentType)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return contentType switch
+        {
+            "application/pdf" => extension == ".pdf",
+            "image/jpeg" => extension is ".jpg" or ".jpeg",
+            "image/png" => extension == ".png",
+            "text/plain" => extension == ".txt",
+            "video/mp4" => extension == ".mp4",
+            "audio/mpeg" => extension == ".mp3",
+            _ => false
+        };
+    }
 
     private static StorageException Error(string code, string message) => new(code, message);
 }

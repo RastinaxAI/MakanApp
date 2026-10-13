@@ -2,7 +2,7 @@ using MakanApp.Application.Storage;
 
 namespace MakanApp.Infrastructure.Storage;
 
-public sealed class UnavailableFileStorage : IFileStorage
+public sealed class UnavailableFileStorage : IFileStorage, IStorageReadinessProbe
 {
     public Task<StoredFileResult> SaveAsync(
         string storageKey,
@@ -18,6 +18,9 @@ public sealed class UnavailableFileStorage : IFileStorage
 
     public Task<bool> ExistsAsync(string storageKey, CancellationToken cancellationToken) =>
         throw Unavailable();
+
+    public Task<bool> IsReadyAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(false);
 
     private static StorageException Unavailable() =>
         new(

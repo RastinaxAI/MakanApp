@@ -3,6 +3,7 @@ using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MakanApp.Api.Controllers;
 
@@ -14,6 +15,7 @@ public sealed class ReportsController(
     IReportExportService reportExportService) : ControllerBase
 {
     [HttpPost("exports")]
+    [EnableRateLimiting("report-export")]
     [ProducesResponseType<ReportExportJobResult>(StatusCodes.Status202Accepted)]
     public async Task<ActionResult<ReportExportJobResult>> CreateExport(
         [FromBody] CreateReportExportCommand command,

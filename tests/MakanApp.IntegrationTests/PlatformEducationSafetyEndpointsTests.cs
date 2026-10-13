@@ -306,7 +306,8 @@ public sealed class PlatformEducationSafetyEndpointsTests(MakanAppWebApplication
         string fileName)
     {
         using var form = new MultipartFormDataContent();
-        using var content = new ByteArrayContent([1, 2, 3, 4]);
+        using var content = new ByteArrayContent(
+            contentType == "text/plain" ? "case evidence"u8.ToArray() : "%PDF-1.7\n"u8.ToArray());
         content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         form.Add(content, "File", fileName);
         using var response = await client.PostAsync("/api/v1/files", form);

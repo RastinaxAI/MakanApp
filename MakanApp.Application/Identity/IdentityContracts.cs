@@ -10,13 +10,33 @@ public sealed record RequestOtpResult(
 public sealed record VerifyOtpCommand(
     Guid ChallengeId,
     string PhoneNumber,
-    string Code);
+    string Code,
+    string? DeviceName = null);
 
 public sealed record VerifyOtpResult(
     string AccessToken,
     string TokenType,
     DateTime ExpiresAtUtc,
+    string RefreshToken,
+    DateTime RefreshExpiresAtUtc,
     CurrentUserResult User);
+
+public sealed record RefreshSessionCommand(string RefreshToken);
+
+public sealed record RefreshSessionResult(
+    string AccessToken,
+    string TokenType,
+    DateTime ExpiresAtUtc,
+    string RefreshToken,
+    DateTime RefreshExpiresAtUtc);
+
+public sealed record UserSessionResult(
+    Guid Id,
+    string? DeviceName,
+    DateTime CreatedAtUtc,
+    DateTime ExpiresAtUtc,
+    DateTime AbsoluteExpiresAtUtc,
+    bool IsCurrent);
 
 public sealed record CompleteProfileCommand(
     string FirstName,

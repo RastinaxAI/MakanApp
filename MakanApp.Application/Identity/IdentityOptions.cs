@@ -13,5 +13,7 @@ public sealed class OtpOptions
 
 public sealed class SessionOptions
 {
-    public TimeSpan Lifetime { get; init; } = TimeSpan.FromDays(30);
+    public TimeSpan AccessLifetime { get; init; } = TimeSpan.FromHours(1);
+    public TimeSpan RefreshLifetime { get; init; } = TimeSpan.FromDays(30);
+    public int MaximumDeviceNameLength { get; init; } = 100;
 }

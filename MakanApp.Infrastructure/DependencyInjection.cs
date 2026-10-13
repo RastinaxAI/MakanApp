@@ -55,6 +55,7 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityStore, EfIdentityStore>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddSingleton<IIdentitySecurityEventRecorder, LoggingIdentitySecurityEventRecorder>();
         services.AddScoped<IOrganizationStore, EfOrganizationStore>();
         services.AddScoped<OrganizationService>();
         services.AddScoped<IOrganizationService>(serviceProvider =>
@@ -165,6 +166,7 @@ public static class DependencyInjection
         services.AddScoped<IFileAssetStore, EfFileAssetStore>();
         services.AddScoped<IFileAssetBoundAccessResolver, EfFileAssetBoundAccessResolver>();
         services.AddScoped<IStorageService, StorageService>();
+        services.AddSingleton<IFileContentValidator, FileSignatureValidator>();
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(CreateOtpOptions(configuration, environmentName));
@@ -193,10 +195,16 @@ public static class DependencyInjection
             services.AddSingleton<LocalFileStorage>();
             services.AddSingleton<IFileStorage>(serviceProvider =>
                 serviceProvider.GetRequiredService<LocalFileStorage>());
+            services.AddSingleton<IStorageReadinessProbe>(serviceProvider =>
+                serviceProvider.GetRequiredService<LocalFileStorage>());
         }
         else
         {
-            services.AddSingleton<IFileStorage, UnavailableFileStorage>();
+            services.AddSingleton<UnavailableFileStorage>();
+            services.AddSingleton<IFileStorage>(serviceProvider =>
+                serviceProvider.GetRequiredService<UnavailableFileStorage>());
+            services.AddSingleton<IStorageReadinessProbe>(serviceProvider =>
+                serviceProvider.GetRequiredService<UnavailableFileStorage>());
         }
 
         return services;
@@ -412,13 +420,32 @@ public static class DependencyInjection
         };
     }
 
-    private static SessionOptions CreateSessionOptions(IConfiguration configuration) => new()
+    private static SessionOptions CreateSessionOptions(IConfiguration configuration)
     {
-        Lifetime = TimeSpan.FromSeconds(ReadPositiveInt(
+        var accessLifetime = TimeSpan.FromSeconds(ReadPositiveInt(
             configuration,
-            "Identity:Session:LifetimeSeconds",
-            2_592_000))
-    };
+            "Identity:Session:AccessLifetimeSeconds",
+            3_600));
+        var refreshLifetime = TimeSpan.FromSeconds(ReadPositiveInt(
+            configuration,
+            "Identity:Session:RefreshLifetimeSeconds",
+            2_592_000));
+        if (refreshLifetime <= accessLifetime)
+        {
+            throw new InvalidOperationException(
+                "Identity:Session:RefreshLifetimeSeconds must be greater than AccessLifetimeSeconds.");
+        }
+
+        return new SessionOptions
+        {
+            AccessLifetime = accessLifetime,
+            RefreshLifetime = refreshLifetime,
+            MaximumDeviceNameLength = Math.Min(200, ReadPositiveInt(
+                configuration,
+                "Identity:Session:MaximumDeviceNameLength",
+                100))
+        };
+    }
 
     private static StorageOptions CreateStorageOptions(IConfiguration configuration)
     {

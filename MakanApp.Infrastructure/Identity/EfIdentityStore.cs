@@ -82,6 +82,35 @@ public sealed class EfIdentityStore(MakanDbContext dbContext) : IIdentityStore
             session => session.Id == sessionId && session.UserId == userId,
             cancellationToken);
 
+    public Task<UserSession?> GetSessionByIdAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken) =>
+        dbContext.UserSessions.SingleOrDefaultAsync(
+            session => session.Id == sessionId,
+            cancellationToken);
+
+    public async Task<IReadOnlyCollection<UserSession>> GetSessionsAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        await dbContext.UserSessions
+            .Where(session => session.UserId == userId)
+            .OrderByDescending(session => session.CreatedAtUtc)
+            .ToArrayAsync(cancellationToken);
+
+    public Task<RefreshToken?> GetRefreshTokenForUpdateAsync(
+        byte[] tokenHash,
+        CancellationToken cancellationToken) =>
+        dbContext.RefreshTokens
+            .FromSqlInterpolated($"SELECT * FROM [identity].[RefreshTokens] WITH (UPDLOCK, HOLDLOCK) WHERE [TokenHash] = {tokenHash}")
+            .SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<RefreshToken>> GetRefreshTokensAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken) =>
+        await dbContext.RefreshTokens
+            .Where(token => token.SessionId == sessionId)
+            .ToArrayAsync(cancellationToken);
+
     public Task<bool> UsernameExistsAsync(
         string normalizedUsername,
         Guid exceptUserId,
@@ -96,6 +125,7 @@ public sealed class EfIdentityStore(MakanDbContext dbContext) : IIdentityStore
     public void Add(Person person) => dbContext.Persons.Add(person);
     public void Add(UserCredential credential) => dbContext.UserCredentials.Add(credential);
     public void Add(UserSession session) => dbContext.UserSessions.Add(session);
+    public void Add(RefreshToken refreshToken) => dbContext.RefreshTokens.Add(refreshToken);
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {

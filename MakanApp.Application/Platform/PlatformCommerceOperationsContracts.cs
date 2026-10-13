@@ -41,7 +41,8 @@ public sealed record PlatformPlanDetail(
     string Code,
     string DisplayName,
     DateTime CreatedAtUtc,
-    IReadOnlyCollection<PlatformPlanVersionItem> Versions);
+    IReadOnlyCollection<PlatformPlanVersionItem> Versions,
+    bool VersionsTruncated);
 
 public sealed record CreatePlatformPlanCommand(string Code, string DisplayName, string Reason);
 

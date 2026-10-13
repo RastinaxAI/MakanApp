@@ -10,6 +10,8 @@ namespace MakanApp.Infrastructure.Platform;
 
 public sealed partial class EfPlatformCommerceOperationsStore
 {
+    private const int MaximumPlanDetailVersions = 100;
+
     public async Task<PlatformPlanPage> GetPlansAsync(
         PlatformPlanQuery query,
         CancellationToken cancellationToken)
@@ -54,7 +56,10 @@ public sealed partial class EfPlatformCommerceOperationsStore
         var versions = await _dbContext.PlanVersions.AsNoTracking()
             .Where(version => version.PlanId == planId)
             .OrderByDescending(version => version.VersionNumber)
+            .Take(MaximumPlanDetailVersions + 1)
             .ToArrayAsync(cancellationToken);
+        var versionsTruncated = versions.Length > MaximumPlanDetailVersions;
+        versions = versions.Take(MaximumPlanDetailVersions).ToArray();
         var versionIds = versions.Select(version => version.Id).ToArray();
         var prices = await _dbContext.PlanVersionPrices.AsNoTracking()
             .Where(price => versionIds.Contains(price.PlanVersionId))
@@ -106,7 +111,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
             plan.Code,
             plan.DisplayName,
             plan.CreatedAtUtc,
-            mapped);
+            mapped,
+            versionsTruncated);
     }
 
     public async Task<PlatformPlanDetail> CreatePlanAsync(

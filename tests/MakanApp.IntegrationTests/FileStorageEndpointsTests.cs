@@ -67,7 +67,7 @@ public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory fact
     {
         using var client = factory.CreateClient();
         await AuthenticateAsync(client);
-        var bytes = Enumerable.Range(0, 900).Select(value => (byte)(value % 251)).ToArray();
+        var bytes = Encoding.UTF8.GetBytes(new string('a', 900));
         using var upload = await UploadAsync(client, "stream.txt", "text/plain", bytes);
         var result = await ReadRequiredAsync<FileAssetResult>(upload);
 
@@ -150,6 +150,23 @@ public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory fact
 
         Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
         Assert.Equal(StorageErrorCodes.FileTypeNotAllowed, await ReadProblemCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task ClaimedImageWithInvalidSignatureIsRejectedBeforeMetadataCreation()
+    {
+        using var client = factory.CreateClient();
+        var user = await AuthenticateAsync(client);
+
+        using var response = await UploadAsync(
+            client,
+            "fake.png",
+            "image/png",
+            Encoding.UTF8.GetBytes("not a png"));
+
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, response.StatusCode);
+        Assert.Equal(StorageErrorCodes.FileContentInvalid, await ReadProblemCodeAsync(response));
+        Assert.Equal(0, await factory.CountFileAssetsForUserAsync(user.User.Id));
     }
 
     [Fact]

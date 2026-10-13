@@ -42,7 +42,10 @@ public sealed class RecordingTestLoggerProvider(SensitiveLogTestControl control)
         {
             if (IsEnabled(logLevel))
             {
-                control.Record(formatter(state, exception));
+                var message = formatter(state, exception);
+                control.Record(exception is null
+                    ? message
+                    : $"{message} [{exception.GetType().Name}: {exception.Message}]");
             }
         }
     }

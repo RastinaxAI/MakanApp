@@ -55,6 +55,7 @@ public sealed class MessagingRealtimeOutboxProcessor(
     ILogger<MessagingRealtimeOutboxProcessor> logger)
 {
     public const int BatchSize = 50;
+    public const int MaximumAttempts = 10;
     private static readonly TimeSpan ClaimLease = TimeSpan.FromSeconds(30);
 
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken)
@@ -66,6 +67,7 @@ public sealed class MessagingRealtimeOutboxProcessor(
                 SELECT TOP ({BatchSize}) *
                 FROM [messaging].[RealtimeOutbox] WITH (UPDLOCK, READPAST, ROWLOCK)
                 WHERE [DispatchedAtUtc] IS NULL
+                  AND [AttemptCount] < {MaximumAttempts}
                   AND ([ClaimedUntilUtc] IS NULL OR [ClaimedUntilUtc] <= {nowUtc})
                   AND ([NextAttemptAtUtc] IS NULL OR [NextAttemptAtUtc] <= {nowUtc})
                 ORDER BY [OccurredAtUtc], [Id]
@@ -120,10 +122,20 @@ public sealed class MessagingRealtimeOutboxProcessor(
             var retrySeconds = Math.Min(30, Math.Max(2, outboxMessage.AttemptCount * 2));
             outboxMessage.ScheduleRetry(timeProvider.GetUtcNow().UtcDateTime.AddSeconds(retrySeconds));
             await dbContext.SaveChangesAsync(CancellationToken.None);
-            logger.LogWarning(
-                exception,
-                "اعلان realtime برای ChangeEvent {ChangeEventId} ارسال نشد و دوباره تلاش می‌شود.",
-                outboxMessage.ChangeEventId);
+            if (outboxMessage.AttemptCount >= MaximumAttempts)
+            {
+                logger.LogError(
+                    exception,
+                    "اعلان realtime برای ChangeEvent {ChangeEventId} پس از سقف تلاش متوقف شد.",
+                    outboxMessage.ChangeEventId);
+            }
+            else
+            {
+                logger.LogWarning(
+                    exception,
+                    "اعلان realtime برای ChangeEvent {ChangeEventId} ارسال نشد و دوباره تلاش می‌شود.",
+                    outboxMessage.ChangeEventId);
+            }
         }
     }
 }
