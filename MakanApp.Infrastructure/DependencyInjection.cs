@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Academic;
+using MakanApp.Application.Ai;
 using MakanApp.Application.Assessment;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
@@ -15,6 +16,7 @@ using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Academic;
+using MakanApp.Infrastructure.Ai;
 using MakanApp.Infrastructure.Assessment;
 using MakanApp.Infrastructure.Commerce;
 using MakanApp.Infrastructure.Guardian;
@@ -169,6 +171,8 @@ public static class DependencyInjection
         services.AddSingleton<IFileContentValidator, FileSignatureValidator>();
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(CreateAiServiceAuthenticationOptions(configuration));
+        services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
         services.AddSingleton(CreateOtpOptions(configuration, environmentName));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
@@ -667,6 +671,27 @@ public static class DependencyInjection
             configuration["Sms:Provider"]?.Trim(),
             "MeliPayamakOtp",
             StringComparison.OrdinalIgnoreCase);
+
+    private static AiServiceAuthenticationOptions CreateAiServiceAuthenticationOptions(
+        IConfiguration configuration) => new()
+    {
+        Issuer = configuration[$"{AiServiceAuthenticationOptions.SectionName}:Issuer"]?.Trim()
+            ?? "makan-backend",
+        Audience = configuration[$"{AiServiceAuthenticationOptions.SectionName}:Audience"]?.Trim()
+            ?? "makan-ai",
+        ServiceName = configuration[$"{AiServiceAuthenticationOptions.SectionName}:ServiceName"]?.Trim()
+            ?? "makan-backend",
+        Scope = configuration[$"{AiServiceAuthenticationOptions.SectionName}:Scope"]?.Trim()
+            ?? "makan.ai.invoke",
+        CurrentKeyId = configuration[$"{AiServiceAuthenticationOptions.SectionName}:CurrentKeyId"]?.Trim()
+            ?? string.Empty,
+        CurrentKey = configuration[$"{AiServiceAuthenticationOptions.SectionName}:CurrentKey"]
+            ?? string.Empty,
+        TokenLifetimeSeconds = ReadPositiveInt(
+            configuration,
+            $"{AiServiceAuthenticationOptions.SectionName}:TokenLifetimeSeconds",
+            120)
+    };
 
     private static int ReadPositiveInt(
         IConfiguration configuration,
