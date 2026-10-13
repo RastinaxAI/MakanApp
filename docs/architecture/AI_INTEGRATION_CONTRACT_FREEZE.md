@@ -59,11 +59,12 @@ Response موفق `200`:
   "requestId": "uuid",
   "correlationId": "string",
   "conversationId": "uuid|null",
-  "answer": "string",
+  "answer": { "text": "string", "language": "fa" },
   "insights": [],
   "risks": [],
   "recommendations": [],
-  "sources": []
+  "sources": [],
+  "metadata": { "modelAlias": "string", "processingTimeMs": 0 }
 }
 ```
 
