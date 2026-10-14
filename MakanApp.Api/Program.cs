@@ -255,7 +255,7 @@ app.UseExceptionHandler();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<HttpRequestMetricsMiddleware>();
 
-var exposeOpenApi = !app.Environment.IsProduction() ||
+var exposeOpenApi = !(app.Environment.IsProduction() || app.Environment.IsStaging()) ||
                     builder.Configuration.GetValue("Swagger:Enabled", false);
 if (exposeOpenApi)
 {

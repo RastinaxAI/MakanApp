@@ -4,6 +4,8 @@
 
 به‌روزرسانی محدود پس از ممیزی، ۲۰۲۶-۱۰-۱۵: **GAP-01 در کد بسته شد**. شرح ممیزی و اعداد baseline در بخش‌های 2 و 3 تاریخی باقی مانده‌اند؛ فقط شواهد، وابستگی‌ها و نتیجه GAP-01 در این نسخه اصلاح شده‌اند. [سند پیاده‌سازی و قراردادها](../architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) مرجع جزئیات است. این closure تأیید Production و تغییر اولویت سایر gapها نیست.
 
+به‌روزرسانی محدود GAP-02، همان تاریخ: آماده‌سازی Staging و آزمون محلی schema/publish/startup انجام شد، اما **GAP-02 باز و BLOCKED_OPERATIONAL_VALIDATION است**. مالک نبود HTTPS مقصد را تأیید کرد؛ `/health/ready` آن 404 بود. هیچ OTP/token روی HTTP ارسال نشد. جزئیات و تفکیک PASS/FAIL/NOT_EXECUTED/BLOCKED در [شواهد GAP-02](GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) آمده‌اند؛ اولویت سایر gapها و verdict انتشار تغییر نکرده‌اند.
+
 ## 1. Executive Summary
 
 **Backend از یک foundation ساده بسیار جلوتر است، اما برای انتشار عمومی غیر AI هنوز `NOT_READY` است.** شماره STEP معیار تکمیل نیست. بخش عمده قواعد آموزشی، ارزیابی، پیام‌رسان، مجوز و گزارش واقعاً اجرا و تست می‌شوند؛ onboarding فراگیر/والد با GAP-01 از حالت fixture-only خارج شده، اما چند قابلیت به adapterهای unavailable متصل‌اند.
@@ -126,6 +128,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | E25 | `MakanApp.Api/Observability/*`، `Infrastructure/Identity/LoggingIdentitySecurityEventRecorder.cs` | تست header/correlation، redaction و قرارداد امن Platform؛ `docs/production/OBSERVABILITY.md` |
 | E26 | `tools/production/sql/`، `smoke-test.ps1`، `load/k6-critical-apis.js`؛ `MakanApp.Api/Properties/PublishProfiles/FolderProfile.pubxml` | `docs/production/DEPLOYMENT_IIS.md`، `BACKUP_RESTORE.md`، `SQL_SERVER_SECURITY.md`، `LOAD_TESTING.md` و `RELEASE_CHECKLIST.md` |
 | E27 | `OrganizationPeopleController`، `SchoolGuardianRelationsController`، `OrganizationPersonService`، `GuardianManagementService`، `EfOrganizationStore.PersonLink.cs` و migration `20261014214734_AddOperationalPersonGuardianOnboarding` | چهار فایل `OrganizationPersonOnboardingEndpointsTests*` با ۲۴ مورد Integration و `OrganizationOnboardingModelTests` با چهار Unit؛ API onboarding/enrollment/link، محافظ نام، چندفرزند، revoke/recheck، هم‌زمانی و constraints SQL |
+| E28 | `ProductionConfigurationValidator` و `Program.cs`؛ تنظیمات Staging؛ ابزارهای `tools/production/*staging*` و `validate-local-migrations.ps1` | سند GAP-02: ۳۵ migration روی DB مستقل، publish ANCM، startup/health/ready محلی و 1021 تست؛ هدف HTTP-only و readiness404؛ OTP واقعی اجرا نشده |
 
 ## 4. Current architecture baseline
 
@@ -179,7 +182,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | HTTP production safety | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24 | Production factory و config validation | IIS/TLS بیرونی لازم | host تست؛ نه IIS واقعی | P0 | GAP-02 |
 | Observability بیرونی | PARTIAL | E25 | metrics/header/privacy تست‌شده | sink/exporter/alert اثبات نشده | خیر | P1 | GAP-08 |
 | Backup/restore | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26 | drill محلی مستند | job عملیاتی اثبات نشده | LocalDB marker بله؛ DB+files خیر | P0 | GAP-03 |
-| Windows/IIS deployment | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24، E26 | Production host تست | artifact/profile/runbook دارد | deployment واقعی اثبات نشده | P0 | GAP-02 |
+| Windows/IIS deployment | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24، E26، E28 | host/config Staging و artifact publish بررسی شد | ANCM web.config واقعی؛ نه deployment | هدف HTTP-only و ready404؛ IIS/TLS واقعی اثبات نشده | P0 | GAP-02 همچنان باز |
 | CI/CD | NOT_IMPLEMENTED | tracked workflow/pipeline موجود نیست | اجرای محلی بله | N/A | خیر | P2 | GAP-15 |
 | Load/performance baseline | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26 | correctness concurrency جداست | k6 script موجود | نتیجه staging موجود نیست | P1 | GAP-14 |
 | AI/Knowledge/RAG | DEFERRED_TO_AI_TRACK | فقط boundary اسناد موجود | suite موجود Fake AI | خارج این ممیزی | خارج این ممیزی | — | بخش 19 |
@@ -212,7 +215,7 @@ Severity وابسته به دامنه عرضه صریح است. P0های شرط�
 
 | ID | شکاف و شاهد | شرط عبور |
 |---|---|---|
-| GAP-02 | تنظیم و rehearsal محیط هدف، live OTP، migration gate و transport واقعی اثبات نشده؛ E03/E23/E24/E26 | IIS staging، secrets بیرونی، SQL TLS/principals، storage ACL، OTP send+verify و smoke ثبت‌شده |
+| GAP-02 | آماده‌سازی و startup محلی اثبات شد؛ مقصد معرفی‌شده HTTPS ندارد و ready404 است؛ OTP/session/core زنده و SQL/IIS هدف اثبات نشده‌اند؛ E28 | HTTPS معتبر و readiness نسخه جاری، سپس SQL TLS/principals، secrets بیرونی، storage ACL و OTP send/receive/verify واقعی |
 | GAP-03 | recovery واقعی داده مدرسه+storage+کلیدها اثبات نشده؛ E26 | job/retention/off-server backup و restore drill سازگار با شواهد RPO/RTO مصوب |
 | GAP-04 | MFA واقعی وجود ندارد؛ مسیر حساس admin عمداً رد می‌شود؛ E21 | factor تأییدشده، verification/replay/freshness/session assurance و تست واقعی؛ بدون دورزدن fail-closed |
 | GAP-05 | safety provider، lifecycle معتبر سن و policy Minor ناقص‌اند؛ E12 | تصمیم محصول و adapter/provider واقعی یا scope محدود مصوب و enforceشده؛ مسیر Unknown با allow ساختگی باز نشود |
@@ -303,8 +306,8 @@ OTP adapter logging فقط recipient ماسک‌شده دارد و HttpClient آ
 | مورد Windows Server | شاهد مخزن | باقی‌مانده |
 |---|---|---|
 | IIS / Hosting Bundle / App Pool | `DEPLOYMENT_IIS.md`؛ No Managed Code و identity اختصاصی | نصب .NET 9 Hosting Bundle، تنظیم IIS و recycle روی سرور تأیید نشده |
-| publish / web.config | SDK Web و FolderProfile با `win-x64`، framework-dependent، Production | web.config source جدا موجود نیست؛ خروجی Web SDK باید هنگام publish بررسی شود. artifact Production در این audit ساخته/تأیید نشده |
-| Environment / secret store | appsettings Production جای‌خالی؛ fail-fast برای settingهای حیاتی | `ASPNETCORE_ENVIRONMENT=Production`، تزریق و ACL/rotation/backup secret در محیط |
+| publish / web.config | SDK Web؛ در GAP-02 publish محلی Release/Staging بررسی شد: ANCM V2، dotnet، inprocess، stdout=false | deployment واقعی IIS و artifact clean از commit هدف هنوز اثبات نشده است؛ publish محلی از worktree شامل dirtyهای قبلی AI بود |
+| Environment / secret store | جای‌خالی امن و fail-fast اکنون برای Production و Staging | تزریق و ACL/rotation/backup secret در محیط واقعی هنوز لازم است |
 | SQL / Firewall | TLS validation و template runtime/migration principal | certificate معتبر، principal least-privilege، firewall/private exposure و target history |
 | Domain / DNS / HTTPS | HTTPS redirect، HSTS، AllowedHosts، known proxy validation | DNS، binding، certificate chain و forwarded-header واقعی |
 | SignalR / WebSocket | Hub و negotiated auth موجود | WebSocket IIS، proxy timeout، reconnect و transport واقعی |
@@ -422,6 +425,8 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 - وابستگی: Windows/SQL staging ایزوله، دامنه/certificate، credential مصوب و شماره تست مجاز؛ GAP-01 برای سناریوی کامل مدرسه.
 - محل/نوع کار: `docs/production`، `tools/production`، deployment configuration و gate schema؛ **ops + validation، code فقط اگر تست شواهد نقص نشان داد**.
 - پذیرش: artifact commit مشخص، .NET9/IIS/WS، TLS معتبر، secret بیرون Git، principal جدا، ۳۵ migration پس از GAP-01، storage ACL، log redaction، send/receive/verify/resend/restart OTP، refresh/revoke و smoke چهار نقش ثبت شوند؛ health بدون schema کافی تلقی نشود.
+- وضعیت پس از کار مجاز GAP-02: **BLOCKED_OPERATIONAL_VALIDATION**؛ شواهد E28 و سند مستقل ثبت شدند. validation مخزن 1021 passed، صفر failed/skipped و build بدون warning/error است؛ ۱۶ case اضافه شد. ابزار زنده از تست عادی جداست؛ MeliPayamak code/config و فایل‌های قبلی AI تغییر نکرده‌اند.
+- مانع عملیاتی مشخص: کاربر مقصد HTTP معرفی و نبود HTTPS را تأیید کرد؛ health200، profile بدون token401، ready404 و HTTPS timeout مشاهده شدند. دسترسی server-side/نسخه deployment/log هدف ارائه نشد. هیچ ورود یا پیامک زنده اجرا نشد و GAP-02 بسته نیست.
 
 ### GAP-03 — backup و restore کامل DB + storage + secrets
 

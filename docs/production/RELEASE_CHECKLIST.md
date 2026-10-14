@@ -22,7 +22,8 @@
 ## smoke و پذیرش
 
 - [ ] `tools/production/smoke-test.ps1` علیه staging/target مجاز اجرا شده است.
-- [ ] login/OTP فقط به‌صورت دستی در test environment و بدون SMS واقعی خودکار بررسی شده است.
+- [ ] login/OTP واقعی فقط در staging مجاز با HTTPS معتبر، opt-in صریح و ورود دستی کد بررسی و شواهد sanitized ثبت شده است؛ normal dotnet test ارسال واقعی ندارد.
+- [ ] [شواهد GAP-02](../release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) به‌روز است؛ HTTP-only، readiness 404 یا نبود دریافت/verify واقعی SMS، closure محسوب نشده است.
 - [ ] profile، workspace، یک read اصلی و boundaryهای 401/403 بررسی شده‌اند.
 - [ ] SignalR negotiate، DB read و storage probe قابل استفاده‌اند.
 - [ ] 5xx، latency، worker backlog و provider degraded status مشاهده شده‌اند.

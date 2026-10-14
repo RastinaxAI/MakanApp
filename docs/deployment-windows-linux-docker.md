@@ -4,6 +4,8 @@
 
 مبنای بازبینی: سورس `main@f0b78dd` در `2026-10-12`، شامل OTP مدیریت‌شده، چهار داشبورد، شانزده گزارش تفصیلی و تغییرات میزبانی Production. این سند دستورالعمل استقرار است؛ در این مرحله روی سرور واقعی، IIS، Linux یا Docker استقرار انجام نشده است. [قرارداد فرانت‌اند](frontend-contract/README.md) و [مرجع API](backend-api-reference.md) مکمل این راهنما هستند.
 
+به‌روزرسانی محدود GAP-02 در ۲۰۲۶-۱۰-۱۵: [شواهد و روش جاری smoke](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) و [runbook IIS](production/DEPLOYMENT_IIS.md) مرجع اجرای این مرحله‌اند. Staging نیز مانند Production fail-fast دارد و Swagger پیش‌فرض خاموش است. برای GAP-02 secretها فقط از environment/IIS یا mechanism مصوب تأمین شوند؛ روش‌های تاریخی server-only JSON در بخش‌های ۲، ۳ و ۶ این سند در workflow این مرحله استفاده نمی‌شوند. HTTPS واقعی، SQL TLS، allowlist و readiness باید پیش از ورود واقعی تأیید شوند. مثال‌های قدیمی Linux/Docker به‌تنهایی همه تنظیمات الزامی میزبان را پوشش نمی‌دهند.
+
 > هیچ `ServiceToken`، connection string، password یا `Identity:SecurityKey` واقعی نباید داخل repository، image، Dockerfile، Compose file یا artifact مشترک قرار بگیرد.
 
 ## 1. تنظیمات الزامی Production
@@ -36,9 +38,9 @@ Environment Variable تنظیم هم‌نام داخل JSON را override می�
 
 با تنظیم یک مسیر مطلق در `Storage:RootPath`، ذخیره‌سازی محلی در Production فعال می‌شود. فایل‌ها از طریق endpointهای دارای کنترل دسترسی دریافت می‌شوند؛ این مسیر نباید داخل پوشه publish یا web root باشد. برای اجرای چند نمونه برنامه، دیسک محلی هر سرور به‌تنهایی کافی نیست و باید storage مشترک در نظر گرفته شود.
 
-Swagger UI در `/swagger` و سند OpenAPI در `/openapi/v1.json` در Production نیز بدون ورود در دسترس هستند. احراز هویت و مجوز endpointهای API همچنان اعمال می‌شوند.
+Swagger UI و OpenAPI در Production/Staging پیش‌فرض خاموش‌اند؛ فعال‌سازی صریح همراه با کنترل شبکه/دسترسی لازم است. APIهای حفاظت‌شده همچنان Bearer و مجوز جاری می‌خواهند.
 
-CORS برای همه originها، متدها و headerها باز است و تنظیم جداگانه‌ای در appsettings لازم ندارد. درخواست‌های مرورگر باید Bearer token را در header بفرستند و از `credentials: "include"` استفاده نکنند. برای کلاینت مرورگر SignalR در اتصال cross-origin، مقدار `withCredentials: false` لازم است؛ این حالت برای استقرار فعلی روی یک IIS در نظر گرفته شده و وابستگی به cookie برای sticky session ندارد.
+CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:AllowedOrigins` را می‌پذیرد؛ wildcard مجاز نیست. `AllowedHosts`، `ReverseProxy:Enabled`، `ReverseProxy:KnownProxies` و `Hosting:RequireHttps` نیز باید مطابق runbook تنظیم شوند. درخواست‌های مرورگر باید Bearer را در header بفرستند؛ پشتیبانی cookie یا query-token از این تنظیمات نتیجه نمی‌شود.
 
 ### 1.1 رفتار واقعی گزینه‌ها و محدودیت‌های میزبان
 
@@ -50,12 +52,12 @@ CORS برای همه originها، متدها و headerها باز است و تن
 | `Sms:MeliPayamakOtp:TimeoutSeconds` | پیش‌فرض10؛ فقط1 تا60؛ مقدار نامعتبر startup را رد می‌کند |
 | `Sms:MeliPayamakOtp:BaseUrl` | HTTPS origin بدون credential، path، query یا fragment |
 | `Identity:Otp:MinimumCodeLength` / `MaximumCodeLength` | پیش‌فرض4 / 64؛ بازه معتبر حداکثر256؛ UI نباید کد شش‌رقمی ثابت فرض کند |
-| `Storage:RootPath` خالی در Production | `UnavailableFileStorage`؛ میزبان ممکن است بالا بیاید ولی upload آماده نیست |
+| `Storage:RootPath` خالی در Production/Staging | startup fail-fast می‌شود؛ مسیر مطلق و پایدار لازم است |
 | `Storage:RootPath` غیرخالی | `LocalFileStorage`؛ مسیر باید مطلق و قابل نوشتن باشد؛ خطا ممکن است هنگام resolve سرویس رخ دهد |
 | Storage defaults | سقف فایل10MiB؛ PDF/PNG/JPEG/plain text؛ فایل بدون اتصال24ساعت metadata انقضا دارد، worker پاک‌سازی ندارد |
 | `/health` | فقط liveness؛ SQL، SMS، permission دیسک و outbox را probe نمی‌کند |
-| Swagger/OpenAPI | در Production عمومی؛ CORS تنظیم endpointهای نیازمند Bearer را عمومی نمی‌کند |
-| CORS | `AllowAnyOrigin/AllowAnyHeader/AllowAnyMethod`؛ بدون `AllowCredentials` و بدون گزینه allowlist در config |
+| Swagger/OpenAPI | در Production/Staging پیش‌فرض خاموش؛ فعال‌سازی صریح لازم است |
+| CORS | allowlist صریح HTTPS در Production/Staging؛ بدون AllowCredentials |
 | Multi-instance | shared storage و SignalR backplane در این نسخه فراهم نشده؛ استقرار تک‌instance مبنای این سند است |
 
 کلید HMAC در deploy معمولی ثابت بماند. تغییر آن هم OTP ذخیره‌شده و هم نشست‌های موجود را نامعتبر می‌کند. کد OTP توسط provider تولید و ارسال می‌شود؛ backend همان کد normalize‌شده را hash می‌کند. درخواست SMS retry خودکار ندارد و timeout لزوماً اثبات نرسیدن پیامک نیست. URL provider شامل token است؛ علاوه بر log برنامه، proxy خروجی و ابزار APM نیز نباید URL/body حساس را ثبت کنند.
@@ -280,9 +282,9 @@ sudo journalctl -u makanapp -n 200 --no-pager
 
 ### 4.4 TLS termination، آدرس IP و SignalR
 
-`Program.cs` فعلی خارج Testing از HTTPS redirection استفاده می‌کند، اما middleware صریح `UseForwardedHeaders` و trust list پروکسی ندارد. در IIS in-process، integration میزبان با سناریوی Linux/Nginx یکسان نیست. برای Linux یا Docker پشت TLS termination، صحت scheme و IP واقعی باید پیش از انتقال ترافیک بررسی شود؛ redirect loop، scheme اشتباه و تجمیع همه کاربران زیر IP پروکسی از نشانه‌های تنظیم ناقص‌اند. محدودکننده OTP از `RemoteIpAddress` استفاده می‌کند.
+`Program.cs` خارج Testing از HTTPS redirection استفاده می‌کند و اکنون `UseForwardedHeaders` مشروط به `ReverseProxy:Enabled` و فهرست `KnownProxies` دارد. برای IIS یا Linux/Docker پشت TLS termination، scheme و IP واقعی باید پیش از انتقال ترافیک بررسی شوند؛ redirect loop، scheme اشتباه و تجمیع همه کاربران زیر IP پروکسی نشانه تنظیم ناقص‌اند. محدودکننده OTP از `RemoteIpAddress` استفاده می‌کند.
 
-نمونه systemd و Compose به‌تنهایی قرارداد trusted proxy را پیاده نمی‌کنند. اگر محیط به Forwarded Headers نیاز دارد، افزودن پشتیبانی با proxy/network مشخص یک تغییر کد جداست؛ اعتماد عمومی به header ارسالی اینترنت راه‌حل این سند نیست. [راهنمای رسمی Forwarded Headers](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-9.0) مبنای تنظیم زیرساخت باشد.
+نمونه systemd و Compose به‌تنهایی proxyهای مورد اعتماد را تعیین نمی‌کنند؛ مقادیر واقعی و صریح محیط را تزریق کنید. اعتماد عمومی به header اینترنت راه‌حل نیست. [راهنمای رسمی Forwarded Headers](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-9.0) مبنای بررسی زیرساخت باشد.
 
 بازبودن CORS پشتیبانی query-token را اضافه نمی‌کند. `SessionAuthenticationHandler` فقط Authorization header را می‌خواند؛ browser WebSocket/SSE که token را در query می‌فرستد با قرارداد فعلی سازگار نیست. مسیر قابل بررسی مرورگر، SignalR LongPolling با `accessTokenFactory` و `withCredentials:false` است؛ نمونه در قرارداد فرانت‌اند آمده است. در proxy، درخواست‌های negotiate/poll/send/delete و timeout اتصال باید عبور کنند. پشتیبانی cookie-based affinity یا چند instance از این مثال قابل نتیجه‌گیری نیست. [ملاحظات رسمی امنیت SignalR](https://learn.microsoft.com/en-us/aspnet/core/signalr/security?view=aspnetcore-9.0) این تفاوت transport و credential را توضیح می‌دهد.
 
@@ -483,7 +485,7 @@ dotnet tool run dotnet-ef database update `
 
 Migration را داخل startup عادی container یا IIS قرار ندهید؛ اجرای هم‌زمان چند instance می‌تواند عملیات schema را مبهم و پرخطر کند.
 
-در مبنای این سند ۲۰ migration وجود دارد. OTP مدیریت‌شده، Dashboard، Detailed Reports و تغییر hosting جدول جدیدی اضافه نکرده‌اند؛ گزارش‌ها projection روی جداول آموزشی موجودند. محیطی که هنوز در مرحله تألیف آزمون بوده، چهار migration بعدی تلاش/پاسخ/نهایی‌سازی/تصحیح را نیز لازم دارد؛ فقط آماده‌بودن provider پیامک نشان‌دهنده آماده‌بودن schema نیست.
+در بازبینی GAP-02، ۳۵ migration تا `20261014214734_AddOperationalPersonGuardianOnboarding` وجود دارد. همه روی LocalDB تازه اجرا شدند؛ این، اجرای history روی SQL هدف نیست. فقط آماده‌بودن provider پیامک نشان‌دهنده آماده‌بودن schema نیست.
 
 برای artifact قابل بازبینی، از ریشه مخزن و SDK سازگار SQL idempotent بسازید؛ این فرمان به‌خودی‌خود آن را روی سرور اجرا نمی‌کند:
 
@@ -534,7 +536,7 @@ sudo test -s /etc/makanapp/makanapp.env \
 
 ### قرارداد فرانت‌اند و تست‌های عملیاتی پس از انتشار
 
-۱. `/swagger/index.html` و `/openapi/v1.json` در Production باید بدون ورود200 بدهند. تعداد عملیات Controller در این مبنا۱۴۱ است؛ Hub و health در این شمارش نیستند.
+۱. `/swagger/index.html` و `/openapi/v1.json` در Production/Staging با تنظیم پیش‌فرض باید404 بدهند. شمارش قدیمی۱۴۱ عملیات متعلق به snapshot اولیه سند است، نه API فعلی.
 
 ۲. preflight از origin واقعی فرانت‌اند را روی **HTTPS نهایی** بررسی کنید. در PowerShell برای جلوگیری از alias، `curl.exe` و در Linux `curl` استفاده شود:
 
@@ -545,7 +547,7 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
   -H 'Access-Control-Request-Headers: authorization,content-type'
 ```
 
-انتظار قرارداد میزبان:204، `Access-Control-Allow-Origin: *`، method/header مجاز و نبود `Access-Control-Allow-Credentials`. درخواست به منبع محافظت‌شده بدون token همچنان401 است. رفتار مرورگر واقعی و proxy را جدا بررسی کنید؛ موفقیت curl کافی نیست.
+انتظار برای origin موجود در allowlist:204، `Access-Control-Allow-Origin` برابر همان origin، method/header مجاز و نبود `Access-Control-Allow-Credentials`. origin خارج allowlist نباید اجازه بگیرد. درخواست محافظت‌شده بدون token همچنان401 است؛ رفتار مرورگر/proxy جدا بررسی شود.
 
 ۳. با حساب و سازمان آزمایشی از پیش مجاز، workspace نقش متناظر را انتخاب و dashboard همان نقش را باز کنید. Parent بدون فرزند انتخاب‌شده در dashboard پاسخ200 خالی می‌دهد ولی `/reports/parent/...` قبل انتخاب فرزند404 با `CHILD_CONTEXT_NOT_FOUND` دارد. نمره منتشرنشده و یادداشت خصوصی نباید در Student/Parent دیده شوند؛ نقش اشتباه403 است.
 

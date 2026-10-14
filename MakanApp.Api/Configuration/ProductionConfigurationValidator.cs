@@ -8,7 +8,8 @@ public static class ProductionConfigurationValidator
 {
     public static void Validate(IConfiguration configuration, string environmentName)
     {
-        if (!environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase))
+        if (!environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) &&
+            !environmentName.Equals("Staging", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
@@ -26,25 +27,25 @@ public static class ProductionConfigurationValidator
         if (!sql.Encrypt || sql.TrustServerCertificate)
         {
             throw Invalid(
-                "ConnectionStrings:MakanDatabase must use Encrypt=True and TrustServerCertificate=False in Production.");
+                "ConnectionStrings:MakanDatabase در Production/Staging باید Encrypt=True و TrustServerCertificate=False داشته باشد.");
         }
 
         if (Encoding.UTF8.GetByteCount(Require(configuration, "Identity:SecurityKey")) < 32)
         {
-            throw Invalid("Identity:SecurityKey must contain at least 32 UTF-8 bytes in Production.");
+            throw Invalid("Identity:SecurityKey در Production/Staging باید حداقل ۳۲ بایت UTF-8 داشته باشد.");
         }
 
         var storageRoot = Environment.ExpandEnvironmentVariables(Require(configuration, "Storage:RootPath"));
         if (!Path.IsPathFullyQualified(storageRoot))
         {
-            throw Invalid("Storage:RootPath must be an absolute persistent path in Production.");
+            throw Invalid("Storage:RootPath در Production/Staging باید مسیر مطلق و پایدار باشد.");
         }
 
         var allowedHosts = Require(configuration, "AllowedHosts");
         if (allowedHosts.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Any(host => host == "*"))
         {
-            throw Invalid("AllowedHosts cannot contain '*' in Production.");
+            throw Invalid("AllowedHosts در Production/Staging نمی‌تواند شامل '*' باشد.");
         }
 
         var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -57,23 +58,23 @@ public static class ProductionConfigurationValidator
                 !string.IsNullOrEmpty(uri.UserInfo) ||
                 origin.Contains('*', StringComparison.Ordinal)))
         {
-            throw Invalid("Cors:AllowedOrigins must contain only explicit HTTPS origins in Production.");
+            throw Invalid("Cors:AllowedOrigins در Production/Staging باید فقط originهای صریح HTTPS داشته باشد.");
         }
 
         if (!configuration.GetValue("Hosting:RequireHttps", false))
         {
-            throw Invalid("Hosting:RequireHttps must be true in Production.");
+            throw Invalid("Hosting:RequireHttps در Production/Staging باید true باشد.");
         }
 
         if (!configuration.GetValue("ReverseProxy:Enabled", false))
         {
-            throw Invalid("ReverseProxy:Enabled must be true for the IIS Production target.");
+            throw Invalid("ReverseProxy:Enabled برای مقصد IIS در Production/Staging باید true باشد.");
         }
 
         var knownProxies = configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [];
         if (knownProxies.Length == 0 || knownProxies.Any(value => !IPAddress.TryParse(value, out _)))
         {
-            throw Invalid("ReverseProxy:KnownProxies must contain explicit IP addresses in Production.");
+            throw Invalid("ReverseProxy:KnownProxies در Production/Staging باید IPهای صریح داشته باشد.");
         }
     }
 
@@ -81,7 +82,7 @@ public static class ProductionConfigurationValidator
     {
         var value = configuration[key]?.Trim();
         return string.IsNullOrWhiteSpace(value)
-            ? throw Invalid($"{key} must be configured in Production.")
+            ? throw Invalid($"تنظیم {key} در Production/Staging الزامی است.")
             : value;
     }
 

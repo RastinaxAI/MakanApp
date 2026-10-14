@@ -13,12 +13,14 @@ namespace MakanApp.IntegrationTests;
 [Collection(SqlServerCollection.Name)]
 public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory)
 {
-    [Fact]
-    public async Task SwaggerAndOpenApiAreDisabledByDefaultInProduction()
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    public async Task SwaggerAndOpenApiAreDisabledByDefaultInProductionLikeHost(string environmentName)
     {
-        using var production = CreateProductionFactory();
+        using var production = CreateProductionFactory(environmentName: environmentName);
         using var client = CreateClient(production);
-        Assert.Equal("Production", production.Services.GetRequiredService<IHostEnvironment>().EnvironmentName);
+        Assert.Equal(environmentName, production.Services.GetRequiredService<IHostEnvironment>().EnvironmentName);
 
         using var swagger = await client.GetAsync("/swagger/index.html");
         Assert.Equal(HttpStatusCode.NotFound, swagger.StatusCode);
@@ -158,11 +160,11 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
     }
 
-    private WebApplicationFactory<Program> CreateProductionFactory(string? rootPath = null)
+    private WebApplicationFactory<Program> CreateProductionFactory(string? rootPath = null, string environmentName = "Production")
     {
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseEnvironment("Production");
+            builder.UseEnvironment(environmentName);
             builder.UseSetting(
                 "ConnectionStrings:MakanDatabase",
                 "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False");

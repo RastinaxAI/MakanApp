@@ -11,7 +11,7 @@
 
 ## تنظیمات محیط
 
-`ASPNETCORE_ENVIRONMENT=Production` و مقادیر زیر در IIS Configuration Editor، environmentVariables یا secret store سرور تنظیم شوند. مقدار واقعی در repository نوشته نشود.
+`ASPNETCORE_ENVIRONMENT=Production` یا برای محیط جدا `Staging` و مقادیر زیر در IIS Configuration Editor، environmentVariables یا secret store سرور تنظیم شوند. هر دو محیط کنترل fail-fast دارند؛ مقدار واقعی در repository نوشته نشود.
 
 ```text
 ConnectionStrings__MakanDatabase
@@ -52,3 +52,9 @@ Notifications__SmsProvider=Unavailable
 ## Gate شکست و rollback
 
 استقرار شکست‌خورده است اگر startup fail-fast شود، readiness سبز نشود، migration ناقص باشد، smoke test خطا دهد، 5xx/latency غیرعادی شود یا worker backlog رشد پایدار داشته باشد. در این حالت traffic را متوقف و artifact قبلی را برگردانید. downgrade migration را کورکورانه اجرا نکنید؛ بسته به compatibility از forward-fix یا restore تأییدشده استفاده کنید و trace ID/logهای بازه را نگه دارید.
+
+## smoke زنده GAP-02
+
+شواهد و دستور ابزارهای opt-in در [گزارش GAP-02](../release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) آمده‌اند. ابزار قدیمی `smoke-test.ps1` همچنان OTP زنده اجرا نمی‌کند؛ ابزار جدا `staging-core-smoke.ps1` به HTTPS معتبر، تأیید صریح و ورود مخفی OTP توسط اپراتور نیاز دارد. normal `dotnet test` هرگز SMS واقعی نمی‌فرستد.
+
+publish بررسی‌شده Web SDK، `web.config` را با `AspNetCoreModuleV2`، `processPath=dotnet`، `hostingModel=inprocess` و `stdoutLogEnabled=false` تولید می‌کند؛ وجود artifact اثبات نصب module یا WebSocket روی سرور نیست. نسخه‌ی تمیز commit تأییدشده را publish کنید، نه worktree دارای تغییرات نامرتبط. تنظیمات محرمانه را به artifact اضافه نکنید.
