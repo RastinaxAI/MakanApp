@@ -37,6 +37,9 @@ public sealed partial class MakanAppWebApplicationFactory :
     private const string TestConnectionString =
         "Server=(localdb)\\MSSQLLocalDB;Database=" + DatabaseName + ";Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
+    private string _instanceConnectionString = TestConnectionString;
+    private string? _recoverySecurityKey;
+
     private readonly string? _originalConnectionString =
         Environment.GetEnvironmentVariable(ConnectionStringEnvironmentVariable);
 
@@ -75,7 +78,7 @@ public sealed partial class MakanAppWebApplicationFactory :
         {
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:MakanDatabase"] = TestConnectionString,
+                ["ConnectionStrings:MakanDatabase"] = _instanceConnectionString,
                 ["Sms:Provider"] = "Development",
                 ["Identity:Otp:MaxRequestsPerWindow"] = "5",
                 ["Identity:Session:AccessLifetimeSeconds"] = "86400",
@@ -89,6 +92,13 @@ public sealed partial class MakanAppWebApplicationFactory :
                 ["Storage:AllowedContentTypes:3"] = "video/mp4",
                 ["Storage:AllowedContentTypes:4"] = "audio/mpeg"
             });
+            if (_recoverySecurityKey is not null)
+            {
+                configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Identity:SecurityKey"] = _recoverySecurityKey
+                });
+            }
         });
         builder.ConfigureTestServices(services =>
         {
@@ -189,6 +199,13 @@ public sealed partial class MakanAppWebApplicationFactory :
                 new FaultInjectingFileStorage(
                     serviceProvider.GetRequiredService<LocalFileStorage>(),
                     serviceProvider.GetRequiredService<StorageFailureSwitch>()));
+            if (_recoverySecurityKey is not null)
+            {
+                services.RemoveAll<IIdentitySecurity>();
+                services.AddSingleton<IIdentitySecurity>(new IdentityCryptography(
+                    System.Text.Encoding.UTF8.GetBytes(_recoverySecurityKey)));
+                services.RemoveAll<IHostedService>();
+            }
         });
     }
 

@@ -1,5 +1,9 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
+## روش فعلی پس از GAP-03
+
+روش قابل تکرار DB + storage، inventory کلیدها، مقصد جدید، ACL و شواهد drill کامل محلی در [GAP-03](../release/GAP_03_BACKUP_RESTORE_RECOVERY.md) آمده است. ابزار فعلی `tools/production/recovery/Invoke-MakanRecovery.ps1` است؛ SQL قدیمی STEP 16 پایین صرفاً شاهد تاریخی marker و دارای cleanup است، نه ابزار بازیابی کامل محصول. نمونه SQL پایین نیز روش پیشنهادی قدیمی است؛ ابزار جدید `COPY_ONLY, CHECKSUM` و فایل تازه بدون `INIT` می‌گیرد. هیچ job سرور، off-server copy یا RPO/RTO مصوب با این سند ادعا نمی‌شود.
+
 ## سیاست پیشنهادی
 
 - Full backup زمان‌بندی‌شده با `CHECKSUM` و retention تأییدشده.

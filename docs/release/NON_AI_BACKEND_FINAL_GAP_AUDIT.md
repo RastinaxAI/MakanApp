@@ -17,7 +17,7 @@
 - ذخیره‌سازی runtime واقعاً `LocalFileStorage` است. Object Storage برای پایلوت تک‌سروری الزام ذاتی ندارد؛ دیسک پایدار، ACL، ظرفیت، backup و restore الزام دارند.
 - export واقعی CSV است؛ PDF/Excel تولید نمی‌شود. صف، فایل و مجوز مجدد دانلود وجود دارند، اما expiration/purge خودکار وجود ندارد.
 - Entitlement/Quota صرفاً entity نیست: resolve، محاسبه usage و ثبت metered usage وجود دارند؛ بااین‌حال consumer عملیاتی آن‌ها در ایجاد کلاس/Enrollment/upload/export پیدا نشد. محدودیت ظرفیت کلاس با quota تجاری اشتباه نشود.
-- hardening واقعی HTTP و session وجود دارد؛ deployment واقعی IIS، پایش بیرونی، recovery کامل DB+storage و baseline بار اثبات نشده‌اند. CI/CD در فایل‌های مخزن وجود ندارد.
+- hardening واقعی HTTP و session وجود دارد؛ GAP-03 بازیابی واقعی DB+storage+app/auth را در LocalDB/TestServer ثابت کرد (E29)، نه recovery توپولوژی Production یا off-server. deployment واقعی IIS، پایش بیرونی و baseline بار با این مرحله اثبات نشده‌اند. CI/CD در فایل‌های مخزن وجود ندارد.
 
 | حالت | حکم فعلی | معنی |
 |---|---|---|
@@ -129,6 +129,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | E26 | `tools/production/sql/`، `smoke-test.ps1`، `load/k6-critical-apis.js`؛ `MakanApp.Api/Properties/PublishProfiles/FolderProfile.pubxml` | `docs/production/DEPLOYMENT_IIS.md`، `BACKUP_RESTORE.md`، `SQL_SERVER_SECURITY.md`، `LOAD_TESTING.md` و `RELEASE_CHECKLIST.md` |
 | E27 | `OrganizationPeopleController`، `SchoolGuardianRelationsController`، `OrganizationPersonService`، `GuardianManagementService`، `EfOrganizationStore.PersonLink.cs` و migration `20261014214734_AddOperationalPersonGuardianOnboarding` | چهار فایل `OrganizationPersonOnboardingEndpointsTests*` با ۲۴ مورد Integration و `OrganizationOnboardingModelTests` با چهار Unit؛ API onboarding/enrollment/link، محافظ نام، چندفرزند، revoke/recheck، هم‌زمانی و constraints SQL |
 | E28 | `ProductionConfigurationValidator` و `Program.cs`؛ تنظیمات Staging؛ ابزارهای `tools/production/*staging*` و `validate-local-migrations.ps1` | سند GAP-02: ۳۵ migration روی DB مستقل، publish ANCM، startup/health/ready محلی و 1021 تست؛ هدف HTTP-only و readiness404؛ OTP واقعی اجرا نشده |
+| E29 | `tools/production/recovery/`، `RecoveryDrillTests.cs`، fixture recovery و `docs/release/GAP_03_BACKUP_RESTORE_RECOVERY.md` | full SQL backup/restore به DB جدید، CHECKDB، ۳۵ migration، ۸۵ table count، فایل/hash/CSV، session با کلید یکسان، health و org/guardian authorization؛ محیط LocalDB/TestServer، نه job/off-server واقعی |
 
 ## 4. Current architecture baseline
 
@@ -181,7 +182,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Schema/migration integrity | COMPLETE_IN_CODE | E23، E27 | ۳۵ migration روی empty LocalDB پس از GAP-01 | SQL Server provider واقعی | SQL هدف/permission/TLS خیر | P0 | GAP-02 |
 | HTTP production safety | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24 | Production factory و config validation | IIS/TLS بیرونی لازم | host تست؛ نه IIS واقعی | P0 | GAP-02 |
 | Observability بیرونی | PARTIAL | E25 | metrics/header/privacy تست‌شده | sink/exporter/alert اثبات نشده | خیر | P1 | GAP-08 |
-| Backup/restore | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26 | drill محلی مستند | job عملیاتی اثبات نشده | LocalDB marker بله؛ DB+files خیر | P0 | GAP-03 |
+| Backup/restore | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26/E29 | drill کامل DB+files+app/auth محلی | ابزار امن واقعی؛ job عملیاتی اثبات نشده | LocalDB کامل بله؛ off-server/Production خیر | P0 عملیاتی | GAP-03؛ runbook جدید |
 | Windows/IIS deployment | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24، E26، E28 | host/config Staging و artifact publish بررسی شد | ANCM web.config واقعی؛ نه deployment | هدف HTTP-only و ready404؛ IIS/TLS واقعی اثبات نشده | P0 | GAP-02 همچنان باز |
 | CI/CD | NOT_IMPLEMENTED | tracked workflow/pipeline موجود نیست | اجرای محلی بله | N/A | خیر | P2 | GAP-15 |
 | Load/performance baseline | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26 | correctness concurrency جداست | k6 script موجود | نتیجه staging موجود نیست | P1 | GAP-14 |
@@ -216,7 +217,7 @@ Severity وابسته به دامنه عرضه صریح است. P0های شرط�
 | ID | شکاف و شاهد | شرط عبور |
 |---|---|---|
 | GAP-02 | آماده‌سازی و startup محلی اثبات شد؛ مقصد معرفی‌شده HTTPS ندارد و ready404 است؛ OTP/session/core زنده و SQL/IIS هدف اثبات نشده‌اند؛ E28 | HTTPS معتبر و readiness نسخه جاری، سپس SQL TLS/principals، secrets بیرونی، storage ACL و OTP send/receive/verify واقعی |
-| GAP-03 | recovery واقعی داده مدرسه+storage+کلیدها اثبات نشده؛ E26 | job/retention/off-server backup و restore drill سازگار با شواهد RPO/RTO مصوب |
+| GAP-03 | drill کامل محلی DB+storage+app/auth انجام شد؛ E29؛ job/off-server و secret store واقعی هنوز اثبات نشده‌اند | اقدام عملیاتی مالک: مقصد مستقل، encryption/access/retention، RPO/RTO مصوب و rehearsal سرور |
 | GAP-04 | MFA واقعی وجود ندارد؛ مسیر حساس admin عمداً رد می‌شود؛ E21 | factor تأییدشده، verification/replay/freshness/session assurance و تست واقعی؛ بدون دورزدن fail-closed |
 | GAP-05 | safety provider، lifecycle معتبر سن و policy Minor ناقص‌اند؛ E12 | تصمیم محصول و adapter/provider واقعی یا scope محدود مصوب و enforceشده؛ مسیر Unknown با allow ساختگی باز نشود |
 | GAP-06 | درگاه، callback قابل اعتماد و reconciliation واقعی نداریم؛ E19 | فقط برای عرضه پولی: قرارداد provider، verify واقعی، duplicate/replay/mismatch، recovery وضعیت unknown و settlement ثبت‌شده |
@@ -355,10 +356,12 @@ GAP-08 باید مشاهده end-to-end یک request/correlation، خطای depe
 
 مدرک مثبت موجود است: `docs/production/BACKUP_RESTORE.md` اجرای ۲۰۲۶-۱۰-۱۳ را ثبت می‌کند؛ source DB disposable روی LocalDB، backup با checksum، restore با MOVE در DB دوم و validate marker با خروجی `STEP16_RESTORE_DRILL_SUCCEEDED`. SQL آن در `tools/production/sql/restore-drill-localdb.sql` موجود است. این audit آن drill یا cleanup را دوباره اجرا نکرد.
 
-این شاهد صرفاً LocalDB و marker مصنوعی را ثابت می‌کند، نه recovery کامل سیستم. موارد فاقد مدرک هدف:
+شاهد تاریخی بالا صرفاً marker را ثابت می‌کرد. در GAP-03 مورخ ۲۰۲۶-۱۰-۱۵، E29 یک full backup/restore کامل با ۳۵ migration، تطبیق count تمام ۸۵ جدول، CHECKDB، snapshot سه فایل با hash/size و دانلود CSV/upload از app بازیابی‌شده را اثبات کرد. session قدیمی با کلید یکسان، OTP تستی، read مجاز، منع cross-org و Guardian/revoke نیز بررسی شدند؛ SMS زنده یا تغییر provider انجام نشد. زمان یک اجرای ثبت‌شده restore+smoke حدود ۳٫۸۰ ثانیه بود؛ این اندازه کوچک LocalDB، RTO قراردادی نیست. جزئیات و زمان UTC در سند GAP-03 است.
+
+بسته‌شدن معیار drill همین درخواست، به معنی بسته‌شدن همه ریسک‌های عملیاتی اولیه audit نیست. موارد فاقد مدرک هدف:
 
 - backup job واقعی با retention/off-server copy/encryption و هشدار شکست؛ recovery model و log chain متناسب RPO مصوب.
-- snapshot سازگار storage و DB، بازیابی فایل و تطبیق hash، session/membership/grade/Outbox و دسترسی پس از restore.
+- snapshot/drill متناظر روی topology واقعی سرور و بازیابی از کپی خارج failure domain؛ شواهد محلی DB/file/session/membership/grade/outbox/auth در E29 موجود است.
 - بازیابی `Identity:SecurityKey` و دیگر secretها از مسیر امن؛ مقدار کلید در backup عمومی قرار نگیرد.
 - RTO/RPO اندازه‌گیری‌شده روی topology واقعی و اپلیکیشن پس از restore؛ restore از سرور/دیسک از دست‌رفته.
 
@@ -434,6 +437,7 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 - وابستگی: محیط GAP-02، RPO/RTO/retention مصوب و محل backup جدا.
 - محل/نوع کار: `tools/production/sql` و `docs/production/BACKUP_RESTORE.md`؛ **ops + drill**.
 - پذیرش: job با هشدار شکست، off-server copy، restore محیط disposable، تطبیق فایل/hash و روابط رسمی/Outbox و بازیابی secret reference، RPO/RTO اندازه‌گیری‌شده؛ بدون حذف داده هدف عادی.
+- شواهد جدید: E29 معیار درخواست GAP-03 برای drill واقعی disposable شامل DB+فایل+app را پوشش می‌دهد؛ ابزار و runbook تکرارپذیر اضافه شدند، schema و secret/providerها تغییر نکردند. job/off-server، secret store واقعی و RPO/RTO کسب‌وکاری هنوز اقدام عملیاتی مالک‌اند؛ `RPO/RTO NOT YET PRODUCT-APPROVED`. این به‌روزرسانی وضعیت هیچ gap دیگری را تغییر نمی‌دهد.
 
 ### GAP-04 — MFA/step-up واقعی Platform
 
