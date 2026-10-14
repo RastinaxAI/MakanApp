@@ -59,6 +59,11 @@ public static class DependencyInjection
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddSingleton<IIdentitySecurityEventRecorder, LoggingIdentitySecurityEventRecorder>();
         services.AddScoped<IOrganizationStore, EfOrganizationStore>();
+        services.AddScoped<SchoolManagementAccessResolver>();
+        services.AddScoped<IOrganizationPersonStore, EfOrganizationPersonStore>();
+        services.AddScoped<IOrganizationPersonService, OrganizationPersonService>();
+        services.AddScoped<IGuardianManagementStore, EfGuardianManagementStore>();
+        services.AddScoped<IGuardianManagementService, GuardianManagementService>();
         services.AddScoped<OrganizationService>();
         services.AddScoped<IOrganizationService>(serviceProvider =>
             serviceProvider.GetRequiredService<OrganizationService>());

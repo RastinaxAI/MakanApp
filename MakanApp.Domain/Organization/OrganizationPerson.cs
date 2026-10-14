@@ -29,6 +29,8 @@ public sealed class OrganizationPerson
     public DateTime ActivatedAtUtc { get; private set; }
     public DateTime? EndedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public Guid? CreationOperationId { get; private set; }
+    public string? CreationRequestHash { get; private set; }
 
     public bool IsActive =>
         Status == OrganizationPersonStatus.Active && !EndedAtUtc.HasValue;
@@ -38,6 +40,25 @@ public sealed class OrganizationPerson
         Guid personId,
         DateTime createdAtUtc) =>
         new(Guid.NewGuid(), organizationId, personId, createdAtUtc, createdAtUtc);
+
+    public static OrganizationPerson CreateOnboarded(
+        Guid organizationId, Guid personId, Guid operationId, string requestHash, DateTime createdAtUtc)
+    {
+        if (operationId == Guid.Empty || requestHash.Length != 64)
+            throw new ArgumentException("شناسه و اثر انگشت درخواست ایجاد معتبر نیست.");
+        var person = CreateActive(organizationId, personId, createdAtUtc);
+        person.CreationOperationId = operationId;
+        person.CreationRequestHash = requestHash;
+        return person;
+    }
+
+    public void LinkConsentingAccountPerson(Guid accountPersonId)
+    {
+        if (!IsActive || accountPersonId == Guid.Empty)
+            throw new InvalidOperationException("پرونده فعال و شخص حساب معتبر برای اتصال لازم است.");
+        // فقط مرجع پرونده سازمانی عوض می‌شود؛ هیچ Person یا سابقه‌ای merge یا حذف نمی‌شود.
+        PersonId = accountPersonId;
+    }
 
     public void End(DateTime endedAtUtc)
     {

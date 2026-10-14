@@ -33,7 +33,14 @@ public sealed record InvitationResult(
     Guid InvitedByUserId,
     OrganizationRole Role,
     InvitationStatus Status,
-    DateTime ExpiresAtUtc);
+    DateTime ExpiresAtUtc,
+    Guid? OrganizationPersonId = null,
+    string? OrganizationPersonDisplayName = null)
+{
+    public bool RequiresPersonLinkConsent => OrganizationPersonId.HasValue;
+}
+
+public sealed record AcceptInvitationCommand(bool ConfirmPersonLink = false);
 
 public sealed record AcceptInvitationResult(
     Guid InvitationId,
@@ -42,7 +49,8 @@ public sealed record AcceptInvitationResult(
     Guid MembershipId,
     Guid RoleAssignmentId,
     OrganizationRole Role,
-    bool AlreadyAccepted);
+    bool AlreadyAccepted,
+    Guid? OrganizationPersonId = null);
 
 public sealed record DeclineInvitationResult(
     Guid InvitationId,
@@ -56,4 +64,5 @@ public sealed record OrganizationWorkspaceRecord(
 
 public sealed record InvitationWithOrganization(
     Invitation Invitation,
-    string OrganizationName);
+    string OrganizationName,
+    string? OrganizationPersonDisplayName = null);

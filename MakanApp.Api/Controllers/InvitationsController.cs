@@ -2,6 +2,7 @@ using MakanApp.Api.Authentication;
 using MakanApp.Application.Organization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace MakanApp.Api.Controllers;
 
@@ -26,12 +27,15 @@ public sealed class InvitationsController(IOrganizationService organizationServi
     [ProducesResponseType<AcceptInvitationResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<AcceptInvitationResult>> AcceptInvitation(
         Guid invitationId,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] AcceptInvitationCommand? command,
         CancellationToken cancellationToken)
     {
         var result = await organizationService.AcceptInvitationAsync(
             AuthenticatedSession.GetUserId(User),
             invitationId,
-            cancellationToken);
+            cancellationToken,
+            command?.ConfirmPersonLink ?? false,
+            AuthenticatedSession.GetSessionId(User));
         return Ok(result);
     }
 

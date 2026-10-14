@@ -16,6 +16,8 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
             table.HasCheckConstraint(
                 "CK_Invitations_Expiry",
                 "[ExpiresAtUtc] > [CreatedAtUtc]");
+            table.HasCheckConstraint("CK_Invitations_PersonLink",
+                "([OrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1)");
         });
         builder.HasKey(invitation => invitation.Id);
         builder.Property(invitation => invitation.CreatedAtUtc).HasColumnType("datetime2(7)");
@@ -24,6 +26,16 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
         builder.Property(invitation => invitation.DeclinedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(invitation => invitation.RevokedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(invitation => invitation.RowVersion).IsRowVersion();
+        builder.HasIndex(invitation => new { invitation.OrganizationId, invitation.ClientOperationId })
+            .IsUnique().HasFilter("[ClientOperationId] IS NOT NULL")
+            .HasDatabaseName("UX_Invitations_LinkOperation");
+        builder.HasIndex(invitation => new { invitation.OrganizationId, invitation.OrganizationPersonId })
+            .IsUnique().HasFilter("[OrganizationPersonId] IS NOT NULL AND [Status] = 1")
+            .HasDatabaseName("UX_Invitations_Pending_PersonLink");
+        builder.HasOne<OrganizationPerson>().WithMany()
+            .HasForeignKey(invitation => new { invitation.OrganizationId, invitation.OrganizationPersonId })
+            .HasPrincipalKey(person => new { person.OrganizationId, person.Id })
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(invitation => new
         {

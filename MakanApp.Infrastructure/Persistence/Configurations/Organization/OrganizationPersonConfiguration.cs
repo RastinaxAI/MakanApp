@@ -10,9 +10,13 @@ public sealed class OrganizationPersonConfiguration : IEntityTypeConfiguration<O
     public void Configure(EntityTypeBuilder<OrganizationPerson> builder)
     {
         builder.ToTable("OrganizationPersons", "organization", table =>
+        {
             table.HasCheckConstraint(
                 "CK_OrganizationPersons_Status",
-                "[Status] IN (1, 2)"));
+                "[Status] IN (1, 2)");
+            table.HasCheckConstraint("CK_OrganizationPersons_CreationRequest",
+                "([CreationOperationId] IS NULL AND [CreationRequestHash] IS NULL) OR ([CreationOperationId] IS NOT NULL AND [CreationRequestHash] IS NOT NULL AND LEN([CreationRequestHash]) = 64)");
+        });
         builder.HasKey(organizationPerson => organizationPerson.Id);
         builder.HasAlternateKey(organizationPerson => new
         {
@@ -27,6 +31,10 @@ public sealed class OrganizationPersonConfiguration : IEntityTypeConfiguration<O
         builder.Property(organizationPerson => organizationPerson.EndedAtUtc)
             .HasColumnType("datetime2(7)");
         builder.Property(organizationPerson => organizationPerson.RowVersion).IsRowVersion();
+        builder.Property(organizationPerson => organizationPerson.CreationRequestHash).HasMaxLength(64).IsUnicode(false);
+        builder.HasIndex(person => new { person.OrganizationId, person.CreationOperationId })
+            .IsUnique().HasFilter("[CreationOperationId] IS NOT NULL")
+            .HasDatabaseName("UX_OrganizationPersons_CreationOperation");
 
         builder.HasIndex(organizationPerson => new
         {

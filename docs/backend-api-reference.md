@@ -2,11 +2,45 @@
 
 این مرجع مکمل [راهنمای استفاده از بک‌اند](backend-api-guide.md) است. قراردادهای HTTP از Controllerهای فعلی و مدل‌های متصل به آن‌ها آمده‌اند؛ مدل‌های داخلی persistence در فهرست قراردادها قرار ندارند.
 
-در این نسخه 141 عملیات HTTP در 22 Controller وجود دارد. مسیرهای `/health`، `/openapi/v1.json`، `/swagger` و Hub در این شمارش نیستند.
+شمارش 141 عملیات HTTP در 22 Controller مربوط به snapshot اولیه این مرجع است، نه شمار کل API فعلی. مسیرهای `/health`، `/openapi/v1.json`، `/swagger` و Hub در آن شمارش نیستند. برای GAP-01 جدول افزوده زیر و [قرارداد کامل GAP-01](architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) مرجع جاری‌اند؛ OpenAPI runtime در Development قرارداد سورس فعلی را نشان می‌دهد.
 
 همه مسیرها کامل نوشته شده‌اند. پارامترهای داخل `{...}` از مسیر، موارد ستون Query از URL و Command از بدنه JSON دریافت می‌شوند؛ تنها Upload از form-data استفاده می‌کند. همه عملیات به‌جز درخواست و تأیید OTP نیازمند `Authorization: Bearer <accessToken>` هستند.
 
 ستون پاسخ فقط status موفق تعریف‌شده در Controller را نشان می‌دهد. خطاهای مشترک در راهنما و فهرست کدها در پایان این مرجع آمده‌اند. DTO و Enum قابل کلیک‌اند. علامت `?` یا عبارت «یا null» نشان‌دهنده nullable بودن قرارداد است؛ قواعد الزامی‌بودن و lifecycle در سرویس نیز بررسی می‌شوند.
+
+## افزوده GAP-01 — ۲۰۲۶-۱۰-۱۵
+
+۱۳ عملیات جدید در `OrganizationPeopleController` و `SchoolGuardianRelationsController` و توسعه صریح یک عملیات accept موجود؛ تغییری در نسخه‌بندی route یا API پیامک ایجاد نشده است. همه مسیرهای مدرسه زیر، نشست معتبر و workspace سازمانی جاری با عضویت معتبر و نقش فعال Manager می‌خواهند؛ شناسه سازمان در body/query تعیین‌کننده مجوز نیست. Parent از Controller قبلی Guardian استفاده می‌کند.
+
+| Method | Route | Command / Query | پاسخ |
+|---|---|---|---|
+| POST | `/api/v1/organization/people` | CreateOrganizationPersonCommand | OrganizationPersonDto؛ 201 / 200 replay |
+| GET | `/api/v1/organization/people` | search, page=1, pageSize=50 | OrganizationPeoplePage؛ 200 |
+| GET | `/api/v1/organization/people/{id}` | — | OrganizationPersonDto؛ 200 |
+| PATCH | `/api/v1/organization/people/{id}` | UpdateOrganizationPersonNamesCommand | OrganizationPersonDto؛ 200 |
+| POST | `/api/v1/organization/people/{id}/end` | OnboardingStateCommand | OrganizationPersonDto؛ 200 |
+| POST | `/api/v1/organization/people/{id}/invitations` | CreatePersonLinkInvitationCommand | PersonLinkInvitationDto؛ 201 / 200 |
+| POST | `/api/v1/organization/people/{id}/invitations/{invitationId}/revoke` | OnboardingStateCommand | PersonLinkInvitationDto؛ 200 |
+| POST | `/api/v1/organization/guardian-relations` | CreateSchoolGuardianRelationCommand | SchoolGuardianRelationDto؛ 201 / 200 |
+| GET | `/api/v1/organization/guardian-relations` | learnerId, page=1, pageSize=50 | SchoolGuardianRelationsPage؛ 200 |
+| GET | `/api/v1/organization/guardian-relations/{id}` | — | SchoolGuardianRelationDto؛ 200 |
+| POST | `/api/v1/organization/guardian-relations/{id}/activate` | OnboardingStateCommand | SchoolGuardianRelationDto؛ 200 |
+| POST | `/api/v1/organization/guardian-relations/{id}/end` | OnboardingStateCommand | SchoolGuardianRelationDto؛ 200 |
+| POST | `/api/v1/organization/guardian-relations/{id}/revoke` | OnboardingStateCommand | SchoolGuardianRelationDto؛ 200 |
+| POST | `/api/v1/invitations/{invitationId}/accept` | AcceptInvitationCommand؛ فقط مقصد دعوت با نشست معتبر | AcceptInvitationResult؛ 200 |
+
+| Command | فیلدها |
+|---|---|
+| CreateOrganizationPersonCommand | clientOperationId, firstName, lastName, displayName?, reason |
+| UpdateOrganizationPersonNamesCommand | firstName, lastName, displayName?, expectedRowVersion, expectedPersonRowVersion, reason |
+| OnboardingStateCommand | expectedRowVersion, reason |
+| CreatePersonLinkInvitationCommand | clientOperationId, destinationUserId, expiresAtUtc, expectedRowVersion, reason |
+| CreateSchoolGuardianRelationCommand | guardianUserId, learnerOrganizationPersonId, reason |
+| AcceptInvitationCommand | confirmPersonLink؛ برای دعوت اتصال باید true، برای دعوت عادی body همچنان اختیاری |
+
+صفحه‌ها `items,totalCount,page,pageSize,dataAsOfUtc` دارند؛ اندازه صفحه ۱ تا ۱۰۰. DTO پرونده هر دو `rowVersion` و `personRowVersion` و دو flag `isAccountLinked/canEditNames` دارد. DTO دعوت و رابطه، `rowVersion/replayed` دارند. `InvitationResult` موجود با `organizationPersonId/organizationPersonDisplayName/requiresPersonLinkConsent` و `AcceptInvitationResult` با `organizationPersonId` اختیاری توسعه یافته‌اند.
+
+اعتبارسنجی: نام‌ها ۱..۱۰۰، displayName اختیاری تا۲۰۰، دلیل ۱..۵۰۰ نویسه؛ نسخه‌ها Base64 هشت‌بایتی؛ زمان دعوت UTC آینده حداکثر۳۰روز. خطاها ProblemDetails موجود: 400 ورودی/رضایت، 401 نشست، 403 نقش/نام محافظت‌شده، 404 منبع غیرمجاز/سازمان دیگر، 409 تعارض/پرونده دارای ثبت‌نام فعال/پروفایل ناقص، 410 دعوت غیرقابل‌پذیرش و 412 نسخه قدیمی. جزئیات status، نمونه درخواست/پاسخ، امنیت نام جهانی و retry در سند لینک‌شده بالا آمده‌اند.
 
 <a id="reference-reading"></a>
 ## چگونه از این مرجع استفاده کنیم؟

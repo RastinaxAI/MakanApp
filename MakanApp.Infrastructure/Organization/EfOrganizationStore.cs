@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Organization;
 
-public sealed class EfOrganizationStore(MakanDbContext dbContext) : IOrganizationStore
+public sealed partial class EfOrganizationStore(MakanDbContext dbContext) : IOrganizationStore
 {
     public async Task<IOrganizationTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -114,9 +114,16 @@ public sealed class EfOrganizationStore(MakanDbContext dbContext) : IOrganizatio
             from invitation in dbContext.Invitations
             join organization in dbContext.Organizations
                 on invitation.OrganizationId equals organization.Id
+            join schoolPerson in dbContext.OrganizationPersons
+                on invitation.OrganizationPersonId equals (Guid?)schoolPerson.Id into schoolPeople
+            from schoolPerson in schoolPeople.DefaultIfEmpty()
+            join person in dbContext.Persons
+                on schoolPerson.PersonId equals person.Id into people
+            from person in people.DefaultIfEmpty()
             where invitation.DestinationUserId == userId
             orderby invitation.CreatedAtUtc descending
-            select new InvitationWithOrganization(invitation, organization.Name))
+            select new InvitationWithOrganization(invitation, organization.Name,
+                person == null ? null : person.DisplayName ?? person.FirstName + " " + person.LastName))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 

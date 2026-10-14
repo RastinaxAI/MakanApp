@@ -39,6 +39,21 @@ public sealed class Invitation
     public Guid? AcceptedMembershipId { get; private set; }
     public Guid? AcceptedRoleAssignmentId { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public Guid? OrganizationPersonId { get; private set; }
+    public Guid? ClientOperationId { get; private set; }
+
+    public static Invitation CreatePersonLink(
+        Guid organizationId, Guid organizationPersonId, Guid destinationUserId,
+        Guid invitedByUserId, Guid operationId, DateTime createdAtUtc, DateTime expiresAtUtc)
+    {
+        if (organizationPersonId == Guid.Empty || destinationUserId == Guid.Empty || operationId == Guid.Empty)
+            throw new ArgumentException("شناسه‌های درخواست اتصال معتبر نیستند.");
+        var invitation = Create(organizationId, destinationUserId, invitedByUserId,
+            OrganizationRole.Student, createdAtUtc, expiresAtUtc);
+        invitation.OrganizationPersonId = organizationPersonId;
+        invitation.ClientOperationId = operationId;
+        return invitation;
+    }
 
     public static Invitation Create(
         Guid organizationId,

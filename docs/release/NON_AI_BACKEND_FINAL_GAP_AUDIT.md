@@ -2,12 +2,14 @@
 
 تاریخ ممیزی: ۲۰۲۶-۱۰-۱۵، منطقه زمانی `Asia/Tehran`. دامنه: فقط Backend فعلی؛ بدون تغییر محصول، تست، migration، معماری، Frontend یا AI.
 
+به‌روزرسانی محدود پس از ممیزی، ۲۰۲۶-۱۰-۱۵: **GAP-01 در کد بسته شد**. شرح ممیزی و اعداد baseline در بخش‌های 2 و 3 تاریخی باقی مانده‌اند؛ فقط شواهد، وابستگی‌ها و نتیجه GAP-01 در این نسخه اصلاح شده‌اند. [سند پیاده‌سازی و قراردادها](../architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) مرجع جزئیات است. این closure تأیید Production و تغییر اولویت سایر gapها نیست.
+
 ## 1. Executive Summary
 
-**Backend از یک foundation ساده بسیار جلوتر است، اما برای انتشار عمومی غیر AI هنوز `NOT_READY` است.** شماره STEP معیار تکمیل نیست. بخش عمده قواعد آموزشی، ارزیابی، پیام‌رسان، مجوز و گزارش واقعاً اجرا و تست می‌شوند؛ چند مسیر ضروری onboarding هنوز فقط مدل/fixture دارند و چند قابلیت به adapterهای unavailable متصل‌اند.
+**Backend از یک foundation ساده بسیار جلوتر است، اما برای انتشار عمومی غیر AI هنوز `NOT_READY` است.** شماره STEP معیار تکمیل نیست. بخش عمده قواعد آموزشی، ارزیابی، پیام‌رسان، مجوز و گزارش واقعاً اجرا و تست می‌شوند؛ onboarding فراگیر/والد با GAP-01 از حالت fixture-only خارج شده، اما چند قابلیت به adapterهای unavailable متصل‌اند.
 
 - سلامت worktree ممیزی‌شده: restore و build موفق؛ build بدون warning/error؛ **۹۷۷ تست موفق، صفر failed و صفر skipped**. این عدد شامل تست‌های Fake/Recording AI موجود نیز هست؛ هیچ AI یا provider خارجی زنده فراخوانی نشد.
-- `OrganizationPerson` و `GuardianRelation` مدل و persistence دارند، اما runtime برای ساخت/مدیریت رابطه فراگیر و والد پیدا نشد. این شکاف را تست‌های fixtureمحور پنهان می‌کنند: ثبت‌نام به learner موجود نیاز دارد، ولی ساخت آن workflow عملیاتی ندارد.
+- GAP-01 بسته شد: API مدرسه برای ساخت/get/search/update/end پرونده، دعوت اتصال حساب با رضایت صریح و create/activate/end/revoke رابطه والد اضافه شد؛ خود onboarding و ثبت‌نام از API در تست اجرا می‌شوند. نام Person حساب‌دار/مشترک از مدرسه قابل ویرایش نیست؛ حساب یا سابقه‌ای merge/حذف نمی‌شود. شواهد E27 و بخش 20.
 - OTP ملی‌پیامک adapter واقعی دارد، اما نمونه Production به `Unavailable` متصل است و مدرک نسخه‌بندی‌شده smoke کامل ارسال واقعی و verify موفق در محیط هدف پیدا نشد. ادعای ارسال/تست دستی در گذشته با مدرک عملیاتی قابل بازتولید یکسان نیست.
 - MFA/step-up، پرداخت واقعی، Push، SMS عمومی اعلان و Content Safety واقعی متصل نیستند. fail-closed بودن به معنی bypass امنیتی نیست؛ به معنی غیرقابل‌استفاده بودن مسیرهای مربوط است.
 - ذخیره‌سازی runtime واقعاً `LocalFileStorage` است. Object Storage برای پایلوت تک‌سروری الزام ذاتی ندارد؛ دیسک پایدار، ACL، ظرفیت، backup و restore الزام دارند.
@@ -18,7 +20,7 @@
 | حالت | حکم فعلی | معنی |
 |---|---|---|
 | MODE A — Internal Development | `READY` | برای توسعه و تست ایزوله با providerهای تست؛ نه اثبات عملکرد provider Production |
-| MODE B — Controlled Pilot | `NOT_READY` | gate فعلی onboarding و محیط هدف بسته نشده؛ پس از رفع موارد مشخص بخش 17، پایلوت محدود ممکن است |
+| MODE B — Controlled Pilot | `NOT_READY` | GAP-01 در کد بسته شده؛ gate محیط هدف و سایر شروط بخش 17 هنوز بازند |
 | MODE C — General Production | `NOT_READY` | workflow، provider و شواهد عملیاتی الزامی هنوز کامل نیستند |
 
 این سند certification امنیت، ممیزی زیرساخت سرور یا تضمین نبود همه باگ‌ها نیست. «شاهد پیدا نشد» به معنی مشاهده نکردن مدرک در مخزن است، نه ادعای اینکه فعالیتی خارج مخزن هرگز انجام نشده است.
@@ -123,12 +125,13 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | E24 | `MakanApp.Api/Program.cs`، `Configuration/ProductionConfigurationValidator.cs`، `Hosting/*`، `Errors/GlobalExceptionHandler.cs`، `appsettings.Production.json` | `ProductionConfigurationValidationTests.cs`، `ProductionHostingTests.cs` و `HealthEndpointTests.cs` |
 | E25 | `MakanApp.Api/Observability/*`، `Infrastructure/Identity/LoggingIdentitySecurityEventRecorder.cs` | تست header/correlation، redaction و قرارداد امن Platform؛ `docs/production/OBSERVABILITY.md` |
 | E26 | `tools/production/sql/`، `smoke-test.ps1`، `load/k6-critical-apis.js`؛ `MakanApp.Api/Properties/PublishProfiles/FolderProfile.pubxml` | `docs/production/DEPLOYMENT_IIS.md`، `BACKUP_RESTORE.md`، `SQL_SERVER_SECURITY.md`، `LOAD_TESTING.md` و `RELEASE_CHECKLIST.md` |
+| E27 | `OrganizationPeopleController`، `SchoolGuardianRelationsController`، `OrganizationPersonService`، `GuardianManagementService`، `EfOrganizationStore.PersonLink.cs` و migration `20261014214734_AddOperationalPersonGuardianOnboarding` | چهار فایل `OrganizationPersonOnboardingEndpointsTests*` با ۲۴ مورد Integration و `OrganizationOnboardingModelTests` با چهار Unit؛ API onboarding/enrollment/link، محافظ نام، چندفرزند، revoke/recheck، هم‌زمانی و constraints SQL |
 
 ## 4. Current architecture baseline
 
 - هفت پروژه solution: Domain، Application، Infrastructure، Api و سه پروژه Unit/Integration/Architecture؛ همگی `.NET 9`. ابزار untracked AI در solution اضافه نشده است.
 - ASP.NET Core Controller-based API؛ مسیرهای عمومی `/api/v1`، مدیریت پلتفرم `/api/admin/v1` و Hub در `/hubs/messaging`.
-- شمارش source: **۴۲ Controller و ۲۵۳ attribute مربوط به HTTP action**، شامل AI. این عدد شمار attribute است، نه ادعای استخراج OpenAPI runtime یا شمارش health/Hub.
+- شمارش source در ممیزی اولیه: **۴۲ Controller و ۲۵۳ attribute مربوط به HTTP action**، شامل AI. GAP-01 دو Controller و ۱۳ عملیات HTTP اضافه کرد. این عدد شمار attribute است، نه شمارش health/Hub.
 - Onion در Modular Monolith: Domain خالص؛ Application دارای use case و port؛ Infrastructure دارای EF/provider/worker؛ Api دارای transport، auth و composition root. تست‌های Architecture سبز هستند.
 - EF Core SQL Server `9.0.5`، یک `MakanDbContext` و schemaهای ماژولی؛ نه MySQL/PostgreSQL، نه migration خودکار startup.
 - `AddSignalR()` بدون backplane؛ rate limiter حافظه‌ای process-local؛ فایل‌ها روی local disk؛ هر چهار worker در executable API. Redis، Worker executable مستقل و Object Storage adapter مشاهده نشدند.
@@ -142,10 +145,10 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Auth/session/profile/revocation | COMPLETE_IN_CODE | E02، E24 | Identity و RefreshToken | نیاز به SQL؛ OTP ردیف بعد | LocalDB بله؛ سرور خیر | — | حفظ coverage و smoke هدف |
 | MeliPayamak managed OTP | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E03 | HTTP contract ساختگی + API OTP | adapter واقعی؛ نمونه Prod unavailable | smoke زنده قابل استناد پیدا نشد | P0 | GAP-02 |
 | Workspace/membership/invitation acceptance | COMPLETE_IN_CODE | E04 | tenant، نقش، پذیرش هم‌زمان | SQL واقعی در تست | عملیاتی خیر | — | onboarding از مسیر مجاز |
-| OrganizationPerson onboarding | FOUNDATION_ONLY | E05 | persistence/fixture | provider مطرح نیست | workflow ندارد | P0 | GAP-01 |
-| Guardian read/select/recheck | COMPLETE_IN_CODE | E06 | revoked/pending/cross-org | provider مطرح نیست | داده fixture | — | حفظ fail-closed |
-| ایجاد/پایان/لغو رابطه والد توسط عامل مجاز | NOT_IMPLEMENTED | E06؛ Controller فقط read/select | domain/persistence؛ نه workflow مدیریتی | provider مطرح نیست | خیر | P0 | GAP-01 |
-| Academic/Class/Enrollment/TeacherAssignment | COMPLETE_IN_CODE | E07 | capacity، history، isolation | SQL در تست | فقط با learner از پیش موجود | — | رفع dependency onboarding |
+| OrganizationPerson onboarding | COMPLETE_IN_CODE | E05، E27 | ساخت/get/search/update/end و link از API؛ بدون ساخت ضمنی حساب/نقش | provider مطرح نیست | SQL ایزوله بله؛ مدرسه واقعی خیر | — | GAP-02 برای smoke هدف |
+| Guardian read/select/recheck | COMPLETE_IN_CODE | E06، E27 | revoked/pending/cross-org؛ درخواست بعد از لغو API | provider مطرح نیست | رابطه از workflow جدید API | — | حفظ fail-closed |
+| ایجاد/پایان/لغو رابطه والد توسط عامل مجاز | COMPLETE_IN_CODE | E27؛ Manager جاری مدرسه | Pending/activate/end/revoke، retry و چندفرزند | provider مطرح نیست | SQL ایزوله بله؛ مدرسه واقعی خیر | — | GAP-02 برای smoke هدف |
+| Academic/Class/Enrollment/TeacherAssignment | COMPLETE_IN_CODE | E07، E27 | capacity، history، isolation و learner ساخته‌شده از API | SQL در تست | وابستگی fixture-only onboarding رفع شد؛ سرور خیر | — | smoke آموزش در GAP-02 |
 | Session/schedule/official Attendance | COMPLETE_IN_CODE | E07 | timezone/conflict/correction/concurrency | meeting link یک URL است | اتصال meeting واقعی اثبات نشده | — | smoke برنامه و حضور |
 | Assignment/submission/evaluation/release | COMPLETE_IN_CODE | E08 | lifecycle، authorization، concurrency، retry | provider لازم ندارد | روی fixture، نه مدارس واقعی | — | حفظ MaxScore همان نسخه |
 | File lifecycle و local disk | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E09 | upload، ACL، signature، restart | LocalFileStorage واقعی | IIS/backup/capacity خیر | P0 | GAP-02، GAP-03 |
@@ -172,7 +175,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Backoffice/IAM/provisioning/operations | PARTIAL | E20، E21 | permission، last-owner/manager، audit | MFA/payment/safety کم است | staging واقعی اثبات نشده | P0 | GAP-04 و gateهای مرتبط |
 | Platform MFA/step-up | IMPLEMENTED_BUT_PROVIDER_MISSING | E21 | Test provider؛ fail-closed واقعی | خیر | خیر | P0 | GAP-04 |
 | چهار worker و durable retry | COMPLETE_IN_CODE | E22 | processor/claim/retry/recovery | به ازای side-effect متفاوت | IIS lifecycle خیر | P1 | GAP-09 |
-| Schema/migration integrity | COMPLETE_IN_CODE | E23 | ۳۴ migration روی empty LocalDB | SQL Server provider واقعی | SQL هدف/permission/TLS خیر | P0 | GAP-02 |
+| Schema/migration integrity | COMPLETE_IN_CODE | E23، E27 | ۳۵ migration روی empty LocalDB پس از GAP-01 | SQL Server provider واقعی | SQL هدف/permission/TLS خیر | P0 | GAP-02 |
 | HTTP production safety | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24 | Production factory و config validation | IIS/TLS بیرونی لازم | host تست؛ نه IIS واقعی | P0 | GAP-02 |
 | Observability بیرونی | PARTIAL | E25 | metrics/header/privacy تست‌شده | sink/exporter/alert اثبات نشده | خیر | P1 | GAP-08 |
 | Backup/restore | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26 | drill محلی مستند | job عملیاتی اثبات نشده | LocalDB marker بله؛ DB+files خیر | P0 | GAP-03 |
@@ -209,12 +212,13 @@ Severity وابسته به دامنه عرضه صریح است. P0های شرط�
 
 | ID | شکاف و شاهد | شرط عبور |
 |---|---|---|
-| GAP-01 | onboarding فراگیر/والد runtime ندارد؛ E05/E06. `EnrollLearnerAsync` OrganizationPerson فعال می‌خواهد ولی `OrganizationPerson.CreateActive` و ساخت GuardianRelation در runtime مصرف ندارند | workflow مجاز، audit و تست ایجاد/link/end/revoke بدون ویرایش دستی DB |
 | GAP-02 | تنظیم و rehearsal محیط هدف، live OTP، migration gate و transport واقعی اثبات نشده؛ E03/E23/E24/E26 | IIS staging، secrets بیرونی، SQL TLS/principals، storage ACL، OTP send+verify و smoke ثبت‌شده |
 | GAP-03 | recovery واقعی داده مدرسه+storage+کلیدها اثبات نشده؛ E26 | job/retention/off-server backup و restore drill سازگار با شواهد RPO/RTO مصوب |
 | GAP-04 | MFA واقعی وجود ندارد؛ مسیر حساس admin عمداً رد می‌شود؛ E21 | factor تأییدشده، verification/replay/freshness/session assurance و تست واقعی؛ بدون دورزدن fail-closed |
 | GAP-05 | safety provider، lifecycle معتبر سن و policy Minor ناقص‌اند؛ E12 | تصمیم محصول و adapter/provider واقعی یا scope محدود مصوب و enforceشده؛ مسیر Unknown با allow ساختگی باز نشود |
 | GAP-06 | درگاه، callback قابل اعتماد و reconciliation واقعی نداریم؛ E19 | فقط برای عرضه پولی: قرارداد provider، verify واقعی، duplicate/replay/mismatch، recovery وضعیت unknown و settlement ثبت‌شده |
+
+GAP-01 از فهرست blockerهای باز خارج شد: workflow مجاز، Audit اتمیک، اتصال رضایتی بدون merge و قطع دسترسی والد در درخواست بعدی با تست SQL/API اثبات شدند (E27). سایر P0ها تغییر وضعیت نداده‌اند.
 
 ### P1 — Serious operational risk
 
@@ -281,7 +285,7 @@ OTP adapter logging فقط recipient ماسک‌شده دارد و HttpClient آ
 
 ## 10. Data / DB / Migration gaps
 
-وضعیت واقعی: **۳۴ migration** از `20260929075711_InitialIdentity` تا `20261013084443_AddRefreshTokenRotationAndSessionAssurance`. اجرای suite اعمال همه روی empty LocalDB را اثبات کرد؛ pending-model check نیز موفق بود. migration جدید ساخته یا روی DB عادی اعمال نشد.
+وضعیت ممیزی اولیه: **۳۴ migration** از `20260929075711_InitialIdentity` تا `20261013084443_AddRefreshTokenRotationAndSessionAssurance`. در GAP-01 migration شماره ۳۵ با نام `20261014214734_AddOperationalPersonGuardianOnboarding` افزوده و روی empty LocalDB تست شد؛ دیتابیس عادی توسعه/Production migrate نشده است. چهار ستون nullable، سه filtered unique، دو CHECK و یک composite FK به Invitation/OrganizationPerson افزوده شده‌اند؛ جدول/داده‌ای حذف نشده و Guardian schema تغییر نکرده است.
 
 نمونه integrity موجود: composite FK سازمان/منبع، filtered unique فعال برای membership/enrollment/guardian، `rowversion`، check constraint وضعیت/تاریخ/مقدار و `DeleteBehavior.Restrict` برای تاریخچه‌های مرتبط. `AssignmentVersion.MaxScore` و `EvaluationRevision.Score` دارای precision `decimal(9,2)` هستند؛ validation دامنه سقف همان نسخه را کنترل می‌کند. نمره آزمون نیز از version/سؤال منجمد خوانده می‌شود. timestampهای رویداد با UTC سرور و ستون‌های `datetime2(7)` مدل می‌شوند؛ DateOnly برای تقویم دوره با timestamp رویداد اشتباه نشود.
 
@@ -289,10 +293,10 @@ OTP adapter logging فقط recipient ماسک‌شده دارد و HttpClient آ
 
 - LocalDB نسخه و topology واقعی SQL Server Production، certificate، permission و workload آن را اثبات نمی‌کند.
 - collation صریح در `OnModelCreating`/configuration مشاهده نشد؛ باید در ساخت DB محیط و تطبیق test/production ثبت شود، به‌ویژه username/search فارسی.
-- migration bundle یا script نسخه‌بندی‌شده اجرای ۳۴ migration در مخزن پیدا نشد؛ اسکریپت‌های SQL موجود برای principal و drill هستند. فرمان EF و gate دستی مستند است، نه pipeline اجراشده.
+- migration bundle یا script نسخه‌بندی‌شده اجرای migrationها در مخزن پیدا نشد (۳۴ در ممیزی اولیه، ۳۵ پس از GAP-01)؛ اسکریپت‌های SQL موجود برای principal و drill هستند. فرمان EF و gate دستی مستند است، نه pipeline اجراشده.
 - design-time factory در نبود تنظیم اتصال، fallback محلی دارد؛ migration در release باید با environment و target تأییدشده اجرا شود، نه اعتماد به fallback.
 - rollback مستند، app rollback و DB forward-fix/restore بر اساس compatibility است؛ اجرای کور Down migration راهبرد ایمن فرض نشده است. rehearsal واقعی باقی است.
-- مهم‌ترین gap داده‌ای GAP-01 است: برای onboarding واقعی راه‌حل «درج دستی رابطه در DB» پذیرفته نیست. ساخت دیتای fixture، workflow محصول محسوب نمی‌شود.
+- dependency داده‌ای GAP-01 رفع شد: ساخت پرونده، دعوت اتصال و مدیریت رابطه والد اکنون workflow API با مجوز مدرسه دارند؛ درج دستی رابطه جایگزین مجاز این APIها نیست.
 
 ## 11. Infrastructure / deployment gaps
 
@@ -376,7 +380,7 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 
 **Verdict: `NOT_READY` در وضعیت اثبات‌شده فعلی.** توسعه داخلی سالم است، اما pilot با مدارس/کاربران واقعی بدون بستن gateهای زیر تأیید نمی‌شود:
 
-1. GAP-01: ایجاد/مدیریت learner و رابطه والد از workflow مجاز، بدون دست‌کاری DB.
+1. GAP-01: **CLOSED در کد**؛ ایجاد/مدیریت learner و رابطه والد از API مجاز، بدون دست‌کاری DB کسب‌وکاری. اجرای همین جریان در محیط هدف همچنان بخشی از GAP-02 است.
 2. GAP-02 و GAP-03: محیط هدف امن، ورود OTP واقعی، migration و storage صحیح، smoke و recovery پایه DB+files ثبت‌شده.
 3. scope پایلوت مکتوب و enforceشده: تک instance، کاربران محدود و داده کنترل‌شده؛ Commerce پولی/Push/SMS اعلان وعده داده نشوند تا providerها آماده شوند. in-app می‌تواند کانال اعلان باشد.
 4. اگر Backoffice حساس یا Messenger با Minor/Unknown عرضه می‌شوند، GAP-04/05 نیز قبل از pilot بسته شوند. صرف unavailable نگه‌داشتن بدون توضیح UX و محدودسازی واقعی کافی نیست. سن کاربران را با SQL دستی Adult نکنید.
@@ -401,21 +405,23 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 
 ## 20. Exact recommended closure roadmap
 
-این ترتیب از gap واقعی می‌آید، نه شماره STEP قدیمی. همه موارد **پیشنهاد** هستند؛ هیچ‌کدام در audit اجرا نشده‌اند. مسیرهای «expected» محل بررسی/تغییر احتمالی‌اند، نه فایل ایجادشده یا طرح نهایی API. یک تیم می‌تواند پس از approval بعضی کارهای ops/provider مستقل را هم‌زمان پیش ببرد؛ این audit delegation یا تغییر خارجی انجام نمی‌دهد.
+این ترتیب از gap واقعی می‌آید، نه شماره STEP قدیمی. در ممیزی اولیه همه موارد **پیشنهاد** بودند و در خود audit اجرا نشدند؛ GAP-01 پس از تأیید جداگانه مالک اجرا و در ادامه به‌روزرسانی شد. سایر مسیرهای «expected» محل بررسی/تغییر احتمالی‌اند، نه فایل ایجادشده یا طرح نهایی API. یک تیم می‌تواند پس از approval بعضی کارهای ops/provider مستقل را هم‌زمان پیش ببرد؛ این audit delegation یا تغییر خارجی انجام نمی‌دهد.
 
-### GAP-01 — تکمیل onboarding فراگیر و Guardian lifecycle
+### GAP-01 — تکمیل onboarding فراگیر و Guardian lifecycle — CLOSED
 
 - هدف/اهمیت: بستن dependency اصلی آموزش و والد؛ حذف نیاز به درج/تغییر دستی SQL.
-- وابستگی: تصمیم مالک درباره عامل مجاز ایجاد/link/unlink، روش تطبیق Person/User و تأیید رابطه والد؛ از دسترسی Parent به‌عنوان مجوز خوداظهاری استفاده نشود.
-- محل/نوع کار: Domain/Organization و Guardian موجود، Application/Organization و Guardian، Infrastructure/store/configuration و Controllerهای مجاز؛ **code + product decision**.
-- پذیرش: OTP/profile → ساخت/link سازمانی مجاز → enrollment → Guardian ثبت/انتخاب → read؛ end/revoke درخواست بعدی را ببندد؛ دو سازمان، duplicate/retry، stale rowversion و audit تست شوند؛ هیچ fixture/SQL دستی برای workflow لازم نباشد.
+- تصمیم مصوب: نام جهانی تنها برای Person بدون حساب و دقیقاً یک ارجاع سازمانی قابل ویرایش است؛ اتصال فقط با Invitation و رضایت صریح صاحب حساب در نشست معتبر؛ بدون matching یا merge. unlink در این مرحله پیاده نشده است.
+- پیاده‌سازی: Domain/Organization، Application/Organization و Guardian، Infrastructure store/configuration و دو Controller مدرسه؛ از IAM پلتفرم برای عملیات مدرسه استفاده نشده است. قرارداد و مسیر مطالعه در سند E27 آمده‌اند.
+- پذیرش اثبات‌شده: OTP/profile تستی → ساخت پرونده از API → Enrollment موجود → دعوت و پذیرش رضایتی → Guardian Pending/activate/select → dashboard/report؛ end/revoke درخواست بعدی را می‌بندد. دو سازمان، چندفرزند، duplicate/retry، stale rowversion، Audit و constraints SQL تست شدند. fixture فقط برای پیش‌شرط سازمان/مدیر/عضویت و حالت‌های legacy/حمله است، نه خود workflow جدید.
+- Validation پس از پیاده‌سازی: restore و build موفق با صفر warning/error؛ **Unit 384 + Integration 607 + Architecture 14 = 1005 passed، صفر failed/skipped** (baseline برابر 977 بود؛ 28 مورد افزوده شد). این نتیجه worktree شامل فایل‌های قبلی AI است؛ آن فایل‌ها جزو commit GAP-01 نیستند. ارسال زنده SMS/AI یا عملیات سرور انجام نشده است.
+- اولین gap باز پیشنهادی اکنون **GAP-02** است؛ verdict پایلوت/Production همچنان NOT_READY می‌ماند.
 
 ### GAP-02 — محیط IIS staging، secrets و live core smoke
 
 - هدف/اهمیت: تبدیل کنترل‌های کد به محیط قابل ارزیابی و اثبات OTP واقعی.
 - وابستگی: Windows/SQL staging ایزوله، دامنه/certificate، credential مصوب و شماره تست مجاز؛ GAP-01 برای سناریوی کامل مدرسه.
 - محل/نوع کار: `docs/production`، `tools/production`، deployment configuration و gate schema؛ **ops + validation، code فقط اگر تست شواهد نقص نشان داد**.
-- پذیرش: artifact commit مشخص، .NET9/IIS/WS، TLS معتبر، secret بیرون Git، principal جدا، ۳۴ migration، storage ACL، log redaction، send/receive/verify/resend/restart OTP، refresh/revoke و smoke چهار نقش ثبت شوند؛ health بدون schema کافی تلقی نشود.
+- پذیرش: artifact commit مشخص، .NET9/IIS/WS، TLS معتبر، secret بیرون Git، principal جدا، ۳۵ migration پس از GAP-01، storage ACL، log redaction، send/receive/verify/resend/restart OTP، refresh/revoke و smoke چهار نقش ثبت شوند؛ health بدون schema کافی تلقی نشود.
 
 ### GAP-03 — backup و restore کامل DB + storage + secrets
 
@@ -550,4 +556,4 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 - محل/نوع کار: adapter پشت `IFileStorage`، readiness و deployment؛ **code + provider + ops**.
 - پذیرش: parity upload/read/delete/hash، خصوصی بودن bytes، retry و authorization فایل/export/evidence، consistency DB+object و restore واقعی؛ SQL Server همچنان مرجع metadata و مجوز باقی بماند.
 
-پس از ثبت این سند و validation، فقط همین فایل باید commit و به branch رهگیری‌شده push شود. مقایسه hash و Git status باید حفظ همه تغییرات قبلی AI را تأیید کند. اجرای GAP-01 یا هر مورد دیگر نیازمند approval بعدی مالک پروژه است.
+قاعده اجرای ممیزی اولیه: پس از ثبت سند و validation، فقط همین سند commit/push شد. GAP-01 با approval جداگانه مالک اجرا شده و commit آن فقط فایل‌های همین gap را شامل می‌شود؛ مقایسه hash و Git status باید حفظ همه تغییرات قبلی AI را تأیید کند. اجرای هر gap باز دیگر هنوز نیازمند approval بعدی مالک پروژه است.

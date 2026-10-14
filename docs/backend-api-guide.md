@@ -4,6 +4,16 @@
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
+## تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵
+
+مسیر ساخت و مدیریت پرونده فراگیر و رابطه سرپرستی اکنون API دارد؛ توضیح کامل قراردادها، نمونه‌ها، خطاها، migration و تست‌ها در [سند GAP-01](architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) است. این بخش وضعیت قدیمیِ fixture-only برای OrganizationPerson/GuardianRelation را جایگزین می‌کند؛ HTML/PDFهای قبلی snapshot تاریخی‌اند و در این مرحله بازتولید نشده‌اند.
+
+جریان مدرسه: ورود و workspace با نقش فعال Manager → `POST /api/v1/organization/people` → جست‌وجو/دریافت پرونده → ثبت‌نام اختیاری از Academic موجود. ایجاد پرونده حساب، عضویت، نقش، Enrollment یا TeacherAssignment نمی‌سازد. ویرایش نام فقط برای Person بدون حساب و دارای دقیقاً یک ارجاع سازمانی مجاز است؛ هر دو rowversion پرونده و Person لازم‌اند.
+
+اتصال حساب: ساخت دعوت از `/api/v1/organization/people/{id}/invitations` برای User موجود → نمایش دعوت به همان کاربر → ورود و تکمیل پروفایل توسط صاحب حساب → پذیرش صریح با `{"confirmPersonLink":true}` در مسیر accept موجود. فقط مرجع PersonId پرونده متصل می‌شود؛ هیچ Person/User ادغام یا حذف نمی‌شود. Membership/Student Role از جریان قبلی دعوت می‌آید؛ ثبت‌نام همچنان مستقل است. پذیرش دعوت عادی قبلی بدون بدنه سازگار باقی مانده است.
+
+سرپرستی: مدیر برای Parent دارای عضویت/نقش معتبر همان سازمان، از `/api/v1/organization/guardian-relations` رابطه Pending می‌سازد؛ سپس با rowversion فعال می‌کند. Parent خوداظهاریِ دسترسی ندارد. Parent از children/select موجود استفاده می‌کند؛ بعد از end/revoke، درخواست بعدی dashboard/report با انتخاب قبلی رد می‌شود و تاریخچه آموزشی حذف نمی‌شود. School Manager جای Platform Admin نیست و این قابلیت دسترسی به محتوای خصوصی پیام‌رسان ایجاد نمی‌کند.
+
 ## فهرست مطالب
 
 - [قابلیت‌ها و معماری](#overview)

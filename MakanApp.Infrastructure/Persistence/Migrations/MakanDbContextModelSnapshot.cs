@@ -4100,6 +4100,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("AcceptedRoleAssignmentId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -4116,6 +4119,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("OrganizationPersonId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("RevokedAtUtc")
@@ -4141,7 +4147,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InvitedByUserId");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("OrganizationId", "ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Invitations_LinkOperation")
+                        .HasFilter("[ClientOperationId] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId", "OrganizationPersonId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Invitations_Pending_PersonLink")
+                        .HasFilter("[OrganizationPersonId] IS NOT NULL AND [Status] = 1");
 
                     b.HasIndex("DestinationUserId", "OrganizationId", "Role")
                         .IsUnique()
@@ -4151,6 +4165,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("Invitations", "organization", t =>
                         {
                             t.HasCheckConstraint("CK_Invitations_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_Invitations_PersonLink", "([OrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1)");
 
                             t.HasCheckConstraint("CK_Invitations_Role", "[Role] IN (1, 2, 3, 4)");
 
@@ -4247,6 +4263,14 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
 
+                    b.Property<Guid?>("CreationOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreationRequestHash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
                     b.Property<DateTime?>("EndedAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -4272,6 +4296,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonId");
 
+                    b.HasIndex("OrganizationId", "CreationOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_OrganizationPersons_CreationOperation")
+                        .HasFilter("[CreationOperationId] IS NOT NULL");
+
                     b.HasIndex("OrganizationId", "PersonId")
                         .IsUnique()
                         .HasDatabaseName("UX_OrganizationPersons_Active_Organization_Person")
@@ -4279,6 +4308,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("OrganizationPersons", "organization", t =>
                         {
+                            t.HasCheckConstraint("CK_OrganizationPersons_CreationRequest", "([CreationOperationId] IS NULL AND [CreationRequestHash] IS NULL) OR ([CreationOperationId] IS NOT NULL AND [CreationRequestHash] IS NOT NULL AND LEN([CreationRequestHash]) = 64)");
+
                             t.HasCheckConstraint("CK_OrganizationPersons_Status", "[Status] IN (1, 2)");
                         });
                 });
@@ -6652,6 +6683,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.OrganizationPerson", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "OrganizationPersonId")
+                        .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Organization.Membership", b =>

@@ -151,14 +151,18 @@ public sealed class OrganizationService(
                 item.Invitation.InvitedByUserId,
                 item.Invitation.Role,
                 item.Invitation.GetEffectiveStatus(nowUtc),
-                item.Invitation.ExpiresAtUtc))
+                item.Invitation.ExpiresAtUtc,
+                item.Invitation.OrganizationPersonId,
+                item.OrganizationPersonDisplayName))
             .ToArray();
     }
 
     public async Task<AcceptInvitationResult> AcceptInvitationAsync(
         Guid userId,
         Guid invitationId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool confirmPersonLink = false,
+        Guid? sessionId = null)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
@@ -183,6 +187,12 @@ public sealed class OrganizationService(
 
         if (invitation.Status == InvitationStatus.Accepted)
         {
+            if (invitation.OrganizationPersonId.HasValue)
+            {
+                EnsurePersonLinkConsent(confirmPersonLink);
+                var session = await GetActiveSessionAsync(userId, sessionId ?? Guid.Empty, cancellationToken);
+                await store.CompletePersonLinkAsync(invitation, userId, session.Id, nowUtc, true, cancellationToken);
+            }
             await transaction.CommitAsync(cancellationToken);
             return CreateAcceptanceResult(invitation, organization.Name, true);
         }
@@ -203,6 +213,13 @@ public sealed class OrganizationService(
             await store.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             throw InvitationExpiredException();
+        }
+
+        if (invitation.OrganizationPersonId.HasValue)
+        {
+            EnsurePersonLinkConsent(confirmPersonLink);
+            var session = await GetActiveSessionAsync(userId, sessionId ?? Guid.Empty, cancellationToken);
+            await store.CompletePersonLinkAsync(invitation, userId, session.Id, nowUtc, false, cancellationToken);
         }
 
         var membership = await store.GetActiveMembershipAsync(
@@ -241,6 +258,12 @@ public sealed class OrganizationService(
         await store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return CreateAcceptanceResult(invitation, organization.Name, false);
+    }
+
+    private static void EnsurePersonLinkConsent(bool confirmed)
+    {
+        if (!confirmed)
+            throw new OrganizationException(SchoolOnboardingErrorCodes.ConsentRequired, "برای اتصال پرونده، تأیید صریح کاربر لازم است.");
     }
 
     public async Task<DeclineInvitationResult> DeclineInvitationAsync(
@@ -315,7 +338,8 @@ public sealed class OrganizationService(
             invitation.AcceptedRoleAssignmentId
                 ?? throw new InvalidOperationException("نقش پذیرفته‌شده ثبت نشده است."),
             invitation.Role,
-            alreadyAccepted);
+            alreadyAccepted,
+            invitation.OrganizationPersonId);
 
     private static OrganizationException WorkspaceNotFoundException() =>
         new(
