@@ -17,7 +17,7 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class DashboardEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
+public sealed partial class DashboardEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 8_000_000;

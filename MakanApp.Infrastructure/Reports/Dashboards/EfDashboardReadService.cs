@@ -177,33 +177,32 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
             .AsNoTracking()
             .CountAsync(cancellationToken);
         var attendanceQuery =
-            from attendance in _dbContext.Attendance
+            from attendance in _dbContext.Attendance.AsNoTracking()
             join eligible in eligibleSessions
                 on new { SessionId = attendance.SessionId, attendance.EnrollmentId }
                 equals new { SessionId = eligible.Id, eligible.EnrollmentId }
             select attendance.Status;
 
-        var recordedCount = await attendanceQuery.CountAsync(cancellationToken);
-        var presentCount = await attendanceQuery.CountAsync(
-            status => status == AttendanceStatus.Present,
-            cancellationToken);
-        var absentCount = await attendanceQuery.CountAsync(
-            status => status == AttendanceStatus.Absent,
-            cancellationToken);
-        var lateCount = await attendanceQuery.CountAsync(
-            status => status == AttendanceStatus.Late,
-            cancellationToken);
-        var excusedCount = await attendanceQuery.CountAsync(
-            status => status == AttendanceStatus.Excused,
-            cancellationToken);
+        var counts = await attendanceQuery
+            .GroupBy(status => 1)
+            .Select(group => new
+            {
+                Recorded = group.Count(),
+                Present = group.Count(status => status == AttendanceStatus.Present),
+                Absent = group.Count(status => status == AttendanceStatus.Absent),
+                Late = group.Count(status => status == AttendanceStatus.Late),
+                Excused = group.Count(status => status == AttendanceStatus.Excused)
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+        var recordedCount = counts?.Recorded ?? 0;
 
         return new DashboardAttendanceSummary(
             eligibleCount,
             recordedCount,
-            presentCount,
-            absentCount,
-            lateCount,
-            excusedCount,
+            counts?.Present ?? 0,
+            counts?.Absent ?? 0,
+            counts?.Late ?? 0,
+            counts?.Excused ?? 0,
             Math.Max(0, eligibleCount - recordedCount));
     }
 
@@ -218,14 +217,12 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 on new
                 {
                     exam.OrganizationId,
-                    ExamId = exam.Id,
-                    VersionNumber = exam.LatestPublishedVersionNumber!.Value
+                    ExamId = exam.Id
                 }
                 equals new
                 {
                     version.OrganizationId,
-                    version.ExamId,
-                    version.VersionNumber
+                    version.ExamId
                 }
             join academicClass in _dbContext.Classes
                 on new { exam.OrganizationId, Id = exam.ClassId }
@@ -236,7 +233,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
             let latestAttemptStatus = _dbContext.ExamAttempts
                 .Where(attempt =>
                     attempt.OrganizationId == organizationId &&
-                    attempt.ExamId == exam.Id &&
+                    attempt.ExamVersionId == version.Id &&
                     attempt.EnrollmentId == enrollment.Id)
                 .OrderByDescending(attempt => attempt.AttemptNumber)
                 .Select(attempt => (ExamAttemptStatus?)attempt.Status)
@@ -250,7 +247,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                     on new { revision.OrganizationId, ExamGradeRevisionId = revision.Id }
                     equals new { release.OrganizationId, release.ExamGradeRevisionId }
                 where attempt.OrganizationId == organizationId &&
-                      attempt.ExamId == exam.Id &&
+                      attempt.ExamVersionId == version.Id &&
                       attempt.EnrollmentId == enrollment.Id &&
                       revision.Status == ExamGradeRevisionStatus.Released
                 orderby release.ReleasedAtUtc descending
@@ -264,7 +261,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                     on new { revision.OrganizationId, ExamGradeRevisionId = revision.Id }
                     equals new { release.OrganizationId, release.ExamGradeRevisionId }
                 where attempt.OrganizationId == organizationId &&
-                      attempt.ExamId == exam.Id &&
+                      attempt.ExamVersionId == version.Id &&
                       attempt.EnrollmentId == enrollment.Id &&
                       revision.Status == ExamGradeRevisionStatus.Released
                 orderby release.ReleasedAtUtc descending
@@ -275,26 +272,27 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                     on new { attempt.OrganizationId, ExamAttemptId = attempt.Id }
                     equals new { revision.OrganizationId, revision.ExamAttemptId }
                 where attempt.OrganizationId == organizationId &&
-                      attempt.ExamId == exam.Id &&
+                      attempt.ExamVersionId == version.Id &&
                       attempt.EnrollmentId == enrollment.Id &&
                       revision.Status == ExamGradeRevisionStatus.ReadyForRelease
                 select revision.Id).Any()
             let hasFinalizedAttempt = _dbContext.ExamAttempts.Any(attempt =>
                 attempt.OrganizationId == organizationId &&
-                attempt.ExamId == exam.Id &&
+                attempt.ExamVersionId == version.Id &&
                 attempt.EnrollmentId == enrollment.Id &&
                 attempt.Status == ExamAttemptStatus.Finalized)
             where exam.OrganizationId == organizationId &&
                   exam.Status == ExamStatus.Published &&
                   exam.LatestPublishedVersionNumber != null &&
                   version.Status == ExamVersionStatus.Published &&
-                  (version.AvailableUntilUtc >= dataAsOfUtc || releasedScore.HasValue) &&
+                  ((version.VersionNumber == exam.LatestPublishedVersionNumber &&
+                    version.AvailableUntilUtc >= dataAsOfUtc) || releasedScore.HasValue) &&
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
                   enrollment.Status == EnrollmentStatus.Active &&
                   enrollment.EndedAtUtc == null &&
                   academicClass.Status == ClassStatus.Active &&
                   academicClass.EndedAtUtc == null
-            orderby version.AvailableFromUtc, exam.Id
+            orderby version.AvailableFromUtc, exam.Id, version.VersionNumber
             select new DashboardExamItem(
                 exam.Id,
                 version.Id,
@@ -336,7 +334,13 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 enrollment.EndedAtUtc == null)
             let recordedCount = _dbContext.Attendance.Count(attendance =>
                 attendance.OrganizationId == organizationId &&
-                attendance.SessionId == session.Id)
+                attendance.SessionId == session.Id &&
+                _dbContext.Enrollments.Any(enrollment =>
+                    enrollment.OrganizationId == organizationId &&
+                    enrollment.ClassId == session.ClassId &&
+                    enrollment.Id == attendance.EnrollmentId &&
+                    enrollment.Status == EnrollmentStatus.Active &&
+                    enrollment.EndedAtUtc == null))
             where session.OrganizationId == organizationId &&
                   session.Status != SessionStatus.Cancelled &&
                   session.EndUtc <= dataAsOfUtc &&
@@ -417,13 +421,6 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 equals new { exam.OrganizationId, ExamId = exam.Id }
             where attempt.OrganizationId == organizationId &&
                   attempt.Status == ExamAttemptStatus.Finalized &&
-                  _dbContext.ExamAttemptQuestions.Any(mapping =>
-                      mapping.OrganizationId == organizationId &&
-                      mapping.ExamAttemptId == attempt.Id &&
-                      _dbContext.QuestionVersions.Any(question =>
-                          question.OrganizationId == organizationId &&
-                          question.Id == mapping.QuestionVersionId &&
-                          question.Type == ExamQuestionType.Descriptive)) &&
                   (!teacherMembershipId.HasValue || _dbContext.TeacherAssignments.Any(teacher =>
                       teacher.OrganizationId == organizationId &&
                       teacher.ClassId == exam.ClassId &&

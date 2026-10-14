@@ -1,6 +1,9 @@
 using System.Text.Json;
+using MakanApp.Application.Assessment;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Dashboards;
+using MakanApp.Domain.Academic;
+using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 using Xunit;
 
@@ -129,6 +132,76 @@ public sealed class DashboardServiceTests
                 forbiddenName,
                 json,
                 StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void PopulatedDashboardContractsSerializeOnlyAudienceSafeFields()
+    {
+        var id = Guid.NewGuid();
+        var session = new DashboardSessionItem(id, id, "Class", "Session", DataAsOfUtc,
+            DataAsOfUtc.AddHours(1), "Asia/Tehran", null, SessionStatus.Scheduled);
+        var assignment = new DashboardAssignmentItem(id, id, id, "Class", "Assignment",
+            DataAsOfUtc.AddHours(2), true, StudentAssignmentActionStatus.NotStarted);
+        var exam = new DashboardExamItem(id, id, id, "Class", "Exam", DataAsOfUtc,
+            DataAsOfUtc.AddHours(3), 30, ExamAttemptStatus.Finalized,
+            ExamResultReleaseStatus.Released, 18m, 20m, DataAsOfUtc);
+        var student = RecordingDashboardReadService.Student with
+        {
+            NextSession = session,
+            NearestAssignmentDeadline = assignment,
+            RecentReleasedFeedback = [new(id, id, "Assignment", 17.25m, 20m, "Learner feedback", DataAsOfUtc)],
+            UpcomingExams = [exam]
+        };
+        var parent = RecordingDashboardReadService.Parent with
+        {
+            SelectedLearner = new(id, "Child"),
+            UpcomingSessions = [session],
+            Assignments = [assignment],
+            ReleasedAssignmentResults = [new(id, id, "Assignment", 17.25m, 20m, "Guardian feedback", DataAsOfUtc)],
+            Exams = [exam]
+        };
+        var teacher = RecordingDashboardReadService.Teacher with
+        {
+            AssignedClasses = [new(id, "Class", "Course", "Period", 1)],
+            UpcomingSessions = [session],
+            AttendancePending = [new(id, id, "Class", "Session", DataAsOfUtc, DataAsOfUtc.AddHours(1), 1, 0, 1)]
+        };
+        var manager = RecordingDashboardReadService.Manager with
+        {
+            UpcomingSessions = [session],
+            SessionsMissingMeetingLink = [session],
+            AttendancePending = teacher.AttendancePending
+        };
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        var forbidden = new[] { "answerKey", "correctOptionId", "isCorrect", "prompt", "options",
+            "learnerFeedback", "teacherPrivateNote", "evaluatorPrivateNote", "messageBody",
+            "copilotHistory", "sessionToken", "accessToken", "refreshToken", "codeHash", "rowVersion" };
+
+        foreach (var dashboard in new object[] { student, parent, teacher, manager })
+        {
+            using var document = JsonDocument.Parse(JsonSerializer.Serialize(dashboard, options));
+            Assert.True(document.RootElement.TryGetProperty("dataAsOfUtc", out _));
+            var forbiddenForAudience = dashboard is StudentDashboardDto
+                ? forbidden.Where(name => name != "learnerFeedback")
+                : forbidden;
+            AssertSafeProperties(document.RootElement, forbiddenForAudience.ToHashSet(StringComparer.OrdinalIgnoreCase));
+        }
+    }
+
+    private static void AssertSafeProperties(JsonElement element, HashSet<string> forbidden)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                Assert.DoesNotContain(property.Name, forbidden);
+                AssertSafeProperties(property.Value, forbidden);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray()) AssertSafeProperties(item, forbidden);
+        }
     }
 
     private static AccessContext CreateContext(OrganizationRole role) =>

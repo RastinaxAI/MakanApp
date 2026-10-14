@@ -156,6 +156,7 @@ public sealed partial class EfDashboardReadService
             .Take(AssignmentLimit)
             .ToArrayAsync(cancellationToken);
         var attentionCount = await assignmentsQuery.CountAsync(item =>
+            item.IsActionable &&
             item.DueAtUtc > dataAsOfUtc &&
             !item.HasSubmission &&
             !item.IsGraded,

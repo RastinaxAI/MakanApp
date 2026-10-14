@@ -10,6 +10,7 @@
 - [مرجع کامل Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): جدول و کارت تفصیلی ۱۴۱ عملیات، مجوز و قواعد شاخص، مسیر service/port/adapter، نمونه HTTP/JSON، معنی فیلدها، Enumها و کدهای خطا.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
+- [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
 بازبینی اسناد در `2026-10-12` بر مبنای `f0b78dd` انجام شده است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل چهار داشبورد و شانزده گزارش تفصیلی، OTP مدیریت‌شده و تنظیمات جدید میزبانی. قرارداد فرانت‌اند رفتار فعلی را از قابلیت‌های آینده جدا می‌کند. بخش‌های مرحله‌ای پایین گزارش همان مرحله توسعه‌اند؛ برای وضعیت جاری، راهنماهای بالا را مبنا قرار دهید.
 

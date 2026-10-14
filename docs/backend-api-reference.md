@@ -10441,6 +10441,8 @@ required از schema OpenAPI و nullable از type DTO گزارش می‌شود.
 
 منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
 
+بازبینی STEP 11A در `2026-10-15`: Expected و Recorded فقط Enrollmentهای فعال همان کلاس را می‌شمارند؛ حضور Enrollment پایان‌یافته نقص حضور عضو فعال دیگری را نمی‌پوشاند. این current-roster backlog است، نه بازسازی roster تاریخی. نبود Attendance رسمی، غیبت قطعی نیست.
+
 | فیلد | نوع و حضور | معنی و قاعده |
 | --- | --- | --- |
 | `sessionId` | `Guid`<br>null: خیر؛ required در schema: بله | شناسه جلسه آموزشی؛ با نشست ورود UserSession متفاوت است. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
@@ -10488,6 +10490,8 @@ required از schema OpenAPI و nullable از type DTO گزارش می‌شود.
 ### DashboardExamItem
 
 منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+بازبینی STEP 11A در `2026-10-15`: کلید ردیف `examVersionId` است. فهرست محدود می‌تواند نسخه جاریِ هنوز باز و نسخه تاریخیِ دارای نتیجه منتشرشده را هم‌زمان داشته باشد. وضعیت تلاش، نمره و سقف آن فقط از همان نسخه خوانده می‌شوند؛ نمره18/20 نسخه قبلی با سقف10 نسخه جدید ترکیب نمی‌شود. `releasedScore` و `maximumScore` بدون ExamGradeRelease همان نسخه null هستند. هیچ سؤال، option یا کلید پاسخ در این DTO وجود ندارد.
 
 | فیلد | نوع و حضور | معنی و قاعده |
 | --- | --- | --- |
@@ -10855,6 +10859,8 @@ required از schema OpenAPI و nullable از type DTO گزارش می‌شود.
 ### ExamGradingQueueSummary
 
 منبع: [DashboardContracts.cs](../MakanApp.Application/Reports/Dashboards/DashboardContracts.cs).
+
+صف scope مجاز، همه attemptهای Finalized را در بر می‌گیرد، نه فقط آزمون دارای سؤال توصیفی؛ آزمون objective نیز می‌تواند در انتظار آغاز grading یا انتشار باشد. بازبینی Draft و ReadyForRelease از آخرین GradeRevision خوانده می‌شود و Released جزو pending نیست.
 
 | فیلد | نوع و حضور | معنی و قاعده |
 | --- | --- | --- |
@@ -11479,7 +11485,7 @@ required از schema OpenAPI و nullable از type DTO گزارش می‌شود.
 | `releasedAssignmentResults` | [IReadOnlyCollection&lt;ParentReleasedAssignmentItem&gt;](#type-parentreleasedassignmentitem)<br>null: خیر؛ required در schema: بله | نتایج رسمی تکلیف فرزند فقط پس از GradeRelease با feedback مخصوص والد. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
 | `exams` | [IReadOnlyCollection&lt;DashboardExamItem&gt;](#type-dashboardexamitem)<br>null: خیر؛ required در schema: بله | metadata امن آزمون‌های فرزند؛ بدون محتوای سؤال و پاسخ. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
 | `attendanceSummary` | [DashboardAttendanceSummary](#type-dashboardattendancesummary)<br>null: خیر؛ required در schema: بله | خلاصه حضور رسمی؛ notRecorded را غیبت محسوب نکنید. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
-| `attentionItemCount` | `int`<br>null: خیر؛ required در schema: بله | شمارنده موارد نیازمند توجه در داشبورد والد طبق read model؛ اعلان یا غیبت قطعی نیست. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
+| `attentionItemCount` | `int`<br>null: خیر؛ required در schema: بله | تعداد تکلیف Published با موعد آینده و بدون submission/grade؛ Closed فقط تاریخچه است و شمرده نمی‌شود. اعلان یا غیبت قطعی نیست. خروجی سرور؛ فقط طبق نوع و nullability مصرف شود. |
 
 
 <a id="type-parentexamreportitem"></a>

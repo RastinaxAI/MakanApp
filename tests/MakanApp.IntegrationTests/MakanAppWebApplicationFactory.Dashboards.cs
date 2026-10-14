@@ -126,7 +126,8 @@ public sealed partial class MakanAppWebApplicationFactory
         DateTime availableFromUtc,
         DateTime availableUntilUtc,
         string title,
-        DashboardExamSeedState state = DashboardExamSeedState.Available)
+        DashboardExamSeedState state = DashboardExamSeedState.Available,
+        ExamQuestionType questionType = ExamQuestionType.Descriptive)
     {
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
@@ -150,10 +151,13 @@ public sealed partial class MakanAppWebApplicationFactory
             organizationId,
             version.Id,
             1,
-            ExamQuestionType.Descriptive,
+            questionType,
             "Private question content",
             20m,
-            null,
+            questionType == ExamQuestionType.ObjectiveSingleChoice
+                ? [new ExamQuestionOptionDefinition(1, "Private correct option", true),
+                   new ExamQuestionOptionDefinition(2, "Private incorrect option", false)]
+                : null,
             nowUtc);
         version.Publish([question], nowUtc);
         exam.PublishCurrentVersion(1);
@@ -204,6 +208,11 @@ public sealed partial class MakanAppWebApplicationFactory
         dbContext.ExamAttemptQuestions.Add(attemptQuestion);
         await dbContext.SaveChangesAsync();
 
+        if (state == DashboardExamSeedState.AwaitingGrading)
+        {
+            return new DashboardExamSeed(exam.Id, version.Id, attempt.Id, null);
+        }
+
         var gradeRevision = ExamGradeRevision.CreateDraft(
             organizationId,
             attempt.Id,
@@ -221,14 +230,17 @@ public sealed partial class MakanAppWebApplicationFactory
         dbContext.ExamGradeRevisions.Add(gradeRevision);
         dbContext.ExamQuestionGrades.Add(questionGrade);
 
-        if (state == DashboardExamSeedState.Released)
+        if (state is DashboardExamSeedState.Released or DashboardExamSeedState.ReadyForRelease)
         {
-            questionGrade.ReviewManually(
-                18m,
-                "Learner exam feedback",
-                "Evaluator private exam note",
-                evaluatorMembershipId,
-                attemptStartUtc);
+            if (questionType == ExamQuestionType.Descriptive)
+            {
+                questionGrade.ReviewManually(
+                    18m,
+                    "Learner exam feedback",
+                    "Evaluator private exam note",
+                    evaluatorMembershipId,
+                    attemptStartUtc);
+            }
             gradeRevision.CompleteReview(
                 [questionGrade],
                 version.MaxScore,
@@ -236,13 +248,16 @@ public sealed partial class MakanAppWebApplicationFactory
                 "Guardian exam feedback",
                 "Evaluator private exam note",
                 attemptStartUtc);
-            gradeRevision.Release([questionGrade], version.MaxScore, attemptStartUtc);
-            dbContext.ExamGradeReleases.Add(ExamGradeRelease.Create(
-                gradeRevision,
-                evaluatorMembershipId,
-                Guid.NewGuid(),
-                new string('b', ExamGradeRelease.RequestHashLength),
-                attemptStartUtc));
+            if (state == DashboardExamSeedState.Released)
+            {
+                gradeRevision.Release([questionGrade], version.MaxScore, attemptStartUtc);
+                dbContext.ExamGradeReleases.Add(ExamGradeRelease.Create(
+                    gradeRevision,
+                    evaluatorMembershipId,
+                    Guid.NewGuid(),
+                    new string('b', ExamGradeRelease.RequestHashLength),
+                    attemptStartUtc));
+            }
         }
 
         await dbContext.SaveChangesAsync();
@@ -275,7 +290,9 @@ public enum DashboardExamSeedState
 {
     Available = 1,
     DraftGrade = 2,
-    Released = 3
+    Released = 3,
+    AwaitingGrading = 4,
+    ReadyForRelease = 5
 }
 
 public sealed record DashboardAssignmentSeed(
