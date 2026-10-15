@@ -245,6 +245,21 @@ builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOption
 
 var app = builder.Build();
 
+if (app.Environment.IsProduction())
+{
+    if (app.Configuration.GetValue("Hosting:AllowInsecureHttp", false))
+    {
+        app.Logger.LogWarning(
+            "استثنای Hosting:AllowInsecureHttp فعال است؛ ارتباط HTTP، OTP و توکن‌های ورود را در مسیر شبکه رمزگذاری نمی‌کند.");
+    }
+
+    if (app.Configuration.GetValue("Database:AllowUntrustedServerCertificate", false))
+    {
+        app.Logger.LogWarning(
+            "استثنای Database:AllowUntrustedServerCertificate فعال است؛ اتصال SQL با TrustServerCertificate=True هویت گواهی سرور را بررسی نمی‌کند.");
+    }
+}
+
 if (await PlatformOwnerBootstrapRunner.TryRunAsync(app, args))
 {
     return;
@@ -271,7 +286,7 @@ if (exposeOpenApi)
     });
 }
 
-if (app.Environment.IsProduction())
+if (app.Environment.IsProduction() && builder.Configuration.GetValue("Hosting:RequireHttps", true))
 {
     app.UseHsts();
 }

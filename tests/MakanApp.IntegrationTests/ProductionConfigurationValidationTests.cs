@@ -72,6 +72,82 @@ public sealed class ProductionConfigurationValidationTests
     public void DevelopmentLikeEnvironmentsRetainExistingConfigurationBehavior(string environmentName) =>
         ProductionConfigurationValidator.Validate(new ConfigurationBuilder().Build(), environmentName);
 
+    [Fact]
+    public void ExplicitProductionExceptionsAllowApprovedHttpAndUntrustedCertificate()
+    {
+        var configuration = BuildConfiguration(ApprovedExceptions());
+
+        ProductionConfigurationValidator.Validate(configuration, "Production");
+    }
+
+    [Theory]
+    [InlineData("Hosting:AllowInsecureHttp")]
+    [InlineData("Database:AllowUntrustedServerCertificate")]
+    public void EachExceptionRequiresItsOwnExplicitOptIn(string key)
+    {
+        var values = ApprovedExceptions();
+        values[key] = "false";
+
+        Assert.Throws<InvalidOperationException>(() =>
+            ProductionConfigurationValidator.Validate(BuildConfiguration(values), "Production"));
+    }
+
+    [Theory]
+    [InlineData("Staging")]
+    [InlineData("staging")]
+    public void ProductionExceptionsCannotWeakenStaging(string environmentName)
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            ProductionConfigurationValidator.Validate(BuildConfiguration(ApprovedExceptions()), environmentName));
+    }
+
+    [Theory]
+    [InlineData("AllowedHosts", "*")]
+    [InlineData("Cors:AllowedOrigins:0", "http://*.example.test")]
+    [InlineData("Cors:AllowedOrigins:0", "ftp://app.example.test")]
+    [InlineData("Cors:AllowedOrigins:0", "http://app.example.test/path")]
+    [InlineData("Cors:AllowedOrigins:0", "http://user:secret-marker@app.example.test")]
+    [InlineData("Cors:AllowedOrigins:0", "http://app.example.test?token=secret-marker")]
+    [InlineData("Cors:AllowedOrigins:0", "http://app.example.test#secret-marker")]
+    [InlineData("Cors:AllowedOrigins:0", "")]
+    [InlineData("ReverseProxy:KnownProxies:0", "any-proxy")]
+    [InlineData("ReverseProxy:Enabled", "false")]
+    [InlineData("Storage:RootPath", "relative/path")]
+    [InlineData("Identity:SecurityKey", "secret-marker")]
+    [InlineData("ConnectionStrings:MakanDatabase", "Server=sql.internal;Database=Tests;Integrated Security=True;Encrypt=False;TrustServerCertificate=True")]
+    public void ApprovedExceptionsDoNotBypassOtherProductionGuards(string key, string value)
+    {
+        var values = ApprovedExceptions();
+        values[key] = value;
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ProductionConfigurationValidator.Validate(BuildConfiguration(values), "Production"));
+
+        Assert.DoesNotContain("secret-marker", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HttpWithoutExplicitExceptionRemainsRejected()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Hosting:RequireHttps"] = "false"
+        });
+
+        Assert.Throws<InvalidOperationException>(() =>
+            ProductionConfigurationValidator.Validate(configuration, "Production"));
+    }
+
+    private static Dictionary<string, string?> ApprovedExceptions() => new()
+    {
+        ["Hosting:RequireHttps"] = "false",
+        ["Hosting:AllowInsecureHttp"] = "true",
+        ["Database:AllowUntrustedServerCertificate"] = "true",
+        ["Cors:AllowedOrigins:0"] = "http://app.example.test",
+        ["ConnectionStrings:MakanDatabase"] =
+            "Server=sql.internal;Database=Tests;Integrated Security=True;Encrypt=True;TrustServerCertificate=True"
+    };
+
     private static IConfiguration BuildConfiguration(
         IReadOnlyDictionary<string, string?>? overrides = null)
     {

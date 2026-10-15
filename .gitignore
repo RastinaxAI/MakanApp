@@ -447,6 +447,9 @@ __pycache__/
 !.env.sample
 appsettings.*.local.json
 
+# کانفیگ واقعی Production محرمانه است؛ نمونهٔ غیرمحرمانه نسخه‌بندی می‌شود.
+/MakanApp.Api/appsettings.Production.json
+
 # خروجی‌های قابل تولید از مستند ساختار دیتابیس
 /docs/database-current-structure.html
 /docs/database-current-structure.pdf

@@ -6,21 +6,30 @@
     "SecurityKey": ""
   },
   "Cors": {
-    "AllowedOrigins": []
+    "AllowedOrigins": ["https://app.example.test"]
   },
   "Hosting": {
     "RequireHttps": true,
+    "AllowInsecureHttp": false,
     "HstsDays": 365
+  },
+  "Database": {
+    "AllowUntrustedServerCertificate": false
   },
   "ReverseProxy": {
     "Enabled": true,
-    "KnownProxies": []
+    "KnownProxies": ["127.0.0.1", "::1"]
   },
   "Swagger": {
     "Enabled": false
   },
   "Sms": {
-    "Provider": "Unavailable"
+    "Provider": "MeliPayamakOtp",
+    "MeliPayamakOtp": {
+      "BaseUrl": "https://console.melipayamak.com",
+      "ServiceToken": "",
+      "TimeoutSeconds": 10
+    }
   },
   "Payments": {
     "Provider": "Unavailable"
@@ -33,7 +42,7 @@
     "SmsProvider": "Unavailable"
   },
   "Storage": {
-    "RootPath": ""
+    "RootPath": "C:\\MakanAppData\\Storage"
   },
   "Logging": {
     "LogLevel": {
@@ -42,5 +51,5 @@
       "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
     }
   },
-  "AllowedHosts": ""
+  "AllowedHosts": "api.example.test"
 }

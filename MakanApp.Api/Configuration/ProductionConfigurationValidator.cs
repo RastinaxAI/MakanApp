@@ -8,7 +8,8 @@ public static class ProductionConfigurationValidator
 {
     public static void Validate(IConfiguration configuration, string environmentName)
     {
-        if (!environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) &&
+        var isProduction = environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase);
+        if (!isProduction &&
             !environmentName.Equals("Staging", StringComparison.OrdinalIgnoreCase))
         {
             return;
@@ -24,10 +25,14 @@ public static class ProductionConfigurationValidator
         {
             throw Invalid("ConnectionStrings:MakanDatabase is not a valid SQL Server connection string.");
         }
-        if (!sql.Encrypt || sql.TrustServerCertificate)
+        // استثناها فقط با تأیید صریح مالک در کانفیگ Production فعال می‌شوند؛ پیش‌فرض امن می‌ماند.
+        var allowInsecureHttp = isProduction && configuration.GetValue("Hosting:AllowInsecureHttp", false);
+        var allowUntrustedCertificate = isProduction &&
+            configuration.GetValue("Database:AllowUntrustedServerCertificate", false);
+        if (!sql.Encrypt || (sql.TrustServerCertificate && !allowUntrustedCertificate))
         {
             throw Invalid(
-                "ConnectionStrings:MakanDatabase در Production/Staging باید Encrypt=True و TrustServerCertificate=False داشته باشد.");
+                "اتصال SQL باید Encrypt=True داشته باشد؛ TrustServerCertificate=True فقط با استثنای صریح Database:AllowUntrustedServerCertificate در Production مجاز است.");
         }
 
         if (Encoding.UTF8.GetByteCount(Require(configuration, "Identity:SecurityKey")) < 32)
@@ -51,19 +56,20 @@ public static class ProductionConfigurationValidator
         var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
         if (origins.Length == 0 || origins.Any(origin =>
                 !Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
-                uri.Scheme != Uri.UriSchemeHttps ||
+                (uri.Scheme != Uri.UriSchemeHttps &&
+                 !(allowInsecureHttp && uri.Scheme == Uri.UriSchemeHttp)) ||
                 uri.AbsolutePath != "/" ||
                 !string.IsNullOrEmpty(uri.Query) ||
                 !string.IsNullOrEmpty(uri.Fragment) ||
                 !string.IsNullOrEmpty(uri.UserInfo) ||
                 origin.Contains('*', StringComparison.Ordinal)))
         {
-            throw Invalid("Cors:AllowedOrigins در Production/Staging باید فقط originهای صریح HTTPS داشته باشد.");
+            throw Invalid("Cors:AllowedOrigins باید originهای صریح HTTPS داشته باشد؛ HTTP فقط با استثنای Hosting:AllowInsecureHttp در Production مجاز است.");
         }
 
-        if (!configuration.GetValue("Hosting:RequireHttps", false))
+        if (!configuration.GetValue("Hosting:RequireHttps", false) && !allowInsecureHttp)
         {
-            throw Invalid("Hosting:RequireHttps در Production/Staging باید true باشد.");
+            throw Invalid("Hosting:RequireHttps باید true باشد؛ غیرفعال‌سازی فقط با استثنای صریح Hosting:AllowInsecureHttp در Production مجاز است.");
         }
 
         if (!configuration.GetValue("ReverseProxy:Enabled", false))

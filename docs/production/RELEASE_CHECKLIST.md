@@ -4,7 +4,10 @@
 
 - [ ] `dotnet restore`, دو بار build/test نهایی و `git diff --check` سبز است.
 - [ ] `dotnet ef migrations has-pending-model-changes` بدون pending model است.
+- [ ] SQL با `tools/production/export-migration-sql.ps1` تولید و با `tools/production/test-migration-sql.ps1 -ConfirmLocalDisposableDatabase` روی LocalDB ایزوله آزمایش شده؛ hash فایل تحویلی با ScriptSha256 گزارش یکسان است.
 - [ ] artifact از commit/branch مورد انتظار ساخته شده و secret ندارد.
+- [ ] فایل خصوصی `appsettings.Production.json` خارج از Git و از نمونه جداست؛ اگر به artifact انتقال اپراتور اضافه شده، artifact محرمانه و غیرقابل‌اشتراک است. `appsettings.Staging.json` در خروجی تازه وجود ندارد.
+- [ ] انتشار HTTP-only فقط با تأیید صریح دو استثنای مستقل `Hosting:AllowInsecureHttp` و `Database:AllowUntrustedServerCertificate` انجام می‌شود؛ این تأیید جای TLS امن، حساب SQL کم‌اختیار یا smoke زنده را نمی‌گیرد.
 - [ ] Production blockers و قابلیت‌های unavailable به ذی‌نفعان اعلام شده‌اند.
 - [ ] backup DB و storage گرفته و reference آن ثبت شده است.
 - [ ] runtime و migration principal جدا و connection TLS معتبر است.

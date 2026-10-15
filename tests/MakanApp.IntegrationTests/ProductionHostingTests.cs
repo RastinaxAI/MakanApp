@@ -1,11 +1,17 @@
 using System.Net;
 using System.Text;
+using MakanApp.Application.Identity;
 using MakanApp.Application.Storage;
+using MakanApp.Infrastructure.Identity;
+using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace MakanApp.IntegrationTests;
@@ -160,30 +166,142 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
     }
 
-    private WebApplicationFactory<Program> CreateProductionFactory(string? rootPath = null, string environmentName = "Production")
+    [Fact]
+    public async Task ApprovedHttpHostRespondsWithoutRedirectOrHsts()
+    {
+        using var production = CreateProductionFactory(overrides: HttpOverrides());
+        using var client = CreateClient(production, useHttps: false);
+
+        using var response = await client.GetAsync("/health/live");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(response.Headers.Location);
+        Assert.False(response.Headers.Contains("Strict-Transport-Security"));
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+    }
+
+    [Theory]
+    [InlineData("http://app.example.test", true)]
+    [InlineData("http://unlisted.example.test", false)]
+    public async Task ApprovedHttpCorsStillRequiresExplicitOrigin(string origin, bool allowed)
+    {
+        using var production = CreateProductionFactory(overrides: HttpOverrides());
+        using var client = CreateClient(production, useHttps: false);
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/files");
+        request.Headers.Add("Origin", origin);
+        request.Headers.Add("Access-Control-Request-Method", "POST");
+        request.Headers.Add("Access-Control-Request-Headers", "authorization,content-type");
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(allowed, response.Headers.Contains("Access-Control-Allow-Origin"));
+        if (allowed)
+        {
+            Assert.Equal(origin, Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+        }
+        Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
+    }
+
+    [Theory]
+    [InlineData("/api/v1/files")]
+    [InlineData("/hubs/messaging/negotiate?negotiateVersion=1")]
+    public async Task ApprovedHttpDoesNotBypassAuthentication(string path)
+    {
+        using var production = CreateProductionFactory(overrides: HttpOverrides());
+        using var client = CreateClient(production, useHttps: false);
+
+        using var response = await client.PostAsync(path, null);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ApprovedHttpStillRejectsUnlistedHost()
+    {
+        using var production = CreateProductionFactory(overrides: HttpOverrides());
+        using var client = CreateClient(production, useHttps: false);
+
+        using var response = await client.GetAsync("http://unlisted.example.test/health/live");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    private static Dictionary<string, string?> HttpOverrides() => new()
+    {
+        ["Hosting:RequireHttps"] = "false",
+        ["Hosting:AllowInsecureHttp"] = "true",
+        ["Cors:AllowedOrigins:0"] = "http://app.example.test"
+    };
+
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    public void ProductionLikeHostCannotInheritPrivateDeploymentSecretsOrProviders(string environmentName)
+    {
+        using var production = CreateProductionFactory(environmentName: environmentName);
+        using var scope = production.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<MakanDbContext>();
+        var sql = new SqlConnectionStringBuilder(context.Database.GetConnectionString());
+
+        Assert.Equal("(localdb)\\MSSQLLocalDB", sql.DataSource);
+        Assert.Equal("MakanApp_ProductionHostingTests", sql.InitialCatalog);
+        Assert.True(sql.IntegratedSecurity);
+        Assert.Empty(sql.Password);
+        Assert.IsType<UnavailableOtpDeliveryProvider>(services.GetRequiredService<IOtpDeliveryProvider>());
+        Assert.Equal(factory.StorageRootPath, services.GetRequiredService<StorageOptions>().RootPath);
+        // برای جلوگیری از افشای کلید واقعی، failure فقط نتیجهٔ boolean را نمایش می‌دهد.
+        Assert.True(production.Services.GetRequiredService<IConfiguration>()["Identity:SecurityKey"] == new string('P', 32));
+    }
+
+    private WebApplicationFactory<Program> CreateProductionFactory(
+        string? rootPath = null,
+        string environmentName = "Production",
+        IReadOnlyDictionary<string, string?>? overrides = null)
     {
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(environmentName);
-            builder.UseSetting(
-                "ConnectionStrings:MakanDatabase",
-                "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False");
-            builder.UseSetting("Identity:SecurityKey", new string('P', 32));
-            builder.UseSetting("Sms:Provider", "Unavailable");
-            builder.UseSetting("Storage:RootPath", rootPath ?? factory.StorageRootPath);
-            builder.UseSetting("AllowedHosts", "localhost");
-            builder.UseSetting("Cors:AllowedOrigins:0", "https://app.example.test");
-            builder.UseSetting("Hosting:RequireHttps", "true");
-            builder.UseSetting("ReverseProxy:Enabled", "true");
-            builder.UseSetting("ReverseProxy:KnownProxies:0", "127.0.0.1");
-            builder.UseSetting("Swagger:Enabled", "false");
+            // کانفیگ خصوصی انتشار نباید دیتابیس یا سرویس پیامک واقعی را وارد تست کند.
+            var values = new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:MakanDatabase"] =
+                    "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False",
+                ["Identity:SecurityKey"] = new string('P', 32),
+                ["Sms:Provider"] = "Unavailable",
+                ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
+                ["Storage:RootPath"] = rootPath ?? factory.StorageRootPath,
+                ["AllowedHosts"] = "localhost",
+                ["Cors:AllowedOrigins:0"] = "https://app.example.test",
+                ["Hosting:RequireHttps"] = "true",
+                ["Hosting:AllowInsecureHttp"] = "false",
+                ["Database:AllowUntrustedServerCertificate"] = "false",
+                ["ReverseProxy:Enabled"] = "true",
+                ["ReverseProxy:KnownProxies:0"] = "127.0.0.1",
+                ["ReverseProxy:KnownProxies:1"] = "::1",
+                ["Swagger:Enabled"] = "false"
+            };
+            if (overrides is not null)
+            {
+                foreach (var (key, value) in overrides)
+                {
+                    values[key] = value;
+                }
+            }
+            // UseSetting پیش از کد startup و provider حافظه‌ای هنگام ساخت host اعمال می‌شود.
+            foreach (var (key, value) in values)
+            {
+                builder.UseSetting(key, value);
+            }
+            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(values));
         });
     }
 
-    private static HttpClient CreateClient(WebApplicationFactory<Program> production) =>
+    private static HttpClient CreateClient(WebApplicationFactory<Program> production, bool useHttps = true) =>
         production.CreateClient(new WebApplicationFactoryClientOptions
         {
-            BaseAddress = new Uri("https://localhost"),
+            BaseAddress = new Uri(useHttps ? "https://localhost" : "http://localhost"),
             AllowAutoRedirect = false
         });
 }
