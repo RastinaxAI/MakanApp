@@ -131,8 +131,10 @@ public sealed class PlatformStepUpTestControl
 }
 
 public sealed class TestPlatformStepUpAuthorization(PlatformStepUpTestControl control)
-    : IPlatformStepUpAuthorization
+    : IPlatformStepUpAuthorization, IPlatformMfaAssurance
 {
+    // تست‌های legacy IAM عامل امنیتی را شبیه‌سازی می‌کنند؛ suite جدید MFA هر دو port را واقعی جایگزین می‌کند.
+    Task<bool> IPlatformMfaAssurance.IsSatisfiedAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken) => Task.FromResult(true);
     public Task<bool> IsSatisfiedAsync(
         Guid userId,
         Guid sessionId,

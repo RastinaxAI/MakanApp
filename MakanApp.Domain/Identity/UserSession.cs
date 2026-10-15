@@ -111,6 +111,12 @@ public sealed class UserSession
         RevokedAtUtc ??= revokedAtUtc;
     }
 
+    public void ClearMfaAssurance()
+    {
+        AssuranceLevel = AuthenticationAssuranceLevel.Primary;
+        StepUpAtUtc = null;
+    }
+
     public void SelectPersonalWorkspace()
     {
         SelectedMembershipId = null;

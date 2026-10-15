@@ -99,6 +99,10 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetIpPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 10)));
+    options.AddPolicy("platform-mfa", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 10)));
     options.AddPolicy("otp-verify", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetIpPartitionKey(httpContext),
@@ -230,6 +234,7 @@ builder.Services.AddHealthChecks()
 builder.Services.AddInfrastructure(
     builder.Configuration,
     builder.Environment.EnvironmentName);
+builder.Services.AddBackofficeMfa(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<SignalRMessagingRealtimeNotifier>();
 builder.Services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
     serviceProvider.GetRequiredService<SignalRMessagingRealtimeNotifier>());

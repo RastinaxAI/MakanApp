@@ -4439,6 +4439,95 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaCredential", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ActivatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EnrollmentExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("EnrollmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("EnrollmentSessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("LastAcceptedTimeStep")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PendingProtectedSecret")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<string>("ProtectedSecret")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("EnrollmentSessionId", "UserId");
+
+                    b.ToTable("PlatformMfaCredentials", "platform", t =>
+                        {
+                            t.HasCheckConstraint("CK_PlatformMfa_Active", "([ProtectedSecret] IS NULL AND [ActivatedAtUtc] IS NULL) OR ([ProtectedSecret] IS NOT NULL AND [ActivatedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_PlatformMfa_Attempts", "[FailedAttempts] >= 0 AND ([LastAcceptedTimeStep] IS NULL OR [LastAcceptedTimeStep] >= 0)");
+
+                            t.HasCheckConstraint("CK_PlatformMfa_Pending", "([PendingProtectedSecret] IS NULL AND [EnrollmentId] IS NULL AND [EnrollmentSessionId] IS NULL AND [EnrollmentExpiresAtUtc] IS NULL) OR ([PendingProtectedSecret] IS NOT NULL AND [EnrollmentId] IS NOT NULL AND [EnrollmentSessionId] IS NOT NULL AND [EnrollmentExpiresAtUtc] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaRecoveryCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime?>("ConsumedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CodeHash")
+                        .IsUnique();
+
+                    b.ToTable("PlatformMfaRecoveryCodes", "platform");
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Platform.PlatformPermission", b =>
                 {
                     b.Property<Guid>("Id")
@@ -6753,6 +6842,30 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaCredential", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithMany()
+                        .HasForeignKey("EnrollmentSessionId", "UserId")
+                        .HasPrincipalKey("Id", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaRecoveryCode", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Platform.PlatformMfaCredential", null)
+                        .WithMany("RecoveryCodes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Platform.PlatformProvisioningRequest", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -6888,6 +7001,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Navigation("Price");
 
                     b.Navigation("QuotaDefinitions");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaCredential", b =>
+                {
+                    b.Navigation("RecoveryCodes");
                 });
 #pragma warning restore 612, 618
         }

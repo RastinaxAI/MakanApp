@@ -17,7 +17,7 @@ Backoffice از همان Bearer session احرازشده‌ی Identity استف�
 
 1. `GET /api/admin/v1/me` را فراخوانی کنید.
 2. در `401` کاربر را به ورود برگردانید.
-3. در `403` صفحه‌ی «دسترسی Backoffice ندارید» نشان دهید؛ نقش سازمانی را به‌عنوان fallback استفاده نکنید.
+3. در `403` کد خطا را بررسی کنید: `MFA_REQUIRED` به جریان MFA می‌رود؛ نبود permission همان «دسترسی Backoffice ندارید» است. نقش سازمانی fallback نیست.
 4. navigation را از `permissions` پاسخ بسازید.
 
 bootstrap اولین Owner یک فرمان عمومی HTTP نیست. اجرای آن out-of-band و از command-line host انجام می‌شود و پس از ایجاد اولین Owner بسته می‌ماند.
@@ -70,7 +70,7 @@ bootstrap اولین Owner یک فرمان عمومی HTTP نیست. اجرای 
 | review/resolve/dismiss پرونده | `platform.moderation.review` | بله | خیر |
 | حذف محتوای case-scoped | review + `platform.moderation.enforce` | بله | خیر |
 
-UI باید پیش از mutation حساس خلاصه‌ی اثر، target صریح و Reason را نشان دهد. در `PLATFORM_STEP_UP_REQUIRED` کاربر را وارد جریان MFA فرضی نکنید؛ provider production هنوز وجود ندارد و عملیات عمداً fail-closed است.
+UI باید پیش از mutation حساس خلاصه‌ی اثر، target صریح و Reason را نشان دهد. از GAP-04، در `PLATFORM_STEP_UP_REQUIRED` verify واقعی TOTP/recovery انجام و سپس همان عملیات با context جاری retry می‌شود. در `MFA_REQUIRED` ابتدا status/enrollment را بررسی کنید؛ نبود key ring با `MFA_UNAVAILABLE` باید به اپراتور ارجاع شود، نه bypass. [قرارداد کامل](../release/GAP_04_BACKOFFICE_TOTP_MFA.md).
 
 ## stateهای HTTP
 

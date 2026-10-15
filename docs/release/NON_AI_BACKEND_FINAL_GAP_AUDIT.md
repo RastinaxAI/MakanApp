@@ -13,7 +13,7 @@
 - سلامت worktree ممیزی‌شده: restore و build موفق؛ build بدون warning/error؛ **۹۷۷ تست موفق، صفر failed و صفر skipped**. این عدد شامل تست‌های Fake/Recording AI موجود نیز هست؛ هیچ AI یا provider خارجی زنده فراخوانی نشد.
 - GAP-01 بسته شد: API مدرسه برای ساخت/get/search/update/end پرونده، دعوت اتصال حساب با رضایت صریح و create/activate/end/revoke رابطه والد اضافه شد؛ خود onboarding و ثبت‌نام از API در تست اجرا می‌شوند. نام Person حساب‌دار/مشترک از مدرسه قابل ویرایش نیست؛ حساب یا سابقه‌ای merge/حذف نمی‌شود. شواهد E27 و بخش 20.
 - OTP ملی‌پیامک adapter واقعی دارد، اما نمونه Production به `Unavailable` متصل است و مدرک نسخه‌بندی‌شده smoke کامل ارسال واقعی و verify موفق در محیط هدف پیدا نشد. ادعای ارسال/تست دستی در گذشته با مدرک عملیاتی قابل بازتولید یکسان نیست.
-- MFA/step-up، پرداخت واقعی، Push، SMS عمومی اعلان و Content Safety واقعی متصل نیستند. fail-closed بودن به معنی bypass امنیتی نیست؛ به معنی غیرقابل‌استفاده بودن مسیرهای مربوط است.
+- GAP-04، TOTP MFA، recovery و step-up واقعی session-scoped را اضافه کرد (E30)؛ key ring/custody عملیاتی لازم است. پرداخت واقعی، Push، SMS عمومی اعلان و Content Safety واقعی همچنان متصل نیستند. fail-closed بودن با پیاده‌سازی provider یکسان نیست.
 - ذخیره‌سازی runtime واقعاً `LocalFileStorage` است. Object Storage برای پایلوت تک‌سروری الزام ذاتی ندارد؛ دیسک پایدار، ACL، ظرفیت، backup و restore الزام دارند.
 - export واقعی CSV است؛ PDF/Excel تولید نمی‌شود. صف، فایل و مجوز مجدد دانلود وجود دارند، اما expiration/purge خودکار وجود ندارد.
 - Entitlement/Quota صرفاً entity نیست: resolve، محاسبه usage و ثبت metered usage وجود دارند؛ بااین‌حال consumer عملیاتی آن‌ها در ایجاد کلاس/Enrollment/upload/export پیدا نشد. محدودیت ظرفیت کلاس با quota تجاری اشتباه نشود.
@@ -121,7 +121,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | E18 | `MakanApp.Application/Commerce/CommerceService.cs`؛ `MakanApp.Infrastructure/Commerce/EfCommerceStore.cs` | `CommerceEndpointsTests.cs` و `CommerceDomainTests.cs` |
 | E19 | `MakanApp.Application/Commerce/OrderPaymentService.cs`؛ `EfOrderPaymentStore.cs`، `EfSubscriptionActivationHandler.cs` و `UnavailablePaymentGateway.cs` در Infrastructure/Commerce | `OrderPaymentEndpointsTests.cs`؛ قیمت سرور، retry، verification/activation با Recording gateway |
 | E20 | `MakanApp.Api/Authorization/PlatformPermissionAuthorizationHandler.cs`؛ service/storeهای Platform؛ `PlatformOwnerBootstrapRunner.cs` | `PlatformIamEndpointsTests.cs`، `PlatformOperationsEndpointsTests.cs`، `PlatformEducationSafetyEndpointsTests.cs`، `PlatformCommerceOperationsEndpointsTests.cs`، `PlatformBackofficeFinalAcceptanceTests.cs` |
-| E21 | `MakanApp.Infrastructure/Platform/UnavailablePlatformStepUpAuthorization.cs`؛ guardهای `EnsureStepUpAsync` در Application/Platform | تست‌های Platform از `TestPlatformStepUpAuthorization` استفاده می‌کنند، نه MFA واقعی |
+| E21 | شاهد تاریخی پیش از GAP-04: `UnavailablePlatformStepUpAuthorization`؛ guardهای `EnsureStepUpAsync` در Application/Platform | تست‌های legacy Platform از `TestPlatformStepUpAuthorization` استفاده می‌کنند؛ runtime و suite واقعی جدید در E30 آمده‌اند |
 | E22 | `MakanApp.Infrastructure/Outbox/OutboxDispatcher.cs`؛ `Messaging/MessagingRealtimeOutboxDispatcher.cs`؛ `Notification/NotificationDeliveryDispatcher.cs` و E16 | Integrationهای Notification، MessagingRealtime، ReportExport و OrderPayment |
 | E23 | `MakanApp.Infrastructure/Persistence/Migrations/`، `Configurations/`، `MakanDbContext.cs` و `MakanDbContextFactory.cs` | اجرای واقعی تمام migrationها در fixture؛ EF pending-model check موفق |
 | E24 | `MakanApp.Api/Program.cs`، `Configuration/ProductionConfigurationValidator.cs`، `Hosting/*`، `Errors/GlobalExceptionHandler.cs`، `appsettings.Production.json` | `ProductionConfigurationValidationTests.cs`، `ProductionHostingTests.cs` و `HealthEndpointTests.cs` |
@@ -130,6 +130,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | E27 | `OrganizationPeopleController`، `SchoolGuardianRelationsController`، `OrganizationPersonService`، `GuardianManagementService`، `EfOrganizationStore.PersonLink.cs` و migration `20261014214734_AddOperationalPersonGuardianOnboarding` | چهار فایل `OrganizationPersonOnboardingEndpointsTests*` با ۲۴ مورد Integration و `OrganizationOnboardingModelTests` با چهار Unit؛ API onboarding/enrollment/link، محافظ نام، چندفرزند، revoke/recheck، هم‌زمانی و constraints SQL |
 | E28 | `ProductionConfigurationValidator` و `Program.cs`؛ تنظیمات Staging؛ ابزارهای `tools/production/*staging*` و `validate-local-migrations.ps1` | سند GAP-02: ۳۵ migration روی DB مستقل، publish ANCM، startup/health/ready محلی و 1021 تست؛ هدف HTTP-only و readiness404؛ OTP واقعی اجرا نشده |
 | E29 | `tools/production/recovery/`، `RecoveryDrillTests.cs`، fixture recovery و `docs/release/GAP_03_BACKUP_RESTORE_RECOVERY.md` | full SQL backup/restore به DB جدید، CHECKDB، ۳۵ migration، ۸۵ table count، فایل/hash/CSV، session با کلید یکسان، health و org/guardian authorization؛ محیط LocalDB/TestServer، نه job/off-server واقعی |
+| E30 | `PlatformMfaService`، `PlatformMfaCredential`، `EfPlatformMfaStore`، `EfPlatformMfaAssurance`، `TotpMfaCryptography`، `PlatformMfaController`، migration `20261015073418_AddPlatformTotpMfa` | suite واقعی `PlatformMfaEndpointsTests` و `PlatformMfaTests`؛ enrollment/confirmation، MFA gate، freshness، replay/concurrency، recovery/regenerate، Owner reset و hash/protection؛ key ring پایدار به محیط نیاز دارد |
 
 ## 4. Current architecture baseline
 
@@ -176,10 +177,10 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Plan/version/subscription management | PARTIAL | E18، E20 | immutable version/effective time/override | provider لازم ندارد | renewal/cancel سلف‌سرویس نیست | P1 | GAP-07؛ تعریف lifecycle |
 | Entitlement/Quota enforcement در business modules | FOUNDATION_ONLY | E18؛ مصرف فقط در Commerce/DI | خود سرویس/ledger تست دارد | provider لازم ندارد | enforcement سراسری نیست | P1 | GAP-07 |
 | Order/payment/verification | IMPLEMENTED_BUT_PROVIDER_MISSING | E19 | Recording gateway، duplicate verification | خیر؛ Unavailable، نه پرداخت دستی | خیر | P0 | GAP-06 برای عرضه پولی |
-| Backoffice/IAM/provisioning/operations | PARTIAL | E20، E21 | permission، last-owner/manager، audit | MFA/payment/safety کم است | staging واقعی اثبات نشده | P0 | GAP-04 و gateهای مرتبط |
-| Platform MFA/step-up | IMPLEMENTED_BUT_PROVIDER_MISSING | E21 | Test provider؛ fail-closed واقعی | خیر | خیر | P0 | GAP-04 |
+| Backoffice/IAM/provisioning/operations | PARTIAL | E20، E21، E30 | permission، last-owner/manager، audit و TOTP واقعی | MFA محلی واقعی؛ payment/safety جدا | staging واقعی اثبات نشده | P0 وابسته به دامنه | gateهای provider/عملیاتی باقی |
+| Platform MFA/step-up | COMPLETE_IN_CODE | E30 | TOTP واقعی، recovery و reset با SQL/API | بله؛ بدون provider شبکه‌ای | محیط تست بله؛ key ring/IIS هدف جدا | عملیاتی | GAP-04 بسته در کد؛ provision key ring |
 | چهار worker و durable retry | COMPLETE_IN_CODE | E22 | processor/claim/retry/recovery | به ازای side-effect متفاوت | IIS lifecycle خیر | P1 | GAP-09 |
-| Schema/migration integrity | COMPLETE_IN_CODE | E23، E27 | ۳۵ migration روی empty LocalDB پس از GAP-01 | SQL Server provider واقعی | SQL هدف/permission/TLS خیر | P0 | GAP-02 |
+| Schema/migration integrity | COMPLETE_IN_CODE | E23، E27، E30 | ۳۶ migration روی empty LocalDB پس از GAP-04 | SQL Server provider واقعی | SQL هدف/permission/TLS خیر | P0 عملیاتی | GAP-02 |
 | HTTP production safety | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E24 | Production factory و config validation | IIS/TLS بیرونی لازم | host تست؛ نه IIS واقعی | P0 | GAP-02 |
 | Observability بیرونی | PARTIAL | E25 | metrics/header/privacy تست‌شده | sink/exporter/alert اثبات نشده | خیر | P1 | GAP-08 |
 | Backup/restore | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E26/E29 | drill کامل DB+files+app/auth محلی | ابزار امن واقعی؛ job عملیاتی اثبات نشده | LocalDB کامل بله؛ off-server/Production خیر | P0 عملیاتی | GAP-03؛ runbook جدید |
@@ -199,7 +200,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Notification SMS | `INotificationSmsProvider` | `UnavailableNotificationSmsProvider`؛ `Notifications:SmsProvider` | Prod NOT IMPLEMENTED؛ Dev `DevelopmentNotificationSmsProvider` MOCK | recording + failures | خیر | P1، GAP-12 |
 | Push | `IPushNotificationProvider` | `UnavailablePushNotificationProvider`؛ `Notifications:PushProvider` | Prod NOT IMPLEMENTED؛ Dev `DevelopmentPushNotificationProvider` MOCK | recording/device/retry | خیر | P1، GAP-12 |
 | Payment | `IPaymentGateway` | `UnavailablePaymentGateway`؛ `Payments:Provider=Unavailable` | real gateway NOT IMPLEMENTED؛ `RecordingPaymentGateway` فقط تست | E19 | خیر | P0 عرضه پولی، GAP-06 |
-| Platform step-up | `IPlatformStepUpAuthorization` | `UnavailablePlatformStepUpAuthorization` همیشه false | factor واقعی NOT IMPLEMENTED؛ Test provider فقط تست | E20/E21 | خیر | P0 مسیرهای حساس، GAP-04 |
+| Platform step-up | `IPlatformStepUpAuthorization` | `EfPlatformMfaAssurance` و TOTP/Data Protection | REAL محلی؛ fake فقط fixtureهای legacy تست | E20/E30 | SQL/API بله؛ IIS/authenticator دستی هدف خیر | provision key ring پایدار و custody |
 | Child Safety | `IContentSafetyProvider` | `UnavailableContentSafetyProvider`؛ `Messaging:ContentSafetyProvider` | NOT IMPLEMENTED؛ `DevelopmentAllowContentSafetyProvider` فقط Dev/Testing | E12 | خیر | P0 Messenger با Minor/Unknown، GAP-05 |
 | File/export bytes | `IFileStorage` / `IStorageReadinessProbe` | `LocalFileStorage`؛ `Storage:RootPath` | REAL local disk در Prod با root معتبر؛ نه object adapter | E09/E16؛ storage واقعی موقت | host restart تست شده؛ IIS/disaster خیر | backup/ACL P0؛ Object Storage P3 |
 | Meeting links | فیلد/validation جلسه؛ نه SDK provider | URL ذخیره‌شده در Session و خروجی مجاز schedule | REAL metadata؛ ایجاد meeting/provider API پیاده نیست | E07؛ click حضور ثبت نمی‌کند | جلسه آنلاین واقعی اثبات نشده | provider خودکار فعلاً N/A؛ health جلسه smoke شود |
@@ -218,11 +219,10 @@ Severity وابسته به دامنه عرضه صریح است. P0های شرط�
 |---|---|---|
 | GAP-02 | آماده‌سازی و startup محلی اثبات شد؛ مقصد معرفی‌شده HTTPS ندارد و ready404 است؛ OTP/session/core زنده و SQL/IIS هدف اثبات نشده‌اند؛ E28 | HTTPS معتبر و readiness نسخه جاری، سپس SQL TLS/principals، secrets بیرونی، storage ACL و OTP send/receive/verify واقعی |
 | GAP-03 | drill کامل محلی DB+storage+app/auth انجام شد؛ E29؛ job/off-server و secret store واقعی هنوز اثبات نشده‌اند | اقدام عملیاتی مالک: مقصد مستقل، encryption/access/retention، RPO/RTO مصوب و rehearsal سرور |
-| GAP-04 | MFA واقعی وجود ندارد؛ مسیر حساس admin عمداً رد می‌شود؛ E21 | factor تأییدشده، verification/replay/freshness/session assurance و تست واقعی؛ بدون دورزدن fail-closed |
 | GAP-05 | safety provider، lifecycle معتبر سن و policy Minor ناقص‌اند؛ E12 | تصمیم محصول و adapter/provider واقعی یا scope محدود مصوب و enforceشده؛ مسیر Unknown با allow ساختگی باز نشود |
 | GAP-06 | درگاه، callback قابل اعتماد و reconciliation واقعی نداریم؛ E19 | فقط برای عرضه پولی: قرارداد provider، verify واقعی، duplicate/replay/mismatch، recovery وضعیت unknown و settlement ثبت‌شده |
 
-GAP-01 از فهرست blockerهای باز خارج شد: workflow مجاز، Audit اتمیک، اتصال رضایتی بدون merge و قطع دسترسی والد در درخواست بعدی با تست SQL/API اثبات شدند (E27). سایر P0ها تغییر وضعیت نداده‌اند.
+GAP-01 از فهرست blockerهای باز خارج شد: workflow مجاز، Audit اتمیک، اتصال رضایتی بدون merge و قطع دسترسی والد در درخواست بعدی با تست SQL/API اثبات شدند (E27). GAP-04 نیز با TOTP/step-up/recovery/reset واقعی و تست E30 در کد بسته شد؛ key ring/custody عملیاتی لازم است. سایر P0ها با GAP-04 تغییر وضعیت نداده‌اند.
 
 ### P1 — Serious operational risk
 
@@ -278,7 +278,7 @@ OTP adapter logging فقط recipient ماسک‌شده دارد و HttpClient آ
 
 ### شکاف‌های لازم برای بستن
 
-- GAP-04: نشست دارای فیلد assurance است، اما provider runtime هرگز step-up را تأیید نمی‌کند؛ فیلد موجود معادل MFA نیست.
+- GAP-04 در کد بسته شد: TOTP معتبر، recovery یک‌باره و reset audited assurance واقعی ایجاد/باطل می‌کنند؛ عامل موقت یا claim کلاینت authority نیست. custody/recovery key ring و offline last-owner همچنان اقدام/تصمیم عملیاتی لازم‌اند.
 - GAP-05: User تازه `CommunicationAgeCategory.Unknown` است؛ مسیر runtime برای `SetCommunicationAgeCategory` پیدا نشد. presence یک عضو غیر Adult در گفتگو، safety evaluation می‌خواهد؛ Prod unavailable موجب رد امن ارسال می‌شود. این محدودیت فقط کودکان تأییدشده را درگیر نمی‌کند.
 - `ConversationManagementAuthorizationPolicy.CanCreate` پارامتر سن را می‌گیرد ولی در تصمیم استفاده نمی‌کند؛ منع/اجازه گروه Minor را نباید از متن سند نتیجه گرفت. همین‌طور محدودیت‌های رابطه Teacher/Student در سازمان وجود دارند، اما policy کامل personal child/adult باید مصوب شود، نه فرض شود.
 - GAP-11: امضای فایل و محدودیت نوع/حجم جای malware scanner را نمی‌گیرد.
@@ -323,7 +323,7 @@ CI/CD: `.github` workflow یا pipeline build/test/publish/deploy/approval در 
 ## 12. Provider gaps
 
 - GAP-02: credential پایدار Identity و token OTP باید بیرون Git تزریق و روی محیط هدف smoke شوند. این سند هیچ مقدار secret، شماره واقعی، token یا connection string ندارد.
-- GAP-04: factor/MFA، ثبت assurance و freshness واقعی نیازمند قرارداد و implementation است؛ Unavailable نباید با Test provider در Production عوض شود.
+- GAP-04: عامل مصوب TOTP با implementation واقعی محلی و step-up ۱۰ دقیقه‌ای قابل تنظیم موجود است؛ provider بیرونی لازم نیست. فقدان protector معتبر به `MFA_UNAVAILABLE` می‌رسد و fake provider در runtime انتخاب نمی‌شود.
 - GAP-05: provider safety و تصمیم سن/گروه نیازمند privacy، timeout و fail-closed contract هستند. نبود آن با `DevelopmentAllow` در Prod دور زده نمی‌شود؛ DI این انتخاب را رد می‌کند.
 - GAP-06: vendor پرداخت تعیین نشده است. public callback/webhook adapter، authenticate/verify قرارداد آن و job reconciliation واقعی وجود ندارند. `IPaymentVerificationService` داخلی موجود، server-to-server verify را مطالبه می‌کند و duplicate business effect را با store/unique/Outbox مهار می‌کند؛ تست آن Recording است. پرداخت دستی موفق جعلی ساخته نشده است.
 - GAP-12: Notification SMS و Push contract و adapter واقعی می‌خواهند؛ dev providerها فقط نتیجه آزمایشی می‌دهند. provider unavailable در وضعیت فعلی Suppressed است، نه صفی که قطعاً بعداً با تغییر config تحویل خواهد شد؛ برای recovery باید semantics صریح شود.
@@ -439,12 +439,14 @@ correctness concurrency موجود: آخرین ظرفیت کلاس و contention
 - پذیرش: job با هشدار شکست، off-server copy، restore محیط disposable، تطبیق فایل/hash و روابط رسمی/Outbox و بازیابی secret reference، RPO/RTO اندازه‌گیری‌شده؛ بدون حذف داده هدف عادی.
 - شواهد جدید: E29 معیار درخواست GAP-03 برای drill واقعی disposable شامل DB+فایل+app را پوشش می‌دهد؛ ابزار و runbook تکرارپذیر اضافه شدند، schema و secret/providerها تغییر نکردند. job/off-server، secret store واقعی و RPO/RTO کسب‌وکاری هنوز اقدام عملیاتی مالک‌اند؛ `RPO/RTO NOT YET PRODUCT-APPROVED`. این به‌روزرسانی وضعیت هیچ gap دیگری را تغییر نمی‌دهد.
 
-### GAP-04 — MFA/step-up واقعی Platform
+### GAP-04 — MFA/step-up واقعی Platform — CLOSED در کد
 
 - هدف/اهمیت: فعال‌شدن امن مسیرهای حساس، نه خاموش‌کردن guard.
 - وابستگی: انتخاب عامل و policy freshness/recovery/rotation توسط مالک؛ محیط GAP-02.
 - محل/نوع کار: Identity/session assurance، Platform port و adapter، auth transport و audit؛ **code + provider + ops**.
 - پذیرش: enroll/verify عامل مستقل، replay/expired factor رد، assurance به session جاری سروری متصل، recovery و revoke امن، real smoke و تست منفی last-owner/permission؛ Development/Test adapter در Prod مجاز نباشد.
+- شواهد closure: E30 و [قرارداد GAP-04](GAP_04_BACKOFFICE_TOTP_MFA.md)؛ TOTP کتابخانه‌ای استاندارد، gate تمام Backoffice محافظت‌شده، freshness حساس، recovery یک‌باره/هم‌زمان، reset Owner و invalidation چند نشست با SQL/API واقعی تست شدند. migration شماره ۳۶ تنها دو جدول MFA می‌سازد؛ DB معمول/Production migrate نشد. قرارگیری کلید پایدار، ACL/certificate و rollout واقعی هنوز مسئولیت محیط است، نه ادعای انجام‌شده این مرحله. گزینه‌های آینده و offline last-owner در [register](DEFERRED_DECISIONS_AND_REMAINING_GAPS.md) ثبت‌اند؛ هیچ gap دیگری بسته نشده است.
+- validation مخزن پس از GAP-04: restore و build بدون warning/error؛ Unit=392 + Integration=644 + Architecture=14 = 1050 passed، صفر failed/skipped. ۲۷ تست افزوده شد؛ ۱۱ فایل dirty قبلی AI بدون تغییر باقی ماندند. MFA local است و تماس provider بیرونی در تست ندارد.
 
 ### GAP-05 — Child Safety واقعی و policy سن/گروه
 

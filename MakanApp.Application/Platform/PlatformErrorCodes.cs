@@ -2,6 +2,10 @@ namespace MakanApp.Application.Platform;
 
 public static class PlatformErrorCodes
 {
+    public const string MfaRequired = "MFA_REQUIRED";
+    public const string MfaInvalid = "MFA_INVALID";
+    public const string MfaRateLimited = "MFA_RATE_LIMITED";
+    public const string MfaUnavailable = "MFA_UNAVAILABLE";
     public const string AccessDenied = "PLATFORM_ACCESS_DENIED";
     public const string UserNotFound = "PLATFORM_USER_NOT_FOUND";
     public const string RoleNotFound = "PLATFORM_ROLE_NOT_FOUND";

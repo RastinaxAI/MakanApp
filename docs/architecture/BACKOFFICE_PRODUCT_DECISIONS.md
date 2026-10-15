@@ -118,8 +118,11 @@
 ## 7. Step-up و MFA
 
 - عملیات حساس نیازمند `IPlatformStepUpAuthorization` هستند.
-- فناوری و provider واقعی MFA هنوز تصمیم‌گیری نشده است.
-- در Production نبود provider معتبر باید fail-closed باشد.
+- تصمیم مصوب release در GAP-04: TOTP Authenticator عامل اصلی MFA است؛ provider بیرونی، SMS MFA، email OTP و passkey در این مرحله وجود ندارند. این انتخاب محدودیت دائمی معماری نیست.
+- تمام سطح محافظت‌شده Backoffice علاوه بر session و permission جاری، MFA همان نشست را می‌خواهد؛ endpointهای محدود enrollment/status/verify برای رفع همین gate از MFA قبلی معاف‌اند ولی Platform access جاری لازم دارند.
+- نشست عادی با TOTP معتبر یا recovery code مصرف‌نشده به MFA-assured تبدیل می‌شود؛ عملیات حساس علاوه بر این به step-up تازه، پیش‌فرض قابل تنظیم ۱۰ دقیقه، نیاز دارند.
+- secret TOTP فقط با Data Protection محافظت‌شده ذخیره می‌شود؛ key ring پایدار و محافظت‌شده محیط عملیاتی الزامی است. نبود محافظ معتبر، ثبت/تأیید TOTP را fail-closed می‌کند.
+- reset فقط برای Owner مجاز با step-up تازه، Reason و audit، روی کاربر پلتفرمی دیگر انجام می‌شود؛ همه assuranceها و recovery codeهای target نامعتبر می‌شوند، بدون تغییر role assignment یا قواعد آخرین Owner.
 - fake implementation فقط در محیط `Testing` برای تست قابل استفاده است.
 - صرف داشتن OTP login، session تازه، role یا token claim معادل step-up نیست.
 - عملیات حساس حداقل شامل role grant/revoke، suspend/reactivate سازمان یا کاربر، enforcement، subscription mutation و عملیات مالی mutation است.
@@ -193,7 +196,7 @@
 
 موارد زیر freeze نشده‌اند و هر پیاده‌سازی وابسته باید متوقف/محدود شود:
 
-1. MFA/step-up provider و UX واقعی.
+1. روش offline بازیابی آخرین Owner در فقدان TOTP و همه recovery codeها: `DEFERRED_OPERATIONAL_DECISION`؛ backdoor API ممنوع است. TOTP اصلی مصوب است؛ روش‌های MFA آینده در register مربوط به GAP-04 ثبت می‌شوند.
 2. payment provider، reconciliation callback و refund lifecycle.
 3. child-safety provider واقعی.
 4. سیاست دقیق minor برای ساخت/عضویت Personal Group و Channel.

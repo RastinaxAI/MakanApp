@@ -176,6 +176,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<IContentSafetyProvider, RecordingContentSafetyProvider>();
             services.RemoveAll<IPlatformStepUpAuthorization>();
             services.AddSingleton<IPlatformStepUpAuthorization, TestPlatformStepUpAuthorization>();
+            services.RemoveAll<IPlatformMfaAssurance>();
+            services.AddSingleton<IPlatformMfaAssurance, TestPlatformStepUpAuthorization>();
             services.RemoveAll<IAiServiceClient>();
             services.AddSingleton<IAiServiceClient, RecordingAiServiceClient>();
             services.RemoveAll<NotificationDeliveryOptions>();

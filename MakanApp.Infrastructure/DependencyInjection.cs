@@ -74,7 +74,20 @@ public static class DependencyInjection
         services.AddScoped<IPlatformPermissionResolver>(serviceProvider =>
             serviceProvider.GetRequiredService<PlatformIamService>());
         services.AddScoped<IPlatformBootstrapService, PlatformBootstrapService>();
-        services.AddScoped<IPlatformStepUpAuthorization, UnavailablePlatformStepUpAuthorization>();
+        var backofficeSecurity = new BackofficeSecurityOptions
+        {
+            StepUpLifetimeMinutes = ReadBackofficeSetting(configuration, "StepUpLifetimeMinutes", 10),
+            EnrollmentLifetimeMinutes = ReadBackofficeSetting(configuration, "EnrollmentLifetimeMinutes", 10),
+            MaximumFailedAttempts = ReadBackofficeSetting(configuration, "MaximumFailedAttempts", 5),
+            LockoutMinutes = ReadBackofficeSetting(configuration, "LockoutMinutes", 5)
+        };
+        backofficeSecurity.Validate();
+        services.AddSingleton(backofficeSecurity);
+        services.AddScoped<IPlatformMfaStore, EfPlatformMfaStore>();
+        services.AddScoped<PlatformMfaService>();
+        services.AddScoped<EfPlatformMfaAssurance>();
+        services.AddScoped<IPlatformMfaAssurance>(sp => sp.GetRequiredService<EfPlatformMfaAssurance>());
+        services.AddScoped<IPlatformStepUpAuthorization>(sp => sp.GetRequiredService<EfPlatformMfaAssurance>());
         services.AddScoped<IPlatformOperationsStore, EfPlatformOperationsStore>();
         services.AddScoped<IPlatformOperationsService, PlatformOperationsService>();
         services.AddScoped<IPlatformEducationSafetyStore, EfPlatformEducationSafetyStore>();
@@ -732,6 +745,13 @@ public static class DependencyInjection
             $"{AiServiceOptions.SectionName}:CircuitBreakerBreakSeconds",
             30)
     };
+
+    private static int ReadBackofficeSetting(IConfiguration configuration, string name, int fallback)
+    {
+        var raw = configuration["BackofficeSecurity:" + name];
+        if (raw is null) return fallback;
+        return int.TryParse(raw, out var value) ? value : throw new InvalidOperationException("تنظیم امنیت Backoffice عدد معتبر نیست.");
+    }
 
     private static int ReadPositiveInt(
         IConfiguration configuration,
