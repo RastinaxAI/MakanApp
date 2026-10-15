@@ -277,11 +277,12 @@ public sealed class MessagingDirectoryService(
         MessagingProfileStoreRecord record)
     {
         var requesterIsTarget = requesterUserId == record.UserId;
-        var phoneVisible = MessagingPrivacyPolicy.Allows(
+        var phoneVisible = (!record.IsProtectedAccount || requesterIsTarget) && MessagingPrivacyPolicy.Allows(
             record.PhoneNumberVisibilityAudience,
             record.TargetHasSavedRequester,
             requesterIsTarget);
         var canStartDirect = !requesterIsTarget &&
+            record.SafetyAllowsDirect &&
             !record.HasEffectiveDirectBlock &&
             MessagingPrivacyPolicy.Allows(
                 record.DirectMessagesAudience,

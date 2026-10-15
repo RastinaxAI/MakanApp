@@ -204,9 +204,13 @@ public sealed partial class EfMessagingStore
             return;
         }
 
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
         var recipients = await dbContext.ConversationParticipants
             .AsNoTracking()
             .Where(participant => participant.ConversationId == conversation.Id &&
+                                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == participant.UserId &&
+                                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                                   participant.UserId != senderUserId &&
                                   participant.Status == ConversationParticipantStatus.Active &&
                                   participant.EndedAtUtc == null &&

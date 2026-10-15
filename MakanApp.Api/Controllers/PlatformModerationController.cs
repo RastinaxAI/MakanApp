@@ -30,7 +30,18 @@ public sealed class PlatformModerationController(
     public async Task<ActionResult<PlatformModerationCaseDetail>> GetCase(
         Guid caseId,
         CancellationToken cancellationToken) =>
-        Ok(await service.GetModerationCaseAsync(caseId, cancellationToken));
+        Ok(await service.GetModerationCaseAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), caseId, HttpContext.TraceIdentifier, cancellationToken));
+
+    [HttpPost("{caseId:guid}/expanded-context")]
+    [Authorize(Policy = PlatformPermissionKeys.ModerationReview)]
+    [Authorize(Policy = PlatformPermissionKeys.ModerationEnforce)]
+    public async Task<ActionResult<PlatformModerationCaseDetail>> ExpandedContext(Guid caseId, PlatformModerationVersionCommand command, CancellationToken ct) =>
+        Ok(await service.GetExpandedModerationContextAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), caseId, command, HttpContext.TraceIdentifier, ct));
+
+    [HttpPost("{caseId:guid}/actions")]
+    [Authorize(Policy = PlatformPermissionKeys.ModerationReview)]
+    public async Task<ActionResult<PlatformModerationCaseDetail>> ApplyAction(Guid caseId, PlatformModerationActionCommand command, CancellationToken ct) =>
+        Ok(await service.ApplySafetyActionAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), caseId, command, HttpContext.TraceIdentifier, ct));
 
     [HttpPost("{caseId:guid}/start-review")]
     [Authorize(Policy = PlatformPermissionKeys.ModerationReview)]
@@ -97,8 +108,11 @@ public sealed class PlatformModerationController(
         CancellationToken cancellationToken)
     {
         var result = await service.DownloadModerationEvidenceAsync(
+            AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User),
             caseId,
             fileAssetId,
+            HttpContext.TraceIdentifier,
             cancellationToken);
         return File(result.Content, result.ContentType, result.DownloadFileName, enableRangeProcessing: true);
     }

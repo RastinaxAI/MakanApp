@@ -56,12 +56,14 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<CommunicationAgeVerification> CommunicationAgeVerifications => Set<CommunicationAgeVerification>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<UserCredential> UserCredentials => Set<UserCredential>();
     public DbSet<OtpChallenge> OtpChallenges => Set<OtpChallenge>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ConversationInvitation> ConversationInvitations => Set<ConversationInvitation>();
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<ConversationUserState> ConversationUserStates => Set<ConversationUserState>();
     public DbSet<ConversationOwnershipTransfer> ConversationOwnershipTransfers =>
@@ -130,6 +132,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries<CommunicationAgeVerification>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("شاهد تأیید سن فقط قابل افزودن است.");
         if (ChangeTracker.Entries<AdminAuditLog>().Any(entry =>
                 entry.State is EntityState.Modified or EntityState.Deleted))
         {

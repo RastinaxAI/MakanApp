@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
 
-public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
+public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProvider clock)
     : IMessagingDirectoryStore
 {
     public async Task<UserContactStorePage> GetContactsAsync(
@@ -212,7 +212,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
     {
         var normalizedUsernameQuery = query.ToUpperInvariant();
         var userIds = await (
-            from user in dbContext.Users.AsNoTracking()
+            from user in DiscoverableAccounts(requesterUserId)
             join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
             where user.Id != requesterUserId &&
                   user.PersonId != null &&
@@ -242,7 +242,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
         string normalizedUsername,
         CancellationToken cancellationToken)
     {
-        var userId = await dbContext.Users.AsNoTracking()
+        var userId = await DiscoverableAccounts(requesterUserId)
             .Where(user => user.NormalizedUsername == normalizedUsername &&
                            user.ProfileCompletedAtUtc != null &&
                            user.PersonId != null)
@@ -260,7 +260,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
     {
         var userId = await (
             from credential in dbContext.UserCredentials.AsNoTracking()
-            join user in dbContext.Users.AsNoTracking() on credential.UserId equals user.Id
+            join user in DiscoverableAccounts(requesterUserId) on credential.UserId equals user.Id
             where credential.Kind == CredentialKind.MobilePhone &&
                   credential.NormalizedIdentifier == normalizedPhoneNumber &&
                   user.ProfileCompletedAtUtc != null &&
@@ -369,7 +369,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
         }
 
         var identities = await (
-            from user in dbContext.Users.AsNoTracking()
+            from user in DiscoverableAccounts(requesterUserId)
             join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
             where userIds.Contains(user.Id) &&
                   user.PersonId != null &&
@@ -383,7 +383,9 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
                     .Where(credential => credential.UserId == user.Id &&
                                          credential.Kind == CredentialKind.MobilePhone)
                     .Select(credential => credential.NormalizedIdentifier)
-                    .FirstOrDefault()))
+                    .FirstOrDefault(),
+                user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
+                user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified))
             .ToArrayAsync(cancellationToken);
         var validUserIds = identities.Select(identity => identity.UserId).ToArray();
         if (validUserIds.Length == 0)
@@ -415,6 +417,12 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
                 : block.BlockerUserId)
             .ToHashSetAsync(cancellationToken);
 
+        var requesterIsAdult = await dbContext.Users.AnyAsync(u => u.Id == requesterUserId &&
+            u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
+            u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified, cancellationToken);
+        var relatedIds = requesterIsAdult && identities.All(i => !i.IsProtected) ? [] :
+            await MessengerRelationshipQuery.RelatedUsers(dbContext, requesterUserId, clock.GetUtcNow().UtcDateTime)
+                .Where(id => validUserIds.Contains(id)).ToHashSetAsync(cancellationToken);
         var result = new Dictionary<Guid, MessagingProfileStoreRecord>(identities.Length);
         foreach (var identity in identities)
         {
@@ -431,7 +439,9 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
                 savedRequesterUserIds.Contains(identity.UserId),
                 contact is not null,
                 contact?.IsFavorite ?? false,
-                blockedUserIds.Contains(identity.UserId));
+                blockedUserIds.Contains(identity.UserId),
+                identity.IsProtected,
+                requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId));
         }
 
         return result;
@@ -446,6 +456,14 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
                     user.Username != null &&
                     user.ProfileCompletedAtUtc != null,
             cancellationToken);
+
+    private IQueryable<User> DiscoverableAccounts(Guid requesterId)
+    {
+        var related = MessengerRelationshipQuery.RelatedUsers(dbContext, requesterId, clock.GetUtcNow().UtcDateTime);
+        return dbContext.Users.AsNoTracking().Where(u => u.AccountStatus == UserAccountStatus.Active &&
+            (u.Id == requesterId || u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
+             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified || related.Contains(u.Id)));
+    }
 
     private static bool IsUniqueConflict(DbUpdateException exception) =>
         exception.InnerException is SqlException { Number: 2601 or 2627 };
@@ -472,7 +490,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext)
         Guid UserId,
         string Username,
         string DisplayName,
-        string? NormalizedPhoneNumber);
+        string? NormalizedPhoneNumber,
+        bool IsProtected);
 
     private sealed record RecentRow(Guid UserId, DateTime LastActivityAtUtc);
 }

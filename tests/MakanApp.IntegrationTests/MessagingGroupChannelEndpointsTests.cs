@@ -588,7 +588,7 @@ public sealed partial class MessagingEndpointsTests
             $"/api/v1/conversations/{conversationId}");
 
         Assert.Equal(HttpStatusCode.Forbidden, mutate.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, publish.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, publish.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, unrelated.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
     }

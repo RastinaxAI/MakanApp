@@ -7,5 +7,7 @@ public enum ModerationActionType
     Resolved = 3,
     Dismissed = 4,
     Escalated = 5,
-    ContentRemoved = 6
+    ContentRemoved = 6,
+    Warned = 7,
+    MessagingRestricted = 8
 }

@@ -11,6 +11,23 @@ namespace MakanApp.Infrastructure.Messaging;
 
 public sealed partial class EfMessagingStore
 {
+    public async Task<SendMessageStoreCommand> PrepareEditMessageSafetyAsync(Guid userId, Guid conversationId, Guid messageId,
+        AccessContext access, string? text, byte[] expectedVersion, DateTime nowUtc, CancellationToken ct)
+    {
+        var conversation = await dbContext.Conversations.AsNoTracking().SingleOrDefaultAsync(c => c.Id == conversationId, ct) ?? throw ConversationNotFound();
+        var participant = await LoadActiveParticipantAsync(conversationId, userId, ct) ?? throw ConversationNotFound();
+        await EnsureCanReadAdvancedAsync(conversation, participant, userId, access, ct);
+        var message = await dbContext.Messages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == messageId && m.ConversationId == conversationId, ct) ?? throw MessageNotFound();
+        if (message.SenderUserId != userId) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "فقط فرستنده می‌تواند ویرایش کند.");
+        if (message.IsDeleted) throw new MessagingException(MessagingErrorCodes.MessageDeleted, "پیام حذف شده است.");
+        if (!message.RowVersion.SequenceEqual(expectedVersion)) throw MessageConflict();
+        if (!message.IsWithinSenderMutationWindow(nowUtc)) throw new MessagingException(MessagingErrorCodes.MessageEditWindowExpired, "مهلت ویرایش پایان یافته است.");
+        var attachments = await dbContext.MessageAttachments.Where(a => a.MessageId == messageId).Select(a => a.FileAssetId).ToArrayAsync(ct);
+        // شناسه قطعی تلاش ویرایش از شناسه پیام، نسخه و متن؛ ارسال جدید یا بازنویسی history نیست.
+        var attemptHash = SHA256.HashData(Encoding.UTF8.GetBytes($"edit:{messageId:N}:{Convert.ToBase64String(expectedVersion)}:{text}"));
+        return new SendMessageStoreCommand(new Guid(attemptHash.AsSpan(0, 16)), message.Kind, text, attachments,
+            null, [], null, true, message.SharedContactUserId);
+    }
     public async Task<MessageSafetyPreparationStoreResult> PrepareMessageSafetyAsync(
         Guid userId,
         Guid conversationId,
@@ -76,15 +93,7 @@ public sealed partial class EfMessagingStore
             userId,
             command,
             cancellationToken);
-        var requiresEvaluation = await (
-            from candidate in dbContext.ConversationParticipants.AsNoTracking()
-            join account in dbContext.Users.AsNoTracking() on candidate.UserId equals account.Id
-            where candidate.ConversationId == conversationId &&
-                  candidate.Status == ConversationParticipantStatus.Active &&
-                  candidate.EndedAtUtc == null &&
-                  account.CommunicationAgeCategory != CommunicationAgeCategory.Adult
-            select candidate.Id)
-            .AnyAsync(cancellationToken);
+        var requiresEvaluation = await HasProtectedAudienceAsync(conversation, cancellationToken);
         return new MessageSafetyPreparationStoreResult(
             null,
             null,
@@ -332,21 +341,34 @@ public sealed partial class EfMessagingStore
             return;
         }
 
-        var hasNonAdultParticipant = await (
-            from candidate in dbContext.ConversationParticipants
-            join account in dbContext.Users on candidate.UserId equals account.Id
-            where candidate.ConversationId == conversation.Id &&
-                  candidate.Status == ConversationParticipantStatus.Active &&
-                  candidate.EndedAtUtc == null &&
-                  account.CommunicationAgeCategory != CommunicationAgeCategory.Adult
-            select candidate.Id)
-            .AnyAsync(cancellationToken);
+        var hasNonAdultParticipant = await HasProtectedAudienceAsync(conversation, cancellationToken);
         if (hasNonAdultParticipant)
         {
             throw new MessagingException(
                 MessagingErrorCodes.MessageSafetyUnavailable,
                 "بررسی ایمنی پیام موقتاً ممکن نیست؛ دوباره تلاش کنید.");
         }
+    }
+
+    private async Task<bool> HasProtectedAudienceAsync(Conversation conversation, CancellationToken cancellationToken)
+    {
+        if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
+            return await (from member in MessengerRelationshipQuery.ClassMembers(dbContext)
+                join user in dbContext.Users on member.UserId equals user.Id
+                where member.ClassId == conversation.AcademicClassId && member.OrganizationId == conversation.OrganizationId &&
+                    (user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
+                     user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified)
+                select member.UserId).AnyAsync(cancellationToken);
+        return await (
+            from candidate in dbContext.ConversationParticipants
+            join account in dbContext.Users on candidate.UserId equals account.Id
+            where candidate.ConversationId == conversation.Id &&
+                  candidate.Status == ConversationParticipantStatus.Active &&
+                  candidate.EndedAtUtc == null &&
+                  (account.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
+                   account.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified)
+            select candidate.Id)
+            .AnyAsync(cancellationToken);
     }
 
     private static void EnsureSafetyRetryMatches(

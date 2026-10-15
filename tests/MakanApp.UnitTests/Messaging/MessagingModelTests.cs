@@ -153,7 +153,7 @@ public sealed class CommunicationEligibilityPolicyTests
     private readonly CommunicationEligibilityPolicy _policy = new();
 
     [Fact]
-    public void PersonalConversationUsesTargetPrivacyWithoutAdultOrGrantPrerequisites()
+    public void PersonalConversationUsesPrivacyAndRequiresRelationshipForProtectedAccounts()
     {
         var allowed = CreateFacts(
             ConversationScope.Personal,
@@ -165,7 +165,8 @@ public sealed class CommunicationEligibilityPolicyTests
 
         Assert.True(_policy.CanStartOrSend(allowed, MessagingEligibilityOperation.Start));
         Assert.False(_policy.CanStartOrSend(privacyDenied, MessagingEligibilityOperation.Start));
-        Assert.True(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
+        Assert.False(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
+        Assert.True(_policy.CanStartOrSend(minor with { HasAuthorizedSafetyRelationship = true }, MessagingEligibilityOperation.Start));
     }
 
     [Fact]
@@ -241,8 +242,8 @@ public sealed class CommunicationEligibilityPolicyTests
 
     private static CommunicationEligibilityFacts CreateFacts(
         ConversationScope scope,
-        CommunicationAgeCategory actorAge = CommunicationAgeCategory.Unknown,
-        CommunicationAgeCategory targetAge = CommunicationAgeCategory.Unknown,
+        CommunicationAgeCategory actorAge = CommunicationAgeCategory.Adult,
+        CommunicationAgeCategory targetAge = CommunicationAgeCategory.Adult,
         bool targetAllowsDirect = true,
         bool targetAllowsGroupInvite = true,
         OrganizationRole actorRole = OrganizationRole.Manager,

@@ -102,3 +102,26 @@
 `BLOCKED_BY_PRODUCT_POLICY` است: adapter واقعی Child Safety و policy دقیق ساخت/عضویت
 Personal Group/Channel برای حساب کودک تصویب نشده‌اند. runtime فعلی در نبود provider
 واقعی برای Conversation حساس به کودک fail-closed است.
+
+## Addendum مصوب GAP-05 — Child Safety Policy v1
+
+تاریخ ۲۰۲۶-۱۰-۱۵: مالک پروژه همه تصمیم‌های P0 این قابلیت و اجرای امنیتی آن را صریحاً تأیید کرده است. `BLOCKED_BY_PRODUCT_POLICY` در بند تاریخی STEP 14E دیگر وضعیت جاری GAP-05 نیست؛ متن تاریخی بالا شواهد زمان خود را حفظ می‌کند. مرجع اجرای فعلی، [قرارداد GAP-05](GAP_05_MESSENGER_CHILD_SAFETY.md) است.
+
+| تصمیم P0 | وضعیت و قرارداد مصوب جاری |
+|---|---|
+| ۱. طبقه سن | حل‌شده؛ Minor کمتر از ۱۸، Adult از ۱۸ پس از تأیید، Unknown مستقل از نقش و مانند Minor محافظت می‌شود |
+| ۲. منبع/تأیید سن | حل‌شده؛ مدیر فقط با رابطه سازمانی معتبر، شاهد و audit؛ تعارض بدون overwrite و حل Owner با MFA تازه |
+| ۳. Discovery | حل‌شده؛ Minor/Unknown عمومی کشف نمی‌شوند؛ context مجاز محدود و بدون PII حساس |
+| ۴. Stranger Direct | حل‌شده؛ ارتباط غریبه با Minor/Unknown، حتی با شناسه، ممنوع است |
+| ۵. جدایی مجوزها | حل‌شده؛ Find/Create/Send/Read مستقل و مجوز جاری سرور مرجع است |
+| ۶. رابطه مجاز | حل‌شده؛ کلاس/assignment/enrollment/Guardian/رضایت Contact معتبر؛ بدون دسترسی والد یا مدیر به private chat دیگران |
+| ۷. گروه/کانال شخصی | حل‌شده؛ Minor/Unknown فقط گروه خصوصی؛ دعوت رابطه‌دار با پذیرش صریح؛ کانال و ساخت عمومی ممنوع |
+| ۸. گروه رسمی | حل‌شده؛ کلاس/سازمان و Enrollment/TeacherAssignment مرجع، نه participant دلخواه Messenger |
+| ۹. تاریخچه | حل‌شده؛ پایان رابطه یا تغییر سن حذف مخرب خودکار ایجاد نمی‌کند |
+| ۱۰. ارسال جدید | حل‌شده؛ حساب/محدودیت/Block/سن/رابطه/Permission/Safety در هر mutation دوباره بررسی می‌شوند |
+| ۱۱. Block | حل‌شده؛ Direct جدید منع می‌شود، عضویت/نمرات/تاریخچه و اعلان رسمی خودکار حذف نمی‌شوند |
+| ۱۲. تغییر سن | حل‌شده؛ اختیار آینده Discovery/Direct/Send/member/channel دوباره محاسبه می‌شود |
+| ۱۳. Content Safety | حل‌شده؛ Internal Makan قاعده‌محور نسخه‌دار پشت IContentSafetyProvider؛ نه vendor یا AI ساختگی |
+| ۱۴. نتیجه Safety | حل‌شده؛ Allowed، ReviewRequired، Blocked و Unavailable؛ مسیر محافظت‌شده در شکست fail-closed |
+
+قرارداد تکمیلی مصوب: AbuseReviewer پرونده‌محور، پنجره عادی reported item و ۲ قبل/۲ بعد؛ گسترش محدود فقط با ارجاع، permission قوی‌تر، reason، MFA تازه و audit. School Manager یا Owner مجوز unrestricted private browsing ندارند. رسانه‌ای که موتور نمی‌تواند معناشناسی کند ReviewRequired است و Sent اعلام نمی‌شود. ضعف معنایی موتور، richer age assurance، appeal/SLA/retention و گزینه‌های آینده در register معوق ثبت می‌شوند؛ این‌ها اجازه کنارگذاشتن رفتار محافظتی فعلی نیستند.

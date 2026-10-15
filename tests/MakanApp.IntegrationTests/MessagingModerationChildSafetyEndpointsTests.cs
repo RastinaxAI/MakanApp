@@ -471,7 +471,8 @@ public sealed partial class MessagingEndpointsTests
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
-            PersonalCommand("کودک 14D", member.UserId));
+            PersonalCommand("کودک 14D"));
+        await InviteAndAcceptPersonalAsync(ownerClient, memberClient, group.ConversationId, member.UserId);
         var groupMessage = await SendMessageAndReadAsync(
             ownerClient,
             group.ConversationId,
@@ -491,16 +492,19 @@ public sealed partial class MessagingEndpointsTests
         var academicSender = await CreateMessagingUserAsync(academicSenderClient);
         var academicReporter = await CreateMessagingUserAsync(academicReporterClient);
         var organizationId = await factory.CreateOrganizationAsync(NewOrganizationName());
-        await factory.CreateMembershipAsync(academicSender.UserId, organizationId, OrganizationRole.Teacher);
+        var academicTeacherMembership = await factory.CreateMembershipAsync(academicSender.UserId, organizationId, OrganizationRole.Teacher);
         var reporterMembership = await factory.CreateMembershipAsync(
             academicReporter.UserId,
             organizationId,
             OrganizationRole.Student);
-        var systemConversationId = await factory.CreateSystemManagedConversationAsync(
-            organizationId,
-            academicSender.UserId,
-            ConversationType.Group);
-        await factory.AddConversationParticipantAsync(systemConversationId, academicReporter.UserId);
+        var academic = await factory.CreateAcademicClassAsync(organizationId);
+        var academicPerson = await factory.CreateOrganizationPersonAsync(organizationId, await factory.GetUserPersonIdAsync(academicReporter.UserId));
+        await factory.CreateEnrollmentAsync(organizationId, academic.ClassId, academicPerson);
+        await factory.CreateTeacherAssignmentAsync(organizationId, academic.ClassId, academicTeacherMembership.MembershipId);
+        await SelectOrganizationAsync(academicSenderClient, academicTeacherMembership.MembershipId, OrganizationRole.Teacher);
+        using var officialResponse = await academicSenderClient.PostAsync($"/api/v1/organization/classes/{academic.ClassId}/conversation", null);
+        officialResponse.EnsureSuccessStatusCode();
+        var systemConversationId = (await officialResponse.Content.ReadFromJsonAsync<OfficialClassConversationResult>(JsonOptions))!.ConversationId;
         var systemMessageId = await factory.CreateCommittedMessageAsync(
             systemConversationId,
             academicSender.UserId,
@@ -537,6 +541,7 @@ public sealed partial class MessagingEndpointsTests
         var recipient = await CreateMessagingUserAsync(recipientClient);
         await factory.SetCommunicationAgeCategoryAsync(sender.UserId, CommunicationAgeCategory.Adult);
         await factory.SetCommunicationAgeCategoryAsync(recipient.UserId, CommunicationAgeCategory.Minor);
+        await factory.AllowPersonalGroupInviteAsync(sender.UserId, recipient.UserId);
         var direct = await StartDirectAndReadAsync(senderClient, recipient.UserId, ConversationScope.Personal);
         var clientMessageId = Guid.NewGuid();
 
@@ -598,6 +603,7 @@ public sealed partial class MessagingEndpointsTests
         Assert.Empty(factory.ContentSafetyProvider.Requests);
 
         await factory.SetCommunicationAgeCategoryAsync(recipient.UserId, CommunicationAgeCategory.Unknown);
+        await factory.AllowPersonalGroupInviteAsync(sender.UserId, recipient.UserId);
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed);
         var allowedId = Guid.NewGuid();
         var allowed = await SendMessageAndReadAsync(
@@ -640,7 +646,8 @@ public sealed partial class MessagingEndpointsTests
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
-            PersonalCommand("TOCTOU 14D", member.UserId));
+            PersonalCommand("TOCTOU 14D"));
+        await InviteAndAcceptPersonalAsync(ownerClient, memberClient, group.ConversationId, member.UserId);
         factory.ContentSafetyProvider.Configure(
             ContentSafetyDecision.Allowed,
             beforeReturn: () => factory.RemoveConversationParticipantAsync(
@@ -671,7 +678,8 @@ public sealed partial class MessagingEndpointsTests
         var group = await CreateManagedAndReadAsync(
             ownerClient,
             "groups",
-            PersonalCommand("Age scope 14D", member.UserId));
+            PersonalCommand("Age scope 14D"));
+        await InviteAndAcceptPersonalAsync(ownerClient, memberClient, group.ConversationId, member.UserId);
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed);
         var first = await SendMessageAndReadAsync(
             ownerClient,
@@ -709,6 +717,7 @@ public sealed partial class MessagingEndpointsTests
         var recipient = await CreateMessagingUserAsync(recipientClient);
         await factory.SetCommunicationAgeCategoryAsync(sender.UserId, CommunicationAgeCategory.Adult);
         await factory.SetCommunicationAgeCategoryAsync(recipient.UserId, CommunicationAgeCategory.Minor);
+        await factory.AllowPersonalGroupInviteAsync(sender.UserId, recipient.UserId);
         var direct = await StartDirectAndReadAsync(senderClient, recipient.UserId, ConversationScope.Personal);
         var file = await UploadFileAsync(senderClient, "image/png", "blocked-14d.png");
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Blocked);
@@ -764,7 +773,8 @@ public sealed partial class MessagingEndpointsTests
         var destination = await CreateManagedAndReadAsync(
             senderClient,
             "groups",
-            PersonalCommand("Forward safety 14D", groupMember.UserId));
+            PersonalCommand("Forward safety 14D"));
+        await InviteAndAcceptPersonalAsync(senderClient, groupMemberClient, destination.ConversationId, groupMember.UserId);
         var changedDuringEvaluationId = Guid.NewGuid();
         factory.ContentSafetyProvider.Configure(
             ContentSafetyDecision.Allowed,

@@ -376,13 +376,14 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task GlobalPersonalDirectUsesCurrentPrivacyWithoutGrantOrAdultRequirement()
+    public async Task GlobalPersonalDirectUsesCurrentPrivacyAndApprovedProtectedRelationshipWithoutGrant()
     {
         using var actorClient = factory.CreateClient();
         using var targetClient = factory.CreateClient();
         var actor = await CreateMessagingUserAsync(actorClient);
         var target = await CreateMessagingUserAsync(targetClient);
         await factory.SetCommunicationAgeCategoryAsync(target.UserId, CommunicationAgeCategory.Minor);
+        await factory.AllowPersonalGroupInviteAsync(actor.UserId, target.UserId);
 
         var conversation = await StartDirectAndReadAsync(
             actorClient,
@@ -398,6 +399,7 @@ public sealed partial class MessagingEndpointsTests
             conversation.ConversationId,
             Guid.NewGuid(),
             "پیام قبل از محدودیت");
+        await factory.RemoveApprovedContactAsync(target.UserId, actor.UserId);
         var privacy = await UpdatePrivacyAsync(
             targetClient,
             PrivacyAudience.Contacts,

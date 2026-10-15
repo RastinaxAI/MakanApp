@@ -15,6 +15,7 @@ public sealed partial class EfMessagingStore
         AccessContext accessContext,
         string? text,
         byte[] expectedVersion,
+        bool safetyEvaluated,
         int maximumTextLength,
         DateTime nowUtc,
         CancellationToken cancellationToken)
@@ -29,6 +30,8 @@ public sealed partial class EfMessagingStore
             accessContext,
             cancellationToken);
         EnsureMutableConversation(conversation);
+        await EnsureCanSendAdvancedAsync(conversation, participant, userId, accessContext, message.Kind, nowUtc, cancellationToken);
+        await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, cancellationToken);
         ApplyExpectedMessageVersion(message, expectedVersion);
         if (message.IsDeleted)
         {

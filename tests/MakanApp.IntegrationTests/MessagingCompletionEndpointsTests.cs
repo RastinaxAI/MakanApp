@@ -391,6 +391,7 @@ public sealed partial class MessagingEndpointsTests
         var sender = await CreateMessagingUserAsync(senderClient);
         var recipient = await CreateMessagingUserAsync(recipientClient);
         await factory.SetCommunicationAgeCategoryAsync(recipient.UserId, CommunicationAgeCategory.Minor);
+        await factory.AllowPersonalGroupInviteAsync(sender.UserId, recipient.UserId);
         var direct = await StartDirectAndReadAsync(senderClient, recipient.UserId, ConversationScope.Personal);
         var before = await CountMessageNotificationOutboxAsync();
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Blocked);

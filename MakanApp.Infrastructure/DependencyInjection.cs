@@ -60,6 +60,12 @@ public static class DependencyInjection
         services.AddSingleton<IIdentitySecurityEventRecorder, LoggingIdentitySecurityEventRecorder>();
         services.AddScoped<IOrganizationStore, EfOrganizationStore>();
         services.AddScoped<SchoolManagementAccessResolver>();
+        services.AddScoped<ICommunicationAgeStore, EfCommunicationAgeStore>();
+        services.AddScoped<CommunicationAgeService>();
+        services.AddScoped<ConversationInvitationService>();
+        services.AddScoped<OfficialClassConversationService>();
+        services.AddScoped<IOfficialClassConversationStore>(sp => sp.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<IConversationInvitationStore>(sp => sp.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IOrganizationPersonStore, EfOrganizationPersonStore>();
         services.AddScoped<IOrganizationPersonService, OrganizationPersonService>();
         services.AddScoped<IGuardianManagementStore, EfGuardianManagementStore>();
@@ -251,8 +257,13 @@ public static class DependencyInjection
         IConfiguration configuration,
         string environmentName)
     {
-        var defaultProvider = IsDevelopmentLike(environmentName) ? "DevelopmentAllow" : "Unavailable";
+        var defaultProvider = "Internal";
         var provider = configuration["Messaging:ContentSafetyProvider"]?.Trim() ?? defaultProvider;
+        if (provider.Equals("Internal", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IContentSafetyProvider, InternalMakanContentSafetyProvider>();
+            return;
+        }
         if (provider.Equals("DevelopmentAllow", StringComparison.OrdinalIgnoreCase))
         {
             if (!IsDevelopmentLike(environmentName))
@@ -272,7 +283,7 @@ public static class DependencyInjection
         }
 
         throw new InvalidOperationException(
-            "Messaging:ContentSafetyProvider must be DevelopmentAllow or Unavailable until an approved provider adapter exists.");
+            "Messaging:ContentSafetyProvider must be Internal, Unavailable or DevelopmentAllow (development/testing only).");
     }
 
     private static void AddPaymentGateway(

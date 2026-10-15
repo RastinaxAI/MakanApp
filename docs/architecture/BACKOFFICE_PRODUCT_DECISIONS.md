@@ -165,7 +165,9 @@
 - `SecurityAudit` metadata و audit را read-only می‌بیند.
 - Manager و Support بر اساس عنوان نقش به evidence دسترسی ندارند.
 - هر enforcement نیازمند reason، permission، resource check و AdminAuditLog است.
-- child-safety provider واقعی و سیاست minor برای Personal Group/Channel همچنان unresolved هستند و نباید در STEP 15 حدس زده شوند.
+- تصمیم تاریخی STEP 15 برای Child Safety با GAP-05 جایگزین شده است: Internal Makan قاعده‌محور و سیاست سنی/رضایت گروه مصوب‌اند؛ جزئیات در `GAP_05_MESSENGER_CHILD_SAFETY.md` است. دقت معنایی AI یا اسکن رسانه ادعا نمی‌شود.
+- پنجره عادی شاهد، reported item و حداکثر ۲ پیام قبل/۲ پیام بعد همان پرونده است؛ read و download حساس audit می‌شوند. گسترش محدود نیازمند escalation، بازبین assigned، ModerationEnforce، reason و Step-up تازه GAP-04 است.
+- Warn و RestrictMessaging زمان‌دار در scope پرونده بازبین مجازند؛ حذف محتوا مجوز قوی‌تر/MFA تازه می‌خواهد. SuspendAccount از workflow موجود UsersManage و محافظ آخرین Owner/Manager استفاده می‌کند؛ AbuseReviewer این اختیار را ندارد.
 
 ## 12. Commerce و Finance
 
@@ -198,8 +200,8 @@
 
 1. روش offline بازیابی آخرین Owner در فقدان TOTP و همه recovery codeها: `DEFERRED_OPERATIONAL_DECISION`؛ backdoor API ممنوع است. TOTP اصلی مصوب است؛ روش‌های MFA آینده در register مربوط به GAP-04 ثبت می‌شوند.
 2. payment provider، reconciliation callback و refund lifecycle.
-3. child-safety provider واقعی.
-4. سیاست دقیق minor برای ساخت/عضویت Personal Group و Channel.
+3. تصمیم قبلی Child Safety در GAP-05 حل شد: Internal Makan provider قاعده‌محور، با محدودیت‌های صریح و گزینه ارتقای آینده.
+4. تصمیم قبلی minor در GAP-05 حل شد: گروه خصوصی مجاز، ساخت عمومی/کانال ممنوع، رابطه جاری و پذیرش صریح عضویت محافظت‌شده لازم.
 5. scope و resourceهای واقعی نقش `Content`.
 6. هر نوع impersonation یا break-glass private-content access.
 

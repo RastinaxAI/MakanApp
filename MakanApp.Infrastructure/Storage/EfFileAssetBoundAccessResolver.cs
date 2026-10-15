@@ -5,6 +5,7 @@ using MakanApp.Domain.Organization;
 using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Persistence;
+using MakanApp.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Storage;
@@ -30,6 +31,7 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
         AccessContext accessContext,
         CancellationToken cancellationToken)
     {
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
         var canReadMessage = await (
             from attachment in dbContext.MessageAttachments
             join message in dbContext.Messages on attachment.MessageId equals message.Id
@@ -42,6 +44,9 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext)
                 into states
             from state in states.DefaultIfEmpty()
             where attachment.FileAssetId == fileAsset.Id &&
+                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == accessContext.UserId &&
+                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   message.DeletedAtUtc == null &&
                   participant.UserId == accessContext.UserId &&
                   participant.Status == ConversationParticipantStatus.Active &&

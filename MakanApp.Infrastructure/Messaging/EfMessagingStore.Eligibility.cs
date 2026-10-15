@@ -155,7 +155,11 @@ public sealed partial class EfMessagingStore
             actorHasEnrollment,
             targetHasEnrollment,
             hasTeacherStudentRelationship,
-            hasTeacherParentRelationship);
+            hasTeacherParentRelationship,
+            (actor?.AgeCategory != CommunicationAgeCategory.Adult || target?.AgeCategory != CommunicationAgeCategory.Adult) &&
+            await MessengerRelationshipQuery.RelatedUsers(dbContext, actorUserId, nowUtc,
+                    scope == ConversationScope.Organization ? organizationId : null)
+                .ContainsAsync(targetUserId, cancellationToken));
     }
 
     private async Task<SafeMessagingIdentityRecord> LoadSafeIdentityAsync(
@@ -199,13 +203,15 @@ public sealed partial class EfMessagingStore
          where user.Id == userId &&
                user.PersonId != null &&
                user.Username != null &&
+               user.AccountStatus == UserAccountStatus.Active &&
                user.ProfileCompletedAtUtc != null
          select new UserMessagingSnapshot(
              user.Id,
              user.PersonId,
              user.Username!,
              person.DisplayName ?? person.FirstName + " " + person.LastName,
-             user.CommunicationAgeCategory))
+             user.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified
+                 ? user.CommunicationAgeCategory : CommunicationAgeCategory.Unknown))
         .AsNoTracking()
         .SingleOrDefaultAsync(cancellationToken);
 

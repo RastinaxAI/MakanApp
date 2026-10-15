@@ -11,7 +11,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Platform;
 
-public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
+public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbContext,
+    IPlatformIamStore iamStore, IPlatformMfaAssurance mfaAssurance, IPlatformStepUpAuthorization stepUp)
     : IPlatformEducationSafetyStore
 {
     private const int MaximumClassDetailPeople = 200;
@@ -558,8 +559,10 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        await RequireReviewerAsync(actor, false, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
+        if (await CaseSubjectAsync(moderationCase, cancellationToken) == actor.UserId) throw ModerationNotFound();
         EnsureVersion(moderationCase, expectedVersion);
         try
         {
@@ -569,7 +572,7 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
                 var report = await dbContext.AbuseReports.SingleAsync(
                     item => item.Id == moderationCase.AbuseReportId.Value,
                     cancellationToken);
-                report.MarkUnderReview();
+                if (report.Status != AbuseReportStatus.UnderReview) report.MarkUnderReview();
             }
         }
         catch (InvalidOperationException)
@@ -605,8 +608,10 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        await RequireReviewerAsync(actor, false, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
+        if (await CaseSubjectAsync(moderationCase, cancellationToken) == actor.UserId) throw ModerationNotFound();
         EnsureVersion(moderationCase, expectedVersion);
         try
         {
@@ -680,8 +685,10 @@ public sealed class EfPlatformEducationSafetyStore(MakanDbContext dbContext)
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        await RequireReviewerAsync(actor, true, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
+        if (await CaseSubjectAsync(moderationCase, cancellationToken) == actor.UserId) throw ModerationNotFound();
         EnsureVersion(moderationCase, expectedVersion);
         if (!moderationCase.AbuseReportId.HasValue)
         {

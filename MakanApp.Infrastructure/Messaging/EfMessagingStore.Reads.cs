@@ -24,6 +24,7 @@ public sealed partial class EfMessagingStore
         var membershipId = accessContext.MembershipId;
         var savedTitleMatches = search is not null &&
             "پیام‌های ذخیره‌شده".Contains(search, StringComparison.OrdinalIgnoreCase);
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
         var query =
             from participant in dbContext.ConversationParticipants
             join conversation in dbContext.Conversations
@@ -38,6 +39,9 @@ public sealed partial class EfMessagingStore
                 into organizations
             from organization in organizations.DefaultIfEmpty()
             where participant.UserId == userId &&
+                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == userId &&
+                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   conversation.Status == ConversationStatus.Active &&
@@ -199,6 +203,7 @@ public sealed partial class EfMessagingStore
         {
             throw ConversationNotFound();
         }
+        if (!await CanAccessScopeAsync(conversation, userId, accessContext, cancellationToken)) throw ConversationNotFound();
 
         var visibleFromSequence = await GetVisibleFromSequenceAsync(
             conversationId,

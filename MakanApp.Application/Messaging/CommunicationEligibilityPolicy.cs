@@ -30,7 +30,8 @@ public sealed record CommunicationEligibilityFacts(
     bool ActorHasActiveEnrollment,
     bool TargetHasActiveEnrollment,
     bool HasActiveTeacherStudentRelationship,
-    bool HasActiveTeacherParentRelationship);
+    bool HasActiveTeacherParentRelationship,
+    bool HasAuthorizedSafetyRelationship = false);
 
 public sealed record ConversationReadFacts(
     ConversationScope Scope,
@@ -65,6 +66,10 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
             return false;
         }
 
+        if ((facts.ActorAgeCategory != CommunicationAgeCategory.Adult ||
+             facts.TargetAgeCategory != CommunicationAgeCategory.Adult) && !facts.HasAuthorizedSafetyRelationship)
+            return false;
+
         return facts.Scope switch
         {
             ConversationScope.Personal => CanUsePersonal(facts, operation),
@@ -83,6 +88,10 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
         {
             return false;
         }
+
+        if ((facts.ActorAgeCategory != CommunicationAgeCategory.Adult ||
+             facts.TargetAgeCategory != CommunicationAgeCategory.Adult) && !facts.HasAuthorizedSafetyRelationship)
+            return false;
 
         return facts.Scope switch
         {

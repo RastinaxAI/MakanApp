@@ -57,7 +57,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
     }
 
     [Fact]
-    public async Task PersonalConversationDoesNotRequireGrantOrAdultParticipants()
+    public async Task PersonalConversationRejectsUnrelatedMinorWithoutCreatingGrantOrConversation()
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
@@ -72,7 +72,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
             second.UserId,
             ConversationScope.Personal);
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, await factory.CountActivePersonalCommunicationGrantsAsync(
             first.UserId,
             second.UserId));

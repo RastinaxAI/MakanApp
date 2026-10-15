@@ -23,11 +23,15 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext)
             return [];
         }
 
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
         var query =
             from participant in dbContext.ConversationParticipants.AsNoTracking()
             join session in dbContext.UserSessions.AsNoTracking()
                 on participant.UserId equals session.UserId
             where participant.ConversationId == conversationId &&
+                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == session.UserId &&
+                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   session.RevokedAtUtc == null &&

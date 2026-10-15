@@ -10,6 +10,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users", "identity", table =>
         {
+            table.HasCheckConstraint("CK_Users_AgeVerificationStatus", "[CommunicationAgeVerificationStatus] IN (0,1,2)");
             table.HasCheckConstraint(
                 "CK_Users_CommunicationAgeCategory",
                 "[CommunicationAgeCategory] IN (0, 1, 2)");
@@ -27,6 +28,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.UpdatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.ProfileCompletedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.SuspendedAtUtc).HasColumnType("datetime2(7)");
+        builder.Property(user => user.MessagingRestrictedUntilUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.RowVersion).IsRowVersion();
 
         builder.HasIndex(user => user.NormalizedUsername)

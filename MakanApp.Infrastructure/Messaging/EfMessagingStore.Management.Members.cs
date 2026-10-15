@@ -31,11 +31,15 @@ public sealed partial class EfMessagingStore
             throw ConversationNotFound();
         }
 
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
         var rows = await (
             from participant in dbContext.ConversationParticipants.AsNoTracking()
             join user in dbContext.Users.AsNoTracking() on participant.UserId equals user.Id
             join person in dbContext.Persons.AsNoTracking() on user.PersonId equals (Guid?)person.Id
             where participant.ConversationId == conversationId &&
+                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == participant.UserId &&
+                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   user.Username != null &&
@@ -127,6 +131,8 @@ public sealed partial class EfMessagingStore
             accessContext,
             nowUtc,
             cancellationToken);
+        await EnsureInstantAddIsSafeAsync(actorUserId, targetUserId, conversation.Scope, cancellationToken);
+        await EnsurePersonalAudienceSafetyAsync(conversation, targetUserId, nowUtc, cancellationToken);
         var added = ConversationParticipant.CreateActive(
                 conversation.Id,
                 targetUserId,
@@ -268,6 +274,9 @@ public sealed partial class EfMessagingStore
         target.ChangeRole(role, role == ConversationParticipantRole.Admin
             ? adminPermissions
             : ConversationAdminPermission.None);
+        if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
+            adminPermissions.HasFlag(ConversationAdminPermission.PublishMessages) && !await IsVerifiedAdultAsync(targetUserId, cancellationToken))
+            throw ManagementNotAllowed();
         await SaveManagementAsync(cancellationToken);
         await AppendChangeAsync(
             conversation,

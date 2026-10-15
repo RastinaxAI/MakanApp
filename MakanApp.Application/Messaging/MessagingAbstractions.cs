@@ -168,6 +168,9 @@ public interface IMessagingStore
         DateTime nowUtc,
         CancellationToken cancellationToken);
 
+    Task<SendMessageStoreCommand> PrepareEditMessageSafetyAsync(Guid userId, Guid conversationId, Guid messageId,
+        AccessContext access, string? text, byte[] expectedVersion, DateTime nowUtc, CancellationToken ct);
+
     Task<Message> EditMessageAsync(
         Guid userId,
         Guid conversationId,
@@ -175,6 +178,7 @@ public interface IMessagingStore
         AccessContext accessContext,
         string? text,
         byte[] expectedVersion,
+        bool safetyEvaluated,
         int maximumTextLength,
         DateTime nowUtc,
         CancellationToken cancellationToken);

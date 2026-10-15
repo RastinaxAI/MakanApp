@@ -18,6 +18,8 @@ public sealed class User
     public string? Username { get; private set; }
     public string? NormalizedUsername { get; private set; }
     public CommunicationAgeCategory CommunicationAgeCategory { get; private set; }
+    public CommunicationAgeVerificationStatus CommunicationAgeVerificationStatus { get; private set; }
+    public DateTime? MessagingRestrictedUntilUtc { get; private set; }
     public UserAccountStatus AccountStatus { get; private set; }
     public DateTime? SuspendedAtUtc { get; private set; }
     public DateTime? ProfileCompletedAtUtc { get; private set; }
@@ -69,13 +71,31 @@ public sealed class User
         CommunicationAgeCategory communicationAgeCategory,
         DateTime updatedAtUtc)
     {
+        if (updatedAtUtc.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("زمان تأیید سن باید UTC باشد.", nameof(updatedAtUtc));
         if (!Enum.IsDefined(communicationAgeCategory))
         {
             throw new ArgumentOutOfRangeException(nameof(communicationAgeCategory));
         }
 
         CommunicationAgeCategory = communicationAgeCategory;
+        CommunicationAgeVerificationStatus = communicationAgeCategory == CommunicationAgeCategory.Unknown
+            ? CommunicationAgeVerificationStatus.Unverified : CommunicationAgeVerificationStatus.Verified;
         UpdatedAtUtc = updatedAtUtc;
+    }
+
+    public void MarkCommunicationAgeConflict(DateTime nowUtc)
+    {
+        SetCommunicationAgeCategory(CommunicationAgeCategory.Unknown, nowUtc);
+        CommunicationAgeVerificationStatus = CommunicationAgeVerificationStatus.Conflict;
+    }
+
+    public void RestrictMessaging(DateTime untilUtc, DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc || untilUtc.Kind != DateTimeKind.Utc || untilUtc <= nowUtc)
+            throw new ArgumentException("زمان پایان محدودیت باید UTC و در آینده باشد.");
+        MessagingRestrictedUntilUtc = MessagingRestrictedUntilUtc > untilUtc ? MessagingRestrictedUntilUtc : untilUtc;
+        UpdatedAtUtc = nowUtc;
     }
 
     public void SetProfile(

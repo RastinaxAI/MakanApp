@@ -13,6 +13,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
     {
         builder.ToTable("Conversations", "messaging", table =>
         {
+            table.HasCheckConstraint("CK_Conversations_AcademicClass", "[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type]=2 AND [Scope]=2 AND [OrganizationId] IS NOT NULL)");
             table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3, 4)");
             table.HasCheckConstraint("CK_Conversations_Scope", "[Scope] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_Status", "[Status] IN (1, 2)");
@@ -50,6 +51,11 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
                 "[ManagementPolicy] <> 2 OR [Visibility] = 1");
         });
         builder.HasKey(conversation => conversation.Id);
+        builder.HasIndex(c => c.OrganizationId);
+        builder.HasIndex(c => new { c.OrganizationId, c.AcademicClassId }).IsUnique().HasFilter("[AcademicClassId] IS NOT NULL");
+        builder.HasOne<MakanApp.Domain.Academic.Class>().WithMany()
+            .HasForeignKey(c => new { c.OrganizationId, c.AcademicClassId })
+            .HasPrincipalKey(c => new { c.OrganizationId, c.Id }).OnDelete(DeleteBehavior.Restrict);
         builder.Property(conversation => conversation.Title)
             .HasMaxLength(Conversation.TitleMaximumLength);
         builder.Property(conversation => conversation.Description)

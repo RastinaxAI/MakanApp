@@ -90,11 +90,27 @@ public sealed class PlatformEducationSafetyService(
         return store.GetModerationCasesAsync(query, cancellationToken);
     }
 
-    public async Task<PlatformModerationCaseDetail> GetModerationCaseAsync(
-        Guid caseId,
-        CancellationToken cancellationToken) =>
-        await store.GetModerationCaseAsync(RequireId(caseId), cancellationToken)
-        ?? throw ModerationNotFound();
+    public Task<PlatformModerationCaseDetail> GetModerationCaseAsync(Guid actorUserId, Guid actorSessionId,
+        Guid caseId, string correlationId, CancellationToken cancellationToken) =>
+        store.ReadModerationContextAsync(Actor(actorUserId, actorSessionId, correlationId), RequireId(caseId), false, "مشاهده شاهد محدود پرونده", cancellationToken);
+
+    public Task<PlatformModerationCaseDetail> GetExpandedModerationContextAsync(Guid actorUserId, Guid actorSessionId, Guid caseId,
+        PlatformModerationVersionCommand command, string correlationId, CancellationToken ct)
+    {
+        ValidateMutation(command.ExpectedVersion, command.Reason);
+        return store.ReadModerationContextAsync(Actor(actorUserId, actorSessionId, correlationId), RequireId(caseId), true, command.Reason.Trim(), ct, DecodeVersion(command.ExpectedVersion));
+    }
+
+    public Task<PlatformModerationCaseDetail> ApplySafetyActionAsync(Guid actorUserId, Guid actorSessionId, Guid caseId,
+        PlatformModerationActionCommand command, string correlationId, CancellationToken ct)
+    {
+        ValidateMutation(command.ExpectedVersion, command.Reason);
+        if (command.Action is not ModerationActionType.Warned and not ModerationActionType.MessagingRestricted and not ModerationActionType.Escalated ||
+            command.Action == ModerationActionType.MessagingRestricted &&
+            (command.RestrictedUntilUtc?.Kind != DateTimeKind.Utc || command.RestrictedUntilUtc <= timeProvider.GetUtcNow().UtcDateTime)) throw InvalidQuery();
+        return store.ApplySafetyActionAsync(Actor(actorUserId, actorSessionId, correlationId), RequireId(caseId), DecodeVersion(command.ExpectedVersion),
+            command.Reason.Trim(), command.Action, command.RestrictedUntilUtc, ct);
+    }
 
     public Task<PlatformModerationCaseDetail> StartModerationReviewAsync(
         Guid actorUserId,
@@ -149,10 +165,14 @@ public sealed class PlatformEducationSafetyService(
     }
 
     public async Task<FileDownloadResult> DownloadModerationEvidenceAsync(
+        Guid actorUserId,
+        Guid actorSessionId,
         Guid caseId,
         Guid fileAssetId,
+        string correlationId,
         CancellationToken cancellationToken)
     {
+        await store.ReadModerationContextAsync(Actor(actorUserId, actorSessionId, correlationId), RequireId(caseId), false, "دریافت فایل شاهد پرونده", cancellationToken);
         var file = await store.GetModerationEvidenceFileAsync(
             RequireId(caseId),
             RequireId(fileAssetId),

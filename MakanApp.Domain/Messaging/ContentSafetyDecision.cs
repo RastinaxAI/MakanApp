@@ -4,5 +4,6 @@ public enum ContentSafetyDecision
 {
     Allowed = 1,
     Blocked = 2,
-    ReviewRequired = 3
+    ReviewRequired = 3,
+    Unavailable = 4
 }

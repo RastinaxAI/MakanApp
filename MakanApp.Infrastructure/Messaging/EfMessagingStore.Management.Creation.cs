@@ -97,8 +97,10 @@ public sealed partial class EfMessagingStore
                     accessContext,
                     nowUtc,
                     cancellationToken);
+                await EnsureInstantAddIsSafeAsync(actorUserId, targetUserId, scope, cancellationToken);
             }
 
+            await EnsurePersonalCreationSafetyAsync(actorUserId, scope, type, visibility, cancellationToken);
             var conversation = Conversation.CreateUserManaged(
                 type,
                 scope,

@@ -164,6 +164,8 @@ public sealed partial class EfMessagingStore
         {
             throw OwnershipTransferNotFound();
         }
+        if (accept)
+            await EnsurePersonalCreationSafetyAsync(actorUserId, conversation.Scope, conversation.Type, conversation.Visibility, cancellationToken);
 
         if ((accept && transfer.Status == OwnershipTransferStatus.Accepted) ||
             (!accept && transfer.Status == OwnershipTransferStatus.Declined))

@@ -20,7 +20,10 @@ public sealed record ContentSafetyResult(
     ContentSafetyDecision Decision,
     string? RiskLevel = null,
     string? ProviderReference = null,
-    IReadOnlyCollection<string>? PolicyCodes = null);
+    IReadOnlyCollection<string>? PolicyCodes = null,
+    string? ReasonCode = null,
+    string? PolicyVersion = null,
+    string? CorrelationId = null);
 
 public interface IContentSafetyProvider
 {

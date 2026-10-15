@@ -89,6 +89,24 @@ public sealed class ModerationCase
         UpdatedAtUtc = dismissedAtUtc;
     }
 
+    public void Escalate(Guid reviewerUserId, DateTime nowUtc)
+    {
+        EnsureReviewer(reviewerUserId);
+        EnsureUtc(nowUtc, nameof(nowUtc));
+        Priority = ModerationPriority.Critical;
+        Status = ModerationCaseStatus.Pending;
+        AssignedReviewerUserId = null;
+        ReviewStartedAtUtc = null;
+        UpdatedAtUtc = nowUtc;
+    }
+
+    public void RecordSafetyAction(Guid reviewerUserId, DateTime nowUtc)
+    {
+        EnsureReviewer(reviewerUserId);
+        EnsureUtc(nowUtc, nameof(nowUtc));
+        UpdatedAtUtc = nowUtc;
+    }
+
     private static ModerationCase Create(
         Guid conversationId,
         ModerationCaseSource source,

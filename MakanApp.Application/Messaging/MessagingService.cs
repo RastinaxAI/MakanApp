@@ -173,6 +173,10 @@ public sealed class MessagingService(
 
         var expectedVersion = DecodeVersion(command.ExpectedVersion);
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var safetyCommand = await store.PrepareEditMessageSafetyAsync(userId, conversationId, messageId,
+            context, command.Text, expectedVersion, UtcNow(), cancellationToken);
+        var safety = await ApplySafetyGateAsync(userId, conversationId, context, safetyCommand,
+            HashSendPayload(conversationId, safetyCommand), cancellationToken);
         var message = await store.EditMessageAsync(
             userId,
             conversationId,
@@ -180,6 +184,7 @@ public sealed class MessagingService(
             context,
             command.Text,
             expectedVersion,
+            safety.Evaluated,
             options.MaximumTextLength,
             UtcNow(),
             cancellationToken);
@@ -766,6 +771,7 @@ public sealed class MessagingService(
         {
             throw SafetyUnavailable();
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (ContentSafetyProviderUnavailableException)
         {
             throw SafetyUnavailable();
@@ -783,6 +789,8 @@ public sealed class MessagingService(
         {
             return (null, true);
         }
+
+        if (safetyResult.Decision == ContentSafetyDecision.Unavailable) throw SafetyUnavailable();
 
         var incidentResult = await store.RecordSafetyIncidentAsync(
             userId,

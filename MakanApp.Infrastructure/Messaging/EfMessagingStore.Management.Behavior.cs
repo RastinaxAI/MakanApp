@@ -37,6 +37,9 @@ public sealed partial class EfMessagingStore
         }
 
         ApplyParticipantVersion(target, expectedVersion);
+        if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
+            permissions.HasFlag(ConversationAdminPermission.PublishMessages) && !await IsVerifiedAdultAsync(targetUserId, cancellationToken))
+            throw ManagementNotAllowed();
         target.UpdateAdminPermissions(permissions);
         await SaveManagementAsync(cancellationToken);
         await AppendChangeAsync(
@@ -84,6 +87,9 @@ public sealed partial class EfMessagingStore
             throw PermissionRequired();
         }
 
+        await EnsurePersonalCreationSafetyAsync(actorUserId, conversation.Scope, conversation.Type, visibility, cancellationToken);
+        if (conversation.CreatedByUserId.HasValue)
+            await EnsurePersonalCreationSafetyAsync(conversation.CreatedByUserId.Value, conversation.Scope, conversation.Type, visibility, cancellationToken);
         if (!conversation.RowVersion.SequenceEqual(expectedVersion))
         {
             throw StateConflict();
@@ -201,6 +207,7 @@ public sealed partial class EfMessagingStore
         }
 
         var existing = await LoadActiveParticipantAsync(conversationId, actorUserId, cancellationToken);
+        await EnsurePersonalAudienceSafetyAsync(conversation, actorUserId, nowUtc, cancellationToken);
         if (existing is not null)
         {
             var existingResult = await LoadManagedResultAsync(conversation, true, cancellationToken);

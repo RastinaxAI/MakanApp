@@ -14,6 +14,7 @@ public sealed class Conversation
     public ConversationType Type { get; private set; }
     public ConversationScope Scope { get; private set; }
     public Guid? OrganizationId { get; private set; }
+    public Guid? AcademicClassId { get; private set; }
     public Guid? DirectUserLowId { get; private set; }
     public Guid? DirectUserHighId { get; private set; }
     public Guid? SavedOwnerUserId { get; private set; }
@@ -203,6 +204,15 @@ public sealed class Conversation
         }
 
         return new DirectUserPair(DirectUserLowId.Value, DirectUserHighId.Value);
+    }
+
+    public void BindAcademicClass(Guid classId)
+    {
+        if (classId == Guid.Empty || ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+            Type != ConversationType.Group || Scope != ConversationScope.Organization ||
+            AcademicClassId.HasValue && AcademicClassId != classId)
+            throw new InvalidOperationException("اتصال رسمی کلاس معتبر نیست.");
+        AcademicClassId = classId;
     }
 
     public long AllocateNextMessageSequence()

@@ -13,7 +13,9 @@ public sealed record MessagingProfileStoreRecord(
     bool TargetHasSavedRequester,
     bool IsSavedContact,
     bool IsFavorite,
-    bool HasEffectiveDirectBlock);
+    bool HasEffectiveDirectBlock,
+    bool IsProtectedAccount = false,
+    bool SafetyAllowsDirect = true);
 
 public sealed record UserContactStoreRecord(
     UserContact Contact,

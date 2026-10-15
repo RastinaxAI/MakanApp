@@ -21,6 +21,7 @@ public sealed partial class EfMessagingStore
         var organizationId = accessContext.OrganizationId;
         var membershipId = accessContext.MembershipId;
         var normalizedQuery = query.NormalizedQuery;
+        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
 
         var authorizedQuery =
             from message in dbContext.Messages.AsNoTracking()
@@ -35,6 +36,9 @@ public sealed partial class EfMessagingStore
                 into states
             from state in states.DefaultIfEmpty()
             where participant.Status == ConversationParticipantStatus.Active &&
+                  (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == userId &&
+                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   participant.EndedAtUtc == null &&
                   message.DeletedAtUtc == null &&
                   message.Sequence >= participant.HistoryVisibleFromSequence &&

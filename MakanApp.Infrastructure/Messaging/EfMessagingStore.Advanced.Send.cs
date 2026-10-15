@@ -33,6 +33,7 @@ public sealed partial class EfMessagingStore
             userId,
             accessContext,
             cancellationToken);
+        await EnsureActorCanMessageAsync(userId, nowUtc, cancellationToken);
         var existing = await dbContext.Messages
             .FromSqlInterpolated($"SELECT * FROM [messaging].[Messages] WITH (UPDLOCK, HOLDLOCK) WHERE [ConversationId] = {conversation.Id} AND [SenderUserId] = {userId} AND [ClientMessageId] = {command.ClientMessageId}")
             .SingleOrDefaultAsync(cancellationToken);
@@ -451,6 +452,7 @@ public sealed partial class EfMessagingStore
         DateTime nowUtc,
         CancellationToken cancellationToken)
     {
+        await EnsureActorCanMessageAsync(userId, nowUtc, cancellationToken);
         await EnsureCanReadAdvancedAsync(
             conversation,
             participant,
@@ -466,7 +468,21 @@ public sealed partial class EfMessagingStore
 
         if (conversation.Type is ConversationType.Group or ConversationType.Channel)
         {
-            var canPublish = conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
+            if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && dbContext.Database.CurrentTransaction is not null)
+            {
+                var members = await MessengerRelationshipQuery.ClassMembers(dbContext).Where(m => m.ClassId == conversation.AcademicClassId &&
+                    m.OrganizationId == conversation.OrganizationId).Select(m => m.UserId).Distinct().ToArrayAsync(cancellationToken);
+                await SynchronizeOfficialParticipantsAsync(conversation, userId, members, nowUtc, cancellationToken);
+            }
+            await EnsurePersonalAudienceSafetyAsync(conversation, userId, nowUtc, cancellationToken);
+            if (participant.Role == ConversationParticipantRole.Owner)
+                await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, cancellationToken);
+            if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
+                !await IsVerifiedAdultAsync(userId, cancellationToken)) throw ManagementNotAllowed();
+            var canPublish = conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic &&
+                conversation.AcademicClassId.HasValue && await MessengerRelationshipQuery.ClassMembers(dbContext).AnyAsync(m =>
+                    m.UserId == userId && m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId, cancellationToken) ||
+                conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
                 (conversation.Type == ConversationType.Channel
                     ? participant.Role == ConversationParticipantRole.Owner ||
                       participant.Role == ConversationParticipantRole.Admin &&

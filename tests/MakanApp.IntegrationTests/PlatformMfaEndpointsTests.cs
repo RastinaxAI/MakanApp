@@ -21,7 +21,7 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class PlatformMfaEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
+public sealed partial class PlatformMfaEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
 {
     private WebApplicationFactory<Program> _host = null!;
     private static int _sequence = 7_820_000;

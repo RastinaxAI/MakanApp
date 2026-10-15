@@ -20,7 +20,9 @@ public sealed partial class EfMessagingStore(
     IMessagingStore,
     IConversationManagementStore,
     IMessagingSafetyStore,
-    IModerationStore
+    IModerationStore,
+    IConversationInvitationStore,
+    IOfficialClassConversationStore
 {
     public Task<DirectConversationStoreResult> StartOrGetDirectConversationAsync(
         Guid actorUserId,

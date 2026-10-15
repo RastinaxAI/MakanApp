@@ -236,7 +236,11 @@ public sealed record PlatformModerationCaseDetail(
     PlatformAbuseReportEvidence? AbuseReport,
     PlatformSafetyIncidentEvidence? SafetyIncident,
     IReadOnlyCollection<PlatformModerationEvidenceItem> Attachments,
-    IReadOnlyCollection<PlatformModerationActionItem> Actions);
+    IReadOnlyCollection<PlatformModerationActionItem> Actions,
+    IReadOnlyCollection<PlatformModerationContextMessage>? ContextMessages = null);
+
+public sealed record PlatformModerationContextMessage(Guid MessageId, Guid SenderUserId, long Sequence, MessageKind Kind, string? Text, DateTime SentAtUtc);
+public sealed record PlatformModerationActionCommand(string ExpectedVersion, string Reason, ModerationActionType Action, DateTime? RestrictedUntilUtc = null);
 
 public sealed record PlatformModerationVersionCommand(string ExpectedVersion, string Reason);
 

@@ -160,6 +160,10 @@ Health یک مشاهده‌ی امن از وضعیت adapter و queue است، �
 
 ## منابع تکمیلی
 
+### افزوده قرارداد GAP-05
+
+جزئیات در [قرارداد ایمنی کودک](../architecture/GAP_05_MESSENGER_CHILD_SAFETY.md) است. detail پرونده `contextMessages` محدود به ۲ قبل/۲ بعد دارد؛ برای مرور عمومی چت استفاده نشود. درخواست `expanded-context` فقط پس از escalation/claim، با permission قوی‌تر، reason، نسخه و Step-up تازه ممکن است. `actions` فقط Warned/MessagingRestricted/Escalated را می‌پذیرد؛ برای محدودیت، پایان UTC لازم است. 422 ایمنی یعنی پیام معمولی منتشر نشده؛ ReviewRequired را Sent نمایش ندهید. `AGE_VERIFICATION_CONFLICT` نیازمند حل Owner است؛ فرم مدرسه نباید retry کور برای overwrite انجام دهد. Frontend یا نقش Manager هیچ راه میان‌بری برای مشاهده private Direct ندارد.
+
 - [تصمیم‌های محصول Backoffice](../architecture/BACKOFFICE_PRODUCT_DECISIONS.md)
 - [IAM و Owner](../architecture/STEP_15A_PLATFORM_IAM_OWNER_FOUNDATION.md)
 - [Organization/User/Provisioning](../architecture/STEP_15B_ORGANIZATION_USER_PROVISIONING.md)
