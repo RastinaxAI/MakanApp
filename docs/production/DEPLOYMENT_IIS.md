@@ -26,12 +26,27 @@ Swagger__Enabled=false
 Sms__Provider
 Sms__MeliPayamakOtp__ServiceToken          # فقط اگر MeliPayamakOtp انتخاب شده باشد
 Payments__Provider=Unavailable             # تا زمان adapter تأییدشده
-Messaging__ContentSafetyProvider=Unavailable
+Messaging__ContentSafetyProvider=Internal
+BackofficeSecurity__KeyRingPath=C:\ProgramData\MakanApp\BackofficeMfaKeys
 Notifications__PushProvider=Unavailable
 Notifications__SmsProvider=Unavailable
 ```
 
 `Identity__SecurityKey` حداقل ۳۲ بایت تصادفی و پایدار بین restartها باشد. rotation آن بدون برنامه، OTPهای ذخیره‌شده و token hashهای جدید را مختل می‌کند. connection string Production باید `Encrypt=True;TrustServerCertificate=False` داشته باشد و certificate SQL زنجیره‌ی قابل‌اعتماد داشته باشد.
+
+`MakanApp.Api/web.config` تنظیم Production و مسیر پیش‌فرض بالا را همراه Publish مخصوص IIS منتقل می‌کند؛ Linux/Docker این فایل IIS را مصرف نمی‌کنند و همچنان مسیر volume و محافظ معتبر خود را از environment می‌گیرند. `Messaging:ContentSafetyProvider=Internal` در `appsettings.Production.json` موجود است و کلید provider خارجی لازم ندارد. مقادیر SMS، اتصال SQL و Secretهای فعلی سرور را هنگام کپی فایل‌ها حفظ کنید؛ فایل نمونه جایگزین کامل کانفیگ اختصاصی سرور نیست.
+
+پیش از استفاده از MFA، پوشهٔ KeyRing را بیرون Publish و Storage بسازید و فقط به هویت App Pool و اپراتور مجاز دسترسی لازم بدهید. بدون certificate، محافظ Windows از DPAPI استفاده می‌کند؛ هویت App Pool باید ثابت و `Load User Profile` مناسب باشد. اگر MFA قبلاً فعال بوده، همان مسیر و کلیدهای قبلی را در `web.config` نگه دارید؛ تعویض مسیر، حذف پوشه یا کپی XML به ماشین دیگر بازیابی secretهای TOTP را تضمین نمی‌کند. این فایل پوشه/ACL یا تنظیمات App Pool سرور را خودکار ایجاد نمی‌کند. جزئیات در [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) است.
+
+## فایل SQL مایگریشن‌ها
+
+Migration تازه‌ای برای این تغییر کانفیگ لازم نیست. دو Migration موجود مرتبط با MFA و Child Safety عبارت‌اند از `20261015073418_AddPlatformTotpMfa` و `20261015091336_EnforceApprovedMessengerChildSafety`. اگر پایگاه هدف قدیمی‌تر از GAP-01 است، اسکریپت محدود این دو مرحله کافی نیست. خروجی کامل idempotent را بدون اتصال به دیتابیس می‌توان تولید کرد:
+
+```powershell
+dotnet ef migrations script 0 20261015091336_EnforceApprovedMessengerChildSafety --idempotent --project MakanApp.Infrastructure --startup-project MakanApp.Infrastructure --context MakanDbContext --configuration Debug --output .artifacts/deployment/migrations-idempotent.sql
+```
+
+تولید فایل SQL به معنی اجرای آن نیست. قبل از اجرا، اپراتور باید دیتابیس انتخاب‌شده، Backup و `__EFMigrationsHistory` را بررسی و تغییرات pending را بازبینی کند؛ idempotent فقط به history ثبت‌شده متکی است و اختلاف schema دستی را اصلاح نمی‌کند. اجرا با migration principal جدا و توقف در اولین خطا انجام شود؛ این دستور هیچ `database update` یا startup migration ندارد.
 
 ## ترتیب استقرار
 
