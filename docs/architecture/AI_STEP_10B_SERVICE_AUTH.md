@@ -1,5 +1,9 @@
 # STEP 10B — Service Authentication
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 Backend اکنون از طریق `IAiServiceCredentialProvider` یک credential داخلی مستقل از کاربر می‌گیرد. پیاده‌سازی `HmacAiServiceCredentialProvider` JWT کوتاه‌عمر HS256 با `kid`، issuer، audience، service subject، scope، timestamps و `jti` می‌سازد.
 
 AI Service تمام endpointهای business زیر `/api/v1/ai/*` را با `require_service_auth` محافظت می‌کند. health/readiness عمومی‌اند. verifier امضا، الگوریتم، key id، issuer، audience، scope، زمان و بیشینه عمر token را fail-closed بررسی می‌کند.

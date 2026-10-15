@@ -1,4 +1,4 @@
-"""ساخت HTML/PDF جداگانه دو کتاب بک‌اند از Markdownهای نسخه‌بندی‌شده."""
+"""ساخت HTML/PDF راهنما، مرجع API، مدل دیتابیس و قرارداد مصرف از منابع نگه‌داری‌شده."""
 
 from pathlib import Path
 from html import escape, unescape
@@ -15,6 +15,8 @@ WORK = ROOT / '.artifacts/backend-handbook'
 DOCUMENTS = {
     'backend-api-guide': ('راهنمای جامع پروژه و بک‌اند ماکان', 'شناخت محصول، معماری، جریان اجرا و توسعه'),
     'backend-api-reference': ('مرجع کامل API و قراردادهای ماکان', 'قرارداد انتقال، قواعد و مسیر کد هر عملیات'),
+    'database-current-structure': ('ساختار فعلی دیتابیس ماکان', 'فرهنگ مدل SQL Server، کلیدها، روابط و Migrationها'),
+    'frontend-contract': ('قرارداد جاری مصرف Backend ماکان', 'راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO'),
 }
 
 CSS = '''
@@ -38,8 +40,19 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 '''
 
 
+def document_path(name, extension):
+    if name == 'frontend-contract':
+        return ROOT / 'docs/frontend-contract' / ('README.md' if extension == 'md' else f'MakanApp-Frontend-Backend-Contract.{extension}')
+    return ROOT / 'docs' / f'{name}.{extension}'
+
+
 def html_document(name, markdown_module):
-    source = (ROOT / 'docs' / f'{name}.md').read_text(encoding='utf-8')
+    source = document_path(name, 'md').read_text(encoding='utf-8-sig')
+    if name == 'frontend-contract':
+        reference = (ROOT / 'docs/backend-api-reference.md').read_text(encoding='utf-8-sig')
+        # مرجعِ ضمیمه یک سطح عمیق‌تر است؛ لینک‌های سورس بدون تغییر معنا منتقل می‌شوند.
+        reference = re.sub(r'\]\((?!https?://|#)([^)]+)\)', lambda match: '](../' + match.group(1) + ')', reference)
+        source += '\n\n' + '\n'.join(reference.splitlines()[1:])
     baseline = re.search(r'main@([0-9a-f]{7,40})', source)
     reviewed = re.search(r'`(\d{4}-\d{2}-\d{2})`', source)
     if not baseline or not reviewed:
@@ -63,12 +76,16 @@ def html_document(name, markdown_module):
         body = body.replace(f'href="#{old_id}"', f'href="#{stable_id}"')
     for document in DOCUMENTS:
         body = body.replace(f'href="{document}.md', f'href="{document}.html')
+        body = body.replace(f'href="../{document}.md', f'href="../{document}.html')
     body = body.replace('<table>', '<div class="table-wrap"><table>').replace('</table>', '</table></div>')
     title, subtitle = DOCUMENTS[name]
     cover = f'''<section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>{title}</h1><p class="subtitle">{subtitle}</p><p class="edition">نسخه بررسی: <code>main @ {edition[0]}</code><br>تاریخ بازبینی: <code>{edition[1]}</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section>'''
     print_style = '@media print{.print-toc{display:block;break-after:page}.print-toc .toc{column-count:2;column-gap:9mm;font-size:8pt}.print-toc li{margin:4pt 0}.print-toc ul{padding-right:12pt}}'
     output = f'''<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{CSS}{print_style}</style></head><body><header class="readerbar"><span>ماکان · کتاب بک‌اند</span><div class="actions"><a href="{name}.pdf" download>دریافت PDF</a><button type="button" onclick="window.print()">چاپ</button></div></header><div class="layout"><aside aria-label="فهرست مطالب"><h2>فهرست مطالب</h2>{navigation}</aside><main>{cover}<section class="print-toc"><h2>فهرست کتاب</h2>{navigation}</section>{body}</main></div></body></html>'''
-    path = ROOT / 'docs' / f'{name}.html'
+    if name == 'frontend-contract':
+        output = output.replace('href="frontend-contract.pdf"', 'href="MakanApp-Frontend-Backend-Contract.pdf"')
+    output = output.replace('</style>', 'h2,h3,h4{overflow-wrap:anywhere;word-break:break-word}</style>')
+    path = document_path(name, 'html')
     path.write_text(output, encoding='utf-8')
     identifiers = re.findall(r'\bid="([^"]+)"', output)
     assert len(identifiers) == len(set(identifiers)), f'شناسه تکراری در {name}'
@@ -126,13 +143,14 @@ def pdf_document(name, html_path, headings, edition, browser, pdf):
     assert not blank, f'صفحات خالی: {blank}'
     assert not outside, f'متن بیرون صفحه: {outside[:8]}'
     title, subtitle = DOCUMENTS[name]
-    document.set_metadata({'title': title, 'author': 'MakanApp Backend', 'subject': subtitle + f'؛ main@{edition[0]}؛ {edition[1]}', 'creator': 'Markdown / Microsoft Edge / PyMuPDF'})
-    target = ROOT / 'docs' / f'{name}.pdf'
+    html_sha = hashlib.sha256(html_path.read_bytes()).hexdigest()
+    document.set_metadata({'title': title, 'author': 'MakanApp Backend', 'subject': subtitle + f'؛ main@{edition[0]}؛ {edition[1]}', 'keywords': 'source-html-sha256:' + html_sha, 'creator': 'Markdown / Microsoft Edge / PyMuPDF'})
+    target = document_path(name, 'pdf')
     document.save(target, garbage=1, deflate=True)
     selected = sorted(set([0, len(document) // 2, len(document) - 1] + [destinations[headings[i][1]] - 1 for i in (0, min(len(headings) - 1, 10))]))
     for index in selected:
         document[index].get_pixmap(matrix=pdf.Matrix(1.2, 1.2)).save(WORK / f'{name}-page-{index + 1}.png')
-    result = {'pdfPages': len(document), 'bookmarks': len(toc), 'blankPages': blank, 'textOutsidePage': outside, 'pdfBytes': target.stat().st_size, 'renderedPages': [index + 1 for index in selected]}
+    result = {'pdfPages': len(document), 'bookmarks': len(toc), 'blankPages': blank, 'textOutsidePage': outside, 'pdfBytes': target.stat().st_size, 'pdfSha256': hashlib.sha256(target.read_bytes()).hexdigest(), 'sourceHtmlSha256': html_sha, 'renderedPages': [index + 1 for index in selected]}
     document.close()
     return result
 

@@ -2,6 +2,8 @@
 
 اسکریپت `tools/production/load/k6-critical-apis.js` فقط باید روی staging یا SQL Server ایزوله اجرا شود. `CONFIRM_ISOLATED_STAGING=YES` gate اجباری است؛ Production مجاز نیست.
 
+انتشار جاری مالک Production/HTTP است و فایل appsettings.Staging.json حذف شده؛ این تغییر هیچ load test یا محیط staging تازه‌ای را فعال نمی‌کند. نام تاریخی پارامتر ایمنی ابزار حفظ شده است. نبود محیط ایزوله دلیل مجاز شدن تست بار روی Production نیست و تأیید استثنای HTTP، نتیجهٔ Performance یا smoke امن ایجاد نمی‌کند.
+
 ## داده و سناریوها
 
 - access tokenهای test برای نقش‌های Student، Manager و Platform operator.

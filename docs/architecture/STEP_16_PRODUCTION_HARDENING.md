@@ -1,5 +1,9 @@
 # STEP 16 — Production Hardening
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## تصمیم‌های معماری
 
 احراز هویت همچنان opaque bearer و server-authoritative است. access token کوتاه و قابل revoke است؛ refresh token تصادفی فقط یک بار مصرف می‌شود، raw آن ذخیره نمی‌شود و hash/HMAC آن در SQL Server قرار می‌گیرد. replay یک token مصرف‌شده کل session family را revoke و security event امن ثبت می‌کند.

@@ -1,5 +1,12 @@
 # MakanApp Non-AI Backend Final Gap Audit
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
+بازبینی مستندات جاری، ۲۰۲۶-۱۰-۱۵ از main@80d6a14: کاتالوگ واقعی ۲۸۴ عملیات در ۴۸ Controller، ۸۸ جدول و ۳۷ Migration دارد. آمار baseline پایین تاریخی است. GAP-01/04/05 در کد تکمیل شده‌اند؛ هدف فعلی Production/HTTP با استثناهای صریح مالک است و فایل Staging حذف شده. SQL handoff اصلاح‌شده با هفت آزمون مستقل LocalDB بررسی شده؛ این‌ها موفقیت سرور یا closure GAP-02 نیستند. readiness404 گزارش‌شده مشاهدهٔ تاریخی است؛ وضعیت زندهٔ امروز دوباره بررسی نشده. [آمادگی جاری](../production/PRODUCTION_READINESS.md)، [runbook](../production/DEPLOYMENT_IIS.md) و [مرجع API](../backend-api-reference.md) را مبنا قرار دهید.
+
+
 تاریخ ممیزی: ۲۰۲۶-۱۰-۱۵، منطقه زمانی `Asia/Tehran`. دامنه: فقط Backend فعلی؛ بدون تغییر محصول، تست، migration، معماری، Frontend یا AI.
 
 به‌روزرسانی محدود پس از ممیزی، ۲۰۲۶-۱۰-۱۵: **GAP-01 در کد بسته شد**. شرح ممیزی و اعداد baseline در بخش‌های 2 و 3 تاریخی باقی مانده‌اند؛ فقط شواهد، وابستگی‌ها و نتیجه GAP-01 در این نسخه اصلاح شده‌اند. [سند پیاده‌سازی و قراردادها](../architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) مرجع جزئیات است. این closure تأیید Production و تغییر اولویت سایر gapها نیست.
@@ -151,7 +158,7 @@ restore موفق و dependencyها up-to-date بودند؛ build موفق با `
 | Area | Status | Evidence | Automated tests | Real provider? | Operationally validated? | Severity | Next action |
 |---|---|---|---|---|---|---|---|
 | Auth/session/profile/revocation | COMPLETE_IN_CODE | E02، E24 | Identity و RefreshToken | نیاز به SQL؛ OTP ردیف بعد | LocalDB بله؛ سرور خیر | — | حفظ coverage و smoke هدف |
-| MeliPayamak managed OTP | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E03 | HTTP contract ساختگی + API OTP | adapter واقعی؛ نمونه Prod unavailable | smoke زنده قابل استناد پیدا نشد | P0 | GAP-02 |
+| MeliPayamak managed OTP | IMPLEMENTED_BUT_OPERATIONAL_VALIDATION_PENDING | E03 | HTTP stub و API OTP؛ بدون SMS واقعی در suite | adapter واقعی؛ فایل خصوصی/نمونه MeliPayamakOtp، پایه Unavailable | smoke سرور در این تحویل اجرا/تأیید نشده | P0 | GAP-02 |
 | Workspace/membership/invitation acceptance | COMPLETE_IN_CODE | E04 | tenant، نقش، پذیرش هم‌زمان | SQL واقعی در تست | عملیاتی خیر | — | onboarding از مسیر مجاز |
 | OrganizationPerson onboarding | COMPLETE_IN_CODE | E05، E27 | ساخت/get/search/update/end و link از API؛ بدون ساخت ضمنی حساب/نقش | provider مطرح نیست | SQL ایزوله بله؛ مدرسه واقعی خیر | — | GAP-02 برای smoke هدف |
 | Guardian read/select/recheck | COMPLETE_IN_CODE | E06، E27 | revoked/pending/cross-org؛ درخواست بعد از لغو API | provider مطرح نیست | رابطه از workflow جدید API | — | حفظ fail-closed |

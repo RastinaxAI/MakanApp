@@ -1,6 +1,6 @@
 # قرارداد تحویل Backoffice به Frontend
 
-این سند از baseline ورودی STEP 15E یعنی `main@eebf02c` در تاریخ `2026-10-13` استخراج و با پیاده‌سازی نهایی همان مرحله تکمیل شده است. این سند فقط قرارداد مصرف API را توضیح می‌دهد و مجوز ساخت یا تغییر frontend نیست.
+بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14، شامل Backoffice نهایی، TOTP واقعی GAP-04 و Child Safety مصوب GAP-05 است. گزارش‌های STEP 15E تاریخچهٔ همان مرحله‌اند. این سند فقط قرارداد مصرف API است و مجوز ساخت یا تغییر frontend نیست؛ [مرجع جاری HTTP/DTO](../backend-api-reference.md) همهٔ endpointهای این حوزه را دارد.
 
 ## مرز محصول
 
@@ -40,7 +40,15 @@ bootstrap اولین Owner یک فرمان عمومی HTTP نیست. اجرای 
 | Notification Ops | `platform.notifications.read` | شمارنده‌ها و failure metadata امن |
 | System Ops | `platform.operations.read` | job summary و health |
 
-برای AI منو یا route نسازید. backend فقط در health مقدار `NotIntegrated/DependencyPending` برمی‌گرداند و endpoint AI ندارد.
+برای AI منوی مدیریتی، prompt viewer یا دسترسی تازه نسازید. Backend در حوزهٔ مستقل AI دوازده API دارد، اما API مدیریتی Backoffice AI و مجوز عمومی محتوا از این نقش‌ها ایجاد نشده است. real E2E و RAG lifecycle بسته‌شده فرض نشوند؛ اظهارات legacy در STEP 15E متعلق به همان زمان‌اند.
+
+## جریان واقعی MFA و Step-up پس از GAP-04
+
+روش جاری TOTP Authenticator و recovery است؛ SMS ورود MFA نیست. در MFA_REQUIRED وضعیت GET /api/admin/v1/mfa خوانده شود؛ enrollment و enrollment/confirm عامل را فعال می‌کنند. برای عامل موجود verify و برای recovery مسیر recovery/verify اختصاصی وجود دارد. recovery-codes/regenerate و users/{userId}/reset فقط با قواعد سروری مجازند. مسیرها زیر /api/admin/v1/mfa و schema دقیق در مرجع جاری است.
+
+SetupUri و recovery code فقط در پاسخ اختصاصی یک‌بار نمایش داده می‌شوند؛ در telemetry، URL، storage ناامن یا screenshot مشترک نمانند. assurance و freshness به همان Session تعلق دارند؛ refresh یا نشست دیگر step-up تازه نمی‌سازد. PLATFORM_STEP_UP_REQUIRED به verify تازه و سپس retry همان عملیات با قرارداد idempotency مربوط نیاز دارد. counter/replay/lockout در SQL اعمال می‌شود؛ کد مصرف‌شده را کور retry نکنید.
+
+MFA_UNAVAILABLE نشانهٔ نبود محافظ/key ring قابل استفاده است، نه مجوز عبور. مسیر، identity و DPAPI/certificate را اپراتور حفظ کند. [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) و [استقرار](../production/DEPLOYMENT_IIS.md).
 
 ## الگوی list/detail
 

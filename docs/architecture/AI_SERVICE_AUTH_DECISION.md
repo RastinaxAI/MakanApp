@@ -1,5 +1,9 @@
 # تصمیم Service Authentication برای Backend ↔ AI
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## تصمیم
 
 برای نسخه اول integration از JWT داخلی کوتاه‌عمر با امضای `HS256` استفاده می‌شود. این انتخاب موقت و عملی با dependencyهای فعلی است؛ کلید asymmetric یا workload identity در محیط orchestration بالغ‌تر گزینه ترجیحی آینده است.

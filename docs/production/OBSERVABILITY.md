@@ -4,6 +4,8 @@
 
 logها structured هستند و سطح Production پیش‌فرض `Information` با overrideهای `Microsoft.AspNetCore=Warning` و `Microsoft.EntityFrameworkCore.Database.Command=Warning` است. `X-Correlation-ID` امن با سقف ۶۴ نویسه پذیرفته یا از trace جاری تولید می‌شود و در پاسخ و `ProblemDetails.traceId` برمی‌گردد.
 
+با فعال شدن Hosting:AllowInsecureHttp یا Database:AllowUntrustedServerCertificate در Production، startup هشدار ثابت و بدون مقدار secret ثبت می‌کند. در انتشار فعلی این دو استثنا تأییدشده‌اند؛ دیدن هشدار به معنی TLS امن یا سلامت SQL نیست. Event Viewer/IIS برای خطای startup بررسی شود؛ چاپ appsettings.Production.json یا URL ملی‌پیامک برای عیب‌یابی مجاز نیست.
+
 هیچ log جدیدی نباید OTP، access/refresh token، شماره کامل، متن private chat، moderation evidence، payment secret/reference خام، push token، AI payload یا connection string را ثبت کند. شناسه‌های فنی کنترل‌شده برای عیب‌یابی مجازند.
 
 ## Metrics و tracing

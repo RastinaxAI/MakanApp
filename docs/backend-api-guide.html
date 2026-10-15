@@ -16,248 +16,312 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 @media(max-width:1000px){.layout{display:block;padding:0 12px}aside{position:static;max-height:360px;margin-bottom:18px}main{padding:25px 22px}.readerbar{padding:12px}.brand{font-size:12px}}
 @page{size:A4;margin:16mm 14mm 17mm}
 @media print{body{background:#fff;font-size:10pt;line-height:1.75;-webkit-print-color-adjust:exact;print-color-adjust:exact}.readerbar,aside{display:none}.layout{display:block;margin:0;padding:0;max-width:none}main{border:0;border-radius:0;padding:0}.cover{break-after:page;min-height:235mm;padding-top:18mm}.cover h1{font-size:30pt}.subtitle{font-size:16pt}.edition{font-size:11pt}.reading-note{font-size:10pt}h1{font-size:22pt}h2{font-size:17pt;margin-top:24pt}h3{font-size:13pt;margin-top:18pt}h4{font-size:11pt}h1,h2,h3,h4{break-after:avoid}p,li{orphans:3;widows:3}table{font-size:8.5pt;line-height:1.7}th,td{padding:6pt}table code{font-size:7.6pt}thead{display:table-header-group}tr{break-inside:avoid}.table-wrap{overflow:visible;margin:12pt 0}pre{padding:11pt;font-size:8pt;break-inside:auto}pre code{font-size:8pt;line-height:1.6}code{font-size:8pt}a{color:#145e68}.cover p{margin:16pt 0}}
-@media print{.print-toc{display:block;break-after:page}.print-toc .toc{column-count:2;column-gap:9mm;font-size:8pt}.print-toc li{margin:4pt 0}.print-toc ul{padding-right:12pt}}</style></head><body><header class="readerbar"><span>ماکان · کتاب بک‌اند</span><div class="actions"><a href="backend-api-guide.pdf" download>دریافت PDF</a><button type="button" onclick="window.print()">چاپ</button></div></header><div class="layout"><aside aria-label="فهرست مطالب"><h2>فهرست مطالب</h2><div class="toc">
+@media print{.print-toc{display:block;break-after:page}.print-toc .toc{column-count:2;column-gap:9mm;font-size:8pt}.print-toc li{margin:4pt 0}.print-toc ul{padding-right:12pt}}h2,h3,h4{overflow-wrap:anywhere;word-break:break-word}</style></head><body><header class="readerbar"><span>ماکان · کتاب بک‌اند</span><div class="actions"><a href="backend-api-guide.pdf" download>دریافت PDF</a><button type="button" onclick="window.print()">چاپ</button></div></header><div class="layout"><aside aria-label="فهرست مطالب"><h2>فهرست مطالب</h2><div class="toc">
 <ul>
-<li><a href="#heading-1">فهرست مطالب</a></li>
-<li><a href="#heading-2">قابلیت‌ها و معماری</a></li>
-<li><a href="#heading-3">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</a><ul>
-<li><a href="#heading-4">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</a></li>
-<li><a href="#heading-5">برنامه مطالعه و اولین کار عملی</a></li>
+<li><a href="#heading-1">وضعیت جاری و تغییرات مؤثر بر مطالعه</a></li>
+<li><a href="#heading-2">تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵</a></li>
+<li><a href="#heading-3">فهرست مطالب</a></li>
+<li><a href="#heading-4">قابلیت‌ها و معماری</a></li>
+<li><a href="#heading-5">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</a><ul>
+<li><a href="#heading-6">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</a></li>
+<li><a href="#heading-7">برنامه مطالعه و اولین کار عملی</a></li>
 </ul>
 </li>
-<li><a href="#heading-6">واژه‌نامه مدل و شناسه‌ها</a><ul>
-<li><a href="#heading-7">مثال چندسازمانی</a></li>
+<li><a href="#heading-8">واژه‌نامه مدل و شناسه‌ها</a><ul>
+<li><a href="#heading-9">مثال چندسازمانی</a></li>
 </ul>
 </li>
-<li><a href="#heading-8">نقشه کد و مسئولیت لایه‌ها</a><ul>
-<li><a href="#heading-9">از Controller به implementation</a></li>
-<li><a href="#heading-10">جای درست یک تغییر</a></li>
+<li><a href="#heading-10">نقشه کد و مسئولیت لایه‌ها</a><ul>
+<li><a href="#heading-11">از Controller به implementation</a></li>
+<li><a href="#heading-12">جای درست یک تغییر</a></li>
 </ul>
 </li>
-<li><a href="#heading-11">startup، Dependency Injection و مسیر هر درخواست</a><ul>
-<li><a href="#heading-12">طول عمر سرویس‌ها</a></li>
-<li><a href="#heading-13">ترتیب pipeline</a></li>
-<li><a href="#heading-14">نشست این پروژه چگونه کار می‌کند؟</a></li>
-<li><a href="#heading-15">مجوز به صورت مرحله‌ای</a></li>
-<li><a href="#heading-16">خطا چگونه به HTTP تبدیل می‌شود؟</a></li>
+<li><a href="#heading-13">startup، Dependency Injection و مسیر هر درخواست</a><ul>
+<li><a href="#heading-14">طول عمر سرویس‌ها</a></li>
+<li><a href="#heading-15">ترتیب pipeline</a></li>
+<li><a href="#heading-16">نشست این پروژه چگونه کار می‌کند؟</a></li>
+<li><a href="#heading-17">مجوز به صورت مرحله‌ای</a></li>
+<li><a href="#heading-18">خطا چگونه به HTTP تبدیل می‌شود؟</a></li>
 </ul>
 </li>
-<li><a href="#heading-17">راه‌اندازی محلی</a><ul>
-<li><a href="#heading-18">پیش‌نیاز و بررسی اولیه</a></li>
-<li><a href="#heading-19">انتخاب دیتابیس توسعه</a></li>
-<li><a href="#heading-20">اعمال migration و اجرا</a></li>
+<li><a href="#heading-19">راه‌اندازی محلی</a><ul>
+<li><a href="#heading-20">پیش‌نیاز و بررسی اولیه</a></li>
+<li><a href="#heading-21">انتخاب دیتابیس توسعه</a></li>
+<li><a href="#heading-22">اعمال migration و اجرا</a></li>
 </ul>
 </li>
-<li><a href="#heading-21">تنظیمات</a></li>
-<li><a href="#heading-22">قرارداد مشترک HTTP</a><ul>
-<li><a href="#heading-23">استفاده در PowerShell و Postman</a></li>
+<li><a href="#heading-23">تنظیمات</a></li>
+<li><a href="#heading-24">قرارداد مشترک HTTP</a><ul>
+<li><a href="#heading-25">استفاده در PowerShell و Postman</a></li>
 </ul>
 </li>
-<li><a href="#heading-24">ورود و پروفایل</a><ul>
-<li><a href="#heading-25">دریافت OTP و نشست</a></li>
-<li><a href="#heading-26">تکمیل پروفایل و خروج</a></li>
+<li><a href="#heading-26">ورود و پروفایل</a><ul>
+<li><a href="#heading-27">دریافت OTP و نشست</a></li>
+<li><a href="#heading-28">تکمیل پروفایل و خروج</a></li>
 </ul>
 </li>
-<li><a href="#heading-27">فضای کاری و سرپرست</a><ul>
-<li><a href="#heading-28">شناسه‌ها را با هم اشتباه نگیرید</a></li>
-<li><a href="#heading-29">انتخاب فضای شخصی یا سازمانی</a></li>
-<li><a href="#heading-30">دعوت و فرزند</a></li>
+<li><a href="#heading-29">فضای کاری و سرپرست</a><ul>
+<li><a href="#heading-30">شناسه‌ها را با هم اشتباه نگیرید</a></li>
+<li><a href="#heading-31">انتخاب فضای شخصی یا سازمانی</a></li>
+<li><a href="#heading-32">دعوت و فرزند</a></li>
 </ul>
 </li>
-<li><a href="#heading-31">آموزش و حضور و غیاب</a><ul>
-<li><a href="#heading-32">مجوزهای اصلی</a></li>
-<li><a href="#heading-33">ساخت کلاس</a></li>
-<li><a href="#heading-34">جلسه و برنامه تکرارشونده</a></li>
-<li><a href="#heading-35">ثبت و اصلاح حضور و غیاب</a></li>
+<li><a href="#heading-33">آموزش و حضور و غیاب</a><ul>
+<li><a href="#heading-34">مجوزهای اصلی</a></li>
+<li><a href="#heading-35">ساخت کلاس</a></li>
+<li><a href="#heading-36">جلسه و برنامه تکرارشونده</a></li>
+<li><a href="#heading-37">ثبت و اصلاح حضور و غیاب</a></li>
 </ul>
 </li>
-<li><a href="#heading-36">تکلیف و ارزیابی</a><ul>
-<li><a href="#heading-37">ساخت و انتشار</a></li>
-<li><a href="#heading-38">پاسخ و تحویل دانش‌آموز</a></li>
-<li><a href="#heading-39">ارزیابی و انتشار نمره</a></li>
+<li><a href="#heading-38">تکلیف و ارزیابی</a><ul>
+<li><a href="#heading-39">ساخت و انتشار</a></li>
+<li><a href="#heading-40">پاسخ و تحویل دانش‌آموز</a></li>
+<li><a href="#heading-41">ارزیابی و انتشار نمره</a></li>
 </ul>
 </li>
-<li><a href="#heading-40">آزمون و انتشار نمره</a><ul>
-<li><a href="#heading-41">طراحی و نسخه‌بندی آزمون</a></li>
-<li><a href="#heading-42">شروع، ذخیره پاسخ و نهایی‌سازی</a></li>
-<li><a href="#heading-43">تصحیح و انتشار نمره آزمون</a></li>
+<li><a href="#heading-42">آزمون و انتشار نمره</a><ul>
+<li><a href="#heading-43">طراحی و نسخه‌بندی آزمون</a></li>
+<li><a href="#heading-44">شروع، ذخیره پاسخ و نهایی‌سازی</a></li>
+<li><a href="#heading-45">تصحیح و انتشار نمره آزمون</a></li>
 </ul>
 </li>
-<li><a href="#heading-44">فایل‌ها</a></li>
-<li><a href="#heading-45">پیام‌رسانی و همگام‌سازی</a><ul>
-<li><a href="#heading-46">آغاز گفت‌وگو و مجوز ارتباط</a></li>
-<li><a href="#heading-47">گروه، کانال و پیام</a></li>
-<li><a href="#heading-48">تاریخچه، Delta و رسید خواندن</a></li>
-<li><a href="#heading-49">SignalR</a></li>
-<li><a href="#heading-50">جست‌وجو، مسدودسازی و گزارش</a></li>
+<li><a href="#heading-46">فایل‌ها</a></li>
+<li><a href="#heading-47">پیام‌رسانی و همگام‌سازی</a><ul>
+<li><a href="#heading-48">آغاز گفت‌وگو و مجوز ارتباط</a></li>
+<li><a href="#heading-49">Contacts، Privacy و Discovery</a></li>
+<li><a href="#heading-50">گروه، کانال و پیام</a></li>
+<li><a href="#heading-51">رفتار و state گفتگو در STEP 14C</a></li>
+<li><a href="#heading-52">تاریخچه، Delta و رسید خواندن</a></li>
+<li><a href="#heading-53">SignalR</a></li>
+<li><a href="#heading-54">جست‌وجو، مسدودسازی و گزارش</a></li>
+<li><a href="#heading-55">تکمیل Messenger در STEP 14E</a></li>
 </ul>
 </li>
-<li><a href="#heading-51">خطاها و تلاش مجدد</a><ul>
-<li><a href="#heading-52">قراردادهای retry</a></li>
+<li><a href="#heading-56">خطاها و تلاش مجدد</a><ul>
+<li><a href="#heading-57">قراردادهای retry</a></li>
 </ul>
 </li>
-<li><a href="#heading-53">داشبوردهای نقش‌محور</a></li>
-<li><a href="#heading-54">گزارش‌های تفصیلی نقش‌محور</a></li>
-<li><a href="#heading-55">نقشه persistence و مرز تراکنش‌ها</a><ul>
-<li><a href="#heading-56">سه لایه تضمین درستی داده</a></li>
-<li><a href="#heading-57">rowversion، revision و operationId سه چیز متفاوت‌اند</a></li>
-<li><a href="#heading-58">نمونه‌های واقعی تراکنش و locking</a></li>
-<li><a href="#heading-59">migration و محیط توسعه</a></li>
+<li><a href="#heading-58">داشبوردهای نقش‌محور</a></li>
+<li><a href="#heading-59">گزارش‌های تفصیلی نقش‌محور</a></li>
+<li><a href="#heading-60">نقشه persistence و مرز تراکنش‌ها</a><ul>
+<li><a href="#heading-61">سه لایه تضمین درستی داده</a></li>
+<li><a href="#heading-62">rowversion، revision و operationId سه چیز متفاوت‌اند</a></li>
+<li><a href="#heading-63">نمونه‌های واقعی تراکنش و locking</a></li>
+<li><a href="#heading-64">migration و محیط توسعه</a></li>
 </ul>
 </li>
-<li><a href="#heading-60">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</a><ul>
-<li><a href="#heading-61">۱. درخواست و تأیید OTP</a></li>
-<li><a href="#heading-62">۲. آخرین ظرفیت کلاس</a></li>
-<li><a href="#heading-63">۳. تحویل تکلیف و انتشار نمره</a></li>
-<li><a href="#heading-64">۴. پاسخ آزمون تا نتیجه رسمی</a></li>
-<li><a href="#heading-65">۵. ارسال پیام، Delta و SignalR</a></li>
-<li><a href="#heading-66">۶. یک گزارش نقش‌محور</a></li>
+<li><a href="#heading-65">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</a><ul>
+<li><a href="#heading-66">۱. درخواست و تأیید OTP</a></li>
+<li><a href="#heading-67">۲. آخرین ظرفیت کلاس</a></li>
+<li><a href="#heading-68">۳. تحویل تکلیف و انتشار نمره</a></li>
+<li><a href="#heading-69">۴. پاسخ آزمون تا نتیجه رسمی</a></li>
+<li><a href="#heading-70">۵. ارسال پیام، Delta و SignalR</a></li>
+<li><a href="#heading-71">۶. یک گزارش نقش‌محور</a></li>
 </ul>
 </li>
-<li><a href="#heading-67">روش توسعه و عیب‌یابی برای عضو جدید تیم</a><ul>
-<li><a href="#heading-68">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</a></li>
-<li><a href="#heading-69">تست‌ها چه چیزی را ثابت می‌کنند؟</a></li>
-<li><a href="#heading-70">مسیر عیب‌یابی یک درخواست ناموفق</a></li>
-<li><a href="#heading-71">مرز میزبانی و موارد لازم برای تحویل عملیاتی</a></li>
+<li><a href="#heading-72">روش توسعه و عیب‌یابی برای عضو جدید تیم</a><ul>
+<li><a href="#heading-73">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</a></li>
+<li><a href="#heading-74">تست‌ها چه چیزی را ثابت می‌کنند؟</a></li>
+<li><a href="#heading-75">مسیر عیب‌یابی یک درخواست ناموفق</a></li>
+<li><a href="#heading-76">مرز میزبانی و موارد لازم برای تحویل عملیاتی</a></li>
 </ul>
 </li>
-<li><a href="#heading-72">تست و عیب‌یابی</a><ul>
-<li><a href="#heading-73">اجرای validation</a></li>
-<li><a href="#heading-74">عیب‌یابی سریع</a></li>
+<li><a href="#heading-77">تست و عیب‌یابی</a><ul>
+<li><a href="#heading-78">اجرای validation</a></li>
+<li><a href="#heading-79">عیب‌یابی سریع</a></li>
 </ul>
 </li>
-<li><a href="#heading-75">محدودیت‌ها و مسیر مطالعه</a><ul>
-<li><a href="#heading-76">مرز قابلیت موجود</a></li>
-<li><a href="#heading-77">دیتابیس و منابع کد</a></li>
+<li><a href="#heading-80">محدودیت‌ها و مسیر مطالعه</a><ul>
+<li><a href="#heading-81">مرز قابلیت موجود</a></li>
+<li><a href="#heading-82">دیتابیس و منابع کد</a></li>
 </ul>
 </li>
-<li><a href="#heading-78">نگهداری همین راهنما و مرجع</a></li>
-<li><a href="#heading-79">شناسنامه بازبینی و نتیجه اعتبارسنجی</a></li>
+<li><a href="#heading-83">نگهداری همین راهنما و مرجع</a></li>
+<li><a href="#heading-84">شناسنامه تاریخی تحویل ۲۰۲۶-۱۰-۱۲ و نتیجه همان اجرا</a></li>
+<li><a href="#heading-85">خروجی غیرهم‌زمان گزارش‌ها — STEP 11C</a></li>
+<li><a href="#heading-86">اعلان‌های داخلی — STEP 12A</a></li>
+<li><a href="#heading-87">تنظیمات و کانال‌های ارسال اعلان — STEP 12B</a></li>
+<li><a href="#heading-88">اشتراک، دسترسی تجاری و ظرفیت — STEP 13A</a></li>
+<li><a href="#heading-89">سفارش و پرداخت — STEP 13B</a></li>
+<li><a href="#heading-90">تعدیل پیام و ایمنی کودک — STEP 14D</a></li>
+<li><a href="#heading-91">Backoffice پلتفرم — STEP 15E</a><ul>
+<li><a href="#heading-92">قرارداد IAM و Audit</a></li>
+<li><a href="#heading-93">Organization، User و Provisioning</a></li>
+<li><a href="#heading-94">Education، Messaging Metadata و PlatformSafety</a></li>
+<li><a href="#heading-95">Commerce، Finance و Operations</a></li>
+<li><a href="#heading-96">صفحه‌بندی، خطا و رفتار حساس</a></li>
+</ul>
+</li>
+<li><a href="#heading-97">سخت‌سازی Production — STEP 16</a><ul>
+<li><a href="#heading-98">نشست و refresh token</a></li>
+<li><a href="#heading-99">Health و رفتار میزبانی</a></li>
+</ul>
+</li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>راهنمای جامع پروژه و بک‌اند ماکان</h1><p class="subtitle">شناخت محصول، معماری، جریان اجرا و توسعه</p><p class="edition">نسخه بررسی: <code>main @ f0ff3be</code><br>تاریخ بازبینی: <code>2026-10-12</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>راهنمای جامع پروژه و بک‌اند ماکان</h1><p class="subtitle">شناخت محصول، معماری، جریان اجرا و توسعه</p><p class="edition">نسخه بررسی: <code>main @ 80d6a14</code><br>تاریخ بازبینی: <code>2026-10-15</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
-<li><a href="#heading-1">فهرست مطالب</a></li>
-<li><a href="#heading-2">قابلیت‌ها و معماری</a></li>
-<li><a href="#heading-3">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</a><ul>
-<li><a href="#heading-4">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</a></li>
-<li><a href="#heading-5">برنامه مطالعه و اولین کار عملی</a></li>
+<li><a href="#heading-1">وضعیت جاری و تغییرات مؤثر بر مطالعه</a></li>
+<li><a href="#heading-2">تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵</a></li>
+<li><a href="#heading-3">فهرست مطالب</a></li>
+<li><a href="#heading-4">قابلیت‌ها و معماری</a></li>
+<li><a href="#heading-5">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</a><ul>
+<li><a href="#heading-6">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</a></li>
+<li><a href="#heading-7">برنامه مطالعه و اولین کار عملی</a></li>
 </ul>
 </li>
-<li><a href="#heading-6">واژه‌نامه مدل و شناسه‌ها</a><ul>
-<li><a href="#heading-7">مثال چندسازمانی</a></li>
+<li><a href="#heading-8">واژه‌نامه مدل و شناسه‌ها</a><ul>
+<li><a href="#heading-9">مثال چندسازمانی</a></li>
 </ul>
 </li>
-<li><a href="#heading-8">نقشه کد و مسئولیت لایه‌ها</a><ul>
-<li><a href="#heading-9">از Controller به implementation</a></li>
-<li><a href="#heading-10">جای درست یک تغییر</a></li>
+<li><a href="#heading-10">نقشه کد و مسئولیت لایه‌ها</a><ul>
+<li><a href="#heading-11">از Controller به implementation</a></li>
+<li><a href="#heading-12">جای درست یک تغییر</a></li>
 </ul>
 </li>
-<li><a href="#heading-11">startup، Dependency Injection و مسیر هر درخواست</a><ul>
-<li><a href="#heading-12">طول عمر سرویس‌ها</a></li>
-<li><a href="#heading-13">ترتیب pipeline</a></li>
-<li><a href="#heading-14">نشست این پروژه چگونه کار می‌کند؟</a></li>
-<li><a href="#heading-15">مجوز به صورت مرحله‌ای</a></li>
-<li><a href="#heading-16">خطا چگونه به HTTP تبدیل می‌شود؟</a></li>
+<li><a href="#heading-13">startup، Dependency Injection و مسیر هر درخواست</a><ul>
+<li><a href="#heading-14">طول عمر سرویس‌ها</a></li>
+<li><a href="#heading-15">ترتیب pipeline</a></li>
+<li><a href="#heading-16">نشست این پروژه چگونه کار می‌کند؟</a></li>
+<li><a href="#heading-17">مجوز به صورت مرحله‌ای</a></li>
+<li><a href="#heading-18">خطا چگونه به HTTP تبدیل می‌شود؟</a></li>
 </ul>
 </li>
-<li><a href="#heading-17">راه‌اندازی محلی</a><ul>
-<li><a href="#heading-18">پیش‌نیاز و بررسی اولیه</a></li>
-<li><a href="#heading-19">انتخاب دیتابیس توسعه</a></li>
-<li><a href="#heading-20">اعمال migration و اجرا</a></li>
+<li><a href="#heading-19">راه‌اندازی محلی</a><ul>
+<li><a href="#heading-20">پیش‌نیاز و بررسی اولیه</a></li>
+<li><a href="#heading-21">انتخاب دیتابیس توسعه</a></li>
+<li><a href="#heading-22">اعمال migration و اجرا</a></li>
 </ul>
 </li>
-<li><a href="#heading-21">تنظیمات</a></li>
-<li><a href="#heading-22">قرارداد مشترک HTTP</a><ul>
-<li><a href="#heading-23">استفاده در PowerShell و Postman</a></li>
+<li><a href="#heading-23">تنظیمات</a></li>
+<li><a href="#heading-24">قرارداد مشترک HTTP</a><ul>
+<li><a href="#heading-25">استفاده در PowerShell و Postman</a></li>
 </ul>
 </li>
-<li><a href="#heading-24">ورود و پروفایل</a><ul>
-<li><a href="#heading-25">دریافت OTP و نشست</a></li>
-<li><a href="#heading-26">تکمیل پروفایل و خروج</a></li>
+<li><a href="#heading-26">ورود و پروفایل</a><ul>
+<li><a href="#heading-27">دریافت OTP و نشست</a></li>
+<li><a href="#heading-28">تکمیل پروفایل و خروج</a></li>
 </ul>
 </li>
-<li><a href="#heading-27">فضای کاری و سرپرست</a><ul>
-<li><a href="#heading-28">شناسه‌ها را با هم اشتباه نگیرید</a></li>
-<li><a href="#heading-29">انتخاب فضای شخصی یا سازمانی</a></li>
-<li><a href="#heading-30">دعوت و فرزند</a></li>
+<li><a href="#heading-29">فضای کاری و سرپرست</a><ul>
+<li><a href="#heading-30">شناسه‌ها را با هم اشتباه نگیرید</a></li>
+<li><a href="#heading-31">انتخاب فضای شخصی یا سازمانی</a></li>
+<li><a href="#heading-32">دعوت و فرزند</a></li>
 </ul>
 </li>
-<li><a href="#heading-31">آموزش و حضور و غیاب</a><ul>
-<li><a href="#heading-32">مجوزهای اصلی</a></li>
-<li><a href="#heading-33">ساخت کلاس</a></li>
-<li><a href="#heading-34">جلسه و برنامه تکرارشونده</a></li>
-<li><a href="#heading-35">ثبت و اصلاح حضور و غیاب</a></li>
+<li><a href="#heading-33">آموزش و حضور و غیاب</a><ul>
+<li><a href="#heading-34">مجوزهای اصلی</a></li>
+<li><a href="#heading-35">ساخت کلاس</a></li>
+<li><a href="#heading-36">جلسه و برنامه تکرارشونده</a></li>
+<li><a href="#heading-37">ثبت و اصلاح حضور و غیاب</a></li>
 </ul>
 </li>
-<li><a href="#heading-36">تکلیف و ارزیابی</a><ul>
-<li><a href="#heading-37">ساخت و انتشار</a></li>
-<li><a href="#heading-38">پاسخ و تحویل دانش‌آموز</a></li>
-<li><a href="#heading-39">ارزیابی و انتشار نمره</a></li>
+<li><a href="#heading-38">تکلیف و ارزیابی</a><ul>
+<li><a href="#heading-39">ساخت و انتشار</a></li>
+<li><a href="#heading-40">پاسخ و تحویل دانش‌آموز</a></li>
+<li><a href="#heading-41">ارزیابی و انتشار نمره</a></li>
 </ul>
 </li>
-<li><a href="#heading-40">آزمون و انتشار نمره</a><ul>
-<li><a href="#heading-41">طراحی و نسخه‌بندی آزمون</a></li>
-<li><a href="#heading-42">شروع، ذخیره پاسخ و نهایی‌سازی</a></li>
-<li><a href="#heading-43">تصحیح و انتشار نمره آزمون</a></li>
+<li><a href="#heading-42">آزمون و انتشار نمره</a><ul>
+<li><a href="#heading-43">طراحی و نسخه‌بندی آزمون</a></li>
+<li><a href="#heading-44">شروع، ذخیره پاسخ و نهایی‌سازی</a></li>
+<li><a href="#heading-45">تصحیح و انتشار نمره آزمون</a></li>
 </ul>
 </li>
-<li><a href="#heading-44">فایل‌ها</a></li>
-<li><a href="#heading-45">پیام‌رسانی و همگام‌سازی</a><ul>
-<li><a href="#heading-46">آغاز گفت‌وگو و مجوز ارتباط</a></li>
-<li><a href="#heading-47">گروه، کانال و پیام</a></li>
-<li><a href="#heading-48">تاریخچه، Delta و رسید خواندن</a></li>
-<li><a href="#heading-49">SignalR</a></li>
-<li><a href="#heading-50">جست‌وجو، مسدودسازی و گزارش</a></li>
+<li><a href="#heading-46">فایل‌ها</a></li>
+<li><a href="#heading-47">پیام‌رسانی و همگام‌سازی</a><ul>
+<li><a href="#heading-48">آغاز گفت‌وگو و مجوز ارتباط</a></li>
+<li><a href="#heading-49">Contacts، Privacy و Discovery</a></li>
+<li><a href="#heading-50">گروه، کانال و پیام</a></li>
+<li><a href="#heading-51">رفتار و state گفتگو در STEP 14C</a></li>
+<li><a href="#heading-52">تاریخچه، Delta و رسید خواندن</a></li>
+<li><a href="#heading-53">SignalR</a></li>
+<li><a href="#heading-54">جست‌وجو، مسدودسازی و گزارش</a></li>
+<li><a href="#heading-55">تکمیل Messenger در STEP 14E</a></li>
 </ul>
 </li>
-<li><a href="#heading-51">خطاها و تلاش مجدد</a><ul>
-<li><a href="#heading-52">قراردادهای retry</a></li>
+<li><a href="#heading-56">خطاها و تلاش مجدد</a><ul>
+<li><a href="#heading-57">قراردادهای retry</a></li>
 </ul>
 </li>
-<li><a href="#heading-53">داشبوردهای نقش‌محور</a></li>
-<li><a href="#heading-54">گزارش‌های تفصیلی نقش‌محور</a></li>
-<li><a href="#heading-55">نقشه persistence و مرز تراکنش‌ها</a><ul>
-<li><a href="#heading-56">سه لایه تضمین درستی داده</a></li>
-<li><a href="#heading-57">rowversion، revision و operationId سه چیز متفاوت‌اند</a></li>
-<li><a href="#heading-58">نمونه‌های واقعی تراکنش و locking</a></li>
-<li><a href="#heading-59">migration و محیط توسعه</a></li>
+<li><a href="#heading-58">داشبوردهای نقش‌محور</a></li>
+<li><a href="#heading-59">گزارش‌های تفصیلی نقش‌محور</a></li>
+<li><a href="#heading-60">نقشه persistence و مرز تراکنش‌ها</a><ul>
+<li><a href="#heading-61">سه لایه تضمین درستی داده</a></li>
+<li><a href="#heading-62">rowversion، revision و operationId سه چیز متفاوت‌اند</a></li>
+<li><a href="#heading-63">نمونه‌های واقعی تراکنش و locking</a></li>
+<li><a href="#heading-64">migration و محیط توسعه</a></li>
 </ul>
 </li>
-<li><a href="#heading-60">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</a><ul>
-<li><a href="#heading-61">۱. درخواست و تأیید OTP</a></li>
-<li><a href="#heading-62">۲. آخرین ظرفیت کلاس</a></li>
-<li><a href="#heading-63">۳. تحویل تکلیف و انتشار نمره</a></li>
-<li><a href="#heading-64">۴. پاسخ آزمون تا نتیجه رسمی</a></li>
-<li><a href="#heading-65">۵. ارسال پیام، Delta و SignalR</a></li>
-<li><a href="#heading-66">۶. یک گزارش نقش‌محور</a></li>
+<li><a href="#heading-65">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</a><ul>
+<li><a href="#heading-66">۱. درخواست و تأیید OTP</a></li>
+<li><a href="#heading-67">۲. آخرین ظرفیت کلاس</a></li>
+<li><a href="#heading-68">۳. تحویل تکلیف و انتشار نمره</a></li>
+<li><a href="#heading-69">۴. پاسخ آزمون تا نتیجه رسمی</a></li>
+<li><a href="#heading-70">۵. ارسال پیام، Delta و SignalR</a></li>
+<li><a href="#heading-71">۶. یک گزارش نقش‌محور</a></li>
 </ul>
 </li>
-<li><a href="#heading-67">روش توسعه و عیب‌یابی برای عضو جدید تیم</a><ul>
-<li><a href="#heading-68">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</a></li>
-<li><a href="#heading-69">تست‌ها چه چیزی را ثابت می‌کنند؟</a></li>
-<li><a href="#heading-70">مسیر عیب‌یابی یک درخواست ناموفق</a></li>
-<li><a href="#heading-71">مرز میزبانی و موارد لازم برای تحویل عملیاتی</a></li>
+<li><a href="#heading-72">روش توسعه و عیب‌یابی برای عضو جدید تیم</a><ul>
+<li><a href="#heading-73">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</a></li>
+<li><a href="#heading-74">تست‌ها چه چیزی را ثابت می‌کنند؟</a></li>
+<li><a href="#heading-75">مسیر عیب‌یابی یک درخواست ناموفق</a></li>
+<li><a href="#heading-76">مرز میزبانی و موارد لازم برای تحویل عملیاتی</a></li>
 </ul>
 </li>
-<li><a href="#heading-72">تست و عیب‌یابی</a><ul>
-<li><a href="#heading-73">اجرای validation</a></li>
-<li><a href="#heading-74">عیب‌یابی سریع</a></li>
+<li><a href="#heading-77">تست و عیب‌یابی</a><ul>
+<li><a href="#heading-78">اجرای validation</a></li>
+<li><a href="#heading-79">عیب‌یابی سریع</a></li>
 </ul>
 </li>
-<li><a href="#heading-75">محدودیت‌ها و مسیر مطالعه</a><ul>
-<li><a href="#heading-76">مرز قابلیت موجود</a></li>
-<li><a href="#heading-77">دیتابیس و منابع کد</a></li>
+<li><a href="#heading-80">محدودیت‌ها و مسیر مطالعه</a><ul>
+<li><a href="#heading-81">مرز قابلیت موجود</a></li>
+<li><a href="#heading-82">دیتابیس و منابع کد</a></li>
 </ul>
 </li>
-<li><a href="#heading-78">نگهداری همین راهنما و مرجع</a></li>
-<li><a href="#heading-79">شناسنامه بازبینی و نتیجه اعتبارسنجی</a></li>
+<li><a href="#heading-83">نگهداری همین راهنما و مرجع</a></li>
+<li><a href="#heading-84">شناسنامه تاریخی تحویل ۲۰۲۶-۱۰-۱۲ و نتیجه همان اجرا</a></li>
+<li><a href="#heading-85">خروجی غیرهم‌زمان گزارش‌ها — STEP 11C</a></li>
+<li><a href="#heading-86">اعلان‌های داخلی — STEP 12A</a></li>
+<li><a href="#heading-87">تنظیمات و کانال‌های ارسال اعلان — STEP 12B</a></li>
+<li><a href="#heading-88">اشتراک، دسترسی تجاری و ظرفیت — STEP 13A</a></li>
+<li><a href="#heading-89">سفارش و پرداخت — STEP 13B</a></li>
+<li><a href="#heading-90">تعدیل پیام و ایمنی کودک — STEP 14D</a></li>
+<li><a href="#heading-91">Backoffice پلتفرم — STEP 15E</a><ul>
+<li><a href="#heading-92">قرارداد IAM و Audit</a></li>
+<li><a href="#heading-93">Organization، User و Provisioning</a></li>
+<li><a href="#heading-94">Education، Messaging Metadata و PlatformSafety</a></li>
+<li><a href="#heading-95">Commerce، Finance و Operations</a></li>
+<li><a href="#heading-96">صفحه‌بندی، خطا و رفتار حساس</a></li>
+</ul>
+</li>
+<li><a href="#heading-97">سخت‌سازی Production — STEP 16</a><ul>
+<li><a href="#heading-98">نشست و refresh token</a></li>
+<li><a href="#heading-99">Health و رفتار میزبانی</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section><h1 id="api">راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان</h1>
-<p>این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است: شناخت محصول و مدل، معماری و مسئولیت فایل‌ها، راه‌اندازی، استفاده از API، مطالعه مسیر اجرا، persistence، تست و ادامه توسعه. مبنای بازبینی <code>main@f0ff3be</code> در <code>2026-10-12</code> است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل داشبوردها، گزارش‌های تفصیلی STEP 11B، OTP مدیریت‌شده و میزبانی Production.</p>
+<p>این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. مبنای جاری <code>main@80d6a14</code> در <code>2026-10-15</code> است: ۲۸۴ عملیات HTTP در ۴۸ Controller، ۴۸۸ schema، ۸۸ جدول و ۳۷ Migration. مرجع HTTP و فرهنگ دیتابیس از metadata واقعی بازتولید شده‌اند؛ مثال‌های آموزشی این راهنما گزیده‌اند و فهرست کامل فیلدها در مرجع جاری است. گزارش‌ها و اعداد validation مرحله‌ایِ قدیمی‌تر، تاریخچهٔ همان اجرا هستند؛ جایگزین وضعیت جاری زیر یا اثبات deployment نیستند.</p>
+<h2 id="heading-1">وضعیت جاری و تغییرات مؤثر بر مطالعه</h2>
+<p>اختلاف DOC-CONTRACT-01: OpenAPI خام بعضی Enumها را integer نشان می‌دهد، اما JsonOptions واقعی MVC خروجی رشته‌ای دارد. مرجع جدید literalها را با همان serializer استخراج و اختلاف را جدا مستند می‌کند؛ runtime در این مرحله تغییر نمی‌کند. برای ساخت client از OpenAPI، نوع Enum را بدون کنترل مرجع رشته‌ای فرض نکنید. <a href="release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md">ثبت مورد باز</a>.</p>
+<ul>
+<li>Identity شامل access یک‌ساعته، refresh چرخشی با عمر مطلق ۳۰روزه و مدیریت نشست است. OTP ملی‌پیامک provider واقعی دارد، اما موفقیت تست خودکار تحویل SMS سرور را اثبات نمی‌کند.</li>
+<li>onboarding مدرسه و Guardian در GAP-01 API عملیاتی دارند؛ دعوت اتصال حساب نیازمند پذیرش احرازشدهٔ صاحب حساب است و merge خودکار Person/User نداریم.</li>
+<li>Reports/export، اعلان داخلی/outbox/preferences، Commerce/order/payment lifecycle و Backoffice/IAM API دارند. Push/SMS اعلان و gateway پرداخت واقعی همچنان unavailable هستند؛ OTP ورود با SMS اعلان یکی نیست.</li>
+<li>TOTP/recovery/step-up واقعی Backoffice در GAP-04 پیاده‌سازی شده؛ فایل‌ها، هویت App Pool و key ring پایدار باید حفظ شوند. <a href="release/GAP_04_BACKOFFICE_TOTP_MFA.md">قرارداد MFA</a>.</li>
+<li>سیاست مصوب GAP-05 جای پیش‌فرض‌های قدیمی Messenger را می‌گیرد: Unknown مانند Minor محافظت می‌شود؛ غریبه حق Direct ندارد؛ هر Send رابطه/Block/membership جاری و Content Safety را دوباره می‌سنجد. Internal Makan موتور قاعده‌محور واقعی ولی محدود است؛ رسانه unsupported به ReviewRequired می‌رود. Guardian و School Manager مجوز مرور Direct خصوصی ندارند. <a href="architecture/GAP_05_MESSENGER_CHILD_SAFETY.md">قرارداد کامل</a>.</li>
+<li>۱۲ API سمت Backend AI وجود دارند؛ پیش‌فرض غیرفعال، RAG source lifecycle deferred و real E2E از شواهد commit‌شده بسته نشده است. نقش Platform مجوز عمومی AI یا پیام خصوصی نمی‌سازد.</li>
+<li>انتشار انتخابی فعلی Production/HTTP با دو استثنای مستقل و تأییدشده است، نه Staging. فایل خصوصی Production ignored و نمونهٔ عمومی بدون secret است. <a href="production/DEPLOYMENT_IIS.md">runbook جاری IIS</a> و <a href="production/PRODUCTION_READINESS.md">ماتریس آمادگی</a> را پیش از rollout بخوانید.</li>
+</ul>
 <p>برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. <a href="backend-api-reference.html">مرجع کامل Endpointها و قراردادها</a> همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.</p>
-<h2 id="heading-1">فهرست مطالب</h2>
+<h2 id="heading-2">تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵</h2>
+<p>مسیر ساخت و مدیریت پرونده فراگیر و رابطه سرپرستی اکنون API دارد؛ توضیح کامل قراردادها، نمونه‌ها، خطاها، migration و تست‌ها در <a href="architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md">سند GAP-01</a> است. این بخش وضعیت قدیمی fixture-only را جایگزین می‌کند؛ HTML/PDF که در تحویل GAP-01 بازتولید نشده بودند، در همگام‌سازی جاری از منبع تازه بازسازی می‌شوند.</p>
+<p>جریان مدرسه: ورود و workspace با نقش فعال Manager → <code>POST /api/v1/organization/people</code> → جست‌وجو/دریافت پرونده → ثبت‌نام اختیاری از Academic موجود. ایجاد پرونده حساب، عضویت، نقش، Enrollment یا TeacherAssignment نمی‌سازد. ویرایش نام فقط برای Person بدون حساب و دارای دقیقاً یک ارجاع سازمانی مجاز است؛ هر دو rowversion پرونده و Person لازم‌اند.</p>
+<p>اتصال حساب: ساخت دعوت از <code>/api/v1/organization/people/{id}/invitations</code> برای User موجود → نمایش دعوت به همان کاربر → ورود و تکمیل پروفایل توسط صاحب حساب → پذیرش صریح با <code>{"confirmPersonLink":true}</code> در مسیر accept موجود. فقط مرجع PersonId پرونده متصل می‌شود؛ هیچ Person/User ادغام یا حذف نمی‌شود. Membership/Student Role از جریان قبلی دعوت می‌آید؛ ثبت‌نام همچنان مستقل است. پذیرش دعوت عادی قبلی بدون بدنه سازگار باقی مانده است.</p>
+<p>سرپرستی: مدیر برای Parent دارای عضویت/نقش معتبر همان سازمان، از <code>/api/v1/organization/guardian-relations</code> رابطه Pending می‌سازد؛ سپس با rowversion فعال می‌کند. Parent خوداظهاریِ دسترسی ندارد. Parent از children/select موجود استفاده می‌کند؛ بعد از end/revoke، درخواست بعدی dashboard/report با انتخاب قبلی رد می‌شود و تاریخچه آموزشی حذف نمی‌شود. School Manager جای Platform Admin نیست و این قابلیت دسترسی به محتوای خصوصی پیام‌رسان ایجاد نمی‌کند.</p>
+<h2 id="heading-3">فهرست مطالب</h2>
 <ul>
 <li><a href="#overview">قابلیت‌ها و معماری</a></li>
 <li><a href="#orientation">شروع مطالعه و هدف پروژه</a></li>
@@ -266,7 +330,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#host-pipeline">startup، DI و pipeline</a></li>
 <li><a href="#setup">راه‌اندازی محلی</a></li>
 <li><a href="#configuration">تنظیمات</a></li>
-<li><a href="#heading-16">قرارداد مشترک HTTP</a></li>
+<li><a href="#heading-18">قرارداد مشترک HTTP</a></li>
 <li><a href="#identity">ورود و پروفایل</a></li>
 <li><a href="#workspace">فضای کاری و سرپرست</a></li>
 <li><a href="#academic">آموزش و حضور و غیاب</a></li>
@@ -279,7 +343,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#detailed-reports">گزارش‌های تفصیلی</a></li>
 <li><a href="deployment-windows-linux-docker.md">استقرار و secretهای Production</a></li>
 <li><a href="frontend-contract/README.md">قرارداد اتصال React و React Native</a></li>
-<li><a href="#heading-55">persistence و تراکنش</a></li>
+<li><a href="#heading-60">persistence و تراکنش</a></li>
 <li><a href="#runtime-walkthroughs">شش مسیر واقعی مطالعه کد</a></li>
 <li><a href="#developer-workflow">روش توسعه و عیب‌یابی</a></li>
 <li><a href="#testing">تست و عیب‌یابی</a></li>
@@ -288,7 +352,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#limits">محدودیت‌ها و مسیر مطالعه</a></li>
 </ul>
 <p><a id="overview"></a></p>
-<h2 id="heading-2">قابلیت‌ها و معماری</h2>
+<h2 id="heading-4">قابلیت‌ها و معماری</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -327,11 +391,27 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tr>
 <tr>
 <td>Messaging</td>
-<td>گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR</td>
+<td>Contact، Privacy و Discovery، گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR</td>
 </tr>
 <tr>
 <td>Reports</td>
-<td>چهار داشبورد مخاطب و شانزده گزارش تفصیلی؛ داده مجاز نقش، pagination، حضور و نمره منتشرشده</td>
+<td>چهار داشبورد، شانزده گزارش تفصیلی و export خصوصی CSV با job پایدار؛ visibility نمره و scope نقش</td>
+</tr>
+<tr>
+<td>Notification</td>
+<td>اعلان داخلی، durable outbox، preferences و دستگاه؛ provider بیرونی Push/SMS اعلان unavailable</td>
+</tr>
+<tr>
+<td>Commerce</td>
+<td>Plan/Subscription/Entitlement/Quota و Order/Payment lifecycle؛ بدون gateway مالی واقعی</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>IAM، provisioning، metadata operations و moderation محدود به case؛ TOTP/recovery/step-up واقعی</td>
+</tr>
+<tr>
+<td>AI Backend</td>
+<td>دوازده API و adapter اختیاری؛ غیرفعال پیش‌فرض، real E2E و RAG lifecycle تأیید نشده</td>
 </tr>
 </tbody>
 </table></div>
@@ -371,10 +451,10 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </code></pre>
 <p>وابستگی کامپایل از بیرون به داخل است: <code>Api -&gt; Application</code>، <code>Api -&gt; Infrastructure</code>، <code>Infrastructure -&gt; Application/Domain</code> و <code>Application -&gt; Domain</code>. مسیر اجرای درخواست با جهت وابستگی یکسان نیست؛ Application از interface استفاده می‌کند و DI پیاده‌سازی Infrastructure را به آن می‌دهد.</p>
 <p><a id="orientation"></a></p>
-<h2 id="heading-3">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</h2>
+<h2 id="heading-5">از کجا شروع کنیم و پروژه چه مسئله‌ای حل می‌کند؟</h2>
 <p>MakanApp یک backend مشترک برای ارتباط و فعالیت آموزشی در سازمان است. یک شخص می‌تواند حساب ورود داشته باشد، عضو چند سازمان باشد، در هر سازمان چند نقش داشته باشد و در نشست جاری فقط یک فضای کاری و نقش را انتخاب کند. مدرسه/آموزشگاه، کلاس، حضور، تکلیف و آزمون داده رسمی آموزشی‌اند؛ پیام‌رسان مسیر ارتباط افراد است. داشبورد و گزارش، وضعیت همین داده رسمی را برای مخاطب مجاز خلاصه می‌کنند.</p>
-<p>در این نسخه ناحیه School و Messenger جریان‌های واقعی دارند. نام Copilot، Knowledge، Intelligence، Commerce، Notification و Platform Operations در معماری هدف آمده است، اما وجود آن نام‌ها به معنی وجود API اجرایی آن‌ها نیست. مدیر مدرسه <code>Manager</code> با ادمین پلتفرم یک مفهوم نیست؛ endpoint عمومی مدیریت پلتفرم یا provisioning سازمان در این مخزن وجود ندارد.</p>
-<h3 id="heading-4">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</h3>
+<p>School، Messenger، Reports/export، Notification، Commerce و Platform Operations اکنون API اجرایی دارند؛ Copilot نیز قراردادهای Backend متصل به port سرویس AI دارد و آماده‌بودن سرویس بیرونی جداست. Knowledge ingestion/RAG source lifecycle کامل نشده است. مدیر مدرسه <code>Manager</code> با ادمین پلتفرم یک مفهوم نیست؛ bootstrap اولین PlatformOwner خارج HTTP و با مرز عملیاتی کنترل‌شده است.</p>
+<h3 id="heading-6">نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد</h3>
 <ol>
 <li>
 <p>بتواند solution را بسازد، دیتابیس توسعه را آگاهانه انتخاب کند و API را اجرا کند.</p>
@@ -395,7 +475,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p>یک تغییر کوچک را با تست مناسب، migration بررسی‌شده و قرارداد HTTP روشن تحویل دهد.</p>
 </li>
 </ol>
-<h3 id="heading-5">برنامه مطالعه و اولین کار عملی</h3>
+<h3 id="heading-7">برنامه مطالعه و اولین کار عملی</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -444,7 +524,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </table></div>
 <p>اجرای نخست را با <code>/health</code>، OpenAPI و تست‌ها شروع کنید. پایگاه تازه بعد از migration سازمان، عضویت یا کلاس آماده ندارد. ورود OTP یک حساب ایجاد می‌کند، اما نقش مدیر سازمان به آن نمی‌دهد. برای یادگیری جریان کامل سازمانی از fixture و تست‌ها استفاده کنید؛ داده fixture را با seed عمومی محصول اشتباه نگیرید.</p>
 <p><a id="glossary"></a></p>
-<h2 id="heading-6">واژه‌نامه مدل و شناسه‌ها</h2>
+<h2 id="heading-8">واژه‌نامه مدل و شناسه‌ها</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -581,10 +661,10 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tr>
 </tbody>
 </table></div>
-<h3 id="heading-7">مثال چندسازمانی</h3>
+<h3 id="heading-9">مثال چندسازمانی</h3>
 <p>یک User می‌تواند در سازمان A نقش Teacher و در سازمان B نقش Parent داشته باشد. انتخاب workspace A/Teacher در نشست فقط عملیات مجاز Teacher در A را فعال می‌کند. برای مشاهده فرزند در B باید workspace B/Parent و child معتبر آن انتخاب شود. حتی اگر ClassId معتبر A در درخواست B ارسال شود، سرویس باید scope جاری و رابطه منبع را کنترل کند. FK مرکب از اتصال داده دو سازمان جلوگیری می‌کند؛ مجوز خواندن HTTP همچنان وظیفه سرویس است.</p>
 <p><a id="code-map"></a></p>
-<h2 id="heading-8">نقشه کد و مسئولیت لایه‌ها</h2>
+<h2 id="heading-10">نقشه کد و مسئولیت لایه‌ها</h2>
 <p>پروژه‌های اصلی در ریشه solution هستند؛ پوشه <code>src</code> وجود ندارد. namespaceها و نام کلاس‌ها انگلیسی‌اند؛ توضیحات توسعه‌دهنده فارسی است. هر حوزه پوشه‌های متناظر خودش را دارد، اما میزبان و دیتابیس مشترک‌اند.</p>
 <pre><code class="language-text">MakanApp.Api/Controllers          HTTP transport
 MakanApp.Application/{Area}       Use cases + DTOs + ports + policies
@@ -596,7 +676,7 @@ tests/MakanApp.UnitTests
 tests/MakanApp.IntegrationTests
 tests/MakanApp.ArchitectureTests
 </code></pre>
-<h3 id="heading-9">از Controller به implementation</h3>
+<h3 id="heading-11">از Controller به implementation</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -709,7 +789,7 @@ tests/MakanApp.ArchitectureTests
 </tbody>
 </table></div>
 <p>فایل‌های <code>*Abstractions.cs</code> قرارداد میان use case و ابزار فنی را نگه می‌دارند. فایل‌های <code>*Contracts.cs</code> شکل ورودی/خروجی‌اند؛ entity EF را مستقیم به کلاینت برنمی‌گردانیم. بعضی کلاس‌ها <code>partial</code> هستند: هنگام مطالعه یک service یا store همه فایل‌های هم‌نام آن را بررسی کنید؛ پیاده‌سازی ممکن است در فایل اصلی تمام نشود.</p>
-<h3 id="heading-10">جای درست یک تغییر</h3>
+<h3 id="heading-12">جای درست یک تغییر</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -748,9 +828,9 @@ tests/MakanApp.ArchitectureTests
 </table></div>
 <p>در این مخزن GenericRepository، MediatR، Event Sourcing یا سرویس‌های مستقل برای هر حوزه استفاده نشده‌اند. برای افزودن رفتار، ابتدا الگوی همان service و port موجود را دنبال کنید. interface تازه زمانی لازم است که یک وابستگی واقعی را جدا کند.</p>
 <p><a id="host-pipeline"></a></p>
-<h2 id="heading-11">startup، Dependency Injection و مسیر هر درخواست</h2>
+<h2 id="heading-13">startup، Dependency Injection و مسیر هر درخواست</h2>
 <p>دو نقطه اصلی ترکیب سیستم <a href="../MakanApp.Api/Program.cs">Program.cs</a> و <a href="../MakanApp.Infrastructure/DependencyInjection.cs">DependencyInjection.cs</a> هستند. Program سرویس‌های HTTP را اضافه می‌کند؛ AddInfrastructure اتصال SQL، portها، serviceها، options و adapterها را متصل می‌کند. Controller فقط interface سرویس را دریافت می‌کند؛ Controller از EF query استفاده نمی‌کند.</p>
-<h3 id="heading-12">طول عمر سرویس‌ها</h3>
+<h3 id="heading-14">طول عمر سرویس‌ها</h3>
 <ul>
 <li><code>MakanDbContext</code> و بیشتر service/storeها Scoped هستند: در scope درخواست از context مشترک استفاده می‌کنند؛ context بین درخواست‌ها share نمی‌شود.</li>
 <li><code>TimeProvider.System</code>، options، policyهای بدون state درخواست و بعضی adapterها Singleton هستند. user/context درخواست را داخل singleton ذخیره نکنید.</li>
@@ -758,7 +838,7 @@ tests/MakanApp.ArchitectureTests
 <li><code>EfMessagingStore</code> یک‌بار در scope ثبت و برای سه interface resolve می‌شود. سه interface به معنی سه DbContext مستقل نیست.</li>
 <li>dispatcher پس‌زمینه Singleton میزبان است ولی برای هر دور <code>CreateAsyncScope</code> می‌سازد تا processor و DbContext Scoped را درست دریافت کند.</li>
 </ul>
-<h3 id="heading-13">ترتیب pipeline</h3>
+<h3 id="heading-15">ترتیب pipeline</h3>
 <pre><code class="language-text">Request
 -&gt; Exception handling / technical endpoints
 -&gt; HTTPS redirection (outside Testing)
@@ -771,10 +851,10 @@ tests/MakanApp.ArchitectureTests
 -&gt; DTO / HTTP result
 </code></pre>
 <p><code>[Authorize]</code> فقط الزام ورود را در transport اعمال می‌کند. کنترل نقش، سازمان و رابطه کلاس/فرزند داخل Application ادامه دارد. CORS قبل از authentication است تا preflight مرورگر پردازش شود. محدودیت OTP یک bucket حافظه‌ای بر IP است؛ محدودیت شماره موبایل از challengeهای persisted نیز بررسی می‌شود. این دو محدودیت یک شمارنده نیستند.</p>
-<h3 id="heading-14">نشست این پروژه چگونه کار می‌کند؟</h3>
+<h3 id="heading-16">نشست این پروژه چگونه کار می‌کند؟</h3>
 <p><code>SessionAuthenticationHandler</code> مقدار header <code>Authorization: Bearer ...</code> را به <code>IdentityService.AuthenticateAsync</code> می‌دهد. <code>IdentityCryptography</code> از توکن تصادفی ۳۲ بایتی، hash HMAC-SHA256 می‌سازد؛ فقط hash در <code>UserSessions</code> نگه‌داری می‌شود. احراز هویت، نشست فعال/منقضی/لغوشده و User مربوط را از سمت سرور بررسی می‌کند. claims شامل UserId و SessionId هستند؛ role سازمانی از claims ثابت استخراج نمی‌شود.</p>
 <p>توکن جاری JWT نیست؛ decode کردن آن با ابزار JWT یا نگه‌داری role کلاینت مبنای تصمیم سرور نیست. refresh token جدا وجود ندارد. خروج نشست را revoke می‌کند؛ تغییر <code>Identity:SecurityKey</code> هم hash OTPها و هم نشست‌های قبلی را نامعتبر می‌کند.</p>
-<h3 id="heading-15">مجوز به صورت مرحله‌ای</h3>
+<h3 id="heading-17">مجوز به صورت مرحله‌ای</h3>
 <pre><code class="language-text">Bearer -&gt; active UserSession -&gt; UserId + SessionId
 -&gt; OrganizationService: workspace + organization + membership + active role
 -&gt; GuardianAccessContextResolver: selected child relation if present
@@ -782,12 +862,12 @@ tests/MakanApp.ArchitectureTests
 -&gt; authorized projection or mutation
 </code></pre>
 <p><code>GuardianAccessContextResolver</code> در Application قرار دارد؛ به پیاده‌سازی SQL وابسته نیست. انتخاب workspace در <code>OrganizationService</code>، child قبلی نشست را پاک می‌کند. رابطه منتخب در درخواست بعدی دوباره بررسی می‌شود؛ revoke شدن رابطه نباید با cache قبلی دور زده شود.</p>
-<h3 id="heading-16">خطا چگونه به HTTP تبدیل می‌شود؟</h3>
+<h3 id="heading-18">خطا چگونه به HTTP تبدیل می‌شود؟</h3>
 <p><code>GlobalExceptionHandler</code> exceptionهای حوزه را به ProblemDetails با <code>code</code> پایدار و status تبدیل می‌کند. خطای ناشناخته با <code>UNEXPECTED_ERROR</code> و پیام عمومی500 برمی‌گردد؛ stack trace پاسخ عمومی نیست. <code>traceId</code> به پاسخ اضافه می‌شود تا بتوان درخواست را در log پیدا کرد. خطای model binding قبل از رسیدن به use case ممکن است ValidationProblemDetails دارای <code>errors</code> بدهد؛ وجود <code>code</code> اختصاصی برای همه خطاهای binding تضمین نشده است.</p>
 <p><code>CancellationToken</code> از RequestAborted/پارامتر Controller تا I/O عبور می‌کند. لغو درخواست، retry موفق یا rollback همه side effectهای بیرونی را به‌تنهایی تضمین نمی‌کند؛ ارسال SMS و نوشتن فایل باید با قرارداد هر عملیات بررسی شوند.</p>
 <p><a id="setup"></a></p>
-<h2 id="heading-17">راه‌اندازی محلی</h2>
-<h3 id="heading-18">پیش‌نیاز و بررسی اولیه</h3>
+<h2 id="heading-19">راه‌اندازی محلی</h2>
+<h3 id="heading-20">پیش‌نیاز و بررسی اولیه</h3>
 <ul>
 <li>.NET SDK سازگار با هدف <code>net9.0</code>؛ baseline پروژه .NET 9 است.</li>
 <li>SQL Server محلی یا یک پایگاه توسعه مجاز؛ تست‌های Integration مشخصاً به Windows و SQL Server LocalDB نیاز دارند.</li>
@@ -800,7 +880,7 @@ dotnet restore MakanApp.sln
 dotnet tool restore
 dotnet build MakanApp.sln --configuration Debug --nologo
 </code></pre>
-<h3 id="heading-19">انتخاب دیتابیس توسعه</h3>
+<h3 id="heading-21">انتخاب دیتابیس توسعه</h3>
 <p>کلید اتصال <code>ConnectionStrings:MakanDatabase</code> است. نمونه زیر فقط از Windows Authentication و یک نام مشخص برای دیتابیس توسعه استفاده می‌کند:</p>
 <pre><code class="language-powershell">$env:ConnectionStrings__MakanDatabase = 'Server=.;Database=MakanApp_Development;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True'
 </code></pre>
@@ -808,13 +888,13 @@ dotnet build MakanApp.sln --configuration Debug --nologo
 <pre><code class="language-powershell">dotnet user-secrets set 'ConnectionStrings:MakanDatabase' $env:ConnectionStrings__MakanDatabase --project MakanApp.Api/MakanApp.Api.csproj
 </code></pre>
 <p><code>MakanDbContextFactory</code> هنگام اجرای ابزار EF، متغیر محیطی بالا را می‌خواند و User Secrets پروژه API را نمی‌خواند. در نبود متغیر، به <code>Server=.;Database=MakanApp</code> برمی‌گردد. برای اینکه migration روی مقصد دیگری اعمال نشود، متغیر اتصال را در همان پنجره‌ای که فرمان EF اجرا می‌شود صریح تنظیم کنید.</p>
-<h3 id="heading-20">اعمال migration و اجرا</h3>
+<h3 id="heading-22">اعمال migration و اجرا</h3>
 <p>پس از انتخاب دیتابیس توسعه مجاز، migrationها را با فرمان زیر اعمال کنید. این فرمان schema مقصد را تغییر می‌دهد؛ مقصد آن باید همان پایگاه توسعه انتخاب‌شده باشد.</p>
 <pre><code class="language-powershell">dotnet tool run dotnet-ef database update --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj
 dotnet dev-certs https --trust
 dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --launch-profile https
 </code></pre>
-<p>برنامه migration را خودکار در startup اجرا نمی‌کند. آخرین migration موجود هنگام نگارش، <code>20261007075650_AddExamGradingAndRelease</code> است. اعمال migration به معنی ایجاد سازمان، دعوت، دانش‌آموز یا حساب مدیر نیست؛ seed عمومی و Endpoint راه‌اندازی سازمان در پروژه وجود ندارد.</p>
+<p>برنامه migration را خودکار در startup اجرا نمی‌کند. آخرین migration موجود <code>20261015091336_EnforceApprovedMessengerChildSafety</code> است. اعمال migration به معنی ایجاد دادهٔ کسب‌وکاری نیست؛ ساخت سازمان و provisioning از API مجاز Backoffice و ساخت پرونده/Guardian از API مدیر مدرسه انجام می‌شود. bootstrap اولین PlatformOwner خارج HTTP است.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -829,11 +909,11 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 </tr>
 <tr>
 <td><code>https://localhost:7063/swagger</code></td>
-<td>Swagger UI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است</td>
+<td>Swagger UI در Development/Testing؛ Production پیش‌فرض خاموش</td>
 </tr>
 <tr>
 <td><code>https://localhost:7063/openapi/v1.json</code></td>
-<td>سند OpenAPI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است</td>
+<td>سند OpenAPI در Development/Testing یا فعال‌سازی صریح</td>
 </tr>
 <tr>
 <td><code>https://localhost:7063/api/v1</code></td>
@@ -847,7 +927,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 </table></div>
 <p>پروفایل HTTPS، HTTP را هم روی <code>http://localhost:5077</code> باز می‌کند. خارج از محیط <code>Testing</code>، HTTPS redirection فعال است؛ برای نمونه‌های این سند از HTTPS استفاده کنید.</p>
 <p><a id="configuration"></a></p>
-<h2 id="heading-21">تنظیمات</h2>
+<h2 id="heading-23">تنظیمات</h2>
 <p>مقادیر زیر از <code>appsettings.json</code> و <code>DependencyInjection.cs</code> آمده‌اند. برای متغیر محیطی، <code>:</code> را با <code>__</code> جایگزین کنید؛ مثلاً <code>Storage__MaxFileSizeBytes</code>.</p>
 <div class="table-wrap"><table>
 <thead>
@@ -906,8 +986,20 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 <td><code>10</code> ثانیه</td>
 </tr>
 <tr>
-<td><code>Identity:Session:LifetimeSeconds</code></td>
-<td><code>2592000</code>، برابر ۳۰ روز</td>
+<td><code>Identity:Session:AccessLifetimeSeconds</code></td>
+<td><code>3600</code>، برابر یک ساعت</td>
+</tr>
+<tr>
+<td><code>Identity:Session:RefreshLifetimeSeconds</code></td>
+<td><code>2592000</code>، برابر ۳۰ روز؛ refresh چرخشی</td>
+</tr>
+<tr>
+<td><code>Hosting:RequireHttps</code> / <code>AllowInsecureHttp</code></td>
+<td><code>true</code> / <code>false</code>؛ HTTP فقط با استثنای صریح Production</td>
+</tr>
+<tr>
+<td><code>Database:AllowUntrustedServerCertificate</code></td>
+<td><code>false</code>؛ استثنای مستقل تأیید گواهی SQL، نه اجازهٔ Encrypt=False</td>
 </tr>
 <tr>
 <td><code>Storage:RootPath</code></td>
@@ -956,9 +1048,9 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 </tbody>
 </table></div>
 <p>مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در <code>Program.cs</code> برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.</p>
-<p>کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart دیگر معتبر نیست. انتخاب <code>MeliPayamakOtp</code> بدون <code>Identity:SecurityKey</code> پایدار در startup رد می‌شود. appsettings پایه <code>Sms:Provider=Unavailable</code> دارد؛ برای OTP واقعی، provider و ServiceToken و کلید پایدار از secret store تنظیم شوند. در Production، <code>Storage:RootPath</code> غیرخالی <code>LocalFileStorage</code> را فعال می‌کند؛ مسیر باید مطلق، پایدار و قابل نوشتن باشد. مسیر خالی <code>UnavailableFileStorage</code> می‌دهد.</p>
+<p>کلید امنیت یا ServiceToken را در Git یا سند مشترک ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart معتبر نیست. انتخاب MeliPayamakOtp بدون کلید پایدار در startup رد می‌شود. پایه Sms:Provider=Unavailable دارد؛ فایل خصوصی Production این انتشار provider واقعی را تنظیم می‌کند. RootPath در Production باید مطلق و پایدار باشد؛ خالی بودن آن fail-fast می‌شود. فایل واقعی Production ignored و نمونهٔ عمومی بدون secret است؛ مسیر و کلیدهای قبلی MFA را هنگام Publish حفظ کنید.</p>
 <p><a id="http"></a></p>
-<h2 id="heading-22">قرارداد مشترک HTTP</h2>
+<h2 id="heading-24">قرارداد مشترک HTTP</h2>
 <p>به‌جز درخواست و تأیید OTP، تمام Endpointهای Controllerها نیازمند نشست معتبر هستند:</p>
 <pre><code class="language-http">Authorization: Bearer &lt;accessToken&gt;
 Content-Type: application/json
@@ -975,7 +1067,7 @@ Accept: application/json
 <li>برای نسخه یا cursor داخل Query از URL encoding استفاده کنید؛ مخصوصاً <code>+</code> و <code>/</code> در Base64 نباید خراب شوند.</li>
 <li>مجوز به انتخاب workspace، عضویت، نقش و رابطه با منبع وابسته است. ارسال <code>OrganizationId</code> یا <code>ClassId</code> مجوز ایجاد نمی‌کند.</li>
 </ul>
-<h3 id="heading-23">استفاده در PowerShell و Postman</h3>
+<h3 id="heading-25">استفاده در PowerShell و Postman</h3>
 <p>برای درخواست‌های JSON در PowerShell، این helper محلی را می‌توانید در همان نشست تعریف کنید. ارسال بایت UTF-8 متن فارسی را حفظ می‌کند:</p>
 <pre><code class="language-powershell">$apiBase = 'https://localhost:7063/api/v1'
 
@@ -1005,8 +1097,8 @@ function Invoke-MakanApi {
 </code></pre>
 <p>در Postman، سند <code>/openapi/v1.json</code> را Import کنید و Authorization مجموعه را روی <code>Bearer Token</code> با مقدار توکن جاری بگذارید. در تنظیم فعلی OpenAPI، security scheme اختصاصی Bearer اضافه نشده است؛ وجود Swagger UI را به معنی آماده‌بودن دکمه Authorize برای نشست‌ها در نظر نگیرید. توکن‌های واقعی را در collection یا environment اشتراکی صادر نکنید.</p>
 <p><a id="identity"></a></p>
-<h2 id="heading-24">ورود و پروفایل</h2>
-<h3 id="heading-25">دریافت OTP و نشست</h3>
+<h2 id="heading-26">ورود و پروفایل</h2>
+<h3 id="heading-27">دریافت OTP و نشست</h3>
 <pre><code class="language-powershell">$phoneNumber = Read-Host 'شماره موبایل حساب آزمایشی'
 $challenge = Invoke-MakanApi -Method POST -Path '/auth/otp/challenges' -Body @{
     phoneNumber = $phoneNumber
@@ -1024,8 +1116,8 @@ $accessToken = $login.accessToken
 $otpCode = $null
 $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 </code></pre>
-<p>پاسخ تأیید <code>200</code> شامل <code>accessToken</code>، <code>tokenType</code>، <code>expiresAtUtc</code> و <code>user</code> است. <code>challengeId</code> و شماره باید متعلق به همان درخواست OTP باشند؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد provider به‌صورت string opaque و در بازه طول تنظیم‌شده پذیرفته می‌شود؛ اگر کد عددی باشد، ارقام انگلیسی، فارسی و عربی پیش از hash به شکل یکسان normalize می‌شوند. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند <code>OTP_ALREADY_USED</code> بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.</p>
-<h3 id="heading-26">تکمیل پروفایل و خروج</h3>
+<p>پاسخ تأیید <code>200</code> شامل <code>accessToken</code>، <code>tokenType</code>، <code>expiresAtUtc</code>، <code>refreshToken</code>، <code>refreshExpiresAtUtc</code> و <code>user</code> است. challengeId و شماره باید متعلق به همان درخواست OTP باشند؛ challenge جدید قبلی را supersede می‌کند. کد opaque است؛ ارقام فارسی/عربی عددی normalize می‌شوند. OTP یک‌بارمصرف و پنج‌دقیقه‌ای است؛ تأیید تکراری می‌تواند OTP_ALREADY_USED بدهد. refresh token هم credential خصوصی است؛ برای refresh از POST /api/v1/auth/refresh و قرارداد جاری استفاده کنید. پاسخ ازدست‌رفته یا replay را با فرض idempotency عمومی retry نکنید.</p>
+<h3 id="heading-28">تکمیل پروفایل و خروج</h3>
 <pre><code class="language-powershell">$me = Invoke-MakanApi -Method PATCH -Path '/me/profile' -Token $accessToken -Body @{
     firstName = 'کاربر'
     lastName = 'آزمایشی'
@@ -1036,8 +1128,8 @@ $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 <p>نام و نام خانوادگی اجباری و هرکدام حداکثر ۱۰۰ کاراکترند. <code>displayName</code> اختیاری و حداکثر ۲۰۰ کاراکتر است. <code>username</code> باید ۳ تا ۳۲ کاراکتر و شامل حروف لاتین، رقم، نقطه یا زیرخط باشد؛ یکتایی آن نسبت به بزرگی و کوچکی حروف حساس نیست. مقدار نمونه را برای هر حساب تغییر دهید.</p>
 <p><code>POST /auth/logout</code> بدون بدنه، نشست جاری را revoke می‌کند و <code>204</code> می‌دهد. پس از موفقیت، توکن محلی را پاک کنید.</p>
 <p><a id="workspace"></a></p>
-<h2 id="heading-27">فضای کاری و سرپرست</h2>
-<h3 id="heading-28">شناسه‌ها را با هم اشتباه نگیرید</h3>
+<h2 id="heading-29">فضای کاری و سرپرست</h2>
+<h3 id="heading-30">شناسه‌ها را با هم اشتباه نگیرید</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1080,7 +1172,7 @@ $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 </tr>
 </tbody>
 </table></div>
-<h3 id="heading-29">انتخاب فضای شخصی یا سازمانی</h3>
+<h3 id="heading-31">انتخاب فضای شخصی یا سازمانی</h3>
 <pre><code class="language-powershell">$workspaces = Invoke-MakanApi -Method GET -Path '/workspaces/me' -Token $accessToken
 $personalContext = Invoke-MakanApi -Method POST -Path '/workspaces/select' -Token $accessToken -Body @{
     workspaceType = 'Personal'
@@ -1097,7 +1189,7 @@ $personalContext = Invoke-MakanApi -Method POST -Path '/workspaces/select' -Toke
 </code></pre>
 <p>نتیجه <code>AccessContext</code> شامل <code>actorId</code>، <code>userId</code>، <code>sessionId</code>، <code>workspaceType</code>، <code>organizationId</code>، <code>membershipId</code>، <code>activeRole</code> و <code>subjectOrganizationPersonId</code> است. انتخاب در نشست ذخیره می‌شود؛ تغییر آن در یک tab روی درخواست‌های tab دیگری که همان توکن را دارد هم اثر دارد. بعد از تغییر فضا، داده‌های context قبلی را دوباره از API مربوط دریافت کنید.</p>
 <p>کاربر بدون عضویت، فضای شخصی دارد. ساخت حساب و تکمیل پروفایل به‌خودی‌خود نقش <code>Manager</code>، عضویت سازمانی، رابطه سرپرست یا مجوز تماس شخصی ایجاد نمی‌کند.</p>
-<h3 id="heading-30">دعوت و فرزند</h3>
+<h3 id="heading-32">دعوت و فرزند</h3>
 <ol>
 <li>با <code>GET /invitations</code> دعوت‌های حساب جاری را بگیرید.</li>
 <li><code>POST /invitations/{invitationId}/accept</code> یا <code>/decline</code> را بدون بدنه بفرستید.</li>
@@ -1108,8 +1200,8 @@ $personalContext = Invoke-MakanApi -Method POST -Path '/workspaces/select' -Toke
 </ol>
 <p>ایجاد سازمان، عضویت اولیه، دعوت، شخص سازمانی و رابطه سرپرست API عمومی ندارند. برای اجرای سناریو سازمانی به داده از قبل آماده‌شده در محیط مجاز نیاز دارید. fixtureهای Integration الگوی داده آزمایشی‌اند و ابزار seed دیتابیس عادی نیستند.</p>
 <p><a id="academic"></a></p>
-<h2 id="heading-31">آموزش و حضور و غیاب</h2>
-<h3 id="heading-32">مجوزهای اصلی</h3>
+<h2 id="heading-33">آموزش و حضور و غیاب</h2>
+<h3 id="heading-34">مجوزهای اصلی</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1153,7 +1245,7 @@ $personalContext = Invoke-MakanApi -Method POST -Path '/workspaces/select' -Toke
 </tbody>
 </table></div>
 <p>همه نقش‌های جدول سازمانی‌اند و فقط در همان سازمان و روابط معتبر معنی دارند.</p>
-<h3 id="heading-33">ساخت کلاس</h3>
+<h3 id="heading-35">ساخت کلاس</h3>
 <p>با توکن مدیری که workspace سازمانی را انتخاب کرده است:</p>
 <pre><code class="language-powershell">$period = Invoke-MakanApi -Method POST -Path '/academic/periods' -Token $accessToken -Body @{
     title = 'دوره آزمایشی'
@@ -1199,7 +1291,7 @@ $class = Invoke-MakanApi -Method POST -Path '/academic/classes' -Token $accessTo
 </tbody>
 </table></div>
 <p>ثبت‌نام یا انتساب فعال تکراری خطا می‌دهد؛ این دو عملیات قرارداد عمومی <code>clientOperationId</code> ندارند. پایان ثبت‌نام/انتساب، تاریخچه را حذف نمی‌کند.</p>
-<h3 id="heading-34">جلسه و برنامه تکرارشونده</h3>
+<h3 id="heading-36">جلسه و برنامه تکرارشونده</h3>
 <p>برای <code>POST /academic/classes/{classId}/sessions</code>:</p>
 <pre><code class="language-json">{
   &quot;title&quot;: &quot;جلسه اول&quot;,
@@ -1223,7 +1315,7 @@ $class = Invoke-MakanApi -Method POST -Path '/academic/classes' -Token $accessTo
 }
 </code></pre>
 <p>قانون برنامه، روز و ساعت محلی را همراه timezone نگه می‌دارد و جلسه‌های دارای زمان UTC تولید می‌کند. برای ویرایش قانون، <code>applyFromDate</code> و <code>expectedRowVersion</code> نیز لازم‌اند. برنامه بازه را با <code>GET /academic/schedule?fromUtc=...&amp;toUtc=...</code> بخوانید؛ هر دو زمان UTC، پایان بزرگ‌تر از شروع و بازه حداکثر یک سال است.</p>
-<h3 id="heading-35">ثبت و اصلاح حضور و غیاب</h3>
+<h3 id="heading-37">ثبت و اصلاح حضور و غیاب</h3>
 <p>ابتدا <code>GET /academic/sessions/{sessionId}/attendance</code> را بگیرید. برای <code>PUT</code> همان مسیر:</p>
 <pre><code class="language-json">{
   &quot;entries&quot;: [
@@ -1233,11 +1325,11 @@ $class = Invoke-MakanApi -Method POST -Path '/academic/classes' -Token $accessTo
 </code></pre>
 <p>مقادیر ثبت‌کردنی <code>Present</code>، <code>Absent</code>، <code>Late</code> و <code>Excused</code> هستند. <code>NotRecorded</code> وضعیت نمایش ثبت‌نشدن است. ثبت پیش از شروع جلسه و برای جلسه لغوشده مجاز نیست. برای اصلاح رکورد موجود از <code>PATCH /academic/sessions/{sessionId}/attendance/{attendanceId}</code> با <code>status</code>، <code>correctionReason</code> و <code>expectedRowVersion</code> استفاده کنید؛ اصلاح تاریخچه جدا دارد.</p>
 <p><a id="assignments"></a></p>
-<h2 id="heading-36">تکلیف و ارزیابی</h2>
+<h2 id="heading-38">تکلیف و ارزیابی</h2>
 <pre><code class="language-text">ساخت Draft -&gt; انتشار و تعیین گیرندگان -&gt; Draft پاسخ دانش‌آموز
 -&gt; ذخیره متن / اتصال فایل -&gt; Submit -&gt; Draft ارزیابی -&gt; Release -&gt; نتیجه
 </code></pre>
-<h3 id="heading-37">ساخت و انتشار</h3>
+<h3 id="heading-39">ساخت و انتشار</h3>
 <p>با توکن Manager یا Teacher منتسب:</p>
 <pre><code class="language-powershell">$assignment = Invoke-MakanApi -Method POST -Path &quot;/academic/classes/$($class.id)/assignments&quot; -Token $accessToken -Body @{
     title = 'تمرین اول'
@@ -1254,7 +1346,7 @@ $published = Invoke-MakanApi -Method POST -Path &quot;/academic/assignments/$($a
 </code></pre>
 <p>پاسخ انتشار شامل <code>assignment</code> و <code>recipientCount</code> است. <code>MaxScore</code> متعلق به نسخه تکلیف است؛ نمره ارزیابی از این سقف تبعیت می‌کند. پیش‌نویس از مسیر <code>PATCH /academic/assignments/{assignmentId}</code> قابل ویرایش است و به هر دو نسخه نیاز دارد. انتشار گیرندگان را از ثبت‌نام‌های واجد شرایط همان زمان تعیین می‌کند؛ صرف عضویت Student برای پاسخ کافی نیست.</p>
 <p>فهرست را با <code>GET /academic/classes/{classId}/assignments</code> یا <code>GET /academic/assignments?classId=...</code> بخوانید. نقش و رابطه با کلاس بر داده قابل مشاهده اثر دارند.</p>
-<h3 id="heading-38">پاسخ و تحویل دانش‌آموز</h3>
+<h3 id="heading-40">پاسخ و تحویل دانش‌آموز</h3>
 <p><code>$studentToken</code> در مثال باید توکن نشست Student با workspace سازمانی انتخاب‌شده باشد:</p>
 <pre><code class="language-powershell">$attempt = Invoke-MakanApi -Method POST -Path &quot;/academic/assignments/$($assignment.id)/attempts&quot; -Token $studentToken
 $attempt = Invoke-MakanApi -Method PATCH -Path &quot;/academic/submission-attempts/$($attempt.id)/draft&quot; -Token $studentToken -Body @{
@@ -1267,7 +1359,7 @@ $receipt = Invoke-MakanApi -Method POST -Path &quot;/academic/submission-attempt
 </code></pre>
 <p>برای پیوست، ابتدا فایل را با همان حساب و scope مناسب آپلود کنید؛ سپس به <code>/academic/submission-attempts/{attemptId}/attachments</code> بدنه <code>fileAssetId</code> و <code>expectedRowVersion</code> بدهید. پس از هر ذخیره یا اتصال/حذف فایل، از <code>rowVersion</code> پاسخ جدید استفاده کنید. حذف پیوست، <code>expectedRowVersion</code> را در Query می‌گیرد.</p>
 <p>ایجاد Draft، تلاش باز موجود را resume می‌کند. ذخیره Draft تحویل رسمی نیست؛ رسید <code>SubmissionReceipt</code> موفقیت Submit را با <code>submittedAtUtc</code>، <code>isLate</code> و وضعیت <code>Submitted</code> نشان می‌دهد. سرور مهلت، سیاست تأخیر، تعداد تلاش و آمادگی فایل را کنترل می‌کند. فیلد <code>contentVisible</code> را در پاسخ رعایت کنید؛ وجود metadata تلاش به معنی مجازبودن نمایش محتوای آن نیست.</p>
-<h3 id="heading-39">ارزیابی و انتشار نمره</h3>
+<h3 id="heading-41">ارزیابی و انتشار نمره</h3>
 <ol>
 <li>ارزیاب مجاز از <code>/academic/evaluations/queue</code>، با فیلترهای اختیاری <code>assignmentId</code>، <code>classId</code>، <code>reviewStatus</code> و <code>isLate</code>، صف را می‌خواند.</li>
 <li>محتوای پاسخ نهایی از <code>/academic/submission-attempts/{attemptId}/evaluation/submission</code> خوانده می‌شود.</li>
@@ -1284,8 +1376,8 @@ $receipt = Invoke-MakanApi -Method POST -Path &quot;/academic/submission-attempt
 <p>در ایجاد اولیه، <code>expectedRowVersion=null</code> است؛ در ویرایش باید نسخه فعلی را بفرستید. نمره در بازه صفر تا <code>maxScore</code> نسخه تکلیف است. برای انتشار، به <code>/evaluation/release</code> مقدار <code>expectedRowVersion</code> پاسخ ارزیابی را بدهید.</p>
 <p>دانش‌آموز <code>/academic/submission-attempts/{attemptId}/result</code> و والد <code>/guardian-result</code> را می‌خوانند. قبل از انتشار، نتیجه تکلیف می‌تواند <code>404 GRADE_NOT_RELEASED</code> بدهد. <code>teacherPrivateNote</code> به هیچ‌کدام داده نمی‌شود. اصلاح نتیجه منتشرشده از <code>/evaluation/corrections</code> با <code>correctionReason</code> و <code>expectedReleasedEvaluationRowVersion</code> یک Draft تازه می‌سازد؛ انتشار آن نیز جداگانه است.</p>
 <p><a id="exams"></a></p>
-<h2 id="heading-40">آزمون و انتشار نمره</h2>
-<h3 id="heading-41">طراحی و نسخه‌بندی آزمون</h3>
+<h2 id="heading-42">آزمون و انتشار نمره</h2>
+<h3 id="heading-43">طراحی و نسخه‌بندی آزمون</h3>
 <p>با Manager یا Teacher مجاز، <code>POST /academic/classes/{classId}/exams</code>:</p>
 <pre><code class="language-json">{
   &quot;title&quot;: &quot;آزمون ریاضی&quot;,
@@ -1314,7 +1406,7 @@ $receipt = Invoke-MakanApi -Method POST -Path &quot;/academic/submission-attempt
 <p>سؤال تستی حداقل دو گزینه و دقیقاً یک گزینه درست می‌خواهد؛ ترتیب و متن گزینه‌ها نباید تکراری باشد. سؤال <code>Descriptive</code> گزینه ندارد. هنگام انتشار، آزمون باید حداقل یک سؤال داشته باشد و مجموع نمره سؤال‌ها دقیقاً برابر <code>maxScore</code> شود.</p>
 <p>به <code>POST /academic/exams/{examId}/publish</code> دو فیلد <code>expectedExamRowVersion</code> و <code>expectedVersionRowVersion</code> را از آخرین پاسخ بدهید. نسخه منتشرشده درجا ویرایش نمی‌شود؛ <code>/versions</code> با <code>expectedExamRowVersion</code> و <code>expectedPublishedVersionRowVersion</code> نسخه بعدی می‌سازد. حذف سؤال، برخلاف بسیاری از DELETEها، بدنه JSON با نسخه سؤال و نسخه آزمون دارد.</p>
 <p><code>GET /academic/exams</code> فهرست را بر اساس نقش/کلاس یا فرزند مجاز می‌دهد. <code>/editor</code> و <code>/teacher-preview</code> مخصوص ارزیاب مجازند و اطلاعات پاسخ صحیح دارند. <code>/student-preview</code> برای Teacher/Manager مجاز، نمایش امن بدون پاسخ صحیح می‌سازد؛ Student فقط با ثبت‌نام فعال و در بازه فعال آزمون می‌تواند آن را بگیرد. Parent اجازه دیدن محتوای سؤال از این مسیر ندارد.</p>
-<h3 id="heading-42">شروع، ذخیره پاسخ و نهایی‌سازی</h3>
+<h3 id="heading-44">شروع، ذخیره پاسخ و نهایی‌سازی</h3>
 <pre><code class="language-text">Student workspace -&gt; Start -&gt; دریافت سؤال‌های منجمد و deadline سرور
 -&gt; دریافت write lease -&gt; Save Answer -&gt; دریافت رسید هر ذخیره
 -&gt; توقف ذخیره‌های در حال ارسال -&gt; Finalize -&gt; دریافت رسید نهایی
@@ -1346,7 +1438,7 @@ $receipt = Invoke-MakanApi -Method POST -Path &quot;/academic/submission-attempt
 </code></pre>
 <p>هر دو نسخه نمونه‌اند و باید از پاسخ‌های جاری گرفته شوند. رسید شامل <code>finalizedAtUtc</code>، <code>finalizedAnswerSetVersion</code>، <code>answeredQuestionCount</code>، <code>totalQuestionCount</code> و <code>status=Finalized</code> است. <code>GET /academic/exam-attempts/{attemptId}/receipt</code> آن را دوباره می‌دهد. رسید، نمره یا پاسخ صحیح ندارد.</p>
 <p>پس از deadline، ذخیره یا Finalize جدید رد می‌شود و تلاش می‌تواند <code>Expired</code> شود. <strong>auto-finalize یا scheduler پایان آزمون وجود ندارد</strong>؛ وجود پاسخ ذخیره‌شده، تلاش Expired را به پاسخ تحویل‌شده تبدیل نمی‌کند. retry دقیق Finalize موفق با همان شناسه و payload، رسید قبلی را برمی‌گرداند؛ payload متفاوت با همان شناسه conflict است.</p>
-<h3 id="heading-43">تصحیح و انتشار نمره آزمون</h3>
+<h3 id="heading-45">تصحیح و انتشار نمره آزمون</h3>
 <p>فقط تلاش <code>Finalized</code> وارد تصحیح می‌شود؛ منبع تصحیح <code>ExamFinalAnswers</code> و revisionهای منجمدشده است.</p>
 <ol>
 <li><code>GET /academic/exams/{examId}/grading</code> صف تصحیح را با فیلتر اختیاری <code>classId</code> و <code>status</code> می‌دهد.</li>
@@ -1369,7 +1461,7 @@ $receipt = Invoke-MakanApi -Method POST -Path &quot;/academic/submission-attempt
 </ol>
 <p>DTO دانش‌آموز فقط بازخورد دانش‌آموز و DTO والد فقط بازخورد والد را دارد؛ یادداشت خصوصی مصحح و کلید پاسخ در نتیجه عمومی قرار نمی‌گیرند.</p>
 <p><a id="storage"></a></p>
-<h2 id="heading-44">فایل‌ها</h2>
+<h2 id="heading-46">فایل‌ها</h2>
 <p>بارگذاری فایل از <code>POST /files</code> با <code>multipart/form-data</code> انجام می‌شود؛ نام فیلد <code>File</code> است. در Postman بخش Body را روی form-data بگذارید، نوع <code>File</code> را برای آن فیلد انتخاب کنید و Content-Type دارای boundary را به خود ابزار بسپارید.</p>
 <pre><code class="language-powershell">$uploadPath = Read-Host 'مسیر فایل PDF آزمایشی'
 curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization: Bearer $accessToken&quot; --form &quot;File=@$uploadPath;type=application/pdf&quot;
@@ -1400,8 +1492,11 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 <p>فایل لینک عمومی ندارد. مالکیت، scope و binding به پیام/پاسخ در مجوز دانلود اثر دارند. حذف فایل retained یا در حال استفاده می‌تواند <code>FILE_IN_USE</code> بدهد. مهلت فایل unattached به معنی وجود پاک‌سازی پس‌زمینه زمان‌بندی‌شده نیست.</p>
 <p>در تنظیم پیش‌فرض فقط PDF، JPEG، PNG و متن مجازند. مدل Messaging نوع <code>Video</code> و <code>Voice</code> را می‌شناسد، اما برای آپلود آن‌ها باید MIME مجاز مناسب در تنظیم محیط وجود داشته باشد؛ تنظیم پایه این نوع‌ها را نمی‌پذیرد. اعتبارسنجی MIME و اندازه، جای اسکن بدافزار نیست؛ اسکن و object storage تولیدی در این نسخه ارائه نشده‌اند.</p>
 <p><a id="messaging"></a></p>
-<h2 id="heading-45">پیام‌رسانی و همگام‌سازی</h2>
-<h3 id="heading-46">آغاز گفت‌وگو و مجوز ارتباط</h3>
+<h2 id="heading-47">پیام‌رسانی و همگام‌سازی</h2>
+<blockquote>
+<p><strong>مرز قرارداد Messenger v2:</strong> توضیحات این بخش رفتار runtime فعلی را مستند می‌کنند. ممیزی تاریخی ۱۲۷ requirement در <a href="architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md">STEP 14A</a>، تصمیم‌های freeze‌شده در <a href="architecture/MESSENGER_V2_PRODUCT_DECISIONS.md">Messenger v2 Product Decisions</a> و نتیجه re-audit نهایی در <a href="architecture/STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md">STEP 14E</a> ثبت شده‌اند.</p>
+</blockquote>
+<h3 id="heading-48">آغاز گفت‌وگو و مجوز ارتباط</h3>
 <p><code>POST /conversations/direct</code>:</p>
 <pre><code class="language-json">{
   &quot;targetUserId&quot;: &quot;&lt;UserId مخاطب مجاز&gt;&quot;,
@@ -1409,7 +1504,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 }
 </code></pre>
 <p>Scope یکی از <code>Personal</code> یا <code>Organization</code> است. در Scope سازمانی، سازمان از workspace جاری به دست می‌آید. ایجاد گفت‌وگوی تازه <code>201</code> و بازیابی زوج موجود <code>200</code> با <code>alreadyExisted=true</code> دارد.</p>
-<p>در فضای شخصی، شروع تماس به دو حساب با وضعیت سنی <code>Adult</code> و <code>PersonalCommunicationGrant</code> فعال نیاز دارد؛ ثبت‌نام ساده این شرایط را تأمین نمی‌کند. برای وضعیت سنی و ایجاد grant، API عمومی وجود ندارد.</p>
+<p>در فضای شخصی، Direct به‌صورت سراسری و مستقل از Organization قابل شروع است. مقصد باید بر اساس <code>DirectMessagesAudience</code> فعلی خود (<code>Everyone</code>، <code>Contacts</code> یا <code>Nobody</code>) درخواست‌کننده را مجاز کند و Block دوطرفه نیز برقرار نباشد. حالت <code>Contacts</code> یک‌طرفه و از دید مقصد است: مقصد باید درخواست‌کننده را در Contacts خود ذخیره کرده باشد. وضعیت سنی و <code>PersonalCommunicationGrant</code> دیگر شرط Personal Direct نیستند؛ grant قدیمی فقط برای سازگاری schema/history باقی مانده است. سیاست ایمنی حساب کودک هنوز release gate مستقل دارد.</p>
 <p>در فضای سازمانی، عضویت‌ها و نقش‌ها فعال‌اند و policy فعلی این روابط را کنترل می‌کند:</p>
 <div class="table-wrap"><table>
 <thead>
@@ -1437,8 +1532,77 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tr>
 </tbody>
 </table></div>
-<p>شناسه مخاطب ناشناخته یا غیرمجاز می‌تواند خطای عمومی <code>DIRECT_RECIPIENT_NOT_AVAILABLE</code> بدهد. API عمومی جست‌وجوی کاربران با شماره تلفن وجود ندارد.</p>
-<h3 id="heading-47">گروه، کانال و پیام</h3>
+<p>شناسه مخاطب ناشناخته، Blockشده یا غیرمجاز خطای عمومی <code>DIRECT_RECIPIENT_NOT_AVAILABLE</code> می‌دهد و علت داخلی افشا نمی‌شود. Organization Direct و روابط سازمانی این جدول در STEP 14B تغییر نکرده‌اند.</p>
+<h3 id="heading-49">Contacts، Privacy و Discovery</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Route</th>
+<th>کاربرد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/contacts?q=&amp;favoritesOnly=&amp;page=&amp;pageSize=</code></td>
+<td>فهرست خصوصی Contacts؛ SavedName فقط برای مالک</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/contacts/recent?page=&amp;pageSize=</code></td>
+<td>مخاطبان اخیر بر اساس فعالیت Personal Direct</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/contacts</code></td>
+<td>ذخیره idempotent با <code>contactUserId</code> و <code>savedName</code></td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/contacts/{contactUserId}</code></td>
+<td>تغییر SavedName/Favorite با <code>expectedVersion</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/contacts/{contactUserId}</code></td>
+<td>حذف Contact بدون حذف chat، history یا Block</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/people/search?q=&amp;page=&amp;pageSize=</code></td>
+<td>جست‌وجوی محدود Username/DisplayName</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/people/resolve</code></td>
+<td>resolve دقیق Username یا Phone Number در body</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/people/{userId}</code></td>
+<td>پروفایل عمومی حداقلی و privacy-aware</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/messaging/privacy</code></td>
+<td>settings مؤثر کاربر</td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td><code>/messaging/privacy</code></td>
+<td>ایجاد/ویرایش settings با optimistic concurrency</td>
+</tr>
+</tbody>
+</table></div>
+<p>مقادیر پیش‌فرض بدون ایجاد ردیف دیتابیس عبارت‌اند از Direct=<code>Everyone</code>، نمایش شماره=<code>Nobody</code>، کشف با شماره=<code>Nobody</code> و دعوت گروه شخصی=<code>Contacts</code>. کشف شماره و نمایش شماره دو مجوز مستقل‌اند. Phone resolve فقط exact match است، شماره در URL قرار نمی‌گیرد و نتیجه شماره مخفی با شماره ناموجود یکسان است:</p>
+<pre><code class="language-json">{
+  &quot;isDiscoverable&quot;: false,
+  &quot;profile&quot;: null
+}
+</code></pre>
+<p>People Search به query حداقل دوکاراکتری و صفحه حداکثر ۵۰تایی محدود است. endpointهای <code>/people</code> علاوه بر authentication، rate limit دارند. DTO عمومی فقط اطلاعات حداقلی مانند <code>userId</code>، <code>username</code>، <code>displayName</code>، شماره مجازشده، <code>isSavedContact</code>، <code>isFavorite</code> و <code>canStartDirect</code> را دارد؛ داده سازمانی، نقش، سن، grant و جزئیات Privacy افشا نمی‌شوند. قرارداد کامل در <a href="architecture/STEP_14B_CONTACTS_PRIVACY_DISCOVERY.md">سند STEP 14B</a> ثبت شده است.</p>
+<h3 id="heading-50">گروه، کانال و پیام</h3>
 <p>برای ایجاد گروه یا کانال از <code>/conversations/groups</code> یا <code>/conversations/channels</code> استفاده کنید:</p>
 <pre><code class="language-json">{
   &quot;clientOperationId&quot;: &quot;&lt;Guid ایجاد گفت‌وگو&gt;&quot;,
@@ -1448,7 +1612,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
   &quot;initialParticipantUserIds&quot;: []
 }
 </code></pre>
-<p>ایجاد گروه/کانال سازمانی به workspace معتبر با نقش Manager یا Teacher نیاز دارد؛ ایجاد شخصی به workspace شخصی و وضعیت سنی Adult. افزودن عضو نیز policy ارتباط با مخاطب را طی می‌کند. نقش‌های داخل گفت‌وگو <code>Owner</code>، <code>Admin</code> و <code>Member</code> از نقش‌های سازمانی جدا هستند. در Group اعضای فعال مجاز به ارسال‌اند؛ در Channel انتشار به Owner/Admin محدود است. مالک باید پیش از خروج، مالکیت را با جریان درخواست انتقال و پذیرش مقصد واگذار کند. archive با حذف تاریخچه یکی نیست.</p>
+<p>ایجاد گروه/کانال سازمانی به workspace معتبر با نقش Manager یا Teacher نیاز دارد؛ ایجاد شخصی در workspace شخصی برای حساب معتبر انجام می‌شود و safety policy حساب کودک همچنان release gate مستقل است. افزودن عضو توسط شخص دیگر policy دعوت مخاطب را طی می‌کند، اما self-join یک Public Group دعوت ناخواسته محسوب نمی‌شود. نقش‌های داخل گفتگو <code>Owner</code>، <code>Admin</code> و <code>Member</code> از نقش‌های سازمانی جدا هستند. Admin فقط permissionهای صریح خود را دارد و در Channel فقط Owner یا Admin دارای <code>PublishMessages</code> می‌تواند منتشر کند. مالک باید پیش از خروج، مالکیت را با جریان درخواست انتقال و پذیرش مقصد واگذار کند.</p>
 <p>برای ارسال <code>POST /conversations/{conversationId}/messages</code>:</p>
 <pre><code class="language-json">{
   &quot;clientMessageId&quot;: &quot;&lt;Guid این پیام منطقی&gt;&quot;,
@@ -1456,13 +1620,78 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
   &quot;text&quot;: &quot;سلام، زمان جلسه تأیید شد.&quot;,
   &quot;attachmentIds&quot;: [],
   &quot;replyToMessageId&quot;: null,
-  &quot;mentionedUserIds&quot;: []
+  &quot;mentionedUserIds&quot;: [],
+  &quot;contactUserId&quot;: null
 }
 </code></pre>
 <p>رسید <code>200</code> دارای <code>messageId</code>، <code>sequence</code>، <code>sentAtUtc</code>، <code>status=Sent</code> و <code>version</code> است. <code>Sent</code> یعنی commit موفق در SQL Server؛ دریافت یا خواندن توسط مخاطب را تضمین نمی‌کند. همان <code>clientMessageId</code> را برای retry همان پیام نگه دارید؛ تغییر payload با شناسه قبلی <code>MESSAGE_IDEMPOTENCY_CONFLICT</code> می‌دهد.</p>
 <p>برای پیام رسانه‌ای <code>kind</code> مناسب و <code>attachmentIds</code> فایل‌های آماده لازم است. Reply با شناسه پیام همان گفت‌وگو، Mention با UserId عضو مجاز و Forward با <code>destinationConversationId</code> و یک <code>clientMessageId</code> جدید انجام می‌شود؛ دسترسی به هر دو طرف و محدودیت Scope کنترل می‌شود.</p>
-<p>ویرایش پیام <code>text</code> و <code>expectedVersion</code> می‌گیرد؛ حذف پیام <code>expectedVersion</code> در Query می‌خواهد. حذف یک tombstone ایجاد می‌کند؛ در نمایش <code>isDeleted</code> و محتوای پنهان‌شده را رعایت کنید. واکنش‌های موجود <code>Like</code>، <code>Love</code>، <code>Laugh</code>، <code>Wow</code> و <code>Sad</code> هستند. مسیرهای Pin، اعضا، انتقال مالکیت و رسانه در مرجع Endpointها آمده‌اند.</p>
-<h3 id="heading-48">تاریخچه، Delta و رسید خواندن</h3>
+<p>ویرایش پیام <code>text</code> و <code>expectedVersion</code> می‌گیرد و فقط برای فرستنده تا مرز دقیق <code>SentAtUtc + 1h</code> مجاز است. حذف عمومی صریح با <code>DELETE /conversations/{id}/messages/{messageId}/for-everyone?expectedVersion=...</code> انجام می‌شود؛ مسیر قدیمی حذف برای سازگاری همین معنی را دارد. فرستنده همان deadline را دارد، ولی Owner یا Admin دارای <code>DeleteMessages</code> برای moderation محدود به یک ساعت نیست. حذف یک tombstone می‌سازد و متن/رسانه/دانلود عادی را می‌بندد. <code>DELETE .../for-me</code> بدون deadline فقط برای همان کاربر پیام را از History، Search، Media، Reply، Pin و File authorization مخفی می‌کند و retry آن idempotent است. واکنش‌های موجود <code>Like</code>، <code>Love</code>، <code>Laugh</code>، <code>Wow</code> و <code>Sad</code> هستند.</p>
+<h3 id="heading-51">رفتار و state گفتگو در STEP 14C</h3>
+<p>بدنه ساخت Group می‌تواند <code>visibility</code> برابر <code>Private/Public</code>، <code>groupHistoryPolicy</code> برابر <code>FullHistory/FromJoin</code> و flags مربوط به <code>memberCapabilities</code> را بفرستد. Channel فقط FullHistory و capability صفر می‌پذیرد. در FromJoin، boundary عضو هنگام join snapshot می‌شود و تغییر بعدی setting تاریخچه اعضای قبلی را بازنویسی نمی‌کند.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Route</th>
+<th>کاربرد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/conversations?filter=All&amp;page=1&amp;pageSize=30</code></td>
+<td>فهرست bounded؛ فیلترهای Direct/Group/Channel/Unread/Archived نیز پذیرفته می‌شوند</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/conversations/discover?type=Group&amp;q=...&amp;page=1&amp;pageSize=30</code></td>
+<td>کشف Public در context شخصی یا همان سازمان</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/conversations/{id}/join</code></td>
+<td>عضویت داوطلبانه در Public user-managed</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/conversations/{id}/settings</code></td>
+<td>Visibility/History/Capabilities با <code>expectedVersion</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/conversations/{id}/members?page=1&amp;pageSize=30</code></td>
+<td>member list صفحه‌بندی‌شده</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/conversations/{id}/members/{userId}/permissions</code></td>
+<td>permissionهای Admin با <code>expectedVersion</code></td>
+</tr>
+<tr>
+<td><code>POST/DELETE</code></td>
+<td><code>/conversations/{id}/archive</code></td>
+<td>archive/unarchive فقط برای caller</td>
+</tr>
+<tr>
+<td><code>POST/DELETE</code></td>
+<td><code>/conversations/{id}/state/pin</code></td>
+<td>pin/unpin گفتگو فقط برای caller</td>
+</tr>
+<tr>
+<td><code>PUT/DELETE</code></td>
+<td><code>/conversations/{id}/mute</code></td>
+<td>mute دائم یا تا timestamp صریح UTC / unmute</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/conversations/{id}/mark-unread</code></td>
+<td>unread نمایشی بدون کاهش read cursor</td>
+</tr>
+</tbody>
+</table></div>
+<p>فهرست گفتگو state کاربر جاری (<code>isArchived</code>, <code>isMuted</code>, <code>mutedUntilUtc</code>, <code>isPinned</code>, <code>isManuallyUnread</code>) و badge امن سازمان (<code>organizationId</code>, <code>organizationName</code>) را برمی‌گرداند. پیام جدید archive را خودکار باز نمی‌کند. Mute جلوی ذخیره پیام، unread یا Delta/SignalR را نمی‌گیرد و فقط برای notification policy آینده است. جزئیات کامل در <a href="architecture/STEP_14C_MESSAGING_BEHAVIOR_HARDENING.md">سند STEP 14C</a> ثبت شده است.</p>
+<h3 id="heading-52">تاریخچه، Delta و رسید خواندن</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1502,20 +1731,76 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tbody>
 </table></div>
 <p>عدد <code>12</code> نمونه است؛ فقط آخرین Sequence واقعاً دریافت‌شده یا خوانده‌شده را ACK کنید. cursor خواندن/دریافت عقب نمی‌رود. <code>MessageSequence</code> ترتیب پیام‌ها و cursor تغییرات ترتیب mutationها را بیان می‌کنند؛ این دو قابل جایگزینی نیستند. cursorها را opaque نگه دارید و به گفت‌وگو/جست‌وجوی دیگری منتقل نکنید.</p>
-<h3 id="heading-49">SignalR</h3>
+<h3 id="heading-53">SignalR</h3>
 <p>Hub مسیر <code>/hubs/messaging</code> دارد. متدهای قابل فراخوانی <code>SubscribeConversation(conversationId)</code> و <code>UnsubscribeConversation(conversationId)</code> هستند. event سمت کلاینت <code>ConversationChanged</code> نام دارد و اطلاعات سبک مثل <code>conversationId</code>، <code>type</code>، <code>resourceId</code>، <code>resourceVersion</code>، <code>cursor</code>، <code>occurredAtUtc</code> و <code>payloadVersion</code> را حمل می‌کند؛ متن کامل پیام نیست.</p>
 <p>پس از اتصال یا reconnect، دسترسی و subscriptionها را برقرار کنید و تغییرات را از آخرین cursor پردازش‌شده با REST بگیرید. صرف دریافت یک اعلان یا cursor جدید، مجوز ردکردن تغییرات بین cursor قبلی و آن اعلان نیست. بعد از پردازش موفق صفحه Delta، cursor ذخیره‌شده را جلو ببرید. تحویل اعلان می‌تواند تکراری باشد؛ <code>changeId</code> را برای تشخیص تغییر تکراری نگه دارید.</p>
 <p><strong>محدودیت فعلی احراز هویت Hub:</strong> <code>SessionAuthenticationHandler</code> فقط <code>Authorization: Bearer ...</code> را می‌خواند و <code>access_token</code> در query را نمی‌خواند. CORS اکنون برای همه origin/header/methodها باز و بدون <code>AllowCredentials</code> است؛ این تغییر پشتیبانی query-token WebSocket/SSE مرورگر را اضافه نمی‌کند. REST مرورگر از <code>credentials: "omit"</code> و SignalR LongPolling از <code>accessTokenFactory</code> و <code>withCredentials:false</code> استفاده کند؛ نمونه در قرارداد فرانت‌اند است. transport و reconnect در origin واقعی باید آزمایش شوند. در قطع realtime، REST و Delta مسیر بازیابی‌اند؛ backplane و cookie-based affinity از تنظیم فعلی قابل نتیجه‌گیری نیستند.</p>
-<h3 id="heading-50">جست‌وجو، مسدودسازی و گزارش</h3>
-<p><code>GET /messages/search?q=...</code> از فیلترهای اختیاری <code>conversationId</code>، <code>kind</code>، <code>fromUtc</code>، <code>toUtc</code>، <code>cursor</code> و <code>limit</code> پشتیبانی می‌کند. پاسخ شامل <code>items</code>، <code>totalCount</code> و <code>nextCursor</code> است. Query و cursor را URL-encode کنید؛ نتایج بر اساس دسترسی جاری محدود می‌شوند.</p>
+<h3 id="heading-54">جست‌وجو، مسدودسازی و گزارش</h3>
+<p><code>GET /messages/search?q=...</code> از فیلترهای اختیاری <code>conversationId</code>، <code>senderUserId</code>، <code>kind</code>، <code>fromUtc</code>، <code>toUtc</code>، <code>cursor</code> و <code>limit</code> پشتیبانی می‌کند. پاسخ شامل <code>items</code>، <code>totalCount</code> و <code>nextCursor</code> است. Query و cursor را URL-encode کنید؛ نتایج بر اساس دسترسی جاری و watermark خصوصی Clear History محدود می‌شوند. <code>GET /conversations?q=...</code> نیز title گروه/کانال، هویت امن طرف Direct و عنوان Saved Messages را جست‌وجو می‌کند.</p>
 <ul>
 <li><code>POST /messaging/blocks/{userId}</code> حساب را مسدود می‌کند؛ <code>DELETE</code> همان مسیر رفع مسدودسازی است؛ <code>GET /messaging/blocks</code> فهرست خود کاربر را می‌دهد.</li>
 <li><code>POST /conversations/{conversationId}/messages/{messageId}/reports</code> بدنه <code>clientReportId</code>، <code>reason</code> و <code>description</code> می‌گیرد.</li>
 <li>دلیل گزارش یکی از <code>Harassment</code>، <code>Spam</code>، <code>Threat</code>، <code>InappropriateContent</code>، <code>Impersonation</code> یا <code>Other</code> است.</li>
 <li><code>GET /messaging/reports/{reportId}</code> رسید گزارش متعلق به خود کاربر را می‌دهد. این API پنل رسیدگی مدیر یا تضمین اقدام خودکار روی گزارش نیست.</li>
 </ul>
+<h3 id="heading-55">تکمیل Messenger در STEP 14E</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Route</th>
+<th>قرارداد</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/conversations/saved</code></td>
+<td>Saved Conversation شخصی را lazy می‌سازد؛ بار اول <code>201</code> و دفعات بعد <code>200</code> با <code>alreadyExisted=true</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/conversations?filter=Saved&amp;q=&amp;page=&amp;pageSize=</code></td>
+<td>Saved را در list/filter می‌آورد؛ هر summary دارای <code>unreadMentionCount</code> است</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/conversations/{id}/clear-history</code></td>
+<td>watermark خصوصی را تا آخرین Sequence committed جلو می‌برد و <code>ConversationUserStateResult</code> برمی‌گرداند</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/messages/search?...&amp;senderUserId=</code></td>
+<td>فیلتر sender را همراه فیلترهای قبلی اعمال می‌کند</td>
+</tr>
+</tbody>
+</table></div>
+<p>Saved Messages فقط در workspace شخصی قابل resolve است، در SQL Server برای هر User
+یک Conversation یکتا دارد، notification تولید نمی‌کند و فقط مالک می‌تواند آن را
+بخواند یا در آن پیام بفرستد. متن، فایل، Search و Shared Media از pipeline عادی
+استفاده می‌کنند. Forward به Saved یک Message مستقل می‌سازد و تغییر یا حذف آن منبع
+را mutate نمی‌کند.</p>
+<p>Clear History حذف فیزیکی Message نیست. مقدار <code>historyHiddenThroughSequence</code> در state
+خصوصی کاربر ثبت می‌شود و History، Search، Shared Media، File، Reply، Forward، Delta،
+preview و unread را برای پیام‌های قدیمی همان کاربر محدود می‌کند. تکرار درخواست
+idempotent است و پیام‌های بعدی دیده می‌شوند. طرف دیگر Conversation هیچ تغییری نمی‌بیند.</p>
+<p>برای ارسال Contact Card، <code>kind="ContactCard"</code> و <code>contactUserId</code> معتبر بدهید و <code>text</code>
+و <code>attachmentIds</code> را خالی نگه دارید. پاسخ پیام فقط snapshot امن <code>userId</code>، <code>username</code>
+و <code>displayName</code> را در <code>contactCard</code> دارد؛ Phone Number برنمی‌گردد و card به‌تنهایی
+Contact یا Direct Conversation ایجاد نمی‌کند.</p>
+<p>هر Message committed در Direct/Group/Channel برای participantهای فعال به‌جز فرستنده
+یک intent اعلان durable می‌سازد. type مؤثر هر گیرنده با اولویت
+<code>MessageMention &gt; MessageReply &gt; MessageReceived</code> تعیین می‌شود. preview Push/SMS فقط
+متن عمومی «پیام جدیدی در ماکان دارید.» است. Mute موقت یا دائم فقط Push/SMS را
+suppress می‌کند؛ Notification داخلی، خود پیام، unread، Delta و SignalR باقی می‌مانند.
+provider خارجی داخل transaction ارسال پیام فراخوانی نمی‌شود و retry همان
+<code>clientMessageId</code> اعلان تکراری ایجاد نمی‌کند.</p>
+<p>Contact Sync، Avatar/Bio و Presence/LastSeen/Typing در این نسخه endpoint یا schema
+ندارند؛ قرارداد consent/provenance فایل و semantics privacy/multi-instance هنوز
+تصویب نشده است. برای production دارای کودک نیز انتخاب adapter واقعی Child Safety و
+policy دقیق ساخت/عضویت Personal Group/Channel release blocker باقی مانده است.</p>
 <p><a id="errors"></a></p>
-<h2 id="heading-51">خطاها و تلاش مجدد</h2>
+<h2 id="heading-56">خطاها و تلاش مجدد</h2>
 <p>خطای کاربردی به شکل ProblemDetails برمی‌گردد؛ نمونه:</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;urn:makan:problem:auth-required&quot;,
@@ -1589,7 +1874,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tr>
 </tbody>
 </table></div>
-<h3 id="heading-52">قراردادهای retry</h3>
+<h3 id="heading-57">قراردادهای retry</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1642,7 +1927,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </table></div>
 <p>هدر عمومی <code>Idempotency-Key</code> پیاده‌سازی نشده است. برای عملیات جدید Guid جدید و برای retry همان عملیات همان Guid و payload را نگه دارید. همه POSTها retry-safe نیستند؛ ساخت دوره، درس، کلاس یا تکلیف را با فرض idempotency تکرار نکنید. کنترل نسخه نیز با idempotency یک مفهوم نیست.</p>
 <p><a id="dashboards"></a></p>
-<h2 id="heading-53">داشبوردهای نقش‌محور</h2>
+<h2 id="heading-58">داشبوردهای نقش‌محور</h2>
 <p>داشبوردهای STEP 11A از داده رسمی موجود در SQL Server ساخته می‌شوند و برای چهار مخاطب قرارداد جدا دارند:</p>
 <div class="table-wrap"><table>
 <thead>
@@ -1709,7 +1994,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </code></pre>
 <p>فیلد AI/Copilot در قرارداد ساخته نشده است. insightهای هوشمند به STEP 10 و widgetهای Plan/Quota/Subscription مدیر به STEP 13 Commerce موکول شده‌اند. معماری و جزئیات privacy در <a href="architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md">سند STEP 11A</a> آمده است.</p>
 <p><a id="detailed-reports"></a></p>
-<h2 id="heading-54">گزارش‌های تفصیلی نقش‌محور</h2>
+<h2 id="heading-59">گزارش‌های تفصیلی نقش‌محور</h2>
 <p>STEP 11B در کنار داشبوردهای خلاصه، APIهای report خواندنی و صفحه‌بندی‌شده را ارائه می‌کند. Dashboard برای glance سریع است؛ report برای history، filter، sort و drill-down استفاده می‌شود. مسیرهای اصلی:</p>
 <ul>
 <li>Student: <code>GET /api/v1/reports/student/attendance|assignments|exams|grades</code></li>
@@ -1731,8 +2016,8 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </code></pre>
 <p>جزئیات endpointها، allowlist مرتب‌سازی و privacy در <a href="architecture/STEP_11B_DETAILED_REPORTS.md">سند معماری STEP 11B</a> آمده است. Export، گزارش زمان‌بندی‌شده، cache و AI در این مرحله وجود ندارند.</p>
 <p><a id="persistence"></a></p>
-<h2 id="heading-55">نقشه persistence و مرز تراکنش‌ها</h2>
-<p><a href="../MakanApp.Infrastructure/Persistence/MakanDbContext.cs">MakanDbContext</a> از configurationهای همان assembly استفاده می‌کند. ۵۳ جدول در هفت schema وجود دارد؛ Reports داده جدید ذخیره نمی‌کند. برای ستون‌ها، FKها، indexها و CHECKهای کامل، <a href="database-current-structure.md">فرهنگ دیتابیس</a> مرجع تکمیلی است.</p>
+<h2 id="heading-60">نقشه persistence و مرز تراکنش‌ها</h2>
+<p><a href="../MakanApp.Infrastructure/Persistence/MakanDbContext.cs">MakanDbContext</a> از configurationهای همان assembly استفاده می‌کند. ۸۸ جدول داریم؛ از جمله persistence مربوط به report export، Notification، Commerce و Platform/MFA. برای ۹۰۱ ستون، FK، key، index و CHECKهای واقعی، <a href="database-current-structure.html">فرهنگ جاری دیتابیس</a> مرجع تکمیلی است.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1744,8 +2029,8 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 <tbody>
 <tr>
 <td><code>identity</code></td>
-<td style="text-align: right;">۵</td>
-<td>User، Person، Credential، OTP و UserSession</td>
+<td style="text-align: right;">۷</td>
+<td>User، Person، Credential، OTP، UserSession، RefreshToken و شاهد CommunicationAge</td>
 </tr>
 <tr>
 <td><code>organization</code></td>
@@ -1769,17 +2054,37 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tr>
 <tr>
 <td><code>messaging</code></td>
-<td style="text-align: right;">۱۴</td>
-<td>گفتگو/عضو/پیام/فایل/واکنش، تغییرات، outbox، Block، Report و مجوز ارتباط</td>
+<td style="text-align: right;">۲۳</td>
+<td>گفتگو/عضو/دعوت/ownership/state، پیام و تعامل، delta/outbox، privacy/contact، Block، moderation و safety</td>
 </tr>
 <tr>
 <td><code>storage</code></td>
 <td style="text-align: right;">۱</td>
 <td>FileAsset؛ محتوای باینری در storage adapter است</td>
 </tr>
+<tr>
+<td><code>commerce</code></td>
+<td style="text-align: right;">۱۰</td>
+<td>Plan/version، entitlement/quota، subscription/usage و order/payment</td>
+</tr>
+<tr>
+<td><code>notification</code></td>
+<td style="text-align: right;">۴</td>
+<td>اعلان، delivery، preference و device</td>
+</tr>
+<tr>
+<td><code>platform</code></td>
+<td style="text-align: right;">۹</td>
+<td>IAM، audit، provisioning و MFA credential/recovery</td>
+</tr>
+<tr>
+<td><code>reports</code></td>
+<td style="text-align: right;">۱</td>
+<td>job خروجی خصوصی گزارش</td>
+</tr>
 </tbody>
 </table></div>
-<h3 id="heading-56">سه لایه تضمین درستی داده</h3>
+<h3 id="heading-61">سه لایه تضمین درستی داده</h3>
 <ol>
 <li>
 <p>Domain قوانین محلی و تغییر وضعیت entity را کنترل می‌کند؛ مثل معتبر بودن نمره و غیرقابل ویرایش بودن نسخه منتشرشده.</p>
@@ -1792,7 +2097,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </li>
 </ol>
 <p>FKهای مرکب مانند <code>(OrganizationId, ClassId)</code> تطابق بافت را الزام می‌کنند. این FKها حق خواندن یک endpoint را اثبات نمی‌کنند. filtered unique indexها معمولاً یکتایی رابطه فعال را نگه می‌دارند تا سابقه پایان‌یافته حفظ شود. CHECK SQL نیز فقط محدودیت تعریف‌شده خود را تضمین می‌کند؛ lifecycle کامل محصول یک CHECK واحد نیست.</p>
-<h3 id="heading-57">rowversion، revision و operationId سه چیز متفاوت‌اند</h3>
+<h3 id="heading-62">rowversion، revision و operationId سه چیز متفاوت‌اند</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1825,7 +2130,7 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tbody>
 </table></div>
 <p>rowversion زمان رویداد نیست. پارامتر expected version در body/query همان endpoint قرار دارد؛ هدر عمومی If-Match یا Idempotency-Key برای همه APIها وجود ندارد. همه POSTها retry-safe نیستند.</p>
-<h3 id="heading-58">نمونه‌های واقعی تراکنش و locking</h3>
+<h3 id="heading-63">نمونه‌های واقعی تراکنش و locking</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1868,16 +2173,16 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </tbody>
 </table></div>
 <p>ارسال SMS در <code>RequestOtpAsync</code> قبل از ذخیره challenge است و در transaction طولانی SQL انجام نمی‌شود. اگر provider موفق شود ولی ذخیره SQL شکست بخورد، SMS رسیده الزاماً challenge قابل تأیید در backend ندارد. retry کور ارسال پیامک را پیشنهاد نکنید. storage فایل هم transaction مشترک اتمیک با SQL Server ندارد؛ مسیرهای جبران و وضعیت FileAsset در <code>StorageService</code> بررسی شوند.</p>
-<h3 id="heading-59">migration و محیط توسعه</h3>
-<p>۲۰ migration موجود از foundation تا <code>AddExamGradingAndRelease</code> مدل فعلی را می‌سازند. Dashboard، Detailed Reports و adapter OTP migration اختصاصی جدید ندارند. runtime هنگام startup <code>Migrate</code> یا <code>EnsureCreated</code> اجرا نمی‌کند. <code>MakanDbContextFactory</code> برای ابزار EF از متغیر <code>ConnectionStrings__MakanDatabase</code> استفاده می‌کند؛ connection runtime پروژه Api را خودکار از User Secrets نمی‌گیرد.</p>
+<h3 id="heading-64">migration و محیط توسعه</h3>
+<p>۳۷ Migration موجود تا EnforceApprovedMessengerChildSafety مدل فعلی را می‌سازند. runtime هنگام startup Migrate یا EnsureCreated اجرا نمی‌کند. MakanDbContextFactory اتصال design-time را از ConnectionStrings__MakanDatabase می‌گیرد، نه خودکار از User Secrets API. خروجی SQL تحویلی باید با ابزار export-migration-sql.ps1 تولید و با تست مستقل SQL بررسی شود؛ خروجی خام قدیمی در backfill ستون تازه خطای 207 داشت. <a href="production/DEPLOYMENT_IIS.md">دستور جاری</a>.</p>
 <p>برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر <strong>الگوی توسعه</strong> است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:</p>
 <pre><code class="language-powershell">dotnet tool restore
 dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj
 </code></pre>
 <p>نام نمونه بالا migration موجود نیست. این مرحله مستندسازی migration نساخته است. اجرای migration روی Production یک عملیات جدا با artifact بررسی‌شده و برنامه backup/rollback است؛ <a href="deployment-windows-linux-docker.md">سند استقرار</a> مسیر آن را توضیح می‌دهد.</p>
 <p><a id="runtime-walkthroughs"></a></p>
-<h2 id="heading-60">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</h2>
-<h3 id="heading-61">۱. درخواست و تأیید OTP</h3>
+<h2 id="heading-65">شش مسیر واقعی برای مطالعه کد از ابتدا تا انتها</h2>
+<h3 id="heading-66">۱. درخواست و تأیید OTP</h3>
 <pre><code class="language-text">AuthController.RequestOtp
 -&gt; IdentityService.RequestOtpAsync
 -&gt; NormalizePhoneNumber + persisted rate/resend checks
@@ -1889,7 +2194,7 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 </code></pre>
 <p>provider مدیریت‌شده کد را تولید می‌کند؛ backend همان کد را hash می‌کند و کد موازی محلی نمی‌سازد. latest challenge پس از پاسخ قابل استفاده provider supersede می‌شود و زمان expiry از زمان بعد از تحویل provider محاسبه می‌شود. در verify، <code>OtpChallenge.Verify</code> مصرف/انقضا/تعداد تلاش را تعیین می‌کند؛ credential موجود User را resolve می‌کند یا User تازه ساخته می‌شود، سپس UserSession با hash توکن ساخته می‌شود. token خام فقط در response ساخت نشست تحویل داده می‌شود.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/AuthController.cs">AuthController</a> → <a href="../MakanApp.Application/Identity/IdentityService.cs">IdentityService</a> → <a href="../MakanApp.Domain/Identity/OtpChallenge.cs">OtpChallenge</a> → <a href="../MakanApp.Application/Identity/IdentityAbstractions.cs">IdentityAbstractions</a> → <a href="../MakanApp.Infrastructure/Identity/EfIdentityStore.cs">EfIdentityStore</a> → <a href="../tests/MakanApp.IntegrationTests/IdentityEndpointsTests.cs">IdentityEndpointsTests</a>.</p>
-<h3 id="heading-62">۲. آخرین ظرفیت کلاس</h3>
+<h3 id="heading-67">۲. آخرین ظرفیت کلاس</h3>
 <pre><code class="language-text">ClassesController.EnrollLearner
 -&gt; AcademicService.EnrollLearnerAsync
 -&gt; resolve Organization / Manager
@@ -1900,11 +2205,11 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 </code></pre>
 <p>هدف قفل کلاس این است که دو درخواست آخرین جای خالی را هم‌زمان آزاد نبینند. یکتایی enrollment فعال در SQL نیز مکمل کنترل سرویس است. پایان enrollment سابقه را حذف نمی‌کند؛ status و زمان پایان ثبت می‌شوند. API ثبت‌نام LearnerOrganizationPersonId می‌گیرد، نه شناسه حساب User.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/ClassesController.cs">ClassesController</a> → <a href="../MakanApp.Application/Academic/AcademicService.cs">AcademicService</a> → <a href="../MakanApp.Domain/Academic/Enrollment.cs">Enrollment</a> → <a href="../MakanApp.Infrastructure/Academic/EfAcademicStore.cs">EfAcademicStore</a> → <a href="../MakanApp.Infrastructure/Persistence/Configurations/Academic/EnrollmentConfiguration.cs">EnrollmentConfiguration</a> → <a href="../tests/MakanApp.IntegrationTests/AcademicEndpointsTests.cs">AcademicEndpointsTests</a>.</p>
-<h3 id="heading-63">۳. تحویل تکلیف و انتشار نمره</h3>
+<h3 id="heading-68">۳. تحویل تکلیف و انتشار نمره</h3>
 <p>انتشار تکلیف، نسخه و گیرندگان رسمی آن را مشخص می‌کند. Student draft خودش را می‌سازد/بازیابی می‌کند، متن و فایل مجاز را ذخیره می‌کند و FinalSubmit می‌زند. پاسخ موفق تحویل با حفظ clientOperationId قابل بازیابی است؛ ذخیره draft به معنی Submitted نیست. فایل ابتدا upload می‌شود و attach مجاز به submission مرحله جداست.</p>
 <p>ارزیاب از <code>EvaluationService</code> یک <code>EvaluationRevision</code> draft می‌سازد، سپس release رسمی <code>GradeRelease</code> را ایجاد می‌کند. Student و Parent projection نتیجه منتشرشده خود را می‌گیرند؛ TeacherPrivateNote در خروجی عمومی قرار نمی‌گیرد. اصلاح نمره منتشرشده revision اصلاحی و دلیل می‌خواهد و سابقه رسمی را بی‌صدا overwrite نمی‌کند.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/SubmissionsController.cs">SubmissionsController</a> → <a href="../MakanApp.Application/Assessment/SubmissionService.cs">SubmissionService</a> → <a href="../MakanApp.Domain/Assessment/SubmissionAttempt.cs">SubmissionAttempt</a> → <a href="../MakanApp.Infrastructure/Assessment/EfSubmissionStore.cs">EfSubmissionStore</a>؛ سپس <a href="../MakanApp.Application/Assessment/EvaluationService.cs">EvaluationService</a> → <a href="../MakanApp.Infrastructure/Assessment/EfEvaluationStore.cs">EfEvaluationStore</a> → <a href="../tests/MakanApp.IntegrationTests/EvaluationLifecycleEndpointsTests.cs">EvaluationLifecycleEndpointsTests</a>.</p>
-<h3 id="heading-64">۴. پاسخ آزمون تا نتیجه رسمی</h3>
+<h3 id="heading-69">۴. پاسخ آزمون تا نتیجه رسمی</h3>
 <pre><code class="language-text">ExamService: published version
 -&gt; ExamAttemptService: freeze questions/order + server deadline
 -&gt; ExamAnswerService: lease + expected revision + accepted AnswerRevision
@@ -1915,7 +2220,7 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 </code></pre>
 <p>هر تلاش به نسخه و مجموعه سؤال خودش وابسته است. زمان دستگاه مرجع مهلت نیست. ذخیره پاسخ، revision جدید قابل پیگیری تولید می‌کند؛ finalize مجموعه پاسخ پذیرفته‌شده را تثبیت می‌کند و receipt دارد. حق نوشتن به نشست مربوط است تا دو دستگاه بی‌صدا پاسخ همدیگر را overwrite نکنند. تصحیح تستی و تکمیل ارزیابی با انتشار عمومی یک مرحله نیستند. وجود deadline به معنی worker نهایی‌سازی خودکار نیست؛ auto-finalize در این نسخه وجود ندارد.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/ExamsController.cs">ExamsController</a> → <a href="../MakanApp.Application/Assessment/ExamAttemptService.cs">ExamAttemptService</a> → <a href="../MakanApp.Application/Assessment/ExamAnswerService.cs">ExamAnswerService</a> → <a href="../MakanApp.Application/Assessment/ExamFinalizationService.cs">ExamFinalizationService</a> → <a href="../MakanApp.Application/Assessment/ExamGradingService.cs">ExamGradingService</a> → <a href="../tests/MakanApp.IntegrationTests/ExamFinalizationEndpointsTests.cs">ExamFinalizationEndpointsTests</a> و <a href="../tests/MakanApp.IntegrationTests/ExamGradingEndpointsTests.cs">ExamGradingEndpointsTests</a>.</p>
-<h3 id="heading-65">۵. ارسال پیام، Delta و SignalR</h3>
+<h3 id="heading-70">۵. ارسال پیام، Delta و SignalR</h3>
 <pre><code class="language-text">ConversationsController.SendMessage
 -&gt; MessagingService + communication/participant policy
 -&gt; EfMessagingStore: message + stable change event + outbox
@@ -1927,13 +2232,13 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 <p><code>clientMessageId</code> اثر retry را محدود می‌کند. receipt HTTP نتیجه commit است؛ SignalR می‌تواند دیرتر برسد یا اتصال قطع باشد. notification یک اشاره به تغییر است، نه payload کامل پیام خصوصی. Delta از <code>MessagingChangeEvent</code> مرجع بازیابی تغییرات بعد از cursor است. cursor delivered/read وضعیت خود کاربر است؛ از آن رسید خواندن همه مخاطبان نتیجه نگیرید.</p>
 <p>processor در <a href="../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs">MessagingRealtimeOutboxDispatcher.cs</a> تعریف شده است. claim با <code>UPDLOCK/READPAST/ROWLOCK</code>، batch حداکثر۵۰ و lease۳۰ثانیه‌ای انجام می‌شود؛ ارسال notifier خارج transaction claim است. از lease، retry و crash باید امکان ارسال تکراری notification را نتیجه گرفت؛ مصرف‌کننده با شناسه/نسخه و Delta باید تکرار را تحمل کند. backplane چند instance در این نسخه ثبت نشده است.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/ConversationsController.cs">ConversationsController</a> → <a href="../MakanApp.Application/Messaging/MessagingService.cs">MessagingService</a> → <a href="../MakanApp.Infrastructure/Messaging/EfMessagingStore.cs">EfMessagingStore</a> و فایل‌های partial → <a href="../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs">dispatcher/processor</a> → <a href="../MakanApp.Api/Realtime/SignalRMessagingRealtimeNotifier.cs">SignalRMessagingRealtimeNotifier</a> → <a href="../tests/MakanApp.IntegrationTests/MessagingSyncEndpointsTests.cs">MessagingSyncEndpointsTests</a>.</p>
-<h3 id="heading-66">۶. یک گزارش نقش‌محور</h3>
+<h3 id="heading-71">۶. یک گزارش نقش‌محور</h3>
 <p><code>ReportsController</code> query را bind می‌کند. <code>DetailedReportService</code> context و نقش مسیر، page size، sort allowlist و بازه UTC را بررسی می‌کند. <code>EfDetailedReportReadService</code> query/projection را روی جداول رسمی همان scope اجرا می‌کند. تغییر وضعیت entity یا جدول گزارش تازه‌ای لازم نیست. این تفاوت یک read use case با mutation است.</p>
 <p>Student/Parent فقط release رسمی نتیجه را می‌بینند. مقدار <code>dataAsOfUtc</code> زمان شروع خواندن است و مجموعه چند query را به snapshot اتمیک تبدیل نمی‌کند. برای teacher-workload بازه زمانی فقط completedSessionCount را محدود می‌کند؛ مراجعه به کارت دقیق endpoint برای معنی فیلترها ضروری است.</p>
 <p>مسیر مطالعه: <a href="../MakanApp.Api/Controllers/ReportsController.cs">ReportsController</a> → <a href="../MakanApp.Application/Reports/Detailed/DetailedReportService.cs">DetailedReportService</a> → <a href="../MakanApp.Application/Reports/Detailed/DetailedReportAbstractions.cs">DetailedReportAbstractions</a> → <a href="../MakanApp.Infrastructure/Reports/Detailed/EfDetailedReportReadService.cs">EfDetailedReportReadService</a> → <a href="../tests/MakanApp.UnitTests/Reports/DetailedReportServiceTests.cs">DetailedReportServiceTests</a>.</p>
 <p><a id="developer-workflow"></a></p>
-<h2 id="heading-67">روش توسعه و عیب‌یابی برای عضو جدید تیم</h2>
-<h3 id="heading-68">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</h3>
+<h2 id="heading-72">روش توسعه و عیب‌یابی برای عضو جدید تیم</h2>
+<h3 id="heading-73">یک قابلیت کوچک را چطور اضافه یا اصلاح کنیم؟</h3>
 <ol>
 <li>
 <p>مسئله، endpoint/رفتار، نقش مجاز و scope منبع را دقیق بنویسید. AGENTS و اسناد مرتبط را بخوانید؛ وضعیت Git و تغییرات از قبل موجود را بررسی کنید.</p>
@@ -1957,7 +2262,7 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 <p>restore، build، test و validation نهایی را اجرا کنید؛ سپس diff، اسناد و artifactهای لازم را بررسی و فقط فایل‌های مرتبط را commit کنید. endpoint جدید را در مرجع و مسیر استفاده‌اش را در راهنما ثبت کنید.</p>
 </li>
 </ol>
-<h3 id="heading-69">تست‌ها چه چیزی را ثابت می‌کنند؟</h3>
+<h3 id="heading-74">تست‌ها چه چیزی را ثابت می‌کنند؟</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1996,7 +2301,7 @@ dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project Ma
 dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --configuration Debug --filter FullyQualifiedName~AcademicEndpointsTests
 dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj --configuration Debug
 </code></pre>
-<h3 id="heading-70">مسیر عیب‌یابی یک درخواست ناموفق</h3>
+<h3 id="heading-75">مسیر عیب‌یابی یک درخواست ناموفق</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -2059,12 +2364,12 @@ dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj -
 </tbody>
 </table></div>
 <p>برای خطای ناشناخته، traceId پاسخ را با log متناظر دنبال کنید. connection string، token، OTP و URL حاوی ServiceToken را در گزارش مشترک قرار ندهید. در EF store مربوط query scope، SQL exception و تغییرات tracked را بررسی کنید؛ نسخه و شناسه مصنوعی مثال‌های این کتاب، داده واقعی پایگاه شما نیستند.</p>
-<h3 id="heading-71">مرز میزبانی و موارد لازم برای تحویل عملیاتی</h3>
-<p>میزبان migrations را اجرا نمی‌کند؛ health فقط liveness است؛ Swagger/OpenAPI در همه محیط‌ها عمومی‌اند. فایل upload برای دوام بین deploy به RootPath مطلق، permission و storage پایدار نیاز دارد. CORS فعلی wildcard بدون credentials است. handler فقط Bearer header را می‌خواند؛ SignalR WebSocket/SSE مرورگر با query-token از آن پشتیبانی نمی‌گیرد. برای transport قابل آزمایش مرورگر به نمونه LongPolling قرارداد فرانت و <a href="deployment-windows-linux-docker.md">راهنمای استقرار</a> مراجعه کنید.</p>
-<p>UseForwardedHeaders/trusted proxy صریح در Program ثبت نشده است؛ TLS termination و RemoteIpAddress پشت reverse proxy باید در محیط هدف بررسی شوند. runtime account SQL و principal migration مسئولیت جدا دارند. backup دیتابیس بدون backup فایل‌های referenced کافی نیست. هیچ‌یک از موفقیت تست‌ها یا دستورهای این کتاب به معنی استقرار واقعی، تحویل SMS یا آماده‌بودن چند instance نیست.</p>
+<h3 id="heading-76">مرز میزبانی و موارد لازم برای تحویل عملیاتی</h3>
+<p>میزبان migrations را اجرا نمی‌کند؛ /health و /health/live فقط liveness و /health/ready شامل probe SQL و Storage است. Swagger/OpenAPI در Production پیش‌فرض خاموش‌اند. Storage پایدار خارج Publish و CORS allowlist بدون credentials لازم‌اند. handler فقط Bearer header را می‌خواند؛ query-token مرورگر برای SignalR پشتیبانی نمی‌شود. LongPolling با header و withCredentials:false را مطابق <a href="frontend-contract/README.md">قرارداد مصرف API</a> بررسی کنید.</p>
+<p>UseForwardedHeaders با KnownProxies صریح و ForwardLimit=1 وجود دارد؛ اعتماد عمومی به proxy مجاز نیست. runtime principal SQL و migration principal جدا باشند. Backup دیتابیس بدون Storage و custody کلیدهای Identity/MFA کافی نیست. هیچ موفقیت تست یا دستور این کتاب اثبات IIS واقعی، تحویل SMS، recovery محیط هدف یا آماده‌بودن چند instance نیست. HTTP این انتشار استثنای صریح مالک است و رمزگذاری ندارد.</p>
 <p><a id="testing"></a></p>
-<h2 id="heading-72">تست و عیب‌یابی</h2>
-<h3 id="heading-73">اجرای validation</h3>
+<h2 id="heading-77">تست و عیب‌یابی</h2>
+<h3 id="heading-78">اجرای validation</h3>
 <pre><code class="language-powershell">dotnet restore MakanApp.sln
 dotnet build MakanApp.sln --configuration Debug --nologo
 dotnet test MakanApp.sln --configuration Debug --nologo
@@ -2076,7 +2381,7 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 </code></pre>
 <p>Integration از SQL Server LocalDB و پایگاه ثابت <code>MakanApp_MessagingSafety_IntegrationTests_Step7E</code> استفاده می‌کند؛ fixture آن را در شروع حذف و با migration بازسازی می‌کند و در پایان حذف می‌کند. این نام فقط برای تست است؛ داده شخصی/توسعه را در آن نگذارید و دو اجرای هم‌زمان این suite را روی یک LocalDB شروع نکنید. test fixture اتصال runtime را برای تست override می‌کند. فایل‌ها هم در پوشه موقت مختص تست نوشته می‌شوند.</p>
 <p>Unit قوانین مدل و سرویس‌های قابل تست را بررسی می‌کند. Integration رفتار HTTP، SQL Server، migration، مجوز، هم‌زمانی، idempotency و SignalR را پوشش می‌دهد. Architecture جهت وابستگی و عدم ورود EF Core/ASP.NET Core به لایه‌های داخلی را کنترل می‌کند.</p>
-<h3 id="heading-74">عیب‌یابی سریع</h3>
+<h3 id="heading-79">عیب‌یابی سریع</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -2099,11 +2404,11 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 </tr>
 <tr>
 <td>Swagger در دسترس نیست</td>
-<td>در تمام محیط‌ها ثبت می‌شود؛ آدرس، base path و reverse proxy را بررسی کنید</td>
+<td>در Production پیش‌فرض خاموش است؛ 404 می‌تواند رفتار صحیح باشد</td>
 </tr>
 <tr>
 <td>OTP نمی‌رسد</td>
-<td>adapter توسعه پیامک واقعی ندارد؛ debugger محلی یا تست خودکار را مطابق بخش ورود به کار ببرید</td>
+<td>Provider واقعی/Unavailable/Development، secret، محدودیت ارسال و خطای امن provider را بررسی کنید؛ تست خودکار SMS پولی نمی‌فرستد</td>
 </tr>
 <tr>
 <td>پس از restart پاسخ <code>401</code> می‌گیرید</td>
@@ -2135,7 +2440,7 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 </tr>
 <tr>
 <td>مرورگر خطای CORS دارد</td>
-<td>CORS wildcard فعال است؛ credentials:include، HTTP redirect، preflight proxy و header را بررسی کنید؛ موفقیت Postman اثبات اتصال مرورگر نیست</td>
+<td>Origin دقیق، allowlist، scheme/redirect و preflight را بررسی کنید؛ cookie credentials نداریم و موفقیت Postman اثبات مرورگر نیست</td>
 </tr>
 <tr>
 <td>Integration شکست می‌خورد</td>
@@ -2144,13 +2449,13 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 </tbody>
 </table></div>
 <p><a id="limits"></a></p>
-<h2 id="heading-75">محدودیت‌ها و مسیر مطالعه</h2>
-<h3 id="heading-76">مرز قابلیت موجود</h3>
-<p>در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider، backplane چند-instance SignalR، Copilot، AI، Commerce و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.</p>
+<h2 id="heading-80">محدودیت‌ها و مسیر مطالعه</h2>
+<h3 id="heading-81">مرز قابلیت موجود</h3>
+<p>در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider واقعی، backplane چندinstance SignalR، Copilot، AI، Payment/Order و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. Commerce فقط Summary خواندنی مدیر و foundation داخلی Entitlement/Quota دارد؛ مدیریت Plan و Subscription به Backoffice آینده موکول شده است. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.</p>
 <p>تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.</p>
-<h3 id="heading-77">دیتابیس و منابع کد</h3>
+<h3 id="heading-82">دیتابیس و منابع کد</h3>
 <p>Persistence با <code>MakanDbContext</code> و schemaهای <code>identity</code>، <code>organization</code>، <code>guardian</code>، <code>academic</code>، <code>assessment</code>، <code>storage</code> و <code>messaging</code> سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با <code>rowversion</code> و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.</p>
-<p>برای جزئیات مدل، <a href="database-current-structure.md">راهنمای ساختار دیتابیس</a> را کنار migrationها بخوانید؛ بازبینی فعلی آن ۵۳ جدول و ۲۰ migration موجود تا انتشار نتیجه آزمون را پوشش می‌دهد. مرجع schema جاری، configurationها و migrationهای موجود است.</p>
+<p>برای جزئیات مدل، <a href="database-current-structure.html">راهنمای ساختار دیتابیس</a> را کنار migrationها بخوانید؛ بازبینی جاری آن ۸۸ جدول و ۳۷ Migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.</p>
 <p>مسیر مطالعه یک جریان واقعی آزمون:</p>
 <ol>
 <li><a href="../MakanApp.Api/Controllers/ExamsController.cs">ExamsController</a> و <a href="../MakanApp.Api/Controllers/ExamGradingsController.cs">ExamGradingsController</a> برای قرارداد HTTP.</li>
@@ -2163,17 +2468,673 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 </ol>
 <p>برای قرارداد دقیق هر عملیات به <a href="backend-api-reference.html">مرجع API</a> و برای قواعد کلی مخزن به <a href="../AGENTS.md">AGENTS.md</a> مراجعه کنید.</p>
 <p><a id="document-maintenance"></a></p>
-<h2 id="heading-78">نگهداری همین راهنما و مرجع</h2>
-<p>Markdownهای <code>backend-api-guide.md</code> و <code>backend-api-reference.md</code> منابع اصلی‌اند. HTML/PDF هر سند خروجی جداگانه‌اند و برای تحویل کنار منبع نسخه‌بندی می‌شوند. تغییر route، قرارداد، code خطا، مجوز، DI، option یا migration باید در بخش متناظر منعکس شود؛ سپس خروجی‌ها دوباره تولید شوند.</p>
+<h2 id="heading-83">نگهداری همین راهنما و مرجع</h2>
+<p>راهنمای آموزشی Markdown دستی نگه‌داری می‌شود؛ مرجع API، مدل دیتابیس و README قرارداد مصرف از شواهد قابل بازتولید تولید می‌شوند. HTML/PDF هر چهار سند خروجی جداگانه دارند؛ خروجی‌های دیتابیس محلی/ignored هستند. تغییر route، DTO، مجوز، DI، option یا Migration باید در متن و metadata منعکس و خروجی‌ها دوباره ساخته شوند؛ رندر تنها جای استخراج از کد را نمی‌گیرد.</p>
 <p>برای تولید خروجی‌ها ابزار مستندسازی مستقل از build محصول است. از ریشه مخزن با Python و مرورگر Edge اجرا کنید؛ وابستگی‌های Python فقط ابزار Markdown/PDF هستند:</p>
 <pre><code class="language-powershell">python -m pip install --target .artifacts/docs-python -r tools/docs/requirements.txt
+dotnet run --project tools/docs/MakanApp.DocumentationSnapshot/MakanApp.DocumentationSnapshot.csproj --configuration Debug -- .artifacts/documentation-snapshot
+python tools/docs/sync_repository_docs.py --snapshot .artifacts/documentation-snapshot --reviewed-date 2026-10-15
 python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --pdf
 </code></pre>
 <p>ابزار Markdown را به HTML مستقل RTL تبدیل می‌کند، هر HTML را با Edge مخفی چاپ می‌کند و PDF دارای شماره صفحه/نشانک می‌سازد. ورودی و خروجی‌ها هر دو در <code>docs</code> هستند؛ فایل‌های موقت، گزارش audit و تصاویر کنترل در <code>.artifacts/backend-handbook</code> می‌مانند. برای HTML تنها، <code>--pdf</code> را حذف کنید. ابزار به SQL Server وصل نمی‌شود و schema یا داده محصول را تغییر نمی‌دهد.</p>
 <p>پس از تولید، فهرست، لینک داخلی، فارسی، جدول بلند، نمونه کد و صفحات نماینده PDF را بررسی کنید. اگر سورس محصول تغییر کرده، علاوه بر renderer باید محتوای Markdown با Controller/DTO/سرویس و OpenAPI تازه تطبیق داده شود؛ چاپ دوباره به‌تنهایی سند را به‌روز نمی‌کند.</p>
 <p><a id="handoff-validation"></a></p>
-<h2 id="heading-79">شناسنامه بازبینی و نتیجه اعتبارسنجی</h2>
+<h2 id="heading-84">شناسنامه تاریخی تحویل ۲۰۲۶-۱۰-۱۲ و نتیجه همان اجرا</h2>
 <p>این تحویل در <code>2026-10-12</code> بر مبنای سورس <code>main@f0ff3be</code> انجام شده است. تغییرات این مرحله مستندات و ابزار ساخت خروجی‌اند؛ کد محصول، frontend و schema تغییر نکرده‌اند. هیچ migration تازه ساخته یا روی دیتابیس عادی/Production اعمال نشده است.</p>
 <p>restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.</p>
-<p>۱۴۱ عملیات و پارامترهای query با Controller و OpenAPI تازه میزبان تطبیق داده شدند؛ ۱۸۲ schema JSON و چهار مدل query کنترل شدند. ۱۹۰ نمونه JSON درخواست/پاسخ از نظر فیلد، nesting، type، enum، nullable، UUID، زمان و نسخه بررسی شدند. لینک‌های داخلی/مسیرهای source و تعداد ستون جدول‌ها نیز کنترل شدند. PDF هر کتاب با مرورگر رندر، شماره صفحه و نشانک اضافه و برای صفحه خالی و متن خارج صفحه بررسی شد؛ صفحات نماینده نیز بصری بازبینی شدند.</p>
-<p>این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.</p></main></div></body></html>
+<p>شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از ۲۸۴ عملیات، ۴۸۸ schema و مدل طراحی ۸۸ جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.</p>
+<p>این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.</p>
+<p><a id="asynchronous-report-exports"></a></p>
+<h2 id="heading-85">خروجی غیرهم‌زمان گزارش‌ها — STEP 11C</h2>
+<p>گزارش‌های جدولی STEP 11B اکنون با یک job پایدار SQL Server به خروجی خصوصی CSV تبدیل می‌شوند. فرمت‌های PDF و Excel پیاده‌سازی نشده‌اند، چون سند محصول فرمت اجباری تعیین نکرده و CSV UTF-8 بدون وابستگی تازه نیاز فعلی را پوشش می‌دهد.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ایجاد</td>
+<td><code>POST /api/v1/reports/exports</code></td>
+<td>اعتبارسنجی/authorization، ثبت <code>Queued</code> و پاسخ <code>202</code></td>
+</tr>
+<tr>
+<td>وضعیت</td>
+<td><code>GET /api/v1/reports/exports/{jobId}</code></td>
+<td>وضعیت امن فقط برای مالک و scope فعلی</td>
+</tr>
+<tr>
+<td>دانلود</td>
+<td><code>GET /api/v1/reports/exports/{jobId}/download</code></td>
+<td>stream خصوصی فقط در <code>Completed</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>body ایجاد شامل <code>reportType</code> بسته، <code>format=Csv</code> و <code>filters</code> typed متناظر گزارش است. سقف پیش‌فرض ۱۰هزار سطر و ۲۰MiB است. jobهای <code>Queued</code> پس از restart از SQL Server دوباره دیده می‌شوند؛ <code>Processing</code> دارای lease منقضی recover می‌شود و retry حداکثر سه بار است. claim با lockهای سازگار SQL Server انجام می‌شود و wake signal حافظه‌ای منبع حقیقت نیست.</p>
+<p>در ایجاد، پردازش و دانلود دسترسی دوباره کنترل می‌شود. Parent به GuardianRelation و فرزند snapshot‌شده، Teacher به TeacherAssignment همان کلاس، Student به شخص حساب و Manager به همان سازمان محدود است. تغییر دسترسی می‌تواند تولید را با <code>REPORT_DATA_NO_LONGER_AUTHORIZED</code> متوقف یا دانلود را رد کند. فایل از <code>storage.FileAssets</code> و storage provider موجود استفاده می‌کند و physical path برنمی‌گرداند.</p>
+<p>CSV quote/newline/comma را escape می‌کند و متن user-controlled با پیشوندهای <code>= + - @</code> را با apostrophe خنثی می‌کند تا spreadsheet formula injection رخ ندهد. قرارداد کامل lifecycle، typeها، migration، indexها، retry و محدودیت‌ها در <a href="architecture/STEP_11C_REPORT_EXPORTS.md">سند معماری STEP 11C</a> آمده است.</p>
+<p><a id="internal-notifications"></a></p>
+<h2 id="heading-86">اعلان‌های داخلی — STEP 12A</h2>
+<p>Notification Center از رکوردهای پایدار schema <code>notification</code> می‌خواند. اعلان فقط reference مقصد است و مجوز دسترسی محسوب نمی‌شود؛ endpoint تکلیف، آزمون یا نتیجه باید Membership، Enrollment و GuardianRelation جاری را طبق policy خودش دوباره بررسی کند.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>ورودی/نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>فهرست</td>
+<td><code>GET /api/v1/notifications</code></td>
+<td><code>page</code>، <code>pageSize&lt;=100</code>، <code>unreadOnly</code>، <code>category</code> و <code>organizationId</code>؛ پاسخ <code>NotificationPage</code></td>
+</tr>
+<tr>
+<td>شمارش نخوانده</td>
+<td><code>GET /api/v1/notifications/unread-count</code></td>
+<td><code>organizationId</code> اختیاری؛ پاسخ <code>NotificationUnreadCount</code></td>
+</tr>
+<tr>
+<td>خواندن</td>
+<td><code>POST /api/v1/notifications/{notificationId}/read</code></td>
+<td>idempotent؛ پاسخ <code>NotificationItem</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>هر سه endpoint به Bearer session معتبر نیاز دارند و فقط رکوردهای recipient جاری را می‌بینند. شناسه کاربر از client گرفته نمی‌شود و شناسه اعلان متعلق به دیگری با <code>notification_not_found</code> و 404 پنهان می‌شود. inbox می‌تواند notificationهای چند سازمان را همراه <code>OrganizationId</code> نشان دهد و با organization فیلتر شود.</p>
+<p>انتشار تکلیف/آزمون، انتشار رسمی نتیجه و پیام‌های Direct/Group/Channel event نسخه‌دار Outbox را در همان transaction کسب‌وکاری ثبت می‌کنند. worker پس از commit اعلان مجاز را materialize می‌کند. متن نتیجه score، answer و note خصوصی ندارد و اعلان بیرونی پیام نیز متن خام، نام فایل یا Phone Number ندارد. Saved Messages اعلان تولید نمی‌کند.</p>
+<p>در محدوده STEP 12A، Push، SMS عمومی، Email، preferences، Quiet Hours و realtime اعلان وجود نداشتند. OTP ملی‌پیامک کانال جداگانه Identity است. جزئیات entity، قفل SQL Server، deduplication، retry، migration و privacy والد در <a href="architecture/STEP_12A_NOTIFICATION_FOUNDATION.md">سند معماری STEP 12A</a> آمده است.</p>
+<p><a id="notification-preferences-delivery"></a></p>
+<h2 id="heading-87">تنظیمات و کانال‌های ارسال اعلان — STEP 12B</h2>
+<p>اعلان داخلی STEP 12A همچنان منبع حقیقت durable است. پس از materialize شدن <code>Notification</code>، سرویس <code>NotificationDeliveryCoordinator</code> با توجه به scope شخصی/سازمانی، category، preference، ساعات سکوت، عضویت جاری، device فعال و موبایل تأییدشده، تلاش‌های Push/SMS را در SQL Server ثبت می‌کند. provider بیرونی داخل transaction کسب‌وکاری فراخوانی نمی‌شود.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>ورودی/نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>دریافت تنظیمات</td>
+<td><code>GET /api/v1/notification-preferences</code></td>
+<td><code>organizationId</code> اختیاری؛ هفت دسته effective با default/explicit، mandatory و rowversion</td>
+</tr>
+<tr>
+<td>تغییر یک دسته</td>
+<td><code>PUT /api/v1/notification-preferences/{category}</code></td>
+<td>کانال‌ها، Quiet Hours، <code>TimeZoneId</code> و <code>ExpectedRowVersion</code>؛ فقط کاربر جاری</td>
+</tr>
+<tr>
+<td>ثبت دستگاه</td>
+<td><code>POST /api/v1/notifications/devices</code></td>
+<td><code>platform</code> و <code>pushToken</code>؛ پاسخ فاقد token</td>
+</tr>
+<tr>
+<td>لغو دستگاه</td>
+<td><code>DELETE /api/v1/notifications/devices/{registrationId}</code></td>
+<td>فقط device متعلق به کاربر جاری؛ پاسخ 204</td>
+</tr>
+</tbody>
+</table></div>
+<p>Scope سازمانی فقط با Membership فعال قابل مشاهده/تغییر است. ردیف scope شخصی و هر سازمان مستقل است. In-app خاموش‌شدنی نیست. Default کانال اختیاری <code>Push=true</code> و <code>Sms=false</code> است. category امنیت حساب mandatory است و server خاموش‌کردن Push/SMS آن را رد می‌کند؛ producer امنیتی تازه‌ای در این مرحله افزوده نشده است.</p>
+<p>Quiet Hours فقط با timezone صریح همان preference اجرا می‌شود، زیرا User/Organization هنوز timezone مرجع ندارند. بازه روزانه و عبوری از نیمه‌شب پشتیبانی می‌شود؛ اعلان داخلی حتی در ساعات سکوت فوراً ایجاد می‌شود و delivery خارجی تا پایان بازه <code>Deferred</code> می‌ماند.</p>
+<p>Push provider واقعی انتخاب نشده و فقط providerهای <code>Development/Unavailable</code> موجودند. رجیستری device از session token جدا است؛ token در API/log برنمی‌گردد و تلاش ارسال فقط شناسه device را ذخیره می‌کند. logout، انقضای session یا revoke دستگاه مانع resolve شدن آن برای Push آینده می‌شود.</p>
+<p><code>INotificationSmsProvider</code> کاملاً از OTP جدا است. شماره موبایل از credential تأییدشده Identity resolve می‌شود و body دلخواه frontend پذیرفته نمی‌شود. <code>MeliPayamakOtpProvider</code> و endpoint اختصاصی OTP تغییر نکرده‌اند؛ adapter ملی‌پیامک برای SMS عمومی تا دریافت قرارداد رسمی provider عمداً وجود ندارد.</p>
+<p><code>NotificationDeliveryDispatcher</code> تلاش‌های <code>Pending/Deferred</code> را با lease و قفل SQL Server claim می‌کند. timeout، transient retry محدود، permanent failure و suppression علت‌های جدا دارند. unique index بر <code>(NotificationId, Channel, DestinationReference)</code> از ساخت effect تکراری جلوگیری می‌کند. preview خارجی privacy-safe و deep link فقط navigation hint است؛ authorization مقصد باید دوباره اجرا شود.</p>
+<p>schema، indexها، lifecycle، تنظیمات provider و محدودیت‌های دقیق در <a href="architecture/STEP_12B_NOTIFICATION_PREFERENCES_DELIVERY.md">سند معماری STEP 12B</a> آمده است.</p>
+<p><a id="commerce-foundation"></a></p>
+<h2 id="heading-88">اشتراک، دسترسی تجاری و ظرفیت — STEP 13A</h2>
+<p>Commerce وضعیت جاری اشتراک سازمان، قابلیت‌های فعال و ظرفیت‌ها را از PlanVersion منتشرشده resolve می‌کند. نام نمایشی Plan در authorization استفاده نمی‌شود و Subscriptionهای قدیمی با انتشار نسخه جدید خودکار تغییر نمی‌کنند.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>خلاصه اشتراک مدیر</td>
+<td><code>GET /api/v1/commerce/summary</code></td>
+<td>Plan/Version، وضعیت اشتراک، Entitlementها، quota، usage، remaining و over-quota</td>
+</tr>
+</tbody>
+</table></div>
+<p>این endpoint به Bearer session معتبر، workspace سازمانی، Membership فعال و نقش جاری <code>Manager</code> نیاز دارد. OrganizationId از frontend دریافت نمی‌شود و از <code>AccessContext</code> resolve می‌شود. نبود اشتراک خطای سرور نیست و با <code>state=NoSubscription</code> و HTTP 200 نمایش داده می‌شود؛ اشتراک خارج از بازه یا لغوشده <code>Inactive</code> است.</p>
+<p>کلیدهای Entitlement شامل Academic، Assignments، Exams، Messaging، Reports و Storage هستند. quotaهای فعلی <code>ActiveLearners</code>، <code>ActiveClasses</code>، <code>StorageBytes</code> و <code>ReportExports</code> هستند. سه مورد نخست مصرف را از ماژول مالک می‌خوانند؛ فقط <code>ReportExports</code> در UsageLedger metered است. <code>null</code> برای Limit به معنی unlimited صریح است و نبود definition به معنی unlimited نیست.</p>
+<p>برای مصرف metered، <code>SourceOperationId</code> و unique index retry را idempotent می‌کنند. Transaction سریال‌پذیر و <code>UPDLOCK/HOLDLOCK</code> روی Subscription مانع مصرف هم‌زمان بیش از آخرین واحد ظرفیت می‌شود. <code>CheckCapacityAsync</code> به‌تنهایی رزرو نیست؛ write pathهای authoritative آینده باید lock quota و write ماژول مالک را در یک transaction کوتاه ترکیب کنند.</p>
+<p>Downgrade داده‌های آموزشی یا فایل را حذف نمی‌کند. مصرف بالاتر از سقف با <code>isOverQuota=true</code> دیده می‌شود و عملیات ظرفیت‌ساز آینده باید مسدود شود؛ workflow از قبل شروع‌شده کورکورانه قطع نمی‌شود.</p>
+<p>هیچ endpoint مدیر برای ایجاد Plan، انتشار PlanVersion، تغییر quota یا فعال‌سازی Subscription وجود ندارد. Manager سازمانی Platform Admin نیست. Order، Payment، gateway، callback، Backoffice، Contacts و AI integration در این مرحله ساخته نشده‌اند. جزئیات مدل، schema، concurrency، خطاها و مرزهای آینده در <a href="architecture/STEP_13A_COMMERCE_FOUNDATION.md">سند معماری STEP 13A</a> آمده است.</p>
+<p><a id="order-payment-foundation"></a></p>
+<h2 id="heading-89">سفارش و پرداخت — STEP 13B</h2>
+<p>قیمت قابل خرید یک جزء immutable از <code>PlanVersion</code> منتشرشده است. Order مبلغ و currency آن نسخه را در لحظه ایجاد freeze می‌کند؛ body ایجاد Order هیچ Amount یا Currency معتبری از client نمی‌گیرد. واحد canonical فعلی <code>IRR</code> و precision مبلغ <code>decimal(18,2)</code> است. PlanVersionهای قدیمی که قیمت ندارند قابل خرید نیستند و backfill حدسی نشده‌اند.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>ورودی/نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ایجاد سفارش</td>
+<td><code>POST /api/v1/commerce/orders</code></td>
+<td><code>planVersionId</code>, <code>clientOperationId</code>؛ پاسخ 201 یا retry برابر 200</td>
+</tr>
+<tr>
+<td>آغاز پرداخت</td>
+<td><code>POST /api/v1/commerce/orders/{orderId}/payments</code></td>
+<td><code>clientOperationId</code>؛ PaymentAttempt، وضعیت، reference/URL امن</td>
+</tr>
+<tr>
+<td>جزئیات</td>
+<td><code>GET /api/v1/commerce/orders/{orderId}</code></td>
+<td>Order، تاریخچه attemptها و fulfillment state</td>
+</tr>
+<tr>
+<td>فهرست</td>
+<td><code>GET /api/v1/commerce/orders?limit=20</code></td>
+<td>حداکثر ۱۰۰ مورد برای مدیر و سازمان جاری</td>
+</tr>
+</tbody>
+</table></div>
+<p>تمام مسیرها به Bearer session، workspace سازمانی، Membership فعال و <code>Manager</code> جاری نیاز دارند. OrganizationId از <code>AccessContext</code> می‌آید. Order سازمان دیگر 404 است؛ Manager نمی‌تواند amount/currency را عوض کند، پرداخت را موفق اعلام کند یا Subscription را مستقیم فعال کند. POSTها rate limit مستقل دارند و idempotency همچنان با ClientOperationId و payload hash enforce می‌شود.</p>
+<p>تماس <code>IPaymentGateway</code> بیرون SQL transaction انجام می‌شود. timeout به <code>Unknown</code> می‌رود و Failed فرض نمی‌شود. Verification server-to-server مبلغ، IRR و reference را تطبیق می‌دهد؛ settlement موفق PaymentAttempt، Payment، Paid Order و پیام activation Outbox را اتمیک ثبت می‌کند. worker Outbox Subscription قبلی را بدون حذف تاریخچه لغو و نسخه خریداری‌شده را دقیقاً یک بار فعال می‌کند. بنابراین Order پرداخت‌شده ممکن است موقتاً <code>SubscriptionActivationPending</code> باشد.</p>
+<p>Provider واقعی و قرارداد callback هنوز تأیید نشده‌اند. runtime فقط <code>Payments:Provider=Unavailable</code> دارد و endpoint callback عمومی ساخته نشده است؛ provider تست فقط در Integration Test ثبت شده و تماس واقعی ندارد. Refund، reconciliation/Finance، Order expiration، billing period، provisioning سازمان جدید، Backoffice، frontend و Notification پرداخت خارج از این مرحله‌اند. جزئیات lifecycle، schema، locking، error codeها و محدودیت‌ها در <a href="architecture/STEP_13B_ORDER_AND_PAYMENT.md">سند معماری STEP 13B</a> آمده است.</p>
+<p><a id="messaging-moderation-child-safety"></a></p>
+<h2 id="heading-90">تعدیل پیام و ایمنی کودک — STEP 14D</h2>
+<p>ثبت report قبلی حفظ شده است، اما هر گزارش اکنون یک <code>ModerationCase</code> و action اولیه دارد. گزارش عادی Group/Channel کاربرمدیریت‌شده در صف بازبین همان گفتگو قرار می‌گیرد؛ Personal Direct، گفتگوی SystemManagedAcademic و هر <code>ChildSafetyConcern</code> به صف داخلی <code>PlatformSafety</code> می‌روند. API PlatformSafety تا STEP 15 ارائه نشده است.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>عملیات</th>
+<th>مسیر</th>
+<th>ورودی/نتیجه</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>فهرست پرونده گفتگو</td>
+<td><code>GET /api/v1/conversations/{conversationId}/moderation/cases</code></td>
+<td>filter اختیاری <code>status</code>/<code>priority</code> و صفحه‌بندی حداکثر ۱۰۰</td>
+</tr>
+<tr>
+<td>جزئیات</td>
+<td><code>GET /api/v1/conversations/{conversationId}/moderation/cases/{caseId}</code></td>
+<td>فقط snapshot همان پیام و safe identity</td>
+</tr>
+<tr>
+<td>شروع بررسی</td>
+<td><code>POST .../{caseId}/start-review</code></td>
+<td><code>expectedVersion</code>؛ claim اتمیک</td>
+</tr>
+<tr>
+<td>حل</td>
+<td><code>POST .../{caseId}/resolve</code></td>
+<td><code>expectedVersion</code> و <code>internalNote</code> اختیاری</td>
+</tr>
+<tr>
+<td>رد</td>
+<td><code>POST .../{caseId}/dismiss</code></td>
+<td><code>expectedVersion</code> و <code>internalNote</code> اختیاری</td>
+</tr>
+<tr>
+<td>فایل شاهد</td>
+<td><code>GET .../{caseId}/evidence/files/{fileAssetId}</code></td>
+<td>re-authorization در هر درخواست</td>
+</tr>
+</tbody>
+</table></div>
+<p>Owner مجوز ضمنی review دارد. Admin فقط با flag مستقل <code>ReviewReports</code> مجاز است؛ <code>DeleteMessages</code> معادل آن نیست. Member، Manager سازمان بدون participant/permission، participant لغوشده و کاربر گزارش‌شده دسترسی ندارند. note داخلی در پاسخ API یا receipt گزارش‌دهنده نیست. status گزارش‌دهنده از مسیر موجود <code>GET /api/v1/messaging/reports/{reportId}</code> به Submitted/UnderReview/Resolved/Dismissed همگام می‌شود.</p>
+<p>ارسال محتوای user-generated در گفتگویی که participant فعال Minor یا Unknown دارد پیش از persistence از <code>IContentSafetyProvider</code> عبور می‌کند. Adult-only provider را صدا نمی‌زند. <code>Allowed</code> مسیر عادی Message را ادامه می‌دهد؛ <code>Blocked</code> و <code>ReviewRequired</code> Message نمی‌سازند و <code>SafetyIncident</code> و پرونده Critical داخلی می‌سازند. خطا/timeout/پاسخ نامعتبر provider با <code>MESSAGE_SAFETY_UNAVAILABLE</code> و 503 fail-closed است، اما incident تخلف کاذب ایجاد نمی‌کند.</p>
+<p>مسیرهای Send و Forward در هر گفتگوی child-sensitive هر دو مشمول این gate هستند؛ در
+Direct دو طرف و در Group/Channel participantهای فعال بررسی می‌شوند. بررسی دوباره پیش
+از commit، تغییر هم‌زمان participantها را پوشش می‌دهد.</p>
+<p>Provider واقعی هنوز انتخاب نشده است. <code>Messaging:ContentSafetyProvider</code> فقط <code>DevelopmentAllow</code> در Development/Testing یا <code>Unavailable</code> را می‌پذیرد؛ محیط production به‌صورت پیش‌فرض Unavailable و امن است. MakanApp-AI در این مسیر استفاده نمی‌شود. جزئیات privacy، idempotency، schema و محدودیت‌ها در <a href="architecture/STEP_14D_MODERATION_CHILD_SAFETY.md">سند معماری STEP 14D</a> آمده است.</p>
+<p><a id="platform-backoffice"></a></p>
+<h2 id="heading-91">Backoffice پلتفرم — STEP 15E</h2>
+<p>Backoffice زیر مسیر مستقل <code>/api/admin/v1</code> قرار دارد. <code>OrganizationRole.Manager</code> هیچ مجوزی برای این مسیر ایجاد نمی‌کند؛ هر درخواست به Bearer session فعال و permission جاری Platform از SQL Server نیاز دارد. revoke نقش بدون انتظار برای انقضای token مؤثر می‌شود. جزئیات ماتریس نقش‌ها و نتیجه پذیرش در <a href="architecture/STEP_15E_BACKOFFICE_FINAL_ACCEPTANCE.md">سند STEP 15E</a> و قرارداد UX در <a href="platform/BACKOFFICE_FRONTEND_HANDOFF.md">تحویل Frontend</a> ثبت شده است.</p>
+<h3 id="heading-92">قرارداد IAM و Audit</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method و Route</th>
+<th>Permission</th>
+<th>Request</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/admin/v1/me</code></td>
+<td><code>platform.access</code></td>
+<td>بدون body</td>
+<td><code>PlatformMeResult</code> با هویت امن، نقش‌ها و permissionهای مؤثر</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/roles</code></td>
+<td><code>platform.roles.read</code></td>
+<td>بدون body</td>
+<td>مجموعه <code>PlatformRoleCatalogItem</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/role-assignments</code></td>
+<td><code>platform.roles.read</code></td>
+<td><code>userId</code>, <code>roleKey</code>, <code>activeOnly</code>, <code>page</code>, <code>pageSize</code></td>
+<td><code>PlatformRoleAssignmentPage</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/role-assignments</code></td>
+<td><code>platform.roles.manage</code></td>
+<td><code>GrantPlatformRoleCommand</code></td>
+<td><code>PlatformRoleMutationResult</code>؛ ایجاد 201 و retry هم‌ارز 200</td>
+</tr>
+<tr>
+<td><code>DELETE /api/admin/v1/role-assignments/{assignmentId}</code></td>
+<td><code>platform.roles.manage</code></td>
+<td><code>EndPlatformRoleAssignmentCommand</code> در body</td>
+<td><code>PlatformRoleMutationResult</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/audit-logs</code></td>
+<td><code>platform.audit.read</code></td>
+<td>filterهای actor/action/target/result/time، sort allowlist و page</td>
+<td><code>AdminAuditLogPage</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>grant/revoke نقش به <code>Reason</code> و step-up نیاز دارد. آخرین <code>PlatformOwner</code> با transaction و SQL Server lock قابل پایان‌دادن نیست. bootstrap مالک اول یک ابزار عملیاتی خارج HTTP است و پس از ایجاد اولین مالک بسته می‌شود. Audit append-only است و هیچ API برای update/delete ندارد.</p>
+<h3 id="heading-93">Organization، User و Provisioning</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method و Route</th>
+<th>Permission</th>
+<th>Request</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/admin/v1/organizations</code></td>
+<td><code>platform.organizations.read</code></td>
+<td>search/status/page/pageSize و sort allowlist</td>
+<td><code>PlatformOrganizationPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/organizations/{organizationId}</code></td>
+<td><code>platform.organizations.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformOrganizationDetail</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/organizations/{organizationId}/suspension-impact</code></td>
+<td><code>platform.organizations.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformOrganizationImpactPreview</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/organizations</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>CreatePlatformOrganizationCommand</code></td>
+<td><code>PlatformProvisioningResult</code>؛ 201 یا replay برابر 200</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/organizations/{organizationId}/suspend</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>PlatformOrganizationStateCommand</code></td>
+<td><code>PlatformOrganizationMutationResult</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/organizations/{organizationId}/reactivate</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>PlatformOrganizationStateCommand</code></td>
+<td><code>PlatformOrganizationMutationResult</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/organizations/{organizationId}/memberships</code></td>
+<td><code>platform.organizations.read</code></td>
+<td><code>activeOnly</code>, page/pageSize</td>
+<td><code>PlatformMembershipPage</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/organizations/{organizationId}/invitations</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>CreatePlatformInvitationCommand</code></td>
+<td><code>PlatformInvitationResult</code>؛ 201 یا replay برابر 200</td>
+</tr>
+<tr>
+<td><code>PUT /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}/role</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>ChangePlatformMembershipRoleCommand</code></td>
+<td><code>PlatformMembershipMutationResult</code></td>
+</tr>
+<tr>
+<td><code>DELETE /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}</code></td>
+<td><code>platform.organizations.manage</code></td>
+<td><code>EndPlatformMembershipCommand</code> در body</td>
+<td><code>PlatformMembershipMutationResult</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/provisioning</code></td>
+<td><code>platform.provisioning.read</code></td>
+<td>status و page/pageSize</td>
+<td><code>PlatformProvisioningPage</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/provisioning</code></td>
+<td><code>platform.provisioning.manage</code></td>
+<td><code>ProvisionOrganizationCommand</code></td>
+<td><code>PlatformProvisioningResult</code>؛ 201 یا replay برابر 200</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/users</code></td>
+<td><code>platform.users.read</code></td>
+<td>search/status/page/pageSize و sort allowlist</td>
+<td><code>PlatformUserPage</code> با phone mask‌شده</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/users/{userId}</code></td>
+<td><code>platform.users.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformUserDetail</code> با PII محدود</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/users/{userId}/suspend</code></td>
+<td><code>platform.users.manage</code></td>
+<td><code>PlatformUserStateCommand</code></td>
+<td><code>PlatformUserMutationResult</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/users/{userId}/reactivate</code></td>
+<td><code>platform.users.manage</code></td>
+<td><code>PlatformUserStateCommand</code></td>
+<td><code>PlatformUserMutationResult</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/users/{userId}/sessions/revoke</code></td>
+<td><code>platform.sessions.manage</code></td>
+<td><code>RevokePlatformSessionsCommand</code></td>
+<td><code>PlatformSessionRevocationResult</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/users/{userId}/sessions/{sessionId}/revoke</code></td>
+<td><code>platform.sessions.manage</code></td>
+<td><code>RevokePlatformSessionsCommand</code></td>
+<td><code>PlatformSessionRevocationResult</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>تعلیق/فعال‌سازی Organization یا User به step-up نیاز دارد. provisioning حاوی <code>PlanVersionId</code> نیز step-up می‌خواهد؛ ساخت صرف Organization بدون subscription چنین الزامی ندارد. mutationها <code>Reason</code> می‌گیرند و audit می‌شوند. تعلیق User نشست‌های فعال او را revoke می‌کند. قاعده آخرین Manager و استقلال membershipهای چند سازمان در لایه persistence و transaction حفظ می‌شود.</p>
+<h3 id="heading-94">Education، Messaging Metadata و PlatformSafety</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method و Route</th>
+<th>Permission</th>
+<th>Request</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/admin/v1/education/classes</code></td>
+<td><code>platform.education.read</code></td>
+<td>organization/status/search/page</td>
+<td><code>PlatformClassPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/education/classes/{classId}</code></td>
+<td><code>platform.education.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformClassDetail</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/education/teachers</code></td>
+<td><code>platform.education.read</code></td>
+<td>organization/class/search/page</td>
+<td><code>PlatformTeacherAssignmentPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/education/enrollments</code></td>
+<td><code>platform.education.read</code></td>
+<td>organization/class/search/page</td>
+<td><code>PlatformEnrollmentPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/education/assignments</code></td>
+<td><code>platform.education.read</code></td>
+<td>organization/class/search/page</td>
+<td><code>PlatformAssignmentPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/education/exams</code></td>
+<td><code>platform.education.read</code></td>
+<td>organization/class/search/page</td>
+<td><code>PlatformExamPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/messaging/conversations</code></td>
+<td><code>platform.messaging.read_metadata</code></td>
+<td>organization/type/scope/visibility/status/page</td>
+<td><code>PlatformConversationMetadataPage</code> بدون message body</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/moderation/cases</code></td>
+<td><code>platform.moderation.review</code></td>
+<td>status/priority/page</td>
+<td><code>PlatformModerationCasePage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/moderation/cases/{caseId}</code></td>
+<td><code>platform.moderation.review</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformModerationCaseDetail</code> با evidence همان پرونده</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/moderation/cases/{caseId}/start-review</code></td>
+<td><code>platform.moderation.review</code></td>
+<td><code>PlatformModerationVersionCommand</code></td>
+<td><code>PlatformModerationCaseDetail</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/moderation/cases/{caseId}/resolve</code></td>
+<td><code>platform.moderation.review</code></td>
+<td><code>PlatformCompleteModerationCommand</code></td>
+<td><code>PlatformModerationCaseDetail</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/moderation/cases/{caseId}/dismiss</code></td>
+<td><code>platform.moderation.review</code></td>
+<td><code>PlatformCompleteModerationCommand</code></td>
+<td><code>PlatformModerationCaseDetail</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/moderation/cases/{caseId}/enforce-content-removal</code></td>
+<td>هر دو <code>platform.moderation.review</code> و <code>platform.moderation.enforce</code></td>
+<td><code>PlatformModerationVersionCommand</code></td>
+<td><code>PlatformModerationCaseDetail</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/moderation/cases/{caseId}/evidence/files/{fileAssetId}</code></td>
+<td><code>platform.moderation.review</code></td>
+<td>شناسه پرونده و فایل</td>
+<td>stream فقط اگر فایل به همان پرونده متصل باشد</td>
+</tr>
+</tbody>
+</table></div>
+<p>Platform permission مجوز خواندن دلخواه Direct، Contacts یا فایل را ایجاد نمی‌کند. metadata پیام‌رسان فاقد متن پیام است و evidence فقط از Case مجاز resolve می‌شود. mutationهای moderation optimistic concurrency دارند و هم AdminAudit و هم سابقه دامنه‌ای مربوط را حفظ می‌کنند.</p>
+<h3 id="heading-95">Commerce، Finance و Operations</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method و Route</th>
+<th>Permission</th>
+<th>Request</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /api/admin/v1/commerce/plans</code></td>
+<td><code>platform.commerce.read</code></td>
+<td>search/page/pageSize</td>
+<td><code>PlatformPlanPage</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/commerce/plans/{planId}</code></td>
+<td><code>platform.commerce.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformPlanDetail</code> با version history</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/commerce/plans</code></td>
+<td><code>platform.commerce.manage</code></td>
+<td><code>CreatePlatformPlanCommand</code></td>
+<td><code>PlatformPlanDetail</code> با 201</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/commerce/plans/{planId}/versions</code></td>
+<td><code>platform.commerce.manage</code></td>
+<td><code>CreatePlatformPlanVersionCommand</code></td>
+<td><code>PlatformPlanVersionItem</code> با 201</td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/commerce/plan-versions/{planVersionId}/publish</code></td>
+<td><code>platform.commerce.manage</code></td>
+<td><code>PublishPlatformPlanVersionCommand</code></td>
+<td><code>PlatformPlanVersionItem</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/commerce/subscriptions</code></td>
+<td><code>platform.commerce.read</code></td>
+<td>organization/status/page/pageSize</td>
+<td><code>PlatformSubscriptionPage</code></td>
+</tr>
+<tr>
+<td><code>POST /api/admin/v1/commerce/organizations/{organizationId}/subscription-override</code></td>
+<td><code>platform.commerce.manage</code></td>
+<td><code>OverridePlatformSubscriptionCommand</code></td>
+<td><code>PlatformSubscriptionOverrideResult</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/finance/orders</code></td>
+<td><code>platform.finance.read</code></td>
+<td>organization/status/page/pageSize</td>
+<td><code>PlatformOrderPage</code> با referenceهای mask‌شده</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/finance/orders/{orderId}</code></td>
+<td><code>platform.finance.read</code></td>
+<td>شناسه مسیر</td>
+<td><code>PlatformOrderItem</code> و تاریخچه امن attempt/payment</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/operations/notifications</code></td>
+<td><code>platform.notifications.read</code></td>
+<td>بدون body</td>
+<td><code>PlatformNotificationOperations</code> فقط counter/state/provider availability</td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/operations/jobs</code></td>
+<td><code>platform.operations.read</code></td>
+<td>بدون body</td>
+<td><code>PlatformJobOperations</code></td>
+</tr>
+<tr>
+<td><code>GET /api/admin/v1/operations/health</code></td>
+<td><code>platform.operations.read</code></td>
+<td>بدون body</td>
+<td><code>PlatformSystemHealth</code> بدون secret/config خام</td>
+</tr>
+</tbody>
+</table></div>
+<p>انتشار PlanVersion و override اشتراک به step-up و Reason نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API پرداخت موفق دستی، refund یا reconciliation ساختگی وجود ندارد. عملیات مدیریتی notification/job نیز read-only و بدون token، شماره کامل یا متن اعلان‌اند. دوازده API مستقل Backend AI وجود دارند، اما منوی مدیریتی/محتوای AI عمومی از نقش Platform نتیجه نمی‌شود؛ real E2E و RAG lifecycle تأیید نشده‌اند.</p>
+<h3 id="heading-96">صفحه‌بندی، خطا و رفتار حساس</h3>
+<ul>
+<li>listها server-side هستند؛ مقدار پیش‌فرض اغلب <code>page=1&amp;pageSize=30</code> است، membership/audit پیش‌فرض ۵۰ دارند و سقف معتبر در Application enforce می‌شود. sort فقط در مسیرهایی که صریحاً ارائه شده و فقط از allowlist پذیرفته می‌شود.</li>
+<li>پاسخ خطا <code>ProblemDetails</code> با کد پایدار دارد. <code>401</code> یعنی Bearer session نامعتبر/منقضی، <code>403</code> یعنی permission یا step-up ناکافی، <code>404</code> برای resource غیرقابل مشاهده/ناموجود، <code>409</code> برای conflict یا last-owner/last-manager، <code>412</code> برای concurrency/version mismatch، <code>422</code> برای validation، <code>429</code> برای rate limit و <code>503</code> برای dependency fail-closed است.</li>
+<li>در runtime جاری EfPlatformMfaAssurance و جریان واقعی TOTP/recovery/step-up از GAP-04 فعال‌اند؛ نبود عامل، freshness یا محافظ معتبر همچنان fail-closed است. <a href="release/GAP_04_BACKOFFICE_TOTP_MFA.md">قرارداد کامل</a>؛ TOTP ورود مدرسه یا SMS MFA موازی ساخته نشده است.</li>
+<li>تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.</li>
+<li>OpenAPI جاری در <code>/openapi/v1.json</code> قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.</li>
+</ul>
+<p><a id="production-hardening"></a></p>
+<h2 id="heading-97">سخت‌سازی Production — STEP 16</h2>
+<h3 id="heading-98">نشست و refresh token</h3>
+<p>ورود OTP اکنون access token opaque کوتاه‌عمر و refresh token چرخشی برمی‌گرداند. raw refresh token فقط در پاسخ صدور/rotation دیده می‌شود و در SQL Server فقط HMAC/hash ذخیره می‌شود. هر refresh، access token قبلی و refresh token قبلی را نامعتبر می‌کند؛ replay توکن مصرف‌شده کل نشست را revoke می‌کند.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Method و Route</th>
+<th>Authentication</th>
+<th>Request</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST /api/v1/auth/refresh</code></td>
+<td>بدون access token</td>
+<td><code>RefreshSessionCommand</code></td>
+<td><code>RefreshSessionResult</code> با access/refresh جدید</td>
+</tr>
+<tr>
+<td><code>GET /api/v1/auth/sessions</code></td>
+<td>Bearer</td>
+<td>بدون body</td>
+<td>نشست‌های فعال خود کاربر، بدون token/hash</td>
+</tr>
+<tr>
+<td><code>DELETE /api/v1/auth/sessions/{sessionId}</code></td>
+<td>Bearer</td>
+<td>شناسه نشست متعلق به خود کاربر</td>
+<td><code>204</code></td>
+</tr>
+<tr>
+<td><code>POST /api/v1/auth/sessions/revoke-others</code></td>
+<td>Bearer</td>
+<td>بدون body</td>
+<td><code>204</code> و حفظ نشست جاری</td>
+</tr>
+</tbody>
+</table></div>
+<p><code>VerifyOtpCommand</code> فیلد اختیاری <code>DeviceName</code> دارد. access پیش‌فرض ۳۶۰۰ ثانیه و absolute/refresh پیش‌فرض ۲۵۹۲۰۰۰ ثانیه است و از configuration خوانده می‌شود. OTP ورود assurance اولیه است و به‌تنهایی MFA محسوب نمی‌شود.</p>
+<h3 id="heading-99">Health و رفتار میزبانی</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th>کاربرد</th>
+<th>جزئیات عمومی</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /health</code></td>
+<td>alias سازگار liveness</td>
+<td>فقط Healthy/Unhealthy</td>
+</tr>
+<tr>
+<td><code>GET /health/live</code></td>
+<td>زنده‌بودن process</td>
+<td>dependency را probe نمی‌کند</td>
+</tr>
+<tr>
+<td><code>GET /health/ready</code></td>
+<td>آمادگی دریافت traffic</td>
+<td>SQL Server و persistent storage</td>
+</tr>
+</tbody>
+</table></div>
+<p>Production در startup به connection string امن SQL، security key، storage root مطلق، <code>AllowedHosts</code> محدود، CORS HTTPS allowlist و trusted proxy صریح نیاز دارد. Swagger/OpenAPI در Production پیش‌فرض خاموش است. پاسخ‌ها <code>X-Correlation-ID</code> و security headerهای ثابت دارند و <code>ProblemDetails</code> شامل <code>traceId</code> امن است.</p>
+<p>آپلود فقط با content type مجاز، پسوند سازگار و signature حداقلی معتبر پذیرفته می‌شود. mismatch با <code>FILE_CONTENT_INVALID</code> و <code>415</code> برمی‌گردد. دانلود همچنان authorization منبع را resolve می‌کند و content disposition از نوع attachment است.</p>
+<p>در backoffice، <code>PlatformPlanDetail.Versions</code> به ۱۰۰ مورد و افراد فعال <code>PlatformClassDetail</code> به ۲۰۰ teacher و ۲۰۰ learner محدود شده‌اند. flagهای <code>VersionsTruncated</code>، <code>ActiveTeachersTruncated</code> و <code>ActiveLearnersTruncated</code> نشان می‌دهند client باید برای داده‌ی کامل از listهای paginated متناظر استفاده کند.</p>
+<p>جزئیات deployment، blockerها و ماتریس محیط در <a href="production/PRODUCTION_READINESS.md">Production Readiness</a> و <a href="production/DEPLOYMENT_IIS.md">IIS Deployment</a> ثبت شده‌اند.</p></main></div></body></html>

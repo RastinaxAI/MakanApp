@@ -2,11 +2,11 @@
 
 این سند روش استقرار backend فعلی MakanApp و تأمین امن تنظیمات محرمانه را توضیح می‌دهد. مثال‌ها برای `.NET 9`، `SQL Server` و provider واقعی `MeliPayamakOtp` نوشته شده‌اند.
 
-مبنای بازبینی: سورس `main@f0b78dd` در `2026-10-12`، شامل OTP مدیریت‌شده، چهار داشبورد، شانزده گزارش تفصیلی و تغییرات میزبانی Production. این سند دستورالعمل استقرار است؛ در این مرحله روی سرور واقعی، IIS، Linux یا Docker استقرار انجام نشده است. [قرارداد فرانت‌اند](frontend-contract/README.md) و [مرجع API](backend-api-reference.md) مکمل این راهنما هستند.
+مبنای جاری: `main@80d6a14` در `2026-10-15`؛ ۲۸۴ عملیات HTTP، ۳۷ Migration، MFA واقعی Backoffice و سیاست مصوب Child Safety. این سند دستورالعمل است و اجرای استقرار Windows/Linux/Docker یا تغییر سرور را ادعا نمی‌کند. [قرارداد مصرف API](frontend-contract/README.md)، [مرجع جاری](backend-api-reference.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) مکمل آن‌اند.
 
-به‌روزرسانی محدود GAP-02 در ۲۰۲۶-۱۰-۱۵: [شواهد و روش جاری smoke](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) و [runbook IIS](production/DEPLOYMENT_IIS.md) مرجع اجرای این مرحله‌اند. Staging نیز مانند Production fail-fast دارد و Swagger پیش‌فرض خاموش است. برای GAP-02 secretها فقط از environment/IIS یا mechanism مصوب تأمین شوند؛ روش‌های تاریخی server-only JSON در بخش‌های ۲، ۳ و ۶ این سند در workflow این مرحله استفاده نمی‌شوند. HTTPS واقعی، SQL TLS، allowlist و readiness باید پیش از ورود واقعی تأیید شوند. مثال‌های قدیمی Linux/Docker به‌تنهایی همه تنظیمات الزامی میزبان را پوشش نمی‌دهند.
+انتشار انتخابی فعلی مالک Production روی HTTP است؛ appsettings.Staging.json حذف شده. فایل واقعی Production محلی و ignored است و نمونهٔ عمومی .json.example بدون secret نسخه‌بندی می‌شود. دو استثنای Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate فقط با تأیید صریح مالک در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض امن تغییر نکرده است. HTTP، OTP و توکن را رمزگذاری نمی‌کند. این تصمیم gate امن [GAP-02](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) را نمی‌بندد و ابزارهای HTTPS-only را دور نمی‌زند. [مراحل جاری IIS](production/DEPLOYMENT_IIS.md) مبنای Windows است؛ نمونه‌های Linux/Docker حالت امن و مقادیر مختص محیط می‌خواهند.
 
-> هیچ `ServiceToken`، connection string، password یا `Identity:SecurityKey` واقعی نباید داخل repository، image، Dockerfile، Compose file یا artifact مشترک قرار بگیرد.
+> هیچ ServiceToken، connection string، password یا Identity:SecurityKey واقعی نباید وارد Git، image، Dockerfile، Compose file یا artifact مشترک شود. فایل خصوصی ignored محلی مجاز، ولی خروجی حاوی آن محرمانه و فقط برای انتقال امن اپراتور است.
 
 ## 1. تنظیمات الزامی Production
 
@@ -21,6 +21,12 @@
 | `Sms:MeliPayamakOtp:ServiceToken` | credential سرویس OTP ملی‌پیامک | بله |
 | `Sms:MeliPayamakOtp:TimeoutSeconds` | timeout درخواست؛ مقدار پیشنهادی `10` | خیر |
 | `Storage:RootPath` | محل پایدار فایل‌های آپلودشده | بسته به محیط |
+| `AllowedHosts` / `Cors:AllowedOrigins` | Host و origin صریح؛ بدون wildcard | خیر |
+| `ReverseProxy:Enabled` / `KnownProxies` | فعال و IP واقعی proxy مورد اعتماد | خیر |
+| `Hosting:RequireHttps` / `AllowInsecureHttp` | پیش‌فرض true / false؛ استثنای HTTP فقط Production | خیر |
+| `Database:AllowUntrustedServerCertificate` | پیش‌فرض false؛ Encrypt=False همیشه رد است | خیر |
+| `BackofficeSecurity:KeyRingPath` | مسیر پایدار خارج Publish و StorageRoot | مسیر عملیاتی |
+| `BackofficeSecurity:CertificatePath` / `CertificatePassword` | محافظ PFX برای Linux/container؛ Windows می‌تواند DPAPI داشته باشد | password محرمانه |
 
 در Environment Variable، جداکننده `:` با `__` جایگزین می‌شود:
 
@@ -40,7 +46,7 @@ Environment Variable تنظیم هم‌نام داخل JSON را override می�
 
 Swagger UI و OpenAPI در Production/Staging پیش‌فرض خاموش‌اند؛ فعال‌سازی صریح همراه با کنترل شبکه/دسترسی لازم است. APIهای حفاظت‌شده همچنان Bearer و مجوز جاری می‌خواهند.
 
-CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:AllowedOrigins` را می‌پذیرد؛ wildcard مجاز نیست. `AllowedHosts`، `ReverseProxy:Enabled`، `ReverseProxy:KnownProxies` و `Hosting:RequireHttps` نیز باید مطابق runbook تنظیم شوند. درخواست‌های مرورگر باید Bearer را در header بفرستند؛ پشتیبانی cookie یا query-token از این تنظیمات نتیجه نمی‌شود.
+CORS امن Production و Staging فقط origin صریح HTTPS می‌پذیرد؛ HTTP فقط با Hosting:AllowInsecureHttp در Production مجاز است. wildcard، cookie credentials، proxy نامعتبر و bypass Authentication از این استثنا نتیجه نمی‌شوند. Host و proxy باید با محیط واقعی منطبق باشند؛ Origin و UserId مجوز کسب‌وکاری نیستند.
 
 ### 1.1 رفتار واقعی گزینه‌ها و محدودیت‌های میزبان
 
@@ -57,14 +63,14 @@ CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:Allow
 | Storage defaults | سقف فایل10MiB؛ PDF/PNG/JPEG/plain text؛ فایل بدون اتصال24ساعت metadata انقضا دارد، worker پاک‌سازی ندارد |
 | `/health` | فقط liveness؛ SQL، SMS، permission دیسک و outbox را probe نمی‌کند |
 | Swagger/OpenAPI | در Production/Staging پیش‌فرض خاموش؛ فعال‌سازی صریح لازم است |
-| CORS | allowlist صریح HTTPS در Production/Staging؛ بدون AllowCredentials |
+| CORS | allowlist صریح؛ HTTPS امن پیش‌فرض و HTTP فقط با استثنای مستقل Production؛ بدون AllowCredentials |
 | Multi-instance | shared storage و SignalR backplane در این نسخه فراهم نشده؛ استقرار تک‌instance مبنای این سند است |
 
 کلید HMAC در deploy معمولی ثابت بماند. تغییر آن هم OTP ذخیره‌شده و هم نشست‌های موجود را نامعتبر می‌کند. کد OTP توسط provider تولید و ارسال می‌شود؛ backend همان کد normalize‌شده را hash می‌کند. درخواست SMS retry خودکار ندارد و timeout لزوماً اثبات نرسیدن پیامک نیست. URL provider شامل token است؛ علاوه بر log برنامه، proxy خروجی و ابزار APM نیز نباید URL/body حساس را ثبت کنند.
 
 ## 2. فایل server-only با appsettings.Production.json
 
-اگر نگه‌داری تنظیمات داخل فایل برای عملیات سرور ساده‌تر است، فایل زیر را **فقط روی سرور و بعد از publish** کنار `MakanApp.Api.dll` بسازید:
+فایل خصوصی می‌تواند روی ماشین مجاز اپراتور یا سرور کنار DLL نگه‌داری شود. نام واقعی appsettings.Production.json و در Git ignored است؛ Web SDK فایل موجود را هنگام Publish کپی می‌کند. برای clone تازه از نمونهٔ عمومی کپی بگیرید و مقادیر را فقط خصوصی وارد کنید. قالب امن کامل زیر نمونه است، نه مقادیر واقعی انتشار فعلی:
 
 ```json
 {
@@ -84,6 +90,30 @@ CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:Allow
   },
   "Storage": {
     "RootPath": "<PERSISTENT_STORAGE_PATH>"
+  },
+  "AllowedHosts": "api.example.test",
+  "Cors": {
+    "AllowedOrigins": ["https://app.example.test"]
+  },
+  "Hosting": {
+    "RequireHttps": true,
+    "AllowInsecureHttp": false
+  },
+  "Database": {
+    "AllowUntrustedServerCertificate": false
+  },
+  "ReverseProxy": {
+    "Enabled": true,
+    "KnownProxies": ["127.0.0.1"]
+  },
+  "Swagger": {
+    "Enabled": false
+  },
+  "Messaging": {
+    "ContentSafetyProvider": "Internal"
+  },
+  "BackofficeSecurity": {
+    "KeyRingPath": "<PERSISTENT_MFA_KEY_RING_OUTSIDE_STORAGE_AND_PUBLISH>"
   }
 }
 ```
@@ -91,13 +121,15 @@ CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:Allow
 قواعد این فایل:
 
 - مقدارهای داخل `<...>` حتماً روی سرور جایگزین شوند.
-- فایل داخل repository ساخته، commit یا push نشود.
+- فایل واقعی محلی می‌تواند در مسیر ignored پروژه باشد، ولی هرگز stage/commit/push نشود؛ نمونهٔ عمومی جای فایل خصوصی نیست.
 - فایل همراه Docker image ساخته نشود.
 - فقط account اجرای برنامه و Administrator/root به آن دسترسی خواندن داشته باشند.
-- deploy بعدی نباید آن را overwrite یا حذف کند.
+- deploy بعدی نباید مقادیر قبلی را با نمونهٔ خالی، کلید تصادفی یا فایل محیط دیگری جایگزین کند. خروجی حاوی JSON واقعی محرمانه و غیرقابل‌اشتراک است.
 - برنامه باید با environment برابر `Production` اجرا و بعد از تغییر فایل restart شود.
 
 این فایل plaintext است و secret vault محسوب نمی‌شود؛ امنیت آن به ACL سیستم‌عامل و محدودکردن دسترسی سرور وابسته است.
+
+فایل خصوصی Windows فعلی RequireHttps=false، AllowInsecureHttp=true و AllowUntrustedServerCertificate=true دارد. آن را بدون تغییر مسیرها، proxy و certificate به Linux/container کپی نکنید. پس از آماده شدن TLS معتبر، RequireHttps=true، هر دو استثنا=false، SQL TrustServerCertificate=False و originهای HTTPS تنظیم شوند. ارتباط ملی‌پیامک همچنان HTTPS است و با HTTP بودن API عوض نمی‌شود.
 
 ## 3. استقرار روی Windows Server با IIS
 
@@ -106,6 +138,7 @@ CORS در Production/Staging فقط originهای صریح HTTPS در `Cors:Allow
 1. .NET 9 Hosting Bundle را روی Windows Server نصب کنید.
 2. یک Application Pool اختصاصی، برای مثال `MakanApp`, بسازید.
 3. گزینه `.NET CLR Version` در Application Pool را روی `No Managed Code` قرار دهید.
+   برای x64، Enable 32-Bit Applications=false و برای DPAPI، Load User Profile=true باشد؛ هویت قبلی App Pool را عوض نکنید. WebSocket Protocol نیز بررسی شود.
 4. یک مسیر استقرار مشخص مانند مسیر زیر بسازید:
 
 ```text
@@ -124,7 +157,7 @@ dotnet publish .\MakanApp.Api\MakanApp.Api.csproj `
   --nologo
 ```
 
-محتوای `artifacts\MakanApp.Api` را به `C:\Sites\MakanApp` منتقل کنید. فایل server-only را بعد از انتقال بسازید یا از نسخه محافظت‌شده قبلی نگه دارید.
+از سورس تمیز commit تأییدشده به پوشهٔ تازه Publish بگیرید. همین سایت/App Pool را برای جایگزینی کنترل‌شده متوقف و خروجی کامل را منتقل کنید؛ فقط JSON را روی DLL قدیمی کپی نکنید. فایل واقعی Production و web.config باید همراه خروجی باشند و Staging قدیمی در خروجی تازه نباشد. Backup دیتابیس، Storage، کانفیگ و custody کلیدهای MFA را حفظ کنید. فایل خصوصی فقط با انتقال امن و ACL محدود جابه‌جا شود.
 
 ### 3.3 تنظیم appsettings مخصوص سرور
 
@@ -156,7 +189,7 @@ icacls "C:\MakanAppData\Storage" `
   /grant "IIS AppPool\MakanApp:(OI)(CI)(M)"
 ```
 
-قبل از اجرای فرمان‌ها، نام دقیق Application Pool و مسیرها را بررسی کنید. دسترسی write فقط برای مسیر storage لازم است؛ فایل تنظیمات فقط read باشد.
+قبل از فرمان، نام App Pool و مسیرها را بررسی کنید. کانفیگ read-only و Storage قابل نوشتن باشد. مسیر پایدار MFA نیز بیرون Publish و StorageRoot لازم است؛ پیش‌فرض web.config برابر C:\ProgramData\MakanApp\BackofficeMfaKeys است. اگر قبلاً MFA فعال شده، همان مسیر/کلیدها و هویت Windows حفظ شوند؛ پوشهٔ خالی جایگزین کلیدهای قبلی نشود. App Pool روی key ring مجوز لازم داشته باشد، نه Everyone. DPAPI به هویت/ماشین وابسته است؛ انتقال XML به سرور دیگر کافی نیست.
 
 ### 3.5 environment برنامه
 
@@ -174,6 +207,8 @@ icacls "C:\MakanAppData\Storage" `
 ```
 
 قرار دادن `ServiceToken` در `web.config` پیشنهاد نمی‌شود، چون deploy می‌تواند آن را overwrite کند. اگر `appsettings.Production.json` استفاده می‌شود، token همان‌جا و فقط روی سرور باقی بماند.
+
+web.config نسخهٔ جاری Production و BackofficeSecurity__KeyRingPath را دارد؛ مقادیر نمونهٔ بالا جایگزین کور نسخهٔ موجود نشوند. DOTNET_ENVIRONMENT و ASPNETCORE_ENVIRONMENT سرور نباید متناقض باشند؛ environment و متغیرهای هم‌نام قدیمی می‌توانند انتخاب فایل یا مقدار JSON را عوض کنند. secretها را برای بررسی چاپ نکنید.
 
 پس از تغییر تنظیمات، Application Pool را recycle کنید:
 
@@ -203,6 +238,8 @@ dotnet .\MakanApp.Api.dll --urls "http://127.0.0.1:5080"
 /opt/makanapp/app                 فایل‌های publish
 /etc/makanapp/makanapp.env       secretها و configuration runtime
 /var/lib/makanapp/storage        فایل‌های آپلودشده
+/var/lib/makanapp/mfa-keys       key ring پایدار MFA، جدا از Storage
+/etc/makanapp/mfa-protection.pfx محافظ certificate با private key و دسترسی محدود
 ```
 
 یک user بدون shell تعاملی بسازید:
@@ -227,6 +264,18 @@ Sms__MeliPayamakOtp__BaseUrl=https://console.melipayamak.com
 Sms__MeliPayamakOtp__ServiceToken="<MELIPAYAMAK_OTP_SERVICE_TOKEN>"
 Sms__MeliPayamakOtp__TimeoutSeconds=10
 Storage__RootPath=/var/lib/makanapp/storage
+AllowedHosts=api.example.test
+Cors__AllowedOrigins__0=https://app.example.test
+ReverseProxy__Enabled=true
+ReverseProxy__KnownProxies__0=127.0.0.1
+Hosting__RequireHttps=true
+Hosting__AllowInsecureHttp=false
+Database__AllowUntrustedServerCertificate=false
+Swagger__Enabled=false
+Messaging__ContentSafetyProvider=Internal
+BackofficeSecurity__KeyRingPath=/var/lib/makanapp/mfa-keys
+BackofficeSecurity__CertificatePath=/etc/makanapp/mfa-protection.pfx
+BackofficeSecurity__CertificatePassword="<PRIVATE_PFX_PASSWORD>"
 ```
 
 Permission فایل:
@@ -237,6 +286,8 @@ sudo chmod 600 /etc/makanapp/makanapp.env
 ```
 
 فایل environment را داخل repository یا artifact قرار ندهید.
+
+دامنه، origin، اتصال SQL و IP proxy مثال‌اند و باید با محیط واقعی عوض شوند. key ring جداگانه ساخته و writable برای user سرویس باشد؛ PFX دارای private key و password معتبر را user سرویس فقط بخواند. در Linux/container بدون محافظ معتبر و key ring پایدار، MFA با MFA_UNAVAILABLE بسته می‌ماند؛ DPAPI Windows به Linux منتقل نمی‌شود. سایر APIهای آموزشی جایگزین مجوز MFA نیستند.
 
 ### 4.3 واحد systemd
 
@@ -282,7 +333,7 @@ sudo journalctl -u makanapp -n 200 --no-pager
 
 ### 4.4 TLS termination، آدرس IP و SignalR
 
-`Program.cs` خارج Testing از HTTPS redirection استفاده می‌کند و اکنون `UseForwardedHeaders` مشروط به `ReverseProxy:Enabled` و فهرست `KnownProxies` دارد. برای IIS یا Linux/Docker پشت TLS termination، scheme و IP واقعی باید پیش از انتقال ترافیک بررسی شوند؛ redirect loop، scheme اشتباه و تجمیع همه کاربران زیر IP پروکسی نشانه تنظیم ناقص‌اند. محدودکننده OTP از `RemoteIpAddress` استفاده می‌کند.
+Program.cs خارج Testing طبق Hosting:RequireHttps redirect می‌کند و UseForwardedHeaders مشروط به ReverseProxy:Enabled و KnownProxies است. پشت TLS termination، scheme و IP واقعی باید بررسی شوند؛ redirect loop، scheme اشتباه و تجمیع کاربران زیر IP پروکسی نشانهٔ تنظیم ناقص‌اند. limiter OTP از RemoteIpAddress استفاده می‌کند. HTTP داخلی Kestrel پشت proxy امن، مجوز فعال کردن استثنای HTTP عمومی نیست.
 
 نمونه systemd و Compose به‌تنهایی proxyهای مورد اعتماد را تعیین نمی‌کنند؛ مقادیر واقعی و صریح محیط را تزریق کنید. اعتماد عمومی به header اینترنت راه‌حل نیست. [راهنمای رسمی Forwarded Headers](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-9.0) مبنای بررسی زیرساخت باشد.
 
@@ -333,6 +384,8 @@ artifacts
 docs
 appsettings.Production.json
 **/appsettings.Production.json
+**/*.pfx
+**/*.key
 secrets
 **/secrets
 *.env
@@ -343,7 +396,7 @@ secrets
 
 ## 6. Docker Compose با appsettings server-only
 
-این روش با کد فعلی مستقیماً کار می‌کند. فایل تنظیمات خارج از repository روی host نگه‌داری و به‌صورت read-only داخل container mount می‌شود.
+این روش پس از تکمیل کلیدهای الزامی و مقادیر واقعی محیط با قرارداد configuration سازگار است؛ Docker/Compose در این workspace اجرا و validate نشده‌اند. فایل تنظیمات خارج repository روی host نگه‌داری و read-only mount می‌شود. فایل خصوصی Windows را با مسیرهای C: یا DPAPI به Linux کپی نکنید.
 
 مثال Linux host:
 
@@ -360,14 +413,21 @@ services:
     volumes:
       - /etc/makanapp/appsettings.Production.json:/app/appsettings.Production.json:ro
       - /var/lib/makanapp/storage:/data/storage
+      - /var/lib/makanapp/mfa-keys:/data/mfa-keys
+      - /etc/makanapp/mfa-protection.pfx:/run/secrets/makan-mfa.pfx:ro
 ```
 
-در فایل mountشده مقدار storage باید چنین باشد:
+در فایل mountشده، علاوه بر Host/CORS/proxy/SQL/Identity/provider بخش ۲، مسیرها و محافظ Linux چنین تنظیم شوند:
 
 ```json
 {
   "Storage": {
     "RootPath": "/data/storage"
+  },
+  "BackofficeSecurity": {
+    "KeyRingPath": "/data/mfa-keys",
+    "CertificatePath": "/run/secrets/makan-mfa.pfx",
+    "CertificatePassword": "<PRIVATE_PFX_PASSWORD>"
   }
 }
 ```
@@ -378,10 +438,13 @@ services:
 volumes:
   - C:/MakanApp/config/appsettings.Production.json:/app/appsettings.Production.json:ro
   - C:/MakanApp/data/storage:/data/storage
+  - C:/MakanApp/data/mfa-keys:/data/mfa-keys
+  - C:/MakanApp/config/mfa-protection.pfx:/run/secrets/makan-mfa.pfx:ro
 ```
 
 دسترسی Docker daemon ذاتاً حساس است؛ فقط administratorهای مجاز باید به host، Compose project و فایل تنظیمات دسترسی داشته باشند.
 همچنین UID کاربر non-root داخل container باید اجازه خواندن فایل تنظیمات و نوشتن در مسیر storage را داشته باشد.
+همان UID/GID واقعی باید روی mfa-keys مجوز لازم و روی PFX مجوز read داشته باشد؛ فایل root-only با mode=600 الزاماً برای non-root قابل خواندن نیست. مجوز جهانی راه‌حل نیست. volumeهای key ring و storage مستقل، PFX/password محرمانه و identity پایدارند. proxy در Docker الزاماً 127.0.0.1 نیست؛ IP واقعیِ قابل اعتماد را تعیین کنید.
 
 ## 7. Docker Compose با Docker Secrets
 
@@ -393,6 +456,7 @@ Compose secret را به‌صورت فایل زیر `/run/secrets` در اختی
 /etc/makanapp/secrets/database_connection_string
 /etc/makanapp/secrets/identity_security_key
 /etc/makanapp/secrets/melipayamak_otp_service_token
+/etc/makanapp/secrets/mfa_certificate_password
 ```
 
 Compose:
@@ -409,12 +473,26 @@ services:
       Sms__MeliPayamakOtp__BaseUrl: https://console.melipayamak.com
       Sms__MeliPayamakOtp__TimeoutSeconds: "10"
       Storage__RootPath: /data/storage
+      AllowedHosts: api.example.test
+      Cors__AllowedOrigins__0: https://app.example.test
+      ReverseProxy__Enabled: "true"
+      ReverseProxy__KnownProxies__0: <TRUSTED_PROXY_IP>
+      Hosting__RequireHttps: "true"
+      Hosting__AllowInsecureHttp: "false"
+      Database__AllowUntrustedServerCertificate: "false"
+      Swagger__Enabled: "false"
+      Messaging__ContentSafetyProvider: Internal
+      BackofficeSecurity__KeyRingPath: /data/mfa-keys
+      BackofficeSecurity__CertificatePath: /run/secrets/makan-mfa.pfx
     secrets:
       - database_connection_string
       - identity_security_key
       - melipayamak_otp_service_token
+      - mfa_certificate_password
     volumes:
       - /var/lib/makanapp/storage:/data/storage
+      - /var/lib/makanapp/mfa-keys:/data/mfa-keys
+      - /etc/makanapp/mfa-protection.pfx:/run/secrets/makan-mfa.pfx:ro
     entrypoint:
       - /bin/sh
       - -c
@@ -422,6 +500,7 @@ services:
         export ConnectionStrings__MakanDatabase="$$(cat /run/secrets/database_connection_string)"
         export Identity__SecurityKey="$$(cat /run/secrets/identity_security_key)"
         export Sms__MeliPayamakOtp__ServiceToken="$$(cat /run/secrets/melipayamak_otp_service_token)"
+        export BackofficeSecurity__CertificatePassword="$$(cat /run/secrets/mfa_certificate_password)"
         exec dotnet MakanApp.Api.dll
     ports:
       - "127.0.0.1:5080:8080"
@@ -433,6 +512,8 @@ secrets:
     file: /etc/makanapp/secrets/identity_security_key
   melipayamak_otp_service_token:
     file: /etc/makanapp/secrets/melipayamak_otp_service_token
+  mfa_certificate_password:
+    file: /etc/makanapp/secrets/mfa_certificate_password
 ```
 
 نکات:
@@ -442,6 +523,7 @@ secrets:
 - هیچ command نباید مقدار secret را `echo` یا log کند.
 - Compose standalone فایل secret را از host mount می‌کند؛ permission و امنیت host همچنان مهم است.
 - برای orchestratorهای production از secret manager همان پلتفرم استفاده کنید.
+- مجوز UID/GID روی volumeها و خواندن فایل‌های secret را مثل بخش ۶ بررسی کنید. Placeholder IP proxy باید جایگزین شود؛ trust عمومی یا مقدار نمونه مجاز نیست. هر نمونهٔ Linux/Docker دستورالعمل بررسی‌نشدهٔ محیط است، نه ادعای deployment موفق.
 
 ## 8. SQL Server در سرور و Docker
 
@@ -485,18 +567,15 @@ dotnet tool run dotnet-ef database update `
 
 Migration را داخل startup عادی container یا IIS قرار ندهید؛ اجرای هم‌زمان چند instance می‌تواند عملیات schema را مبهم و پرخطر کند.
 
-در بازبینی GAP-02، ۳۵ migration تا `20261014214734_AddOperationalPersonGuardianOnboarding` وجود دارد. همه روی LocalDB تازه اجرا شدند؛ این، اجرای history روی SQL هدف نیست. فقط آماده‌بودن provider پیامک نشان‌دهنده آماده‌بودن schema نیست.
+شاهد تاریخی GAP-02 شامل ۳۵ Migration تا AddOperationalPersonGuardianOnboarding بود. اکنون ۳۷ Migration تا 20261015091336_EnforceApprovedMessengerChildSafety داریم؛ وجود آن‌ها در سورس یا تست LocalDB به معنی اعمال روی SQL هدف نیست. این همگام‌سازی docs Migration تازه نمی‌خواهد. اگر اسکریپت قبلی روی سرور اجرا شده، history را بررسی و تغییر تازهٔ schema فرض نکنید.
 
 برای artifact قابل بازبینی، از ریشه مخزن و SDK سازگار SQL idempotent بسازید؛ این فرمان به‌خودی‌خود آن را روی سرور اجرا نمی‌کند:
 
 ```powershell
-dotnet tool run dotnet-ef migrations script --idempotent `
-  --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj `
-  --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj `
-  --output artifacts/makanapp-migrations.sql
+& ./tools/production/export-migration-sql.ps1 -OutputPath .artifacts/deployment/migrations-idempotent-safe.sql
 ```
 
-پوشه خروجی باید از قبل موجود باشد. script بررسی‌شده را با principal جداگانه migration اجرا کنید؛ runtime account به DDL یا db_owner نیاز پیش‌فرض ندارد. ابزار EF از `MakanDbContextFactory` و متغیر محیطی اتصال می‌خواند، نه فایل secret پروژه Api. فایل ابزار محلی مرجع `.config/dotnet-tools.json` در ریشه مخزن است؛ فرمان‌ها از همان ریشه اجرا شوند.
+ابزار خروجی موجود را overwrite نمی‌کند؛ نام تازه انتخاب کنید. فایل خام قدیمی در backfill ستون‌های Visibility/GroupHistoryPolicy/MemberCapabilities خطای compile 207 داشت؛ فایل اصلاح‌شده با کامپایل مؤخر، history guard و rollback تراکنش فقط پس از Backup/بازبینی اجرا شود. دستور آزمون مستقل و SHA در [runbook IIS](production/DEPLOYMENT_IIS.md) آمده است. runtime principal به DDL یا db_owner نیاز ندارد. EF از MakanDbContextFactory و اتصال design-time می‌خواند، نه فایل خصوصی API؛ startup پروژهٔ Infrastructure و manifest ریشه استفاده شود. تولید SQL اتصال/اجرای سرور نیست.
 
 برای rollback، ابتدا سازگاری نسخه قبلی کد با schema فعلی را بررسی کنید. برگشت image/binary به معنی برگشت دیتابیس نیست؛ migration معکوس یا restore داده به تأیید عملیاتی و ارزیابی از دست‌رفتن داده نیاز دارد. SQL Server و مسیر Storage باید هر دو backup و روش restore آزموده‌شده داشته باشند؛ backup فقط فایل‌های publish کافی نیست.
 
@@ -586,7 +665,7 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 | `SMS_RATE_LIMITED` با429 | محدودیت provider، مستقل از محدودیت محلی OTP | فاصله مجاز و وضعیت سرویس را بررسی کنید |
 | `SMS_PROVIDER_AUTHENTICATION_FAILED` با503 | credential سرویس پیامک رد شده | secret سمت backend بررسی شود؛ این خطا logout کاربر نیست |
 | upload با `FILE_STORAGE_FAILED` و503 | RootPath در Production خالی است یا storage آماده نیست | مسیر مطلق پایدار و permission سرویس را تنظیم کنید |
-| مسیر نسبی storage یا access denied | LocalFileStorage نمی‌تواند root را آماده کند | مسیر مطلق و ACL/UID؛ health این خطا را تضمیناً نمی‌بیند |
+| مسیر نسبی storage یا access denied | LocalFileStorage نمی‌تواند root را آماده کند | مسیر مطلق و ACL/UID؛ liveness کافی نیست، readiness و log امن را بررسی کنید |
 | REST کار می‌کند ولی browser SignalR وصل نمی‌شود | query-token WebSocket/SSE یا cookie همراه CORS wildcard | LongPolling دارای header و withCredentials:false در origin واقعی بررسی شود |
 | داشبورد والد خالی ولی گزارش والد404 است | child انتخاب نشده | ابتدا Guardian child context انتخاب و هر دو query تازه شوند |
 | پس از تغییر نقش، گزارش403 است | activeRole با مسیر گزارش یکسان نیست | workspace/role جاری و cache context را بررسی کنید |
@@ -596,6 +675,7 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 
 - [ ] build و test قبل از publish موفق بوده‌اند.
 - [ ] artifact هیچ secret واقعی ندارد.
+- [ ] اگر فایل واقعی Production به خروجی انتقال اپراتور اضافه شده، آن خروجی محرمانه و غیرقابل‌اشتراک است؛ داخل image و Git قرار نمی‌گیرد.
 - [ ] environment برنامه `Production` است.
 - [ ] connection string فقط به database مقصد مورد تأیید اشاره می‌کند.
 - [ ] `Identity:SecurityKey` پایدار و حداقل ۳۲ بایت است.
@@ -605,6 +685,8 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 - [ ] migrationها جداگانه و کنترل‌شده اعمال شده‌اند.
 - [ ] storage روی مسیر/volume پایدار قرار دارد.
 - [ ] TLS در reverse proxy/IIS تنظیم شده است.
+- [ ] اگر انتشار HTTP با تأیید مالک انجام می‌شود، دو استثنا و خطر plaintext ثبت و gate امن TLS/GAP-02 باز مانده است؛ HTTP را امن اعلام نکرده‌ایم.
+- [ ] key ring پایدار MFA و محافظ DPAPI/certificate، ACL و identity قبلی حفظ شده‌اند؛ DB Backup به‌تنهایی کافی فرض نشده است.
 - [ ] health و OTP smoke test بعد از استقرار انجام شده‌اند.
 - [ ] logها حاوی OTP، token یا connection string نیستند.
 - [ ] preflight و REST واقعی با Bearer و بدون cookie بررسی شده‌اند.

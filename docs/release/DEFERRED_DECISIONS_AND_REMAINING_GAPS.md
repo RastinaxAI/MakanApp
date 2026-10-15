@@ -1,5 +1,9 @@
 # تصمیم‌های مصوب و موارد باز برای بازبینی نهایی
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 تاریخ ثبت GAP-04: ۲۰۲۶-۱۰-۱۵. این register مجوز پیاده‌سازی موارد آینده نیست.
 
 **تصمیم جاری:** TOTP Authenticator روش اصلی Backoffice MFA است؛ پیاده‌سازی واقعی، مستقل از provider بیرونی و پشت portهای قابل جایگزینی است. TOTP انتخاب مصوب است، نه placeholder ناامن یا موقت. جزئیات در [قرارداد GAP-04](GAP_04_BACKOFFICE_TOTP_MFA.md) است.
@@ -29,3 +33,15 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 | appeal، SLA و retention پیشرفته | پرونده، claim، escalation، action و audit موجودند؛ حذف خودکار نداریم | مهلت/نگه‌داری حقوقی و عملیات تیم نیازمند تصمیم‌اند | workflow مصوب و job/guard قابل تست | GAP-20 و نگه‌داری storage همچنان بازند | P1 |
 
 دیگر gapهای پرداخت، Push/SMS اعلان، worker recovery، observability، CI/CD و AI در [ممیزی غیر AI](NON_AI_BACKEND_FINAL_GAP_AUDIT.md) یا track مستقل خود باقی‌اند. این register برای هیچ‌کدام implementation یا approval تازه ادعا نمی‌کند.
+
+## استثناهای عملیاتی انتشار HTTP — ۲۰۲۶-۱۰-۱۵
+
+مالک پس از اعلام خطر، دو استثنای جداگانهٔ Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate را فقط برای انتشار فعلی Production تأیید کرد. defaults امن باقی‌اند؛ Encrypt=False، wildcard CORS، proxy نامعتبر و bypass مجوز مجاز نشده‌اند. فایل Staging حذف و فایل واقعی Production محلی/ignored شده است. این تصمیم نه سیاست جدید دامنه است، نه تأیید runtime principal پرقدرت و نه closure smoke امن GAP-02.
+
+بدهی عملیاتی: HTTPS معتبر، گواهی SQL قابل اعتماد، runtime principal کم‌اختیار، custody/ACL و recovery واقعی کلیدهای MFA، نگه‌داری فایل خصوصی، Origin دقیق وب‌کلاینت و smoke محیط هدف. پس از آماده شدن TLS، RequireHttps=true، هر دو استثنا=false و TrustServerCertificate=False شوند. [مراحل اجرایی](../production/DEPLOYMENT_IIS.md). شواهد محلی کد و SQL جای rehearsal یا مشاهدهٔ سرور را نمی‌گیرند.
+
+## DOC-CONTRACT-01 — اختلاف نمایش Enum در OpenAPI و MVC
+
+در همگام‌سازی جاری، schema خام MessageKind و OrganizationRole نوع integer داشت، ولی serialize همان CLR Enum با JsonOptions واقعی MVC خروجی رشته‌ای تولید کرد. literalهای مرجع مستندات از serializer واقعی استخراج و نوع خام OpenAPI جدا نشان داده شد. این اختلاف می‌تواند client generator را به نوع عددی نادرست هدایت کند؛ وجود schema عددی به معنی خروجی عددی Controller نیست. JsonStringEnumConverter ممکن است ورودی عددی را هم بپذیرد؛ canonical output و قواعد enum/Flags باید جدا حفظ شوند.
+
+وضعیت: OPEN_RUNTIME_OPENAPI_ALIGNMENT؛ تغییر transport اجراشده یا اصلاح کد برنامه در این کار مستندسازی مجاز/انجام نشده است. گام پیشنهادی مستقل: هم‌ترازکردن schema generation با MVC JsonOptions، با تست enum رشته‌ای/nullable/Flags و حفظ قرارداد فعلی؛ نیازی به تغییر تصمیم محصول یا تبدیل runtime به enum عددی نیست.

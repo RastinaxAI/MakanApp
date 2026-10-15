@@ -1,5 +1,7 @@
 # Release Checklist
 
+بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
+
 ## پیش از انتشار
 
 - [ ] `dotnet restore`, دو بار build/test نهایی و `git diff --check` سبز است.
@@ -13,6 +15,7 @@
 - [ ] runtime و migration principal جدا و connection TLS معتبر است.
 - [ ] CORS origins، AllowedHosts، known proxy، storage root و write permission تأیید شده‌اند.
 - [ ] .NET 9 Hosting Bundle، IIS WebSocket، HTTPS binding، firewall و log collector آماده‌اند.
+- [ ] key ring فعلی MFA، هویت ثابت App Pool، Load User Profile، ACL و روش بازیابی DPAPI/certificate حفظ و بررسی شده‌اند؛ Identity key در deploy عادی عوض نشده است.
 
 ## migration و rollout
 

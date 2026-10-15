@@ -1,5 +1,9 @@
 # AI Integration Contract v1 — Frozen Backend Target
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 وضعیت: **Frozen**. Generic Chat و عملیات role-specific در Backend پیاده‌سازی شده‌اند. این سند target الزام‌آور handoff تیم AI است.
 
 ## مرز و شناسه‌ها

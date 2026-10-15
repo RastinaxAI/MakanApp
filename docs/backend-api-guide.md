@@ -1,12 +1,24 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است: شناخت محصول و مدل، معماری و مسئولیت فایل‌ها، راه‌اندازی، استفاده از API، مطالعه مسیر اجرا، persistence، تست و ادامه توسعه. بازبینی STEP 15E از baseline ورودی `main@eebf02c` در `2026-10-13` انجام شده و قرارداد نهایی Backoffice را نیز پوشش می‌دهد. اظهارات تاریخی مراحل قبلی درباره نبود Backoffice فقط وضعیت همان مرحله را توصیف می‌کنند و بخش «Backoffice پلتفرم» در انتهای این راهنما مرجع جاری است.
+این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. مبنای جاری `main@80d6a14` در `2026-10-15` است: ۲۸۴ عملیات HTTP در ۴۸ Controller، ۴۸۸ schema، ۸۸ جدول و ۳۷ Migration. مرجع HTTP و فرهنگ دیتابیس از metadata واقعی بازتولید شده‌اند؛ مثال‌های آموزشی این راهنما گزیده‌اند و فهرست کامل فیلدها در مرجع جاری است. گزارش‌ها و اعداد validation مرحله‌ایِ قدیمی‌تر، تاریخچهٔ همان اجرا هستند؛ جایگزین وضعیت جاری زیر یا اثبات deployment نیستند.
+
+## وضعیت جاری و تغییرات مؤثر بر مطالعه
+
+اختلاف DOC-CONTRACT-01: OpenAPI خام بعضی Enumها را integer نشان می‌دهد، اما JsonOptions واقعی MVC خروجی رشته‌ای دارد. مرجع جدید literalها را با همان serializer استخراج و اختلاف را جدا مستند می‌کند؛ runtime در این مرحله تغییر نمی‌کند. برای ساخت client از OpenAPI، نوع Enum را بدون کنترل مرجع رشته‌ای فرض نکنید. [ثبت مورد باز](release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md).
+
+- Identity شامل access یک‌ساعته، refresh چرخشی با عمر مطلق ۳۰روزه و مدیریت نشست است. OTP ملی‌پیامک provider واقعی دارد، اما موفقیت تست خودکار تحویل SMS سرور را اثبات نمی‌کند.
+- onboarding مدرسه و Guardian در GAP-01 API عملیاتی دارند؛ دعوت اتصال حساب نیازمند پذیرش احرازشدهٔ صاحب حساب است و merge خودکار Person/User نداریم.
+- Reports/export، اعلان داخلی/outbox/preferences، Commerce/order/payment lifecycle و Backoffice/IAM API دارند. Push/SMS اعلان و gateway پرداخت واقعی همچنان unavailable هستند؛ OTP ورود با SMS اعلان یکی نیست.
+- TOTP/recovery/step-up واقعی Backoffice در GAP-04 پیاده‌سازی شده؛ فایل‌ها، هویت App Pool و key ring پایدار باید حفظ شوند. [قرارداد MFA](release/GAP_04_BACKOFFICE_TOTP_MFA.md).
+- سیاست مصوب GAP-05 جای پیش‌فرض‌های قدیمی Messenger را می‌گیرد: Unknown مانند Minor محافظت می‌شود؛ غریبه حق Direct ندارد؛ هر Send رابطه/Block/membership جاری و Content Safety را دوباره می‌سنجد. Internal Makan موتور قاعده‌محور واقعی ولی محدود است؛ رسانه unsupported به ReviewRequired می‌رود. Guardian و School Manager مجوز مرور Direct خصوصی ندارند. [قرارداد کامل](architecture/GAP_05_MESSENGER_CHILD_SAFETY.md).
+- ۱۲ API سمت Backend AI وجود دارند؛ پیش‌فرض غیرفعال، RAG source lifecycle deferred و real E2E از شواهد commit‌شده بسته نشده است. نقش Platform مجوز عمومی AI یا پیام خصوصی نمی‌سازد.
+- انتشار انتخابی فعلی Production/HTTP با دو استثنای مستقل و تأییدشده است، نه Staging. فایل خصوصی Production ignored و نمونهٔ عمومی بدون secret است. [runbook جاری IIS](production/DEPLOYMENT_IIS.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) را پیش از rollout بخوانید.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
 
 ## تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵
 
-مسیر ساخت و مدیریت پرونده فراگیر و رابطه سرپرستی اکنون API دارد؛ توضیح کامل قراردادها، نمونه‌ها، خطاها، migration و تست‌ها در [سند GAP-01](architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) است. این بخش وضعیت قدیمیِ fixture-only برای OrganizationPerson/GuardianRelation را جایگزین می‌کند؛ HTML/PDFهای قبلی snapshot تاریخی‌اند و در این مرحله بازتولید نشده‌اند.
+مسیر ساخت و مدیریت پرونده فراگیر و رابطه سرپرستی اکنون API دارد؛ توضیح کامل قراردادها، نمونه‌ها، خطاها، migration و تست‌ها در [سند GAP-01](architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md) است. این بخش وضعیت قدیمی fixture-only را جایگزین می‌کند؛ HTML/PDF که در تحویل GAP-01 بازتولید نشده بودند، در همگام‌سازی جاری از منبع تازه بازسازی می‌شوند.
 
 جریان مدرسه: ورود و workspace با نقش فعال Manager → `POST /api/v1/organization/people` → جست‌وجو/دریافت پرونده → ثبت‌نام اختیاری از Academic موجود. ایجاد پرونده حساب، عضویت، نقش، Enrollment یا TeacherAssignment نمی‌سازد. ویرایش نام فقط برای Person بدون حساب و دارای دقیقاً یک ارجاع سازمانی مجاز است؛ هر دو rowversion پرونده و Person لازم‌اند.
 
@@ -57,7 +69,11 @@
 | Exam | نسخه‌بندی آزمون، سؤال تستی و تشریحی، شروع تلاش، ذخیره پاسخ، انتقال حق نوشتن، نهایی‌سازی، تصحیح و انتشار نمره |
 | Storage | بارگذاری، metadata، دانلود مجاز و حذف فایل |
 | Messaging | Contact، Privacy و Discovery، گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR |
-| Reports | چهار داشبورد مخاطب و شانزده گزارش تفصیلی؛ داده مجاز نقش، pagination، حضور و نمره منتشرشده |
+| Reports | چهار داشبورد، شانزده گزارش تفصیلی و export خصوصی CSV با job پایدار؛ visibility نمره و scope نقش |
+| Notification | اعلان داخلی، durable outbox، preferences و دستگاه؛ provider بیرونی Push/SMS اعلان unavailable |
+| Commerce | Plan/Subscription/Entitlement/Quota و Order/Payment lifecycle؛ بدون gateway مالی واقعی |
+| Platform | IAM، provisioning، metadata operations و moderation محدود به case؛ TOTP/recovery/step-up واقعی |
+| AI Backend | دوازده API و adapter اختیاری؛ غیرفعال پیش‌فرض، real E2E و RAG lifecycle تأیید نشده |
 
 پروژه یک Modular Monolith با Onion Architecture است. همه قابلیت‌ها در یک میزبان API اجرا می‌شوند و SQL Server مرجع داده‌های تراکنشی است.
 
@@ -81,7 +97,7 @@ HTTP -> Controller -> Application Service -> Domain rules / Application port
 
 MakanApp یک backend مشترک برای ارتباط و فعالیت آموزشی در سازمان است. یک شخص می‌تواند حساب ورود داشته باشد، عضو چند سازمان باشد، در هر سازمان چند نقش داشته باشد و در نشست جاری فقط یک فضای کاری و نقش را انتخاب کند. مدرسه/آموزشگاه، کلاس، حضور، تکلیف و آزمون داده رسمی آموزشی‌اند؛ پیام‌رسان مسیر ارتباط افراد است. داشبورد و گزارش، وضعیت همین داده رسمی را برای مخاطب مجاز خلاصه می‌کنند.
 
-در این نسخه ناحیه School و Messenger جریان‌های واقعی دارند. نام Copilot، Knowledge، Intelligence، Commerce، Notification و Platform Operations در معماری هدف آمده است، اما وجود آن نام‌ها به معنی وجود API اجرایی آن‌ها نیست. مدیر مدرسه `Manager` با ادمین پلتفرم یک مفهوم نیست؛ endpoint عمومی مدیریت پلتفرم یا provisioning سازمان در این مخزن وجود ندارد.
+School، Messenger، Reports/export، Notification، Commerce و Platform Operations اکنون API اجرایی دارند؛ Copilot نیز قراردادهای Backend متصل به port سرویس AI دارد و آماده‌بودن سرویس بیرونی جداست. Knowledge ingestion/RAG source lifecycle کامل نشده است. مدیر مدرسه `Manager` با ادمین پلتفرم یک مفهوم نیست؛ bootstrap اولین PlatformOwner خارج HTTP و با مرز عملیاتی کنترل‌شده است.
 
 ### نتیجه‌ای که خواننده باید بعد از مطالعه داشته باشد
 
@@ -302,13 +318,13 @@ dotnet dev-certs https --trust
 dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --launch-profile https
 ```
 
-برنامه migration را خودکار در startup اجرا نمی‌کند. آخرین migration موجود هنگام نگارش، `20261007075650_AddExamGradingAndRelease` است. اعمال migration به معنی ایجاد سازمان، دعوت، دانش‌آموز یا حساب مدیر نیست؛ seed عمومی و Endpoint راه‌اندازی سازمان در پروژه وجود ندارد.
+برنامه migration را خودکار در startup اجرا نمی‌کند. آخرین migration موجود `20261015091336_EnforceApprovedMessengerChildSafety` است. اعمال migration به معنی ایجاد دادهٔ کسب‌وکاری نیست؛ ساخت سازمان و provisioning از API مجاز Backoffice و ساخت پرونده/Guardian از API مدیر مدرسه انجام می‌شود. bootstrap اولین PlatformOwner خارج HTTP است.
 
 | نشانی محلی | کاربرد |
 |---|---|
 | `https://localhost:7063/health` | زنده‌بودن میزبان؛ بررسی اتصال SQL Server در آن ثبت نشده است |
-| `https://localhost:7063/swagger` | Swagger UI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است |
-| `https://localhost:7063/openapi/v1.json` | سند OpenAPI؛ مسیر نسبی در تمام محیط‌ها از جمله Production عمومی است |
+| `https://localhost:7063/swagger` | Swagger UI در Development/Testing؛ Production پیش‌فرض خاموش |
+| `https://localhost:7063/openapi/v1.json` | سند OpenAPI در Development/Testing یا فعال‌سازی صریح |
 | `https://localhost:7063/api/v1` | پیشوند APIهای کاربردی |
 | `https://localhost:7063/hubs/messaging` | SignalR پیام‌رسانی |
 
@@ -333,7 +349,10 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 | `Sms:MeliPayamakOtp:BaseUrl` | `https://console.melipayamak.com` |
 | `Sms:MeliPayamakOtp:ServiceToken` | secret الزامی برای provider واقعی؛ هرگز commit یا log نشود |
 | `Sms:MeliPayamakOtp:TimeoutSeconds` | `10` ثانیه |
-| `Identity:Session:LifetimeSeconds` | `2592000`، برابر ۳۰ روز |
+| `Identity:Session:AccessLifetimeSeconds` | `3600`، برابر یک ساعت |
+| `Identity:Session:RefreshLifetimeSeconds` | `2592000`، برابر ۳۰ روز؛ refresh چرخشی |
+| `Hosting:RequireHttps` / `AllowInsecureHttp` | `true` / `false`؛ HTTP فقط با استثنای صریح Production |
+| `Database:AllowUntrustedServerCertificate` | `false`؛ استثنای مستقل تأیید گواهی SQL، نه اجازهٔ Encrypt=False |
 | `Storage:RootPath` | در Development برابر `%LOCALAPPDATA%\MakanApp\Storage` |
 | `Storage:MaxFileSizeBytes` | `10485760`، برابر ۱۰ MiB |
 | `Storage:UnattachedLifetimeHours` | `24` برای فایل هنوز متصل‌نشده |
@@ -348,7 +367,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 
 مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در `Program.cs` برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.
 
-کلید امنیت یا ServiceToken را در مخزن یا سند ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart دیگر معتبر نیست. انتخاب `MeliPayamakOtp` بدون `Identity:SecurityKey` پایدار در startup رد می‌شود. appsettings پایه `Sms:Provider=Unavailable` دارد؛ برای OTP واقعی، provider و ServiceToken و کلید پایدار از secret store تنظیم شوند. در Production، `Storage:RootPath` غیرخالی `LocalFileStorage` را فعال می‌کند؛ مسیر باید مطلق، پایدار و قابل نوشتن باشد. مسیر خالی `UnavailableFileStorage` می‌دهد.
+کلید امنیت یا ServiceToken را در Git یا سند مشترک ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart معتبر نیست. انتخاب MeliPayamakOtp بدون کلید پایدار در startup رد می‌شود. پایه Sms:Provider=Unavailable دارد؛ فایل خصوصی Production این انتشار provider واقعی را تنظیم می‌کند. RootPath در Production باید مطلق و پایدار باشد؛ خالی بودن آن fail-fast می‌شود. فایل واقعی Production ignored و نمونهٔ عمومی بدون secret است؛ مسیر و کلیدهای قبلی MFA را هنگام Publish حفظ کنید.
 
 <a id="http"></a>
 ## قرارداد مشترک HTTP
@@ -434,7 +453,7 @@ $otpCode = $null
 $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 ```
 
-پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc` و `user` است. `challengeId` و شماره باید متعلق به همان درخواست OTP باشند؛ درخواست challenge جدید، challenge قبلی را supersede می‌کند. کد provider به‌صورت string opaque و در بازه طول تنظیم‌شده پذیرفته می‌شود؛ اگر کد عددی باشد، ارقام انگلیسی، فارسی و عربی پیش از hash به شکل یکسان normalize می‌شوند. OTP مصرف‌شده قابل استفاده مجدد نیست و تکرار تأیید می‌تواند `OTP_ALREADY_USED` بدهد. اگر پاسخ ورود در شبکه گم شد و توکن را ندارید، مسیر ورود جدید را با رعایت محدودیت ارسال طی کنید.
+پاسخ تأیید `200` شامل `accessToken`، `tokenType`، `expiresAtUtc`، `refreshToken`، `refreshExpiresAtUtc` و `user` است. challengeId و شماره باید متعلق به همان درخواست OTP باشند؛ challenge جدید قبلی را supersede می‌کند. کد opaque است؛ ارقام فارسی/عربی عددی normalize می‌شوند. OTP یک‌بارمصرف و پنج‌دقیقه‌ای است؛ تأیید تکراری می‌تواند OTP_ALREADY_USED بدهد. refresh token هم credential خصوصی است؛ برای refresh از POST /api/v1/auth/refresh و قرارداد جاری استفاده کنید. پاسخ ازدست‌رفته یا replay را با فرض idempotency عمومی retry نکنید.
 
 ### تکمیل پروفایل و خروج
 
@@ -1118,17 +1137,21 @@ STEP 11B در کنار داشبوردهای خلاصه، APIهای report خوا
 <a id="persistence"></a>
 ## نقشه persistence و مرز تراکنش‌ها
 
-[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) از configurationهای همان assembly استفاده می‌کند. ۵۳ جدول در هفت schema وجود دارد؛ Reports داده جدید ذخیره نمی‌کند. برای ستون‌ها، FKها، indexها و CHECKهای کامل، [فرهنگ دیتابیس](database-current-structure.md) مرجع تکمیلی است.
+[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) از configurationهای همان assembly استفاده می‌کند. ۸۸ جدول داریم؛ از جمله persistence مربوط به report export، Notification، Commerce و Platform/MFA. برای ۹۰۱ ستون، FK، key، index و CHECKهای واقعی، [فرهنگ جاری دیتابیس](database-current-structure.md) مرجع تکمیلی است.
 
 | schema | تعداد جدول | گروه داده |
 |---|---:|---|
-| `identity` | ۵ | User، Person، Credential، OTP و UserSession |
+| `identity` | ۷ | User، Person، Credential، OTP، UserSession، RefreshToken و شاهد CommunicationAge |
 | `organization` | ۵ | Organization، OrganizationPerson، Membership، RoleAssignment و Invitation |
 | `guardian` | ۱ | GuardianRelation |
 | `academic` | ۹ | دوره، درس، کلاس، Enrollment، TeacherAssignment، ScheduleRule، Session و تاریخچه حضور |
 | `assessment` | ۱۸ | تکلیف/نسخه/گیرنده، پاسخ و نمره تکلیف؛ تعریف/تلاش/پاسخ/نمره آزمون |
-| `messaging` | ۱۴ | گفتگو/عضو/پیام/فایل/واکنش، تغییرات، outbox، Block، Report و مجوز ارتباط |
+| `messaging` | ۲۳ | گفتگو/عضو/دعوت/ownership/state، پیام و تعامل، delta/outbox، privacy/contact، Block، moderation و safety |
 | `storage` | ۱ | FileAsset؛ محتوای باینری در storage adapter است |
+| `commerce` | ۱۰ | Plan/version، entitlement/quota، subscription/usage و order/payment |
+| `notification` | ۴ | اعلان، delivery، preference و device |
+| `platform` | ۹ | IAM، audit، provisioning و MFA credential/recovery |
+| `reports` | ۱ | job خروجی خصوصی گزارش |
 
 ### سه لایه تضمین درستی داده
 
@@ -1166,7 +1189,7 @@ rowversion زمان رویداد نیست. پارامتر expected version در 
 
 ### migration و محیط توسعه
 
-۲۰ migration موجود از foundation تا `AddExamGradingAndRelease` مدل فعلی را می‌سازند. Dashboard، Detailed Reports و adapter OTP migration اختصاصی جدید ندارند. runtime هنگام startup `Migrate` یا `EnsureCreated` اجرا نمی‌کند. `MakanDbContextFactory` برای ابزار EF از متغیر `ConnectionStrings__MakanDatabase` استفاده می‌کند؛ connection runtime پروژه Api را خودکار از User Secrets نمی‌گیرد.
+۳۷ Migration موجود تا EnforceApprovedMessengerChildSafety مدل فعلی را می‌سازند. runtime هنگام startup Migrate یا EnsureCreated اجرا نمی‌کند. MakanDbContextFactory اتصال design-time را از ConnectionStrings__MakanDatabase می‌گیرد، نه خودکار از User Secrets API. خروجی SQL تحویلی باید با ابزار export-migration-sql.ps1 تولید و با تست مستقل SQL بررسی شود؛ خروجی خام قدیمی در backfill ستون تازه خطای 207 داشت. [دستور جاری](production/DEPLOYMENT_IIS.md).
 
 برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر **الگوی توسعه** است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:
 
@@ -1322,9 +1345,9 @@ dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj -
 
 ### مرز میزبانی و موارد لازم برای تحویل عملیاتی
 
-میزبان migrations را اجرا نمی‌کند؛ health فقط liveness است؛ Swagger/OpenAPI در همه محیط‌ها عمومی‌اند. فایل upload برای دوام بین deploy به RootPath مطلق، permission و storage پایدار نیاز دارد. CORS فعلی wildcard بدون credentials است. handler فقط Bearer header را می‌خواند؛ SignalR WebSocket/SSE مرورگر با query-token از آن پشتیبانی نمی‌گیرد. برای transport قابل آزمایش مرورگر به نمونه LongPolling قرارداد فرانت و [راهنمای استقرار](deployment-windows-linux-docker.md) مراجعه کنید.
+میزبان migrations را اجرا نمی‌کند؛ /health و /health/live فقط liveness و /health/ready شامل probe SQL و Storage است. Swagger/OpenAPI در Production پیش‌فرض خاموش‌اند. Storage پایدار خارج Publish و CORS allowlist بدون credentials لازم‌اند. handler فقط Bearer header را می‌خواند؛ query-token مرورگر برای SignalR پشتیبانی نمی‌شود. LongPolling با header و withCredentials:false را مطابق [قرارداد مصرف API](frontend-contract/README.md) بررسی کنید.
 
-UseForwardedHeaders/trusted proxy صریح در Program ثبت نشده است؛ TLS termination و RemoteIpAddress پشت reverse proxy باید در محیط هدف بررسی شوند. runtime account SQL و principal migration مسئولیت جدا دارند. backup دیتابیس بدون backup فایل‌های referenced کافی نیست. هیچ‌یک از موفقیت تست‌ها یا دستورهای این کتاب به معنی استقرار واقعی، تحویل SMS یا آماده‌بودن چند instance نیست.
+UseForwardedHeaders با KnownProxies صریح و ForwardLimit=1 وجود دارد؛ اعتماد عمومی به proxy مجاز نیست. runtime principal SQL و migration principal جدا باشند. Backup دیتابیس بدون Storage و custody کلیدهای Identity/MFA کافی نیست. هیچ موفقیت تست یا دستور این کتاب اثبات IIS واقعی، تحویل SMS، recovery محیط هدف یا آماده‌بودن چند instance نیست. HTTP این انتشار استثنای صریح مالک است و رمزگذاری ندارد.
 
 
 <a id="testing"></a>
@@ -1357,8 +1380,8 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 | برنامه با خطای connection string شروع نمی‌شود | تنظیم `ConnectionStrings:MakanDatabase` در محیط واقعی اجرا |
 | `/health` سالم ولی API داده خطا می‌دهد | health فعلی probe دیتابیس نیست؛ اتصال و migration را بررسی کنید |
 | `Invalid object name` | مقصد migration با مقصد runtime یکسان باشد و migrationهای جاری اعمال شده باشند |
-| Swagger در دسترس نیست | در تمام محیط‌ها ثبت می‌شود؛ آدرس، base path و reverse proxy را بررسی کنید |
-| OTP نمی‌رسد | adapter توسعه پیامک واقعی ندارد؛ debugger محلی یا تست خودکار را مطابق بخش ورود به کار ببرید |
+| Swagger در دسترس نیست | در Production پیش‌فرض خاموش است؛ 404 می‌تواند رفتار صحیح باشد |
+| OTP نمی‌رسد | Provider واقعی/Unavailable/Development، secret، محدودیت ارسال و خطای امن provider را بررسی کنید؛ تست خودکار SMS پولی نمی‌فرستد |
 | پس از restart پاسخ `401` می‌گیرید | کلید موقت توسعه عوض شده؛ دوباره وارد شوید یا کلید توسعه را امن و پایدار تنظیم کنید |
 | فضای سازمانی در فهرست نیست | عضویت، سازمان و نقش باید فعال باشند؛ ایجاد حساب جای provisioning را نمی‌گیرد |
 | والد کلاس‌ها را نمی‌بیند | `/academic/classes` برای Parent ارائه نشده؛ برنامه/آزمون/نتیجه از مسیرهای مجاز با context فرزند مصرف شود |
@@ -1366,7 +1389,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 | پاسخ آزمون ذخیره شده ولی رسید نهایی نیست | Finalize مستقل است و باید پیش از deadline موفق شود |
 | ویدئو یا صدا `415` می‌دهد | `Storage:AllowedContentTypes` پیش‌فرض این MIMEها را ندارد |
 | SignalR مرورگر `401` می‌دهد | محدودیت هدر در مقابل `access_token` Query و transport مورد استفاده |
-| مرورگر خطای CORS دارد | CORS wildcard فعال است؛ credentials:include، HTTP redirect، preflight proxy و header را بررسی کنید؛ موفقیت Postman اثبات اتصال مرورگر نیست |
+| مرورگر خطای CORS دارد | Origin دقیق، allowlist، scheme/redirect و preflight را بررسی کنید؛ cookie credentials نداریم و موفقیت Postman اثبات مرورگر نیست |
 | Integration شکست می‌خورد | دسترس‌پذیری LocalDB، اجرای موازی suite و مجوز ایجاد دیتابیس تست |
 
 <a id="limits"></a>
@@ -1382,7 +1405,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، `guardian`، `academic`، `assessment`، `storage` و `messaging` سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با `rowversion` و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.
 
-برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی فعلی آن ۵۳ جدول و ۲۰ migration موجود تا انتشار نتیجه آزمون را پوشش می‌دهد. مرجع schema جاری، configurationها و migrationهای موجود است.
+برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی جاری آن ۸۸ جدول و ۳۷ Migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.
 
 مسیر مطالعه یک جریان واقعی آزمون:
 
@@ -1399,12 +1422,14 @@ Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، 
 <a id="document-maintenance"></a>
 ## نگهداری همین راهنما و مرجع
 
-Markdownهای `backend-api-guide.md` و `backend-api-reference.md` منابع اصلی‌اند. HTML/PDF هر سند خروجی جداگانه‌اند و برای تحویل کنار منبع نسخه‌بندی می‌شوند. تغییر route، قرارداد، code خطا، مجوز، DI، option یا migration باید در بخش متناظر منعکس شود؛ سپس خروجی‌ها دوباره تولید شوند.
+راهنمای آموزشی Markdown دستی نگه‌داری می‌شود؛ مرجع API، مدل دیتابیس و README قرارداد مصرف از شواهد قابل بازتولید تولید می‌شوند. HTML/PDF هر چهار سند خروجی جداگانه دارند؛ خروجی‌های دیتابیس محلی/ignored هستند. تغییر route، DTO، مجوز، DI، option یا Migration باید در متن و metadata منعکس و خروجی‌ها دوباره ساخته شوند؛ رندر تنها جای استخراج از کد را نمی‌گیرد.
 
 برای تولید خروجی‌ها ابزار مستندسازی مستقل از build محصول است. از ریشه مخزن با Python و مرورگر Edge اجرا کنید؛ وابستگی‌های Python فقط ابزار Markdown/PDF هستند:
 
 ```powershell
 python -m pip install --target .artifacts/docs-python -r tools/docs/requirements.txt
+dotnet run --project tools/docs/MakanApp.DocumentationSnapshot/MakanApp.DocumentationSnapshot.csproj --configuration Debug -- .artifacts/documentation-snapshot
+python tools/docs/sync_repository_docs.py --snapshot .artifacts/documentation-snapshot --reviewed-date 2026-10-15
 python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --pdf
 ```
 
@@ -1415,13 +1440,13 @@ python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --
 
 
 <a id="handoff-validation"></a>
-## شناسنامه بازبینی و نتیجه اعتبارسنجی
+## شناسنامه تاریخی تحویل ۲۰۲۶-۱۰-۱۲ و نتیجه همان اجرا
 
 این تحویل در `2026-10-12` بر مبنای سورس `main@f0ff3be` انجام شده است. تغییرات این مرحله مستندات و ابزار ساخت خروجی‌اند؛ کد محصول، frontend و schema تغییر نکرده‌اند. هیچ migration تازه ساخته یا روی دیتابیس عادی/Production اعمال نشده است.
 
 restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.
 
-۱۴۱ عملیات و پارامترهای query با Controller و OpenAPI تازه میزبان تطبیق داده شدند؛ ۱۸۲ schema JSON و چهار مدل query کنترل شدند. ۱۹۰ نمونه JSON درخواست/پاسخ از نظر فیلد، nesting، type، enum، nullable، UUID، زمان و نسخه بررسی شدند. لینک‌های داخلی/مسیرهای source و تعداد ستون جدول‌ها نیز کنترل شدند. PDF هر کتاب با مرورگر رندر، شماره صفحه و نشانک اضافه و برای صفحه خالی و متن خارج صفحه بررسی شد؛ صفحات نماینده نیز بصری بازبینی شدند.
+شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از ۲۸۴ عملیات، ۴۸۸ schema و مدل طراحی ۸۸ جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.
 
 این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.
 
@@ -1625,13 +1650,13 @@ Platform permission مجوز خواندن دلخواه Direct، Contacts یا ف
 | `GET /api/admin/v1/operations/jobs` | `platform.operations.read` | بدون body | `PlatformJobOperations` |
 | `GET /api/admin/v1/operations/health` | `platform.operations.read` | بدون body | `PlatformSystemHealth` بدون secret/config خام |
 
-انتشار PlanVersion و override اشتراک به step-up و `Reason` نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه Subscription را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API برای «موفق اعلام‌کردن دستی پرداخت»، refund یا provider reconciliation ساختگی وجود ندارد. عملیات notification/job نیز فعلاً read-only و بدون token، شماره کامل یا متن notification هستند. endpoint AI ساخته نشده و وضعیت واقعی `NotIntegrated/DependencyPending` است.
+انتشار PlanVersion و override اشتراک به step-up و Reason نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API پرداخت موفق دستی، refund یا reconciliation ساختگی وجود ندارد. عملیات مدیریتی notification/job نیز read-only و بدون token، شماره کامل یا متن اعلان‌اند. دوازده API مستقل Backend AI وجود دارند، اما منوی مدیریتی/محتوای AI عمومی از نقش Platform نتیجه نمی‌شود؛ real E2E و RAG lifecycle تأیید نشده‌اند.
 
 ### صفحه‌بندی، خطا و رفتار حساس
 
 - listها server-side هستند؛ مقدار پیش‌فرض اغلب `page=1&pageSize=30` است، membership/audit پیش‌فرض ۵۰ دارند و سقف معتبر در Application enforce می‌شود. sort فقط در مسیرهایی که صریحاً ارائه شده و فقط از allowlist پذیرفته می‌شود.
 - پاسخ خطا `ProblemDetails` با کد پایدار دارد. `401` یعنی Bearer session نامعتبر/منقضی، `403` یعنی permission یا step-up ناکافی، `404` برای resource غیرقابل مشاهده/ناموجود، `409` برای conflict یا last-owner/last-manager، `412` برای concurrency/version mismatch، `422` برای validation، `429` برای rate limit و `503` برای dependency fail-closed است.
-- در runtime تولید فعلی `UnavailablePlatformStepUpAuthorization` فعال است؛ بنابراین عملیات حساس بالا با `PLATFORM_STEP_UP_REQUIRED` و 403 fail-closed می‌شوند. این رفتار جای MFA واقعی را نمی‌گیرد و مانع اعلام آمادگی کامل Production است.
+- در runtime جاری EfPlatformMfaAssurance و جریان واقعی TOTP/recovery/step-up از GAP-04 فعال‌اند؛ نبود عامل، freshness یا محافظ معتبر همچنان fail-closed است. [قرارداد کامل](release/GAP_04_BACKOFFICE_TOTP_MFA.md)؛ TOTP ورود مدرسه یا SMS MFA موازی ساخته نشده است.
 - تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.
 - OpenAPI جاری در `/openapi/v1.json` قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.
 

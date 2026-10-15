@@ -11,6 +11,8 @@
 - `RESTORE VERIFYONLY` مفید است اما جای restore drill را نمی‌گیرد.
 - مسیر `Storage__RootPath` جداگانه versioned/snapshot شود؛ secrets فقط با reference و روش بازیابی در secret manager نگه‌داری شوند.
 - backupها encrypted، دسترسی‌محدود و خارج از همان failure domain سرور اصلی باشند.
+- پس از GAP-04، key ring پایدار MFA و custody محافظ DPAPI/certificate نیز دارایی recovery هستند؛ DB backup به‌تنهایی TOTP را بازیابی نمی‌کند. DPAPI به همان هویت Windows/ماشین وابسته است و کپی XML به سرور دیگر کافی نیست.
+- فایل خصوصی appsettings.Production.json، کلید Identity و tokenهای provider فقط در نسخهٔ پشتیبان محرمانه با ACL و روش بازیابی کنترل‌شده نگه‌داری شوند؛ داخل artifact مشترک، log یا Git نباشند. انتشار جدید نباید کلید Identity یا مسیر/کلیدهای MFA قبلی را عوض کند.
 
 ## سازگاری DB و Storage
 
@@ -25,7 +27,7 @@ DB مرجع metadata و authorization فایل است و storage بایت‌ها
 5. چند فایل مجاز را از API بخوانید و SHA-256 ذخیره‌شده/واقعی را تطبیق دهید.
 6. نتیجه، زمان restore، RPO/RTO مشاهده‌شده و خطاها را ثبت کنید؛ سپس محیط disposable را طبق فرایند تأییدشده پاک کنید.
 
-اسکریپت disposable برای این کار در `tools/production/sql/restore-drill-localdb.sql` قرار دارد. نتیجه‌ی اجرای STEP 16 باید در گزارش نهایی ثبت شود؛ موفقیت LocalDB فقط صحت پایه‌ی backup/restore را نشان می‌دهد و جای rehearsal روی topology واقعی staging را نمی‌گیرد.
+ابزار جاری برای recovery کامل، Invoke-MakanRecovery.ps1 در ابتدای همین سند است؛ اسکریپت restore-drill-localdb.sql فقط شاهد محدود تاریخی STEP 16 است و با cleanup روی مقصد عادی اجرا نشود. موفقیت LocalDB جای rehearsal توپولوژی واقعی، custodian کلیدها، off-server copy و RPO/RTO مصوب را نمی‌گیرد؛ این تحویل هیچ job یا restore سرور را اجرا نمی‌کند.
 
 ### نتیجه‌ی drill در STEP 16
 
@@ -36,11 +38,11 @@ DB مرجع metadata و authorization فایل است و storage بایت‌ها
 ```sql
 BACKUP DATABASE [MakanApp]
 TO DISK = N'<secure-backup-path>\MakanApp_full.bak'
-WITH CHECKSUM, COMPRESSION, INIT, STATS = 10;
+WITH COPY_ONLY, CHECKSUM, COMPRESSION, STATS = 10;
 
 RESTORE VERIFYONLY
 FROM DISK = N'<secure-backup-path>\MakanApp_full.bak'
 WITH CHECKSUM;
 ```
 
-مسیر، edition، encryption و credential باید توسط DBA محیط تعیین شود.
+مسیر باید نام تازهٔ تأییدشده داشته باشد؛ فایل backup قبلی overwrite نشود. edition، compression، encryption و credential را DBA تعیین می‌کند. نمونه، جای ابزار جاری و drill واقعی DB+storage+application را نمی‌گیرد.

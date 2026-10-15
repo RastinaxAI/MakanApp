@@ -12,6 +12,7 @@
 ## TLS و شبکه
 
 - connection string Production: `Encrypt=True;TrustServerCertificate=False`.
+- استثنای مصوب انتشار فعلی فقط با Database:AllowUntrustedServerCertificate=true در Production، پذیرش TrustServerCertificate=True را مجاز می‌کند؛ Encrypt=False همچنان رد است. رمزگذاری با تأیید هویت گواهی یکی نیست و این استثنا توصیهٔ امنیتی یا مجوز حساب پرقدرت runtime محسوب نمی‌شود. پس از فراهم شدن گواهی معتبر هر دو مقدار به حالت امن برگردند؛ [قرارداد انتشار](DEPLOYMENT_IIS.md).
 - certificate SQL Server باید SAN درست و trust chain معتبر روی Windows Server داشته باشد.
 - پورت 1433/instance port فقط از subnet یا host برنامه و مسیر مدیریت خصوصی مجاز باشد؛ exposure عمومی ممنوع است.
 - SSMS فقط از RDP/local/private management path استفاده کند.
@@ -26,3 +27,5 @@ dotnet ef migrations has-pending-model-changes --project MakanApp.Infrastructure
 ```
 
 قبل و بعد از اجرا نام migration در `__EFMigrationsHistory` بررسی شود. migration principal فقط در job امن deployment در دسترس باشد و سپس secret آن از process پاک شود.
+
+برای handoff فایل SQL/SSMS، ابزار export-migration-sql.ps1 و تست مستقل test-migration-sql.ps1 در [runbook IIS](DEPLOYMENT_IIS.md) مرجع‌اند؛ خروجی خام قبلی برای backfill ستون تازه خطای compile 207 داشت. ۳۷ Migration موجود تا EnforceApprovedMessengerChildSafety داریم؛ همگام‌سازی اسناد Migration جدیدی ایجاد یا اجرا نمی‌کند.

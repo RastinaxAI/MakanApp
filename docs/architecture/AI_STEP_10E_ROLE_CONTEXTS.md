@@ -1,5 +1,9 @@
 # STEP 10E — Role-specific AI Contexts
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## نتیجه
 
 Backend عملیات Student، Parent، Teacher و Manager را با scope و داده‌ای که خودش authorize کرده به AI می‌فرستد. client فقط selectorهای لازم مانند `classId`، `studentId`، `assignmentId` و `examId` را می‌دهد؛ هیچ‌کدام مدرک مجوز نیستند.

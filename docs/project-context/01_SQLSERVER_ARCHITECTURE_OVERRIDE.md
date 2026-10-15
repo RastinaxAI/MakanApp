@@ -1,5 +1,9 @@
 # Makan Architecture v3.1 — SQL Server Override
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل مرجع اصلی/تاریخی محصول است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 **Status:** Authoritative database correction for Makan Architecture v3  
 **Scope:** Database, EF Core persistence, database concurrency, constraints, transactions, migrations, search assumptions, backup/restore, and DB-specific test requirements.
 

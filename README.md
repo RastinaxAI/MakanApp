@@ -7,14 +7,31 @@
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع کامل Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): جدول و کارت تفصیلی ۱۴۱ عملیات، مجوز و قواعد شاخص، مسیر service/port/adapter، نمونه HTTP/JSON، معنی فیلدها، Enumها و کدهای خطا.
+- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۲۸۴ عملیات در ۴۸ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۴۸۸ schema استخراج‌شده از OpenAPI.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
-بازبینی اسناد در `2026-10-12` بر مبنای `f0b78dd` انجام شده است: ۱۴۱ عملیات HTTP در ۲۲ Controller، شامل چهار داشبورد و شانزده گزارش تفصیلی، OTP مدیریت‌شده و تنظیمات جدید میزبانی. قرارداد فرانت‌اند رفتار فعلی را از قابلیت‌های آینده جدا می‌کند. بخش‌های مرحله‌ای پایین گزارش همان مرحله توسعه‌اند؛ برای وضعیت جاری، راهنماهای بالا را مبنا قرار دهید.
+بازبینی جاری در `2026-10-15` از سورس commit `80d6a14` انجام شده است: ۲۸۴ عملیات Controller در ۲۵۶ مسیر متمایز، ۴۸ Controller، ۴۸۸ schema، ۸۸ جدول و ۳۷ Migration. Health/OpenAPI/Hub در شمار Controller operation نیستند. شمارش از TestServer و مدل طراحی EF، بدون اتصال SQL، worker، SMS یا AI واقعی استخراج شده است؛ این شواهد وضعیت یک سرور مستقرشده را تأیید نمی‌کنند.
 
-دو کتاب بک‌اند در همین تاریخ بر مبنای `f0ff3be` برای تحویل به توسعه‌دهنده دیگر تکمیل شده‌اند. Markdown منبع نگهداری و HTML/PDF هر کتاب خروجی مستقل نسخه‌بندی‌شده است؛ روش بازتولید با `tools/docs/build_backend_docs.py` در پایان راهنما آمده است.
+Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
+
+## وضعیت جاری قابلیت‌ها و استقرار
+
+| حوزه | وضعیت کد و مرز عملیاتی |
+|---|---|
+| Identity / OTP | نشست access/refresh و مدیریت نشست؛ adapter واقعی OTP ملی‌پیامک؛ تست خودکار SMS واقعی نمی‌فرستد |
+| Organization / Guardian | onboarding پرونده، دعوت اتصال حساب با رضایت، lifecycle سرپرستی؛ بدون merge یا ساخت ضمنی حساب |
+| Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
+| Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
+| Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان داخلی و outbox/preferences؛ Push و SMS اعلان provider واقعی ندارند |
+| Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ MFA/step-up واقعی TOTP موجود است |
+| AI | ۱۲ API سمت Backend؛ پیش‌فرض غیرفعال، source lifecycle RAG deferred و real Backend↔AI E2E از شواهد commit‌شده بسته نشده است |
+| Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
+
+انتشار فعلی مالک **Production روی HTTP** است؛ فایل Staging حذف شده. `appsettings.Production.json` واقعی محلی/ignored و نمونهٔ بدون secret آن `appsettings.Production.json.example` است. دو استثنای تأییدشدهٔ `Hosting:AllowInsecureHttp` و `Database:AllowUntrustedServerCertificate` فقط در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض پایه امن است. HTTP رمزگذاری ندارد و این استثناها gate امن GAP-02 را نمی‌بندند. [مراحل دقیق سرور IIS](docs/production/DEPLOYMENT_IIS.md) شامل حفظ Storage، کلید Identity و key ring پایدار MFA است؛ هیچ اتصال/تغییر سرور با این اسناد ادعا نمی‌شود.
+
+بخش‌های معرفی مراحل توسعه در ادامه سابقهٔ تکمیل همان مرحله‌اند؛ برای قرارداد جاری از مرجع API، مدل دیتابیس و اسناد عملیاتی بالا استفاده کنید. PDFهای اصلی محصول در project-context دست‌نخورده و فقط مرجع نیازمندی‌اند؛ MySQL قدیمی همچنان منسوخ است.
 
 ## مسیرها
 
@@ -91,25 +108,26 @@ ConnectionStrings:MakanDatabase
 dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=MakanApp;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project MakanApp.Api/MakanApp.Api.csproj
 ~~~
 
-در محیط‌های دیگر مقدار باید از secret store یا `ConnectionStrings__MakanDatabase` تأمین شود. migrationهای نسخه‌بندی‌شده در Infrastructure قرار دارند و آخرین migration موجود `AddOrderAndPaymentFoundation` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال migration یک عملیات کنترل‌شده و جداگانه است.
+در محیط‌های دیگر مقدار از secret store، environment یا فایل خصوصی دارای ACL تأمین می‌شود. ۳۷ Migration نسخه‌بندی‌شده داریم؛ آخرین شناسه `20261015091336_EnforceApprovedMessengerChildSafety` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال آن عملیات کنترل‌شده و جداگانه است. [ساختار جاری دیتابیس](docs/database-current-structure.md) و ابزار SQL بررسی‌شده در [runbook IIS](docs/production/DEPLOYMENT_IIS.md) را ببینید؛ این تغییر مستندات Migration تازه نمی‌خواهد.
 
 زیرساخت Order/Payment فعلاً provider واقعی ندارد. مقدار commit‌شده `Payments:Provider=Unavailable` است و secret پرداختی در appsettings نگهداری نمی‌شود. Integration Testها `RecordingPaymentGateway` داخلی را جایگزین می‌کنند و هیچ تماس مالی واقعی ندارند. جزئیات در `docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md` ثبت شده است.
 
 ## API Foundation
 
 - ASP.NET Core Controllers
-- OpenAPI و Swagger UI در همه محیط‌ها، از جمله Production
-- CORS برای همه originها، متدها و headerها؛ احراز هویت با Bearer token
+- OpenAPI و Swagger UI در Development/Testing؛ در Production/Staging پیش‌فرض خاموش
+- CORS allowlist صریح خارج توسعه؛ بدون cookie credentials؛ احراز هویت با Bearer token
 - ProblemDetails و exception handling متمرکز
-- HTTPS redirection خارج از Testing
+- HTTPS redirection مطابق `Hosting:RequireHttps`؛ غیرفعال‌سازی در Production فقط با استثنای صریح تأییدشده
 - health checks
 - DI composition در `MakanApp.Api/Program.cs`
 
 | مسیر | محیط | کاربرد |
 |---|---|---|
-| `GET /health` | همه محیط‌ها | سلامت application |
-| `GET /openapi/v1.json` | همه محیط‌ها | سند OpenAPI |
-| `/swagger` | همه محیط‌ها | Swagger UI |
+| `GET /health` و `/health/live` | همه محیط‌ها | فقط liveness |
+| `GET /health/ready` | همه محیط‌ها | اتصال SQL و write/delete probe در Storage |
+| `GET /openapi/v1.json` | Development/Testing یا فعال‌سازی صریح | سند OpenAPI |
+| `/swagger` | Development/Testing یا فعال‌سازی صریح | Swagger UI؛ 404 در Production پیش‌فرض طبیعی است |
 
 ## Identity، OTP و پروفایل
 
@@ -369,4 +387,4 @@ Search، Block و Report پس از STEP 7D اضافه شده‌اند و در ر
 
 ## محدودیت‌ها
 
-ارسال پیامک واقعی و rate limiting توزیع‌شده هنوز پیاده‌سازی نشده‌اند. ایجاد دعوت توسط مدیر، مدیریت عمومی سازمان و مدیریت عمومی `GuardianRelation` در API ارائه نشده‌اند. Rubric ساختاریافته، بازگرداندن صریح پاسخ برای revision، Intelligence/LearningEvidence، Notification delivery، provisioning خودکار SystemManagedAcademic، Copilot، گزارش‌ها، audit عمومی و deployment هنوز پیاده‌سازی نشده‌اند. چرخه آزمون شامل طراحی، شروع تلاش، ذخیره پاسخ، نهایی‌سازی، تصحیح و انتشار نمره موجود است؛ auto-finalize آزمون وجود ندارد. realtime فعلی Messaging برای اجرای تک‌instance است و scale-out چند instance به راهکار مصوب backplane نیاز دارد.
+محدودیت‌های جاری: gateway مالی واقعی، Push و SMS عمومی اعلان، AV/CDR و اسکن معنایی کامل رسانه، limiter توزیع‌شده و backplane چند-instance آماده نیستند. adapter OTP ملی‌پیامک، onboarding مدیر، Guardian lifecycle، گزارش/export، اعلان داخلی/outbox، Commerce/Backoffice و APIهای Backend AI اکنون وجود دارند؛ وجود کد به معنی smoke سرور یا real AI E2E نیست. Rubric ساختاریافته و auto-finalize آزمون جزو قابلیت‌های بسته‌شدهٔ این تحویل نیستند. [ممیزی gapها](docs/release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) و [register تصمیم‌ها](docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md) مرجع محدودیت‌های باقی‌مانده‌اند.
