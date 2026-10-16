@@ -71,3 +71,17 @@ Validation کامل پس از اصلاح: restore/build موفق، صفر warnin
 اجرای کامل، فرض شکننده‌ای در تست قدیمی `OrganizationAndUserReadModelsAreGlobalPaginatedAndMaskPhone` را آشکار کرد: داده‌های suite مشترک با ساعت جلوتر می‌توانند target را از ۱۰۰ حساب صفحهٔ اول خارج کنند. فقط خود تست اصلاح شد تا صفحه‌ها را تا TotalCount بخواند و یکتایی نتایج و masking همان target را همچنان بررسی کند؛ رفتار Backoffice برای سبزکردن تست تغییر نکرد.
 
 پس از اصلاح، Build با صفر warning/error و اجرای کامل با Unit=413، Integration=709، Architecture=14، مجموع **1136 passed، صفر failed/skipped** موفق شدند؛ TRX در `.artifacts/messenger-p0/tests/directory-fixed` است. hash هر ۲۲ فایل dirty workspace اصلی با baseline یکسان باقی ماند.
+
+فاز دوم در `3c39d8bb10be330250529c0ad9222d1af15fd0a5` ثبت شد. Build/Test کامل پس از commit نیز ۱۱۳۶ موفق داشت؛ push عادی و fetch برابری HEAD با origin/main را تأیید کردند.
+
+## فاز سوم — تحویل پایدار، Realtime و Retry
+
+هفت case جدید محلی در `MessagingP0RealtimeAuthorizationTests` و `PlatformMfaPersonalRealtimeEndpointsTests` اضافه شدند. قبل از اصلاح، پنج case واقعاً شکست خوردند: حساب معلق، انقضای مطلق نشست، پایان نقش انتخاب‌شده، سازمان معلق و نبود Retry-After در 429. revocation موجود و زنجیرهٔ دو حساب شخصی از قبل pass شدند؛ برای رفتار سالم subsystem موازی ساخته نشد.
+
+`MessagingRealtimeAudienceResolver` ابتدا candidateهای معتبر SQL را با حساب فعال و هر دو انقضای نشست فیلتر می‌کند، سپس همان `MessagingService.AuthorizeRealtimeSubscriptionAsync` متعلق به REST/Hub را reuse می‌کند. scope تازهٔ authorization برای هر event مانع ماندگاری UserSession tracked از event قبلی می‌شود. denial دامنه‌ای یک نشست، تحویل بقیه را متوقف نمی‌کند؛ SQL/خطای فنی/cancellation بلعیده نمی‌شوند و مسیر retry موجود Outbox باقی است. هزینهٔ فعلی چند query برای هر نشست است؛ این انتخاب صحت P0 است، نه ادعای load/scale یا fan-out چند instance. مجوز در لحظهٔ تحویل ارزیابی می‌شود؛ رویداد قبلاً تحویل‌شده قابل پس‌گرفتن نیست.
+
+در پذیرش دوحسابی، receiver پیش از وجود Direct وصل است و بدون Subscribe قبلی اولین MessageCreated را می‌گیرد؛ پاسخ موفق POST عمداً پس از ثبت در سرور دور انداخته و خطای شبکه شبیه‌سازی می‌شود. retry ترتیبی/هم‌زمان همان ClientMessageId فقط یک Message، یک Change و یک اثر اعلان دارد؛ payload متفاوت 409 است. reply و sequence، قطع اتصال، تخلیهٔ outbox در زمان قطع، reconnect و بازیابی/تکرار امن Delta و history بررسی می‌شوند. TOTP و age verification واقعی‌اند؛ SMS آزمایشی است و TestServer/LocalDB **شاهد سرور مستقر نیستند**.
+
+هدر Retry-After از metadata واقعی limiter برای discovery/search محاسبه و در CORS همراه X-Correlation-ID قابل خواندن شد؛ Origin/credential policy گسترش نیافت و OTP/AI rate limit تغییر نکرد. تست 429 از یک limiter کوچک injectشده فقط روی people استفاده می‌کند تا قرارداد handler/header را اثبات کند، نه عدد quota محیط Production. migration جدید لازم نیست.
+
+Validation این فاز: focused=10 موفق؛ restore و Build با صفر warning/error؛ Unit=413، Integration=716، Architecture=14، مجموع **1143 passed، صفر failed/skipped**. TRX کامل در `.artifacts/messenger-p0/tests/realtime-full` قرار دارد. schema یا package تغییری نکرد.

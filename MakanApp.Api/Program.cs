@@ -61,6 +61,7 @@ builder.Services.AddCors(options =>
         .Get<string[]>() ?? [];
     options.AddDefaultPolicy(policy =>
     {
+        policy.WithExposedHeaders("Retry-After", CorrelationIdMiddleware.HeaderName);
         if (allowedOrigins.Length == 0 &&
             (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")))
         {
@@ -149,6 +150,11 @@ builder.Services.AddRateLimiter(options =>
         var isOtp = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/auth/otp",
             StringComparison.OrdinalIgnoreCase);
+        if (isMessagingDiscovery && context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retryAfter.TotalSeconds))
+                .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
         var isAi = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/ai",
             StringComparison.OrdinalIgnoreCase);
