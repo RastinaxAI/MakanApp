@@ -12,6 +12,7 @@ public sealed class NotificationDeliveryProviderTestControl
     public DeliveryProviderResult SmsResult { get; set; } = DeliveryProviderResult.Delivered("test-sms");
     public bool PushWaitsForCancellation { get; set; }
     public bool SmsWaitsForCancellation { get; set; }
+    public Func<PushNotificationDelivery, CancellationToken, Task>? OnPushSending { get; set; }
     public IReadOnlyCollection<PushNotificationDelivery> PushDeliveries => _pushDeliveries.ToArray();
     public IReadOnlyCollection<NotificationSmsDelivery> SmsDeliveries => _smsDeliveries.ToArray();
 
@@ -29,6 +30,7 @@ public sealed class NotificationDeliveryProviderTestControl
         SmsResult = DeliveryProviderResult.Delivered("test-sms");
         PushWaitsForCancellation = false;
         SmsWaitsForCancellation = false;
+        OnPushSending = null;
     }
 
     public async Task<DeliveryProviderResult> SendPushAsync(
@@ -36,6 +38,7 @@ public sealed class NotificationDeliveryProviderTestControl
         CancellationToken cancellationToken)
     {
         _pushDeliveries.Enqueue(delivery);
+        if (OnPushSending is not null) await OnPushSending(delivery, cancellationToken);
         if (PushWaitsForCancellation)
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);

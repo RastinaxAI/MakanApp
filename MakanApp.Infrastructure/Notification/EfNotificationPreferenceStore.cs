@@ -21,7 +21,9 @@ public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
             membership => membership.UserId == userId &&
                           membership.OrganizationId == organizationId &&
                           membership.Status == MembershipStatus.Active &&
-                          membership.EndedAtUtc == null,
+                          membership.EndedAtUtc == null &&
+                          dbContext.Organizations.Any(organization => organization.Id == organizationId &&
+                              organization.Status == OrganizationStatus.Active),
             cancellationToken);
 
     public Task<NotificationPreference?> GetPreferenceForUpdateAsync(
@@ -50,7 +52,8 @@ public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
             session => session.Id == sessionId &&
                        session.UserId == userId &&
                        session.RevokedAtUtc == null &&
-                       session.ExpiresAtUtc > nowUtc,
+                       session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
+                       dbContext.Users.Any(user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active),
             cancellationToken);
 
     public Task<PushDeviceRegistration?> GetActiveByTokenHashAsync(
@@ -86,7 +89,8 @@ public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
             where registration.UserId == userId &&
                   registration.RevokedAtUtc == null &&
                   session.RevokedAtUtc == null &&
-                  session.ExpiresAtUtc > nowUtc
+                  session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
+                  dbContext.Users.Any(user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active)
             select registration.Id)
             .ToArrayAsync(cancellationToken);
 

@@ -20,3 +20,13 @@
 ```
 
 خطاها: 401 نشست نامعتبر؛ 404 منبع ناموجود/خارج مجوز؛ POST read با sequence نامعتبر 400. hidden و unsupported پاسخ موفق اما فاقد رسید هستند. download/search/history/Delta همچنان مجوز جاری را مستقل بررسی می‌کنند؛ دانستن MessageId یا receipt اجازهٔ فایل نمی‌دهد.
+
+## اعلان، Mute و تلاش مجدد
+
+اعلان داخلی و Push یک state نیستند. ترجیحات از API موجود `/api/v1/notification-preferences` و category `Messages` مصرف می‌شوند؛ تنظیم شخصی و هر سازمان مستقل‌اند، In-app خاموش نمی‌شود. Quiet Hours با timezone صریح، ارسال خارجی را عقب می‌اندازد. category مؤثر Mention/Reply از pipeline موجود است؛ هیچ‌کدام Mute را خودکار دور نمی‌زنند.
+
+Mute دائم/Until، پیام و unread و SignalR را قطع نمی‌کند؛ worker پیش از هر تلاش، Mute/Preferences و مجوز جاری منبع/دستگاه را دوباره می‌سنجد. تغییر آن‌ها پس از زمان‌بندی نیز مؤثر است. preview همه حساب‌ها، از جمله Minor/Unknown، عمومی و بدون متن پیام، شماره، نام فایل، سن، رابطه والد یا دلیل safety است.
+
+`NotificationId` هویت منطقی پایدار است؛ retry پیام با همان ClientMessageId/payload اعلان داخلی دوم نمی‌سازد. شبکه دقیقاً یک‌بار نیست و client باید اعلان تکراری با همان شناسه/tag را تحمل کند. enum قدیمی Delivered در delivery داخلی به معنای پذیرش provider است؛ آن را تیک خواندن پیام نکنید. receipt پیام از SQL و peer-read فقط از قرارداد بخش قبل می‌آیند.
+
+خطای موقت provider با backoff و سقف تلاش دوباره پردازش می‌شود. Retry-After رعایت می‌شود؛ invalid destination لغو می‌شود و retry بی‌نهایت ندارد. failure، اصل Message/Notification را حذف نمی‌کند. لغو session یا دسترسی، ارسال آینده را می‌بندد؛ اطلاعاتی که قبلاً به دستگاه/شبکه تحویل شده قابل پس‌گرفتن تضمینی نیست.

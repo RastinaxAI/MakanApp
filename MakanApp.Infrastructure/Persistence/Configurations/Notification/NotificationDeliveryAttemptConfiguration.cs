@@ -16,7 +16,7 @@ public sealed class NotificationDeliveryAttemptConfiguration : IEntityTypeConfig
             table.HasCheckConstraint("CK_NotificationDeliveryAttempts_AttemptCount", "[AttemptCount] >= 0");
             table.HasCheckConstraint(
                 "CK_NotificationDeliveryAttempts_FailureReason",
-                "[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 8");
+                "[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 13");
             table.HasCheckConstraint(
                 "CK_NotificationDeliveryAttempts_Lifecycle",
                 "([Status] = 2 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL) OR " +

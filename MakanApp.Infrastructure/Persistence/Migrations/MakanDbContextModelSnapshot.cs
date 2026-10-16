@@ -4080,7 +4080,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Delivered", "([Status] = 4 AND [DeliveredAtUtc] IS NOT NULL) OR ([Status] <> 4 AND [DeliveredAtUtc] IS NULL)");
 
-                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_FailureReason", "[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 8");
+                            t.HasCheckConstraint("CK_NotificationDeliveryAttempts_FailureReason", "[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 13");
 
                             t.HasCheckConstraint("CK_NotificationDeliveryAttempts_Lifecycle", "([Status] = 2 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL) OR ([Status] <> 2 AND [ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL)");
 

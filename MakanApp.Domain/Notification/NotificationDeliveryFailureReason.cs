@@ -9,5 +9,10 @@ public enum NotificationDeliveryFailureReason
     DeviceRevoked = 5,
     ProviderUnavailable = 6,
     ProviderRejected = 7,
-    ProviderTimeout = 8
+    ProviderTimeout = 8,
+    InvalidRegistration = 9,
+    ProviderAuthenticationFailed = 10,
+    ProviderRateLimited = 11,
+    ProviderConfigurationInvalid = 12,
+    ResourceAccessRevoked = 13
 }

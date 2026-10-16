@@ -1,4 +1,5 @@
 using MakanApp.Application.Notification;
+using MakanApp.Application.Messaging;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Notification;
 using MakanApp.Infrastructure.Persistence;
@@ -48,26 +49,33 @@ public sealed class NotificationDeliveryDispatcher(
     }
 }
 
-public sealed class NotificationDeliveryProcessor(
+public sealed partial class NotificationDeliveryProcessor(
     MakanDbContext dbContext,
     IPushNotificationProvider pushProvider,
     INotificationSmsProvider smsProvider,
+    INotificationPreferenceResolver preferenceResolver,
+    IMessagingPrivacyResolver privacyResolver,
     NotificationDeliveryOptions options,
     TimeProvider timeProvider,
     ILogger<NotificationDeliveryProcessor> logger)
 {
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken)
     {
-        var claims = await ClaimBatchAsync(cancellationToken);
-        foreach (var claim in claims)
+        if (options.ClaimLease <= options.ProviderTimeout)
+            throw new InvalidOperationException("مهلت claim باید از timeout ارسال اعلان بیشتر باشد.");
+        var processed = 0;
+        while (processed < options.BatchSize)
         {
-            await ProcessOneAsync(claim.Id, claim.Token, cancellationToken);
+            var claim = await ClaimNextAsync(cancellationToken);
+            if (claim is null) break;
+            processed++;
+            if (!claim.IsTerminal) await ProcessOneAsync(claim.Id, claim.Token, cancellationToken);
         }
 
-        return claims.Count;
+        return processed;
     }
 
-    private async Task<IReadOnlyCollection<DeliveryClaim>> ClaimBatchAsync(
+    private async Task<DeliveryClaim?> ClaimNextAsync(
         CancellationToken cancellationToken)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
@@ -77,26 +85,35 @@ public sealed class NotificationDeliveryProcessor(
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         var attempts = await dbContext.NotificationDeliveryAttempts
             .FromSqlInterpolated($"""
-                SELECT TOP ({options.BatchSize}) *
+                SELECT TOP (1) *
                 FROM [notification].[NotificationDeliveryAttempts] WITH (UPDLOCK, READPAST, ROWLOCK)
-                WHERE [AttemptCount] < {options.MaximumAttempts}
-                  AND (
-                    ([Status] IN ({pending}, {deferred}) AND ([NextAttemptAtUtc] IS NULL OR [NextAttemptAtUtc] <= {nowUtc}))
+                WHERE (
+                    ([AttemptCount] < {options.MaximumAttempts} AND [Status] IN ({pending}, {deferred}) AND ([NextAttemptAtUtc] IS NULL OR [NextAttemptAtUtc] <= {nowUtc}))
                     OR ([Status] = {processing} AND [ClaimedUntilUtc] <= {nowUtc})
                   )
                 ORDER BY [CreatedAtUtc], [Id]
                 """)
             .ToArrayAsync(cancellationToken);
-        var claims = attempts.Select(attempt =>
+        DeliveryClaim? claim = null;
+        if (attempts.Length != 0)
         {
-            var token = Guid.NewGuid();
-            attempt.Claim(token, nowUtc, nowUtc.Add(options.ClaimLease));
-            return new DeliveryClaim(attempt.Id, token);
-        }).ToArray();
+            var attempt = attempts[0];
+            if (attempt.AttemptCount >= options.MaximumAttempts)
+            {
+                attempt.FailExhaustedAbandonedClaim(nowUtc, options.MaximumAttempts);
+                claim = new DeliveryClaim(attempt.Id, Guid.Empty, true);
+            }
+            else
+            {
+                var token = Guid.NewGuid();
+                attempt.Claim(token, nowUtc, nowUtc.Add(options.ClaimLease));
+                claim = new DeliveryClaim(attempt.Id, token);
+            }
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
-        return claims;
+        return claim;
     }
 
     private async Task ProcessOneAsync(
@@ -105,6 +122,7 @@ public sealed class NotificationDeliveryProcessor(
         CancellationToken cancellationToken)
     {
         DeliveryProviderResult result;
+        string? registrationVersion = null;
         try
         {
             var work = await LoadWorkAsync(attemptId, claimToken, cancellationToken);
@@ -122,9 +140,21 @@ public sealed class NotificationDeliveryProcessor(
                     cancellationToken);
                 return;
             }
+            if (work.DeferUntilUtc.HasValue)
+            {
+                await DeferBeforeDeliveryAsync(attemptId, claimToken, work.DeferUntilUtc.Value, cancellationToken);
+                return;
+            }
+            // بررسی مجوز ممکن است زمان ببرد؛ پیش از شبکه، مالکیت claim دوباره تثبیت می‌شود.
+            var claimedUntilUtc = timeProvider.GetUtcNow().UtcDateTime.Add(options.ClaimLease);
+            var owned = await dbContext.NotificationDeliveryAttempts.Where(a => a.Id == attemptId &&
+                    a.ClaimToken == claimToken && a.Status == NotificationDeliveryStatus.Processing)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.ClaimedUntilUtc, claimedUntilUtc), cancellationToken);
+            if (owned == 0) return;
 
             using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutSource.CancelAfter(options.ProviderTimeout);
+            registrationVersion = work.Push?.RegistrationVersion;
             result = work.Push is not null
                 ? await pushProvider.SendAsync(work.Push, timeoutSource.Token)
                 : await smsProvider.SendAsync(work.Sms!, timeoutSource.Token);
@@ -147,7 +177,7 @@ public sealed class NotificationDeliveryProcessor(
                 NotificationDeliveryFailureReason.ProviderUnavailable);
         }
 
-        await SaveResultAsync(attemptId, claimToken, result, CancellationToken.None);
+        await SaveResultAsync(attemptId, claimToken, result, CancellationToken.None, registrationVersion);
     }
 
     private async Task<DeliveryWork?> LoadWorkAsync(
@@ -171,6 +201,9 @@ public sealed class NotificationDeliveryProcessor(
         var notification = await dbContext.Notifications
             .AsNoTracking()
             .SingleAsync(item => item.Id == attempt.NotificationId, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var currentAccess = await EvaluateCurrentDeliveryAsync(attempt, notification, nowUtc, cancellationToken);
+        if (currentAccess is not null) return currentAccess;
         if (!Guid.TryParseExact(attempt.DestinationReference, "N", out var destinationId))
         {
             return new DeliveryWork(null, null, NotificationDeliveryFailureReason.ProviderRejected);
@@ -178,8 +211,7 @@ public sealed class NotificationDeliveryProcessor(
 
         if (attempt.Channel == NotificationDeliveryChannel.Push)
         {
-            var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
-            var token = await (
+            var device = await (
                 from registration in dbContext.PushDeviceRegistrations.AsNoTracking()
                 join session in dbContext.UserSessions.AsNoTracking()
                     on new { Id = registration.UserSessionId, registration.UserId }
@@ -188,10 +220,10 @@ public sealed class NotificationDeliveryProcessor(
                       registration.UserId == notification.RecipientUserId &&
                       registration.RevokedAtUtc == null &&
                       session.RevokedAtUtc == null &&
-                      session.ExpiresAtUtc > nowUtc
-                select registration.PushToken)
+                      session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc
+                select registration)
                 .SingleOrDefaultAsync(cancellationToken);
-            if (token is null)
+            if (device is null)
             {
                 return new DeliveryWork(null, null, NotificationDeliveryFailureReason.DeviceRevoked);
             }
@@ -201,10 +233,12 @@ public sealed class NotificationDeliveryProcessor(
                 new PushNotificationDelivery(
                     attempt.Id,
                     notification.Id,
-                    token,
+                    device.PushToken,
                     content.Title,
                     content.Body,
-                    content.DeepLink),
+                    content.DeepLink,
+                    device.Platform,
+                    Convert.ToBase64String(device.RowVersion)),
                 null,
                 null);
         }
@@ -237,9 +271,11 @@ public sealed class NotificationDeliveryProcessor(
         Guid attemptId,
         Guid claimToken,
         DeliveryProviderResult result,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? registrationVersion = null)
     {
         dbContext.ChangeTracker.Clear();
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         var attempt = await dbContext.NotificationDeliveryAttempts.SingleOrDefaultAsync(
             item => item.Id == attemptId &&
                     item.ClaimToken == claimToken &&
@@ -261,7 +297,7 @@ public sealed class NotificationDeliveryProcessor(
                 attempt.MarkTransientFailure(
                     claimToken,
                     reason,
-                    nowUtc.Add(CalculateRetryDelay(attempt.AttemptCount)),
+                    nowUtc.Add(CalculateRetryDelay(attempt.AttemptCount, result)),
                     options.MaximumAttempts);
                 break;
             case DeliveryProviderOutcome.PermanentFailure:
@@ -274,22 +310,39 @@ public sealed class NotificationDeliveryProcessor(
                 throw new ArgumentOutOfRangeException(nameof(result));
         }
 
+        if (result.Outcome == DeliveryProviderOutcome.PermanentFailure &&
+            reason == NotificationDeliveryFailureReason.InvalidRegistration &&
+            attempt.Channel == NotificationDeliveryChannel.Push &&
+            Guid.TryParseExact(attempt.DestinationReference, "N", out var registrationId) &&
+            !string.IsNullOrEmpty(registrationVersion))
+        {
+            var version = Convert.FromBase64String(registrationVersion);
+            await dbContext.PushDeviceRegistrations.Where(registration => registration.Id == registrationId &&
+                    registration.RevokedAtUtc == null && registration.RowVersion.SequenceEqual(version))
+                .ExecuteUpdateAsync(setters => setters.SetProperty(registration => registration.RevokedAtUtc, nowUtc), cancellationToken);
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    private TimeSpan CalculateRetryDelay(int attemptCount)
+    private TimeSpan CalculateRetryDelay(int attemptCount, DeliveryProviderResult result)
     {
-        var multiplier = Math.Max(1, attemptCount * attemptCount);
+        var multiplier = 1L << Math.Clamp(attemptCount - 1, 0, 20);
         var ticks = Math.Min(
             options.MaximumRetryDelay.Ticks,
             options.InitialRetryDelay.Ticks * multiplier);
-        return TimeSpan.FromTicks(ticks);
+        var delay = TimeSpan.FromTicks(ticks);
+        if (result.FailureReason == NotificationDeliveryFailureReason.ProviderRateLimited && delay < TimeSpan.FromMinutes(1))
+            delay = TimeSpan.FromMinutes(1);
+        if (result.RetryAfter > delay) delay = result.RetryAfter.Value;
+        return delay;
     }
 
-    private sealed record DeliveryClaim(Guid Id, Guid Token);
+    private sealed record DeliveryClaim(Guid Id, Guid Token, bool IsTerminal = false);
 
     private sealed record DeliveryWork(
         PushNotificationDelivery? Push,
         NotificationSmsDelivery? Sms,
-        NotificationDeliveryFailureReason? SuppressionReason);
+        NotificationDeliveryFailureReason? SuppressionReason,
+        DateTime? DeferUntilUtc = null);
 }

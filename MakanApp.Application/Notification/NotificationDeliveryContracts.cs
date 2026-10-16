@@ -13,13 +13,14 @@ public enum DeliveryProviderOutcome
 public sealed record DeliveryProviderResult(
     DeliveryProviderOutcome Outcome,
     NotificationDeliveryFailureReason? FailureReason = null,
-    string? ProviderMessageId = null)
+    string? ProviderMessageId = null,
+    TimeSpan? RetryAfter = null)
 {
     public static DeliveryProviderResult Delivered(string? providerMessageId = null) =>
         new(DeliveryProviderOutcome.Delivered, ProviderMessageId: providerMessageId);
 
-    public static DeliveryProviderResult Transient(NotificationDeliveryFailureReason reason) =>
-        new(DeliveryProviderOutcome.TransientFailure, reason);
+    public static DeliveryProviderResult Transient(NotificationDeliveryFailureReason reason, TimeSpan? retryAfter = null) =>
+        new(DeliveryProviderOutcome.TransientFailure, reason, RetryAfter: retryAfter);
 
     public static DeliveryProviderResult Permanent(NotificationDeliveryFailureReason reason) =>
         new(DeliveryProviderOutcome.PermanentFailure, reason);
@@ -34,7 +35,12 @@ public sealed record PushNotificationDelivery(
     string PushToken,
     string Title,
     string Body,
-    string DeepLink);
+    string DeepLink,
+    PushDevicePlatform Platform = PushDevicePlatform.Android,
+    string? RegistrationVersion = null)
+{
+    public override string ToString() => $"PushNotificationDelivery {{ DeliveryAttemptId = {DeliveryAttemptId}, NotificationId = {NotificationId} }}";
+}
 
 public sealed record NotificationSmsDelivery(
     Guid DeliveryAttemptId,

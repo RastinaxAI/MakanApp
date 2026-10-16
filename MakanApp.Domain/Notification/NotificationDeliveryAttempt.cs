@@ -131,6 +131,29 @@ public sealed class NotificationDeliveryAttempt
         ClearClaim();
     }
 
+    public void DeferBeforeDelivery(Guid claimToken, DateTime deliverAtUtc)
+    {
+        EnsureClaimOwner(claimToken);
+        EnsureUtc(deliverAtUtc, nameof(deliverAtUtc));
+        if (deliverAtUtc <= LastAttemptAtUtc) throw new ArgumentOutOfRangeException(nameof(deliverAtUtc));
+        Status = NotificationDeliveryStatus.Deferred;
+        NextAttemptAtUtc = deliverAtUtc;
+        AttemptCount--;
+        ClearClaim();
+    }
+
+    public void FailExhaustedAbandonedClaim(DateTime nowUtc, int maximumAttempts)
+    {
+        EnsureUtc(nowUtc, nameof(nowUtc));
+        if (maximumAttempts < 1 || AttemptCount < maximumAttempts ||
+            Status != NotificationDeliveryStatus.Processing || ClaimedUntilUtc > nowUtc || !ClaimedUntilUtc.HasValue)
+            throw new InvalidOperationException("فقط claim رهاشده با سقف تلاش مصرف‌شده قابل پایان‌دادن است.");
+        Status = NotificationDeliveryStatus.Failed;
+        FailureReason = NotificationDeliveryFailureReason.ProviderUnavailable;
+        NextAttemptAtUtc = null;
+        ClearClaim();
+    }
+
     public void MarkTransientFailure(
         Guid claimToken,
         NotificationDeliveryFailureReason reason,
