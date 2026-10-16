@@ -10,7 +10,8 @@ public sealed class MessagingService(
     IMessagingStore store,
     IContentSafetyProvider contentSafetyProvider,
     MessagingOptions options,
-    TimeProvider timeProvider) : IMessagingService
+    TimeProvider timeProvider,
+    IMessagingEphemeralState? ephemeralState = null) : IMessagingService
 {
     private const string SavedConversationTitle = "پیام‌های ذخیره‌شده";
 
@@ -132,6 +133,7 @@ public sealed class MessagingService(
             cancellationToken);
         if (safety.ExistingMessage is not null)
         {
+            ephemeralState?.StopTyping(userId, sessionId, conversationId, UtcNow());
             return ToReceipt(safety.ExistingMessage);
         }
 
@@ -144,6 +146,7 @@ public sealed class MessagingService(
             options.MaximumTextLength,
             UtcNow(),
             cancellationToken);
+        ephemeralState?.StopTyping(userId, sessionId, conversationId, UtcNow());
         return ToReceipt(message);
     }
 

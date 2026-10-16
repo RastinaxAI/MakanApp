@@ -8,6 +8,7 @@ using MakanApp.Application.Storage;
 using MakanApp.Api.Realtime;
 using MakanApp.Domain.Identity;
 using MakanApp.Infrastructure.Identity;
+using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Outbox;
@@ -102,6 +103,13 @@ public sealed partial class MakanAppWebApplicationFactory :
         });
         builder.ConfigureTestServices(services =>
         {
+            services.AddSingleton<MessagingEphemeralTestControl>();
+            services.RemoveAll<IMessagingEphemeralNotifier>();
+            services.AddScoped<IMessagingEphemeralNotifier>(provider => new RecordingMessagingEphemeralNotifier(
+                provider.GetRequiredService<SignalRMessagingEphemeralNotifier>(), provider.GetRequiredService<MessagingEphemeralTestControl>()));
+            var ephemeralDispatcher = services.FirstOrDefault(descriptor => descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(MessagingEphemeralDispatcher));
+            if (ephemeralDispatcher is not null) services.Remove(ephemeralDispatcher);
             var reportDispatcher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) &&
                 descriptor.ImplementationType == typeof(ReportExportDispatcher));

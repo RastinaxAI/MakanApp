@@ -6,6 +6,8 @@ public sealed class MessagingPrivacySettings
     public const PrivacyAudience DefaultPhoneNumberVisibilityAudience = PrivacyAudience.Nobody;
     public const PrivacyAudience DefaultPhoneNumberDiscoveryAudience = PrivacyAudience.Nobody;
     public const PrivacyAudience DefaultGroupInvitesAudience = PrivacyAudience.Contacts;
+    public const PrivacyAudience DefaultOnlineAudience = PrivacyAudience.Contacts;
+    public const PrivacyAudience DefaultLastSeenAudience = PrivacyAudience.Contacts;
 
     private MessagingPrivacySettings()
     {
@@ -33,6 +35,8 @@ public sealed class MessagingPrivacySettings
     public PrivacyAudience PhoneNumberVisibilityAudience { get; private set; }
     public PrivacyAudience PhoneNumberDiscoveryAudience { get; private set; }
     public PrivacyAudience GroupInvitesAudience { get; private set; }
+    public PrivacyAudience OnlineAudience { get; private set; } = DefaultOnlineAudience;
+    public PrivacyAudience LastSeenAudience { get; private set; } = DefaultLastSeenAudience;
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
@@ -85,6 +89,15 @@ public sealed class MessagingPrivacySettings
         PhoneNumberDiscoveryAudience = phoneNumberDiscoveryAudience;
         GroupInvitesAudience = groupInvitesAudience;
         UpdatedAtUtc = updatedAtUtc;
+    }
+
+    public void UpdatePresenceAudiences(PrivacyAudience? onlineAudience, PrivacyAudience? lastSeenAudience)
+    {
+        if (onlineAudience.HasValue && !Enum.IsDefined(onlineAudience.Value) ||
+            lastSeenAudience.HasValue && !Enum.IsDefined(lastSeenAudience.Value))
+            throw new ArgumentOutOfRangeException(nameof(onlineAudience), "مخاطب وضعیت حضور معتبر نیست.");
+        OnlineAudience = onlineAudience ?? OnlineAudience;
+        LastSeenAudience = lastSeenAudience ?? LastSeenAudience;
     }
 
     private static void Validate(

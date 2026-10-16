@@ -261,6 +261,8 @@ builder.Services.AddInfrastructure(
     builder.Environment.EnvironmentName);
 builder.Services.AddBackofficeMfa(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<SignalRMessagingRealtimeNotifier>();
+builder.Services.AddScoped<SignalRMessagingEphemeralNotifier>();
+builder.Services.AddScoped<IMessagingEphemeralNotifier>(provider => provider.GetRequiredService<SignalRMessagingEphemeralNotifier>());
 builder.Services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
     serviceProvider.GetRequiredService<SignalRMessagingRealtimeNotifier>());
 builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOptions, storageOptions) =>

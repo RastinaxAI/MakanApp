@@ -225,7 +225,9 @@ public sealed class MessagingDirectoryService(
                 settings.PhoneNumberDiscoveryAudience,
                 settings.GroupInvitesAudience,
                 true,
-                settings.RowVersion));
+                settings.RowVersion,
+                settings.OnlineAudience,
+                settings.LastSeenAudience));
     }
 
     public async Task<MessagingPrivacySettingsResult> UpdatePrivacySettingsAsync(
@@ -236,7 +238,9 @@ public sealed class MessagingDirectoryService(
         if (!Enum.IsDefined(command.DirectMessagesAudience) ||
             !Enum.IsDefined(command.PhoneNumberVisibilityAudience) ||
             !Enum.IsDefined(command.PhoneNumberDiscoveryAudience) ||
-            !Enum.IsDefined(command.GroupInvitesAudience))
+            !Enum.IsDefined(command.GroupInvitesAudience) ||
+            command.OnlineAudience.HasValue && !Enum.IsDefined(command.OnlineAudience.Value) ||
+            command.LastSeenAudience.HasValue && !Enum.IsDefined(command.LastSeenAudience.Value))
         {
             throw Error(MessagingErrorCodes.PrivacyInvalid, "تنظیم حریم خصوصی معتبر نیست.");
         }
@@ -252,14 +256,18 @@ public sealed class MessagingDirectoryService(
             command.GroupInvitesAudience,
             expectedVersion,
             UtcNow(),
-            cancellationToken);
+            cancellationToken,
+            command.OnlineAudience,
+            command.LastSeenAudience);
         return MapPrivacy(new EffectiveMessagingPrivacySettings(
             settings.DirectMessagesAudience,
             settings.PhoneNumberVisibilityAudience,
             settings.PhoneNumberDiscoveryAudience,
             settings.GroupInvitesAudience,
             true,
-            settings.RowVersion));
+            settings.RowVersion,
+            settings.OnlineAudience,
+            settings.LastSeenAudience));
     }
 
     private UserContactResult MapContact(UserContactStoreRecord record, bool alreadyExisted = false) => new(
@@ -305,7 +313,9 @@ public sealed class MessagingDirectoryService(
         settings.PhoneNumberDiscoveryAudience,
         settings.GroupInvitesAudience,
         settings.IsExplicit,
-        settings.Version is null ? null : Convert.ToBase64String(settings.Version));
+        settings.Version is null ? null : Convert.ToBase64String(settings.Version),
+        settings.OnlineAudience,
+        settings.LastSeenAudience);
 
     private (int Skip, int Take) ValidatePage(int page, int pageSize)
     {

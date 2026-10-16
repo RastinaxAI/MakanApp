@@ -1717,3 +1717,7 @@ Production در startup به connection string امن SQL، security key، stora
 در backoffice، `PlatformPlanDetail.Versions` به ۱۰۰ مورد و افراد فعال `PlatformClassDetail` به ۲۰۰ teacher و ۲۰۰ learner محدود شده‌اند. flagهای `VersionsTruncated`، `ActiveTeachersTruncated` و `ActiveLearnersTruncated` نشان می‌دهند client باید برای داده‌ی کامل از listهای paginated متناظر استفاده کند.
 
 جزئیات deployment، blockerها و ماتریس محیط در [Production Readiness](production/PRODUCTION_READINESS.md) و [IIS Deployment](production/DEPLOYMENT_IIS.md) ثبت شده‌اند.
+
+### افزودهٔ Messenger P2 — Typing و Presence
+
+قراردادهای واقعی `SetTyping`، `Heartbeat`، `SubscribePresence`/`UnsubscribePresence` و eventهای گذرا، همچنین `GET /api/v1/people/{userId}/presence` و دو audience جدید privacy در [Handoff P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) ثبت شده‌اند. پیش‌فرض مصوب Online/Last Seen برابر Contacts از دفترچهٔ مقصد است؛ رابطهٔ جاری، Block و GAP-05 همچنان guard هستند. این بخش ادعای تحویل بقیهٔ P2 یا real Push نیست.

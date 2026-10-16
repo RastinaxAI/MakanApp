@@ -3525,6 +3525,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("GroupInvitesAudience")
                         .HasColumnType("int");
 
+                    b.Property<int>("LastSeenAudience")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
+
+                    b.Property<int>("OnlineAudience")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
+
                     b.Property<int>("PhoneNumberDiscoveryAudience")
                         .HasColumnType("int");
 
@@ -3547,6 +3557,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_MessagingPrivacySettings_DirectMessagesAudience", "[DirectMessagesAudience] IN (1, 2, 3)");
 
                             t.HasCheckConstraint("CK_MessagingPrivacySettings_GroupInvitesAudience", "[GroupInvitesAudience] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_LastSeenAudience", "[LastSeenAudience] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_MessagingPrivacySettings_OnlineAudience", "[OnlineAudience] IN (1, 2, 3)");
 
                             t.HasCheckConstraint("CK_MessagingPrivacySettings_PhoneNumberDiscoveryAudience", "[PhoneNumberDiscoveryAudience] IN (1, 2, 3)");
 

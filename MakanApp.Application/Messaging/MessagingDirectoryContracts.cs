@@ -14,7 +14,9 @@ public sealed record UpdateMessagingPrivacyCommand(
     PrivacyAudience PhoneNumberVisibilityAudience,
     PrivacyAudience PhoneNumberDiscoveryAudience,
     PrivacyAudience GroupInvitesAudience,
-    string? ExpectedVersion);
+    string? ExpectedVersion,
+    PrivacyAudience? OnlineAudience = null,
+    PrivacyAudience? LastSeenAudience = null);
 
 public sealed record ResolvePersonCommand(string? Username, string? PhoneNumber);
 
@@ -69,4 +71,6 @@ public sealed record MessagingPrivacySettingsResult(
     PrivacyAudience PhoneNumberDiscoveryAudience,
     PrivacyAudience GroupInvitesAudience,
     bool IsExplicit,
-    string? Version);
+    string? Version,
+    PrivacyAudience OnlineAudience = MessagingPrivacySettings.DefaultOnlineAudience,
+    PrivacyAudience LastSeenAudience = MessagingPrivacySettings.DefaultLastSeenAudience);

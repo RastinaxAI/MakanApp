@@ -293,7 +293,9 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         PrivacyAudience groupInvitesAudience,
         byte[]? expectedVersion,
         DateTime nowUtc,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        PrivacyAudience? onlineAudience = null,
+        PrivacyAudience? lastSeenAudience = null)
     {
         var settings = await dbContext.MessagingPrivacySettings
             .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
@@ -329,6 +331,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 nowUtc);
         }
 
+        settings.UpdatePresenceAudiences(onlineAudience, lastSeenAudience);
         try
         {
             await dbContext.SaveChangesAsync(cancellationToken);

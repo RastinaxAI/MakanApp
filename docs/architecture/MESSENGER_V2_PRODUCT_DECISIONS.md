@@ -149,3 +149,9 @@ Initial verification، School verification و conflict resolution یکی نیس�
 - read/delivered فعلی private self-state باقی‌اند؛ بستن نشت یک event خصوصی، Peer Read Receipt عمومی ایجاد نمی‌کند. B04، Push، Typing، Presence و قابلیت‌های پیشرفتهٔ ثبت‌شده در register، خارج P0 هستند.
 
 این افزوده رفتار امنیتی مصوب را روشن می‌کند؛ Role مدرسه مجوز private chat نمی‌شود، GuardianRelation private history کودک را نمی‌گشاید، و Minor/Unknown یا failure Safety با verified adult آزاد جایگزین نشده‌اند. [قرارداد مصرف جاری](../messaging/MESSENGER_P0_FRONTEND_HANDOFF.md).
+
+## تصمیم مصوب P2 — Presence و Last Seen
+
+مالک در ۲۰۲۶-۱۰-۱۶، Master PRD v3.0 را target مصوب و **Contacts** را پیش‌فرض OnlineAudience و LastSeenAudience تأیید کرد. عبارت deferred قبلی Presence مربوط به scope تاریخی P0/P1 است؛ این تصمیم فقط P2-1 تا P2-4 را باز می‌کند. Contacts مطابق دفترچهٔ مقصد است، نه viewer؛ رابطهٔ Direct مجاز موجود و eligibility جاری GAP-05 لازم‌اند. Block در هر جهت Hidden می‌کند. زمان دقیق فقط با مجوز Last Seen و وقتی target Online نیست برمی‌گردد؛ heartbeat، راه فرعی افشای Online مخفی نیست. مجوز Guardian به چت شخص ثالث یا مدیر به private Direct گسترش نمی‌یابد.
+
+Typing و Presence گذرا و تک‌process هستند؛ تاریخچهٔ SQL/Delta/Outbox ندارند. default دو audience در migration روی Contacts backfill می‌شود؛ درخواست قدیمی privacy که دو فیلد را ندارد، مقدار جاری آن‌ها را حفظ می‌کند. state مشترک چندگرهی، Recording و Checklist از این تصمیم مجوز ضمنی نمی‌گیرند. [قرارداد و محدودیت واقعی](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md).

@@ -23,7 +23,9 @@ public sealed class EfMessagingPrivacyResolver(MakanDbContext dbContext)
                 settings.PhoneNumberDiscoveryAudience,
                 settings.GroupInvitesAudience,
                 true,
-                settings.RowVersion);
+                settings.RowVersion,
+                settings.OnlineAudience,
+                settings.LastSeenAudience);
         var targetHasSavedRequester = requesterUserId == targetUserId ||
             await dbContext.UserContacts.AsNoTracking().AnyAsync(
                 contact => contact.OwnerUserId == targetUserId &&

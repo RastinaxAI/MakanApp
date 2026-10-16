@@ -181,6 +181,7 @@ public sealed class GlobalExceptionHandler(
             MessagingErrorCodes.ReadCursorInvalid => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.DeliveryCursorInvalid => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.RealtimeSubscriptionNotAllowed => StatusCodes.Status403Forbidden,
+            MessagingErrorCodes.ActivityRateLimited => StatusCodes.Status429TooManyRequests,
             MessagingErrorCodes.SearchQueryRequired => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.SearchQueryInvalid => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.SearchCursorInvalid => StatusCodes.Status400BadRequest,

@@ -163,6 +163,25 @@ public static class DependencyInjection
         services.AddScoped<IMessagingPrivacyResolver, EfMessagingPrivacyResolver>();
         services.AddScoped<IMessagingDirectoryStore, EfMessagingDirectoryStore>();
         services.AddScoped<IMessagingService, MessagingService>();
+        var ephemeralOptions = new MessagingEphemeralOptions
+        {
+            TypingTtl = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:TypingTtlSeconds", 6)),
+            TypingRefreshInterval = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:TypingRefreshSeconds", 3)),
+            ConnectionLease = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:ConnectionLeaseSeconds", 45)),
+            HeartbeatInterval = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:HeartbeatSeconds", 10)),
+            RecentlyWindow = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:RecentlyWindowSeconds", 300)),
+            LastSeenRetention = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:LastSeenRetentionSeconds", 86400)),
+            MaximumConnections = ReadPositiveInt(configuration, "Messaging:Ephemeral:MaximumConnections", 10000),
+            MaximumConnectionsPerUser = ReadPositiveInt(configuration, "Messaging:Ephemeral:MaximumConnectionsPerUser", 10),
+            MaximumSubscriptionsPerConnection = ReadPositiveInt(configuration, "Messaging:Ephemeral:MaximumSubscriptionsPerConnection", 50),
+            CommandsPerMinute = ReadPositiveInt(configuration, "Messaging:Ephemeral:CommandsPerMinute", 120)
+        };
+        ephemeralOptions.Validate();
+        services.AddSingleton(ephemeralOptions);
+        services.AddSingleton<IMessagingEphemeralState, InMemoryMessagingEphemeralState>();
+        services.AddScoped<IMessagingEphemeralAccessStore>(provider => provider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<MessagingEphemeralService>();
+        services.AddHostedService<MessagingEphemeralDispatcher>();
         services.AddScoped<IConversationManagementService, ConversationManagementService>();
         services.AddScoped<IMessagingSafetyService, MessagingSafetyService>();
         services.AddScoped<IModerationService, ModerationService>();

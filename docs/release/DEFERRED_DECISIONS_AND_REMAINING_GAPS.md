@@ -81,3 +81,12 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 - trackهای مستقل: SMS عمومی اعلان، AV/CDR، SignalR backplane و rate limiting توزیع‌شده؛ crypto پروتکل Push هم E2EE چت نیست. هیچ‌یک در P1 به‌طور ضمنی پیاده یا تأیید نشده‌اند.
 
 سه migration فقط CHECK نوع event/failure و دو ستون nullable کلید Web subscription را تغییر می‌دهند؛ جدول/سامانهٔ notification موازی و کلید جعلی وجود ندارد. ارتقای SQL و retry/rollback در LocalDB ایزوله تست شدند، نه روی دیتابیس عادی یا سرور. appsettings، ملی‌پیامک، AI/RAG و dirtyهای worktree اصلی تغییر نکردند. گام بعدی فقط پذیرش عملیاتی transport موجود است؛ قابلیت‌های معوق به مجوز مستقل نیاز دارند.
+
+## پیشرفت مستقل Messenger P2 — بخش گذرا
+
+مجوز مستقل P2 و Master PRD v3.0 دریافت شده‌اند؛ وضعیت تاریخی P0/P1 بالا حذف نمی‌شود. B06/B07 اکنون پیاده‌سازی تک‌process، TTL/heartbeat، privacy مصوب Contacts، چندنشستی و بازبینی GAP-05/Block دارند؛ شواهد validation و commit در [ممیزی P2](../messaging/MESSENGER_P2_DELIVERY_AUDIT.md) ثبت می‌شوند. باقی قابلیت‌های P2 تا تکمیل فاز مربوطه ادعای تحویل ندارند.
+
+- `DISTRIBUTED_EPHEMERAL_STATE=DEFERRED` و `MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA`: state/backplane مشترک وجود ندارد؛ restart حافظه را پاک می‌کند.
+- Recording indicator هنوز ساخته نشده؛ افزودن فیلد نمایشی بدون semantics مجاز نیست.
+- `P2_CHECKLIST_REQUIRES_PRODUCT_DECISION`: PRD نام Checklist را دارد، اما actor/item/ownership/update contract روشن ندارد؛ طبق استثنای prompt، بقیهٔ P2 ادامه دارند.
+- `P1_PUSH_RUNTIME_PENDING` بدون تغییر؛ Web Push/FCM واقعی روی دستگاه ثابت نشده‌اند.

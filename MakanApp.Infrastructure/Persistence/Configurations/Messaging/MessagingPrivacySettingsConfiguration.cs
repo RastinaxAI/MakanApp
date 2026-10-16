@@ -23,11 +23,15 @@ public sealed class MessagingPrivacySettingsConfiguration : IEntityTypeConfigura
             table.HasCheckConstraint(
                 "CK_MessagingPrivacySettings_GroupInvitesAudience",
                 "[GroupInvitesAudience] IN (1, 2, 3)");
+            table.HasCheckConstraint("CK_MessagingPrivacySettings_OnlineAudience", "[OnlineAudience] IN (1, 2, 3)");
+            table.HasCheckConstraint("CK_MessagingPrivacySettings_LastSeenAudience", "[LastSeenAudience] IN (1, 2, 3)");
         });
         builder.HasKey(settings => settings.UserId);
         builder.Property(settings => settings.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(settings => settings.UpdatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(settings => settings.RowVersion).IsRowVersion();
+        builder.Property(settings => settings.OnlineAudience).HasDefaultValue(MessagingPrivacySettings.DefaultOnlineAudience);
+        builder.Property(settings => settings.LastSeenAudience).HasDefaultValue(MessagingPrivacySettings.DefaultLastSeenAudience);
         builder.HasOne<User>()
             .WithOne()
             .HasForeignKey<MessagingPrivacySettings>(settings => settings.UserId)

@@ -8,7 +8,9 @@ public sealed record EffectiveMessagingPrivacySettings(
     PrivacyAudience PhoneNumberDiscoveryAudience,
     PrivacyAudience GroupInvitesAudience,
     bool IsExplicit,
-    byte[]? Version);
+    byte[]? Version,
+    PrivacyAudience OnlineAudience = MessagingPrivacySettings.DefaultOnlineAudience,
+    PrivacyAudience LastSeenAudience = MessagingPrivacySettings.DefaultLastSeenAudience);
 
 public sealed record MessagingPrivacyContext(
     EffectiveMessagingPrivacySettings Settings,

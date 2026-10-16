@@ -113,7 +113,9 @@ public interface IMessagingDirectoryStore
         PrivacyAudience groupInvitesAudience,
         byte[]? expectedVersion,
         DateTime nowUtc,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        PrivacyAudience? onlineAudience = null,
+        PrivacyAudience? lastSeenAudience = null);
 }
 
 public interface IMessagingDirectoryService

@@ -45,6 +45,7 @@ public static class MessagingErrorCodes
     public const string ReadCursorInvalid = "READ_CURSOR_INVALID";
     public const string DeliveryCursorInvalid = "DELIVERY_CURSOR_INVALID";
     public const string RealtimeSubscriptionNotAllowed = "REALTIME_SUBSCRIPTION_NOT_ALLOWED";
+    public const string ActivityRateLimited = "MESSAGING_ACTIVITY_RATE_LIMITED";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";
