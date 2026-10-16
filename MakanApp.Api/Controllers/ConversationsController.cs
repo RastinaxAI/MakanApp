@@ -86,11 +86,12 @@ public sealed class ConversationsController(
         [FromQuery] ConversationListFilter filter = ConversationListFilter.All,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 30,
-        [FromQuery(Name = "q")] string? search = null) =>
+        [FromQuery(Name = "q")] string? search = null,
+        [FromQuery] Guid? folderId = null) =>
         Ok(await messagingService.GetMyConversationsAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
-            new GetConversationListQuery(filter, page, pageSize, search),
+            new GetConversationListQuery(filter, page, pageSize, search, folderId),
             cancellationToken));
 
     [HttpGet("discover")]

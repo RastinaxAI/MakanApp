@@ -46,6 +46,9 @@ public static class MessagingErrorCodes
     public const string DeliveryCursorInvalid = "DELIVERY_CURSOR_INVALID";
     public const string RealtimeSubscriptionNotAllowed = "REALTIME_SUBSCRIPTION_NOT_ALLOWED";
     public const string ActivityRateLimited = "MESSAGING_ACTIVITY_RATE_LIMITED";
+    public const string PresentationInvalid = "MESSAGING_PRESENTATION_INVALID";
+    public const string PresentationNotFound = "MESSAGING_PRESENTATION_NOT_FOUND";
+    public const string PresentationConflict = "MESSAGING_PRESENTATION_CONFLICT";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";

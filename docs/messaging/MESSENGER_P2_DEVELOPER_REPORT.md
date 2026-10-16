@@ -38,3 +38,35 @@ state تک‌process پشت پورت به‌جای Redis جدید انتخاب �
 ### Validation واقعی فاز اول
 
 restore و build/final build موفق با صفر warning/error؛ Unit=507، Integration=820، Architecture=14، مجموع=1341 passed، failed/skipped=0. هشت Unit و نوزده Integration به baseline افزوده شدند. migration روی SQL Server تست ایزوله اجرا شد و `has-pending-model-changes` تغییری نیافت؛ روی سرور یا دیتابیس عادی اجرا نشده است. جزئیات دو دور و تشخیص فشار حافظه در ممیزی ثبت شده‌اند. پیام انتخاب‌شده برای commit متمرکز این فاز `feat(messaging): add private typing and presence leases` است؛ hash و نتیجهٔ push فقط پس از اجرای Git گزارش می‌شوند. محدودیت‌های فعلی: فقط تک‌process، Last Seen حافظه‌ای، بدون Recording، و باقی فازهای P2 هنوز در این commit نیستند.
+
+Git فاز اول واقعاً انجام شد: commit `8d0b92ae33718113d522827f561e57520f392651` با همان پیام، شاخه `messenger/p0`، upstream `origin/main`، remote `origin` در `https://github.com/RastinaxAI/MakanApp.git`. push معمولی `HEAD:main` و fetch/برابری HEAD با origin/main موفق؛ ۳۶ فایل فقط همین فاز و PDF مرجع با bytes بدون تغییر وارد commit شدند. worktree تمیز بود؛ dirtyهای workspace اصلی AI نه تغییر کردند و نه stage شدند.
+
+## فاز دوم: P2-5/P2-6 — Saved Labels و Folders
+
+### خلاصه و لایه‌ها
+
+قبلاً Saved canonical، رسانه و Forward مستقل داشتیم اما label و پوشهٔ شخصی نداشتیم. `ChatFolder`, `FolderConversationOverride`, `SavedMessageOrganization` و `SavedMessageLabel` در Domain، فقط invariantهای نام/نوع/ترتیب/برچسب را نگه می‌دارند. `MessagingPresentationService` در Application ورودی، نسخه و session/context را validate می‌کند؛ پورت `IMessagingPresentationStore` feature-specific است، نه generic repository. partial `EfMessagingStore.Presentation.cs` و Configurationها در Infrastructure مسئول transaction/قفل/FK/SQL هستند. Controllerهای `MessagingFoldersController` و `SavedMessageLabelsController` فقط transport را map می‌کنند.
+
+### جریان و فایل‌های تغییرکرده
+
+HTTP → Controller بالا → `MessagingPresentationService` → Domain validation → `IMessagingPresentationStore` → partial EF → SQL Server → Result → HTTP. `MakanDbContext` چهار DbSet، DI دو registration و handler سه کد خطا اضافه می‌کنند. `GetConversationListQuery` و مسیر `ConversationsController`/`MessagingService`/`EfMessagingStore.Reads.cs` selector اختیاری FolderId دارند؛ query مجاز قبلی پیش از pagination فیلتر می‌شود. `MessagingSafetyService` و queryهای Search/Controller `MessagesController` فیلتر SavedLabel را به همان مسیر مجاز قبلی اضافه می‌کنند؛ جست‌وجوی tag-only آگاهانه q خالی را می‌پذیرد، نه جست‌وجوی unrestricted تازه.
+
+### دیتابیس و concurrency
+
+Migration `20261016170915_AddMessagingPersonalOrganization`: `ChatFolders` با PK Guid، FK مالک، rowversion و index ترتیب مالک؛ `FolderConversationOverrides` با PK مرکب FolderId/ConversationId، FK پوشه Cascade و گفتگو Restrict، pin CHECK؛ `SavedMessageOrganizations` با PK/FK همان MessageId، مالک و rowversion؛ `SavedMessageLabels` با PK مرکب MessageId/Name، FK مجموعه و index Name/MessageId. طول، mask مجاز، revision مثبت و نام غیرخالی CHECK دارند. label canonical با collation باینری ذخیره می‌شود تا SQL و normalization اختلاف casing ایجاد نکنند.
+
+mutationها transaction کوتاه Serializable دارند. قفل User فقط برای سریال‌کردن سقف پوشه و دستگاه‌های همان مالک است؛ Identity تغییر نمی‌کند. برچسب با قفل گفتگوی Saved و rowversion مجموعه تغییر می‌کند. revision عمداً حتی با ساعت ثابت تغییر می‌کند تا جایگزینی label/override نسخهٔ جدید بدهد. حذف فرزند و insert مجدد در دو Save داخل یک transaction انجام می‌شود؛ بین آن‌ها حالت نیمه‌کاره منتشر نمی‌شود. GET نسخه و فرزندان در RepeatableRead است تا version قدیمی کنار فرزند تازه برنگردد. مجوز overrideها batch بررسی می‌شود، نه دو query برای هر ConversationId.
+
+### Endpointها، تصمیم‌ها و تست‌ها
+
+تمام method/route/request/response/validation/auth/error واقعی در بخش جدید Handoff آمده‌اند. تغییر مجموعه با PUT کامل به‌جای API ریزدانهٔ بی‌نیاز انتخاب شد؛ trade-off سقف ۲۰۰ override و ده label، در برابر مدل ساده و rowversion واحد است. پوشهٔ حذف‌شده، چت را حذف نمی‌کند. tag منبع Forward را به metadata خصوصی تبدیل نمی‌کند و فقط copy مجاز را سازمان می‌دهد. multi-device پایدار از REST/version همگرا می‌شود؛ event/Delta مصنوعی ساخته نشد.
+
+`MessagingPresentationTests` شش حالت Unit برای mask/revision، نام خالی/control، override نامعتبر و normalization دارد. `MessagingP2PresentationEndpointsTests` دوازده Integration واقعی SQL/HTTP برای canonical Saved، مالکیت، مخفی‌شدن پیام، جست‌وجوی label، نسخهٔ هم‌زمان، منشأ Forward پس از حذف عضو، CRUD پوشه بدون حذف چت، عدم grant با override، pagination/filter/pin، unread/archive، دو session و smoke بیست‌وپنج گفتگو دارد. هدفمند هر دوازده passed هستند؛ دو suite کامل و Git فقط پس از اتمام واقعی به ممیزی افزوده می‌شوند.
+
+### نکات آموزشی و مطالعه
+
+۱. UI selector مجوز نیست؛ query پایهٔ مجاز را فیلتر کنید. ۲. rowversion باید روی aggregate مجموعه باشد، نه فقط فرزندها. ۳. DELETE/INSERT کلید یکسان نیاز به مدیریت tracker و transaction دارد. ۴. نسخه و دادهٔ چندquery باید snapshot سازگار بدهند. ۵. کنترل سقف count در race به قفل/transaction نیاز دارد. ۶. pin/filter باید قبل از Skip/Take باشد.
+
+ترتیب مطالعه: دو Controller → `MessagingPresentationService` → دو فایل Domain → پورت Presentation → partial EF → Configurationهای ChatFolder/Saved → Migration → دو فایل تست. محدودیت فعلی: label ساده، نه note/taxonomy، پوشه صرفاً ارائهٔ شخصی، بدون event پوشه؛ invite/join و مدیریت پیشرفته در گام مستقل بعد قرار دارند.
+
+Validation واقعی فاز دوم: restore موفق، build و final build صفر warning/error؛ هر دو suite کامل Unit=513، Integration=832، Architecture=14، Total=1359 passed، failed/skipped=0؛ EF pending-model check موفق بدون تغییر معوق. شش Unit و دوازده Integration جدید اضافه شدند. fixture فقط دیتابیس تست را migrate کرد؛ سرور، appsettings، ملی‌پیامک، AI و frontend تغییر نکردند. پیام commit انتخاب‌شده `feat(messaging): add folders and advanced saved organization` است؛ hash و push بعد از Git گزارش می‌شوند.

@@ -74,7 +74,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         if (!Enum.IsDefined(query.Filter) || query.Page is <= 0 or > 100_000 ||
-            query.PageSize is <= 0 or > 100 || query.Search?.Trim().Length > 100)
+            query.PageSize is <= 0 or > 100 || query.Search?.Trim().Length > 100 || query.FolderId == Guid.Empty)
         {
             throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی فهرست گفتگو معتبر نیست.");
         }
@@ -87,7 +87,8 @@ public sealed class MessagingService(
             query.Page,
             query.PageSize,
             string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
-            cancellationToken);
+            cancellationToken,
+            query.FolderId);
         return records.Select(Map).ToArray();
     }
 

@@ -13,7 +13,8 @@ public sealed record MessageSearchStoreQuery(
     DateTime? FromUtc,
     DateTime? ToUtc,
     MessageSearchPosition? Position,
-    int Limit);
+    int Limit,
+    string? SavedLabel = null);
 
 public sealed record MessageSearchStoreRecord(
     Message Message,

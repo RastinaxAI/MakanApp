@@ -1721,3 +1721,7 @@ Production در startup به connection string امن SQL، security key، stora
 ### افزودهٔ Messenger P2 — Typing و Presence
 
 قراردادهای واقعی `SetTyping`، `Heartbeat`، `SubscribePresence`/`UnsubscribePresence` و eventهای گذرا، همچنین `GET /api/v1/people/{userId}/presence` و دو audience جدید privacy در [Handoff P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) ثبت شده‌اند. پیش‌فرض مصوب Online/Last Seen برابر Contacts از دفترچهٔ مقصد است؛ رابطهٔ جاری، Block و GAP-05 همچنان guard هستند. این بخش ادعای تحویل بقیهٔ P2 یا real Push نیست.
+
+### افزودهٔ Messenger P2 — سازمان‌دهی شخصی
+
+`GET/PUT /api/v1/conversations/saved/messages/{messageId}/labels`، `savedLabel` در Search، CRUD مالک‌محور `/api/v1/messaging/folders` و selector اختیاری `folderId` در فهرست گفتگو اضافه شده‌اند. Saved همان canonical قبلی است؛ پوشه فقط query مجاز جاری را پیش از pagination فیلتر می‌کند. قرارداد version، label normalization، filter/override/pin و خطاهای 400/404/412 در همان Handoff P2 آمده‌اند؛ هیچ مجوز گفتگو از پوشه یا برچسب به دست نمی‌آید.

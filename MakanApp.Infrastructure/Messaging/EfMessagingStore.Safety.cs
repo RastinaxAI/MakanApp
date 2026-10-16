@@ -64,6 +64,9 @@ public sealed partial class EfMessagingStore
                   (!query.Kind.HasValue || message.Kind == query.Kind.Value) &&
                   (!query.FromUtc.HasValue || message.SentAtUtc >= query.FromUtc.Value) &&
                   (!query.ToUtc.HasValue || message.SentAtUtc < query.ToUtc.Value) &&
+                  (query.SavedLabel == null || conversation.Type == ConversationType.Saved && conversation.SavedOwnerUserId == userId &&
+                      dbContext.SavedMessageOrganizations.Any(o => o.MessageId == message.Id && o.OwnerUserId == userId) &&
+                      dbContext.SavedMessageLabels.Any(l => l.MessageId == message.Id && l.Name == query.SavedLabel)) &&
                   ((message.SearchText ?? string.Empty).Contains(normalizedQuery) ||
                    (from attachment in dbContext.MessageAttachments
                     join file in dbContext.FileAssets on attachment.FileAssetId equals file.Id

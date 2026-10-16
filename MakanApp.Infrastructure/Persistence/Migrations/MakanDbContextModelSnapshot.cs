@@ -2734,6 +2734,57 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ChatFolder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ExcludedTypes")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IncludedTypes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("UnreadOnly")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId", "SortOrder", "Id");
+
+                    b.ToTable("ChatFolders", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ChatFolders_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+
+                            t.HasCheckConstraint("CK_ChatFolders_Revision", "[Revision] > 0");
+
+                            t.HasCheckConstraint("CK_ChatFolders_SortOrder", "[SortOrder] BETWEEN 0 AND 10000");
+
+                            t.HasCheckConstraint("CK_ChatFolders_Types", "([IncludedTypes] & ~15) = 0 AND ([ExcludedTypes] & ~15) = 0");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.Conversation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3179,6 +3230,32 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_ConversationUserStates_MuteMode", "[MuteMode] IN (0, 1, 2)");
 
                             t.HasCheckConstraint("CK_ConversationUserStates_MuteShape", "([MuteMode] IN (0, 1) AND [MutedUntilUtc] IS NULL) OR ([MuteMode] = 2 AND [MutedUntilUtc] IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.FolderConversationOverride", b =>
+                {
+                    b.Property<Guid>("FolderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Included")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PinOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("FolderId", "ConversationId");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("FolderId", "PinOrder");
+
+                    b.ToTable("FolderConversationOverrides", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_FolderConversationOverrides_Pin", "[PinOrder] IS NULL OR ([Included] = 1 AND [PinOrder] BETWEEN 0 AND 199)");
                         });
                 });
 
@@ -3842,6 +3919,53 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_SafetyIncidents_Lifecycle", "([Status] = 1 AND [ClosedAtUtc] IS NULL) OR ([Status] IN (2, 3) AND [ClosedAtUtc] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_SafetyIncidents_Status", "[Status] IN (1, 2, 3)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SavedMessageLabel", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("MessageId", "Name");
+
+                    b.HasIndex("Name", "MessageId");
+
+                    b.ToTable("SavedMessageLabels", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_SavedMessageLabels_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SavedMessageOrganization", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("OwnerUserId", "MessageId");
+
+                    b.ToTable("SavedMessageOrganizations", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_SavedMessageOrganizations_Revision", "[Revision] > 0");
                         });
                 });
 
@@ -6490,6 +6614,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ChatFolder", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.Conversation", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -6633,6 +6766,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.FolderConversationOverride", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ChatFolder", null)
+                        .WithMany()
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -6855,6 +7003,30 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
                         .WithMany()
                         .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SavedMessageLabel", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.SavedMessageOrganization", null)
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.SavedMessageOrganization", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithOne()
+                        .HasForeignKey("MakanApp.Domain.Messaging.SavedMessageOrganization", "MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -20,6 +20,13 @@ public sealed class MessagingSafetyService(
         CancellationToken cancellationToken)
     {
         var normalizedQuery = MessageSearchText.Normalize(query.Query);
+        string? savedLabel = null;
+        if (query.SavedLabel is not null)
+        {
+            try { savedLabel = SavedMessageLabel.Normalize(query.SavedLabel); }
+            catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.SearchQueryInvalid, "برچسب جستجو معتبر نیست.", ex); }
+            normalizedQuery ??= string.Empty;
+        }
         if (normalizedQuery is null)
         {
             throw Error(MessagingErrorCodes.SearchQueryRequired, "عبارت جستجو الزامی است.");
@@ -59,7 +66,8 @@ public sealed class MessagingSafetyService(
                 query.FromUtc,
                 query.ToUtc,
                 position,
-                limit),
+                limit,
+                savedLabel),
             cancellationToken);
         return new MessageSearchPageResult(
             page.Items.Select(MapSearchItem).ToArray(),

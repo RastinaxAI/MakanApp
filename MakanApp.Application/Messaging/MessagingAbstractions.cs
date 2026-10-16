@@ -124,7 +124,8 @@ public interface IMessagingStore
         int page,
         int pageSize,
         string? search,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? folderId = null);
 
     Task<ConversationMessagePageStoreResult> GetConversationMessagesAsync(
         Guid userId,

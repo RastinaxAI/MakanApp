@@ -17,7 +17,8 @@ public sealed partial class EfMessagingStore
         int page,
         int pageSize,
         string? search,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? folderId = null)
     {
         var workspaceType = accessContext.WorkspaceType;
         var organizationId = accessContext.OrganizationId;
@@ -131,9 +132,23 @@ public sealed partial class EfMessagingStore
                             hidden.MessageId == message.Id && hidden.UserId == userId)))
             };
 
+        if (folderId.HasValue)
+        {
+            var folder = await dbContext.ChatFolders.AsNoTracking().SingleOrDefaultAsync(f => f.Id == folderId && f.OwnerUserId == userId, cancellationToken)
+                ?? throw PresentationNotFound();
+            var includedTypes = folder.IncludedConversationTypes(); var excludedTypes = folder.ExcludedConversationTypes();
+            query = query.Where(row =>
+                !dbContext.FolderConversationOverrides.Any(o => o.FolderId == folderId && o.ConversationId == row.Conversation.Id && !o.Included) &&
+                (dbContext.FolderConversationOverrides.Any(o => o.FolderId == folderId && o.ConversationId == row.Conversation.Id && o.Included) ||
+                    includedTypes.Contains(row.Conversation.Type) && !excludedTypes.Contains(row.Conversation.Type)) &&
+                (!folder.UnreadOnly || row.UnreadCount > 0 || row.State != null && row.State.IsManuallyUnread));
+        }
+
         var conversationRows = await query
             .AsNoTracking()
-            .OrderByDescending(item => item.State != null && item.State.PinnedAtUtc != null)
+            .OrderBy(item => dbContext.FolderConversationOverrides.Where(o => o.FolderId == folderId && o.ConversationId == item.Conversation.Id)
+                .Select(o => o.PinOrder).FirstOrDefault() ?? int.MaxValue)
+            .ThenByDescending(item => item.State != null && item.State.PinnedAtUtc != null)
             .ThenByDescending(item => item.LastMessage == null
                 ? item.Conversation.CreatedAtUtc
                 : item.LastMessage.SentAtUtc)

@@ -42,7 +42,8 @@ public sealed record GetConversationListQuery(
     ConversationListFilter Filter = ConversationListFilter.All,
     int Page = 1,
     int PageSize = 30,
-    string? Search = null);
+    string? Search = null,
+    Guid? FolderId = null);
 
 public sealed record ConversationOrganizationBadgeResult(
     Guid OrganizationId,

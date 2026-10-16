@@ -48,3 +48,31 @@ TTL پیش‌فرض Typing شش ثانیه و حداقل refresh سه ثانیه
 Migration: `20261016163433_AddMessagingPresencePrivacy` فقط دو ستون audience با default مصوب Contacts و دو CHECK مقدار enum به `messaging.MessagingPrivacySettings` می‌افزاید؛ PK/FK/rowversion قبلی حفظ می‌شوند. در startup migration خودکار اجرا نمی‌شود. هیچ timestamp حضور، Typing یا event حضور در SQL ذخیره نمی‌شود.
 
 `DISTRIBUTED_EPHEMERAL_STATE=DEFERRED` و `MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA`: پیاده‌سازی فعلی فقط یک process است؛ restart تاریخچهٔ Last Seen حافظه‌ای را از بین می‌برد و scale-out بدون state/backplane مشترک پشتیبانی‌شده ادعا نمی‌شود. Recording indicator هنوز قرارداد جدا ندارد و ساخته نشده است.
+
+## Saved Labels و پوشه‌ها — P2-5/P2-6
+
+Saved پایه همان `GET /api/v1/conversations/saved` و همان گفتگو/پیام مستقل موجود است. Tag جدید نه فضای ذخیره‌سازی دوم است، نه دسترسی مجدد به منبع Forward. متن/مدیا و Forward همچنان از مسیرهای موجود ارسال می‌شوند؛ metadata منبع غیرمجاز افشا نمی‌شود.
+
+| Method / Route | Request | Response و قواعد |
+|---|---|---|
+| `GET /api/v1/conversations/saved/messages/{messageId}/labels` | بدون body | `{messageId,labels,version}`؛ بدون label-set، labels=[] و version=null؛ فقط پیام Saved قابل‌مشاهدهٔ خود caller |
+| `PUT /api/v1/conversations/saved/messages/{messageId}/labels` | `{labels:["درس"],expectedVersion:null}` برای بار اول؛ سپس version جاری | جایگزینی کامل labelها؛ array خالی پاک‌کردن label است، نه حذف پیام؛ تغییر هم‌زمان → 412 |
+| `GET /api/v1/messages/search?savedLabel=درس` | `savedLabel` با فیلترهای قبلی سازگار | فقط Saved خود caller؛ در این حالت q اختیاری است؛ بدون q و بدون label همچنان خطای قبلی |
+| `GET /api/v1/messaging/folders` | بدون body | حداکثر ۲۰ تنظیم پوشهٔ همین کاربر با overrides و version؛ نه محتوای گفتگوها |
+| `PUT /api/v1/messaging/folders/{folderId}` | نام، sortOrder، includedTypes، excludedTypes، unreadOnly، overrides، expectedVersion | ساخت با Guid پایدار کلاینت و expectedVersion=null؛ ویرایش با version جاری؛ پاسخ ChatFolderResult |
+| `DELETE /api/v1/messaging/folders/{folderId}?expectedVersion=...` | version جاریِ URL-encoded | 204؛ فقط پوشه و overrideهایش حذف می‌شوند، نه گفتگو/پیام/عضویت |
+| `GET /api/v1/conversations?folderId=...` | selector اختیاری، همراه filter/page/pageSize/q موجود | همان ConversationSummaryResultهای مجاز فعلی؛ فیلتر پوشه قبل از pagination در SQL اعمال می‌شود |
+
+نمونهٔ body پوشه:
+
+```json
+{"name":"درس‌ها","sortOrder":0,"includedTypes":"Group, Channel","excludedTypes":"None","unreadOnly":false,"overrides":[],"expectedVersion":null}
+```
+
+نوع Flags برابر `None=0, Direct=1, Group=2, Channel=4, Saved=8, All=15` است؛ نام رشته‌ای canonical است و bit ناشناخته رد می‌شود. هر override برابر `{conversationId,included,pinOrder}` است؛ `pinOrder` اختیاری ۰ تا ۱۹۹ و فقط برای included=true مجاز است. explicit exclude بر قاعدهٔ type مقدم است؛ explicit include می‌تواند type filter را override کند، اما هرگز authorization/فیلتر archive/workspace را override نمی‌کند. pinOrder صعودی مقدم بر ترتیب قبلی فهرست است؛ در نبود آن ترتیب موجود حفظ می‌شود. sortOrder بین ۰ تا ۱۰۰۰۰، نام trimشده حداکثر ۸۰ نویسهٔ بدون control، overrides حداکثر ۲۰۰ و ConversationIdها یکتا هستند. پوشهٔ سیستمی hard-code نشده است.
+
+هر پیام حداکثر ده label با طول ۳۲ دارد؛ trim، Unicode NFKC و uppercase invariant canonical می‌شود و تکرارها حذف می‌شوند. label، یادداشت آزاد جدید یا taxonomy سلسله‌مراتبی نیست. DeleteForMe/Clear/DeleteForEveryone و scope Saved برای خواندن، تغییر و جست‌وجو معتبرند. درخواست روی پیام غیرSaved یا مال دیگری 404 است. پوشهٔ غیرمالک 404، body/enum/version نامعتبر 400 و stale version برابر `MESSAGING_PRESENTATION_CONFLICT` با 412 است. GETها authenticated و mutationها rate-limited هستند؛ revoke نشست از pipeline موجود پیروی می‌کند.
+
+سازمان‌دهی پایدار source-of-truth در REST است؛ دستگاه دوم بعد از refresh نسخه/labelهای تازه را می‌گیرد. در این فاز event ساختگی برای Folder/Label به گفتگوی نامرتبط تزریق نشده است؛ این تغییرات را از Delta پیام‌ها حدس نزنید. پس از timeout ساخت با Guid یکسان، تنظیم‌های جاری را GET کنید؛ expectedVersion=null پوشهٔ موجود را کورکورانه بازنویسی نمی‌کند.
+
+Migration `20261016170915_AddMessagingPersonalOrganization` چهار جدول `messaging.ChatFolders`, `FolderConversationOverrides`, `SavedMessageOrganizations`, `SavedMessageLabels` را با FK، کلید مرکب، CHECK، index و rowversion مجموعه می‌سازد. آخرین دو جدول فقط سازمان‌دهی همان Message موجودند؛ canonical Saved جدید ایجاد نمی‌کنند. migration خودکار startup و apply روی سرور انجام نشده است.
