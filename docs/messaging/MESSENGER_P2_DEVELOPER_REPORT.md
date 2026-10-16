@@ -70,3 +70,41 @@ mutationها transaction کوتاه Serializable دارند. قفل User فقط 
 ترتیب مطالعه: دو Controller → `MessagingPresentationService` → دو فایل Domain → پورت Presentation → partial EF → Configurationهای ChatFolder/Saved → Migration → دو فایل تست. محدودیت فعلی: label ساده، نه note/taxonomy، پوشه صرفاً ارائهٔ شخصی، بدون event پوشه؛ invite/join و مدیریت پیشرفته در گام مستقل بعد قرار دارند.
 
 Validation واقعی فاز دوم: restore موفق، build و final build صفر warning/error؛ هر دو suite کامل Unit=513، Integration=832، Architecture=14، Total=1359 passed، failed/skipped=0؛ EF pending-model check موفق بدون تغییر معوق. شش Unit و دوازده Integration جدید اضافه شدند. fixture فقط دیتابیس تست را migrate کرد؛ سرور، appsettings، ملی‌پیامک، AI و frontend تغییر نکردند. پیام commit انتخاب‌شده `feat(messaging): add folders and advanced saved organization` است؛ hash و push بعد از Git گزارش می‌شوند.
+
+Git فاز دوم انجام شد: `d317aa446443dc58811cfaa04970612c468f375d` با همان پیام، ۳۳ فایل فقط Saved/Folders/مستندات، branch=`messenger/p0` و remote/upstream=`origin/main`. push/fetch و برابری remote موفق، worktree تمیز و dirtyهای AI بیرون commit بودند.
+
+## فاز سوم: P2-7 تا P2-10
+
+### مسئله، لایه‌ها و فایل‌ها
+
+قبلاً دعوت target-bound و permission پایه داشتیم، اما bearer link، approval queue، Ban و محدودیت فردی نداشتیم. نقش‌های قدیمی جایگزین نشدند. `ConversationInviteLink.cs` شامل دو entity لینک/درخواست و lifecycle است؛ `ConversationMemberRestriction.cs` اختیار ممنوع و انقضا را نگه می‌دارد. `ConversationParticipant.CanManage/CanRestrictMember` قاعدهٔ خالص Domain برای جلوگیری از escalation و محدودیت Owner/self است؛ `Conversation.UpdateInformation` فقط مشخصات Group/Channel مجاز را تغییر می‌دهد.
+
+`ConversationAdvancedManagementContracts.cs` قراردادهای صریح و پورت feature-specific، و `ConversationAdvancedManagementService.cs` validation/context use case را در Application دارند. سه partial زیر مسئول SQL هستند: `EfMessagingStore.InviteLinks.cs` برای entropy/hash و join، `EfMessagingStore.JoinRequests.cs` برای تصمیم/نسخه، و `EfMessagingStore.AdvancedManagement.cs` برای capability/audit/info/restriction. دو Controller جدید `ConversationInviteLinksController` و `ConversationAdvancedManagementController` فقط HTTP را map می‌کنند.
+
+### جریان اجرا و تغییرات مهم
+
+HTTP → Controller → `ConversationAdvancedManagementService` → `IAccessContextResolver` → Domain validation → پورت → `EfMessagingStore` → قفل Conversation و revalidation نشست/role در SQL → eligibility و current GAP-05 → mutation/audit/نسخه → commit → DTO/HTTP. برای join، ParticipantChanged موجود از Outbox بعد از commit می‌رود؛ وضعیت خصوصی request/link به همهٔ اعضا broadcast نمی‌شود. صفحهٔ مدیریت از REST نسخهٔ تازه می‌گیرد.
+
+مسیرهای موجود AddMember، JoinPublic و Invitation acceptance برای Ban بازبینی شدند؛ Send/Typing همان محدودیت فردی جاری را می‌سنجند. `ConversationManagementService.ChangeMemberRoleAsync` bit ناشناخته را قبل از رسیدن به exception دامنه رد می‌کند؛ این خطای واقعی 500 با تست پیدا شد، نه با تغییر انتظار تست مخفی شود. DI، DbContext، Configurationها و GlobalExceptionHandler فقط همین قابلیت را متصل می‌کنند؛ هیچ Identity/OTP/SMS/AI پیاده‌سازی تازه‌ای نداریم.
+
+### دیتابیس و concurrency
+
+لینک PK Guid و hash یکتای char(64)، creator، expiry، maximum/used count، approval، context سروری سازمان و rowversion دارد. Guid شناسهٔ لینک secret نیست؛ توکن ۳۲ بایت cryptographic است و SHA-256 یک nonce پُرentropy را نگه می‌دارد، نه hash نامناسب password. درخواست FK مرکب InviteLinkId+ConversationId دارد؛ شناسهٔ لینک دیگر را نمی‌توان به گفتگو چسباند. unique filtered `(ConversationId,UserId) WHERE Status=Pending` مانع duplicate pending است. restriction کلید مرکب ConversationId/UserId و revision/rowversion دارد. همهٔ FKها محدودند؛ join سازمانی Membership/Enrollment را تغییر نمی‌دهد.
+
+قفل ترتیب‌دار Conversation در transaction کوتاه Serializable، مصرف آخرین slot، revoke/approval و permission/action را خطی می‌کند. source/target Membership/Role از snapshot سروری فقط selector هستند و با state جاری دوباره validate می‌شوند. Session نیز داخل transaction کنترل می‌شود تا auth اولیه به‌تنهایی مجوز ادامه نباشد. انقضا از ساعت سرور بعد از انتظار قفل سنجیده می‌شود. provider/network در transaction نیست؛ hash/RNG محلی و کوتاه‌اند. rollback migration در حضور flag جدید، به‌جای کاهش بی‌اجازهٔ permission متوقف می‌شود.
+
+### قرارداد، تصمیم‌ها و محدودیت‌ها
+
+جزئیات endpoint/request/response/auth/validation/error و loading/empty در Handoff همین فاز آمده‌اند. لینک چندمصرفی و queue با دعوت target-bound یکی نیستند، اما eligibility/رضایت/عضویت Messaging و audit موجود reuse شدند. Ban در جدول جدا و پایان عضویت موجود نگه داشته شد تا lifecycle تاریخی و نقش‌ها شکسته نشوند. Unban هیچ عضویت خودکاری ایجاد نمی‌کند. token plaintext در DB/audit/list نگهداری نمی‌شود؛ trade-off این است که پس از گم‌شدن پاسخ اولیه باید revoke/new-link انجام شود، نه بازیابی secret. حداکثر انقضا مطابق دعوت موجود ۳۰ روز و pageها bounded هستند.
+
+این API مدیریت دستی Group رسمی کلاس یا private chat browsing پلتفرم نیست. role مدرسه، UserId، لینک قبلی یا GuardianRelation اختیار جدید برای private Direct کودک نمی‌آورند. Contact خود حساب محافظت‌شده طبق policy فعلی رابطهٔ رضایتی است؛ آزمون «غریبه» نباید آن را از قبل بسازد. باقی P2، scale-out و real Push همچنان از این فاز نتیجه نمی‌شوند.
+
+### تست‌ها، validation و نکات آموزشی
+
+`ConversationAdvancedManagementTests`: پنج Unit خالص برای expiry/limit/hash/context، terminal idempotency، permission مستقل و restriction/time. سه فایل `MessagingP2ManagementEndpointsTests`، `MessagingP2ManagementAuthorizationTests` و `MessagingP2ManagementSafetyTests`: بیست‌وشش Integration SQL/HTTP/Hub با race واقعی و FK واقعی؛ شمارهٔ 547 و constraint موردنظر تأیید می‌شوند، نه هر exception. حالت‌های FromJoin، protected audience، Contact revocation، creator-role revocation، approval×revoke، ban در دعوت قبلی و عدم ساخت Enrollment/Membership پوشش دارند. هدفمند همه passed هستند؛ دور کامل اول Unit=518، Integration=858، Architecture=14، Total=1390 passed، failed/skipped=0. build/restore اجراشده صفر warning/error دارند؛ suite نهایی و Git فقط بعد از نتیجه ثبت می‌شوند.
+
+۱. credential لینک باید با شناسهٔ DB فرق کند. ۲. hashِ nonce پُرentropy با password hashing یک مسئله نیست. ۳. Pending عضو فعال نیست. ۴. context تأییدکننده جای context سازنده/درخواست‌کننده نیست. ۵. unique index بدون transaction کافی نیست تا چند جدولِ اثر join هماهنگ شوند. ۶. test fixture می‌تواند ناخواسته رابطهٔ رضایتی بسازد؛ ردشدن تست را با حذف policy اصلاح نکنید. ۷. ورودی enum ناشناخته باید خطای پایدار client بدهد، نه exception داخلی.
+
+مسیر مطالعه: دو Controller → service/contract Application → سه قاعده/entity Domain → سه partial EF → Configurationها → `20261016174429_AddConversationInvitesAndRestrictions` → سه Integration و Unit بالا. گام بعد Topics و تعامل پیام است؛ مجوز معلم باید از authority کلاس فعلی بیاید، نه Admin کردن ساختگی همهٔ معلم‌ها، و Quiz با Exam آکادمیک یکی نیست.
+
+نتیجهٔ واقعی نهایی فاز سوم: restore، build و final build موفق با صفر warning/error؛ هر دو suite کامل ۱۳۹۰ passed، شامل Unit=518، Integration=858 و Architecture=14، failed/skipped=0؛ EF تغییر معوق ندارد. پنج Unit و بیست‌وشش Integration جدید اضافه شدند. Git پس از بررسی diff با پیام `feat(messaging): add invite links and join requests` انجام می‌شود؛ hash/تأیید remote فقط پس از اجرا گزارش می‌شوند.

@@ -76,3 +76,40 @@ Saved پایه همان `GET /api/v1/conversations/saved` و همان گفتگو
 سازمان‌دهی پایدار source-of-truth در REST است؛ دستگاه دوم بعد از refresh نسخه/labelهای تازه را می‌گیرد. در این فاز event ساختگی برای Folder/Label به گفتگوی نامرتبط تزریق نشده است؛ این تغییرات را از Delta پیام‌ها حدس نزنید. پس از timeout ساخت با Guid یکسان، تنظیم‌های جاری را GET کنید؛ expectedVersion=null پوشهٔ موجود را کورکورانه بازنویسی نمی‌کند.
 
 Migration `20261016170915_AddMessagingPersonalOrganization` چهار جدول `messaging.ChatFolders`, `FolderConversationOverrides`, `SavedMessageOrganizations`, `SavedMessageLabels` را با FK، کلید مرکب، CHECK، index و rowversion مجموعه می‌سازد. آخرین دو جدول فقط سازمان‌دهی همان Message موجودند؛ canonical Saved جدید ایجاد نمی‌کنند. migration خودکار startup و apply روی سرور انجام نشده است.
+
+## مدیریت پیشرفته، لینک و درخواست عضویت — P2-7 تا P2-10
+
+نقش‌های Owner/Admin/Member قبلی عوض نشده‌اند. سه flag واقعی اضافه شده‌اند: `ManageInvites=512` برای لینک/درخواست، `BanMembers=1024` برای محدودیت عضو، و `ChangeInfo=2048` برای عنوان/توضیح. `All=4095` است؛ permissionهای Adminهای قبلی خودکار زیاد نمی‌شوند و LegacyAdminDefault تغییر نکرده است. ManageInvites به معنی ManageAdmins یا PublishMessages نیست. subscriber کانال هنوز نمی‌تواند منتشر کند. محدودیت scope/عضویت/پنجرهٔ history و مرزهای Group رسمی کلاس پابرجاست؛ سیستم رسمی، با API مدیریت دستی عضو یا لینک override نمی‌شود.
+
+همهٔ routeهای زیر authenticated و دارای policy محدودیت نرخ `messaging-send` هستند. page پیش‌فرض ۱، pageSize پیش‌فرض ۳۰ و حداکثر ۱۰۰ است. `HasMore` فقط در محدودهٔ مجاز همان پاسخ محاسبه می‌شود.
+
+| Method / Route | Request | پاسخ و مجوز |
+|---|---|---|
+| `POST /api/v1/conversations/{id}/invite-links` | `{clientLinkId,expiresAtUtc,maximumUses,requiresApproval}` | `{link,token,alreadyExisted}`؛ Owner/Admin با ManageInvites؛ توکن فقط بار اول |
+| `GET /api/v1/conversations/{id}/invite-links` | page/pageSize | `{items,hasMore}`؛ فقط metadata و version؛ نه token و نه hash |
+| `POST /api/v1/conversations/{id}/invite-links/{linkId}/revoke` | `{expectedVersion}` | metadata تازه؛ لغو دوباره idempotent؛ stale version=412 |
+| `POST /api/v1/messaging/invite-links/redeem` | `{token}` | `{conversationId,alreadyMember,joinRequest}`؛ توکن در body، نه URL؛ هویت target از session |
+| `GET /api/v1/conversations/{id}/join-requests` | page/pageSize | مدیریت درخواست فقط با ManageInvites |
+| `GET /api/v1/messaging/join-requests` | page/pageSize | فقط درخواست‌های خود caller؛ بدون عنوان/متن چت، شماره یا سن |
+| `POST /api/v1/messaging/join-requests/{requestId}/approve` | `{expectedVersion}` | فقط مدیر مجاز فعلی همان Group/Channel؛ revalidation کامل |
+| `POST /api/v1/messaging/join-requests/{requestId}/reject` | `{expectedVersion}` | مدیر مجاز؛ بدون ایجاد عضویت |
+| `POST /api/v1/messaging/join-requests/{requestId}/cancel` | `{expectedVersion}` | فقط صاحب درخواست؛ بدون ایجاد عضویت |
+| `GET /api/v1/conversations/{id}/member-restrictions` | page/pageSize | فقط Owner/Admin دارای BanMembers؛ وضعیت/نسخه، بدون reason خام audit |
+| `PUT /api/v1/conversations/{id}/members/{userId}/restriction` | `{isBanned,deniedCapabilities,untilUtc,reason,expectedVersion}` | محدودیت resource-bound؛ عضو/نقش سراسری، Enrollment و User تغییر نمی‌کنند |
+| `PATCH /api/v1/conversations/{id}/info` | `{title,description,expectedVersion}` | فقط Owner/Admin دارای ChangeInfo؛ همان سقف‌های ۱۶۰/۱۰۰۰ نویسهٔ قبلی |
+
+توکن ۳۲ بایت تصادفی cryptographic و ۴۳ نویسهٔ Base64url است؛ فقط SHA-256 آن در SQL می‌ماند. انقضا UTC، آینده و حداکثر ۳۰ روز مطابق دعوت موجود است؛ maximumUses از ۱ تا ۱۰۰۰۰، usedCount server-owned و CHECK استفاده <= سقف دارد. clientLinkId یک Guid idempotency است و **bearer secret نیست**. retry ساخت با همان شناسه/بدنه metadata همان رکورد و token=null می‌دهد؛ توکن گم‌شده از hash بازیابی نمی‌شود، باید لینک را لغو و با شناسهٔ تازه ایجاد کرد. توکن/هش در audit/list نیستند؛ کلاینت هم نباید token را log کند.
+
+مالک از حالت loading ساخت لینک، فقط پس از پاسخ دارای token امکان copy دارد. token=null در retry به معنی لینک تازه یا توکن قابل‌بازیابی نیست. Expired/Revoked/Exhausted یا context/رابطهٔ نامعتبر، `CONVERSATION_INVITE_LINK_UNAVAILABLE` با 404 می‌دهند و نباید از آن سن/علت خصوصی حدس زد. لغو لینک، عضویت قبلاً پذیرفته‌شده را حذف نمی‌کند. عضو فعال در retry معتبر مصرف اضافه ندارد؛ درخواست Pending هم مصرف نمی‌کند. مصرف فقط هنگام ایجاد یک عضویت فعال تازه یا approval واقعی است و آخرین ظرفیت با lock گفتگو/transaction سریال می‌شود.
+
+requiresApproval=true فقط `Pending` می‌سازد؛ target هنوز نمی‌تواند history بخواند. وضعیت‌ها `Pending/Approved/Rejected/Cancelled/Expired` هستند. انقضای مؤثر در read به‌صورت Expired دیده می‌شود؛ درخواست منقضی قابل approval یا بازنویسی با cancel/reject نیست. درخواست تکراری Pending همان شناسه را برمی‌گرداند. تکرار همان تصمیم نهایی idempotent است و عضویت حذف‌شده را دوباره فعال نمی‌کند. پس از لغو/پایان قبلی، درخواست تازه نیازمند اقدام صریح تازه است.
+
+پذیرش لینک یک POST صریح از نشست معتبر target است؛ دانستن UserId جای آن نیست. پیش از join و approval، scope، حساب، نقش و permission فعلی سازنده، audience، حریم خصوصی target، رابطهٔ جاری GAP-05، Ban و وضعیت لینک بازبینی می‌شوند. در سازمان، Membership/Role سازنده و درخواست‌کننده از context **سروری** همان اقدام ذخیره و دوباره validate می‌شوند؛ context مدیر تأییدکننده به‌جای آن‌ها مصرف نمی‌شود. لینک/approval هیچ Membership سازمانی، User، Credential یا Enrollment نمی‌سازد. Contact ثبت‌شده در دفترچهٔ **خودِ حساب محافظت‌شده** طبق GAP-05 رابطهٔ رضایتی مصوب است؛ Contact یک‌طرفهٔ غریبه یا legacy grant به‌تنهایی مجوز نیست. Everyone در privacy هم بدون رابطهٔ لازم، Stranger→Minor/Unknown را مجاز نمی‌کند.
+
+Ban، عضویت فعال Messaging را با همان lifecycle Removed پایان می‌دهد و سطر ممنوعیت جدا دارد؛ history در SQL حذف نمی‌شود، اما دسترسی عضو حذف‌شده مطابق P0 قطع می‌شود. همهٔ Join/Link/Add/دعوت قبلی و Send/Typing وضعیت را تازه می‌سنجند. Unban یا انقضای Ban، عضویت را خودکار زنده نمی‌کند؛ join صریح مجاز لازم است. `deniedCapabilities` از `SendMessages | SendMedia | InviteMembers` است؛ محدودیت فردی بر اختیار عمومی مقدم است. untilUtc=null یعنی دائمی، مقدار زمانی باید UTC آینده باشد؛ پاک‌کردن محدودیت یعنی isBanned=false، None و untilUtc=null. reason بین ۱ تا ۴۰۰ نویسهٔ بدون control فقط برای audit است. Admin بدون ManageAdmins نمی‌تواند Admin دیگر را محدود کند؛ Owner و خودِ actor محدودشدنی نیستند.
+
+400 برای body/enum/bit ناشناخته، 401 برای نشست لغوشده، 403 برای permission یا `CONVERSATION_MEMBER_RESTRICTED`، 404 برای منبع غیرقابل‌دسترسی/لینک نامعتبر و 412 برای نسخهٔ کهنه است. ورودی bit ناشناخته در مسیر تغییر role نیز اکنون در Application با 400 رد می‌شود، نه exception دامنه با 500. loading/empty فهرست‌ها واقعاً [] و HasMore=false است؛ UI از داشتن شناسه، عضو بودن یا permission نتیجه نگیرد.
+
+در این فاز وضعیت خصوصی لینک/درخواست/محدودیت با REST/version refresh می‌شود و به تمام اعضای گفتگو broadcast نمی‌شود. عضویت فعال تازه یا پایان عضویت همان ParticipantChanged موجود را با audience جاری تولید می‌کند؛ metadata لینک و وجود درخواست خصوصی داخل event عمومی قرار نمی‌گیرند. تغییر info همان ConversationChanged موجود است. تمام mutationهای جدید نشست و role سازمانی را داخل transaction نیز بازبینی می‌کنند؛ revoke پس از اولین auth نمی‌تواند گیت جاری را دور بزند.
+
+Migration `20261016174429_AddConversationInvitesAndRestrictions` سه جدول لینک/درخواست/محدودیت، FK مرکب لینک+گفتگو، unique درخواست Pending، rowversion، CHECK استفاده/وضعیت/context و indexها را می‌سازد و CHECK permission را به ۴۰۹۵ گسترش می‌دهد. permission قدیمی backfill/upgrade خودکار نمی‌شود. Down وقتی flag جدید واقعاً استفاده شده باشد، پیش از حذف جدول با خطای روشن متوقف می‌شود؛ کاهش بی‌اجازهٔ permission راه rollback نیست و backup/تصمیم عملیاتی لازم است. هیچ migrate یا deploy روی سرور انجام نشده است.

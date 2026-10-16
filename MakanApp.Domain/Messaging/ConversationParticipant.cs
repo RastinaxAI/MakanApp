@@ -138,6 +138,14 @@ public sealed class ConversationParticipant
         AdminPermissions = permissions;
     }
 
+    public bool CanManage(ConversationAdminPermission permission) => IsActive && permission != ConversationAdminPermission.None &&
+        (permission & ~ConversationAdminPermission.All) == 0 &&
+        (Role == ConversationParticipantRole.Owner || Role == ConversationParticipantRole.Admin && AdminPermissions.HasFlag(permission));
+
+    public bool CanRestrictMember(ConversationParticipant target) => CanManage(ConversationAdminPermission.BanMembers) &&
+        target.UserId != UserId && target.Role != ConversationParticipantRole.Owner &&
+        (target.Role != ConversationParticipantRole.Admin || CanManage(ConversationAdminPermission.ManageAdmins));
+
     public bool AdvanceDelivery(long upToMessageSequence, DateTime updatedAtUtc)
     {
         ValidateCursorInput(upToMessageSequence, updatedAtUtc);

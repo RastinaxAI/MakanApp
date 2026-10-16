@@ -130,7 +130,8 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationAndTarget(conversationId, targetUserId);
-        if (command.Role is not ConversationParticipantRole.Admin and not ConversationParticipantRole.Member)
+        if (command.Role is not ConversationParticipantRole.Admin and not ConversationParticipantRole.Member ||
+            (command.AdminPermissions & ~ConversationAdminPermission.All) != 0)
         {
             throw Error(MessagingErrorCodes.ConversationRoleInvalid, "نقش درخواستی برای این عملیات معتبر نیست.");
         }

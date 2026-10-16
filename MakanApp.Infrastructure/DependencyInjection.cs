@@ -183,6 +183,8 @@ public static class DependencyInjection
         services.AddScoped<MessagingEphemeralService>();
         services.AddScoped<IMessagingPresentationStore>(provider => provider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<MessagingPresentationService>();
+        services.AddScoped<IConversationAdvancedManagementStore>(provider => provider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<ConversationAdvancedManagementService>();
         services.AddHostedService<MessagingEphemeralDispatcher>();
         services.AddScoped<IConversationManagementService, ConversationManagementService>();
         services.AddScoped<IMessagingSafetyService, MessagingSafetyService>();

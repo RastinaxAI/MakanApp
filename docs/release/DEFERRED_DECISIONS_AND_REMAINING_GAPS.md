@@ -92,3 +92,5 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 - `P1_PUSH_RUNTIME_PENDING` بدون تغییر؛ Web Push/FCM واقعی روی دستگاه ثابت نشده‌اند.
 
 افزودهٔ مستقل P2-5/P2-6: label-set نسخه‌دار روی Saved موجود و پوشه‌های مالک‌محور با override/filter/pin پیاده شدند؛ final validation و commit در ممیزی P2 جدا ثبت می‌شوند. source-of-truth سازمان‌دهی REST است، نه event/Delta مصنوعی. این پیشرفت، دعوت پیشرفته/Topics/Poll/Scheduling یا کل P2 را بسته اعلام نمی‌کند.
+
+افزودهٔ مستقل P2-7 تا P2-10: مدیریت مشخصات/محدودیت/ban، permissionهای مستقل، bearer invite و JoinRequest خصوصی پیاده و هر دو دور کامل ۱۳۹۰ تست موفق شدند. migration بررسی‌شده `20261016174429_AddConversationInvitesAndRestrictions` است؛ شواهد و Git در ممیزی P2 ثبت می‌شوند. Topics/Poll/Scheduling و Checklist هنوز از این افزوده نتیجه نمی‌شوند؛ deferredهای scale-out و real Push پابرجا هستند.

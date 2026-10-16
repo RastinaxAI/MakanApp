@@ -207,6 +207,7 @@ public sealed partial class EfMessagingStore
         }
 
         var existing = await LoadActiveParticipantAsync(conversationId, actorUserId, cancellationToken);
+        await EnsureNotBannedAsync(conversation.Id, actorUserId, nowUtc, cancellationToken);
         await EnsurePersonalAudienceSafetyAsync(conversation, actorUserId, nowUtc, cancellationToken);
         if (existing is not null)
         {

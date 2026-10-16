@@ -256,6 +256,14 @@ public sealed class Conversation
         ArchivedAtUtc = archivedAtUtc;
     }
 
+    public void UpdateInformation(string title, string? description)
+    {
+        if (ManagementPolicy != ConversationManagementPolicy.UserManaged || Status != ConversationStatus.Active ||
+            Type is not ConversationType.Group and not ConversationType.Channel)
+            throw new InvalidOperationException("تغییر مشخصات این گفتگو مجاز نیست.");
+        Title = NormalizeTitle(title); Description = NormalizeDescription(description);
+    }
+
     public void UpdateBehaviorSettings(
         ConversationVisibility visibility,
         GroupHistoryPolicy groupHistoryPolicy,

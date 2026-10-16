@@ -15,6 +15,8 @@ public sealed partial class EfMessagingStore
         await using var transaction = await BeginManagementTransactionAsync(ct);
         var (conversation, actor) = await LoadManagedForMutationAsync(actorId, conversationId, access, ct);
         EnsureInviterPermission(conversation, actor);
+        await EnsureCapabilityNotRestrictedAsync(conversation.Id, actorId, GroupMemberCapability.InviteMembers, nowUtc, ct);
+        await EnsureNotBannedAsync(conversation.Id, command.TargetUserId, nowUtc, ct);
         if (conversation.Scope != ConversationScope.Personal) throw ManagementNotAllowed();
         await EnsurePersonalCreationSafetyAsync(actorId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
         await EnsureEligibleTargetAsync(actorId, command.TargetUserId, conversation.Scope, null, access, nowUtc, ct);
@@ -70,6 +72,8 @@ public sealed partial class EfMessagingStore
         EnsureInviterPermission(conversation, inviter);
         if (status == ConversationInvitationStatus.Accepted)
         {
+            await EnsureCapabilityNotRestrictedAsync(conversation.Id, inviter.UserId, GroupMemberCapability.InviteMembers, nowUtc, ct);
+            await EnsureNotBannedAsync(conversation.Id, actorId, nowUtc, ct);
             await EnsurePersonalCreationSafetyAsync(inviter.UserId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
             await EnsureEligibleTargetAsync(inviter.UserId, actorId, conversation.Scope, null, access, nowUtc, ct);
             await EnsurePersonalAudienceSafetyAsync(conversation, actorId, nowUtc, ct);

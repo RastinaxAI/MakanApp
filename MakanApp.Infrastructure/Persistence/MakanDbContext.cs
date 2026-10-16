@@ -70,6 +70,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<FolderConversationOverride> FolderConversationOverrides => Set<FolderConversationOverride>();
     public DbSet<SavedMessageOrganization> SavedMessageOrganizations => Set<SavedMessageOrganization>();
     public DbSet<SavedMessageLabel> SavedMessageLabels => Set<SavedMessageLabel>();
+    public DbSet<ConversationInviteLink> ConversationInviteLinks => Set<ConversationInviteLink>();
+    public DbSet<ConversationJoinRequest> ConversationJoinRequests => Set<ConversationJoinRequest>();
+    public DbSet<ConversationMemberRestriction> ConversationMemberRestrictions => Set<ConversationMemberRestriction>();
     public DbSet<ConversationOwnershipTransfer> ConversationOwnershipTransfers =>
         Set<ConversationOwnershipTransfer>();
     public DbSet<Message> Messages => Set<Message>();

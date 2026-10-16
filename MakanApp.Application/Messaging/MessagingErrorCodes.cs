@@ -49,6 +49,9 @@ public static class MessagingErrorCodes
     public const string PresentationInvalid = "MESSAGING_PRESENTATION_INVALID";
     public const string PresentationNotFound = "MESSAGING_PRESENTATION_NOT_FOUND";
     public const string PresentationConflict = "MESSAGING_PRESENTATION_CONFLICT";
+    public const string AdvancedManagementInvalid = "CONVERSATION_ADVANCED_MANAGEMENT_INVALID";
+    public const string InviteLinkUnavailable = "CONVERSATION_INVITE_LINK_UNAVAILABLE";
+    public const string MemberRestricted = "CONVERSATION_MEMBER_RESTRICTED";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";

@@ -2987,6 +2987,183 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInviteLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatorMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("CreatorRole")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("MaximumUses")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CreatorMembershipId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationInviteLinks", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationInviteLinks_CreatorContext", "([CreatorMembershipId] IS NULL AND [CreatorRole] IS NULL) OR ([CreatorMembershipId] IS NOT NULL AND [CreatorRole] IS NOT NULL AND [CreatorRole] IN (1,2,3,4))");
+
+                            t.HasCheckConstraint("CK_ConversationInviteLinks_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_ConversationInviteLinks_Hash", "LEN([TokenHash]) = 64");
+
+                            t.HasCheckConstraint("CK_ConversationInviteLinks_Uses", "[MaximumUses] BETWEEN 1 AND 10000 AND [UsedCount] BETWEEN 0 AND [MaximumUses]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationJoinRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("InviteLinkId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RequesterMembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("RequesterRole")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterMembershipId");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique()
+                        .HasFilter("[Status] = 1");
+
+                    b.HasIndex("InviteLinkId", "ConversationId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.HasIndex("UserId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationJoinRequests", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationJoinRequests_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_ConversationJoinRequests_Lifecycle", "([Status] = 1 AND [CompletedAtUtc] IS NULL) OR ([Status] <> 1 AND [CompletedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ConversationJoinRequests_RequesterContext", "([RequesterMembershipId] IS NULL AND [RequesterRole] IS NULL) OR ([RequesterMembershipId] IS NOT NULL AND [RequesterRole] IS NOT NULL AND [RequesterRole] IN (1,2,3,4))");
+
+                            t.HasCheckConstraint("CK_ConversationJoinRequests_Status", "[Status] IN (1,2,3,4,5)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationMemberRestriction", b =>
+                {
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DeniedCapabilities")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("ConversationId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ConversationMemberRestrictions", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationMemberRestrictions_Capabilities", "[DeniedCapabilities] BETWEEN 0 AND 7");
+
+                            t.HasCheckConstraint("CK_ConversationMemberRestrictions_Clear", "[IsBanned] = 1 OR [DeniedCapabilities] <> 0 OR [UntilUtc] IS NULL");
+
+                            t.HasCheckConstraint("CK_ConversationMemberRestrictions_Revision", "[Revision] > 0");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationOwnershipTransfer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3118,7 +3295,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ConversationParticipants", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 511 AND (([Role] = 2) OR [AdminPermissions] = 0)");
+                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 4095 AND (([Role] = 2) OR [AdminPermissions] = 0)");
 
                             t.HasCheckConstraint("CK_ConversationParticipants_CursorTimestamp", "([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)");
 
@@ -6674,6 +6851,68 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInviteLink", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("CreatorMembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationJoinRequest", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterMembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationInviteLink", null)
+                        .WithMany()
+                        .HasForeignKey("InviteLinkId", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationMemberRestriction", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

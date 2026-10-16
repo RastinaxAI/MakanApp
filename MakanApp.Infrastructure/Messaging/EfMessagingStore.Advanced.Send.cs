@@ -468,6 +468,8 @@ public sealed partial class EfMessagingStore
 
         if (conversation.Type is ConversationType.Group or ConversationType.Channel)
         {
+            await EnsureCapabilityNotRestrictedAsync(conversation.Id, userId,
+                messageKind == MessageKind.Text ? GroupMemberCapability.SendMessages : GroupMemberCapability.SendMedia, nowUtc, cancellationToken);
             if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && dbContext.Database.CurrentTransaction is not null)
             {
                 var members = await MessengerRelationshipQuery.ClassMembers(dbContext).Where(m => m.ClassId == conversation.AcademicClassId &&

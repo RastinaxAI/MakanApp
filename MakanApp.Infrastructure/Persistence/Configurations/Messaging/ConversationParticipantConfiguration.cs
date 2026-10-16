@@ -28,7 +28,7 @@ public sealed class ConversationParticipantConfiguration :
                 "[HistoryVisibleFromSequence] > 0");
             table.HasCheckConstraint(
                 "CK_ConversationParticipants_AdminPermissions",
-                "[AdminPermissions] BETWEEN 0 AND 511 AND (([Role] = 2) OR [AdminPermissions] = 0)");
+                "[AdminPermissions] BETWEEN 0 AND 4095 AND (([Role] = 2) OR [AdminPermissions] = 0)");
         });
         builder.HasKey(participant => participant.Id);
         builder.HasAlternateKey(participant => new

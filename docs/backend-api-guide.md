@@ -1725,3 +1725,7 @@ Production در startup به connection string امن SQL، security key، stora
 ### افزودهٔ Messenger P2 — سازمان‌دهی شخصی
 
 `GET/PUT /api/v1/conversations/saved/messages/{messageId}/labels`، `savedLabel` در Search، CRUD مالک‌محور `/api/v1/messaging/folders` و selector اختیاری `folderId` در فهرست گفتگو اضافه شده‌اند. Saved همان canonical قبلی است؛ پوشه فقط query مجاز جاری را پیش از pagination فیلتر می‌کند. قرارداد version، label normalization، filter/override/pin و خطاهای 400/404/412 در همان Handoff P2 آمده‌اند؛ هیچ مجوز گفتگو از پوشه یا برچسب به دست نمی‌آید.
+
+### افزودهٔ Messenger P2 — مدیریت Group/Channel و عضویت
+
+لینک دعوت hash-only، درخواست approval، permissionهای مستقل `ManageInvites`/`BanMembers`/`ChangeInfo`، مشخصات و محدودیت فردی نسخه‌دار اضافه شدند. endpointهای واقعی و قرارداد token یک‌بارقابل‌دریافت، expiry/revoke/max-use، 400/401/403/404/412 و current-state در [Handoff P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) آمده‌اند. token در body redeem است، نه URL API یا audit؛ Ban عضویت را پایان می‌دهد و Unban آن را زنده نمی‌کند. queue خصوصی است و عضویت مدرسه/Enrollment را خودکار ایجاد نمی‌کند. این API مدیریت دستی کلاس رسمی یا اختیار مرور private Direct نیست.

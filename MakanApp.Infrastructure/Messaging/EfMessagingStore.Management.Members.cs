@@ -105,6 +105,7 @@ public sealed partial class EfMessagingStore
             conversationId,
             accessContext,
             cancellationToken);
+        await EnsureCapabilityNotRestrictedAsync(conversation.Id, actorUserId, GroupMemberCapability.InviteMembers, nowUtc, cancellationToken);
         var canAdd = actor.Role == ConversationParticipantRole.Owner ||
                      actor.Role == ConversationParticipantRole.Admin &&
                      actor.AdminPermissions.HasFlag(ConversationAdminPermission.ManageMembers) ||
@@ -123,6 +124,7 @@ public sealed partial class EfMessagingStore
                 "کاربر از قبل عضو فعال گفتگو است.");
         }
 
+        await EnsureNotBannedAsync(conversation.Id, targetUserId, nowUtc, cancellationToken);
         await EnsureEligibleTargetAsync(
             actorUserId,
             targetUserId,
