@@ -1,5 +1,13 @@
 # ساختار فعلی دیتابیس MakanApp
 
+## افزودهٔ Messenger P0 — ۲۰۲۶-۱۰-۱۶
+
+Migration جدید `20261016050425_AddPersonalCommunicationAgeVerification`، شمار migration را به ۳۸ می‌رساند. تعداد جدول/ستون/PK/FK/index تغییر نکرده است. تنها CHECK موجود `identity.CommunicationAgeVerifications.CK_CommunicationAgeVerifications_Source` توسعه یافت: School/source=1 با OrganizationId غیرخالی؛ PlatformResolution/source=2 و PlatformVerification/source=3 با OrganizationId خالی. شاهد append-only، rowversion کاربر و audit موجود reuse می‌شوند؛ SQL default/backfill یا مدل سن موازی ایجاد نشده است.
+
+migration در SQL Server LocalDB ایزوله از صفر تست می‌شود؛ این سند اثبات schema سرور نیست و هیچ migration سرور اجرا نشد. در صورت وجود شاهد source=3، Down نمی‌تواند بدون تصمیم داده‌ای به constraint قدیمی برگردد؛ حذف شاهد یا rollback کور مجاز نیست. [workflow و شواهد P0](messaging/MESSENGER_P0_DELIVERY_AUDIT.md).
+
+## snapshot مبنا
+
 مدل طراحی EF Core در `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ بازبینی `2026-10-15`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
 **88 جدول، 901 ستون، 193 FK، 245 index مستقل از key و 238 CHECK؛ 37 Migration.**

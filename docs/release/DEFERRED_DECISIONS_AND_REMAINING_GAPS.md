@@ -44,4 +44,27 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 
 در همگام‌سازی جاری، schema خام MessageKind و OrganizationRole نوع integer داشت، ولی serialize همان CLR Enum با JsonOptions واقعی MVC خروجی رشته‌ای تولید کرد. literalهای مرجع مستندات از serializer واقعی استخراج و نوع خام OpenAPI جدا نشان داده شد. این اختلاف می‌تواند client generator را به نوع عددی نادرست هدایت کند؛ وجود schema عددی به معنی خروجی عددی Controller نیست. JsonStringEnumConverter ممکن است ورودی عددی را هم بپذیرد؛ canonical output و قواعد enum/Flags باید جدا حفظ شوند.
 
-وضعیت: OPEN_RUNTIME_OPENAPI_ALIGNMENT؛ تغییر transport اجراشده یا اصلاح کد برنامه در این کار مستندسازی مجاز/انجام نشده است. گام پیشنهادی مستقل: هم‌ترازکردن schema generation با MVC JsonOptions، با تست enum رشته‌ای/nullable/Flags و حفظ قرارداد فعلی؛ نیازی به تغییر تصمیم محصول یا تبدیل runtime به enum عددی نیست.
+وضعیت تاریخیِ کار مستندسازی: OPEN_RUNTIME_OPENAPI_ALIGNMENT؛ آن کار مجوز اصلاح runtime نداشت. وضعیت جاری Messenger P0 در ۲۰۲۶-۱۰-۱۶: **CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS**. HTTP JSON options با MVC هم‌تراز و type مفقود در .NET 9 با transformer کوچک تکمیل شد؛ enum/nullable/Flags اصلی حفظ شدند. `MessagingOpenApiContractTests`، JSON واقعی MVC/Hub، response واقعی Privacy و رد نام/bit ناشناخته را بررسی می‌کند. این closure اثبات انتشار OpenAPI روی سرور نیست.
+
+## مرز تحویل Messenger P0 — ۲۰۲۶-۱۰-۱۶
+
+مالک آزمون این تحویل را فقط محلی خواست؛ deploy یا REAL SERVER PASS مجاز/انجام‌شده نیست. [Handoff دقیق](../messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) و [ممیزی پذیرش](../messaging/MESSENGER_P0_DELIVERY_AUDIT.md) مرجع‌اند. این register مجوز اجرای خودکار P1 نیست.
+
+| شناسه | وضعیت جاری | شاهد یا مرز |
+|---|---|---|
+| B01 تأیید اولیهٔ سن شخصی | حل‌شده در کد | endpoint UsersManage + MFA تازه، شاهد append-only، rowversion/audit؛ بدون مدرسهٔ جعلی یا اعتماد به OTP/DOB خوداظهاری |
+| B02 اولین ارتباط Adult | حل‌شده در تست دوحسابی محلی | تأیید اولیه، کشف دوطرفه، Contact اختیاری و Direct canonical؛ Message Request یا consent subsystem جدید لازم نشد |
+| B03 وضعیت self | حل‌شده در کد | GET /api/v1/me/messaging-status؛ capability hint خود caller، نه مجوز دائمی یا وضعیت دیگران |
+| B08 Enum/OpenAPI | حل‌شده در کد/تست قرارداد | string/nullable/Flags بدون تغییر wire صحیح MVC/SignalR |
+| B04 Peer Read Receipt | **DEFERRED_TO_P1_B04** | cursorهای read/delivered فعلی self-only هستند؛ public peer state و قرارداد privacy جدید ساخته نشد |
+| B05 Push واقعی | P1، خارج P0 | اعلان داخلی و outbox پایه موجود؛ provider واقعی Push تحویل نشده و Sent/SignalR معادل Push نیست |
+| B06 Typing | P1، خارج P0 | command/event/TTL ساختگی وجود ندارد؛ به طراحی محدودیت/expiry مستقل نیاز دارد |
+| B07 Presence / Last Seen | P1، خارج P0 | online/last-seen از اتصال، recent contact یا read cursor حدس زده نمی‌شود؛ privacy و multi-device/expiry مستقل لازم است |
+| SignalR چند instance / backplane | ارتقای عملیاتی مستقل | P0 منبع حقیقت SQL/Delta و invalidation تک‌instance را دارد؛ ادعای scale-out/load انجام نمی‌شود |
+| Topics / Poll پیشرفته | P2 | خارج basic Group؛ مدل/endpoint placeholder ساخته نشده |
+| Scheduled messages / folders پیشرفته | P2 | نیازمند lifecycle و مجوز محصول مستقل؛ خارج P0 |
+| Calls / Video / Stories | P3 | سرویس تماس/رسانهٔ زنده و حالت جعلی تولید نشده |
+| Bots / Mini Apps / Premium / Monetization | P4 | خارج این تحویل و بدون API یا ادعای اجرایی |
+| Secret Chat / E2EE / RAG | خارج P0 | هیچ ادعای رمزگذاری سرتاسری یا قابلیت AI تازه ساخته نشد |
+
+این موارد معوق **blocker تکمیل P0 نیستند**. پذیرش/مهاجرت محیط Production، TLS، custody کلیدهای MFA و صحت providerهای واقعی همچنان عملیات مستقل خود را می‌خواهند؛ تست محلی به‌جای آن‌ها گزارش نمی‌شود. کد/تنظیم MeliPayamak و کار commit‌نشدهٔ AI این مرحله تغییر نکرده‌اند.

@@ -9,6 +9,7 @@ using MakanApp.Api.Configuration;
 using MakanApp.Api.Errors;
 using MakanApp.Api.Hosting;
 using MakanApp.Api.Observability;
+using MakanApp.Api.OpenApi;
 using MakanApp.Api.Platform;
 using MakanApp.Api.Realtime;
 using MakanApp.Application.Ai;
@@ -37,6 +38,9 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+// تولید OpenAPI از گزینه‌های HTTP JSON استفاده می‌کند، نه صرفاً تنظیم serializer در MVC.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services
     .AddAuthentication(SessionAuthenticationDefaults.Scheme)
     .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(
@@ -222,7 +226,7 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
     options.MaxAge = TimeSpan.FromDays(builder.Configuration.GetValue("Hosting:HstsDays", 365));
 });
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddSchemaTransformer<StringEnumSchemaTransformer>());
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>

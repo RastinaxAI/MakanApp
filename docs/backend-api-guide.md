@@ -1,10 +1,12 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. مبنای جاری `main@80d6a14` در `2026-10-15` است: ۲۸۴ عملیات HTTP در ۴۸ Controller، ۴۸۸ schema، ۸۸ جدول و ۳۷ Migration. مرجع HTTP و فرهنگ دیتابیس از metadata واقعی بازتولید شده‌اند؛ مثال‌های آموزشی این راهنما گزیده‌اند و فهرست کامل فیلدها در مرجع جاری است. گزارش‌ها و اعداد validation مرحله‌ایِ قدیمی‌تر، تاریخچهٔ همان اجرا هستند؛ جایگزین وضعیت جاری زیر یا اثبات deployment نیستند.
+این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. بازبینی Messenger P0 در `2026-10-16` از baseline مستقل `ab00901` انجام شد. سه endpoint تأیید اولیه/وضعیت self اضافه شده‌اند؛ snapshot فعلی ۲۸۷ عملیات HTTP در ۴۸ Controller، ۴۹۱ schema، ۸۸ جدول و ۳۸ Migration دارد. بستهٔ HTML/PDF و کاتالوگ تولیدشدهٔ `2026-10-15` تاریخچهٔ baseline هستند و در P0 بازتولید نشده‌اند؛ برای افزوده‌ها و رفتار جاری از [Handoff دقیق P0](messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) و OpenAPI runtime استفاده کنید. اعداد validation مرحله‌های قدیمی‌تر، جایگزین نتیجهٔ جاری یا اثبات deployment نیستند.
 
 ## وضعیت جاری و تغییرات مؤثر بر مطالعه
 
-اختلاف DOC-CONTRACT-01: OpenAPI خام بعضی Enumها را integer نشان می‌دهد، اما JsonOptions واقعی MVC خروجی رشته‌ای دارد. مرجع جدید literalها را با همان serializer استخراج و اختلاف را جدا مستند می‌کند؛ runtime در این مرحله تغییر نمی‌کند. برای ساخت client از OpenAPI، نوع Enum را بدون کنترل مرجع رشته‌ای فرض نکنید. [ثبت مورد باز](release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md).
+DOC-CONTRACT-01 / B08 در کد P0 اصلاح شد: گزینه‌های HTTP JSON با MVC هماهنگ و `StringEnumSchemaTransformer`، type حذف‌شدهٔ Enum در نسخهٔ جاری .NET 9 را تکمیل می‌کند. literal، nullable و Flags واقعی حفظ می‌شوند؛ JSON صحیح Controller/SignalR به عدد تبدیل نشده است. تست قرارداد، serializer واقعی MVC/Hub، OpenAPI، nullable، ترکیب Flags و رد نام/bit ناشناخته را بررسی می‌کند. [ثبت نتیجه](release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md).
+
+Messenger P0: تأیید اولیهٔ User شخصی با UsersManage/MFA تازه و شاهد append-only، self messaging-status، discovery دو Adult بدون شرط مدرسه، عدم خروج شماره در Username discovery و بررسی محدودیت actor در ساخت Direct افزوده/اصلاح شدند. Realtime علاوه بر نشست/حساب/بافت جاری، visibility دقیق event را از Delta می‌گیرد؛ FromJoin و state خصوصی قابل bypass با audience hint نیستند. پذیرش دوحسابی شامل پاسخ POST گم‌شده پس از commit، retry هم‌زمان، reply و reconnect فقط محلی اجرا می‌شود؛ REAL SERVER PASS ادعا نمی‌شود. [ممیزی و تست‌ها](messaging/MESSENGER_P0_DELIVERY_AUDIT.md).
 
 - Identity شامل access یک‌ساعته، refresh چرخشی با عمر مطلق ۳۰روزه و مدیریت نشست است. OTP ملی‌پیامک provider واقعی دارد، اما موفقیت تست خودکار تحویل SMS سرور را اثبات نمی‌کند.
 - onboarding مدرسه و Guardian در GAP-01 API عملیاتی دارند؛ دعوت اتصال حساب نیازمند پذیرش احرازشدهٔ صاحب حساب است و merge خودکار Person/User نداریم.
@@ -1282,6 +1284,8 @@ ConversationsController.SendMessage
 
 `clientMessageId` اثر retry را محدود می‌کند. receipt HTTP نتیجه commit است؛ SignalR می‌تواند دیرتر برسد یا اتصال قطع باشد. notification یک اشاره به تغییر است، نه payload کامل پیام خصوصی. Delta از `MessagingChangeEvent` مرجع بازیابی تغییرات بعد از cursor است. cursor delivered/read وضعیت خود کاربر است؛ از آن رسید خواندن همه مخاطبان نتیجه نگیرید.
 
+در P0، `MessagingRealtimeAudienceResolver` در scope تازه، `MessagingService.GetConversationChangesAsync` با limit=1 را برای همان cursor/type/resource اجرا می‌کند؛ مجوز container به‌تنهایی کافی نیست. حساب معلق، نشست منقضی/لغوشده، نقش یا سازمان نامعتبر، FromJoin، Clear، DeleteForMe و رویداد خصوصی فیلتر می‌شوند. Client فقط پس از پردازش صفحهٔ Delta checkpoint را جلو ببرد، نه صرف دریافت SignalR. پاسخ 429 جست‌وجو Retry-After دارد و در CORS قابل خواندن است؛ quota یا provider OTP تغییر نکرده است.
+
 processor در [MessagingRealtimeOutboxDispatcher.cs](../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs) تعریف شده است. claim با `UPDLOCK/READPAST/ROWLOCK`، batch حداکثر۵۰ و lease۳۰ثانیه‌ای انجام می‌شود؛ ارسال notifier خارج transaction claim است. از lease، retry و crash باید امکان ارسال تکراری notification را نتیجه گرفت؛ مصرف‌کننده با شناسه/نسخه و Delta باید تکرار را تحمل کند. backplane چند instance در این نسخه ثبت نشده است.
 
 مسیر مطالعه: [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) → [MessagingService](../MakanApp.Application/Messaging/MessagingService.cs) → [EfMessagingStore](../MakanApp.Infrastructure/Messaging/EfMessagingStore.cs) و فایل‌های partial → [dispatcher/processor](../MakanApp.Infrastructure/Messaging/MessagingRealtimeOutboxDispatcher.cs) → [SignalRMessagingRealtimeNotifier](../MakanApp.Api/Realtime/SignalRMessagingRealtimeNotifier.cs) → [MessagingSyncEndpointsTests](../tests/MakanApp.IntegrationTests/MessagingSyncEndpointsTests.cs).
@@ -1404,6 +1408,8 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 ## محدودیت‌ها و مسیر مطالعه
 
 ### مرز قابلیت موجود
+
+یادداشت P0: پاراگراف زیر خلاصهٔ تاریخی نسخهٔ اولیه است و برای تشخیص قابلیت جاری مرجع نیست؛ بخش «وضعیت جاری» ابتدای همین سند و Handoff P0 جای آن را برای تحویل فعلی می‌گیرند. محدودیت‌های واقعی Messenger شامل Peer Read Receipt عمومی، Push واقعی، Typing/Presence/Last Seen و scale-out هستند؛ CORS محیط Production همچنان allowlist است، نه بازِ عمومی.
 
 در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider واقعی، backplane چندinstance SignalR، Copilot، AI، Payment/Order و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. Commerce فقط Summary خواندنی مدیر و foundation داخلی Entitlement/Quota دارد؛ مدیریت Plan و Subscription به Backoffice آینده موکول شده است. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
 

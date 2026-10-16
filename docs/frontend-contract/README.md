@@ -1,10 +1,16 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-بازبینی `2026-10-15` از `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+## افزودهٔ جاری Messenger P0 — ۲۰۲۶-۱۰-۱۶
 
-پوشش جاری: 284 عملیات HTTP در 256 مسیر، ۴۸ Controller، 488 schema، ۸۸ جدول و ۳۷ Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+[قرارداد دقیق P0](../messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) مرجع افزوده‌های age verification، messaging-status، discovery، retry/realtime و Enum است. OpenAPI runtime همین نسخه، نمایش رشته‌ای/nullable/Flags را اصلاح کرده است؛ HTML/PDF قدیمی زیر دوباره تولید نشده‌اند. هیچ frontend تغییر نکرده و آزمون سرور/استقرار ادعا نمی‌شود.
 
-- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
+## بستهٔ مرجع baseline
+
+بازبینی بستهٔ `2026-10-15` از `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+
+پوشش بستهٔ baseline: 284 عملیات HTTP در 256 مسیر، ۴۸ Controller، 488 schema، ۸۸ جدول و ۳۷ Migration. افزودهٔ P0 سه endpoint و migration تأیید اولیه را دارد؛ اطلاعات baseline را وضعیت نهایی P0 فرض نکنید.
+
+- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): کاتالوگ تاریخی baseline.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
 - [UX مرجع اصلی](../project-context/03_Makan_User_Flows_and_Screens_UX_v1.0.pdf) و [نقشه Flow](../project-context/04_Flow.png) نیازمندی‌اند، نه اثبات وجود screen یا frontend در این workspace. اطلاعات snapshot قدیمی ۱۴۱ عملیات/۲۰ Migration وضعیت جاری نیست.
 
@@ -15,7 +21,7 @@
 - role، organization، membership و child جاری را سرور resolve می‌کند؛ selectorهای client مدرک مجوز نیستند. 401 ورود، 403 منع مجوز، 404 پنهان‌سازی/نبود منبع، 409/412 تضاد و 429 محدودیت باید از ProblemDetails/code خوانده شوند.
 - تمام listها یک شکل paging ندارند؛ پارامتر، بدنه، status و schema دقیق هر عملیات در مرجع جاری است. validation کسب‌وکاری فراتر از nullable/required در OpenAPI اجرا می‌شود.
 
-هشدار DOC-CONTRACT-01: OpenAPI خام این نسخه بعضی Enumها را integer معرفی می‌کند، در حالی که serializer واقعی MVC خروجی canonical رشته‌ای دارد. literalهای مرجع از همان JsonOptions استخراج شده‌اند؛ client را بدون کنترل این اختلاف از schema عددی تولید نکنید. runtime برنامه در این همگام‌سازی اصلاح نشده است.
+DOC-CONTRACT-01 مربوط به بستهٔ baseline بود؛ در P0 اصلاح کد و تست قرارداد انجام شد. برای code generation از OpenAPI runtime نسخهٔ P0 استفاده کنید؛ Flags رشته‌ایِ قابل ترکیب است و nullable حفظ شده است. ورودی ناشناخته permission ایجاد نمی‌کند.
 
 ## ورود، نشست و OTP
 

@@ -99,3 +99,55 @@ Validation این فاز: focused=10 موفق؛ restore و Build با صفر war
 نکات آموزشی: مجوز container با مجوز آیتم یکی نیست؛ audience hint جای authorization رویداد را نمی‌گیرد؛ replay باید visibility فعلی را بسنجد؛ صفحه‌بندی پایدار به tie-breaker نیاز دارد؛ حذف Contact/عضو/پیام سه lifecycle جدا هستند. مسیر مطالعه: notifier → audience resolver → `MessagingService.GetConversationChangesAsync` → `EfMessagingStore.Sync` → file bound-access resolver → تست‌های P0 و Group/Channel موجود.
 
 Validation کامل فاز چهارم: focused=11 موفق؛ restore/build موفق با صفر warning/error؛ Unit=413، Integration=721، Architecture=14، مجموع **1148 passed، صفر failed/skipped**. شاهد TRX در `.artifacts/messenger-p0/tests/group-full` است. schema و package عوض نشدند و migration تازه لازم نبود.
+
+فاز چهارم در `3b5569bbdd0010b646b5f7fb9a357e552c28b9f3` ثبت شد؛ Build/Test پس از commit نیز ۱۱۴۸ موفق، push و fetch/برابری با origin/main موفق بودند.
+
+## فاز پنجم — OpenAPI و قرارداد P0
+
+`MessagingOpenApiContractTests` پنج case جدید دارد: همهٔ Enumهای exposeشدهٔ Messaging و ۱۵ نوع الزامی، serialization واقعی MVC/SignalR، response واقعی Privacy، nullable MessageKind، ترکیب Flags و دو ورودی نام/bit ناشناخته. پیش از اصلاح، سه case واقعاً schema عددی را رد کردند. فرض تست دربارهٔ 400 برای bit ناشناخته تصحیح شد: رفتار امن فعلی 403/CONVERSATION_PERMISSION_REQUIRED است؛ نام ناشناخته در binding برابر 400 است. permission/version عوض نمی‌شود و Admin بدون Publish همچنان نمی‌تواند منتشر کند.
+
+افزودن ConfigureHttpJsonOptions به‌تنهایی literalها را اصلاح کرد، اما با بستهٔ `Microsoft.AspNetCore.OpenApi 9.0.5` روی .NET 9، type برای enum عادی/nullable حذف می‌شد؛ تست‌ها همچنان شکست خوردند. `StringEnumSchemaTransformer` فقط type:string را مطابق serializer واقعی MVC تکمیل می‌کند؛ enum، nullability و Flags native حفظ می‌شوند، package/framework upgrade یا تبدیل JSON صحیح به عدد انجام نشد. پنج تست متمرکز پس از اصلاح موفق شدند؛ اجرای کامل نهایی جدا ثبت می‌شود.
+
+Handoff P0، راهنمای API، تصمیم‌های محصول و register معوق به‌روز می‌شوند؛ بستهٔ HTML/PDF قدیمی با baseline خودش علامت خورده است، نه اینکه بازتولیدنشده را جاری معرفی کنیم. هیچ frontend، AI/RAG، تنظیم SMS یا فایل خصوصی انتشار تغییر نکرده است.
+
+## ماتریس پذیرش محلی P0
+
+همهٔ PASSهای این جدول **LOCAL SQL SERVER / TESTSERVER PASS** هستند، نه REAL SERVER PASS. حساب‌های پذیرش اولیهٔ شخصی از API واقعی OTP آزمایشی/profile و تأیید سن با TOTP واقعی عبور می‌کنند؛ fixtureهای regression قدیمی علاوه بر آن برای setup محدود، سن/عضویت را seed می‌کنند. هیچ school membership جعلی برای دو حساب Personal لازم نشد.
+
+| مورد | نتیجه | شاهد اجرایی مهم |
+|---|---|---|
+| T01 کشف دوطرفه | PASS محلی | `VerifiedPersonalAdultsDiscoverContactAndConcurrentlyCreateOneDirectWithoutSchool` |
+| T02 Contact/reload/rename/version/delete | PASS محلی | همان تست و `ContactCrudIsPrivateIdempotentAndDoesNotMutateTargetProfile`؛ saved name/favorite خصوصی، stale=412 |
+| T03 Direct هم‌زمان A↔B | PASS محلی | شش POST و یک ردیف canonical در SQL؛ unique/transaction موجود |
+| T04 اولین پیام/گفتگوی جدید | PASS محلی | `PersonalAdultsReceiveFirstConversationReplyAndReconnectAfterLostSuccessfulPost`؛ اتصال B پیش از ساخت Direct و بدون Subscribe قبلی |
+| T05 reply/sequence | PASS محلی | همان تست؛ event به A و sequence بعدی؛ history سه پیام مرتب |
+| T06 disconnect/reconnect | PASS محلی | همان تست؛ outbox در زمان قطع dispatch شده، reconnect و Delta/history پیام ازدست‌رفته را بازیابی می‌کنند |
+| T07 نتیجه نامعلوم POST | PASS محلی | پاسخ موفق پس از commit عمداً دور انداخته می‌شود؛ retry ترتیبی/هم‌زمان یک Message/Change/Notification دارد؛ payload متفاوت=409 |
+| T08 policy/422 | PASS محلی | `ProtectedSendUsesDurableSafetyOutcome`، `ChildSafetyBlockedAttemptCreatesNoMessageNotificationOutbox` و `RealInternalProviderPersistsReviewForUnsupportedMediaAndBlocksUnsafeEdits`؛ عدم Sent/اثر ساختگی؛ draft UI خارج backend است |
+| T09 429/Retry-After | PASS محلی | `Discovery429ExposesRetryAfterToBrowserWithoutChangingOtpLimits`؛ limiter کوچک injectشده و handler/CORS واقعی، نه load test quota محیط |
+| T10 Peer Read | **DEFERRED_TO_P1_B04** | cursor فعلی self-only؛ تست عدم نشت private ReadCursor، peer receipt عمومی تولید نمی‌کند |
+| T11 attachment/download | PASS محلی | `ReadyImageAndVoiceAreAuthorizedRetainedMediaWithoutStoragePathDisclosure` و دو case حذف عضو Group/Channel |
+| T12 edit/delete جاری | PASS محلی | mutation/window/revision tests و `RemovedGroupOrChannelMemberLosesFilesMutationsDeltaSearchAndRealtime` |
+| T13 Push واقعی | خارج P0 / B05 | provider واقعی پیاده نشده؛ دریافت SignalR یا اعلان داخلی معادل Push نیست |
+| T14 Publish/SendMedia | PASS محلی | `ChannelMemberCannotPublishButAdminCanAndCreationRetryIsStable`، `GroupMemberCapabilitiesSeparateTextAndMediaPublishing` و تست دو مقدار permission ناشناخته |
+| T15 چند صفحه گفتگو | PASS محلی | `ConversationPaginationIsStableAcrossThirtyOneTiedRowsAndActivityRefresh`؛ ۳۱ ردیف، صفحهٔ ۷تایی، tie و refetch؛ بدون ادعای snapshot اتمیک زیر mutation |
+| T16 phone anti-enumeration | PASS محلی | `PhoneDiscoveryIsExactOneWayAndIndependentFromPhoneVisibility` و `UsernameDiscoveryNeverIncludesPhoneEvenWhenTargetMakesPhonePublic` |
+| T17 Minor/Unknown/شناسه | PASS محلی | `ApprovedPolicyProtectedAccountCannotBeGloballyDiscoveredOrContactedByStranger`، `ProtectedCallerCannotGloballyDiscoverUnrelatedAdult` و تست‌های guardian/manager private boundary |
+| T18 Block/restriction | PASS محلی | `BlockIsDirectionalIdempotentAndReauthorizesOfflineDirectSend`، `RestrictedCallerCannotStartDirectAndDirectoryDoesNotAdvertiseThatPermission` و race هنگام safety |
+| T19 حذف عضو/مجوز آینده | PASS محلی | دو case Group/Channel؛ REST/Delta/media/file/search/mutation/Hub و مجموعهٔ receiverهای SQL؛ مالک همچنان مجاز است |
+| T20 نسخهٔ کهنه | PASS محلی | `ModeratorDeleteRequiresExplicitPermissionAndWorksBeyondSenderWindow`، Contact/Privacy conflict و رقابت تأیید سن؛ overwrite خاموش مجاز نیست |
+| T21 Typing/Presence | خارج P0 / B06/B07 | state یا event ساختگی ساخته نشد |
+| T22 Search/history scope | PASS محلی | `SearchUsesCurrentEditExcludesDeletedRevisionAndPaginatesWithOpaqueCursor`، `FromJoinBoundaryAppliesToSearchFilesDeltaAndReplayedRealtimeMessage`، تست‌های cross-org/official class |
+| T23 session لغوشده | PASS محلی | `RevokedSessionCannotContinueRealtimeSubscription`، تست دوحسابی و `RealtimeAudienceRechecksAccountAndBothSessionExpiries` |
+
+Group/Channel پایه از کد قبلی reuse می‌شوند: create/retry، Owner/Admin/Member، add/remove/leave، transfer/آخرین Owner، public/private، history و permissionهای server-side در suite اجرا شده‌اند. حذف یک assignment مدرسه، نقش مدرسهٔ دیگر یا هویت Personal را از بین نمی‌برد؛ `EndingOneSchoolAssignmentDoesNotRevokeOtherSchoolOrPersonalConversation` و `GuardianCommunicationIsScopedAndRevocationDoesNotExposePrivateChildHistory` شاهد‌اند. Unknown/Minor، تغییر سن، پایان رابطه، Content Safety واقعی داخلی و unavailable fail-closed از GAP-05 حفظ شده‌اند.
+
+## Validation نهایی — اجرای اول
+
+restore و build واقعی موفق با **صفر warning/error**؛ Unit=413، Integration=726، Architecture=14؛ مجموع **1153 executed/passed، صفر failed و صفر skipped**. نسبت به baseline همین worktree، ۹ Unit و ۲۸ Integration تازه اضافه شد؛ هیچ تستی حذف/disable نشد. شواهد در `.artifacts/messenger-p0/tests/final-first` هستند. تکرار نهایی و Git gate جداگانه بررسی می‌شوند و این بخش به‌تنهایی ادعای اتمام Git نیست.
+
+snapshot نهایی بدون اتصال SQL، worker، SMS یا AI: **۲۸۷ عملیات، ۲۵۹ path، ۴۸ Controller، ۴۹۱ schema، ۸۸ جدول، ۳۸ Migration**؛ `.artifacts/messenger-p0/contracts/final`. فقط migration تأیید اولیه به ۳۷ مورد baseline افزوده شد. `has-pending-model-changes` با startup Infrastructure/DesignTimeFactory موفق بود و تغییر مدل pending وجود ندارد. نخستین تلاش با startup Api به دلیل private بودن EF Design assembly شکست ابزار بود؛ فرمان صحیح طبق script موجود مخزن اجرا شد، نه نصب package یا تغییر نسخه.
+
+مرز تحویل: هیچ تست/تغییر سرور، deploy یا migration Production اجرا نشده است. HTML/PDF قدیمی frontend-contract بازتولید نشده و صریحاً baseline معرفی شده‌اند؛ Handoff P0 و OpenAPI runtime مرجع افزوده‌های جدیدند. فایل‌های dirty AI workspace اصلی، شامل register معوقِ جداگانهٔ آن workspace، منتقل/ویرایش/stage نشده‌اند.
+
+تکرار نهایی build/test نیز موفق شد: **صفر warning/error، Unit=413، Integration=726، Architecture=14، مجموع 1153 passed، صفر failed/skipped**؛ شواهد `.artifacts/messenger-p0/tests/final-repeat`. تطبیق خودکارِ ۳۷ full route درج‌شده در Handoff با OpenAPI، صفر مسیر ناشناخته داشت. commit/push فاز پنجم فقط پس از review explicit staged files و موفقیت validation انجام می‌شود و hash/remote نهایی در گزارش تحویل اعلام خواهد شد.

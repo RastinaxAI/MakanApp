@@ -139,3 +139,13 @@ Initial verification، School verification و conflict resolution یکی نیس�
 `GET /api/v1/me/messaging-status` فقط راهنمای self با verification/effective category/action/next action/version است؛ authorization token یا روش پرس‌وجوی وضعیت فرد دیگر نیست. actionهای protected به رابطهٔ جاری وابسته‌اند؛ minor/unknown همچنان عمومی کشف نمی‌شوند و Group خصوصی به معنی مجوز Channel یا Group عمومی نیست. هر endpoint مقصد، policy جاری را دوباره بررسی می‌کند.
 
 مالک آزمون پذیرش این تحویل را صریحاً **فقط محلی** خواسته است. هیچ تغییر یا تست روی سرور مجاز این مرحله نیست؛ شواهد LocalDB/TestServer/Kestrel محلی نباید به‌عنوان REAL SERVER PASS یا استقرار Production گزارش شوند. این تصمیم، سیاست امنیتی GAP-05 را عوض نمی‌کند.
+
+## نتیجهٔ تکمیلی P0 — قرارداد و مجوز رویداد
+
+- تست دو Verified Adult با تأیید اولیه و بدون school membership نشان داد جریان discover → Contact اختیاری → canonical Direct برقرار است؛ B02 به مدل Message Request جدید نیاز ندارد. مسیر protected همچنان رابطه/رضایت مصوب می‌خواهد و eligibility هر دو طرف سنجیده می‌شود.
+- Username search/resolve حتی در صورت عمومی‌بودن visibility شماره، شماره نمی‌دهند. exact phone resolve و profile/contact مجاز همچنان privacy مستقل مقصد را رعایت می‌کنند. محدودیت ارسال actor در ساخت Direct هم اعمال می‌شود؛ history حذف نمی‌شود.
+- مجوز conversation به‌تنهایی مجوز هر event نیست. Realtime باید visibility همان Delta را برای cursor/type/resource داشته باشد؛ FromJoin، Clear، DeleteForMe و state خصوصی در replay نیز معتبرند. audience hint فقط candidateها را محدود می‌کند و جای authorization نیست.
+- JSON canonical رشته‌ای MVC/SignalR حفظ می‌شود؛ OpenAPI باید همان string/nullable/Flags را بگوید، نه اینکه runtime صحیح برای schema عددی تغییر کند. مقادیر/bit ناشناخته مجوز نمی‌دهند؛ parser عدد معتبر قدیمی فعلاً سازگاری دارد.
+- read/delivered فعلی private self-state باقی‌اند؛ بستن نشت یک event خصوصی، Peer Read Receipt عمومی ایجاد نمی‌کند. B04، Push، Typing، Presence و قابلیت‌های پیشرفتهٔ ثبت‌شده در register، خارج P0 هستند.
+
+این افزوده رفتار امنیتی مصوب را روشن می‌کند؛ Role مدرسه مجوز private chat نمی‌شود، GuardianRelation private history کودک را نمی‌گشاید، و Minor/Unknown یا failure Safety با verified adult آزاد جایگزین نشده‌اند. [قرارداد مصرف جاری](../messaging/MESSENGER_P0_FRONTEND_HANDOFF.md).
