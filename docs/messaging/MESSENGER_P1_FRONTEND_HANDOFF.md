@@ -2,6 +2,25 @@
 
 این سند فقط قرارداد Backend است؛ هیچ frontend یا service worker در این worktree ساخته/ویرایش نمی‌شود. افزوده‌های هر فاز پس از validation ثبت می‌شوند. مبنای قبلی [Handoff P0](MESSENGER_P0_FRONTEND_HANDOFF.md) و مرجع JSON، OpenAPI runtime همین build است.
 
+## دستگاه‌ها و subscription خصوصی
+
+همان رجیستری `PushDeviceRegistration` موجود گسترش یافته است؛ subsystem دوم ساخته نشده است. همهٔ مسیرهای زیر Bearer session فعال می‌خواهند و مالک را از نشست می‌گیرند، نه از body:
+
+| Method / Route | ورودی | خروجی / خطا |
+|---|---|---|
+| `GET /api/v1/notifications/devices` | `page=1&pageSize=30&includeRevoked=false`؛ سقف pageSize برابر ۱۰۰ | `PushDevicePageResult` فقط metadata خود کاربر، `isActive` و `version` |
+| `POST /api/v1/notifications/devices` | `platform:"Android"` یا `"Ios"`، `pushToken`؛ `expectedVersion` اختیاری | شناسهٔ ثابت registration، platform، زمان‌ها و version؛ نه token |
+| `POST /api/v1/notifications/devices/web-push` | `endpoint`، `p256dh`، `auth`، `expectedVersion` اختیاری | همان `PushDeviceRegistrationResult` امن |
+| `DELETE /api/v1/notifications/devices/{registrationId}` | شناسهٔ متعلق به خود کاربر | `204`؛ شناسهٔ دیگران/قبلاً لغوشده `404` |
+
+کلیدهای subscription استاندارد Base64url هستند: public P-256 معتبر ۶۵ بایت و auth برابر ۱۶ بایت؛ سرور شکل canonical بدون padding را ذخیره می‌کند. مقصد فقط HTTPS پورت ۴۴۳، بدون userinfo/fragment/IP literal و در allowlist دقیق `Notifications:WebPush:AllowedEndpointHosts` پذیرفته می‌شود؛ wildcard یا suffix-match وجود ندارد. نبود allowlist، `503 notification_push_unavailable` می‌دهد. این مرحله هنوز ارسال واقعی provider را ادعا نمی‌کند.
+
+ثبت مجدد همان token/endpoint و همان کلیدها برای همان حساب idempotent و دارای شناسهٔ ثابت است. برای **تغییر کلیدهای endpoint موجود**، version جاری از list/آخرین پاسخ لازم است؛ نسخهٔ قدیمی `409 notification_preference_concurrency_conflict` می‌دهد. token فعالِ حساب دیگر منتقل نمی‌شود (`409 notification_device_conflict`). تغییر token واقعی، ثبت مقصد جدید و سپس لغو شناسهٔ قدیمی است. session جدید همان حساب می‌تواند registration را refresh کند؛ آخرین session ثبت‌کننده، عمر دسترسی مقصد را تعیین می‌کند. لغو/انقضای همان session ارسال آینده را متوقف می‌کند؛ دستگاه‌های سایر sessionها مستقل‌اند.
+
+فهرست فقط `id/platform/createdAtUtc/lastSeenAtUtc/revokedAtUtc/isActive/version` می‌دهد؛ endpoint، token، auth، p256dh، hash و session credential افشا نمی‌شوند. زمان‌ها UTC با پسوند `Z` هستند. mutationها سقف ۶۰ درخواست در دقیقه برای هر کاربر دارند؛ `429` و `Retry-After` نشانهٔ throttling هستند، نه خطای permission. خطای ورودی `400 notification_preference_invalid` است. خود list مجوز خواندن چت یا فایل نمی‌دهد.
+
+Migration `20261016081315_ExtendPushDeviceSubscriptions` فقط دو ستون nullable و CHECK سازگاری کلیدها را به جدول موجود اضافه می‌کند. رکورد Web قدیمی بدون کلید حفظ می‌شود، اما برای ارسال Web Push باید subscription معتبر مجدداً ثبت شود؛ داده یا کلید ساختگی backfill نمی‌شود. Down کلیدها را حذف می‌کند و برای rollback عملیاتی نیازمند بررسی/backup است.
+
 ## Peer Read و یک/دو تیک
 
 - HTTP receipt پیام با `status=Sent` فقط commit سرور را ثابت می‌کند؛ می‌توان آن را server-accepted/یک تیک نمایش داد. Delivered یا دریافت SignalR به معنی خواندن نیست.

@@ -183,6 +183,12 @@ public static class DependencyInjection
         services.AddScoped<INotificationPreferenceResolver, NotificationPreferenceResolver>();
         services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
         services.AddScoped<IPushDeviceService, PushDeviceService>();
+        services.AddSingleton(new PushDeviceOptions
+        {
+            AllowedWebPushHosts = configuration.GetSection("Notifications:WebPush:AllowedEndpointHosts")
+                .GetChildren().Select(item => item.Value?.Trim()).Where(value => !string.IsNullOrEmpty(value))
+                .Select(value => value!).ToArray()
+        });
         services.AddScoped<INotificationDeliveryCoordinator, NotificationDeliveryCoordinator>();
         services.AddScoped<IOutbox, EfOutbox>();
         services.AddScoped<OutboxProcessor>();

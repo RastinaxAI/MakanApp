@@ -4193,6 +4193,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserSessionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("WebPushAuth")
+                        .HasMaxLength(22)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(22)");
+
+                    b.Property<string>("WebPushP256dh")
+                        .HasMaxLength(87)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(87)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TokenHash")
@@ -4208,6 +4218,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("PushDeviceRegistrations", "notification", t =>
                         {
                             t.HasCheckConstraint("CK_PushDeviceRegistrations_Platform", "[Platform] IN (1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_PushDeviceRegistrations_WebKeys", "([WebPushP256dh] IS NULL AND [WebPushAuth] IS NULL) OR ([Platform] = 3 AND [WebPushP256dh] IS NOT NULL AND LEN([WebPushP256dh]) = 87 AND [WebPushAuth] IS NOT NULL AND LEN([WebPushAuth]) = 22)");
                         });
                 });
 

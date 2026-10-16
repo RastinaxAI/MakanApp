@@ -38,6 +38,20 @@ public sealed class PushDeviceRegistration
     public DateTime LastSeenAtUtc { get; private set; }
     public DateTime? RevokedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public string? WebPushP256dh { get; private set; }
+    public string? WebPushAuth { get; private set; }
+
+    public void SetWebPushKeys(string? p256dh, string? auth)
+    {
+        if (Platform != PushDevicePlatform.Web)
+        {
+            if (p256dh is not null || auth is not null) throw new ArgumentException("کلید Web Push برای دستگاه موبایل مجاز نیست.");
+        }
+        else if (p256dh?.Length != 87 || auth?.Length != 22)
+            throw new ArgumentException("کلیدهای subscription معتبر نیستند.");
+        WebPushP256dh = p256dh;
+        WebPushAuth = auth;
+    }
 
     public static PushDeviceRegistration Create(
         Guid userId,
@@ -70,7 +84,7 @@ public sealed class PushDeviceRegistration
         Platform = platform;
         PushToken = pushToken.Trim();
         TokenHash = tokenHash.ToArray();
-        LastSeenAtUtc = lastSeenAtUtc;
+        LastSeenAtUtc = lastSeenAtUtc > LastSeenAtUtc ? lastSeenAtUtc : LastSeenAtUtc;
     }
 
     public void Revoke(DateTime revokedAtUtc)

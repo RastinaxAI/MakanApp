@@ -37,13 +37,31 @@ public sealed record NotificationPreferenceItem(
 
 public sealed record RegisterPushDeviceCommand(
     PushDevicePlatform Platform,
-    string PushToken);
+    string PushToken,
+    string? P256dh = null,
+    string? Auth = null,
+    string? ExpectedVersion = null);
+
+public sealed record RegisterWebPushCommand(string Endpoint, string P256dh, string Auth, string? ExpectedVersion = null);
+
+public sealed record PushDeviceListQuery(int Page = 1, int PageSize = 30, bool IncludeRevoked = false);
+
+public sealed record PushDeviceListItem(Guid Id, PushDevicePlatform Platform, DateTime CreatedAtUtc,
+    DateTime LastSeenAtUtc, DateTime? RevokedAtUtc, bool IsActive, string Version);
+
+public sealed record PushDevicePageResult(IReadOnlyCollection<PushDeviceListItem> Items, int Page, int PageSize, int TotalCount);
+
+public sealed class PushDeviceOptions
+{
+    public IReadOnlyCollection<string> AllowedWebPushHosts { get; init; } = [];
+}
 
 public sealed record PushDeviceRegistrationResult(
     Guid Id,
     PushDevicePlatform Platform,
     DateTime CreatedAtUtc,
-    DateTime LastSeenAtUtc);
+    DateTime LastSeenAtUtc,
+    string? Version = null);
 
 public sealed record EffectiveNotificationPreference(
     Guid UserId,
@@ -70,6 +88,7 @@ public static class NotificationPreferenceErrorCodes
     public const string ConcurrencyConflict = "notification_preference_concurrency_conflict";
     public const string DeviceNotFound = "notification_device_not_found";
     public const string DeviceConflict = "notification_device_conflict";
+    public const string PushUnavailable = "notification_push_unavailable";
 }
 
 public sealed class NotificationPreferenceException(string code, string message) : Exception(message)

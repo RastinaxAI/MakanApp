@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Notification;
 
-public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
+public sealed partial class EfNotificationPreferenceStore(MakanDbContext dbContext) :
     INotificationPreferenceStore,
     IPushDeviceStore,
     INotificationDeliveryStore
@@ -56,14 +56,6 @@ public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
                        dbContext.Users.Any(user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active),
             cancellationToken);
 
-    public Task<PushDeviceRegistration?> GetActiveByTokenHashAsync(
-        byte[] tokenHash,
-        CancellationToken cancellationToken) =>
-        dbContext.PushDeviceRegistrations.SingleOrDefaultAsync(
-            registration => registration.RevokedAtUtc == null &&
-                            registration.TokenHash.SequenceEqual(tokenHash),
-            cancellationToken);
-
     public Task<PushDeviceRegistration?> GetForUpdateAsync(
         Guid registrationId,
         Guid userId,
@@ -73,9 +65,6 @@ public sealed class EfNotificationPreferenceStore(MakanDbContext dbContext) :
                             registration.UserId == userId &&
                             registration.RevokedAtUtc == null,
             cancellationToken);
-
-    public void Add(PushDeviceRegistration registration) =>
-        dbContext.PushDeviceRegistrations.Add(registration);
 
     public async Task<IReadOnlyCollection<Guid>> GetActivePushDeviceIdsAsync(
         Guid userId,

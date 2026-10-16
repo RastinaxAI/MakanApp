@@ -1676,6 +1676,10 @@ Platform permission مجوز خواندن دلخواه Direct، Contacts یا ف
 - تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.
 - OpenAPI جاری در `/openapi/v1.json` قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.
 
+## رجیستری Push در Messenger P1
+
+علاوه بر POST/DELETE دستگاه موجود، `GET /api/v1/notifications/devices` فهرست paginated و خصوصی metadata و `POST /api/v1/notifications/devices/web-push` ورودی استاندارد `endpoint/p256dh/auth/expectedVersion` را ارائه می‌کنند. تمام مسیرها authenticated و owner-scoped هستند؛ token و کلیدها هیچ‌گاه در پاسخ list/register نیستند. Web به allowlist دقیق HTTPS در `Notifications:WebPush:AllowedEndpointHosts` نیاز دارد؛ نبود آن `503 notification_push_unavailable` است. تغییر کلید endpoint موجود version جاری می‌خواهد؛ conflict برابر ۴۰۹، ورودی نامعتبر ۴۰۰ و throttling mutation برابر ۴۲۹ با Retry-After است. سقف ثبت/لغو ۶۰ درخواست در دقیقه به‌ازای کاربر است. [قرارداد و migration](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md). ثبت subscription به‌تنهایی اثبات ارسال/دریافت واقعی Push نیست.
+
 <a id="production-hardening"></a>
 ## سخت‌سازی Production — STEP 16
 

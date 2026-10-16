@@ -1,5 +1,19 @@
 # ممیزی و شواهد تحویل Messenger P1
 
+## فاز سوم — گسترش رجیستری موجود
+
+`PushDeviceService` ورودی Web Push و نسخه را validate می‌کند و `EfNotificationPreferenceStore.Devices` ثبت را در تراکنش Serializable با UPDLOCK/HOLDLOCK روی hash مقصد انجام می‌دهد. token فعال بین حساب‌ها منتقل نمی‌شود؛ refresh هم‌حساب و retry هم‌زمان شناسهٔ ثابت دارند. تغییر کلید Web به rowversion جاری نیاز دارد. رجیستری جدید یا کپی Identity/Session ساخته نشده است.
+
+Controller موجود اکنون list خصوصی و POST web-push دارد؛ POST موبایل/DELETE قبلی حفظ شده‌اند. list فقط metadata امن و زمان UTC می‌دهد. پیکربندی تازه فقط allowlist عمومی host مقصد است؛ appsettings، OTP، AI و سرور تغییر نکرده‌اند. اعتبارسنجی endpoint HTTPS و کلید P-256 در Application است؛ حفاظت DNS/socket و ارسال استاندارد رمز‌شده متعلق به فاز provider بعدی‌اند و هنوز ادعا نمی‌شوند.
+
+Migration `20261016081315_ExtendPushDeviceSubscriptions` دو ستون nullable `varchar(87)` و `varchar(22)` و CHECK هماهنگی platform/کلیدها را به جدول موجود اضافه می‌کند. Web قدیمیِ بدون کلید باقی می‌ماند؛ re-register لازم است. PK/FK، unique active token hash و rowversion موجود reuse شده‌اند. Down دادهٔ کلیدها را حذف می‌کند؛ اجرای کورکورانهٔ آن توصیه نمی‌شود. هیچ migration روی دیتابیس معمول توسعه یا سرور اعمال نشده است.
+
+۱۰ Unit برای endpoint/کلید و ۹ Integration برای CRUD، حریم خصوصی، دو نشست واقعی یک حساب، race موبایل/Web، rotation با نسخه، pagination، پاسخ throttling و OpenAPI اضافه شده‌اند. focused نخست ۸ passed و اجرای قبلی به همراه ۹ regression موجود ۱۵ passed بود. fixture اولیه Base64 معمولی را به Base64url اصلاح کرد؛ سپس assert دقیق نقطهٔ خارج منحنی نشان داد Windows به‌جای CryptographicException، PlatformNotSupportedException می‌دهد. مسیر production این خطای محدود را به validation تبدیل می‌کند، نه bypass؛ یک agreement واقعی نیز import تنبل را می‌سنجد. ورودی نقطهٔ نامعتبر باید HTTP 400 بدهد، نه 500. اجرای Unit اصلاح‌شده ۱۰ passed است. نتیجهٔ full/final جدا پس از اجرا ثبت می‌شود.
+
+Validation فاز سوم: restore موفق؛ full نخست Unit=425، Integration=764، Architecture=14 و مجموع 1203 passed داشت. پس از افزودن تست throttling و دقیق‌کردن تست منحنی، شکست Unit بالا دیده و رفع شد؛ اجرای قدیمی آن suite متوقف و suite کامل دوباره اجرا شد. نتیجهٔ نهایی **Unit=425، Integration=765، Architecture=14، Total=1204 passed، failed=0، skipped=0**، در `registration-final-fixed` است. Build نهایی صفر warning/error و EF pending-model check موفق بود. یک build زودهنگام هنگام اجرای testhost به قفل DLL ویندوز با MSB3027 برخورد کرد؛ بدون تغییر امنیت/نسخه، پس از پایان تست و با اجرای ترتیبی رفع شد. شواهد شکست‌ها حذف نشده‌اند و به‌جای validation موفق گزارش نمی‌شوند.
+
+Git فاز دوم که پیش از شروع رجیستری بسته شد: `90fea9b78bfe5f76e63e2eeff52b11b8048f5038` با پیام `feat(notifications): harden messenger delivery recovery`؛ push و fetch/ls-remote موفق و remote برابر HEAD بود. commit فاز سوم پس از review همین validation انجام می‌شود؛ ارسال خارجی واقعی همچنان تأیید نشده است.
+
 ## مبنا و مرز
 
 شروع ۲۰۲۶-۱۰-۱۶ از `52181b6dda4b2c002a236c4c6f3aa193161cdaa9`، برابر `origin/main` پس از fetch، در worktree تمیز `D:\Project\MakanApp\MakanApp-Backend-Messenger-P0`. شاخهٔ همین worktree `messenger/p0` و upstream موجود `origin/main` حفظ می‌شوند؛ برای commitهای P1 از push عادی `HEAD:main` استفاده می‌شود. workspace اصلی دارای کار commit‌نشدهٔ AI بازنویسی، reset، stash، clean یا منتقل نمی‌شود.

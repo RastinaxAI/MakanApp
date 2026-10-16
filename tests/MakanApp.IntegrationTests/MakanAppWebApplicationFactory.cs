@@ -181,6 +181,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.RemoveAll<IAiServiceClient>();
             services.AddSingleton<IAiServiceClient, RecordingAiServiceClient>();
             services.RemoveAll<NotificationDeliveryOptions>();
+            services.RemoveAll<PushDeviceOptions>();
+            services.AddSingleton(new PushDeviceOptions { AllowedWebPushHosts = ["push.example.test"] });
             services.AddSingleton(new NotificationDeliveryOptions
             {
                 BatchSize = 50,

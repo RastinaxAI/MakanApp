@@ -19,6 +19,10 @@ public interface INotificationPreferenceService
 
 public interface IPushDeviceService
 {
+    Task<PushDevicePageResult> GetPageAsync(Guid userId, Guid sessionId, PushDeviceListQuery query, CancellationToken cancellationToken);
+
+    Task<PushDeviceRegistrationResult> RegisterWebPushAsync(Guid userId, Guid sessionId, RegisterWebPushCommand command, CancellationToken cancellationToken);
+
     Task<PushDeviceRegistrationResult> RegisterAsync(
         Guid userId,
         Guid sessionId,
@@ -68,14 +72,15 @@ public interface INotificationPreferenceStore
 
 public interface IPushDeviceStore
 {
+    Task<PushDeviceRegistration> UpsertAsync(Guid userId, Guid sessionId, RegisterPushDeviceCommand command,
+        byte[] tokenHash, DateTime nowUtc, CancellationToken cancellationToken);
+
+    Task<PushDevicePageResult> GetPageAsync(Guid userId, PushDeviceListQuery query, DateTime nowUtc, CancellationToken cancellationToken);
+
     Task<bool> IsActiveSessionAsync(
         Guid sessionId,
         Guid userId,
         DateTime nowUtc,
-        CancellationToken cancellationToken);
-
-    Task<PushDeviceRegistration?> GetActiveByTokenHashAsync(
-        byte[] tokenHash,
         CancellationToken cancellationToken);
 
     Task<PushDeviceRegistration?> GetForUpdateAsync(
@@ -83,7 +88,6 @@ public interface IPushDeviceStore
         Guid userId,
         CancellationToken cancellationToken);
 
-    void Add(PushDeviceRegistration registration);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 

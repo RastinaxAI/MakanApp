@@ -145,6 +145,7 @@ public sealed class GlobalExceptionHandler(
             NotificationPreferenceErrorCodes.ConcurrencyConflict => StatusCodes.Status409Conflict,
             NotificationPreferenceErrorCodes.DeviceNotFound => StatusCodes.Status404NotFound,
             NotificationPreferenceErrorCodes.DeviceConflict => StatusCodes.Status409Conflict,
+            NotificationPreferenceErrorCodes.PushUnavailable => StatusCodes.Status503ServiceUnavailable,
             MessagingErrorCodes.ConversationNotFound => StatusCodes.Status404NotFound,
             "AGE_VERIFICATION_INVALID" => StatusCodes.Status400BadRequest,
             "AGE_SUBJECT_NOT_FOUND" => StatusCodes.Status404NotFound,

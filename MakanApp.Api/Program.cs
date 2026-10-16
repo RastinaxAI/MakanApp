@@ -128,6 +128,10 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("notification-device", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 60)));
     options.AddPolicy("file-upload", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
@@ -154,7 +158,8 @@ builder.Services.AddRateLimiter(options =>
         var isOtp = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/auth/otp",
             StringComparison.OrdinalIgnoreCase);
-        if (isMessagingDiscovery && context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        var isNotificationDevice = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/notifications/devices", StringComparison.OrdinalIgnoreCase);
+        if ((isMessagingDiscovery || isNotificationDevice) && context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
         {
             context.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retryAfter.TotalSeconds))
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);

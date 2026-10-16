@@ -10,7 +10,12 @@ public sealed class PushDeviceRegistrationConfiguration : IEntityTypeConfigurati
     public void Configure(EntityTypeBuilder<PushDeviceRegistration> builder)
     {
         builder.ToTable("PushDeviceRegistrations", "notification", table =>
-            table.HasCheckConstraint("CK_PushDeviceRegistrations_Platform", "[Platform] IN (1, 2, 3)"));
+        {
+            table.HasCheckConstraint("CK_PushDeviceRegistrations_Platform", "[Platform] IN (1, 2, 3)");
+            table.HasCheckConstraint("CK_PushDeviceRegistrations_WebKeys",
+                "([WebPushP256dh] IS NULL AND [WebPushAuth] IS NULL) OR " +
+                "([Platform] = 3 AND [WebPushP256dh] IS NOT NULL AND LEN([WebPushP256dh]) = 87 AND [WebPushAuth] IS NOT NULL AND LEN([WebPushAuth]) = 22)");
+        });
         builder.HasKey(registration => registration.Id);
         builder.Property(registration => registration.PushToken)
             .HasMaxLength(PushDeviceRegistration.MaximumTokenLength)
@@ -22,6 +27,8 @@ public sealed class PushDeviceRegistrationConfiguration : IEntityTypeConfigurati
         builder.Property(registration => registration.LastSeenAtUtc).HasColumnType("datetime2(7)");
         builder.Property(registration => registration.RevokedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(registration => registration.RowVersion).IsRowVersion();
+        builder.Property(registration => registration.WebPushP256dh).HasMaxLength(87).IsUnicode(false);
+        builder.Property(registration => registration.WebPushAuth).HasMaxLength(22).IsUnicode(false);
         builder.HasIndex(registration => registration.TokenHash)
             .IsUnique()
             .HasFilter("[RevokedAtUtc] IS NULL")
