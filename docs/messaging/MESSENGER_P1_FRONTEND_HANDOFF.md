@@ -21,6 +21,42 @@
 
 Migration `20261016081315_ExtendPushDeviceSubscriptions` فقط دو ستون nullable و CHECK سازگاری کلیدها را به جدول موجود اضافه می‌کند. رکورد Web قدیمی بدون کلید حفظ می‌شود، اما برای ارسال Web Push باید subscription معتبر مجدداً ثبت شود؛ داده یا کلید ساختگی backfill نمی‌شود. Down کلیدها را حذف می‌کند و برای rollback عملیاتی نیازمند بررسی/backup است.
 
+## Web Push و FCM واقعی در کد
+
+`Notifications:PushProvider=WebPushAndFcm`، platform برابر Web را به `WebPushNotificationProvider` و Android/Ios را به `FcmPushNotificationProvider` می‌فرستد. Development همچنان فقط Development/Testing است؛ Unavailable موفقیت ساختگی نمی‌دهد. نبود/خرابی credential، وضعیت unavailable/configuration failure می‌دهد؛ ثبت subscription، SignalR، Sent و حتی پذیرش provider، اثبات نمایش روی دستگاه نیستند. در این تحویل credential و دستگاه واقعی فراهم نشده‌اند: **P1_PUSH_RUNTIME_PENDING**.
+
+`GET /api/v1/notifications/devices/web-push/configuration` با session معتبر فقط `{isConfigured,vapidPublicKey}` می‌دهد؛ نبود تنظیم لازم، false/null است. private key، مسیر credential و token سرور هرگز در این DTO نیستند. این endpoint فقط آمادگی تنظیم‌شدهٔ Web transport را اعلام می‌کند، نه صحت نهایی شبکه یا مجوز مرورگر.
+
+گردش Web: پس از ورود، config عمومی را بگیرید؛ frontend تحت مالکیت خودش با اقدام صریح کاربر permission و subscription استاندارد مرورگر/service worker را دریافت می‌کند؛ endpoint و کلیدهای Base64url را به POST web-push می‌دهد و شناسه/version پاسخ را نگه می‌دارد. برای rotation همان endpoint نسخهٔ جاری لازم است؛ برای endpoint جدید ثبت تازه و لغو registration قدیمی انجام شود. هنگام logout، registration را در صورت دسترسی لغو کنید؛ حتی اگر کلاینت offline باشد، session منقضی/لغوشده در worker مجاز به ارسال آینده نیست. مرورگر/PWA به secure context مانند HTTPS یا localhost مجاز نیاز دارد؛ استثنای HTTP قبلی API این محدودیت مرورگر و mixed-content را رفع نمی‌کند.
+
+گردش موبایل: SDK کلاینت Firebase token مقصد را دریافت و فقط با session خود کاربر به POST devices با `platform:"Android"` یا `"Ios"` ثبت می‌کند. تغییر token، ثبت مقصد جدید و لغو شناسهٔ قدیمی است. service-account JSON و OAuth access token **فقط در Backend** هستند. برای iOS، permission دستگاه و credential معتبر APNs در پروژهٔ Firebase لازم‌اند؛ هیچ فایل/کد موبایل در این repository ساخته نشده است. [مرجع رسمی FCM](https://firebase.google.com/docs/cloud-messaging/send/v1-api).
+
+Payload خارجی برای همهٔ حساب‌ها، از جمله Minor/Unknown، عمومی و حداقلی است: notificationId، type، tag، عنوان/متن عمومی، deepLink و فقط برای پیام conversationId. نام فرستنده، متن خصوصی، شماره، اسم فایل، سن، رابطهٔ والد، مدرسه و علت safety/moderation ارسال نمی‌شوند. token FCM صرفاً مقصد ضروری envelope است، نه metadata اعلان. Web payload با استاندارد Web Push رمز می‌شود؛ این کار E2EE چت نیست. [کتابخانهٔ transport](https://github.com/tpeczek/Lib.Net.Http.WebPush).
+
+برای پیام، navigation target برابر `makan://conversations/{conversationId}` و برای سایر اعلان‌ها `makan://notifications/{notificationId}` است. این‌ها URI معنایی Backend هستند، نه ادعای وجود route وب یا handler آماده در frontend. service worker/app باید پس از ورود آن‌ها را به صفحهٔ مجاز خودش map کند و دادهٔ تازه را از REST بگیرد؛ شناسه یا payload Push مجوز چت نیست. اعلان‌های تکراری با tag ثابت NotificationId جایگزین/dedupe شوند؛ ACK provider نه Read Receipt است و نه exactly-once شبکه.
+
+تنظیم‌های عملیاتی، فقط از secret/config محیط و **نه با commit credential**:
+
+| Setting | مقدار/رفتار |
+|---|---|
+| `Notifications:PushProvider` | `WebPushAndFcm` برای transport واقعی |
+| `Notifications:WebPush:VapidSubject` | URI عمومی تماس از نوع mailto یا HTTPS؛ نمونهٔ غیرواقعی `mailto:push-ops@example.test` |
+| `Notifications:WebPush:VapidPublicKey` | public P-256 متناظر subscription مرورگر؛ در API عمومی authenticated قابل دریافت |
+| `Notifications:WebPush:VapidPrivateKey` | secret خارجی Base64url؛ هرگز در repo، Docker image، frontend یا log قرار نگیرد |
+| `Notifications:WebPush:AllowedEndpointHosts` | آرایهٔ host دقیق provider مورداعتماد؛ بدون scheme، path یا wildcard؛ از subscription واقعی و مرجع provider تعیین شود |
+| `Notifications:WebPush:TimeToLiveSeconds` | پیش‌فرض ۳۶۰۰؛ بازهٔ ۰ تا ۸۶۴۰۰ |
+| `Notifications:Fcm:ProjectId` | شناسهٔ واقعی پروژهٔ Firebase |
+| `Notifications:Fcm:ServiceAccountPath` | مسیر مطلق فایل service-account خارجی؛ fallback نام محیط `GOOGLE_APPLICATION_CREDENTIALS` |
+| `Notifications:Fcm:TimeToLiveSeconds` | پیش‌فرض ۳۶۰۰؛ بازهٔ ۰ تا ۸۶۴۰۰ |
+
+در environment variables جداکنندهٔ `:` را `__` بنویسید؛ مثلاً `Notifications__PushProvider`. برای آرایه، `Notifications__WebPush__AllowedEndpointHosts__0` یک host دقیق واقعی است، نه دامنهٔ نمونه. روی Windows فایل credential خارج Publish و با Read محدود به identity اجرای IIS/سرویس باشد؛ روی Linux/Docker مسیر مطلق و secret mount فقط‌خواندنی با کمترین ACL لازم استفاده شود. نمونهٔ مسیر غیرمحرمانه: `C:\MakanSecrets\firebase-service-account.json` یا `/run/secrets/firebase-service-account.json`. فایل JSON نباید در Git، build context، image یا command output وارد شود. پس از rotation کلیدهای server، process را با تنظیم جدید restart کنید؛ SDK توکن OAuth را در حافظه cache/refresh می‌کند.
+
+FCM فقط service_account همان ProjectId، token URI ثابت Google و scope محدود Firebase Messaging را می‌پذیرد؛ external-account، پروژهٔ دیگر یا token server دلخواه رد می‌شود. Web Push redirect و proxy ندارد؛ DNS مقصد باید فقط IP عمومی بدهد و همان IP بررسی‌شده به socket وصل می‌شود؛ TLS validation استاندارد خاموش نمی‌شود. بنابراین direct HTTPS egress به provider لازم است و محیط proxy-only نیازمند تصمیم عملیاتی مستقل است. HttpClient loggers این دو transport خاموش‌اند تا endpoint/token در URI یا header وارد log نشود.
+
+۴۰۴/۴۱۰ Web و خطای typed `UNREGISTERED`/token-invalid در FCM مقصد را با محافظ rowversion لغو می‌کنند. خطای credential/project/payload عمومی باعث لغو token سالم نمی‌شود؛ ۴۲۹ با حداقل یک دقیقه و Retry-After و خطای موقت با backoff محدود retry می‌شوند. مقدار غیرمعقول Retry-After بیش از یک روز terminal failure است، نه overflow یا ارسال زودهنگام. بدنهٔ خطای Web وارد exception نمی‌شود و پاسخ FCM سقف ۱۶ KiB دارد. [تفکیک خطاهای رسمی FCM](https://firebase.google.com/docs/cloud-messaging/error-codes).
+
+پذیرش قبلی provider را نمی‌توان پس از revoke از شبکه پس گرفت؛ preview عمومی و مجوز مجدد REST ضروری‌اند. TTL و بودجهٔ retry محدودند. پس از اصلاح config، تلاش‌های terminal قدیمی خودکار بازپخش نمی‌شوند؛ endpoint مدیریتی resend ساخته نشده است. هیچ appsettings موجود، تنظیم OTP ملی‌پیامک، سرور یا AI در این فاز تغییر نکرده است.
+
 ## Peer Read و یک/دو تیک
 
 - HTTP receipt پیام با `status=Sent` فقط commit سرور را ثابت می‌کند؛ می‌توان آن را server-accepted/یک تیک نمایش داد. Delivered یا دریافت SignalR به معنی خواندن نیست.

@@ -19,8 +19,10 @@ public sealed class DevelopmentPushNotificationProvider(
     }
 }
 
-public sealed class UnavailablePushNotificationProvider : IPushNotificationProvider
+public sealed class UnavailablePushNotificationProvider : IPushNotificationProvider, IPushClientConfigurationProvider
 {
+    public WebPushClientConfiguration GetWebPushConfiguration() => new(false, null);
+
     public Task<DeliveryProviderResult> SendAsync(
         PushNotificationDelivery delivery,
         CancellationToken cancellationToken)

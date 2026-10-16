@@ -37,7 +37,11 @@ public sealed record PushNotificationDelivery(
     string Body,
     string DeepLink,
     PushDevicePlatform Platform = PushDevicePlatform.Android,
-    string? RegistrationVersion = null)
+    string? RegistrationVersion = null,
+    string? WebPushP256dh = null,
+    string? WebPushAuth = null,
+    NotificationType? Type = null,
+    Guid? ConversationId = null)
 {
     public override string ToString() => $"PushNotificationDelivery {{ DeliveryAttemptId = {DeliveryAttemptId}, NotificationId = {NotificationId} }}";
 }

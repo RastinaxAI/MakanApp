@@ -9,8 +9,12 @@ namespace MakanApp.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/notifications/devices")]
-public sealed class NotificationDevicesController(IPushDeviceService deviceService) : ControllerBase
+public sealed class NotificationDevicesController(IPushDeviceService deviceService, IPushClientConfigurationProvider clientConfiguration) : ControllerBase
 {
+    [HttpGet("web-push/configuration")]
+    [ProducesResponseType<WebPushClientConfiguration>(StatusCodes.Status200OK)]
+    public ActionResult<WebPushClientConfiguration> GetWebPushConfiguration() => Ok(clientConfiguration.GetWebPushConfiguration());
+
     [HttpGet]
     [ProducesResponseType<PushDevicePageResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<PushDevicePageResult>> GetPage(CancellationToken cancellationToken,

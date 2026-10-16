@@ -221,6 +221,7 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
 
     private static string ProviderAvailability(object provider) => provider switch
     {
+        MessengerPushNotificationProvider messengerPush => messengerPush.Availability,
         UnavailablePushNotificationProvider or UnavailableNotificationSmsProvider => "Unavailable",
         DevelopmentPushNotificationProvider or DevelopmentNotificationSmsProvider => "Development",
         _ => "Configured"

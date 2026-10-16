@@ -57,9 +57,9 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 | B03 وضعیت self | حل‌شده در کد | GET /api/v1/me/messaging-status؛ capability hint خود caller، نه مجوز دائمی یا وضعیت دیگران |
 | B08 Enum/OpenAPI | حل‌شده در کد/تست قرارداد | string/nullable/Flags بدون تغییر wire صحیح MVC/SignalR |
 | B04 Peer Read Receipt | **CLOSED_IN_P1_CODE_AND_LOCAL_TESTS** | GET read-states و event اختصاصی Direct با current privacy/eligibility/history؛ cursorهای read/delivered خود کاربر همچنان خصوصی؛ Group/Channel per-member receipt ندارند؛ مرجع: Handoff P1 |
-| B05 Push واقعی | P1، خارج P0 | اعلان داخلی و outbox پایه موجود؛ provider واقعی Push تحویل نشده و Sent/SignalR معادل Push نیست |
-| B06 Typing | P1، خارج P0 | command/event/TTL ساختگی وجود ندارد؛ به طراحی محدودیت/expiry مستقل نیاز دارد |
-| B07 Presence / Last Seen | P1، خارج P0 | online/last-seen از اتصال، recent contact یا read cursor حدس زده نمی‌شود؛ privacy و multi-device/expiry مستقل لازم است |
+| B05 Push واقعی | P1 code/local transport tests؛ runtime pending | Web Push/VAPID و FCM HTTP v1، رجیستری و worker پایدار پیاده شده‌اند؛ credential/device واقعی ارائه نشده است. P1_PUSH_RUNTIME_PENDING؛ Sent/SignalR/provider acceptance به معنی دریافت دستگاه نیست |
+| B06 Typing | P2 / خارج تحویل مصوب P1 جاری | command/event/TTL ساختگی وجود ندارد؛ به طراحی محدودیت/expiry مستقل نیاز دارد |
+| B07 Presence / Last Seen | P2 / خارج تحویل مصوب P1 جاری | online/last-seen از اتصال، recent contact یا read cursor حدس زده نمی‌شود؛ privacy و multi-device/expiry مستقل لازم است |
 | SignalR چند instance / backplane | ارتقای عملیاتی مستقل | P0 منبع حقیقت SQL/Delta و invalidation تک‌instance را دارد؛ ادعای scale-out/load انجام نمی‌شود |
 | Topics / Poll پیشرفته | P2 | خارج basic Group؛ مدل/endpoint placeholder ساخته نشده |
 | Scheduled messages / folders پیشرفته | P2 | نیازمند lifecycle و مجوز محصول مستقل؛ خارج P0 |

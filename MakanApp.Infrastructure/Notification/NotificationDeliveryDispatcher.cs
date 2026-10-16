@@ -238,7 +238,11 @@ public sealed partial class NotificationDeliveryProcessor(
                     content.Body,
                     content.DeepLink,
                     device.Platform,
-                    Convert.ToBase64String(device.RowVersion)),
+                    Convert.ToBase64String(device.RowVersion),
+                    device.WebPushP256dh,
+                    device.WebPushAuth,
+                    notification.Type,
+                    notification.ResourceType == NotificationResourceType.Conversation ? notification.ResourceId : null),
                 null,
                 null);
         }
@@ -328,9 +332,9 @@ public sealed partial class NotificationDeliveryProcessor(
     private TimeSpan CalculateRetryDelay(int attemptCount, DeliveryProviderResult result)
     {
         var multiplier = 1L << Math.Clamp(attemptCount - 1, 0, 20);
-        var ticks = Math.Min(
-            options.MaximumRetryDelay.Ticks,
-            options.InitialRetryDelay.Ticks * multiplier);
+        var ticks = options.InitialRetryDelay.Ticks > options.MaximumRetryDelay.Ticks / multiplier
+            ? options.MaximumRetryDelay.Ticks
+            : options.InitialRetryDelay.Ticks * multiplier;
         var delay = TimeSpan.FromTicks(ticks);
         if (result.FailureReason == NotificationDeliveryFailureReason.ProviderRateLimited && delay < TimeSpan.FromMinutes(1))
             delay = TimeSpan.FromMinutes(1);

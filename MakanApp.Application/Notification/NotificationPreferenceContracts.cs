@@ -40,9 +40,15 @@ public sealed record RegisterPushDeviceCommand(
     string PushToken,
     string? P256dh = null,
     string? Auth = null,
-    string? ExpectedVersion = null);
+    string? ExpectedVersion = null)
+{
+    public override string ToString() => $"RegisterPushDeviceCommand {{ Platform = {Platform} }}";
+}
 
-public sealed record RegisterWebPushCommand(string Endpoint, string P256dh, string Auth, string? ExpectedVersion = null);
+public sealed record RegisterWebPushCommand(string Endpoint, string P256dh, string Auth, string? ExpectedVersion = null)
+{
+    public override string ToString() => "RegisterWebPushCommand";
+}
 
 public sealed record PushDeviceListQuery(int Page = 1, int PageSize = 30, bool IncludeRevoked = false);
 
@@ -54,6 +60,13 @@ public sealed record PushDevicePageResult(IReadOnlyCollection<PushDeviceListItem
 public sealed class PushDeviceOptions
 {
     public IReadOnlyCollection<string> AllowedWebPushHosts { get; init; } = [];
+}
+
+public sealed record WebPushClientConfiguration(bool IsConfigured, string? VapidPublicKey);
+
+public interface IPushClientConfigurationProvider
+{
+    WebPushClientConfiguration GetWebPushConfiguration();
 }
 
 public sealed record PushDeviceRegistrationResult(

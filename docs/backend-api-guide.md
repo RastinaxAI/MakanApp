@@ -1680,6 +1680,8 @@ Platform permission مجوز خواندن دلخواه Direct، Contacts یا ف
 
 علاوه بر POST/DELETE دستگاه موجود، `GET /api/v1/notifications/devices` فهرست paginated و خصوصی metadata و `POST /api/v1/notifications/devices/web-push` ورودی استاندارد `endpoint/p256dh/auth/expectedVersion` را ارائه می‌کنند. تمام مسیرها authenticated و owner-scoped هستند؛ token و کلیدها هیچ‌گاه در پاسخ list/register نیستند. Web به allowlist دقیق HTTPS در `Notifications:WebPush:AllowedEndpointHosts` نیاز دارد؛ نبود آن `503 notification_push_unavailable` است. تغییر کلید endpoint موجود version جاری می‌خواهد؛ conflict برابر ۴۰۹، ورودی نامعتبر ۴۰۰ و throttling mutation برابر ۴۲۹ با Retry-After است. سقف ثبت/لغو ۶۰ درخواست در دقیقه به‌ازای کاربر است. [قرارداد و migration](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md). ثبت subscription به‌تنهایی اثبات ارسال/دریافت واقعی Push نیست.
 
+`GET /api/v1/notifications/devices/web-push/configuration` فقط config عمومی authenticated یعنی `isConfigured/vapidPublicKey` می‌دهد. provider واقعی `Notifications:PushProvider=WebPushAndFcm`، Web را با Web Push/VAPID و Android/Ios را با FCM HTTP v1 می‌فرستد؛ کلید خصوصی و فایل service-account خارجی‌اند. payload پیام عمومی و دارای notificationId/conversationId/type/deepLink/tag است، نه متن خصوصی یا سن/مدرسه/رابطه. مقصد معنایی پیام `makan://conversations/{id}` است و client پس از ورود باید REST مجاز را بخواند. Delivered داخلی یعنی پذیرش provider، نه نمایش یا read. تست adapter با HTTP کنترل‌شده و SQL محلی وجود دارد؛ دریافت روی دستگاه واقعی هنوز **P1_PUSH_RUNTIME_PENDING** است. تنظیم‌ها، HTTPS مرورگر، APNs iOS، خطاها و محدودیت‌های runtime در Handoff بالا آمده‌اند؛ تنظیم OTP ملی‌پیامک تغییر نکرده است.
+
 <a id="production-hardening"></a>
 ## سخت‌سازی Production — STEP 16
 

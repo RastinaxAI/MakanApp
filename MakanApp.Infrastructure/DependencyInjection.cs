@@ -328,11 +328,18 @@ public static class DependencyInjection
         {
             services.AddSingleton<IPushNotificationProvider, UnavailablePushNotificationProvider>();
         }
+        else if (pushProvider.Equals("WebPushAndFcm", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddMessengerPushTransports(configuration);
+        }
         else
         {
             throw new InvalidOperationException(
-                "Notifications:PushProvider must be Development or Unavailable until an approved provider contract exists.");
+                "Notifications:PushProvider must be Development, Unavailable or WebPushAndFcm.");
         }
+
+        services.AddSingleton<IPushClientConfigurationProvider>(provider =>
+            provider.GetRequiredService<IPushNotificationProvider>() as IPushClientConfigurationProvider ?? new UnavailablePushNotificationProvider());
 
         var smsProvider = configuration["Notifications:SmsProvider"]?.Trim() ?? defaultProvider;
         if (smsProvider.Equals("Development", StringComparison.OrdinalIgnoreCase))
