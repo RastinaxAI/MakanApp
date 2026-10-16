@@ -59,6 +59,7 @@ public sealed partial class EfMessagingStore(
             await using var transaction = await dbContext.Database.BeginTransactionAsync(
                 IsolationLevel.Serializable,
                 cancellationToken);
+            await EnsureActorCanMessageAsync(actorUserId, nowUtc, cancellationToken);
             if (await HasEffectiveUserBlockAsync(actorUserId, targetUserId, cancellationToken))
             {
                 throw RecipientNotAvailable();

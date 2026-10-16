@@ -142,7 +142,7 @@ public sealed class MessagingDirectoryService(
             take,
             cancellationToken);
         return new PeopleSearchPageResult(
-            result.Items.Select(item => MapProfile(userId, item)).ToArray(),
+            result.Items.Select(item => MapProfile(userId, item, includePhoneNumber: false)).ToArray(),
             page,
             pageSize,
             result.HasMore);
@@ -194,7 +194,7 @@ public sealed class MessagingDirectoryService(
             }
         }
 
-        return new PeopleResolveResult(true, MapProfile(userId, record));
+        return new PeopleResolveResult(true, MapProfile(userId, record, includePhoneNumber: hasPhone));
     }
 
     public async Task<MessagingPublicProfileResult> GetPublicProfileAsync(
@@ -274,10 +274,11 @@ public sealed class MessagingDirectoryService(
 
     private static MessagingPublicProfileResult MapProfile(
         Guid requesterUserId,
-        MessagingProfileStoreRecord record)
+        MessagingProfileStoreRecord record,
+        bool includePhoneNumber = true)
     {
         var requesterIsTarget = requesterUserId == record.UserId;
-        var phoneVisible = (!record.IsProtectedAccount || requesterIsTarget) && MessagingPrivacyPolicy.Allows(
+        var phoneVisible = includePhoneNumber && (!record.IsProtectedAccount || requesterIsTarget) && MessagingPrivacyPolicy.Allows(
             record.PhoneNumberVisibilityAudience,
             record.TargetHasSavedRequester,
             requesterIsTarget);

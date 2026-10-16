@@ -61,7 +61,17 @@ public sealed class PlatformOperationsEndpointsTests(MakanAppWebApplicationFacto
         var users = await ownerClient.GetFromJsonAsync<PlatformUserPage>(
             "/api/admin/v1/users?page=1&pageSize=100",
             JsonOptions);
-        var user = Assert.Single(users!.Items, item => item.UserId == target.User.Id);
+        // دادهٔ تست‌های دیگر ممکن است با ساعت جلوتر ساخته شده باشد؛ صفحهٔ اول تمام حساب‌ها نیست.
+        var allUsers = users!.Items.ToList();
+        for (var page = 2; allUsers.Count < users.TotalCount; page++)
+        {
+            var nextPage = (await ownerClient.GetFromJsonAsync<PlatformUserPage>(
+                $"/api/admin/v1/users?page={page}&pageSize=100", JsonOptions))!;
+            Assert.NotEmpty(nextPage.Items);
+            allUsers.AddRange(nextPage.Items);
+        }
+        Assert.Equal(users.TotalCount, allUsers.Select(item => item.UserId).Distinct().Count());
+        var user = Assert.Single(allUsers, item => item.UserId == target.User.Id);
         Assert.NotNull(user.MaskedPhone);
         Assert.Contains('*', user.MaskedPhone!);
         Assert.NotEqual(target.User.PhoneNumber, user.MaskedPhone);

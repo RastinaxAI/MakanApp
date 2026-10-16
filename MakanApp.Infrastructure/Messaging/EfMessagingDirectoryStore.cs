@@ -420,6 +420,10 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         var requesterIsAdult = await dbContext.Users.AnyAsync(u => u.Id == requesterUserId &&
             u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified, cancellationToken);
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
+        var requesterCanMessage = await dbContext.Users.AnyAsync(u => u.Id == requesterUserId &&
+            u.AccountStatus == UserAccountStatus.Active &&
+            (u.MessagingRestrictedUntilUtc == null || u.MessagingRestrictedUntilUtc <= nowUtc), cancellationToken);
         var relatedIds = requesterIsAdult && identities.All(i => !i.IsProtected) ? [] :
             await MessengerRelationshipQuery.RelatedUsers(dbContext, requesterUserId, clock.GetUtcNow().UtcDateTime)
                 .Where(id => validUserIds.Contains(id)).ToHashSetAsync(cancellationToken);
@@ -441,7 +445,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 contact?.IsFavorite ?? false,
                 blockedUserIds.Contains(identity.UserId),
                 identity.IsProtected,
-                requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId));
+                requesterCanMessage && (requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId)));
         }
 
         return result;
@@ -460,9 +464,14 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
     private IQueryable<User> DiscoverableAccounts(Guid requesterId)
     {
         var related = MessengerRelationshipQuery.RelatedUsers(dbContext, requesterId, clock.GetUtcNow().UtcDateTime);
+        var requester = dbContext.Users.Where(u => u.Id == requesterId &&
+            u.AccountStatus == UserAccountStatus.Active && u.ProfileCompletedAtUtc != null && u.PersonId != null);
         return dbContext.Users.AsNoTracking().Where(u => u.AccountStatus == UserAccountStatus.Active &&
+            requester.Any() &&
             (u.Id == requesterId || u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified || related.Contains(u.Id)));
+             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified &&
+             requester.Any(a => a.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
+                 a.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified) || related.Contains(u.Id)));
     }
 
     private static bool IsUniqueConflict(DbUpdateException exception) =>

@@ -57,3 +57,17 @@ Migration `20261016050425_AddPersonalCommunicationAgeVerification` فقط CHECK 
 Validation کامل پس از اصلاح: restore/build موفق، صفر warning/error؛ Unit=413، Integration=704، Architecture=14، مجموع **1131 passed، صفر failed، صفر skipped**. شواهد TRX در `.artifacts/messenger-p0/tests/eligibility-full` است. این فقط نتیجهٔ فاز اول است؛ P0 کامل و پذیرش دوحسابی هنوز ادعا نمی‌شود.
 
 نکات آموزشی این فاز: OTP مالکیت شماره است نه اثبات سن؛ state machine اولیه و حل تعارض دو عملیات‌اند؛ rowversion با idempotency یکی نیست؛ check و append شاهد باید اتمیک باشند؛ UI capability hint جای authorization مقصد را نمی‌گیرد. مسیر مطالعه: Controller → service/status policy → مدل شاهد → store → EF configuration/migration → Unit و Integration نام‌برده.
+
+فاز اول در `ed1ea0b7c6319ccf18d3e4fd0a18780870b87066` با پیام `fix(messaging): complete personal messaging eligibility` ثبت شد. Build و همهٔ ۱۱۳۱ تست پس از commit نیز موفق شدند؛ push عادی و fetch، برابری HEAD با origin/main را تأیید کردند.
+
+## فاز دوم — Discovery / Contacts / Direct
+
+`PlatformMfaPersonalDirectoryEndpointsTests` پنج case پذیرش واقعی HTTP/SQL محلی اضافه می‌کند. دو Adult با OTP آزمایشی، تکمیل پروفایل، تأیید اولیهٔ مجاز و TOTP واقعی وارد می‌شوند؛ discovery دوطرفه، Contact یک‌طرفه، add تکراری، rename/favorite/reload، stale version، حذف بدون حذف history و شش درخواست هم‌زمان A↔B روی یک Direct بررسی می‌شوند. هیچ Membership یا PersonalCommunicationGrant برای این زنجیره ساخته نمی‌شود؛ بنابراین **B02 به Message Request یا مدل رضایت جدید نیاز ندارد**.
+
+چهار case ابتدا شکست واقعی داشتند: خروج شمارهٔ عمومی از Username discovery، کشف Adult نامرتبط توسط دو حالت Minor/Unknown و تبلیغ قابلیت ساخت Direct برای actor محدودشده. اصلاح‌ها محدود به mapping خروجی Application و query/transaction موجود Infrastructure هستند. Username search/resolve مستقل از تنظیم visibility شماره، `phoneNumber=null` می‌دهد؛ resolve دقیق شماره و profile/contact مستقل همچنان privacy مصوب مقصد را رعایت می‌کنند. discovery عمومی فقط میان دو Verified Adult است؛ مسیر رابطه/رضایت موجود برای حساب محافظت‌شده حذف نشده است. محدودیت جاری actor در ساخت Direct و hint همان capability اعمال می‌شود؛ history قبلی حذف نمی‌شود. Controller، قرارداد ورودی و schema دیتابیس تغییر ندارند و migration جدیدی لازم نیست.
+
+نکات آموزشی: سیاست output redaction با اجازهٔ discovery یکی نیست؛ eligibility باید هر دو سوی ارتباط را بسنجد؛ Contact جای Membership نیست؛ canonical pair باید SQL invariant داشته باشد؛ hint خروجی مجوز دائمی محسوب نمی‌شود. مسیر مطالعه: `PeopleController` → `MessagingDirectoryService` → `EfMessagingDirectoryStore` → `MessengerRelationshipQuery` → `EfMessagingStore` → تست پذیرش دوحسابی فوق.
+
+اجرای کامل، فرض شکننده‌ای در تست قدیمی `OrganizationAndUserReadModelsAreGlobalPaginatedAndMaskPhone` را آشکار کرد: داده‌های suite مشترک با ساعت جلوتر می‌توانند target را از ۱۰۰ حساب صفحهٔ اول خارج کنند. فقط خود تست اصلاح شد تا صفحه‌ها را تا TotalCount بخواند و یکتایی نتایج و masking همان target را همچنان بررسی کند؛ رفتار Backoffice برای سبزکردن تست تغییر نکرد.
+
+پس از اصلاح، Build با صفر warning/error و اجرای کامل با Unit=413، Integration=709، Architecture=14، مجموع **1136 passed، صفر failed/skipped** موفق شدند؛ TRX در `.artifacts/messenger-p0/tests/directory-fixed` است. hash هر ۲۲ فایل dirty workspace اصلی با baseline یکسان باقی ماند.
