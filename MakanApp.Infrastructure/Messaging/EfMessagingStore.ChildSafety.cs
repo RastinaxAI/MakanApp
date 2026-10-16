@@ -49,27 +49,30 @@ public sealed partial class EfMessagingStore
                 item.Status == ConversationParticipantStatus.Active &&
                 item.EndedAtUtc == null,
                 cancellationToken) ?? throw ConversationNotFound();
-        await EnsureCanSendAdvancedAsync(
+        await EnsureSafetyOperationAuthorizedAsync(
             conversation,
             participant,
             userId,
             accessContext,
-            command.Kind,
+            command,
             nowUtc,
             cancellationToken);
 
-        var existingMessage = await dbContext.Messages
+        var existingMessage = command.SafetyPurpose == MessageSafetyPurpose.Message ? await dbContext.Messages
             .AsNoTracking()
             .SingleOrDefaultAsync(message =>
                 message.ConversationId == conversationId &&
                 message.SenderUserId == userId &&
                 message.ClientMessageId == command.ClientMessageId,
-                cancellationToken);
+                cancellationToken) : null;
         if (existingMessage is not null)
         {
             await EnsureRetryMatchesAsync(existingMessage, command, cancellationToken);
             return new MessageSafetyPreparationStoreResult(existingMessage, null, false, []);
         }
+
+        if (command.SafetyPurpose == MessageSafetyPurpose.Message)
+            await EnsureTopicOpenAsync(conversation, command.TopicId, cancellationToken);
 
         var existingIncident = await dbContext.SafetyIncidents
             .AsNoTracking()
@@ -225,18 +228,18 @@ public sealed partial class EfMessagingStore
             ?? throw ConversationNotFound();
         var participant = await LoadActiveParticipantAsync(conversationId, userId, cancellationToken)
             ?? throw ConversationNotFound();
-        await EnsureCanSendAdvancedAsync(
+        await EnsureSafetyOperationAuthorizedAsync(
             conversation,
             participant,
             userId,
             accessContext,
-            command.Kind,
+            command,
             nowUtc,
             cancellationToken);
 
-        var existingMessage = await dbContext.Messages
+        var existingMessage = command.SafetyPurpose == MessageSafetyPurpose.Message ? await dbContext.Messages
             .FromSqlInterpolated($"SELECT * FROM [messaging].[Messages] WITH (UPDLOCK, HOLDLOCK) WHERE [ConversationId] = {conversationId} AND [SenderUserId] = {userId} AND [ClientMessageId] = {command.ClientMessageId}")
-            .SingleOrDefaultAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken) : null;
         if (existingMessage is not null)
         {
             await EnsureRetryMatchesAsync(existingMessage, command, cancellationToken);

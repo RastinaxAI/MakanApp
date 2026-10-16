@@ -108,3 +108,33 @@ HTTP → Controller → `ConversationAdvancedManagementService` → `IAccessCont
 مسیر مطالعه: دو Controller → service/contract Application → سه قاعده/entity Domain → سه partial EF → Configurationها → `20261016174429_AddConversationInvitesAndRestrictions` → سه Integration و Unit بالا. گام بعد Topics و تعامل پیام است؛ مجوز معلم باید از authority کلاس فعلی بیاید، نه Admin کردن ساختگی همهٔ معلم‌ها، و Quiz با Exam آکادمیک یکی نیست.
 
 نتیجهٔ واقعی نهایی فاز سوم: restore، build و final build موفق با صفر warning/error؛ هر دو suite کامل ۱۳۹۰ passed، شامل Unit=518، Integration=858 و Architecture=14، failed/skipped=0؛ EF تغییر معوق ندارد. پنج Unit و بیست‌وشش Integration جدید اضافه شدند. Git پس از بررسی diff با پیام `feat(messaging): add invite links and join requests` انجام می‌شود؛ hash/تأیید remote فقط پس از اجرا گزارش می‌شوند.
+
+Git فاز سوم انجام شد: `f93a9ed98bd2674b257accd03324b8d797eaec56`، ۳۷ فایل مرتبط، پیام بالا، branch=`messenger/p0` و upstream=`origin/main`؛ push/fetch و برابری remote تأیید، worktree تمیز و فایل‌های AI بیرون commit بودند.
+
+## فاز چهارم: P2-11 — Topics
+
+### مسئله و معماری
+
+قبل از این فاز هر پیام فقط به conversation وصل بود؛ موضوع، وضعیت بسته و مجوز مدیریت آن نداشتیم. `ConversationTopic.cs` در Domain lifecycle و validation خالص، `ConversationTopicContracts.cs`/`ConversationTopicService.cs` در Application قرارداد/context/version و use case، `EfMessagingStore.Topics.cs` در Infrastructure query/قفل/authority/audit، و `ConversationTopicsController.cs` در Api فقط HTTP را دارند. `MessageContentSafetyGate.cs` helper داخلیِ مشترک واقعی است؛ رفتار سابق از `MessagingService` منتقل شده تا کپی دوم safety ساخته نشود. جهت وابستگی Onion عوض نشده است.
+
+### فایل‌های تغییرکرده و اجرای واقعی
+
+`Message` فقط TopicId اختیاری immutable می‌گیرد. command/history/Forward/resultهای Messaging فیلد اختیاری سازگار دارند. `MessagingService` validation، hash و mapping آن‌ها را متصل می‌کند؛ hash قدیمی بدون Topic تغییر نمی‌کند. partialهای Send/ChildSafety/Reads/Sync به‌ترتیب same-group/open، safety purpose مخصوص metadata، فیلتر قبل از pagination و visibility رویداد موضوع را کنترل می‌کنند. permission و enum change با CHECKهای SQL هماهنگ‌اند؛ DI و GlobalExceptionHandler قرارداد خطا را متصل می‌کنند.
+
+HTTP → `ConversationTopicsController` → `ConversationTopicService` → context/preauthorization → `MessageContentSafetyGate`/provider خارج transaction → `EfMessagingStore.Topics` → قفل Conversation → session/current TeacherAssignment یا ManageTopics/GAP-05 → `ConversationTopic` → SQL/audit/TopicChanged → commit → Outbox قبلی → Delta/SignalR با audience جاری → DTO. title مسدود به SafetyIncident/ModerationCase فعلی می‌رود، نه پیام جعلی یا چت خصوصی قابل مرور برای Manager.
+
+### دیتابیس، endpoint و طراحی
+
+Migration `20261016183900_AddConversationTopics`: Topics با PK Guid، alternate key Id+ConversationId، FK به Conversation/User، title nvarchar(160)، datetime2 UTC، status/revision CHECK و rowversion. TopicId nullable روی Messages، FK مرکب و index Conversation/Topic/Sequence جلوی ارجاع گروه دیگر و pagination نامرتبط را می‌گیرند. پیام تاریخی backfill نمی‌شود. ManageTopics=4096 فقط flag جدید است؛ old Admin خودکار ارتقا نمی‌گیرد. TopicChanged=13 از همان log/outbox استفاده می‌کند. rollback دارای guard پیش از حذف داده است؛ تولید migration به معنی apply سرور نیست.
+
+GET/POST موضوع‌ها، PUT موضوع نسخه‌دار، topicId در Send/history و destinationTopicId در Forward با request/response/validation/auth و خطاهای 400/403/404/409/412 در Handoff این فاز مستندند. Close حذف پیام نیست؛ انتخاب status Open همان reopen مجاز است. trade-off: cursor و history همچنان conversation-owned هستند و Topic مرز امنیتی موازی یا Exam آکادمیک نمی‌شود. topic-level pin/unread مستقل یا archived lifecycle ایجاد نشده‌اند؛ محدودهٔ این فاز Open/Closed مصوب است.
+
+### تست، نکات آموزشی و مطالعه
+
+`ConversationTopicTests` چهار Unit خالص برای lifecycle/UTC/validation/permission و TopicId immutable دارند. `MessagingP2TopicsEndpointsTests` و `MessagingP2TopicsSafetyTests` سیزده Integration SQL/HTTP، از جمله FK واقعی، Close×Send، FromJoin، Forward، دو نشست، permission revocation، authority معلم و عدم اختیار Manager/Student، provider fail-closed و لغو رابطه حین provider دارند. همهٔ تست‌های هدفمند passed، failed/skipped=0؛ suite کامل و Git پس از نتیجهٔ واقعی ثبت می‌شوند. خطای نام متد و هشدار async تست قبل از validation رفع شدند.
+
+۱. nullable FK مرکب جلوی reference بین دو aggregate ناسازگار را می‌گیرد. ۲. permission جدید را با اعطای خودکار به Adminهای قدیمی اشتباه نگیرید. ۳. preauthorization قبل از network، reauthorization داخل transaction را حذف نمی‌کند. ۴. metadata کاربرساخته هم محتوای قابل‌بررسی است، ولی Message نیست. ۵. فیلتر pagination در query واقعی و فیلتر audience یک event هر دو لازم‌اند. ۶. تغییر fingerprint عمومی می‌تواند retry نسخهٔ قبلی را بشکند؛ extension باید سازگاری را حفظ کند.
+
+مسیر مطالعه: Controller → TopicService/Contracts → ConversationTopic/Message/Permission → MessageContentSafetyGate → EfMessagingStore.Topics و Send/ChildSafety → Configuration → Migration → Unit/Integration. گام مستقل بعدی scheduled/silent است؛ Poll/Quiz منتظر قرارداد پرسیده‌شده‌اند، Checklist طبق استثنای prompt deferred است و هیچ‌یک نباید قبل از پیاده‌سازی موفق اعلام شوند.
+
+Validation واقعی فاز چهارم: restore و build/final build موفق با صفر warning/error؛ هر دو دور Unit=522، Integration=871، Architecture=14، Total=1407 passed، failed/skipped=0. EF تغییر معوق ندارد و migration فقط در LocalDB ایزولهٔ تست اعمال شده است. چهار Unit و سیزده Integration افزوده شدند. commit متمرکز با پیام `feat(messaging): add versioned group topics` پس از review انجام می‌شود؛ hash/remote به نتیجهٔ واقعی Git وابسته است. محدودیت‌های فاز و مرز نبود تغییر AI/SMS/config/server/frontend همچنان برقرارند.

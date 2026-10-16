@@ -1729,3 +1729,7 @@ Production در startup به connection string امن SQL، security key، stora
 ### افزودهٔ Messenger P2 — مدیریت Group/Channel و عضویت
 
 لینک دعوت hash-only، درخواست approval، permissionهای مستقل `ManageInvites`/`BanMembers`/`ChangeInfo`، مشخصات و محدودیت فردی نسخه‌دار اضافه شدند. endpointهای واقعی و قرارداد token یک‌بارقابل‌دریافت، expiry/revoke/max-use، 400/401/403/404/412 و current-state در [Handoff P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) آمده‌اند. token در body redeem است، نه URL API یا audit؛ Ban عضویت را پایان می‌دهد و Unban آن را زنده نمی‌کند. queue خصوصی است و عضویت مدرسه/Enrollment را خودکار ایجاد نمی‌کند. این API مدیریت دستی کلاس رسمی یا اختیار مرور private Direct نیست.
+
+### افزودهٔ Messenger P2 — Topics
+
+GET/POST `/api/v1/conversations/{id}/topics` و PUT نسخه‌دار `.../topics/{topicId}` برای Group، `topicId` در Send/history و `destinationTopicId` در Forward اضافه شدند. ManageTopics=4096 مستقل است؛ All جاری=8191 و مجوزهای قبلی خودکار افزایش نمی‌یابند. موضوع Open/Closed دارد؛ Close حذف تاریخچه نیست و Send تازه را با 409 رد می‌کند. FK مرکب از اتصال پیام به موضوع گروه دیگر جلوگیری می‌کند. قرارداد کامل permission معلم کلاس، FromJoin، نسخه، safety عنوان و `TopicChanged=13` در Handoff P2 ثبت است.

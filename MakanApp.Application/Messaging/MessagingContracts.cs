@@ -73,7 +73,8 @@ public sealed record ConversationSummaryResult(
 
 public sealed record GetConversationMessagesQuery(
     long? BeforeSequence,
-    int? Limit);
+    int? Limit,
+    Guid? TopicId = null);
 
 public sealed record MessageReplySummaryResult(
     Guid MessageId,
@@ -122,7 +123,8 @@ public sealed record ConversationMessageResult(
     IReadOnlyCollection<MessageAttachmentResult> Attachments,
     ContactCardResult? ContactCard,
     bool IsPinned,
-    string Version);
+    string Version,
+    Guid? TopicId = null);
 
 public sealed record ConversationMessagePageResult(
     IReadOnlyCollection<ConversationMessageResult> Messages,
@@ -137,6 +139,7 @@ public sealed class SendMessageCommand
     public Guid? ReplyToMessageId { get; init; }
     public IReadOnlyCollection<Guid>? MentionedUserIds { get; init; }
     public Guid? ContactUserId { get; init; }
+    public Guid? TopicId { get; init; }
 }
 
 // این قرارداد برای سازگاری کلاینت‌های STEP 7A باقی می‌ماند؛ مسیر اجرا مشترک است.
@@ -146,7 +149,8 @@ public sealed record EditMessageCommand(string? Text, string ExpectedVersion);
 
 public sealed record ForwardMessageCommand(
     Guid DestinationConversationId,
-    Guid ClientMessageId);
+    Guid ClientMessageId,
+    Guid? DestinationTopicId = null);
 
 public sealed record AddReactionCommand(MessageReactionType Reaction);
 

@@ -3295,7 +3295,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ConversationParticipants", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 4095 AND (([Role] = 2) OR [AdminPermissions] = 0)");
+                            t.HasCheckConstraint("CK_ConversationParticipants_AdminPermissions", "[AdminPermissions] BETWEEN 0 AND 8191 AND (([Role] = 2) OR [AdminPermissions] = 0)");
 
                             t.HasCheckConstraint("CK_ConversationParticipants_CursorTimestamp", "([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)");
 
@@ -3357,6 +3357,57 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("ConversationPins", "messaging", t =>
                         {
                             t.HasCheckConstraint("CK_ConversationPins_Lifecycle", "([UnpinnedAtUtc] IS NULL AND [UnpinnedByUserId] IS NULL) OR ([UnpinnedAtUtc] IS NOT NULL AND [UnpinnedByUserId] IS NOT NULL AND [UnpinnedAtUtc] >= [PinnedAtUtc])");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationTopic", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationTopics", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationTopics_Revision", "[Revision] > 0");
+
+                            t.HasCheckConstraint("CK_ConversationTopics_Status", "[Status] IN (1,2)");
+
+                            t.HasCheckConstraint("CK_ConversationTopics_Title", "LEN(LTRIM(RTRIM([Title]))) > 0");
                         });
                 });
 
@@ -3506,6 +3557,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
+                    b.Property<Guid?>("TopicId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasAlternateKey("Id", "ConversationId")
@@ -3527,12 +3581,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ReplyToMessageId", "ConversationId");
 
+                    b.HasIndex("TopicId", "ConversationId");
+
                     b.HasIndex("ConversationId", "SenderUserId", "ClientMessageId")
                         .IsUnique()
                         .HasDatabaseName("UX_Messages_Conversation_Sender_ClientMessageId");
 
                     b.HasIndex("ConversationId", "SentAtUtc", "Id")
                         .HasDatabaseName("IX_Messages_Search_Access");
+
+                    b.HasIndex("ConversationId", "TopicId", "Sequence");
 
                     b.HasIndex("SenderParticipantId", "ConversationId", "SenderUserId");
 
@@ -3761,7 +3819,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
 
-                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)");
+                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)");
                         });
                 });
 
@@ -6993,6 +7051,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationTopic", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationUserState", b =>
                 {
                     b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
@@ -7049,6 +7122,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Messaging.Message", null)
                         .WithMany()
                         .HasForeignKey("ReplyToMessageId", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationTopic", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId", "ConversationId")
                         .HasPrincipalKey("Id", "ConversationId")
                         .OnDelete(DeleteBehavior.Restrict);
 

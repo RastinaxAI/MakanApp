@@ -16,6 +16,7 @@ public enum ConversationAdminPermission
     ManageInvites = 1 << 9,
     BanMembers = 1 << 10,
     ChangeInfo = 1 << 11,
+    ManageTopics = 1 << 12,
     All = ManageMembers |
           RemoveMembers |
           ManageAdmins |
@@ -27,7 +28,8 @@ public enum ConversationAdminPermission
           ReviewReports |
           ManageInvites |
           BanMembers |
-          ChangeInfo,
+          ChangeInfo |
+          ManageTopics,
     LegacyAdminDefault = ManageMembers |
                          RemoveMembers |
                          PinMessages |

@@ -101,6 +101,7 @@ public sealed class MessagingService(
     {
         ValidateConversationId(conversationId);
         var limit = ValidatePage(query.BeforeSequence, query.Limit);
+        if (query.TopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
         var page = await store.GetConversationMessagesAsync(
             userId,
@@ -108,7 +109,8 @@ public sealed class MessagingService(
             context,
             query.BeforeSequence,
             limit,
-            cancellationToken);
+            cancellationToken,
+            query.TopicId);
         return new ConversationMessagePageResult(
             page.Messages.Select(Map).ToArray(),
             page.NextBeforeSequence);
@@ -383,6 +385,8 @@ public sealed class MessagingService(
             command.ClientMessageId,
             UtcNow(),
             cancellationToken);
+        if (command.DestinationTopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
+        storeCommand = storeCommand with { TopicId = command.DestinationTopicId };
         var safety = await ApplySafetyGateAsync(
             userId,
             command.DestinationConversationId,
@@ -639,6 +643,7 @@ public sealed class MessagingService(
 
     private SendMessageStoreCommand ValidateSend(SendMessageCommand command)
     {
+        if (command.TopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
         if (command.ClientMessageId == Guid.Empty)
         {
             throw Error(MessagingErrorCodes.MessageClientIdRequired, "شناسه پایدار پیام کلاینت الزامی است.");
@@ -704,10 +709,11 @@ public sealed class MessagingService(
             attachmentIds,
             command.ReplyToMessageId,
             mentionedUserIds,
-            ContactUserId: command.ContactUserId);
+            ContactUserId: command.ContactUserId,
+            TopicId: command.TopicId);
     }
 
-    private static byte[] HashSendPayload(
+    internal static byte[] HashSendPayload(
         Guid conversationId,
         SendMessageStoreCommand command)
     {
@@ -732,127 +738,23 @@ public sealed class MessagingService(
             writer.Write(command.ForwardedFromMessageId?.ToByteArray() ?? []);
             writer.Write(command.AllowSourceAttachments);
             writer.Write(command.ContactUserId?.ToByteArray() ?? []);
+            // fingerprint درخواست قدیمیِ بدون موضوع تغییر نمی‌کند.
+            if (command.TopicId.HasValue || command.SafetyPurpose != MessageSafetyPurpose.Message)
+            {
+                writer.Write("messaging-p2-topic-v1");
+                writer.Write(command.TopicId?.ToByteArray() ?? []);
+                writer.Write((int)command.SafetyPurpose);
+            }
         }
 
         return SHA256.HashData(stream.ToArray());
     }
 
-    private async Task<(Message? ExistingMessage, bool Evaluated)> ApplySafetyGateAsync(
-        Guid userId,
-        Guid conversationId,
-        AccessContext accessContext,
-        SendMessageStoreCommand command,
-        byte[] payloadHash,
-        CancellationToken cancellationToken)
-    {
-        var preparation = await store.PrepareMessageSafetyAsync(
-            userId,
-            conversationId,
-            accessContext,
-            command,
-            payloadHash,
-            UtcNow(),
-            cancellationToken);
-        if (preparation.ExistingMessage is not null)
-        {
-            return (preparation.ExistingMessage, false);
-        }
-
-        if (preparation.ExistingSafetyDecision.HasValue)
-        {
-            throw SafetyDecisionError(preparation.ExistingSafetyDecision.Value);
-        }
-
-        if (!preparation.RequiresEvaluation)
-        {
-            return (null, false);
-        }
-
-        ContentSafetyResult safetyResult;
-        try
-        {
-            safetyResult = await contentSafetyProvider.EvaluateAsync(
-                new ContentSafetyRequest(
-                    conversationId,
-                    userId,
-                    command.ClientMessageId,
-                    command.Kind,
-                    command.Text,
-                    preparation.Attachments),
-                cancellationToken);
-            ValidateSafetyResult(safetyResult);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            throw SafetyUnavailable();
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
-        catch (ContentSafetyProviderUnavailableException)
-        {
-            throw SafetyUnavailable();
-        }
-        catch (MessagingException)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            throw SafetyUnavailable();
-        }
-
-        if (safetyResult.Decision == ContentSafetyDecision.Allowed)
-        {
-            return (null, true);
-        }
-
-        if (safetyResult.Decision == ContentSafetyDecision.Unavailable) throw SafetyUnavailable();
-
-        var incidentResult = await store.RecordSafetyIncidentAsync(
-            userId,
-            conversationId,
-            accessContext,
-            command,
-            payloadHash,
-            safetyResult,
-            UtcNow(),
-            cancellationToken);
-        if (incidentResult.ExistingMessage is not null)
-        {
-            return (incidentResult.ExistingMessage, false);
-        }
-
-        throw SafetyDecisionError(incidentResult.Decision);
-    }
-
-    private static void ValidateSafetyResult(ContentSafetyResult result)
-    {
-        if (result is null || !Enum.IsDefined(result.Decision) ||
-            result.RiskLevel?.Trim().Length > SafetyIncident.MaximumRiskLevelLength ||
-            result.ProviderReference?.Trim().Length > SafetyIncident.MaximumProviderReferenceLength ||
-            (result.PolicyCodes ?? []).Any(code =>
-                string.IsNullOrWhiteSpace(code) || code.Trim().Length > 100) ||
-            string.Join(',', (result.PolicyCodes ?? []).Select(code => code.Trim()).Distinct())
-                .Length > SafetyIncident.MaximumPolicyCodesLength)
-        {
-            throw new ContentSafetyProviderUnavailableException("پاسخ سرویس ایمنی محتوا معتبر نیست.");
-        }
-    }
-
-    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision) =>
-        decision switch
-        {
-            ContentSafetyDecision.Blocked => Error(
-                MessagingErrorCodes.MessageSafetyBlocked,
-                "ارسال این پیام مجاز نیست."),
-            ContentSafetyDecision.ReviewRequired => Error(
-                MessagingErrorCodes.MessageSafetyReviewRequired,
-                "این پیام قابل ارسال نیست."),
-            _ => SafetyUnavailable()
-        };
-
-    private static MessagingException SafetyUnavailable() => Error(
-        MessagingErrorCodes.MessageSafetyUnavailable,
-        "بررسی ایمنی پیام موقتاً ممکن نیست؛ دوباره تلاش کنید.");
+    private Task<(Message? ExistingMessage, bool Evaluated)> ApplySafetyGateAsync(
+        Guid userId, Guid conversationId, AccessContext accessContext, SendMessageStoreCommand command,
+        byte[] payloadHash, CancellationToken cancellationToken) =>
+        MessageContentSafetyGate.ApplyAsync(store, contentSafetyProvider, timeProvider, userId, conversationId,
+            accessContext, command, payloadHash, cancellationToken);
 
     private int ValidatePage(long? beforeSequence, int? requestedLimit)
     {
@@ -924,7 +826,8 @@ public sealed class MessagingService(
                     message.SharedContactDisplayName)
                 : null,
             record.IsPinned,
-            Convert.ToBase64String(message.RowVersion));
+            Convert.ToBase64String(message.RowVersion),
+            message.TopicId);
     }
 
     private static MessageReplySummaryResult MapReply(MessageReplySummaryStoreRecord reply) =>

@@ -52,6 +52,9 @@ public static class MessagingErrorCodes
     public const string AdvancedManagementInvalid = "CONVERSATION_ADVANCED_MANAGEMENT_INVALID";
     public const string InviteLinkUnavailable = "CONVERSATION_INVITE_LINK_UNAVAILABLE";
     public const string MemberRestricted = "CONVERSATION_MEMBER_RESTRICTED";
+    public const string TopicInvalid = "CONVERSATION_TOPIC_INVALID";
+    public const string TopicNotFound = "CONVERSATION_TOPIC_NOT_FOUND";
+    public const string TopicClosed = "CONVERSATION_TOPIC_CLOSED";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";

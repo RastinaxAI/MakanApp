@@ -57,6 +57,10 @@ public sealed partial class EfMessagingStore
             .Where(change => change.ConversationId == conversationId &&
                              change.ChangeSequence > afterChangeSequence &&
                              (!change.AudienceUserId.HasValue || change.AudienceUserId == userId) &&
+                             (change.ChangeType != MessagingChangeType.TopicChanged || dbContext.ConversationTopics.Any(t => t.Id == change.ResourceId &&
+                                 t.ConversationId == conversationId && (visibleFromSequence <= 1 || t.CreatedAtUtc >= participant.JoinedAtUtc ||
+                                 dbContext.Messages.Any(m => m.TopicId == t.Id && m.Sequence >= visibleFromSequence &&
+                                     !dbContext.MessageUserVisibilities.Any(hidden => hidden.MessageId == m.Id && hidden.UserId == userId))))) &&
                              (change.ChangeType != MessagingChangeType.PeerReadStateChanged ||
                               receiptPeerId != Guid.Empty && change.AudienceUserId == userId &&
                               receiptMessages.Any(message => message.Id == change.ResourceId)) &&

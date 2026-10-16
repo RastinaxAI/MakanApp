@@ -114,12 +114,13 @@ public sealed class ConversationsController(
         Guid conversationId,
         [FromQuery] long? beforeSequence,
         [FromQuery] int? limit,
+        [FromQuery] Guid? topicId,
         CancellationToken cancellationToken) =>
         Ok(await messagingService.GetConversationMessagesAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             conversationId,
-            new GetConversationMessagesQuery(beforeSequence, limit),
+            new GetConversationMessagesQuery(beforeSequence, limit, topicId),
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/messages")]

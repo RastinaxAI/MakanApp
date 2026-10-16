@@ -196,7 +196,8 @@ public sealed partial class EfMessagingStore
         AccessContext accessContext,
         long? beforeSequence,
         int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? topicId = null)
     {
         var conversation = await dbContext.Conversations
             .AsNoTracking()
@@ -253,6 +254,7 @@ public sealed partial class EfMessagingStore
         var descending = await dbContext.Messages
             .AsNoTracking()
             .Where(message => message.ConversationId == conversationId &&
+                              (!topicId.HasValue || message.TopicId == topicId) &&
                               message.Sequence >= visibleFromSequence &&
                               !dbContext.MessageUserVisibilities.Any(hidden =>
                                   hidden.MessageId == message.Id && hidden.UserId == userId) &&
@@ -267,6 +269,7 @@ public sealed partial class EfMessagingStore
             var firstSequence = messages[0].Sequence;
             if (await dbContext.Messages.AnyAsync(
                     message => message.ConversationId == conversationId &&
+                               (!topicId.HasValue || message.TopicId == topicId) &&
                                message.Sequence >= visibleFromSequence &&
                                !dbContext.MessageUserVisibilities.Any(hidden =>
                                    hidden.MessageId == message.Id && hidden.UserId == userId) &&

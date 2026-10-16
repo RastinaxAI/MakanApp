@@ -273,6 +273,8 @@ public sealed partial class EfMessagingStore
         }
 
         var mentionedUserIds = command.MentionedUserIds.Distinct().ToArray();
+        if (command.SafetyPurpose != MessageSafetyPurpose.Message) throw new MessagingException(MessagingErrorCodes.MessageKindInvalid, "محتوای مدیریتی پیام نیست.");
+        await EnsureTopicOpenAsync(conversation, command.TopicId, cancellationToken);
         if (mentionedUserIds.Length > 0)
         {
             var eligibleMentionCount = await dbContext.ConversationParticipants.CountAsync(
@@ -325,7 +327,8 @@ public sealed partial class EfMessagingStore
                 command.ReplyToMessageId,
                 command.ForwardedFromMessageId,
                 maximumTextLength,
-                nowUtc);
+                nowUtc,
+                command.TopicId);
             if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
             {
                 var identity = await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
@@ -398,6 +401,7 @@ public sealed partial class EfMessagingStore
             existing.ReplyToMessageId != command.ReplyToMessageId ||
             existing.ForwardedFromMessageId != command.ForwardedFromMessageId ||
             existing.SharedContactUserId != command.ContactUserId ||
+            existing.TopicId != command.TopicId ||
             !attachments.SequenceEqual(command.AttachmentIds.Distinct().Order()) ||
             !mentions.SequenceEqual(command.MentionedUserIds.Distinct().Order()))
         {

@@ -73,6 +73,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<ConversationInviteLink> ConversationInviteLinks => Set<ConversationInviteLink>();
     public DbSet<ConversationJoinRequest> ConversationJoinRequests => Set<ConversationJoinRequest>();
     public DbSet<ConversationMemberRestriction> ConversationMemberRestrictions => Set<ConversationMemberRestriction>();
+    public DbSet<ConversationTopic> ConversationTopics => Set<ConversationTopic>();
     public DbSet<ConversationOwnershipTransfer> ConversationOwnershipTransfers =>
         Set<ConversationOwnershipTransfer>();
     public DbSet<Message> Messages => Set<Message>();

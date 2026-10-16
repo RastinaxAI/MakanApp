@@ -113,3 +113,24 @@ Ban، عضویت فعال Messaging را با همان lifecycle Removed پای�
 در این فاز وضعیت خصوصی لینک/درخواست/محدودیت با REST/version refresh می‌شود و به تمام اعضای گفتگو broadcast نمی‌شود. عضویت فعال تازه یا پایان عضویت همان ParticipantChanged موجود را با audience جاری تولید می‌کند؛ metadata لینک و وجود درخواست خصوصی داخل event عمومی قرار نمی‌گیرند. تغییر info همان ConversationChanged موجود است. تمام mutationهای جدید نشست و role سازمانی را داخل transaction نیز بازبینی می‌کنند؛ revoke پس از اولین auth نمی‌تواند گیت جاری را دور بزند.
 
 Migration `20261016174429_AddConversationInvitesAndRestrictions` سه جدول لینک/درخواست/محدودیت، FK مرکب لینک+گفتگو، unique درخواست Pending، rowversion، CHECK استفاده/وضعیت/context و indexها را می‌سازد و CHECK permission را به ۴۰۹۵ گسترش می‌دهد. permission قدیمی backfill/upgrade خودکار نمی‌شود. Down وقتی flag جدید واقعاً استفاده شده باشد، پیش از حذف جدول با خطای روشن متوقف می‌شود؛ کاهش بی‌اجازهٔ permission راه rollback نیست و backup/تصمیم عملیاتی لازم است. هیچ migrate یا deploy روی سرور انجام نشده است.
+
+## Topics — P2-11
+
+Topic فقط در Group فعال است؛ Direct/Channel/Saved موضوع ندارند. permission مستقل `ManageTopics=4096` اضافه شده و `All=8191` است؛ LegacyAdminDefault و permissionهای ذخیره‌شده افزایش خودکار ندارند. Owner یا Admin با همین permission مدیریت می‌کند. در Group رسمی، اختیار مؤثر موضوع فقط از Teacher در context فعلی و TeacherAssignment جاری همان کلاس می‌آید؛ participantها به Admin تبدیل نمی‌شوند، Manager مدرسه عضو خودکار نیست و Student حق مدیریت ندارد.
+
+| Method / Route | Request | Response / رفتار |
+|---|---|---|
+| `GET /api/v1/conversations/{id}/topics` | page=1/pageSize=30، حداکثر ۱۰۰ | `{items,hasMore,canManage}`؛ عنوان/وضعیت/سازنده/UTC/version؛ فقط محدودهٔ خواندن جاری |
+| `POST /api/v1/conversations/{id}/topics` | `{clientTopicId,title}` | همان Topic؛ شناسه Guid ثابت و title trimشده ۱ تا ۱۶۰؛ retry یکسان `alreadyExisted=true` |
+| `PUT /api/v1/conversations/{id}/topics/{topicId}` | `{title,status,expectedVersion}` | نسخهٔ جدید؛ status=`Open` یا `Closed`؛ بازگشایی صریح با permission فعلی |
+| Send موجود | `topicId` اختیاری در body | فقط موضوع Open همان Group؛ TopicId پس از ایجاد پیام جابه‌جا نمی‌شود |
+| Forward موجود | `destinationTopicId` اختیاری | محدودیت مقصد و گیت ایمنی موجود؛ موضوع مبدأ به مقصد نشت نمی‌کند |
+| history موجود | `topicId` اختیاری query | فیلتر موضوع پیش از pagination و پس از مجوز/history/Clear/DeleteForMe |
+
+همهٔ APIهای Topic authenticated، mutationها rate-limited با `messaging-send` و current-state/نسخه دارند. 400=`CONVERSATION_TOPIC_INVALID`، 404=`CONVERSATION_TOPIC_NOT_FOUND` یا ConversationNotFound برای دسترسی نامعتبر، 403 برای permission، 409=`CONVERSATION_TOPIC_CLOSED` برای ارسال تازه به موضوع بسته، و 412 برای نسخهٔ کهنه است. UI پس از 412 باید GET و تصمیم کاربر را تکرار کند، نه overwrite بی‌صدا. Loading/empty واقعاً صفحهٔ خالی است؛ canManage راهنمای UI است، نه مجوز bearer.
+
+بستن موضوع پیام‌ها را حذف نمی‌کند؛ همان history مجاز قابل‌خواندن است. FromJoin، عنوان موضوع قدیمی و TopicChanged قدیمی را تا وجود محتوای قابل‌مشاهدهٔ آن موضوع مخفی می‌کند؛ افزودن topicId هیچ مسیر دورزدن history نمی‌سازد. حذف عضو/پایان assignment دسترسی تازه به موضوع، پیام و Delta را می‌بندد. `TopicChanged=13` فقط شناسه/نسخهٔ منبع و cursor موجود را می‌فرستد؛ کلاینت REST جاری را refresh می‌کند. همان revalidation مخاطب Delta/SignalR موجود، نه گروه broadcast بدون کنترل، استفاده می‌شود.
+
+عنوان Topic در audience محافظت‌شده از همان Internal Content Safety و پروندهٔ moderation فعلی عبور می‌کند؛ Unavailable fail-closed است. برای عنوان نه Message ساختگی ساخته می‌شود و نه network داخل transaction است. مجوز و audience بعد از provider و داخل transaction دوباره کنترل می‌شوند. fingerprint پیام قدیمی بدون Topic تغییر نمی‌کند.
+
+Migration `20261016183900_AddConversationTopics`: جدول Topics با PK/alternate key `(Id,ConversationId)`، FK، index، CHECK، rowversion؛ ستون nullable TopicId روی Messages و FK مرکب هم‌گروه، index فیلتر/ترتیب؛ گسترش CHECKهای permission/change type. هیچ backfill پیام تاریخی یا migration سرور انجام نشده است. rollback در حضور topic/event/permission تازه، پیش از تغییر داده متوقف می‌شود و تصمیم عملیاتی/backup لازم دارد. Topic Pin/Unread مستقل و Archived lifecycle در این فاز ادعا نمی‌شوند؛ پیام‌ها از pin/read موجود استفاده می‌کنند.

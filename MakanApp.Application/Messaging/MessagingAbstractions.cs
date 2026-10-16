@@ -57,6 +57,8 @@ public sealed record ConversationMessagePageStoreResult(
     IReadOnlyCollection<ConversationMessageStoreRecord> Messages,
     long? NextBeforeSequence);
 
+public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1 }
+
 public sealed record SendMessageStoreCommand(
     Guid ClientMessageId,
     MessageKind Kind,
@@ -66,7 +68,9 @@ public sealed record SendMessageStoreCommand(
     IReadOnlyCollection<Guid> MentionedUserIds,
     Guid? ForwardedFromMessageId = null,
     bool AllowSourceAttachments = false,
-    Guid? ContactUserId = null);
+    Guid? ContactUserId = null,
+    Guid? TopicId = null,
+    MessageSafetyPurpose SafetyPurpose = MessageSafetyPurpose.Message);
 
 public sealed record MessageSafetyPreparationStoreResult(
     Message? ExistingMessage,
@@ -133,7 +137,8 @@ public interface IMessagingStore
         AccessContext accessContext,
         long? beforeSequence,
         int limit,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? topicId = null);
 
     Task<Message> SendMessageAsync(
         Guid userId,

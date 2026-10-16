@@ -49,6 +49,7 @@ public sealed class Message
     public string? Text { get; private set; }
     public string? SearchText { get; private set; }
     public Guid? ReplyToMessageId { get; private set; }
+    public Guid? TopicId { get; private set; }
     public Guid? ForwardedFromMessageId { get; private set; }
     public Guid? SharedContactUserId { get; private set; }
     public string? SharedContactUsername { get; private set; }
@@ -81,7 +82,8 @@ public sealed class Message
         Guid? replyToMessageId,
         Guid? forwardedFromMessageId,
         int maximumTextLength,
-        DateTime sentAtUtc)
+        DateTime sentAtUtc,
+        Guid? topicId = null)
     {
         if (conversationId == Guid.Empty || senderParticipantId == Guid.Empty ||
             senderUserId == Guid.Empty || clientMessageId == Guid.Empty)
@@ -94,14 +96,14 @@ public sealed class Message
             throw new ArgumentOutOfRangeException(nameof(sequence));
         }
 
-        if (replyToMessageId == Guid.Empty || forwardedFromMessageId == Guid.Empty)
+        if (replyToMessageId == Guid.Empty || forwardedFromMessageId == Guid.Empty || topicId == Guid.Empty)
         {
             throw new ArgumentException("شناسه مرجع پیام معتبر نیست.");
         }
 
         ValidateContent(kind, text, attachmentCount, maximumTextLength);
         ValidateUtc(sentAtUtc, nameof(sentAtUtc));
-        return new Message(
+        var message = new Message(
             Guid.NewGuid(),
             conversationId,
             senderParticipantId,
@@ -113,6 +115,8 @@ public sealed class Message
             replyToMessageId,
             forwardedFromMessageId,
             sentAtUtc);
+        message.TopicId = topicId;
+        return message;
     }
 
     public static Message CreateText(
