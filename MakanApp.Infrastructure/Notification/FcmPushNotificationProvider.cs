@@ -82,7 +82,7 @@ public sealed class FcmPushNotificationProvider(HttpClient httpClient, IFcmAcces
         }
         catch (HttpRequestException) { return DeliveryProviderResult.Transient(NotificationDeliveryFailureReason.ProviderUnavailable); }
         catch (JsonException) { return DeliveryProviderResult.Permanent(NotificationDeliveryFailureReason.ProviderConfigurationInvalid); }
-        catch (Exception exception) when (exception is IOException or ArgumentException or FormatException or CryptographicException or InvalidOperationException or PlatformNotSupportedException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException or FormatException or CryptographicException or InvalidOperationException or PlatformNotSupportedException)
         { return DeliveryProviderResult.Permanent(NotificationDeliveryFailureReason.ProviderConfigurationInvalid); }
     }
 

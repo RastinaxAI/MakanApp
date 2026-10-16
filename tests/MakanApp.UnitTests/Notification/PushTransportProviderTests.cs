@@ -225,6 +225,18 @@ public sealed class PushTransportProviderTests
         Assert.Equal(NotificationDeliveryFailureReason.ProviderUnavailable, result.FailureReason);
     }
 
+    [Fact]
+    public async Task CredentialFileAccessFailureIsConfigurationFailureNotInvalidDeviceOrAccepted()
+    {
+        using var handler = new CapturingHandler(HttpStatusCode.OK, "{}"); using var client = new HttpClient(handler);
+        var provider = new FcmPushNotificationProvider(client, new DeniedCredentialTokenProvider(),
+            new() { ProjectId = "makan-test" }, TimeProvider.System);
+        var result = await provider.SendAsync(Delivery(), default);
+        Assert.Equal(DeliveryProviderOutcome.PermanentFailure, result.Outcome);
+        Assert.Equal(NotificationDeliveryFailureReason.ProviderConfigurationInvalid, result.FailureReason);
+        Assert.Equal(0, handler.Calls);
+    }
+
     private static WebPushNotificationProvider WebProvider(HttpClient client, WebPushTransportOptions options) =>
         new(client, options, new PushDeviceOptions { AllowedWebPushHosts = ["push.example.test"] }, TimeProvider.System);
     private static FcmPushNotificationProvider FcmProvider(HttpClient client) =>
@@ -254,6 +266,11 @@ public sealed class PushTransportProviderTests
         public bool IsConfigured => true;
         public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) =>
             throw new TokenResponseException(new TokenErrorResponse { Error = "test-oauth-error" }, status);
+    }
+    private sealed class DeniedCredentialTokenProvider : IFcmAccessTokenProvider
+    {
+        public bool IsConfigured => true;
+        public Task<string> GetAccessTokenAsync(CancellationToken cancellationToken) => throw new UnauthorizedAccessException();
     }
     private sealed class WaitingHandler : HttpMessageHandler
     {

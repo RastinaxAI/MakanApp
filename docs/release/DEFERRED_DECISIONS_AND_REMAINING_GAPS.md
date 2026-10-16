@@ -68,3 +68,16 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 | Secret Chat / E2EE / RAG | خارج P0 | هیچ ادعای رمزگذاری سرتاسری یا قابلیت AI تازه ساخته نشد |
 
 این موارد معوق **blocker تکمیل P0 نیستند**. پذیرش/مهاجرت محیط Production، TLS، custody کلیدهای MFA و صحت providerهای واقعی همچنان عملیات مستقل خود را می‌خواهند؛ تست محلی به‌جای آن‌ها گزارش نمی‌شود. کد/تنظیم MeliPayamak و کار commit‌نشدهٔ AI این مرحله تغییر نکرده‌اند.
+
+## مرز تحویل Messenger P1 — ۲۰۲۶-۱۰-۱۶
+
+این مرحله با درخواست مستقل مالک اجرا شد: Peer Read محافظت‌شدهٔ Direct، Web Push/VAPID و FCM HTTP v1، رجیستری موجودِ گسترش‌یافته، recovery/reauthorization اعلان، اصلاح UTF-8/UTC، rate mutation و پذیرش دو session مستقل. [ممیزی و ۳۵ سناریوی محلی](../messaging/MESSENGER_P1_DELIVERY_AUDIT.md)، [Handoff تنظیم‌ها و API](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [گزارش آموزشی/validation](../messaging/MESSENGER_P1_DEVELOPER_REPORT.md) شواهد دقیق‌اند. provider acceptance یا SignalR، دریافت دستگاه/read انسان نیست. REAL-PUSH-01 تا 04 به‌علت نبود credential و مرورگر/دستگاه عملیاتی **PENDING_ENVIRONMENT / P1_PUSH_RUNTIME_PENDING** باقی‌اند؛ تست محلی جای آن‌ها نمی‌نشیند.
+
+موارد معوق صریح:
+
+- P2: Typing، Presence/Last Seen، Topics، Poll پیشرفته، Scheduled Message، folder و Saved Messages پیشرفته. Saved پایه موجود با قابلیت پیشرفتهٔ پیاده‌نشده یکی نیست.
+- P3: Calls، Video-call، Live و Stories؛ video attachment موجود ادعای تماس/پخش زنده نیست.
+- P4: Bots، Mini Apps، Premium و Monetization.
+- trackهای مستقل: SMS عمومی اعلان، AV/CDR، SignalR backplane و rate limiting توزیع‌شده؛ crypto پروتکل Push هم E2EE چت نیست. هیچ‌یک در P1 به‌طور ضمنی پیاده یا تأیید نشده‌اند.
+
+سه migration فقط CHECK نوع event/failure و دو ستون nullable کلید Web subscription را تغییر می‌دهند؛ جدول/سامانهٔ notification موازی و کلید جعلی وجود ندارد. ارتقای SQL و retry/rollback در LocalDB ایزوله تست شدند، نه روی دیتابیس عادی یا سرور. appsettings، ملی‌پیامک، AI/RAG و dirtyهای worktree اصلی تغییر نکردند. گام بعدی فقط پذیرش عملیاتی transport موجود است؛ قابلیت‌های معوق به مجوز مستقل نیاز دارند.

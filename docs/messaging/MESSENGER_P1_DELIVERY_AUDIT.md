@@ -1,5 +1,74 @@
 # ممیزی و شواهد تحویل Messenger P1
 
+## نتیجهٔ validation نهایی کل P1
+
+پس از آخرین اصلاح FCM، ترتیب restore -> Build -> full test -> final Build -> final full test اجرا شد. restore موفق؛ هر دو Build برابر **۰ warning / ۰ error**؛ هر دو suite برابر **Unit=499، Integration=801، Architecture=14، Total=1314 passed، failed=0، skipped=0**. شواهد TRX به‌ترتیب در `.artifacts/messenger-p1/tests/acceptance-reviewed` و `.artifacts/messenger-p1/tests/acceptance-final` هستند. نسبت به baseline، ۸۶ Unit و ۷۵ Integration، مجموعاً ۱۶۱ case افزوده شده‌اند؛ ۱۴ Architecture موجود حفظ شدند. EF مجدداً no pending model changes گزارش کرد. ۳۵ سناریوی جدول زیر محلی PASS هستند؛ هیچ‌یک جای REAL-PUSH-01 تا 04 نیستند.
+
+Git فاز media پیش از پذیرش: `3f5a8f41e33f18db31e15ee4b17c6ba4b4227809`، `fix(messaging): harden media search and message actions`؛ ۱۴ فایل مرتبط، push/fetch/verify موفق. commit همراه این ممیزی، پذیرش دو-session/smoke، یک catch محدود FCM با Unit و مستندات را ثبت می‌کند؛ hash خود commit و نتیجهٔ push/برابری remote پس از اجرای Git در گزارش نهایی گفتگو اعلام می‌شوند. دریافت دستگاه واقعی همچنان **P1_PUSH_RUNTIME_PENDING** است.
+
+## فاز ششم — پذیرش دو session و smoke محدود
+
+سه تست `MessagingP1MultiDeviceAcceptanceTests`، با دو VerifyOtp مستقل برای همان حساب و اثبات دو شناسهٔ session در SQL، Read رقابتی/monotonic، Manual Unread، Archive/Mute/Pin، Reaction، ForMe، رجیستری و revoke یک session را آزمایش می‌کنند. Delta و مخاطب قطعی SQL برای رویداد خصوصی با sessionهای همان حساب برابرند؛ Hub واقعی هم استفاده می‌شود. پس از revoke، REST نامعتبر و Hub قدیمی رد/قطع می‌شود، session دیگر event و REST معتبر دارد و مخاطب خصوصی فقط همان session باقی‌مانده است. **۳ focused passed**؛ تغییر تولیدی دیگری برای state لازم نشد، چون persistence موجود User-scoped است.
+
+سه تست `MessagingP1PerformanceAcceptanceTests` با همان SQL/Controllers، ۱۰۵ گفتگو در صفحات ۲۵تایی، ۴۱ پیام و جست‌وجو در صفحات هفت‌تایی، ورود پیام بین صفحات history، سه connection در reconnect burst، retry هشت‌درخواستی offline و race دوازده‌درخواستی notification را آزمایش می‌کنند. ۱۸ اعلان با batch حداکثر ۴ پردازش و اثر منطقیِ پیام تکراری یکتا می‌ماند. **۳ focused passed**؛ یک خطای اولیهٔ compile تست از استفادهٔ Count به‌جای Count() اصلاح شد. هیچ تستی حذف یا skip نشد. زمان‌های TRX همین اجرای focused: فهرست/history/search حدود ۲٫۵۸ ثانیه، queue/race حدود ۲٫۲۸ ثانیه و reconnect حدود ۰٫۳۶ ثانیه؛ این‌ها فقط smoke محلی‌اند و ظرفیت، WebSocket شبکهٔ واقعی یا scale-out Production نیستند.
+
+Snapshot runtime محلی: **۲۹۱ operation، ۲۶۲ path، ۴۸ Controller، ۸۸ table و ۴۱ migration**. ابزار مستندسازی هیچ اتصال SQL، worker، SMS یا AI را فعال نکرد؛ مبنای Git نخست آن `3f5a8f41e33f18db31e15ee4b17c6ba4b4227809` است. بازبینی پذیرش یک اصلاح محدود دیگر داشت: عدم مجوز خواندن فایل credential FCM اکنون configuration failure دائمی است، نه خطای شبکهٔ قابل retry؛ تست آن هیچ تماس شبکه/لغو دستگاه سالم ندارد. contract/schema عوض نشده و snapshot پس از commit نهایی مجدداً استخراج می‌شود. OpenAPI و inventory در `.artifacts/messenger-p1/contracts/final` قرار دارند.
+
+SQL قابل تحویل با exporter موجود در `.artifacts/messenger-p1/deployment/messenger-p1-migrations-idempotent-safe.sql` تولید شد؛ hash برابر `C994878F2843F474112EAE89857A16862F5C67483B243C72C45BE74DE9987D77`. هفت regression واقعی LocalDB برای نصب از صفر، retry حالت current، بازتولید خطای خام 207، ارتقا از migration بیستم همراه داده، retry بدون بازنویسی پیام/rowversion، rollback خطای میانی و رد تراکنش بیرونی، همگی موفق بودند. این اسکریپت روی سرور یا دیتابیس عادی اجرا نشده است. گزارش: `.artifacts/deployment/sql-regression-a2c39b8a1dd84490be2aab8a40723cf6/test-report.json`؛ سه دیتابیس موقت `MakanApp_SqlScript_*` طبق رفتار ابزار برای شواهد نگه داشته شدند، نه حذف یا جایگزینی دیتابیس کاربر.
+
+## ماتریس پذیرش P1-T01 تا P1-T35
+
+وضعیت این جدول شاهد case محلی است؛ full regression نهایی در بخش Validation جدا ثبت می‌شود. روش HTTP TestServer، SQL Server LocalDB و SignalR LongPolling است، نه سرور یا دستگاه فیزیکی.
+
+| شناسه | سناریو / شاهد واقعی | نتیجهٔ محلی |
+|---|---|---|
+| T01 | `MessageUsesServerTimePreservesTextAndIsIdempotent`؛ receipt و commit سرور | PASS |
+| T02 | `PeerReceiptRequiresPeerReadNotAcceptedDeliveredOrOwnReadAndSurvivesReconnect` | PASS |
+| T03 | همان تست، قطع/وصل و snapshot/Delta پایدار Peer Read | PASS |
+| T04 | `PeerReceiptIsMonotonicAndRepeatedReadCreatesNoDuplicatePeerEvent` | PASS |
+| T05 | `WebSubscriptionCrudIsPrivateVersionedIdempotentAndSafeAcrossSessions` | PASS |
+| T06 | `ConcurrentMobileRegistrationsHaveOneStableIdentity` برای Android/Ios و CRUD خصوصی | PASS |
+| T07 | `NotificationWorkerRechecksCurrentStateAfterScheduling`، حالت mute و رگرسیون Mute موجود | PASS |
+| T08 | `BoundedNotificationBatchAndDuplicateSendRaceKeepOneLogicalNotification` | PASS |
+| T09 | `WorkerHonorsProviderRetryAfterWithoutLosingLogicalNotification` و adapter 429/5xx | PASS |
+| T10 | `PermanentInvalidRegistrationIsRevokedAndFutureMessagesDoNotRetryIt` و نتیجهٔ adapter واقعی/HTTP کنترل‌شده | PASS |
+| T11 | `SupportedMediaUploadSendDownloadAndSharedMediaUsePrivateFileAssetContract` | PASS |
+| T12 | `RemovedGroupOrChannelMemberLosesFilesMutationsDeltaSearchAndRealtime` | PASS |
+| T13 | `ReplyWithinConversationWorksAndDeletedSourceUsesSafePlaceholder` | PASS |
+| T14 | `DeleteForMeIsIdempotentPrivateAndReplyUsesUnavailablePlaceholder` و history boundary P0 | PASS |
+| T15 | `StaleEditAndEditByAnotherParticipantAreRejected` و window/Safety/race موجود | PASS |
+| T16 | `TwoSessionsShareReactionsForMeAndRegistrationsWithoutLeakingToPeer` | PASS |
+| T17 | `SenderDeleteForEveryoneUsesExactOneHourServerWindow` و permissionهای Group/Channel | PASS |
+| T18 | `ReactionIsUniqueChangeableRemovableAndRemovedParticipantCannotReact` و دو session | PASS |
+| T19 | `ForwardCreatesNewMessageAndUnauthorizedSourceIsConcealed` و scope/Safety موجود | PASS |
+| T20 | `GroupPinRequiresOwnerOrAdminAndPinnedDeletedMessageRemainsIdentifiable` با tombstone امن | PASS |
+| T21 | `TwoAuthenticatedSessionsShareReadManualUnreadAndPrivateConversationState`؛ Archive فقط خود حساب | PASS |
+| T22 | همان تست؛ pin شخصی، مستقل از Message Pin و peer | PASS |
+| T23 | همان تست و worker؛ Mute شخصی، پیام/SignalR برقرار | PASS |
+| T24 | همان تست؛ Manual Unread بدون rewind و پاک‌شدن با read واقعی | PASS |
+| T25 | `SearchUsesCurrentEditExcludesDeletedRevisionAndPaginatesWithOpaqueCursor`؛ رگرسیون ForMe/Clear/removal/FromJoin | PASS |
+| T26 | `SharedMediaPagesKeepAllAttachmentsAndRespectForMeWithoutRewritingPeerHistory` و P0 removal | PASS |
+| T27 | `BoundedP1SmokeTraverses105ConversationsAndMultiPageHistoryAndSearch` و ورود پیام بین صفحات | PASS |
+| T28 | Read رقابتی از دو session مستقل در `TwoAuthenticatedSessionsShareReadManualUnreadAndPrivateConversationState` | PASS |
+| T29 | همان تست؛ Archive/Mute/Pin در دو session همگرا | PASS |
+| T30 | `RevokingOneSessionStopsRestHubAndFuturePrivateEventsButKeepsOtherSessionWorking` | PASS |
+| T31 | `ReconnectBurstRecoversPagedDeltaAndDuplicateRetryWithoutNewLogicalEffects` | PASS |
+| T32 | دو تست دو-session، مخاطب قطعی SQL، Delta و Hub؛ رگرسیون missing audience hint P0 | PASS |
+| T33 | `MinorNotificationUsesMinimalPreviewNotPrivateMessageOrSafetyMetadata` و payload عمومی همهٔ transportها | PASS |
+| T34 | `MessagingChildSafetyPolicyEndpointsTests` و `MessagingInternalContentSafetyEndpointsTests`؛ Unknown/Minor/Guardian/Manager | PASS |
+| T35 | `MessagingGroupChannelEndpointsTests`، `MessagingP0GroupChannelAcceptanceTests` و official-class/GAP-05 | PASS |
+
+## gate خارجی Push
+
+| سناریو | وضعیت | علت |
+|---|---|---|
+| REAL-PUSH-01؛ Web Push هنگام بسته‌بودن صفحه و click صحیح | PENDING_ENVIRONMENT | subscription/مرورگر و VAPID عملیاتی ارائه نشده‌اند؛ frontend/service worker در محدوده نیست |
+| REAL-PUSH-02؛ Mute و عدم Push واقعی با حفظ پیام | PENDING_ENVIRONMENT | رفتار کد/SQL تست شده؛ دریافت روی دستگاه واقعی مشاهده نشده |
+| REAL-PUSH-03؛ لغو مقصد واقعی و توقف retry | PENDING_ENVIRONMENT | پاسخ invalid کنترل‌شده تست شده، نه سرویس واقعی |
+| REAL-PUSH-04؛ FCM روی موبایل واقعی | PENDING_ENVIRONMENT | credential Firebase، APNs iOS و دستگاه واقعی ارائه نشده‌اند |
+
+این چهار مورد به‌عنوان PASS جعل نمی‌شوند؛ **P1_PUSH_RUNTIME_PENDING**. HTTPS/secure context مرورگر، credential خارجی، allowlist و egress معتبر و مشاهدهٔ دستگاه، پذیرش عملیاتی جدا می‌خواهند. هیچ سروری در این تحویل deploy یا تغییر نمی‌کند.
+
 ## فاز پنجم — رسانه، wire UTC و محدودسازی mutation
 
 دو ایراد واقعی با تست red بازتولید شدند: `FileSignatureValidator` پایان نمونهٔ ۵۱۲ بایتی را EOF فرض می‌کرد و فارسی/emoji سالم را 415 می‌داد؛ همچنین `datetime2` در بازخوانی SQL، DateTimeKind را از دست می‌داد و receipt تکراری/history/Delta/search/media/state و SignalR زمان بدون Z می‌دادند. decoder اکنون فقط در EOF واقعی flush می‌شود؛ UTF-8 خراب داخل نمونه، NUL و انتهای واقعی ناقص همچنان مردودند. `MessagingWireTime` فقط Kind مقدارِ از قبل UTC را هنگام ساخت result بازیابی می‌کند؛ ToUniversalTime، زمان client، تغییر داده/ساعت یا migration وجود ندارد. Outbox realtime نیز همان timestamp UTC را با Kind درست می‌فرستد.

@@ -1,6 +1,8 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. بازبینی Messenger P0 در `2026-10-16` از baseline مستقل `ab00901` انجام شد. سه endpoint تأیید اولیه/وضعیت self اضافه شده‌اند؛ snapshot فعلی ۲۸۷ عملیات HTTP در ۴۸ Controller، ۴۹۱ schema، ۸۸ جدول و ۳۸ Migration دارد. بستهٔ HTML/PDF و کاتالوگ تولیدشدهٔ `2026-10-15` تاریخچهٔ baseline هستند و در P0 بازتولید نشده‌اند؛ برای افزوده‌ها و رفتار جاری از [Handoff دقیق P0](messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) و OpenAPI runtime استفاده کنید. اعداد validation مرحله‌های قدیمی‌تر، جایگزین نتیجهٔ جاری یا اثبات deployment نیستند.
+این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. بازبینی Messenger P0 در `2026-10-16` از baseline مستقل `ab00901` انجام شد. سه endpoint تأیید اولیه/وضعیت self اضافه شدند؛ snapshot آن مرحله ۲۸۷ عملیات HTTP در ۴۸ Controller، ۴۹۱ schema، ۸۸ جدول و ۳۸ Migration داشت. بستهٔ HTML/PDF و کاتالوگ تولیدشدهٔ `2026-10-15` تاریخچهٔ baseline هستند و در P0 بازتولید نشده‌اند؛ برای افزوده‌ها و رفتار جاری از [Handoff دقیق P0](messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) و OpenAPI runtime استفاده کنید. اعداد validation مرحله‌های قدیمی‌تر، جایگزین نتیجهٔ جاری یا اثبات deployment نیستند.
+
+به‌روزرسانی Messenger P1 در همان تاریخ: اعداد پاراگراف قبلی snapshot تاریخی P0 هستند؛ snapshot محلی جاری **۲۹۱ عملیات، ۲۶۲ مسیر، ۴۸ Controller، ۸۸ جدول و ۴۱ migration** دارد. Peer Read، رجیستری Web/موبایل و transport واقعی Web Push/VAPID و FCM HTTP v1 افزوده شده‌اند؛ دریافت روی دستگاه واقعی هنوز `P1_PUSH_RUNTIME_PENDING` است. [گزارش آموزشی و validation P1](messaging/MESSENGER_P1_DEVELOPER_REPORT.md)، [ممیزی ۳۵ سناریو](messaging/MESSENGER_P1_DELIVERY_AUDIT.md) و [قرارداد مصرف API و تنظیم‌های P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) مرجع افزوده‌های جاری‌اند؛ HTML/PDF قدیمی بازتولید نشده‌اند.
 
 ## وضعیت جاری و تغییرات مؤثر بر مطالعه
 
@@ -10,7 +12,7 @@ Messenger P0: تأیید اولیهٔ User شخصی با UsersManage/MFA تاز�
 
 - Identity شامل access یک‌ساعته، refresh چرخشی با عمر مطلق ۳۰روزه و مدیریت نشست است. OTP ملی‌پیامک provider واقعی دارد، اما موفقیت تست خودکار تحویل SMS سرور را اثبات نمی‌کند.
 - onboarding مدرسه و Guardian در GAP-01 API عملیاتی دارند؛ دعوت اتصال حساب نیازمند پذیرش احرازشدهٔ صاحب حساب است و merge خودکار Person/User نداریم.
-- Reports/export، اعلان داخلی/outbox/preferences، Commerce/order/payment lifecycle و Backoffice/IAM API دارند. Push/SMS اعلان و gateway پرداخت واقعی همچنان unavailable هستند؛ OTP ورود با SMS اعلان یکی نیست.
+- Reports/export، اعلان داخلی/outbox/preferences، Commerce/order/payment lifecycle و Backoffice/IAM API دارند. Web Push و FCM در P1 پیاده شده‌اند و به config/credential خارجی نیاز دارند؛ پذیرش دستگاه واقعی pending است. SMS عمومی اعلان و gateway پرداخت واقعی همچنان unavailable هستند؛ OTP ورود با SMS اعلان یکی نیست.
 - TOTP/recovery/step-up واقعی Backoffice در GAP-04 پیاده‌سازی شده؛ فایل‌ها، هویت App Pool و key ring پایدار باید حفظ شوند. [قرارداد MFA](release/GAP_04_BACKOFFICE_TOTP_MFA.md).
 - سیاست مصوب GAP-05 جای پیش‌فرض‌های قدیمی Messenger را می‌گیرد: Unknown مانند Minor محافظت می‌شود؛ غریبه حق Direct ندارد؛ هر Send رابطه/Block/membership جاری و Content Safety را دوباره می‌سنجد. Internal Makan موتور قاعده‌محور واقعی ولی محدود است؛ رسانه unsupported به ReviewRequired می‌رود. Guardian و School Manager مجوز مرور Direct خصوصی ندارند. [قرارداد کامل](architecture/GAP_05_MESSENGER_CHILD_SAFETY.md).
 - ۱۲ API سمت Backend AI وجود دارند؛ پیش‌فرض غیرفعال، RAG source lifecycle deferred و real E2E از شواهد commit‌شده بسته نشده است. نقش Platform مجوز عمومی AI یا پیام خصوصی نمی‌سازد.
@@ -72,7 +74,7 @@ Messenger P0: تأیید اولیهٔ User شخصی با UsersManage/MFA تاز�
 | Storage | بارگذاری، metadata، دانلود مجاز و حذف فایل |
 | Messaging | Contact، Privacy و Discovery، گفت‌وگوی مستقیم، گروه، کانال، مدیریت اعضا، پیام و رسانه، جست‌وجو، Block، Report، Delta و SignalR |
 | Reports | چهار داشبورد، شانزده گزارش تفصیلی و export خصوصی CSV با job پایدار؛ visibility نمره و scope نقش |
-| Notification | اعلان داخلی، durable outbox، preferences و دستگاه؛ provider بیرونی Push/SMS اعلان unavailable |
+| Notification | اعلان داخلی، durable outbox، preferences و دستگاه؛ Web Push/VAPID و FCM قابل تنظیم، پذیرش واقعی pending؛ SMS عمومی unavailable |
 | Commerce | Plan/Subscription/Entitlement/Quota و Order/Payment lifecycle؛ بدون gateway مالی واقعی |
 | Platform | IAM، provisioning، metadata operations و moderation محدود به case؛ TOTP/recovery/step-up واقعی |
 | AI Backend | دوازده API و adapter اختیاری؛ غیرفعال پیش‌فرض، real E2E و RAG lifecycle تأیید نشده |
@@ -1516,7 +1518,7 @@ Scope سازمانی فقط با Membership فعال قابل مشاهده/تغ�
 
 Quiet Hours فقط با timezone صریح همان preference اجرا می‌شود، زیرا User/Organization هنوز timezone مرجع ندارند. بازه روزانه و عبوری از نیمه‌شب پشتیبانی می‌شود؛ اعلان داخلی حتی در ساعات سکوت فوراً ایجاد می‌شود و delivery خارجی تا پایان بازه `Deferred` می‌ماند.
 
-Push provider واقعی انتخاب نشده و فقط providerهای `Development/Unavailable` موجودند. رجیستری device از session token جدا است؛ token در API/log برنمی‌گردد و تلاش ارسال فقط شناسه device را ذخیره می‌کند. logout، انقضای session یا revoke دستگاه مانع resolve شدن آن برای Push آینده می‌شود.
+در تحویل تاریخی STEP 12B فقط providerهای `Development/Unavailable` موجود بودند؛ P1 اکنون گزینهٔ `WebPushAndFcm` را افزوده است و default/config قبلی را تغییر نمی‌دهد. credential، allowlist و secure context لازم‌اند؛ دریافت خارجی هنوز pending است. رجیستری device از session token جدا است؛ token در API/log برنمی‌گردد و تلاش ارسال فقط شناسه device را ذخیره می‌کند. logout، انقضای session یا revoke دستگاه مانع resolve شدن آن برای Push آینده می‌شود. [قرارداد جاری P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md).
 
 `INotificationSmsProvider` کاملاً از OTP جدا است. شماره موبایل از credential تأییدشده Identity resolve می‌شود و body دلخواه frontend پذیرفته نمی‌شود. `MeliPayamakOtpProvider` و endpoint اختصاصی OTP تغییر نکرده‌اند؛ adapter ملی‌پیامک برای SMS عمومی تا دریافت قرارداد رسمی provider عمداً وجود ندارد.
 

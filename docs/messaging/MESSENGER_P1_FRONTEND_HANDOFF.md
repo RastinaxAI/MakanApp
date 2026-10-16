@@ -114,6 +114,22 @@ Reaction با POST `.../messages/{messageId}/reactions` و `reaction` و حذف 
 
 در Testing سقف‌های named policy برای آزمون عملکردی بالا هستند؛ تست قرارداد 429 با limiter کوچک کنترل‌شده اجرا می‌شود، نه ادعای اندازه‌گیری quota واقعی Production. `Retry-After` پاسخ 429 برای writeهای Messaging و Upload نیز مانند discovery/device ارائه و از CORS expose می‌شود. backoff/retry کلاینت موقت است؛ auth نامعتبر `401`، منبع خارج مجوز عموماً `404`، policy rejection مطابق کد stable قبلی، concurrency مانند Edit برابر `412` یا device برابر `409` است. در 429 توکن را logout/rotate نکنید و ارسال را با همان ClientMessageId/payload retry کنید. کنترل‌های OTP/AI/پرداخت تغییر نکرده‌اند. limiter و SignalR backplane توزیع‌شده خارج این P1 هستند.
 
+## state شخصی، چنددستگاهی و reconnect
+
+Archive از POST/DELETE `/api/v1/conversations/{id}/archive`، pin شخصی از POST/DELETE `.../state/pin`، Mute از PUT/DELETE `.../mute` و Mark Unread از POST `.../mark-unread` مصرف می‌شوند. هرکدام state **حساب** در همان گفتگو هستند، نه state مستقلِ هر tab/session و نه تنظیم کل گفتگو. `filter=Archived` برای فهرست archive است؛ pin شخصی ترتیب caller را تغییر می‌دهد، نه permission پیام را. پیام جدید گفتگو را خودکار از archive خارج نمی‌کند. Mute پیام، unread و SignalR را متوقف نمی‌کند.
+
+Mark Unread فقط `isManuallyUnread` را روشن می‌کند؛ `lastReadMessageSequence` واقعی عقب نمی‌رود و Peer Read قبلی جعل/بازنویسی نمی‌شود. `filter=Unread`، unread واقعی یا manual را نشان می‌دهد. Mark Read واقعی همان manual flag را حتی وقتی cursor از قبل روی همان sequence بوده پاک می‌کند. بنابراین روی `ReadCursorAdvanced` فقط بر اساس مساوی بودن ResourceVersion، refresh user-state را کنار نگذارید؛ ChangeId/cursor رویداد و snapshotهای REST مرجع‌اند.
+
+Read/Delivered خصوصی، Archive/Mute/Pin شخصی، Manual Unread و ForMe به sessionهای مجاز **همان User** می‌رسند؛ peer آن‌ها را در Delta/Hub دریافت نمی‌کند. Peer Read رویداد اختصاصی و محدود خودش را دارد، نه broadcast cursor خصوصی. دستگاه‌ها با GET رجیستری refresh می‌شوند؛ event جدیدِ device-state اختراع نشده است. Reaction عمومیِ مجاز است، اما `reactedByCurrentUser` برای هر حساب از سرور محاسبه می‌شود. ForMe در همهٔ sessionهای خود حساب history/media/download را پنهان می‌کند، نه در حساب peer.
+
+در reconnect، REST فهرست/stateهای جاری و Delta از آخرین checkpoint **پردازش‌شده** را بخوانید. Hub یک invalidation hint با امکان تکرار، تأخیر یا ازدست‌رفتن است؛ نه منبع حقیقت یا تضمین delivery شبکه. پیام pending محلی با ClientMessageId ثابت و payload یکسان retry شود؛ استفادهٔ همان شناسه برای payload متفاوت conflict است. هنگام timeout پس از commit، replay همان receipt/message را recover می‌کند؛ message ID تازه نسازید. ChangeId/cursor برای dedupe و ترتیب پردازش رویداد است؛ دریافت hint به‌تنهایی مجوز جلو بردن checkpoint نیست.
+
+History و Shared Media از beforeSequence انحصاری، Search از cursor query-bound و Delta از cursor conversation-bound استفاده می‌کنند. ورود پیام جدید بین صفحات history، بخش قدیمیِ قبل از anchor را جابه‌جا نمی‌کند؛ برای پیام‌های تازه از Delta/head refresh استفاده کنید. conversation/member/device listهای offset-based snapshot تراکنشی چندصفحه‌ای نیستند؛ در traversal آرام tie-breaker پایدار دارند، اما پس از mutation/فعالیت جدید از page=1 refresh و بر اساس شناسه dedupe کنید. ادعای بدون‌تغییر بودن چندصفحه در برابر همهٔ mutationهای هم‌زمان نمی‌شود.
+
+revoke یک session باید REST آن را 401 و Subscribe/handshake Hub آن را نامعتبر کند؛ session دیگر همان حساب مستقل می‌ماند. مخاطب event هنگام dispatch دوباره از SQL resolve می‌شود، حتی اگر connection قدیمی هنوز بسته نشده باشد. client پس از 401 session منقضی، cache خصوصی را طبق lifecycle ورود خودش پاک کند؛ Guardian/Manager از داشتن شناسه یا رابطه، مجوز مرور Direct خصوصی نمی‌گیرند. از اتصال، read cursor یا recent contact، Typing/Presence/Last Seen نسازید.
+
+پذیرش محلی این قرارداد با دو ورود OTP آزمایشی مستقل، دو UserSession در SQL و Hub واقعی TestServer/LongPolling انجام شده است؛ دستگاه فیزیکی، سرویس‌ورکر واقعی و deploy تست نشده‌اند. سناریوهای بیشتر و ماتریس P1-T01 تا P1-T35 در [ممیزی پذیرش](MESSENGER_P1_DELIVERY_AUDIT.md) و گزارش آموزشی در [گزارش توسعه‌دهنده](MESSENGER_P1_DEVELOPER_REPORT.md) هستند.
+
 ## اعلان، Mute و تلاش مجدد
 
 اعلان داخلی و Push یک state نیستند. ترجیحات از API موجود `/api/v1/notification-preferences` و category `Messages` مصرف می‌شوند؛ تنظیم شخصی و هر سازمان مستقل‌اند، In-app خاموش نمی‌شود. Quiet Hours با timezone صریح، ارسال خارجی را عقب می‌اندازد. category مؤثر Mention/Reply از pipeline موجود است؛ هیچ‌کدام Mute را خودکار دور نمی‌زنند.
@@ -123,3 +139,5 @@ Mute دائم/Until، پیام و unread و SignalR را قطع نمی‌کند�
 `NotificationId` هویت منطقی پایدار است؛ retry پیام با همان ClientMessageId/payload اعلان داخلی دوم نمی‌سازد. شبکه دقیقاً یک‌بار نیست و client باید اعلان تکراری با همان شناسه/tag را تحمل کند. enum قدیمی Delivered در delivery داخلی به معنای پذیرش provider است؛ آن را تیک خواندن پیام نکنید. receipt پیام از SQL و peer-read فقط از قرارداد بخش قبل می‌آیند.
 
 خطای موقت provider با backoff و سقف تلاش دوباره پردازش می‌شود. Retry-After رعایت می‌شود؛ invalid destination لغو می‌شود و retry بی‌نهایت ندارد. failure، اصل Message/Notification را حذف نمی‌کند. لغو session یا دسترسی، ارسال آینده را می‌بندد؛ اطلاعاتی که قبلاً به دستگاه/شبکه تحویل شده قابل پس‌گرفتن تضمینی نیست.
+
+availability امن Backoffice فقط `Configured`، `PartiallyConfigured` یا `Unavailable` است؛ مثلاً تنظیم معتبر فقط Web و نه FCM می‌تواند وضعیت جزئی بدهد. این metadata، سلامت credential در سرویس بیرونی یا رسیدن Push به دستگاه را ثابت نمی‌کند. token/subscription فعال حساب دیگر به‌طور خودکار هنگام تعویض حساب منتقل نمی‌شود و conflict برابر 409 است؛ پیش از logout مقصد متعلق به حساب قبلی را طبق lifecycle رجیستری لغو و با session حساب جدید ثبت کنید.
