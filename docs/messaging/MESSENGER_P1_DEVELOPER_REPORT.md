@@ -72,7 +72,7 @@ Peer Read:
 ```text
 POST read / GET read-states
 -> ConversationsController
--> MessagingService + AccessContextResolver
+-> MessagingService + IAccessContextResolver (GuardianAccessContextResolver)
 -> ConversationParticipant.AdvanceRead (monotonic)
 -> EfMessagingStore.Sync / EfMessagingStore.PeerRead
 -> SQL Server: cursor + event خصوصی خود reader + event محدود PeerRead
@@ -199,8 +199,9 @@ worktree مجاز `D:\Project\MakanApp\MakanApp-Backend-Messenger-P0`، branch=`
 | `a59bb740a06c921dd491e2a865737c652e896ed6` | `feat(notifications): add web push and mobile registrations` | ۲۱ فایل؛ push/verify موفق |
 | `4856b284c59cdb490913268803e6aa2aba05c36e` | `feat(notifications): deliver web push and fcm transports` | ۲۴ فایل؛ push/verify موفق |
 | `3f5a8f41e33f18db31e15ee4b17c6ba4b4227809` | `fix(messaging): harden media search and message actions` | ۱۴ فایل؛ push/verify موفق؛ مبنای آخرین فاز پذیرش |
+| `ae664539927dd6e83d36711339d0e46da5861668` | `fix(messaging): close p1 acceptance and credential failure handling` | ۹ فایل؛ پذیرش، catch محدود FCM و پنج سند؛ push/fetch/ls-remote موفق و HEAD برابر origin/main |
 
-commit نهاییِ همراه این گزارش با پیام `fix(messaging): close p1 acceptance and credential failure handling`، پس از validation دوباره، دو فایل تست پذیرش، اصلاح محدود طبقه‌بندی خطای دسترسی فایل FCM و Unit آن، و پنج سند مرتبط را ثبت می‌کند؛ SHA خود commit به‌صورت دوری داخل محتوای خودش نوشته نمی‌شود. hash نهایی، push و برابری HEAD/origin/main در خروجی واقعی Git و گزارش نهایی گفتگو اعلام می‌شوند؛ پیش از اجرای موفق، انجام‌شده تلقی نمی‌شوند. هیچ secret، frontend، bin/obj، کد/تنظیم MeliPayamak یا تغییر AI وارد این commitها نشده است.
+commit پذیرش بالا، پس از validation دوباره، دو فایل تست پذیرش، اصلاح محدود طبقه‌بندی خطای دسترسی فایل FCM و Unit آن، و پنج سند مرتبط را ثبت کرد. commit مستندسازی همراه نسخهٔ جاری با پیام `docs(messaging): finalize p1 acceptance evidence` فقط نام واقعی resolver و شاهد commit پذیرش را در همین گزارش دقیق می‌کند؛ کد اجرایی تغییر نمی‌کند. SHA خود commit به‌صورت دوری داخل محتوای خودش نوشته نمی‌شود. hash نهایی، push و برابری HEAD/origin/main در خروجی واقعی Git و گزارش نهایی گفتگو اعلام می‌شوند؛ پیش از اجرای موفق، انجام‌شده تلقی نمی‌شوند. هیچ secret، frontend، bin/obj، کد/تنظیم MeliPayamak یا تغییر AI وارد این commitها نشده است.
 
 ## ۱۳. محدودیت‌های فعلی و موارد خارج تحویل
 
