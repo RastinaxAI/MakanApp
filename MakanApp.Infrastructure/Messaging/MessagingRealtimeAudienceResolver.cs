@@ -15,11 +15,15 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
     : IMessagingRealtimeAudienceResolver
 {
     public async Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsAsync(
-        Guid conversationId,
+        MessagingRealtimeNotification notification,
         Guid? audienceUserId,
         DateTime nowUtc,
         CancellationToken cancellationToken)
     {
+        var conversationId = notification.ConversationId;
+        if (!MessagingChangeCursor.TryDecode(notification.Cursor, conversationId, out var changeSequence) || changeSequence < 1)
+            throw new InvalidOperationException("نشانگر رویداد realtime با گفتگو سازگار نیست.");
+        var precedingCursor = MessagingChangeCursor.Encode(conversationId, changeSequence - 1);
         var conversation = await dbContext.Conversations
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == conversationId, cancellationToken);
@@ -68,9 +72,13 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
         {
             try
             {
-                await messagingService.AuthorizeRealtimeSubscriptionAsync(
-                    session.UserId, session.Id, conversationId, cancellationToken);
-                authorized.Add(session.Id);
+                // همان Delta، مرز FromJoin/Clear/DeleteForMe و audience خصوصی خود رویداد را نیز می‌سنجد.
+                var visible = await messagingService.GetConversationChangesAsync(
+                    session.UserId, session.Id, conversationId,
+                    new GetConversationChangesQuery(precedingCursor, 1), cancellationToken);
+                if (visible.Changes.Any(change => change.Cursor == notification.Cursor &&
+                    change.Type == notification.Type && change.ResourceId == notification.ResourceId))
+                    authorized.Add(session.Id);
             }
             catch (Exception exception) when (exception is IdentityException or OrganizationException or GuardianException or MessagingException)
             {

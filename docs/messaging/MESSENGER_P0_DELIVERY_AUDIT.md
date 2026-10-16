@@ -85,3 +85,17 @@ Validation کامل پس از اصلاح: restore/build موفق، صفر warnin
 هدر Retry-After از metadata واقعی limiter برای discovery/search محاسبه و در CORS همراه X-Correlation-ID قابل خواندن شد؛ Origin/credential policy گسترش نیافت و OTP/AI rate limit تغییر نکرد. تست 429 از یک limiter کوچک injectشده فقط روی people استفاده می‌کند تا قرارداد handler/header را اثبات کند، نه عدد quota محیط Production. migration جدید لازم نیست.
 
 Validation این فاز: focused=10 موفق؛ restore و Build با صفر warning/error؛ Unit=413، Integration=716، Architecture=14، مجموع **1143 passed، صفر failed/skipped**. TRX کامل در `.artifacts/messenger-p0/tests/realtime-full` قرار دارد. schema یا package تغییری نکرد.
+
+فاز سوم در `b99b0e5c4ebaae06ff736b01130c20386b47c629` ثبت شد؛ Build/Test پس از commit نیز ۱۱۴۳ موفق، push عادی و fetch/remote verification موفق بودند.
+
+## فاز چهارم — Group/Channel، مرز تاریخچه و رویداد خصوصی
+
+پنج case جدید در `MessagingP0GroupChannelAcceptanceTests` اضافه شدند. حذف عضو Group و Channel از راه API، دانلود فایل قبل از حذف، منع history/media/download/Delta/search/edit/delete/send/Hub پس از حذف و ادامهٔ دسترسی مالک بررسی می‌شود. ۳۱ گفتگوی هم‌زمان‌نما با timestamp برابر در چند صفحه بدون حذف/تکرار خوانده می‌شوند؛ refetch پس از فعالیت جدید ترتیب را اصلاح می‌کند. این شاهد snapshot اتمیک چند صفحه در زمان mutation هم‌زمان نیست؛ قرارداد موجود offset-based باقی است.
+
+دو تست ابتدا شکست واقعی داشتند: بازپخش MessageCreated پیش از مرز FromJoin به عضو جدید می‌رسید؛ و با حذف عمدی audience hint از رویداد خصوصی ReadCursor، notifier به طرف دیگر نیز می‌فرستاد. Search/History/Media/File/Delta خودشان مرز را رعایت می‌کردند. اصلاح حداقلی، policy جدید نیست: port داخلی `IMessagingRealtimeAudienceResolver` اکنون notification کامل را دریافت می‌کند و `SignalRMessagingRealtimeNotifier` آن را عبور می‌دهد. resolver در scope تازه با همان `MessagingService.GetConversationChangesAsync` و limit=1، visibility دقیق cursor/type/resource را می‌سنجد. بنابراین همان قواعد FromJoin، Clear، DeleteForMe و audience خصوصی Delta برای Realtime هم مرجع‌اند؛ SQL rule موازی کپی نشده است. cursor خراب fail-closed و خطای فنی است.
+
+تست بازپخش هم مسیر SignalR واقعی محلی و هم مجموعهٔ قطعی sessionهای مجاز SQL را بررسی می‌کند؛ نبود callback به‌تنهایی شاهد عدم نشت نیست. private read cursor همچنان self-only است؛ این اصلاح **B04 Peer Read Receipt را پیاده نمی‌کند**. Endpoint، JSON wire، permission، lifecycle، storage infrastructure و schema دیتابیس تغییر ندارند. برای Channel همچنان قرارداد فعلی Sender برقرار است و posting ناشناس یا هویت تازهٔ Channel ساخته نشده است. Owner/Admin-Publish/Subscriber و قابلیت SendMedia از policy و تست‌های موجود reuse می‌شوند.
+
+نکات آموزشی: مجوز container با مجوز آیتم یکی نیست؛ audience hint جای authorization رویداد را نمی‌گیرد؛ replay باید visibility فعلی را بسنجد؛ صفحه‌بندی پایدار به tie-breaker نیاز دارد؛ حذف Contact/عضو/پیام سه lifecycle جدا هستند. مسیر مطالعه: notifier → audience resolver → `MessagingService.GetConversationChangesAsync` → `EfMessagingStore.Sync` → file bound-access resolver → تست‌های P0 و Group/Channel موجود.
+
+Validation کامل فاز چهارم: focused=11 موفق؛ restore/build موفق با صفر warning/error؛ Unit=413، Integration=721، Architecture=14، مجموع **1148 passed، صفر failed/skipped**. شاهد TRX در `.artifacts/messenger-p0/tests/group-full` است. schema و package عوض نشدند و migration تازه لازم نبود.

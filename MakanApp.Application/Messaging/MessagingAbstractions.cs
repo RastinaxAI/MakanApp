@@ -336,7 +336,7 @@ public interface IMessagingRealtimeNotifier
 public interface IMessagingRealtimeAudienceResolver
 {
     Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsAsync(
-        Guid conversationId,
+        MessagingRealtimeNotification notification,
         Guid? audienceUserId,
         DateTime nowUtc,
         CancellationToken cancellationToken);

@@ -14,7 +14,7 @@ public sealed class SignalRMessagingRealtimeNotifier(
         CancellationToken cancellationToken)
     {
         var sessionIds = await audienceResolver.GetActiveSessionIdsAsync(
-            notification.ConversationId,
+            notification,
             audienceUserId,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
