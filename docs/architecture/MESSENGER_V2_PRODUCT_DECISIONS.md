@@ -129,3 +129,13 @@ Personal Group/Channel برای حساب کودک تصویب نشده‌اند. 
 | ۱۴. نتیجه Safety | حل‌شده؛ Allowed، ReviewRequired، Blocked و Unavailable؛ مسیر محافظت‌شده در شکست fail-closed |
 
 قرارداد تکمیلی مصوب: AbuseReviewer پرونده‌محور، پنجره عادی reported item و ۲ قبل/۲ بعد؛ گسترش محدود فقط با ارجاع، permission قوی‌تر، reason، MFA تازه و audit. School Manager یا Owner مجوز unrestricted private browsing ندارند. رسانه‌ای که موتور نمی‌تواند معناشناسی کند ReviewRequired است و Sent اعلام نمی‌شود. ضعف معنایی موتور، richer age assurance، appeal/SLA/retention و گزینه‌های آینده در register معوق ثبت می‌شوند؛ این‌ها اجازه کنارگذاشتن رفتار محافظتی فعلی نیستند.
+
+## Addendum مصوب P0 — حساب شخصی و تأیید اولیه
+
+در درخواست «MakanApp Messenger — COMPLETE P0 DELIVERY» مورخ ۲۰۲۶-۱۰-۱۶، مالک مسیر حداقلی تأیید اولیهٔ User شخصی را صریحاً مجاز کرد. OTP، تکمیل Profile و تاریخ تولد خوداظهاری به‌تنهایی Verified نمی‌سازند. اپراتور Platform با `platform.users.manage`، MFA و Step-up تازه، شاهد مجاز، reason و rowversion می‌تواند وضعیت `Unverified` را تأیید کند؛ School membership یا OrganizationPerson ساختگی شرط یا side effect نیست.
+
+Initial verification، School verification و conflict resolution یکی نیستند. initial، `Verified/Conflict` را بازنویسی نمی‌کند و stale version رد می‌شود؛ conflict resolution همچنان Owner و workflow مصوب GAP-05 را می‌خواهد. شاهد جدید source صریح `PlatformVerification` دارد؛ شاهدها و طبقه قبلی حفظ می‌شوند. DOB در پاسخ عمومی یا Audit summary درج نمی‌شود.
+
+`GET /api/v1/me/messaging-status` فقط راهنمای self با verification/effective category/action/next action/version است؛ authorization token یا روش پرس‌وجوی وضعیت فرد دیگر نیست. actionهای protected به رابطهٔ جاری وابسته‌اند؛ minor/unknown همچنان عمومی کشف نمی‌شوند و Group خصوصی به معنی مجوز Channel یا Group عمومی نیست. هر endpoint مقصد، policy جاری را دوباره بررسی می‌کند.
+
+مالک آزمون پذیرش این تحویل را صریحاً **فقط محلی** خواسته است. هیچ تغییر یا تست روی سرور مجاز این مرحله نیست؛ شواهد LocalDB/TestServer/Kestrel محلی نباید به‌عنوان REAL SERVER PASS یا استقرار Production گزارش شوند. این تصمیم، سیاست امنیتی GAP-05 را عوض نمی‌کند.

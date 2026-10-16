@@ -13,7 +13,7 @@ public sealed class CommunicationAgeVerificationConfiguration : IEntityTypeConfi
         {
             table.HasCheckConstraint("CK_CommunicationAgeVerifications_Categories", "[PreviousCategory] IN (0,1,2) AND [ProposedCategory] IN (1,2)");
             table.HasCheckConstraint("CK_CommunicationAgeVerifications_Status", "[Status] IN (1,2)");
-            table.HasCheckConstraint("CK_CommunicationAgeVerifications_Source", "([Source]=1 AND [OrganizationId] IS NOT NULL) OR ([Source]=2 AND [OrganizationId] IS NULL)");
+            table.HasCheckConstraint("CK_CommunicationAgeVerifications_Source", "([Source]=1 AND [OrganizationId] IS NOT NULL) OR ([Source] IN (2,3) AND [OrganizationId] IS NULL)");
         });
         builder.HasKey(v => v.Id);
         builder.Property(v => v.VerifiedBirthDate).HasColumnType("date");

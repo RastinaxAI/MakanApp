@@ -1,4 +1,5 @@
 using System.Data;
+using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Platform;
@@ -14,6 +15,42 @@ namespace MakanApp.Infrastructure.Messaging;
 public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore iam,
     IPlatformStepUpAuthorization stepUp, TimeProvider clock) : ICommunicationAgeStore
 {
+    public async Task<CommunicationAgeResult> GetPlatformAsync(Guid actorId, Guid sessionId, Guid userId, string correlationId, CancellationToken ct)
+    {
+        await AuthorizePlatformAsync(actorId, sessionId, false, ct);
+        var subject = await db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == userId, ct) ?? throw NotFound();
+        var actorPersonId = await db.Users.Where(u => u.Id == actorId).Select(u => u.PersonId).SingleAsync(ct);
+        db.AdminAuditLogs.Add(AdminAuditLog.Create(actorId, actorPersonId, sessionId,
+            "messaging.age.read", "User", userId.ToString("D"), null, "مشاهده وضعیت تأیید ارتباطی بدون تاریخ تولد",
+            clock.GetUtcNow().UtcDateTime, correlationId, AdminAuditResult.Succeeded, null,
+            $"{subject.CommunicationAgeCategory};{subject.CommunicationAgeVerificationStatus}"));
+        await db.SaveChangesAsync(ct);
+        return Map(subject);
+    }
+
+    public async Task<MessagingStatusSnapshot> GetSelfStatusAsync(Guid userId, Guid sessionId, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow().UtcDateTime;
+        var row = await (from user in db.Users.AsNoTracking()
+            join session in db.UserSessions.AsNoTracking() on user.Id equals session.UserId
+            where user.Id == userId && session.Id == sessionId && user.AccountStatus == UserAccountStatus.Active &&
+                session.RevokedAtUtc == null && session.ExpiresAtUtc > now && session.AbsoluteExpiresAtUtc > now
+            select new { user.CommunicationAgeCategory, user.CommunicationAgeVerificationStatus,
+                Complete = user.PersonId != null && user.Username != null && user.ProfileCompletedAtUtc != null,
+                Personal = session.SelectedMembershipId == null, user.MessagingRestrictedUntilUtc, user.RowVersion })
+            .SingleOrDefaultAsync(ct) ?? throw new IdentityException(IdentityErrorCodes.AuthRequired, "نشست معتبر لازم است.");
+        return new(row.CommunicationAgeVerificationStatus, row.CommunicationAgeCategory, row.Complete,
+            row.Personal, row.MessagingRestrictedUntilUtc, Convert.ToBase64String(row.RowVersion));
+    }
+
+    public async Task<CommunicationAgeResult> VerifyInitialAsync(Guid actorId, Guid sessionId, Guid userId,
+        VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct)
+    {
+        try { return await VerifyCoreAsync(actorId, sessionId, null, userId, command, correlationId, ct, true); }
+        catch (SqlException exception) when (exception.Number == 1205)
+        { throw new MessagingException("AGE_VERIFICATION_CONFLICT", "عملیات هم‌زمان تغییر کرده است؛ نسخه تازه را دریافت کنید."); }
+    }
+
     public async Task<CommunicationAgeResult> GetSchoolAsync(Guid actorId, Guid sessionId, AccessContext access, Guid personId, CancellationToken ct)
     {
         await CheckSchoolAsync(actorId, sessionId, access, ct);
@@ -29,7 +66,7 @@ public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore
     }
 
     private async Task<CommunicationAgeResult> VerifyCoreAsync(Guid actorId, Guid sessionId, AccessContext? access, Guid targetId,
-        VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct)
+        VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct, bool initialPlatformVerification = false)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var now = clock.GetUtcNow().UtcDateTime;
@@ -41,18 +78,16 @@ public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore
         }
         else
         {
-            var actor = await iam.GetAuthorizationSnapshotAsync(actorId, ct);
-            if (actor?.Roles.Contains(PlatformRoleKeys.PlatformOwner) != true || !actor.Permissions.Contains(PlatformPermissionKeys.UsersManage))
-                throw new PlatformException(PlatformErrorCodes.AccessDenied, "عملیات مجاز نیست.");
-            if (!await stepUp.IsSatisfiedAsync(actorId, sessionId, ct))
-                throw new PlatformException(PlatformErrorCodes.StepUpRequired, "تأیید تازه MFA لازم است.");
+            await AuthorizePlatformAsync(actorId, sessionId, !initialPlatformVerification, ct);
             subject = await db.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={targetId}")
                 .SingleOrDefaultAsync(ct) ?? throw NotFound();
-            if (subject.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Conflict)
-                throw new MessagingException("AGE_VERIFICATION_CONFLICT", "تعارض قابل حل وجود ندارد.");
         }
         // User از ابتدا با قفل به‌روزرسانی خوانده می‌شود؛ ارتقای دو قفل خواندن مستقل لازم نیست.
         SchoolOnboardingValidation.Version(subject.RowVersion, command.ExpectedVersion);
+        if (access is null && subject.CommunicationAgeVerificationStatus != (initialPlatformVerification
+                ? CommunicationAgeVerificationStatus.Unverified : CommunicationAgeVerificationStatus.Conflict))
+            throw new MessagingException("AGE_VERIFICATION_CONFLICT", "وضعیت جاری برای این عملیات تأیید مجاز نیست.");
+        if (initialPlatformVerification && subject.AccountStatus != UserAccountStatus.Active) throw NotFound();
         var previous = subject.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified
             ? subject.CommunicationAgeCategory : CommunicationAgeCategory.Unknown;
         var latest = await db.CommunicationAgeVerifications.Where(v => v.UserId == subject.Id && v.Status == CommunicationAgeVerificationStatus.Verified)
@@ -60,14 +95,16 @@ public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore
         var conflict = access is not null && (subject.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Conflict ||
             latest is not null && latest.VerifiedBirthDate != command.VerifiedBirthDate);
         var evidence = CommunicationAgeVerification.Create(subject.Id, command.VerifiedBirthDate, previous, conflict,
-            access is null ? CommunicationAgeVerificationSource.PlatformResolution : CommunicationAgeVerificationSource.School,
+            access is not null ? CommunicationAgeVerificationSource.School : initialPlatformVerification
+                ? CommunicationAgeVerificationSource.PlatformVerification : CommunicationAgeVerificationSource.PlatformResolution,
             actorId, access?.OrganizationId, command.Reason, now);
         db.CommunicationAgeVerifications.Add(evidence);
         if (conflict) subject.MarkCommunicationAgeConflict(now);
         else subject.SetCommunicationAgeCategory(evidence.ProposedCategory, now);
         var actorPersonId = await db.Users.Where(u => u.Id == actorId).Select(u => u.PersonId).SingleAsync(ct);
         db.AdminAuditLogs.Add(AdminAuditLog.Create(actorId, actorPersonId, sessionId,
-            conflict ? "messaging.age.conflict" : access is null ? "messaging.age.conflict.resolved" : "messaging.age.verified",
+            conflict ? "messaging.age.conflict" : initialPlatformVerification ? "messaging.age.initial.verified"
+                : access is null ? "messaging.age.conflict.resolved" : "messaging.age.verified",
             "User", subject.Id.ToString("D"), access?.OrganizationId, command.Reason.Trim(), now, correlationId,
             AdminAuditResult.Succeeded, previous.ToString(), $"{subject.CommunicationAgeCategory};{subject.CommunicationAgeVerificationStatus};{evidence.Source}"));
         try { await db.SaveChangesAsync(ct); }
@@ -75,6 +112,16 @@ public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore
         await transaction.CommitAsync(ct);
         if (conflict) throw new MessagingException("AGE_VERIFICATION_CONFLICT", "شاهد متعارض ثبت شد؛ حل مجاز پلتفرم لازم است.");
         return Map(subject);
+    }
+
+    private async Task AuthorizePlatformAsync(Guid actorId, Guid sessionId, bool requireOwner, CancellationToken ct)
+    {
+        var actor = await iam.GetAuthorizationSnapshotAsync(actorId, ct);
+        if (actor is null || !actor.Permissions.Contains(PlatformPermissionKeys.UsersManage) ||
+            requireOwner && !actor.Roles.Contains(PlatformRoleKeys.PlatformOwner))
+            throw new PlatformException(PlatformErrorCodes.AccessDenied, "عملیات مجاز نیست.");
+        if (!await stepUp.IsSatisfiedAsync(actorId, sessionId, ct))
+            throw new PlatformException(PlatformErrorCodes.StepUpRequired, "تأیید تازه MFA لازم است.");
     }
 
     private async Task CheckSchoolAsync(Guid actorId, Guid sessionId, AccessContext access, CancellationToken ct)

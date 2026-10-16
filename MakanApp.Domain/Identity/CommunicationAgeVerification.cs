@@ -1,7 +1,7 @@
 namespace MakanApp.Domain.Identity;
 
 public enum CommunicationAgeVerificationStatus { Unverified = 0, Verified = 1, Conflict = 2 }
-public enum CommunicationAgeVerificationSource { School = 1, PlatformResolution = 2 }
+public enum CommunicationAgeVerificationSource { School = 1, PlatformResolution = 2, PlatformVerification = 3 }
 
 public sealed class CommunicationAgeVerification
 {

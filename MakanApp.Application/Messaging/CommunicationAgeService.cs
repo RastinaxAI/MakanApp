@@ -9,6 +9,10 @@ public sealed record CommunicationAgeResult(Guid UserId, CommunicationAgeCategor
 
 public interface ICommunicationAgeStore
 {
+    Task<CommunicationAgeResult> GetPlatformAsync(Guid actorId, Guid sessionId, Guid userId, string correlationId, CancellationToken ct);
+    Task<CommunicationAgeResult> VerifyInitialAsync(Guid actorId, Guid sessionId, Guid userId,
+        VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct);
+    Task<MessagingStatusSnapshot> GetSelfStatusAsync(Guid userId, Guid sessionId, CancellationToken ct);
     Task<CommunicationAgeResult> GetSchoolAsync(Guid actorId, Guid sessionId, AccessContext access, Guid personId, CancellationToken ct);
     Task<CommunicationAgeResult> VerifyAsync(Guid actorId, Guid sessionId, AccessContext? access, Guid targetId,
         VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct);
@@ -16,6 +20,19 @@ public interface ICommunicationAgeStore
 
 public sealed class CommunicationAgeService(ICommunicationAgeStore store, SchoolManagementAccessResolver schoolAccess, TimeProvider clock)
 {
+    public Task<CommunicationAgeResult> GetPlatformAsync(Guid actorId, Guid sessionId, Guid userId,
+        string correlationId, CancellationToken ct) => store.GetPlatformAsync(actorId, sessionId, userId, correlationId, ct);
+
+    public Task<CommunicationAgeResult> VerifyInitialAsync(Guid actorId, Guid sessionId, Guid userId,
+        VerifyCommunicationAgeCommand command, string correlationId, CancellationToken ct)
+    {
+        Validate(command);
+        return store.VerifyInitialAsync(actorId, sessionId, userId, command, correlationId, ct);
+    }
+
+    public async Task<MessagingStatusResult> GetSelfStatusAsync(Guid userId, Guid sessionId, CancellationToken ct) =>
+        MessagingStatusPolicy.Evaluate(await store.GetSelfStatusAsync(userId, sessionId, ct), clock.GetUtcNow().UtcDateTime);
+
     public async Task<CommunicationAgeResult> GetSchoolAsync(Guid actorId, Guid sessionId, Guid personId, CancellationToken ct) =>
         await store.GetSchoolAsync(actorId, sessionId, await schoolAccess.ResolveAsync(actorId, sessionId, ct), personId, ct);
 

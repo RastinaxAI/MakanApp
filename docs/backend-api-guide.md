@@ -828,6 +828,14 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 
 ### آغاز گفت‌وگو و مجوز ارتباط
 
+تکمیل P0 حساب شخصی: OTP فقط مالکیت شماره را ثابت می‌کند و تکمیل Profile، تأیید سن نیست. `GET /api/v1/me/messaging-status` فقط وضعیت خود caller را با `verificationStatus`، `effectiveAgeCategory`، `allowedActions`، `nextAction` و `version` برمی‌گرداند. سن/Block/علت محدودیت شخص دیگر از این مسیر قابل دریافت نیست. فهرست action راهنمای وضعیت جاری است، نه مجوز مقصد؛ انتخاب workspace و سیاست جاری هر عملیات همچنان بررسی می‌شوند.
+
+برای تأیید اولیه حساب شخصیِ بدون مدرسه، اپراتور Platform دارای `platform.users.manage` و MFA/Step-up تازه از `GET /api/admin/v1/users/{userId}/communication-age` نسخه جاری را می‌گیرد و سپس `POST` همان مسیر با پسوند `/verifications` می‌زند. بدنه: `verifiedBirthDate` با تاریخ معتبر، `expectedVersion` برابر نسخه دریافتی و `reason` به‌عنوان مرجع شاهد مجاز، بدون درج PII. پاسخ `CommunicationAgeResult` تاریخ تولد ندارد. شاهد append-only، classification و Audit در transaction واحد ثبت می‌شوند؛ هیچ OrganizationPerson، Membership، Enrollment، Credential یا حساب دوم ساخته نمی‌شود.
+
+مسیر initial فقط `Unverified` را می‌پذیرد؛ `Verified/Conflict` با `409 AGE_VERIFICATION_CONFLICT` و نسخه کهنه با `412 CONCURRENCY_CONFLICT` رد می‌شوند. حل Conflict همچنان فقط مسیر مصوب `/communication-age/resolve` با Owner و MFA تازه است. عدم MFA با `MFA_REQUIRED` و step-up منقضی با `PLATFORM_STEP_UP_REQUIRED` رد می‌شود؛ denial معمول permission ممکن است فقط HTTP403 بدون body کاربردی داشته باشد. Migration لازم برای source اولیه پلتفرمی: `20261016050425_AddPersonalCommunicationAgeVerification`؛ اجرای آن روی Production در startup یا این مرحله انجام نمی‌شود.
+
+Adult فقط با `Verified`، Adult مؤثر است. Minor کمتر از ۱۸ و Unknown طبق GAP-05 محافظت می‌شوند. برای حساب محافظت‌شده، actionهای محدود به رابطه (`DiscoverRelatedUsers`، `CreateDirectWithAuthorizedRelationship`) با کشف عمومی/تماس غریبه یکسان نیستند؛ گروه خصوصی مجاز به معنی مجوز گروه عمومی یا کانال شخصی نیست. `version` نسخه وضعیت User است، نه permission token؛ تغییر هدف/نشست/زمان می‌تواند مجوز عملیاتی را مستقل تغییر دهد.
+
 `POST /conversations/direct`:
 
 ```json
@@ -839,7 +847,7 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 
 Scope یکی از `Personal` یا `Organization` است. در Scope سازمانی، سازمان از workspace جاری به دست می‌آید. ایجاد گفت‌وگوی تازه `201` و بازیابی زوج موجود `200` با `alreadyExisted=true` دارد.
 
-در فضای شخصی، Direct به‌صورت سراسری و مستقل از Organization قابل شروع است. مقصد باید بر اساس `DirectMessagesAudience` فعلی خود (`Everyone`، `Contacts` یا `Nobody`) درخواست‌کننده را مجاز کند و Block دوطرفه نیز برقرار نباشد. حالت `Contacts` یک‌طرفه و از دید مقصد است: مقصد باید درخواست‌کننده را در Contacts خود ذخیره کرده باشد. وضعیت سنی و `PersonalCommunicationGrant` دیگر شرط Personal Direct نیستند؛ grant قدیمی فقط برای سازگاری schema/history باقی مانده است. سیاست ایمنی حساب کودک هنوز release gate مستقل دارد.
+در فضای شخصی، Direct به‌صورت سراسری و مستقل از Organization قابل شروع است. مقصد باید بر اساس `DirectMessagesAudience` فعلی خود (`Everyone`، `Contacts` یا `Nobody`) درخواست‌کننده را مجاز کند و Block دوطرفه نیز برقرار نباشد. حالت `Contacts` یک‌طرفه و از دید مقصد است: مقصد باید درخواست‌کننده را در Contacts خود ذخیره کرده باشد. برای دو Adult تأییدشده، رابطه مدرسه، Contact یا `PersonalCommunicationGrant` شرط نیست؛ grant قدیمی فقط برای سازگاری schema/history باقی مانده است. هرگاه یک طرف Minor/Unknown باشد، رابطه جاری مجاز GAP-05 نیز الزامی است؛ شناسه یا ذخیره یک‌طرفه توسط غریبه آن را دور نمی‌زند.
 
 در فضای سازمانی، عضویت‌ها و نقش‌ها فعال‌اند و policy فعلی این روابط را کنترل می‌کند:
 
