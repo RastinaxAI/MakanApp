@@ -98,6 +98,10 @@ public sealed class MessagingRealtimeOutboxProcessor(
             var change = await dbContext.MessagingChangeEvents
                 .AsNoTracking()
                 .SingleAsync(item => item.Id == outboxMessage.ChangeEventId, cancellationToken);
+            long? peerReadSequence = change.ChangeType == Domain.Messaging.MessagingChangeType.PeerReadStateChanged
+                ? await dbContext.Messages.AsNoTracking().Where(m => m.Id == change.ResourceId)
+                    .Select(m => (long?)m.Sequence).SingleAsync(cancellationToken)
+                : null;
             var notification = new MessagingRealtimeNotification(
                 change.ConversationId,
                 change.ChangeType,
@@ -105,7 +109,8 @@ public sealed class MessagingRealtimeOutboxProcessor(
                 change.ResourceVersion,
                 MessagingChangeCursor.Encode(change.ConversationId, change.ChangeSequence),
                 change.OccurredAtUtc,
-                change.PayloadVersion);
+                change.PayloadVersion,
+                peerReadSequence);
             await notifier.NotifyConversationChangedAsync(
                 notification,
                 change.AudienceUserId,

@@ -12,5 +12,6 @@ public enum MessagingChangeType
     ReadCursorAdvanced = 8,
     DeliveryCursorAdvanced = 9,
     MessageHiddenForUser = 10,
-    ConversationUserStateChanged = 11
+    ConversationUserStateChanged = 11,
+    PeerReadStateChanged = 12
 }

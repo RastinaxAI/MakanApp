@@ -2819,6 +2819,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("DirectUserLowId");
 
+                    b.HasIndex("OrganizationId");
+
                     b.HasIndex("SavedOwnerUserId")
                         .IsUnique()
                         .HasDatabaseName("UX_Conversations_Saved_Owner")
@@ -2828,8 +2830,6 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_Conversations_Creator_ClientOperationId")
                         .HasFilter("[ManagementPolicy] = 1");
-
-                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("OrganizationId", "AcademicClassId")
                         .IsUnique()
@@ -3507,7 +3507,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
 
-                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)");
+                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)");
                         });
                 });
 

@@ -13,6 +13,15 @@ public sealed class ConversationsController(
     IMessagingService messagingService,
     IConversationManagementService managementService) : ControllerBase
 {
+    [HttpGet("{conversationId:guid}/read-states")]
+    [ProducesResponseType<ConversationPeerReadStateResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ConversationPeerReadStateResult>> GetReadStates(
+        Guid conversationId, CancellationToken cancellationToken) =>
+        Ok(await messagingService.GetPeerReadStateAsync(
+            AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User),
+            conversationId, cancellationToken));
+
     [HttpPost("groups")]
     [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ManagedConversationResult>(StatusCodes.Status201Created)]

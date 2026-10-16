@@ -48,11 +48,18 @@ public sealed partial class EfMessagingStore
                 "نشانگر تغییر از وضعیت فعلی گفتگو جلوتر است.");
         }
 
+        var receiptPeer = await GetVisibleReceiptPeerAsync(conversation, userId, accessContext,
+            timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+        var receiptPeerId = receiptPeer?.UserId ?? Guid.Empty;
+        var receiptMessages = ReceiptMessages(conversationId, userId, receiptPeerId);
         var rows = await dbContext.MessagingChangeEvents
             .AsNoTracking()
             .Where(change => change.ConversationId == conversationId &&
                              change.ChangeSequence > afterChangeSequence &&
                              (!change.AudienceUserId.HasValue || change.AudienceUserId == userId) &&
+                             (change.ChangeType != MessagingChangeType.PeerReadStateChanged ||
+                              receiptPeerId != Guid.Empty && change.AudienceUserId == userId &&
+                              receiptMessages.Any(message => message.Id == change.ResourceId)) &&
                              (change.ChangeType != MessagingChangeType.MessageCreated &&
                               change.ChangeType != MessagingChangeType.MessageEdited &&
                               change.ChangeType != MessagingChangeType.MessageDeleted &&
@@ -74,7 +81,12 @@ public sealed partial class EfMessagingStore
         var nextSequence = hasMore
             ? observedSequence
             : Math.Max(observedSequence, currentSequence);
-        return new ConversationChangePageStoreResult(changes, nextSequence, hasMore);
+        var receiptIds = changes.Where(c => c.ChangeType == MessagingChangeType.PeerReadStateChanged)
+            .Select(c => c.ResourceId).ToArray();
+        var receiptSequences = receiptIds.Length == 0 ? new Dictionary<Guid, long>() :
+            await dbContext.Messages.AsNoTracking().Where(m => receiptIds.Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id, m => m.Sequence, cancellationToken);
+        return new ConversationChangePageStoreResult(changes, nextSequence, hasMore, receiptSequences);
     }
 
     public Task<ConversationCursorStoreResult> AdvanceReadCursorAsync(
@@ -177,6 +189,7 @@ public sealed partial class EfMessagingStore
                 "پیام متناظر با نشانگر در تاریخچه قابل مشاهده وجود ندارد.");
         }
 
+        var previousReadSequence = participant.LastReadMessageSequence;
         var changed = read
             ? participant.AdvanceRead(upToMessageSequence, nowUtc)
             : participant.AdvanceDelivery(upToMessageSequence, nowUtc);
@@ -198,6 +211,9 @@ public sealed partial class EfMessagingStore
                 userId,
                 userId,
                 cancellationToken);
+            if (read && changed)
+                await AppendPeerReadChangeAsync(conversation, participant, previousReadSequence,
+                    accessContext, nowUtc, cancellationToken);
         }
 
         var unreadCount = await GetUnreadCountAsync(

@@ -56,7 +56,7 @@ Internal Makan Content Safety تصمیم مصوب جاری است؛ موتور �
 | B02 اولین ارتباط Adult | حل‌شده در تست دوحسابی محلی | تأیید اولیه، کشف دوطرفه، Contact اختیاری و Direct canonical؛ Message Request یا consent subsystem جدید لازم نشد |
 | B03 وضعیت self | حل‌شده در کد | GET /api/v1/me/messaging-status؛ capability hint خود caller، نه مجوز دائمی یا وضعیت دیگران |
 | B08 Enum/OpenAPI | حل‌شده در کد/تست قرارداد | string/nullable/Flags بدون تغییر wire صحیح MVC/SignalR |
-| B04 Peer Read Receipt | **DEFERRED_TO_P1_B04** | cursorهای read/delivered فعلی self-only هستند؛ public peer state و قرارداد privacy جدید ساخته نشد |
+| B04 Peer Read Receipt | **CLOSED_IN_P1_CODE_AND_LOCAL_TESTS** | GET read-states و event اختصاصی Direct با current privacy/eligibility/history؛ cursorهای read/delivered خود کاربر همچنان خصوصی؛ Group/Channel per-member receipt ندارند؛ مرجع: Handoff P1 |
 | B05 Push واقعی | P1، خارج P0 | اعلان داخلی و outbox پایه موجود؛ provider واقعی Push تحویل نشده و Sent/SignalR معادل Push نیست |
 | B06 Typing | P1، خارج P0 | command/event/TTL ساختگی وجود ندارد؛ به طراحی محدودیت/expiry مستقل نیاز دارد |
 | B07 Presence / Last Seen | P1، خارج P0 | online/last-seen از اتصال، recent contact یا read cursor حدس زده نمی‌شود؛ privacy و multi-device/expiry مستقل لازم است |

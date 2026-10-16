@@ -219,7 +219,8 @@ public sealed record ConversationChangeResult(
     string Cursor,
     DateTime OccurredAtUtc,
     Guid? ActorUserId,
-    int PayloadVersion);
+    int PayloadVersion,
+    long? PeerReadThroughSequence = null);
 
 public sealed record ConversationChangePageResult(
     IReadOnlyCollection<ConversationChangeResult> Changes,
@@ -243,7 +244,21 @@ public sealed record MessagingRealtimeNotification(
     string? ResourceVersion,
     string Cursor,
     DateTime OccurredAtUtc,
-    int PayloadVersion);
+    int PayloadVersion,
+    long? PeerReadThroughSequence = null);
+
+public enum PeerReadVisibility
+{
+    Visible = 1,
+    Hidden = 2,
+    NotSupported = 3
+}
+
+public sealed record ConversationPeerReadStateResult(
+    Guid ConversationId,
+    long? PeerReadThroughSequence,
+    PeerReadVisibility Visibility,
+    string? Version);
 
 public static class MessagingRealtimeEventNames
 {

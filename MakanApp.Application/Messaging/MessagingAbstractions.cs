@@ -90,7 +90,8 @@ public sealed record ConversationMediaPageStoreResult(
 public sealed record ConversationChangePageStoreResult(
     IReadOnlyCollection<MessagingChangeEvent> Changes,
     long NextChangeSequence,
-    bool HasMore);
+    bool HasMore,
+    IReadOnlyDictionary<Guid, long>? PeerReadSequences = null);
 
 public sealed record ConversationCursorStoreResult(
     ConversationParticipant Participant,
@@ -98,6 +99,10 @@ public sealed record ConversationCursorStoreResult(
 
 public interface IMessagingStore
 {
+    Task<ConversationPeerReadStateResult> GetPeerReadStateAsync(
+        Guid userId, Guid conversationId, AccessContext accessContext,
+        DateTime nowUtc, CancellationToken cancellationToken);
+
     Task<DirectConversationStoreResult> StartOrGetDirectConversationAsync(
         Guid actorUserId,
         Guid targetUserId,
@@ -344,6 +349,9 @@ public interface IMessagingRealtimeAudienceResolver
 
 public interface IMessagingService
 {
+    Task<ConversationPeerReadStateResult> GetPeerReadStateAsync(
+        Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken);
+
     Task<SavedConversationResult> GetOrCreateSavedConversationAsync(
         Guid userId,
         Guid sessionId,

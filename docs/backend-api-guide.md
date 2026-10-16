@@ -826,6 +826,8 @@ curl.exe --request POST "$apiBase/files" --header "Authorization: Bearer $access
 <a id="messaging"></a>
 ## پیام‌رسانی و همگام‌سازی
 
+افزودهٔ P1، فاز Peer Read: `GET /api/v1/conversations/{conversationId}/read-states` برای Direct رسید خواندن واقعی peer را با `peerReadThroughSequence/visibility/version` می‌دهد؛ Delivered، Sent و read خود فرستنده رسید peer نیستند. `ConversationChanged` و Delta اکنون `PeerReadStateChanged` با sequence nullable دارند؛ رویداد خصوصی read قبلی self-only باقی است. Block، privacy هر دو جهت، eligibility و مرز تاریخچه جاری اعمال می‌شوند؛ Group/Channel/Saved مقدار NotSupported دارند. [قرارداد دقیق P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) بر توضیح تاریخی self-only پایین برای این افزوده مقدم است. Push واقعی هنوز از این فاز نتیجه نمی‌شود.
+
 > **مرز قرارداد Messenger v2:** توضیحات این بخش رفتار runtime فعلی را مستند می‌کنند. ممیزی تاریخی ۱۲۷ requirement در [STEP 14A](architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md)، تصمیم‌های freeze‌شده در [Messenger v2 Product Decisions](architecture/MESSENGER_V2_PRODUCT_DECISIONS.md) و نتیجه re-audit نهایی در [STEP 14E](architecture/STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md) ثبت شده‌اند.
 
 ### آغاز گفت‌وگو و مجوز ارتباط

@@ -16,7 +16,8 @@ public sealed partial class EfMessagingStore(
     IMessagingPrivacyResolver privacyResolver,
     IConversationManagementPolicy managementPolicy,
     IOutbox outbox,
-    MessagingOutboxWakeSignal outboxWakeSignal) :
+    MessagingOutboxWakeSignal outboxWakeSignal,
+    TimeProvider timeProvider) :
     IMessagingStore,
     IConversationManagementStore,
     IMessagingSafetyStore,

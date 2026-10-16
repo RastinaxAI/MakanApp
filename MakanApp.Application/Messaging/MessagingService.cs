@@ -14,6 +14,14 @@ public sealed class MessagingService(
 {
     private const string SavedConversationTitle = "پیام‌های ذخیره‌شده";
 
+    public async Task<ConversationPeerReadStateResult> GetPeerReadStateAsync(
+        Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        return await store.GetPeerReadStateAsync(userId, conversationId, context, UtcNow(), cancellationToken);
+    }
+
     public async Task<SavedConversationResult> GetOrCreateSavedConversationAsync(
         Guid userId,
         Guid sessionId,
@@ -564,7 +572,10 @@ public sealed class MessagingService(
                 MessagingChangeCursor.Encode(conversationId, change.ChangeSequence),
                 change.OccurredAtUtc,
                 change.ActorUserId,
-                change.PayloadVersion)).ToArray(),
+                change.PayloadVersion,
+                change.ChangeType == MessagingChangeType.PeerReadStateChanged &&
+                    page.PeerReadSequences?.TryGetValue(change.ResourceId, out var readSequence) == true
+                        ? readSequence : null)).ToArray(),
             MessagingChangeCursor.Encode(conversationId, page.NextChangeSequence),
             page.HasMore);
     }
