@@ -193,3 +193,39 @@ Migration بررسی‌شده `20261016211112_AddConversationPollsAndQuiz` پن�
 Validation نهایی فاز هفتم تکمیل شد: دور دوم `phase7-fixed-final` نیز **Unit=544، Integration=973، Architecture=14، Total=1531 passed، failed/skipped=0**؛ Integration حدود۱۲:۳۲. restore و هر دو build موفق با صفر warning/error؛ EF pending model changes: NONE. هر ۱۷۲ تست P2 در full suite وجود دارند. PDF مرجع دوباره hash شد و دقیقاً همان SHA256 ابتدایی را دارد. بررسی کمکی فقط‌خواندنی sqlcmd با timeout پنج‌ثانیه‌ای نتیجه نداد؛ علت کندی به‌طور قطعی نسبت داده نمی‌شود و این diagnostic نه تست موفق/ناموفق محسوب شد، نه با تغییر SQL/service/config رفع ظاهری شد. خود suite کامل سرانجام موفق بود؛ هیچ تست حذف/skip و هیچ تغییر کد میان دو دور اصلاح‌شده وجود نداشت.
 
 از baseline تا این نقطه، ۴۵ Unit و۱۷۲ Integration معنادار افزوده شده‌اند؛ جمع افزایش۲۱۷ و Architecture همان۱۴ است. فقط۵۳ مسیر مرتبط این فاز با فهرست مجاز تطبیق داده شدند؛ unexpected/missing هر دو صفر. source اصلی AI و فایل‌های config/MeliPayamak/frontend/Solution دست‌نخورده‌اند. پیام commit نهایی کد `feat(messaging): add polls quizzes and p2 acceptance` است؛ نتیجهٔ commit/push/remote باید پس از اجرای واقعی ثبت شود.
+
+Git فاز هفتم کامل شد: `9e35bb3ba53ee93cfa555a024792ce50fcef6c86` با همان پیام؛۵۳ فایل مرتبط، commit/push معمولی/fetch و HEAD==origin/main موفق، worktree تمیز. این SHA کد نهاییِ دو بار full-tested است. ثبت پس از آن فقط تکمیل شواهد و وضعیت اسناد است؛ هیچ source/config/migration تازه‌ای به آن افزوده نمی‌شود. SHA commit همین ثبتِ مستندات از `git log` و گزارش نهایی قابل دریافت است؛ self-hash داخل فایل جعل یا amend نمی‌شود.
+
+## نتیجهٔ نهایی Gateهای P2
+
+Gateها فقط به code/product و آزمون محلی موجود اشاره دارند؛ دریافت Push واقعی، frontend، deployment و ظرفیت چندگرهی ادعا نمی‌شوند. Checklist طبق استثنای صریح مرحله deferred است و blocker بقیهٔ P2 نیست. هیچ تصمیم Child Safety بازگشایی/تضعیف نشده است.
+
+```text
+MESSENGER_P2_TYPING=PASS
+MESSENGER_P2_PRESENCE=PASS
+MESSENGER_P2_LAST_SEEN_PRIVACY=PASS
+MESSENGER_P2_SAVED=PASS
+MESSENGER_P2_FOLDERS=PASS
+MESSENGER_P2_GROUP_MANAGEMENT=PASS
+MESSENGER_P2_CHANNEL_MANAGEMENT=PASS
+MESSENGER_P2_INVITES=PASS
+MESSENGER_P2_JOIN_REQUESTS=PASS
+MESSENGER_P2_TOPICS=PASS
+MESSENGER_P2_POLL=PASS
+MESSENGER_P2_QUIZ=PASS
+MESSENGER_P2_SCHEDULED_MESSAGES=PASS
+MESSENGER_P2_SILENT_MESSAGES=PASS
+MESSENGER_P2_ADVANCED_SEARCH=PASS
+MESSENGER_P2_REALTIME_SECURITY=PASS
+MESSENGER_P2_CHILD_SAFETY=PASS
+MESSENGER_P2_OPENAPI=PASS
+MESSENGER_P2_CHECKLIST=DEFERRED_PRODUCT_DECISION
+MESSENGER_P1_REAL_PUSH=PENDING_ENVIRONMENT
+MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA
+```
+
+حکم تحویل کد: `MESSENGER_P2_CODE_COMPLETE`؛ محدودیت‌های زیرساختی و Checklist به معنی وجود پیاده‌سازیِ نداشته نیستند. مانع حل‌نشده‌ای برای scope کد P2 باقی نمانده است. P1 همچنان `MESSENGER_P1_CODE_COMPLETE` و `P1_PUSH_RUNTIME_PENDING` است. نقطهٔ شروع `0a93e800cb5c91d0545ae6a11513fd2fed98f5a5`، شاخه `messenger/p0`، upstream `origin/main` و remote `https://github.com/RastinaxAI/MakanApp.git` است؛ تمام هفت commit کد/فاز بالا جدا push و با remote تطبیق داده شدند. هیچ force-push یا بازنویسی تاریخچه انجام نشد.
+
+شش migration این تحویل به ترتیب: `20261016163433_AddMessagingPresencePrivacy`، `20261016170915_AddMessagingPersonalOrganization`، `20261016174429_AddConversationInvitesAndRestrictions`، `20261016183900_AddConversationTopics`، `20261016190927_AddScheduledAndSilentMessages` و `20261016211112_AddConversationPollsAndQuiz`. pending model changes=NONE؛ migration خودکار startup، apply روی سرور یا دیتابیس عادی انجام نشده است. workspace تحویل همین worktree مستقل است؛ workspace اصلی دارای dirtyهای AI نه تغییر داده شد و نه وارد index/commit شد.
+
+اعتبارسنجی ثبتِ صرفاً مستندات: restore، build و final build موفق با صفر warning/error؛ دو دور هدفمند، هرکدام **۳ Integration قرارداد OpenAPI/body + ۱۴ Architecture = ۱۷ passed** و failed/skipped=0 در `final-doc-contracts` و `final-doc-contracts-repeat`. این ۱۷ مورد جای دو suite کامل۱۵۳۱تایی کد نهایی نیستند و با آن جمع زده نمی‌شوند؛ بعد از SHA کد بالا فقط همین سه فایل سند تغییر کرده‌اند. پیام ثبت نهایی `docs(messaging): finalize p2 delivery evidence` است؛ SHA و تأیید مستقیم remote پس از اجرای Git در گزارش تحویل اعلام می‌شوند.
