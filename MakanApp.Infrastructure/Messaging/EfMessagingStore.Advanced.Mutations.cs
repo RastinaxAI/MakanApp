@@ -30,6 +30,7 @@ public sealed partial class EfMessagingStore
             accessContext,
             cancellationToken);
         nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
+        if (message.Kind == MessageKind.Poll) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "تعریف نظرسنجی منتشرشده تغییر نمی‌کند.");
         EnsureMutableConversation(conversation);
         await EnsureCanSendAdvancedAsync(conversation, participant, userId, accessContext, message.Kind, nowUtc, cancellationToken);
         await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, cancellationToken);

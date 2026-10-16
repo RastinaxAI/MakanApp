@@ -169,12 +169,13 @@ public sealed partial class EfMessagingStore
                 "پیام مبدا برای فوروارد در دسترس نیست.");
         }
 
+        var forwardedContent = await BuildForwardContentAsync(source, cancellationToken);
         await EnsureCanSendAdvancedAsync(
             destinationConversation,
             destinationParticipant,
             userId,
             accessContext,
-            source.Kind,
+            forwardedContent.Kind,
             nowUtc,
             cancellationToken);
         await EnsureSafetyGateSatisfiedAsync(
@@ -187,7 +188,7 @@ public sealed partial class EfMessagingStore
             .OrderBy(attachment => attachment.FileAssetId)
             .Select(attachment => attachment.FileAssetId)
             .ToArrayAsync(cancellationToken);
-        EnsureForwardPreparationStillMatches(source, attachmentIds, command);
+        EnsureForwardPreparationStillMatches(source, forwardedContent.Kind, forwardedContent.Text, attachmentIds, command);
         var forwarded = await CreateMessageAsync(
             destinationConversation,
             destinationParticipant,
@@ -226,12 +227,14 @@ public sealed partial class EfMessagingStore
 
     private static void EnsureForwardPreparationStillMatches(
         Message source,
+        MessageKind expectedKind,
+        string? expectedText,
         IReadOnlyCollection<Guid> attachmentIds,
         SendMessageStoreCommand command)
     {
         if (command.ForwardedFromMessageId != source.Id ||
-            command.Kind != source.Kind ||
-            !string.Equals(command.Text, source.Text, StringComparison.Ordinal) ||
+            command.Kind != expectedKind ||
+            !string.Equals(command.Text, expectedText, StringComparison.Ordinal) ||
             command.ReplyToMessageId.HasValue ||
             command.MentionedUserIds.Count != 0 ||
             !command.AllowSourceAttachments ||

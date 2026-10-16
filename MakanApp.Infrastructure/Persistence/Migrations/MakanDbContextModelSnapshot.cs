@@ -2726,7 +2726,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("AbuseReports", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_AbuseReports_MessageKind", "[ReportedMessageKind] IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("CK_AbuseReports_MessageKind", "[ReportedMessageKind] IN (1, 2, 3, 4, 5, 6, 7)");
 
                             t.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6, 7)");
 
@@ -3360,6 +3360,181 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPoll", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllowsMultipleAnswers")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ClosedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("ClosedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("DefinitionHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsQuiz")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OptionCount")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClosedByUserId");
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("Id", "ConversationId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationPolls", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationPolls_Definition", "[OptionCount] BETWEEN 2 AND 10 AND DATALENGTH([DefinitionHash])=32 AND ([IsQuiz]=0 OR [AllowsMultipleAnswers]=0)");
+
+                            t.HasCheckConstraint("CK_ConversationPolls_State", "[Revision]>0 AND [UpdatedAtUtc]>=[CreatedAtUtc] AND (([Status]=1 AND [ClosedAtUtc] IS NULL AND [ClosedByUserId] IS NULL) OR ([Status]=2 AND [ClosedAtUtc] IS NOT NULL AND [ClosedAtUtc]>=[CreatedAtUtc] AND [ClosedByUserId] IS NOT NULL))");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollOption", b =>
+                {
+                    b.Property<Guid>("PollId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("PollId", "Number");
+
+                    b.ToTable("ConversationPollOptions", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationPollOptions_Value", "[Number] BETWEEN 1 AND 10 AND LEN(LTRIM(RTRIM([Text])))>0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollSelection", b =>
+                {
+                    b.Property<Guid>("PollId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OptionNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("PollId", "UserId", "OptionNumber");
+
+                    b.HasIndex("PollId", "OptionNumber", "UserId");
+
+                    b.ToTable("ConversationPollSelections", "messaging");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollVote", b =>
+                {
+                    b.Property<Guid>("PollId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<bool>("IsQuiz")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("PollId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PollId", "IsQuiz");
+
+                    b.HasIndex("PollId", "CreatedAtUtc", "UserId");
+
+                    b.ToTable("ConversationPollVotes", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationPollVotes_State", "[Revision]>0 AND ([IsQuiz]=0 OR [Revision]=1) AND [UpdatedAtUtc]>=[CreatedAtUtc]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationQuizAnswer", b =>
+                {
+                    b.Property<Guid>("PollId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CorrectOptionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Explanation")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsQuiz")
+                        .HasColumnType("bit");
+
+                    b.HasKey("PollId");
+
+                    b.HasIndex("PollId", "CorrectOptionNumber");
+
+                    b.HasIndex("PollId", "IsQuiz");
+
+                    b.ToTable("ConversationQuizAnswers", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationQuizAnswers_IsQuiz", "[IsQuiz]=1");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationTopic", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3601,11 +3776,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Messages_ContactCardShape", "([Kind] = 6 AND [SharedContactUserId] IS NOT NULL AND LEN(LTRIM(RTRIM([SharedContactUsername]))) > 0 AND LEN(LTRIM(RTRIM([SharedContactDisplayName]))) > 0) OR ([Kind] <> 6 AND [SharedContactUserId] IS NULL AND [SharedContactUsername] IS NULL AND [SharedContactDisplayName] IS NULL)");
 
-                            t.HasCheckConstraint("CK_Messages_Content", "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] = 1 AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))");
+                            t.HasCheckConstraint("CK_Messages_Content", "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] IN (1, 7) AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))");
 
                             t.HasCheckConstraint("CK_Messages_CurrentRevision", "[CurrentRevisionNumber] > 0");
 
-                            t.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6)");
+                            t.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6, 7)");
 
                             t.HasCheckConstraint("CK_Messages_Sequence", "[Sequence] > 0");
                         });
@@ -3822,7 +3997,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
 
-                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)");
+                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)");
                         });
                 });
 
@@ -4150,7 +4325,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("SafetyIncidents", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5, 6, 7)");
 
                             t.HasCheckConstraint("CK_SafetyIncidents_Decision", "[Decision] IN (2, 3)");
 
@@ -7217,6 +7392,83 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("MessageId", "ConversationId")
                         .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPoll", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ClosedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("Id", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollOption", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPoll", null)
+                        .WithMany()
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollSelection", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPollOption", null)
+                        .WithMany()
+                        .HasForeignKey("PollId", "OptionNumber")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPollVote", null)
+                        .WithMany()
+                        .HasForeignKey("PollId", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationPollVote", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPoll", null)
+                        .WithMany()
+                        .HasForeignKey("PollId", "IsQuiz")
+                        .HasPrincipalKey("Id", "IsQuiz")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationQuizAnswer", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPollOption", null)
+                        .WithMany()
+                        .HasForeignKey("PollId", "CorrectOptionNumber")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationPoll", null)
+                        .WithMany()
+                        .HasForeignKey("PollId", "IsQuiz")
+                        .HasPrincipalKey("Id", "IsQuiz")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

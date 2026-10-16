@@ -28,7 +28,12 @@ public sealed partial class MessagingEndpointsTests
             ("/api/v1/messaging/join-requests/{requestId}/approve", "post"),
             ("/api/v1/conversations/{conversationId}/topics", "post"), ("/api/v1/conversations/{conversationId}/topics/{topicId}", "put"),
             ("/api/v1/conversations/{conversationId}/scheduled-messages", "post"), ("/api/v1/conversations/{conversationId}/scheduled-messages/{id}/cancel", "post"),
-            ("/api/v1/conversations/{conversationId}/me/restriction", "get")
+            ("/api/v1/conversations/{conversationId}/me/restriction", "get"),
+            ("/api/v1/conversations/{conversationId}/polls", "post"),
+            ("/api/v1/conversations/{conversationId}/messages/{messageId}/poll", "get"),
+            ("/api/v1/conversations/{conversationId}/messages/{messageId}/poll/vote", "post"),
+            ("/api/v1/conversations/{conversationId}/messages/{messageId}/poll/close", "post"),
+            ("/api/v1/conversations/{conversationId}/messages/{messageId}/poll/voters", "get")
         }) Assert.True(paths.GetProperty(route).TryGetProperty(method, out _), method + " " + route);
         var parameters = paths.GetProperty("/api/v1/messages/search").GetProperty("get").GetProperty("parameters");
         foreach (var name in new[] { "hasAttachment", "hasLinks", "topicId", "savedLabel", "senderUserId", "conversationId" })
@@ -38,6 +43,7 @@ public sealed partial class MessagingEndpointsTests
         foreach (var hidden in new[] { "token", "tokenHash" }) Assert.False(schemas.GetProperty(nameof(InviteLinkResult)).GetProperty("properties").TryGetProperty(hidden, out _));
         Assert.True(schemas.GetProperty(nameof(SendMessageCommand)).GetProperty("properties").TryGetProperty("isSilent", out _));
         Assert.True(schemas.GetProperty(nameof(ConversationMessageResult)).GetProperty("properties").TryGetProperty("topicId", out _));
+        foreach (var secret in new[] { "definitionHash", "closedByUserId", "voters" }) Assert.False(schemas.GetProperty(nameof(ConversationPollResult)).GetProperty("properties").TryGetProperty(secret, out _));
     }
 
     [Fact]
@@ -46,7 +52,7 @@ public sealed partial class MessagingEndpointsTests
         using var client = factory.CreateClient(); await CreateMessagingUserAsync(client);
         using var doc = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json")); var schemas = doc.RootElement.GetProperty("components").GetProperty("schemas");
         var options = factory.Services.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
-        foreach (var value in new object[] { MessagingPresenceState.Hidden, ConversationTopicStatus.Closed, ConversationJoinRequestStatus.Pending, ScheduledMessageStatus.Scheduled, FolderConversationTypes.All })
+        foreach (var value in new object[] { MessagingPresenceState.Hidden, ConversationTopicStatus.Closed, ConversationPollStatus.Closed, ConversationJoinRequestStatus.Pending, ScheduledMessageStatus.Scheduled, FolderConversationTypes.All })
         {
             var type = value.GetType(); var actual = JsonSerializer.SerializeToElement(value, type, options);
             Assert.Equal(JsonValueKind.String, actual.ValueKind); Assert.Equal("string", schemas.GetProperty(type.Name).GetProperty("type").GetString());
@@ -61,7 +67,7 @@ public sealed partial class MessagingEndpointsTests
     public async Task P2MetadataEndpointsHaveBoundedBodyPolicyAndRequireAuthentication()
     {
         foreach (var type in new[] { typeof(MessagingFoldersController), typeof(SavedMessageLabelsController), typeof(ConversationTopicsController),
-            typeof(ConversationInviteLinksController), typeof(ScheduledMessagesController), typeof(ConversationAdvancedManagementController) })
+            typeof(ConversationInviteLinksController), typeof(ScheduledMessagesController), typeof(ConversationAdvancedManagementController), typeof(ConversationPollsController) })
             Assert.Equal(64 * 1024, ((IRequestSizeLimitMetadata)type.GetCustomAttribute<RequestSizeLimitAttribute>()!).MaxRequestBodySize);
         using var anonymous = factory.CreateClient();
         foreach (var route in new[] { "/api/v1/messaging/folders", $"/api/v1/people/{Guid.NewGuid()}/presence", "/api/v1/messaging/join-requests",

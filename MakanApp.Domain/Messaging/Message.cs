@@ -161,6 +161,7 @@ public sealed class Message
 
     public int EditText(string? text, int maximumTextLength, DateTime editedAtUtc)
     {
+        if (Kind == MessageKind.Poll) throw new InvalidOperationException("تعریف منتشرشدهٔ نظرسنجی قابل بازنویسی نیست.");
         if (IsDeleted)
         {
             throw new InvalidOperationException("پیام حذف‌شده قابل ویرایش نیست.");
@@ -237,7 +238,7 @@ public sealed class Message
             throw new ArgumentOutOfRangeException(nameof(attachmentCount));
         }
 
-        if (kind == MessageKind.Text)
+        if (kind is MessageKind.Text or MessageKind.Poll)
         {
             if (string.IsNullOrWhiteSpace(text))
             {

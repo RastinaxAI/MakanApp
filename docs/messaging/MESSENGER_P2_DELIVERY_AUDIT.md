@@ -117,3 +117,79 @@ Git فاز پنجم انجام و remote تأیید شد: `4de7237233dcc88656728
 اصلاح، مخاطب کلاس را مستقیماً از ClassMembers جاری (Enrollment/TeacherAssignment) می‌گیرد؛ peer ساخته‌نشده یا در ChangeTracker ذخیره‌نشده هم از guard جا نمی‌ماند. گروه عادی همان participant جاری را دارد. دو regression حذف/ضعیف نشده‌اند، policy consent هم تغییر نکرده و شمار Integration تازهٔ فاز اکنون **۳۰** است. validation اصلاح‌شده باید دوباره اجرا و سپس Git بسته شود.
 
 Validation اصلاح‌شده انجام شد: هدفمند P2 برابر ۱۲۵ Integration passed؛ restore، build و final build موفق با صفر warning/error. هر دو suite کامل روی source ثابت **Unit=528، Integration=926، Architecture=14، Total=1468 passed، failed/skipped=0** در `.artifacts/messenger-p2/tests/phase6-fixed-full` و `phase6-fixed-final`؛ Integration حدود ۱۰:۰۵ و ۵:۵۱ بود. EF pending model changes: NONE؛ migration تازه ندارد. این نتایج جای خطاهای واقعی قبلی را حذف نمی‌کنند. پیام commit متمرکز `fix(messaging): harden advanced search and current authorization` است؛ نتیجهٔ Git بعد از اجرای واقعی ثبت خواهد شد.
+
+Git فاز ششم: `bf133ffbf5d9f4bfb2804035657e4c60cda27f5a` با همان پیام؛ فقط ۴۰ فایل مرتبط، commit/push/fetch موفق و HEAD==origin/main و worktree تمیز. مرز AI/MeliPayamak/appsettings/frontend/server حفظ شد.
+
+## P2-12/P2-13 و پذیرش نهایی — فاز هفتم
+
+Poll/Quiz با تصمیم Freezeشده پیاده شد: انتخاب صریح Anonymous/NonAnonymous، رأی mutable Poll با rowversion خود رأی، یک پاسخ immutable Quiz، کلید جدا و عدم query آن برای پاسخ‌نداده حتی بعد از Close، Close نهایی با rowversion Poll و reauthorization جاری، و Forward متنی مستقلِ فقط پرسش/گزینه‌ها. نوع عمومی MessageKind.Poll=7 و PollChanged=14 اضافه شدند؛ سایر نوع‌ها و hash درخواست قدیمی تغییر نکردند. رأی/کلید در پیام، Revision، Search، Reply یا event payload وارد نمی‌شوند. Topic، Silent، Block، محدودهٔ تاریخچه و Consent جاری reuse شده‌اند؛ رأی، Message/Notification تازه نمی‌سازد. Creator با حق ارسال یا Owner/Admin با DeleteMessages می‌بندد؛ subscriber کانال فقط حق رأی دارد.
+
+Migration بررسی‌شده `20261016211112_AddConversationPollsAndQuiz` پنج جدول واقعی و PK/FK مرکب/unique/index/CHECK/rowversion دارد. parent رأی هر User/Poll یکتا، انتخاب فقط برای گزینهٔ همان Poll و QuizKey فقط روی Quiz و گزینهٔ واقعی است. ایجاد اتمیک Definition/Options/Key/Message/Revision/Outbox و ترتیب قفل Conversation در Vote/Get/Close، از half-state و Vote×Close مبهم جلوگیری می‌کند. تک‌گزینه‌ای/immutable بودن Quiz قواعد Domain/transaction هستند؛ ادعای CHECK بین چند سطر نمی‌شود. Down قبل از حذف، در حضور داده/رویداد/شواهد moderation تازه ایمن می‌ایستد. فقط LocalDB fixture migrate می‌شود؛ EF pending model changes: NONE.
+
+دو CHECK قبلی AbuseReport/SafetyIncident هنوز فقط Kindهای ۱ تا ۵ را قبول می‌کردند، با وجود ContactCard=6 موجود. توسعهٔ همین constraint برای Kind=6/7 با تست SQL/API واقعی انجام شد؛ provider واقعی Internal Makan برای Card همچنان ReviewRequired می‌دهد، نه allow ضعیف‌شده. پروندهٔ Poll فقط پرسش و گزینه‌ها را snapshot می‌کند؛ private browsing یا bypass MFA جدیدی ایجاد نشد.
+
+هدفمند Domain: **۱۶ passed** در `poll-unit`. دور اول هدفمند SQL واقعاً ۱۳ passed/۱ failed از ۱۴ بود: تست برای MessageNotEditable انتظار 403 داشت، درحالی‌که قرارداد موجود 409 بود. دور بعد ۳۱ passed/۲ failed از ۳۳ داشت: fixture روی settings از PUT به‌جای PATCH استفاده کرد و assertion همهٔ resource eventها را منع می‌کرد، حتی MessageHiddenForUser مجاز خود کاربر. method و assertion به قرارداد واقعی اصلاح شدند؛ authorization ضعیف نشد. یک خطای compile تست نیز property ناموجود ContentKind در database-record helper بود؛ assertion با entity واقعی SQL انجام شد. اجرای بعدی ۴۴ passed و صفر failed/skipped بود (`poll-delivery-focused`).
+
+هدفمند نهایی **۱۷۰ Integration P2 passed، failed/skipped=0** در `phase7-p2-focused`، حدود ۱:۲۹. فاز هفتم **۱۶ Unit و ۴۵ Integration تازه** دارد: ۴۱ Poll/Quiz و چهار smoke نهایی. شامل دو دستگاه واقعی یک account، دوازده رأی‌دهندهٔ مستقل هم‌زمان/یک identity batch، چهار round Vote×Close، SQL 2601/2627 و 547، rollback Outbox و retry، عدم side effect به ExamAttempt/GradeRevision/GradeRelease، provider واقعی برای گزینهٔ unsafe، current revocation و Minor/Unknown، Report/Forward/Delta/SignalR و query-counter کلید بدون متن SQL است. smokeهای ۹ اتصال/۱۴۴ فرمان Typing، batch بیست‌تایی روی ۲۱ task، ۳۵ پیام Topic با صفحه‌های ده‌تایی و Search sender/date/media نیز واقعی‌اند؛ benchmark Production نیستند. suite کامل و Git فقط پس از اتمام واقعی ثبت می‌شوند.
+
+## نگاشت پذیرش P2-T01 تا P2-T50
+
+همهٔ نام‌های کوتاه زیر متد واقعی در `tests/MakanApp.IntegrationTests` هستند؛ theoryها دادهٔ مستقل اجرا دارند. وجود این نگاشت به‌تنهایی PASS نیست؛ TRX اجرای نهایی مرجع نتیجه است. T34 طبق استثنای صریح prompt deferred است، نه تست ساختگی یا skipped.
+
+| Gate | شاهد واقعی |
+|---|---|
+| T01 | P2EphemeralTypingReachesOnlyAuthorizedSubscribedPeerWithoutMessageOrDelta |
+| T02 | P2EphemeralTypingExpiresWithoutDisconnectAndSendStopsCurrentSessionTyping |
+| T03 | P2EphemeralBlockedPublisherAndPendingHintAreDeniedWithoutDeletingHistory؛ P2EphemeralRemovedMemberCannotPublishOrReceiveTyping |
+| T04 | P2EphemeralOneSessionDisconnectKeepsPresenceOnlineAndLastDisconnectGivesLastSeen |
+| T05 | P2EphemeralAbruptLeaseExpiryDoesNotLeavePermanentOnline |
+| T06 | P2EphemeralNobodyPrivacyAndLegacyUpdateDoNotRevealOrResetPresence؛ P2EphemeralOnlineNobodyDoesNotLeakHeartbeatTimestampThroughLastSeen |
+| T07 | P2EphemeralPresenceContactsUsesTargetsContactNotViewersContactAndBlockHidesIt |
+| T08 | P2EphemeralPresenceRealtimeIsReauthorizedAfterBlockAndDoesNotEnumerateStrangers |
+| T09 | P2PresentationLabelsUseCanonicalSavedAndConvergeAcrossSessions؛ unique Saved موجود |
+| T10 | P2PresentationSavedForwardAfterSourceRemovalDoesNotExposeSourceMetadata |
+| T11–T12 | P2PresentationFolderCrudIsOwnerOnlyAndDeletionKeepsConversation |
+| T13 | P2PresentationFolderOverrideDoesNotGrantAccessOrKeepRemovedGroupVisible |
+| T14–T15 | P2ManagementInviteCapabilityDoesNotGrantPromotionInfoOrChannelPublication |
+| T16 | P2ManagementLinkUsesHashAndExplicitAcceptanceWithoutDuplicateUse |
+| T17 | P2ManagementExpiredLinkRejectsJoinUsingServerClock |
+| T18 | P2ManagementRevocationBlocksFutureJoinButDoesNotRemoveExistingMember |
+| T19 | P2ManagementConcurrentLastLinkUseHasExactlyOneNewMember |
+| T20 | P2ManagementAdultCannotUseLinkToBypassExistingProtectedGroupAudience |
+| T21/T23 | P2ManagementPendingRequestIsNotMembershipAndDuplicateApprovalHasOneEffect |
+| T22 | P2ManagementProtectedJoinRequiresRelationAndRechecksItAtApproval؛ P2ManagementOrganizationApprovalUsesCreatorsAndRequestersOwnCurrentRoles |
+| T24 | P2TopicsCrossConversationReferenceFailsInApiAndSql |
+| T25–T26 | P2TopicsClosePreservesHistoryRejectsSendAndExplicitReopenWorks |
+| T27 | P2TopicsGranularPermissionAndRevocationApplyToEveryMutation؛ P2TopicsOfficialClassRequiresCurrentTeacherNotManagerOrStudent |
+| T28–T29 | P2PollVoteMutationUsesOwnVersionAndExactRetryDoesNotDuplicate؛ P2PollConcurrentSameAccountVotesHaveOneFinalSqlEffect |
+| T30 | P2PollMultiChoiceCountsVotersOnceAndRejectsInvalidSelections |
+| T31 | P2PollVoteRacingFinalCloseIsTransactionalAndDeterministic؛ چهار round واقعی |
+| T32 | P2AnonymousPollNeverExposesVoterIdentitiesEvenToCreator؛ P2NonAnonymousVotersArePagedSafeAndVisibleOnlyToCurrentMembers |
+| T33 | P2QuizHidesAnswerUntilOwnFinalVoteAndNeverCreatesEducationalGrade |
+| T34 | DEFERRED_PRODUCT_DECISION؛ Checklist پیاده نشده، تست ساختگی ندارد |
+| T35 | P2ScheduledExpiredClaimIsRecoveredByNewScopeAndOldWorkerCannotOverwriteReceipt؛ recovery با scope/processor تازه، نه ادعای reboot سرور |
+| T36 | P2ScheduledConcurrentCreatesAndWorkersDoNotDuplicate؛ P2ScheduledOutboxFailureRollsBackMessageAndReceiptBeforeSafeRetry |
+| T37 | P2ScheduledBlockAtDispatchDoesNotUseCreationTimePermission |
+| T38 | P2ScheduledRemovedGroupMemberCannotDispatchOldIntent |
+| T39 | P2ScheduledSafetyUnavailableIsRetryableButNeverSent؛ P2ScheduledOrganizationMembershipRemovedDuringSafetyCannotDispatch |
+| T40 | P2ScheduledConcurrentCancelAndDispatchCannotBothTakeEffect؛ پنج round واقعی |
+| T41–T43 | P2SilentStillPersistsUnreadRealtimeAndInternalNotificationButSuppressesOnlyExternalDelivery؛ silent=true/false |
+| T44–T46 | P2AcceptanceSearchSenderUtcWindowAndMediaFiltersStayWithinVisibleScope |
+| T47 | P2SearchFiltersCannotRestoreDeleteForMeClearOrInaccessibleCount؛ P2SearchTopicFilterCannotEscapeGroupOrRemovedMembership |
+| T48 | P2EphemeralRevokedSessionLosesRestTypingHeartbeatAndOnlineContribution؛ P2PollRemovedMemberCannotReadVoteOrListVotersAndRevokedSessionIsUnauthorized؛ P2ManagementRevokedSessionCannotUseLinksOrPendingRequestActions؛ P2ScheduledRevokedSessionLosesMutationWithoutCreatingFakeWorkerSession |
+| T49 | P2EphemeralRemovedMemberCannotPublishOrReceiveTyping؛ P2TopicsRemovedMemberCannotReadWriteOrReceiveFutureTopicDelta؛ P2PollFromJoinAndPersonalClearCannotLeakOldPollOrItsDelta؛ تست‌های revalidation گیرندهٔ موجود |
+| T50 | اجرای کامل Solution شامل تمام suiteهای P0/P1/GAP-05، نه فقط filter P2؛ نتیجه پس از اجرا ثبت می‌شود |
+
+کارایی محدود: smoke پوشهٔ چندگفتگویی `P2PresentationBoundedFolderSmokeReturnsAllAuthorizedConversationsInStablePages`، لینک آخرین slot، Poll دوازده‌نفره، صف ۲۱تایی، Topic ۳۵پیامی، نُه اتصال و Search چندصفحه‌ای پوشش دارند. identity Search و voters هرکدام یک query batch هستند؛ query کلید پاسخ برای unvoted صفر است. اندازهٔ صفحه/گزینه/override/lease/queue bounded است. این شواهد ظرفیت چندگرهی یا SLO Production نیستند.
+
+مدت واقعی کل test method در TRX هدفمند `phase7-p2-focused` (شامل setup/HTTP/assert، نه latency خالص query): صف ۲۱تایی ۰٫۳۸۲ ثانیه؛ آخرین مصرف لینک ۰٫۳۷۰؛ sender/date/media برابر۰٫۴۸۶؛ پوشه چندگفتگویی ۰٫۳۴۲؛ دوازده رأی هم‌زمان و identity batch برابر۵٫۶۳۲؛ Topic ۳۵پیامی/صفحه‌بندی ۰٫۸۵۰؛ Search batch برابر۰٫۳۲۸؛ نُه اتصال و ۱۴۴ فرمان Typing برابر۴٫۳۵۴ ثانیه. این اعداد فقط نمونهٔ محلی همین دور و بدون SLA/تعمیم ظرفیت‌اند.
+
+دور کامل نخست فاز هفتم واقعاً **Unit=544، Integration=971، Architecture=14، Total=1529 passed، failed/skipped=0** در `phase7-full` بود؛ restore/build صفر warning/error و Integration حدود۸:۴۱. review بعدی یک edge واقعی SQL CHECK یافت: در branch Closed، عبارت مقایسهٔ ClosedAtUtc=NULL مقدار UNKNOWN داشت و SQL آن را رد نمی‌کرد. دو تست تکمیلی افزوده شدند؛ `poll-null-before-fix` واقعاً **۱ passed/۱ failed** داشت: تست وضعیت Closed بدون timestamp هیچ exception نگرفت، درحالی‌که آزمون اتصال QuizKey به Poll عادی با FK موجود درست رد شد. این نقص از مسیر Domain/API تولید نمی‌شد، اما integrity جدول جدید باید خودش نیز محافظت کند.
+
+اصلاح: `ClosedAtUtc IS NOT NULL` صریح در configuration، migration تازهٔ همین فاز، Designer و snapshot یکسان شد؛ migration منتشرشدهٔ قبلی تغییر نکرد. تست انتظار SQL547 و نام CHECK را نگه می‌دارد، نه bypass یا suppression. شمار تازهٔ این فاز اکنون **۱۶ Unit و ۴۷ Integration** (۴۳ Poll/Quiz و چهار smoke) است. نتیجهٔ ۱۵۲۹تایی قبل، جای دو suite کامل روی نسخهٔ اصلاح‌شده نخواهد نشست؛ commit/push هنوز انجام نشده است.
+
+بازآزمایی مستقیم `poll-null-after-fix`: **۲ passed، failed/skipped=0** و EF pending model changes: NONE. restore/build موفق با صفر warning/error؛ دور کامل اول اصلاح‌شده `phase7-fixed-full` برابر **Unit=544، Integration=973، Architecture=14، Total=1531 passed، failed/skipped=0** بود؛ Integration حدود۷:۴۴. final build نیز صفر warning/error موفق شد و final suite روی همان source ثابت در اجراست. نتیجهٔ آن و Git پس از پایان واقعی ثبت می‌شوند.
+
+Validation نهایی فاز هفتم تکمیل شد: دور دوم `phase7-fixed-final` نیز **Unit=544، Integration=973، Architecture=14، Total=1531 passed، failed/skipped=0**؛ Integration حدود۱۲:۳۲. restore و هر دو build موفق با صفر warning/error؛ EF pending model changes: NONE. هر ۱۷۲ تست P2 در full suite وجود دارند. PDF مرجع دوباره hash شد و دقیقاً همان SHA256 ابتدایی را دارد. بررسی کمکی فقط‌خواندنی sqlcmd با timeout پنج‌ثانیه‌ای نتیجه نداد؛ علت کندی به‌طور قطعی نسبت داده نمی‌شود و این diagnostic نه تست موفق/ناموفق محسوب شد، نه با تغییر SQL/service/config رفع ظاهری شد. خود suite کامل سرانجام موفق بود؛ هیچ تست حذف/skip و هیچ تغییر کد میان دو دور اصلاح‌شده وجود نداشت.
+
+از baseline تا این نقطه، ۴۵ Unit و۱۷۲ Integration معنادار افزوده شده‌اند؛ جمع افزایش۲۱۷ و Architecture همان۱۴ است. فقط۵۳ مسیر مرتبط این فاز با فهرست مجاز تطبیق داده شدند؛ unexpected/missing هر دو صفر. source اصلی AI و فایل‌های config/MeliPayamak/frontend/Solution دست‌نخورده‌اند. پیام commit نهایی کد `feat(messaging): add polls quizzes and p2 acceptance` است؛ نتیجهٔ commit/push/remote باید پس از اجرای واقعی ثبت شود.

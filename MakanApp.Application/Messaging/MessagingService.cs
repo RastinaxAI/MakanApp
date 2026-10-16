@@ -884,7 +884,7 @@ public sealed class MessagingService(
     private static SafeMessagingIdentityResult Map(SafeMessagingIdentityRecord result) =>
         new(result.UserId, result.Username, result.DisplayName);
 
-    private static MessageReceiptResult ToReceipt(Message message) =>
+    internal static MessageReceiptResult ToReceipt(Message message) =>
         new(
             message.Id,
             message.ConversationId,

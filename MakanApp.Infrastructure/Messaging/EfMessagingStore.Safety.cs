@@ -292,6 +292,7 @@ public sealed partial class EfMessagingStore
             throw ReportMessageNotFound();
         }
 
+        var reportedContent = await BuildForwardContentAsync(message, cancellationToken);
         var report = AbuseReport.Create(
             reporterUserId,
             message.SenderUserId,
@@ -301,7 +302,7 @@ public sealed partial class EfMessagingStore
             command.Reason,
             command.Description,
             message.Kind,
-            message.Text,
+            reportedContent.Text,
             message.RowVersion,
             command.RequestPayloadHash,
             nowUtc);

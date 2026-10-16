@@ -11,14 +11,14 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
     {
         builder.ToTable("Messages", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6)");
+            table.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6, 7)");
             table.HasCheckConstraint("CK_Messages_Sequence", "[Sequence] > 0");
             table.HasCheckConstraint("CK_Messages_CurrentRevision", "[CurrentRevisionNumber] > 0");
             table.HasCheckConstraint(
                 "CK_Messages_Content",
                 "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR " +
                 "([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND " +
-                "(([Kind] = 1 AND LEN(LTRIM(RTRIM([Text]))) > 0) OR " +
+                "(([Kind] IN (1, 7) AND LEN(LTRIM(RTRIM([Text]))) > 0) OR " +
                 "([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR " +
                 "([Kind] = 6 AND [Text] IS NULL)))");
             table.HasCheckConstraint(

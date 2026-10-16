@@ -172,3 +172,54 @@ Contact Card همان پروفایل عمومیِ مجاز موجود است، �
 ویرایش عنوان/توضیح گروه یا کانال با audience محافظت‌شده از همان Safety و پروندهٔ scoped می‌گذرد؛ unavailable هیچ metadata تازه‌ای ثبت نمی‌کند. permission/رابطه/نشست پس از provider و داخل transaction دوباره سنجیده می‌شوند. retry دقیقِ Topic ثبت‌شده، با current permission و همان title، به providerِ در دسترس نیاز ندارد و Topic/event تازه نمی‌سازد. Close/Reopen Topic با Close نهایی Poll یکسان نیست.
 
 GET پوشه/برچسب، parent/version و فرزندان همان نسخه را برمی‌گرداند؛ mutation و خواندن مجموعه با ترتیب قفل مشترک سریال می‌شوند. ورودی خام نام/label پیش از normalization سقف ۱۰۲۴ دارد و سقف نهایی ۸۰/۳۲ باقی است. controllerهای metadata فوق policy بدنهٔ ۶۴ KiB دارند؛ تست attribute/HTTP در TestServer اثبات محدودیت reverse proxy یا Kestrel روی سرور نیست. هیچ تنظیم جدید اجباری، migration یا event گروهی خصوصی افزوده نشده است.
+
+## Poll / Quiz — قرارداد نهایی مصوب P2-12 و P2-13
+
+ساخت فقط از endpoint اختصاصی زیر است؛ `kind=Poll` در Send عمومی یا Scheduled پذیرفته نمی‌شود. پاسخ ساخت همان `MessageReceiptResult` واقعی، `kind="Poll"` و status=200 است؛ برای خواندن تعریف و نسخهٔ مستقل Poll، GET جزئیات لازم است. پیام عمومی، Revision، Search، Reply و اعلان فقط متن پرسش را دارند؛ client گزینه‌ها را از GET مجاز می‌گیرد. server مجوز را از نشست و resource جاری تعیین می‌کند، نه `UserId` ارسالی.
+
+| Method | Route | Request / Response |
+|---|---|---|
+| POST | `/api/v1/conversations/{conversationId}/polls` | `CreateConversationPollCommand` → `MessageReceiptResult` |
+| GET | `/api/v1/conversations/{conversationId}/messages/{messageId}/poll` | `ConversationPollResult` |
+| POST | مسیر GET + `/vote` | `{optionNumbers:[1],expectedVoteVersion:null}` → جزئیات تازه |
+| POST | مسیر GET + `/close` | `{expectedVersion:"<PollVersion>"}` → جزئیات Closed |
+| GET | مسیر GET + `/voters?optionNumber=1&page=1&pageSize=30` | فقط NonAnonymous؛ `ConversationPollVoterPageResult` |
+
+نمونهٔ ساخت Poll:
+
+```json
+{
+  "clientMessageId": "11111111-1111-4111-8111-111111111111",
+  "question": "کدام زمان مناسب است؟",
+  "options": ["شنبه", "یکشنبه"],
+  "allowsMultipleAnswers": false,
+  "isAnonymous": true,
+  "isQuiz": false,
+  "topicId": null,
+  "isSilent": false
+}
+```
+
+Quiz از همین endpoint با `isQuiz=true`، `allowsMultipleAnswers=false`، دقیقاً یک `correctOptionNumber` معتبرِ یک‌مبنا و `explanation` اختیاری ساخته می‌شود. `isAnonymous` باید حتی برای Quiz صریح باشد؛ null/حذف آن مجاز نیست. پرسش حداکثر ۳۰۰، ۲ تا ۱۰ گزینهٔ غیرتکراری با طول ۱۵۰، explanation حداکثر ۱۰۰۰؛ کنترل‌کاراکتر در پرسش/گزینه و ورودی خام بیش از ۴۰۰۰ رد می‌شود. explanation فقط در Quiz است و مانند پرسش/همهٔ گزینه‌ها زیر گیت Content Safety قرار دارد. بدنهٔ controller سقف ۶۴ KiB دارد.
+
+`ConversationPollResult` شامل `messageId/conversationId/question/allowsMultipleAnswers/isAnonymous/isQuiz/status/createdAtUtc/closedAtUtc/options/totalVoters/ownVoteVersion/correctOptionNumber/explanation/version` است. هر گزینه `number/text/voteCount/isSelected` دارد؛ totalVoters تعداد افراد است، نه مجموع انتخاب‌های MultiChoice. enum وضعیت در HTTP و OpenAPI رشته‌ای Open/Closed است. loading تعریف با receipt یکی نیست؛ خطا یا 404 مجوز ساخت Poll ساختگی در frontend نیست. Empty Poll شمارش صفر و ownVoteVersion=null دارد.
+
+Anonymous هویت رأی‌دهنده را در API عمومی، رویداد و voters پنهان می‌کند؛ حتی creator endpoint voters ندارد. Anonymous به معنی حذف UserId از SQL یا ناشناس‌سازی رمزنگاری‌شده در برابر اپراتور مجاز دیتابیس نیست. NonAnonymous فقط به عضو فعلیِ مجاز، با رعایت محدودهٔ history/clear/DeleteForMe، هویت کمینهٔ `SafeMessagingIdentityResult` و انتخاب‌ها را صفحه‌بندی می‌دهد؛ شمارهٔ تلفن یا کلید Quiz در این پاسخ نیست. حداکثر pageSize=100؛ optionNumber نیز selector است، نه مجوز.
+
+ثبت رأی اول expectedVoteVersion=null می‌خواهد. تغییر رأی Poll نسخهٔ `ownVoteVersion` آخرین پاسخ را می‌خواهد؛ بدون آن یا با نسخهٔ کهنه 412 می‌گیرد. گزینه‌ها یکتا و معتبر و SingleChoice فقط یکی است. پاسخ Quiz برای هر User نهایی است؛ عوض‌کردن آن 409 است. retry همان انتخاب مرتب‌شده اثر تازه ندارد و همان نسخه را می‌دهد؛ حتی بعد از Close فقط بازیابی همان اثر قبلی است، نه رأی جدید/تغییر. SQL منبع نهایی است و دو دستگاه یک User نمی‌توانند رأی والد تکراری بسازند.
+
+CorrectOption و Explanation فقط بعد از پاسخ نهایی **خود بیننده** قابل خواندن‌اند؛ پاسخ دیگران یا بسته‌شدن Quiz آن‌ها را برای فرد پاسخ‌نداده آشکار نمی‌کند. creator نیز در GET عمومیِ بدون رأی کلید را دریافت نمی‌کند؛ ورودی اولیهٔ خودش به معنای exception قراردادی در API نیست. Quiz هیچ ExamAttempt/Grade/Assessment آموزشی ایجاد نمی‌کند.
+
+Close توسط creator با مجوز جاری ارسال، یا Owner/Admin با `DeleteMessages` جاری انجام می‌شود؛ subscriber کانال حق رأی دارد ولی حق انتشار یا بستن Poll دیگران ندارد. Close، `version` خود Poll را می‌گیرد، نه نسخهٔ Message یا OwnVote. هر رأی مؤثر نسخهٔ Poll را عوض می‌کند: اگر Vote برنده شود Close کهنه 412، و اگر Close برنده شود رأی تازه 409 است. retry Close پس از reauthorization نسخهٔ Closed موجود را می‌دهد. Reopen، ویرایش تعریف منتشرشده، حذف رأی، auto-close و زمان‌بندی Poll در P2 API ندارند؛ ویرایش پیام Poll با خطای پایدار قبلی MessageNotEditable/409 رد می‌شود.
+
+Forward طبق تأیید نهایی مالک، یک **Message متنی مستقل** شامل پرسش و گزینه‌های شماره‌دار است؛ بدون رأی، CorrectOption و Explanation و بدون Poll زنده در مقصد. scope، metadata منبع، حق خواندن منبع، مجوز ارسال مقصد، Topic مقصد و Safety همان Forward قبلی را دارند. حذف یا بستن Poll مبدأ، کپی مستقل مقصد را mutate نمی‌کند. گزارش abuse شاهد همان پرسش/گزینه‌ها را در پروندهٔ scoped موجود نگه می‌دارد؛ مرور عمومی private chat یا دسترسی جدید School Manager/Guardian ساخته نشده است.
+
+رویداد durable جدید `PollChanged=14` روی همان `ConversationChanged`، فقط invalidation شامل شناسه/نسخه/cursor است؛ payload رأی/کلید/متن و ActorUserId رأی‌دهنده ندارد. client پس از آن یا reconnect از Delta مجاز و GET جزئیات همگرا می‌شود. read تاریخی با حق تعامل جدید فرق دارد: Vote/Close/Publish وضعیت جاری account/session/role/member/Block/GAP-05/restriction را دوباره می‌سنجند. تاریخچه با پایان رابطه خودکار حذف نمی‌شود؛ PollChanged برای Message پنهان/پاک‌شده/بیرون FromJoin ارسال نمی‌شود. رأی، پیام تازه یا notification/unread تازه ایجاد نمی‌کند.
+
+خطاها: 400=`CONVERSATION_POLL_INVALID`؛ 404=`CONVERSATION_POLL_NOT_FOUND` یا خطای concealment گفتگو؛ 409=`CONVERSATION_POLL_CLOSED`، `CONVERSATION_POLL_VOTE_IMMUTABLE` یا conflict تعریف ClientMessageId؛ 412=`CONVERSATION_POLL_CONFLICT` یا `CONVERSATION_POLL_VOTE_CONFLICT`. مجوز نامعتبر همان 403/404 موجود و session لغوشده 401 است؛ Content Safety مسدود/review برابر 422 و unavailable برای Minor/Unknown برابر 503 است. client نباید retry خطای نسخه را به overwrite خاموش تبدیل کند.
+
+تمام routeهای این controller از `messaging-send` موجود، ۳۰۰ درخواست در دقیقه به‌ازای partition احراز‌شده در محیط معمول استفاده می‌کنند؛ discovery و Search هرکدام ۶۰ در دقیقه‌اند. budget Hub و cap اتصال/Presence جداست. این محدودیت‌ها تک‌process هستند، نه distributed enforcement یا benchmark Production. هیچ تنظیم اجباری appsettings یا سرویس خارجی تازه لازم نیست.
+
+Migration `20261016211112_AddConversationPollsAndQuiz` پنج جدول Polls/Options/Votes/Selections/QuizAnswers، rowversion والد/رأی، PK/FK مرکب، unique هر User/Poll، CHECK وضعیت/گزینه/نوع و index صفحه دارد؛ پاسخ صحیح از projection عمومی جداست. ایجاد همهٔ گزینه‌ها/کلید و پیام/Revision/Notification/Outbox یک transaction است. SQL FK/unique اتصال و عدم duplicate را enforce می‌کند؛ تک‌گزینه‌ای بودن و immutable بودن پاسخ از قواعد Domain و transaction برنامه می‌آیند، نه ادعای CHECK چندسطره. Down پیش از حذف ساختار، در حضور رأی‌گیری/رویداد/شواهد جدید ایمن توقف می‌کند. فقط دیتابیس‌های تست ایزوله migrate می‌شوند؛ هیچ migration روی سرور یا دیتابیس عادی اجرا نشده است.
+
+Checklist طبق استثنای مصوب prompt، `P2_CHECKLIST_REQUIRES_PRODUCT_DECISION` است؛ contract مالک/item/actor/completion/version هنوز Freeze نشده و placeholder ساخته نشده است. دریافت واقعی Web Push/FCM همچنان `P1_PUSH_RUNTIME_PENDING` و presence چندگرهی `PENDING_SCALE_INFRA` است.

@@ -11,7 +11,7 @@ public sealed class SafetyIncidentConfiguration : IEntityTypeConfiguration<Safet
     {
         builder.ToTable("SafetyIncidents", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5)");
+            table.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5, 6, 7)");
             table.HasCheckConstraint("CK_SafetyIncidents_Decision", "[Decision] IN (2, 3)");
             table.HasCheckConstraint("CK_SafetyIncidents_Status", "[Status] IN (1, 2, 3)");
             table.HasCheckConstraint(

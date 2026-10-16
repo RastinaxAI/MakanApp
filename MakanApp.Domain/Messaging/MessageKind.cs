@@ -7,5 +7,6 @@ public enum MessageKind
     Video = 3,
     Voice = 4,
     File = 5,
-    ContactCard = 6
+    ContactCard = 6,
+    Poll = 7
 }

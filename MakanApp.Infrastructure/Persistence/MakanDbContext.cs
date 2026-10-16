@@ -85,6 +85,11 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<MessageMention> MessageMentions => Set<MessageMention>();
     public DbSet<ConversationPin> ConversationPins => Set<ConversationPin>();
     public DbSet<MessagingChangeEvent> MessagingChangeEvents => Set<MessagingChangeEvent>();
+    public DbSet<ConversationPoll> ConversationPolls => Set<ConversationPoll>();
+    public DbSet<ConversationPollOption> ConversationPollOptions => Set<ConversationPollOption>();
+    public DbSet<ConversationPollVote> ConversationPollVotes => Set<ConversationPollVote>();
+    public DbSet<ConversationPollSelection> ConversationPollSelections => Set<ConversationPollSelection>();
+    public DbSet<ConversationQuizAnswer> ConversationQuizAnswers => Set<ConversationQuizAnswer>();
     public DbSet<MessagingRealtimeOutboxMessage> MessagingRealtimeOutboxMessages =>
         Set<MessagingRealtimeOutboxMessage>();
     public DbSet<PersonalCommunicationGrant> PersonalCommunicationGrants =>

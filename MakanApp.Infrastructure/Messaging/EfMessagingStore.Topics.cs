@@ -115,6 +115,7 @@ public sealed partial class EfMessagingStore : IConversationTopicStore
         {
             MessageSafetyPurpose.TopicMetadata => EnsureTopicManagementAsync(conversation, actor, userId, context, now, ct),
             MessageSafetyPurpose.ConversationMetadata => EnsureInfoManagementAsync(conversation, actor, userId, context, now, ct),
+            MessageSafetyPurpose.PollMetadata => EnsurePollMetadataAuthorizedAsync(conversation, actor, userId, context, command.TopicId, now, ct),
             MessageSafetyPurpose.Message => EnsureCanSendAdvancedAsync(conversation, actor, userId, context, command.Kind, now, ct),
             _ => throw new MessagingException(MessagingErrorCodes.MessageKindInvalid, "نوع عملیات ایمنی معتبر نیست.")
         };

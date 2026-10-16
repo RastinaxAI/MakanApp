@@ -60,6 +60,12 @@ public static class MessagingErrorCodes
     public const string ScheduledConflict = "SCHEDULED_MESSAGE_CONFLICT";
     public const string ScheduledReserved = "SCHEDULED_MESSAGE_ID_RESERVED";
     public const string ScheduledClaimLost = "SCHEDULED_MESSAGE_CLAIM_LOST";
+    public const string PollInvalid = "CONVERSATION_POLL_INVALID";
+    public const string PollNotFound = "CONVERSATION_POLL_NOT_FOUND";
+    public const string PollClosed = "CONVERSATION_POLL_CLOSED";
+    public const string PollConflict = "CONVERSATION_POLL_CONFLICT";
+    public const string PollVoteConflict = "CONVERSATION_POLL_VOTE_CONFLICT";
+    public const string PollVoteImmutable = "CONVERSATION_POLL_VOTE_IMMUTABLE";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";

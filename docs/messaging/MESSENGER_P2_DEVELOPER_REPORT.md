@@ -220,3 +220,93 @@ Git واقعی فاز پنجم: `4de7237233dcc8865672849f35e0cad06d6010b7` با 
 بازبینی بعدیِ همین فاز، دو regression مهم دیگر اضافه کرد (مجموع ۳۰ Integration تازه): عضو تازهٔ کلاس پیش از درخواست یا حین provider هنوز participant ذخیره‌شده ندارد. هر دو تست ابتدا واقعاً 200 به‌جای 404 دادند؛ صرف سبزبودن دو suite قبلیِ ۱۴۶۶تایی کافی نبود. `EnsureContactCardAudienceAsync` اکنون برای کلاس رسمی از ClassMembers جاری استفاده می‌کند، نه projection ناقص participantها. درس: authorization روی read model همگام‌شونده می‌تواند عضو واقعی را جا بیندازد؛ منبع عضویت جاری و guard نهایی را با زمان‌بندی مشخص تست کنید. نتایج اصلاح‌شده در ممیزی جدا ثبت می‌شوند و تا آن زمان commit/push نداریم.
 
 نتیجهٔ واقعی نسخهٔ اصلاح‌شده: هدفمند P2 برابر ۱۲۵ Integration passed؛ restore موفق، build/final build صفر warning/error، هر دو full/final suite برابر **528 Unit + 926 Integration + 14 Architecture = 1468 passed** و failed/skipped=0. EF تغییر معوق ندارد؛ migration جدیدی ساخته نشده است. شواهد `phase6-fixed-full` و `phase6-fixed-final` هستند. سی تست Integration تازه‌اند؛ Unit/Architecture بدون تغییر حفظ شدند. پس از بازبینی diff، فقط همین ۴۰ فایل مرتبط برای commit با پیام `fix(messaging): harden advanced search and current authorization` انتخاب می‌شوند؛ نتیجهٔ push و hash باید پس از Git واقعی ثبت شود.
+
+Git واقعی فاز ششم: `bf133ffbf5d9f4bfb2804035657e4c60cda27f5a`، همان پیام، ۴۰ فایل مرتبط، branch=`messenger/p0`، upstream=`origin/main` و remote=`origin`؛ commit/push/fetch و برابری HEAD با origin/main موفق و worktree تمیز بود.
+
+## فاز هفتم — Poll / Quiz و پذیرش محدود محلی
+
+### ۱. خلاصه
+
+قبلاً پیام تعاملی رأی‌گیری وجود نداشت. اکنون Poll با حریم خصوصی صریح/انتخاب یک یا چند گزینه و رأی متغیر نسخه‌دار، Quiz با پاسخ نهایی/کلید محافظت‌شده، Close نهایی و Forward متنی مصوب وجود دارد. پیام عمومی فقط پرسش است؛ نمایش گزینه‌ها/نتیجه از endpoint مجاز مستقل می‌آید. این قابلیت Messenger است، نه سامانهٔ آزمون آموزشی.
+
+### ۲. معماری
+
+Domain صاحب تعریف immutable، گزینه، lifecycle Poll و قواعد پاسخ نهایی است؛ به EF/HTTP وابسته نیست. Application صاحب DTO/validation/hash، resolve context و هماهنگی Safety بیرون transaction است. Infrastructure صاحب جدول و transaction SQL، projection محرمانه، current-state authorization، query محدود و Outbox است. Api فقط route، احراز هویت، status، rate/body metadata و فراخوانی سرویس دارد. وابستگی Onion تغییر نکرده و interface عمومی repository اضافه نشده است.
+
+### ۳. فایل‌های مهم جدید
+
+| مسیر | مسئولیت، دلیل و نکتهٔ آموزشی |
+|---|---|
+| `MakanApp.Domain/Messaging/ConversationPollDefinition.cs` | پرسش/گزینه‌های normalizeشده و snapshot readonly؛ ورودی mutable caller نباید تعریف منتشرشده را عوض کند |
+| `MakanApp.Domain/Messaging/ConversationPoll.cs` | Open/Closed نهایی، validation انتخاب و revision؛ state machine و permission دو موضوع جدا هستند |
+| `MakanApp.Domain/Messaging/ConversationPollOption.cs` | گزینهٔ شماره‌دار وابسته به تعریف؛ شمارهٔ گزینه یک‌مبنا و محلیِ Poll است |
+| `MakanApp.Domain/Messaging/ConversationPollVote.cs` | یک پاسخ نهایی Quiz یا نسخه‌های رأی Poll؛ retry همان انتخاب با تغییر واقعی فرق دارد |
+| `MakanApp.Domain/Messaging/ConversationPollSelection.cs` | انتخاب چندگزینه‌ای؛ count افراد از parent رأی می‌آید، نه count انتخاب‌ها |
+| `MakanApp.Domain/Messaging/ConversationQuizAnswer.cs` | کلید جدا؛ جداکردن persistence projection احتمال افشای تصادفی را کم می‌کند |
+| `MakanApp.Application/Messaging/ConversationPollContracts.cs` | DTO و port اختصاصی use case؛ EF entity به HTTP فرستاده نمی‌شود |
+| `MakanApp.Application/Messaging/ConversationPollService.cs` | validation، idempotency hash و بررسی تمام گزینه‌ها/Explanation؛ I/O provider بیرون قفل SQL است |
+| `MakanApp.Api/Controllers/ConversationPollsController.cs` | پنج endpoint نازک، body/rate policy و identity server-side |
+| `MakanApp.Infrastructure/Messaging/EfMessagingStore.Polls.cs` | قفل واحد Conversation، revalidation و mutation/query اتمیک؛ Vote×Close linearization روشن دارد |
+| `MakanApp.Infrastructure/Messaging/EfMessagingStore.PollVoters.cs` | projection فقط NonAnonymous، scope جاری، paging و یک identity batch |
+| `MakanApp.Infrastructure/Messaging/EfMessagingStore.PollForward.cs` | کپی متنی مصوب پرسش/گزینه، بدون حتی query کلید یا رأی |
+| `MakanApp.Infrastructure/Persistence/Configurations/Messaging/ConversationPoll*Configuration.cs` و `ConversationQuizAnswerConfiguration.cs` | پنج configuration واقعی؛ PK/FK/unique/check/index/rowversion از rule برنامه جدا و مکمل آن‌اند |
+| `MakanApp.Infrastructure/Persistence/Migrations/20261016211112_AddConversationPollsAndQuiz.cs` | migration قابل بازتولید با Down guard پیش از حذف داده |
+| `tests/MakanApp.UnitTests/Messaging/ConversationPollTests.cs` | ۱۶ حالت خالص تعریف/lifecycle/انتخاب/UTC/immutability |
+| `tests/MakanApp.IntegrationTests/MessagingP2Poll{Endpoints,Authorization,Concurrency,SafetyAndDelivery}Tests.cs` | تست HTTP/SQL/SignalR/provider/concurrency واقعی، نه EF InMemory |
+| `tests/MakanApp.IntegrationTests/MessagingP2FinalRegressionTests.cs` | چهار smoke محدود: ۹ اتصال، ۲۱ job، ۳۵ پیام Topic، sender/date/media |
+
+### ۴. فایل‌های تغییرکرده
+
+MessageKind.Poll و PollChanged افزوده شدند؛ Message و هر دو مسیر Edit از بازنویسی تعریف منتشرشده جلوگیری می‌کنند. Send عمومی/Schedule، Poll ناقص نمی‌سازند. MessagingService فقط mapper داخلی receipt را reuse می‌کند؛ GlobalExceptionHandler خطای پایدار Poll را به status مناسب می‌برد. DbContext/DI/config/snapshot مدل جدید را ثبت می‌کنند. Forward پیش و پس از Safety از همان کپی canonical استفاده می‌کند. Search/Reply عمومی فقط پرسش دارند. Delta، PollChanged را با همان پنجرهٔ پیام و حذف شخصی/عمومی فیلتر می‌کند. AbuseReport همان پروندهٔ scoped را با پرسش و گزینه‌ها، نه کلید، snapshot می‌کند. CHECK قدیمی moderation با ContactCard=6 ناسازگار بود؛ اکنون 6/7 با آزمون واقعی پذیرفته می‌شوند، بدون تضعیف provider. OpenAPI test مسیرها/enum/body/projection جدید را پوشش می‌دهد.
+
+### ۵. جریان اجرا
+
+`HTTP POST` → `ConversationPollsController.Create` → `ConversationPollService.CreateAsync` → `ConversationPollDefinition.Create` → `IConversationPollStore.PreparePollCreationAsync` → `MessageContentSafetyGate` و provider خارج transaction → `EfMessagingStore.CreatePollAsync` → قفل Conversation/نشست/مجوز/رابطهٔ جاری → `CreateMessageAsync` و Poll/Options/Key → SQL Save/Notification/Outbox/commit → receipt → HTTP 200. رأی از همان Controller/Service به `VotePollAsync`، validation Domain، parent رأی/selection و event کمینه می‌رود؛ GET پس از مجوز فقط projection لازم را می‌خواند.
+
+### ۶. دیتابیس
+
+پنج جدول `messaging.ConversationPolls/ConversationPollOptions/ConversationPollVotes/ConversationPollSelections/ConversationQuizAnswers` هستند. PollId همان MessageId و FK مرکب با ConversationId است؛ کلید گزینه `(PollId,Number)` و رأی `(PollId,UserId)` و انتخاب `(PollId,UserId,OptionNumber)` است. FK مرکب انتخاب را به رأی و گزینهٔ همان Poll می‌بندد. alternate key `(Id,IsQuiz)` مانع key/vote با نوع ناسازگار و FK CorrectOption مانع شمارهٔ ناموجود می‌شود. rowversion Poll و Vote جداست. CHECKها bounds/options/hash/lifecycle/UTC-order/revision و Quiz.SingleChoice تعریف را حفظ می‌کنند؛ دقیقاً یک key هنگام create اتمیک و تک‌انتخابی/immutable بودن پاسخ در Domain/use case enforce می‌شوند، نه CHECK ساختگی چندسطره. indexها paging/count انتخاب‌ها را پشتیبانی می‌کنند. همهٔ readهای جزئیات و Vote/Close از قفل Conversation هم‌جهت استفاده می‌کنند؛ coarse serialization همان گفتگو trade-off روشن consistency است. Down guard دادهٔ تازه را حذف نمی‌کند؛ apply روی سرور انجام نشده است.
+
+### ۷. Endpointها
+
+POST `.../conversations/{id}/polls` تعریف با ClientMessageId/privacy/Topic/Silent را می‌گیرد و MessageReceipt می‌دهد؛ متن/گزینه/Quiz نامعتبر 400 و تعریف تکراری متفاوت 409 است. GET `.../messages/{messageId}/poll` جزئیات scoped و نسخهٔ Poll را می‌دهد. POST `.../poll/vote` گزینه و own version را می‌گیرد؛ stale=412، Quiz تغییرکرده یا Closed=409. POST close نسخهٔ Poll می‌خواهد؛ creator با Send یا Owner/Admin با DeleteMessages می‌بندد. GET voters فقط NonAnonymous و عضو مجاز است؛ paging حداکثر۱۰۰ و بدون phone/key. همگی authenticated با session جاری و current resource permission، body ۶۴ KiB و rate موجودند؛ concealment=404، revoked=401، forbidden=403، Safety blocked/review=422 و unavailable protected=503. Handoff نمونه و تمام DTOها/خطاها را دارد.
+
+### ۸. مفاهیم استفاده‌شده
+
+immutable snapshot، projection کمینه، optimistic concurrency مستقل برای aggregate و رأی، transaction/قفل هم‌جهت، unique/FK، idempotency semantic، fail-closed، Content Safety post-I/O revalidation، invalidation event و batch query واقعاً استفاده شدند. CQRS/MediatR/GenericRepository، صف جدید یا سرویس خارجی اضافه نشد.
+
+### ۹. تصمیم‌ها و trade-off
+
+پاسخ صحیح در جدول جدا به‌جای فیلد message/option عمومی است؛ هزینهٔ query بعد از پاسخ را می‌پذیریم تا query قبل از پاسخ اصلاً وجود نداشته باشد. Forward متنی در برابر live-copy یا انتقال کلید طبق تأیید مالک انتخاب شد. Close با نسخهٔ aggregate در برابر last-writer-wins است؛ Vote برنده، Close را به refresh/412 می‌برد. API همه‌منظوره Send برای payload رأی‌گیری استفاده نشد تا orphan Poll/Message ممکن نشود؛ مسیر ایجاد پیام/Outbox موجود reuse شد. Anonymous محرمانگی API است، نه حذف شناسهٔ موردنیاز integrity در SQL. هیچ استثنای جدید افشای کلید برای creator یا Closed ساخته نشد.
+
+### ۱۰. تست‌ها
+
+۱۶ Unit خالص و ۴۵ Integration تازه‌اند (۴۱ Poll/Quiz و ۴ smoke). Integration شامل PK duplicate واقعی 2601/2627، FK واقعی547، رأی هم‌زمان ۱۲ حساب/دو دستگاه یک User، چهار round Vote×Close، version lost-update، rowversion مستقل، FromJoin/Clear/DeleteForMe/DeleteForEveryone، NonAnonymous صفحه‌دار، Anonymous identity concealment، QuizKey صفر query پیش پاسخ، سه count واقعی ماژول آموزشی قبل/بعد، rollback کامل Outbox و retry، Safety واقعیِ گزینهٔ unsafe و Card ReviewRequired، revoke حین provider، Block/relationship/Minor/Unknown، Report/Forward و Hub/Delta است. OpenAPI قبلی توسعه یافت؛ Architecture جدید بی‌معنا اضافه نشد و suite موجود Onion را بررسی می‌کند. T01–T50 به متدهای واقعی در ممیزی نگاشت‌اند؛ Checklist deferred است، نه skipped-test.
+
+### ۱۱. Validation واقعی تا این نقطه
+
+restore/build موفق و صفر warning/error؛ EF pending model changes: NONE. Unit هدفمند ۱۶ passed و Integration نهایی P2 برابر۱۷۰ passed، failed/skipped=0. دو round هدفمند نخست fixture/expectation failure واقعی داشتند و یک compile error نام property تست اصلاح شد؛ شواهد کامل آن در ممیزی حفظ‌اند. suite کامل اول در حال اجراست؛ نتیجهٔ آن و final suite فقط پس از پایان واقعی افزوده می‌شوند. دریافت واقعی Push و تست سرور ادعا نمی‌شوند.
+
+### ۱۲. Git
+
+فقط فایل‌های P2 در worktree مستقل مجازند. commit پیشنهادی `feat(messaging): add polls quizzes and p2 acceptance` پس از full/final build/test و review diff/cached انجام می‌شود؛ تا آن زمان hash/push ادعا نمی‌شود. شش commit پیشین و remote verification واقعی در ممیزی ثبت شده‌اند؛ AI/config/MeliPayamak/frontend/server دست‌نخورده‌اند.
+
+### ۱۳. محدودیت‌ها
+
+Checklist منتظر قرارداد محصول مجزاست؛ Recording، تعریف قابل ویرایش، Reopen Poll، retract vote، auto-close و Scheduled Poll API ندارند. ویرایش موعد Scheduled طبق optional بودن prompt با cancel/recreate جایگزین است. Topic مستقل unread/pin، presence/backplane/rate-limit چندگرهی، AV/CDR و دریافت واقعی Push تکمیل ادعا نمی‌شوند. Poll Search روی پرسش/فیلتر نوع است؛ index متن گزینه‌ها یا موتور جست‌وجوی جدید اضافه نشده است.
+
+### ۱۴. نکات آموزشی
+
+۱) SQL source-of-truth با افشای همهٔ ستون‌هایش یکی نیست. ۲) unique رأی والد و FK انتخاب، با validation تک‌گزینه‌ای و transaction مکمل‌اند. ۳) نسخهٔ کل Poll و نسخهٔ رأی یک نفر دو conflict متفاوت دارند. ۴) Retry همان پاسخ بعد از Close، اثر تازه نیست. ۵) query نکردن secret از redact دیرهنگام مطمئن‌تر است. ۶) MessageHiddenForUser مجاز را با نشت event اشتباه نگیرید. ۷) تست provider واقعی در کنار fake، ناسازگاری CHECKهای نوع را آشکار می‌کند.
+
+### ۱۵. مسیر مطالعه
+
+ConversationPollsController → ConversationPollService/Contracts → ConversationPollDefinition/Poll/Vote/QuizAnswer → IConversationPollStore → EfMessagingStore.Polls/PollVoters/PollForward → پنج EF Configuration → AddConversationPollsAndQuiz → ConversationPollTests → چهار Poll Integration و FinalRegression → ماتریس پذیرش/Handoff.
+
+### ۱۶. ادامه
+
+بعد از validation و Git این فاز، evidence نهایی P2 و remote verification بسته می‌شوند؛ سپس فقط با درخواست مستقل، قرارداد Checklist یا محیط واقعی Push/scale-out بررسی شود. قابلیت‌های P3/P4، AI/RAG، پرداخت، SMS عمومی و frontend نباید در این تحویل مخلوط شوند.
+
+درس تکمیلی قبل از commit: دور کامل اول ۱۵۲۹ passed بود، اما review CHECK جدول تازه، مسئلهٔ سه‌ارزشی SQL را آشکار کرد. regression مستقیم Closed بدون زمان واقعاً شکست خورد (بدون exception)، و FK QuizKey→Poll عادی درست رد شد؛ `poll-null-before-fix` برابر۱ passed/۱ failed. SQL CHECK، UNKNOWN را مانند FALSE رد نمی‌کند؛ شرط nullable ضروری باید `IS NOT NULL` صریح داشته باشد. configuration و migration/Designer/snapshot تازهٔ همین فاز هم‌زمان اصلاح شدند. Domain/API قبلاً timestamp درست می‌دادند، ولی این جای integrity دیتابیس را نمی‌گیرد. با دو تست تازه، فاز هفتم اکنون۱۶ Unit و۴۷ Integration دارد؛ suiteهای کامل اصلاح‌شده باید دوباره اجرا شوند، نه اینکه نتیجهٔ سبز قبلی به نسخهٔ جدید نسبت داده شود.
+
+Validation نهایی واقعی: تست SQL اصلاح‌شده۲ passed؛ restore موفق، build/final build صفر warning/error، هر دو suite کامل روی source ثابت **544 Unit + 973 Integration + 14 Architecture = 1531 passed**، failed/skipped=0. Integration اول حدود۷:۴۴ و نهایی۱۲:۳۲ بود؛ EF بدون تغییر معوق. در کل P2 نسبت به baseline، ۴۵ Unit و۱۷۲ Integration افزوده شد؛ جمع۲۱۷، بدون test شمارش‌ساز یا skip. source فاز هفتم۱۶ Unit و۴۷ Integration تازه دارد و OpenAPI موجود توسعه یافته است. PDF دقیقاً همان hash اولیه و فهرست تغییرات۵۳ فایل صرفاً مربوط به این مرحله است؛ نتیجهٔ واقعی Git بعد از اجرای آن در ممیزی ثبت می‌شود.
