@@ -110,6 +110,9 @@ public sealed partial class MakanAppWebApplicationFactory :
             var ephemeralDispatcher = services.FirstOrDefault(descriptor => descriptor.ServiceType == typeof(IHostedService) &&
                 descriptor.ImplementationType == typeof(MessagingEphemeralDispatcher));
             if (ephemeralDispatcher is not null) services.Remove(ephemeralDispatcher);
+            var scheduledDispatcher = services.FirstOrDefault(descriptor => descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(ScheduledMessageDispatcher));
+            if (scheduledDispatcher is not null) services.Remove(scheduledDispatcher);
             var reportDispatcher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) &&
                 descriptor.ImplementationType == typeof(ReportExportDispatcher));

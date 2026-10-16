@@ -55,6 +55,11 @@ public static class MessagingErrorCodes
     public const string TopicInvalid = "CONVERSATION_TOPIC_INVALID";
     public const string TopicNotFound = "CONVERSATION_TOPIC_NOT_FOUND";
     public const string TopicClosed = "CONVERSATION_TOPIC_CLOSED";
+    public const string ScheduledInvalid = "SCHEDULED_MESSAGE_INVALID";
+    public const string ScheduledNotFound = "SCHEDULED_MESSAGE_NOT_FOUND";
+    public const string ScheduledConflict = "SCHEDULED_MESSAGE_CONFLICT";
+    public const string ScheduledReserved = "SCHEDULED_MESSAGE_ID_RESERVED";
+    public const string ScheduledClaimLost = "SCHEDULED_MESSAGE_CLAIM_LOST";
     public const string SearchQueryRequired = "SEARCH_QUERY_REQUIRED";
     public const string SearchQueryInvalid = "SEARCH_QUERY_INVALID";
     public const string SearchCursorInvalid = "SEARCH_CURSOR_INVALID";

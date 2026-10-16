@@ -50,6 +50,7 @@ public sealed class Message
     public string? SearchText { get; private set; }
     public Guid? ReplyToMessageId { get; private set; }
     public Guid? TopicId { get; private set; }
+    public bool IsSilent { get; private set; }
     public Guid? ForwardedFromMessageId { get; private set; }
     public Guid? SharedContactUserId { get; private set; }
     public string? SharedContactUsername { get; private set; }
@@ -83,7 +84,8 @@ public sealed class Message
         Guid? forwardedFromMessageId,
         int maximumTextLength,
         DateTime sentAtUtc,
-        Guid? topicId = null)
+        Guid? topicId = null,
+        bool isSilent = false)
     {
         if (conversationId == Guid.Empty || senderParticipantId == Guid.Empty ||
             senderUserId == Guid.Empty || clientMessageId == Guid.Empty)
@@ -116,6 +118,7 @@ public sealed class Message
             forwardedFromMessageId,
             sentAtUtc);
         message.TopicId = topicId;
+        message.IsSilent = isSilent;
         return message;
     }
 

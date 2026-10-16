@@ -25,6 +25,7 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var conversation = await LockConversationAsync(conversationId, cancellationToken)
             ?? throw ConversationNotFound();
+        nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var participant = await LoadActiveParticipantAsync(conversationId, userId, cancellationToken)
             ?? throw ConversationNotFound();
         await EnsureCanReadAdvancedAsync(
@@ -40,10 +41,17 @@ public sealed partial class EfMessagingStore
         if (existing is not null)
         {
             await EnsureRetryMatchesAsync(existing, command, cancellationToken);
+            if (command.ScheduledClaim is not null)
+            {
+                var recovered = await ValidateScheduledSendAsync(userId, conversationId, command, true, cancellationToken, accessContext) ?? throw ScheduledClaimLost();
+                recovered.Dispatch(command.ScheduledClaim.Token, existing.Id, timeProvider.GetUtcNow().UtcDateTime);
+                await SaveScheduledAsync(cancellationToken);
+            }
             await transaction.CommitAsync(cancellationToken);
             return existing;
         }
 
+        var scheduled = command.ScheduledClaim is null ? null : await ValidateScheduledSendAsync(userId, conversationId, command, true, cancellationToken, accessContext);
         await EnsureCanSendAdvancedAsync(
             conversation,
             participant,
@@ -64,6 +72,7 @@ public sealed partial class EfMessagingStore
             maximumTextLength,
             nowUtc,
             cancellationToken);
+        if (scheduled is not null) scheduled.Dispatch(command.ScheduledClaim!.Token, created.Message.Id, timeProvider.GetUtcNow().UtcDateTime);
         await SaveAdvancedAsync(cancellationToken);
         await EnqueueMessageNotificationsAsync(
             conversation,
@@ -250,6 +259,77 @@ public sealed partial class EfMessagingStore
             return (existing, false);
         }
 
+        var (files, mentionedUserIds) = await LoadAndValidateMessageReferencesAsync(conversation, participant, userId, command, cancellationToken);
+        if (command.ScheduledClaim is null) await ValidateScheduledSendAsync(userId, conversation.Id, command, true, cancellationToken);
+
+        Message message;
+        try
+        {
+            message = Message.Create(
+                conversation.Id,
+                participant.Id,
+                userId,
+                command.ClientMessageId,
+                conversation.AllocateNextMessageSequence(),
+                command.Kind,
+                command.Text,
+                files.Length,
+                command.ReplyToMessageId,
+                command.ForwardedFromMessageId,
+                maximumTextLength,
+                nowUtc,
+                command.TopicId,
+                command.IsSilent);
+            if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
+            {
+                var identity = await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
+                message.SetContactCardSnapshot(
+                    identity.UserId,
+                    identity.Username,
+                    identity.DisplayName);
+            }
+        }
+        catch (ArgumentException exception)
+        {
+            throw new MessagingException(
+                MessagingErrorCodes.MessageKindInvalid,
+                "ترکیب نوع، متن و پیوست پیام معتبر نیست.",
+                exception);
+        }
+
+        dbContext.Messages.Add(message);
+        dbContext.MessageRevisions.Add(MessageRevision.Create(
+            message.Id,
+            message.CurrentRevisionNumber,
+            message.Text,
+            userId,
+            nowUtc));
+        foreach (var file in files)
+        {
+            dbContext.MessageAttachments.Add(MessageAttachment.Create(
+                message.Id,
+                file.Id,
+                command.Kind,
+                nowUtc));
+            file.Retain(nowUtc);
+        }
+
+        foreach (var mentionedUserId in mentionedUserIds)
+        {
+            dbContext.MessageMentions.Add(MessageMention.Create(
+                message.Id,
+                mentionedUserId,
+                nowUtc));
+        }
+
+        return (message, true);
+    }
+
+    private async Task<(FileAsset[] Files, Guid[] MentionedUserIds)> LoadAndValidateMessageReferencesAsync(
+        Conversation conversation, ConversationParticipant participant, Guid userId, SendMessageStoreCommand command, CancellationToken cancellationToken)
+    {
+        if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
+            await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
         if (command.ReplyToMessageId.HasValue)
         {
             var visibleFromSequence = await GetVisibleFromSequenceAsync(
@@ -311,67 +391,7 @@ public sealed partial class EfMessagingStore
                 command.Kind,
                 command.AllowSourceAttachments);
         }
-
-        Message message;
-        try
-        {
-            message = Message.Create(
-                conversation.Id,
-                participant.Id,
-                userId,
-                command.ClientMessageId,
-                conversation.AllocateNextMessageSequence(),
-                command.Kind,
-                command.Text,
-                files.Length,
-                command.ReplyToMessageId,
-                command.ForwardedFromMessageId,
-                maximumTextLength,
-                nowUtc,
-                command.TopicId);
-            if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
-            {
-                var identity = await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
-                message.SetContactCardSnapshot(
-                    identity.UserId,
-                    identity.Username,
-                    identity.DisplayName);
-            }
-        }
-        catch (ArgumentException exception)
-        {
-            throw new MessagingException(
-                MessagingErrorCodes.MessageKindInvalid,
-                "ترکیب نوع، متن و پیوست پیام معتبر نیست.",
-                exception);
-        }
-
-        dbContext.Messages.Add(message);
-        dbContext.MessageRevisions.Add(MessageRevision.Create(
-            message.Id,
-            message.CurrentRevisionNumber,
-            message.Text,
-            userId,
-            nowUtc));
-        foreach (var file in files)
-        {
-            dbContext.MessageAttachments.Add(MessageAttachment.Create(
-                message.Id,
-                file.Id,
-                command.Kind,
-                nowUtc));
-            file.Retain(nowUtc);
-        }
-
-        foreach (var mentionedUserId in mentionedUserIds)
-        {
-            dbContext.MessageMentions.Add(MessageMention.Create(
-                message.Id,
-                mentionedUserId,
-                nowUtc));
-        }
-
-        return (message, true);
+        return (files, mentionedUserIds);
     }
 
     private async Task EnsureRetryMatchesAsync(
@@ -402,6 +422,7 @@ public sealed partial class EfMessagingStore
             existing.ForwardedFromMessageId != command.ForwardedFromMessageId ||
             existing.SharedContactUserId != command.ContactUserId ||
             existing.TopicId != command.TopicId ||
+            existing.IsSilent != command.IsSilent ||
             !attachments.SequenceEqual(command.AttachmentIds.Distinct().Order()) ||
             !mentions.SequenceEqual(command.MentionedUserIds.Distinct().Order()))
         {

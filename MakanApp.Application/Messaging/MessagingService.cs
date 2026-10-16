@@ -386,7 +386,7 @@ public sealed class MessagingService(
             UtcNow(),
             cancellationToken);
         if (command.DestinationTopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
-        storeCommand = storeCommand with { TopicId = command.DestinationTopicId };
+        storeCommand = storeCommand with { TopicId = command.DestinationTopicId, IsSilent = command.IsSilent };
         var safety = await ApplySafetyGateAsync(
             userId,
             command.DestinationConversationId,
@@ -641,77 +641,7 @@ public sealed class MessagingService(
             cancellationToken);
     }
 
-    private SendMessageStoreCommand ValidateSend(SendMessageCommand command)
-    {
-        if (command.TopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
-        if (command.ClientMessageId == Guid.Empty)
-        {
-            throw Error(MessagingErrorCodes.MessageClientIdRequired, "شناسه پایدار پیام کلاینت الزامی است.");
-        }
-
-        if (!Enum.IsDefined(command.Kind))
-        {
-            throw Error(MessagingErrorCodes.MessageKindInvalid, "نوع پیام معتبر نیست.");
-        }
-
-        var attachmentIds = (command.AttachmentIds ?? []).Distinct().ToArray();
-        if (attachmentIds.Any(id => id == Guid.Empty) ||
-            attachmentIds.Length > options.MaximumAttachmentsPerMessage)
-        {
-            throw Error(MessagingErrorCodes.MessageAttachmentNotAllowed, "فهرست پیوست‌های پیام معتبر نیست.");
-        }
-
-        var mentionedUserIds = (command.MentionedUserIds ?? []).Distinct().ToArray();
-        if (mentionedUserIds.Any(id => id == Guid.Empty) ||
-            mentionedUserIds.Length > options.MaximumMentionsPerMessage)
-        {
-            throw Error(MessagingErrorCodes.MentionNotAllowed, "فهرست منشن‌های پیام معتبر نیست.");
-        }
-
-        if (command.Text?.Length > options.MaximumTextLength)
-        {
-            throw Error(MessagingErrorCodes.MessageTooLong, "متن پیام از طول مجاز بیشتر است.");
-        }
-
-        if (command.Kind == MessageKind.Text)
-        {
-            if (string.IsNullOrWhiteSpace(command.Text))
-            {
-                throw Error(MessagingErrorCodes.MessageEmpty, "متن پیام الزامی است.");
-            }
-
-            if (attachmentIds.Length > 0)
-            {
-                throw Error(MessagingErrorCodes.MessageKindInvalid, "پیام متنی نمی‌تواند پیوست رسانه‌ای داشته باشد.");
-            }
-        }
-        else if (command.Kind == MessageKind.ContactCard)
-        {
-            if (!command.ContactUserId.HasValue || command.ContactUserId == Guid.Empty ||
-                command.Text is not null || attachmentIds.Length != 0)
-            {
-                throw Error(MessagingErrorCodes.MessageKindInvalid, "کارت مخاطب باید فقط شناسه کاربر معتبر داشته باشد.");
-            }
-        }
-        else if (attachmentIds.Length == 0)
-        {
-            throw Error(MessagingErrorCodes.MessageAttachmentRequired, "این نوع پیام حداقل یک پیوست می‌خواهد.");
-        }
-        else if (command.Text is not null && string.IsNullOrWhiteSpace(command.Text))
-        {
-            throw Error(MessagingErrorCodes.MessageKindInvalid, "عنوان رسانه باید خالی یا دارای متن معتبر باشد.");
-        }
-
-        return new SendMessageStoreCommand(
-            command.ClientMessageId,
-            command.Kind,
-            command.Text,
-            attachmentIds,
-            command.ReplyToMessageId,
-            mentionedUserIds,
-            ContactUserId: command.ContactUserId,
-            TopicId: command.TopicId);
-    }
+    private SendMessageStoreCommand ValidateSend(SendMessageCommand command) => MessageCommandValidation.Validate(command, options);
 
     internal static byte[] HashSendPayload(
         Guid conversationId,
@@ -745,6 +675,7 @@ public sealed class MessagingService(
                 writer.Write(command.TopicId?.ToByteArray() ?? []);
                 writer.Write((int)command.SafetyPurpose);
             }
+            if (command.IsSilent) writer.Write("messaging-p2-silent-v1");
         }
 
         return SHA256.HashData(stream.ToArray());
@@ -827,7 +758,8 @@ public sealed class MessagingService(
                 : null,
             record.IsPinned,
             Convert.ToBase64String(message.RowVersion),
-            message.TopicId);
+            message.TopicId,
+            !isDeleted && message.IsSilent);
     }
 
     private static MessageReplySummaryResult MapReply(MessageReplySummaryStoreRecord reply) =>

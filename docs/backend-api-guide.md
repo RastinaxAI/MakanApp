@@ -1733,3 +1733,7 @@ Production در startup به connection string امن SQL، security key، stora
 ### افزودهٔ Messenger P2 — Topics
 
 GET/POST `/api/v1/conversations/{id}/topics` و PUT نسخه‌دار `.../topics/{topicId}` برای Group، `topicId` در Send/history و `destinationTopicId` در Forward اضافه شدند. ManageTopics=4096 مستقل است؛ All جاری=8191 و مجوزهای قبلی خودکار افزایش نمی‌یابند. موضوع Open/Closed دارد؛ Close حذف تاریخچه نیست و Send تازه را با 409 رد می‌کند. FK مرکب از اتصال پیام به موضوع گروه دیگر جلوگیری می‌کند. قرارداد کامل permission معلم کلاس، FromJoin، نسخه، safety عنوان و `TopicChanged=13` در Handoff P2 ثبت است.
+
+### افزودهٔ Messenger P2 — Scheduled / Silent
+
+POST/GET `/api/v1/conversations/{id}/scheduled-messages` و POST نسخه‌دار `.../{scheduleId}/cancel` قصد پایدار خصوصی را نگه می‌دارند؛ تا commit پیام واقعی، Sent نیست. SQL lease/backoff، current authorization و گیت Safety در dispatch، رزرو ClientMessageId و atomic Message/receipt/Outbox پیاده‌اند؛ تنظیم اجباری جدید یا migration خودکار startup ندارند. edit موعد API ندارد و cancel/recreate شناسهٔ تازه می‌خواهد. `isSilent` در Send/Forward/history، پیام/Unread/SignalR/اعلان داخلی را حفظ و external delivery را suppress می‌کند؛ Mute یا OTP نیست. جزئیات وضعیت، retry، دو نشست، خطا و migration در Handoff P2 و شواهد واقعی validation در ممیزی آمده‌اند.

@@ -124,7 +124,8 @@ public sealed record ConversationMessageResult(
     ContactCardResult? ContactCard,
     bool IsPinned,
     string Version,
-    Guid? TopicId = null);
+    Guid? TopicId = null,
+    bool IsSilent = false);
 
 public sealed record ConversationMessagePageResult(
     IReadOnlyCollection<ConversationMessageResult> Messages,
@@ -140,6 +141,7 @@ public sealed class SendMessageCommand
     public IReadOnlyCollection<Guid>? MentionedUserIds { get; init; }
     public Guid? ContactUserId { get; init; }
     public Guid? TopicId { get; init; }
+    public bool IsSilent { get; init; }
 }
 
 // این قرارداد برای سازگاری کلاینت‌های STEP 7A باقی می‌ماند؛ مسیر اجرا مشترک است.
@@ -150,7 +152,8 @@ public sealed record EditMessageCommand(string? Text, string ExpectedVersion);
 public sealed record ForwardMessageCommand(
     Guid DestinationConversationId,
     Guid ClientMessageId,
-    Guid? DestinationTopicId = null);
+    Guid? DestinationTopicId = null,
+    bool IsSilent = false);
 
 public sealed record AddReactionCommand(MessageReactionType Reaction);
 

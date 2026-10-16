@@ -58,6 +58,7 @@ public sealed record ConversationMessagePageStoreResult(
     long? NextBeforeSequence);
 
 public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1 }
+public sealed record ScheduledSendClaim(Guid ScheduledMessageId, Guid Token, byte[] PayloadHash);
 
 public sealed record SendMessageStoreCommand(
     Guid ClientMessageId,
@@ -70,7 +71,9 @@ public sealed record SendMessageStoreCommand(
     bool AllowSourceAttachments = false,
     Guid? ContactUserId = null,
     Guid? TopicId = null,
-    MessageSafetyPurpose SafetyPurpose = MessageSafetyPurpose.Message);
+    MessageSafetyPurpose SafetyPurpose = MessageSafetyPurpose.Message,
+    bool IsSilent = false,
+    ScheduledSendClaim? ScheduledClaim = null);
 
 public sealed record MessageSafetyPreparationStoreResult(
     Message? ExistingMessage,

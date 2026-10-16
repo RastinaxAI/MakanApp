@@ -138,3 +138,45 @@ GET/POST موضوع‌ها، PUT موضوع نسخه‌دار، topicId در Sen
 مسیر مطالعه: Controller → TopicService/Contracts → ConversationTopic/Message/Permission → MessageContentSafetyGate → EfMessagingStore.Topics و Send/ChildSafety → Configuration → Migration → Unit/Integration. گام مستقل بعدی scheduled/silent است؛ Poll/Quiz منتظر قرارداد پرسیده‌شده‌اند، Checklist طبق استثنای prompt deferred است و هیچ‌یک نباید قبل از پیاده‌سازی موفق اعلام شوند.
 
 Validation واقعی فاز چهارم: restore و build/final build موفق با صفر warning/error؛ هر دو دور Unit=522، Integration=871، Architecture=14، Total=1407 passed، failed/skipped=0. EF تغییر معوق ندارد و migration فقط در LocalDB ایزولهٔ تست اعمال شده است. چهار Unit و سیزده Integration افزوده شدند. commit متمرکز با پیام `feat(messaging): add versioned group topics` پس از review انجام می‌شود؛ hash/remote به نتیجهٔ واقعی Git وابسته است. محدودیت‌های فاز و مرز نبود تغییر AI/SMS/config/server/frontend همچنان برقرارند.
+
+Git فاز چهارم: `7ebe826cd78ef4a49518e9c05e54c88836393675`، ۳۶ فایل مرتبط، همان پیام؛ branch=`messenger/p0`، upstream=`origin/main`، push/fetch و برابری remote موفق، worktree تمیز و فایل‌های AI بیرون commit بودند.
+
+## فاز پنجم: P2-15 تا P2-17 — زمان‌بندی و بی‌صدا
+
+### خلاصه، لایه‌ها و فایل‌های تازه
+
+قبلاً فقط ارسال فوری و Mute گیرنده داشتیم؛ اکنون یک قصد ارسالِ مستقل تا dispatch در SQL پایدار می‌ماند و Silent اختیار همان send است. `ScheduledMessage.cs` در Domain lifecycle، اختیار ثبت‌شده، محتوای typed، فرزندان attachment/mention، lease و retry محدود را دارد؛ EF/HTTP/Timer ندارد. `ScheduledMessageContracts.cs` پورت و DTO، `ScheduledMessageService.cs` validation/context/version، `ScheduledMessageProcessor.cs` orchestration dispatch و `MessageCommandValidation.cs` validation مشترک واقعی را در Application نگه می‌دارند.
+
+`EfMessagingStore.Scheduling.cs` ثبت/خواندن خصوصی/لغو و `EfMessagingStore.ScheduledDispatch.cs` claim/recovery/proof/failure را در Infrastructure دارند. `ScheduledMessageConfiguration.cs` سه mapping و `ScheduledMessageDispatcher.cs` میزبان worker scoped هستند. `ScheduledMessagesController.cs` فقط authenticated HTTP را map می‌کند. actor/context از ورودی client پذیرفته نمی‌شود و worker احراز هویت یا نشست موازی نمی‌سازد؛ authority پایدار از قصد قبلی و بررسی جاری منابع می‌آید.
+
+### تغییرات مهم و جریان اجرا
+
+`Message`، command/Forward/history و fingerprint، IsSilent اختیاری سازگار گرفته‌اند؛ default پیام سابق false و hash درخواست سابق بدون قابلیت جدید ثابت است. validation و reply/mention/file/Topic reference از مسیر فوری استخراج شده تا queue قرارداد ناسازگار دوم نسازد. private ScheduledClaim در قرارداد داخلی Store است، نه body عمومی API؛ token/context/body/hash و وضعیت جاری در SQL دوباره تطبیق داده می‌شوند. فایل factory تست فقط worker تازه را برای اجرای قطعی دستی برمی‌دارد؛ providerهای AI/SMS آن تغییر نکردند.
+
+ثبت: HTTP → `ScheduledMessagesController` → `ScheduledMessageService` → context/validation → `EfMessagingStore.ScheduleAsync` → قفل Conversation/نشست/مجوز/ref جاری → `ScheduledMessage.Create` → SQL/audit → DTO Scheduled، بدون Message/Notification.
+
+dispatch: `ScheduledMessageDispatcher` → `ScheduledMessageProcessor` → claim تک‌کاری SQL و commit lease → context ثبت‌شدهٔ سروری → `MessageContentSafetyGate` و provider خارج transaction → `EfMessagingStore.SendMessageAsync` → قفل Conversation→Scheduled + current account/role/relationship/Block/privacy/attachment/topic و token lease → `Message.Create` + `ScheduledMessage.Dispatch` + Outbox در یک transaction → commit → MessageCreated/SignalR/Unread/اعلان داخلی. source session ممکن است پایان یافته باشد، اما هیچ permission قدیمی تضمین نمی‌شود؛ mutation نشست لغوشده فوراً 401 است.
+
+### دیتابیس، قرارداد و تصمیم‌ها
+
+Migration `20261016190927_AddScheduledAndSilentMessages`: ScheduledMessages با PK Guid، unique conversation/user/clientMessageId، FK به conversation/user/source membership/subject و Topic/Reply/DispatchedMessage هم‌گروه، binary(32) hash، UTC datetime2، version، CHECK lifecycle/lease/context/attempt/time و index due/list؛ دو جدول composite-key attachment/mention با FK واقعی. متن pending در Message ساخته نمی‌شود؛ payload typed و محدود است، نه JSON اجرایی. referenceهای محتوا immutable هستند و split query صف، محتوای دو نسخهٔ متفاوت را ترکیب نمی‌کند.
+
+فقط یک lease در هر نوبت گرفته می‌شود؛ claim کردن بیست کار و انتظار ترتیبی provider، lease کارهای آخر را می‌سوزاند. lease سی ثانیه، polling دو ثانیه، حداکثر پنج تلاش و backoff ۵/۱۰/۲۰/۴۰ است. کارِ crashشدهٔ تلاش آخر هم terminal می‌شود. cancel با rowversion، و در رقابت Cancelled→بدون پیام یا Dispatched→یک پیام است. edit/reschedule اختیاری این فاز ساخته نشده؛ cancel/recreate شناسهٔ تازه می‌خواهد. این trade-off، محتوای immutable و retry معنایی روشن می‌دهد.
+
+سه endpoint ثبت/صف خود/لغو، body، response، 400/401/404/409/412 و وضعیت loading/retry در Handoff آمده‌اند. حداکثر صد Pending برای sender/conversation زیر lock است. initial permission فقط precondition ثبت است؛ dispatch permission مستقل و جاری است. خطای دائمی Failed، خطای موقت Scheduled با LastFailureCode و هرگز Sent نیست. queue خصوصی با REST/version همگراست، نه event گروهی.
+
+`EfMessagingStore.Completion.cs` همان NotificationIntent موجود را با `muted || message.IsSilent` علامت می‌زند؛ `NotificationDeliveryProcessor.Authorization.cs` نیز IsSilent جاری را می‌سنجد. حذف notification داخلی یا تغییر SMS provider لازم نبود. Silent، temporary/hidden یا Mute نیست و پس از edit پیام عادی نیز flag آن عوض نمی‌شود. rollback migration در حضور دادهٔ واقعی از ابتدا توقف می‌کند و backup/تصمیم عملیاتی لازم دارد؛ روی سرور اجرا نشده است.
+
+### تست‌ها، validation، نکات و مطالعه
+
+`ScheduledMessageTests` شش Unit برای زمان/lease/terminal/reclaim/backoff/crash آخر و immutable Silent دارد. چهار فایل Integration `MessagingP2ScheduledEndpointsTests`، `MessagingP2ScheduledSafetyTests`، `MessagingP2ScheduledRecoveryTests` و `MessagingP2SilentEndpointsTests` بیست‌ویک حالت SQL/HTTP/Hub دارند: UTC due و retry پس از موعد، عدم ارسال زودهنگام با ID رزرو، دو worker، cancel×dispatch، cancel در provider، lease قدیمی در مرز SQL، منقضی/بازیابی و failure قدیمی، دو نشست، revoke، Block، membership در حین provider، نقش channel، Topic بسته، فایل حذف‌شده، fail-closed Minor/Unknown و Silent همراه normal regression. تست fault-injection Outbox نشان می‌دهد حتی پس از Save اولیه، rollback پیام/receipt اتفاق می‌افتد و tracker ثبت خطا آن را دوباره ذخیره نمی‌کند؛ retry فقط یک پیام/اعلان می‌سازد. تست Silent با Hub واقعی و provider ضبط‌شونده است، نه دریافت واقعی FCM/Web Push.
+
+هدفمند شش Unit و بیست‌ویک Integration passed، failed/skipped=0؛ build اصلاح‌شده صفر warning/error است. خطای namespace/property تست و فرض نامعتبر Manager در fixture اصلاح شدند؛ policy تضعیف نشد. suite کامل/Git بعد از نتیجهٔ واقعی به ممیزی افزوده می‌شوند؛ هیچ موفقیت نهایی یا production acceptance از هدفمند به‌تنهایی نتیجه نمی‌شود.
+
+۱. durable intent با نشست آنلاین یکی نیست. ۲. lease قدیمی حتی با محتوای درست اختیار commit ندارد. ۳. claimها را متناسب با زمان provider بگیرید، نه صرفاً تعداد batch. ۴. rollback SQL، ChangeTracker را به وضعیت قبل برنمی‌گرداند؛ ثبت خطا نباید entity شکست‌خورده را دوباره Save کند. ۵. Silent را در دو نقطهٔ intent و delivery gate اعمال کنید و internal notification را حفظ کنید. ۶. idempotency پس از موعد هم باید معنی روشن داشته باشد. ۷. workerای که آخرین تلاش آن crash کرده، به recovery terminal نیاز دارد.
+
+مسیر مطالعه: ScheduledMessagesController → ScheduledMessageService/Contracts → ScheduledMessage → ScheduledMessageProcessor → MessageContentSafetyGate → Scheduling/ScheduledDispatch و Send → Configuration → Migration → Unit/Integration. بعد از بسته‌شدن Git این فاز، Search/پذیرش نهایی و hardening جاری ادامه دارد؛ Poll/Quiz تا پاسخ قرارداد و Checklist طبق استثنا جدا می‌مانند. server، AI/RAG، ملی‌پیامک و frontend از این مرحله خارج‌اند.
+
+درس واقعی suite کامل: هدفمند ۲۱ مورد passed بود، اما race claim/cancel در دور کامل SQL 1205 داد؛ Unit=528، Integration=891 passed/1 failed، Architecture=14، skipped=0. queue-index UPD lock و مسیر Cancel با ترتیب متفاوت/upgrade، کافی نبودند. اکنون candidate readonly فقط hint است و claim نیز Conversation→Scheduled را رعایت و بعد از قفل، due/lease/status را دوباره می‌سنجد؛ Cancel با UPDLOCK/HOLDLOCK از conversion جلوگیری می‌کند. پنج round هم‌زمان با start barrier، بدون ضعیف‌کردن assertion، coverage regression را تقویت کردند. ۲۵ Integration هدفمندِ اصلاح‌شده passed هستند؛ suite کامل اصلاح‌شده هنوز در حال اجراست و commit/push تا نتیجه مجاز نیست. این نمونه نشان می‌دهد صرف استفاده از lock و transaction، معادل ترتیب صحیح قفل‌ها نیست.
+
+Validation واقعی نهایی فاز پنجم: restore و build/final build موفق با صفر warning/error؛ هر دو suite کامل اصلاح‌شده Unit=528، Integration=896، Architecture=14، Total=1438 passed، failed/skipped=0. EF تغییر معوق ندارد؛ migration فقط روی fixtureهای SQL ایزوله اعمال شد. ۶ Unit و ۲۵ Integration افزوده شدند؛ خطای واقعی ابتدا fix و دوباره full test شد، نه مخفی/skip. commit با پیام `feat(messaging): add durable scheduled and silent messages` پس از review است؛ hash و تأیید remote فقط پس از اجرای Git گزارش می‌شوند. محدودیت‌های cancel/recreate، نبود distributed presence و real Push مستقل همچنان پابرجا هستند.

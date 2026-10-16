@@ -3514,6 +3514,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ForwardedFromMessageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsSilent")
+                        .HasColumnType("bit");
+
                     b.Property<int>("Kind")
                         .HasColumnType("int");
 
@@ -4202,6 +4205,173 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_SavedMessageOrganizations_Revision", "[Revision] > 0");
                         });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ClaimToken")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClaimedUntilUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("ClientMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("ContactUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("DispatchedMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsSilent")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastFailureCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("MembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("PayloadHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("binary(32)")
+                        .IsFixedLength();
+
+                    b.Property<Guid?>("ReplyToMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("ScheduledAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SubjectOrganizationPersonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid?>("TopicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("WorkspaceType")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContactUserId");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SubjectOrganizationPersonId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("DispatchedMessageId", "ConversationId");
+
+                    b.HasIndex("ReplyToMessageId", "ConversationId");
+
+                    b.HasIndex("TopicId", "ConversationId");
+
+                    b.HasIndex("ConversationId", "UserId", "ClientMessageId")
+                        .IsUnique();
+
+                    b.HasIndex("ConversationId", "UserId", "Status");
+
+                    b.HasIndex("Status", "ScheduledAtUtc", "Id");
+
+                    b.ToTable("ScheduledMessages", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ScheduledMessages_Attempts", "[AttemptCount] BETWEEN 0 AND 5");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Context", "([WorkspaceType]=1 AND [OrganizationId] IS NULL AND [MembershipId] IS NULL AND [Role] IS NULL AND [SubjectOrganizationPersonId] IS NULL) OR ([WorkspaceType]=2 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [Role] IN (1,2,3,4))");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Hash", "DATALENGTH([PayloadHash]) = 32");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Kind", "[Kind] IN (1,2,3,4,5,6)");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Lease", "([ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL) OR ([Status]=1 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Lifecycle", "([Status]=1 AND [CompletedAtUtc] IS NULL AND [DispatchedMessageId] IS NULL) OR ([Status]=2 AND [CompletedAtUtc] IS NOT NULL AND [DispatchedMessageId] IS NOT NULL) OR ([Status] IN (3,4) AND [CompletedAtUtc] IS NOT NULL AND [DispatchedMessageId] IS NULL)");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_Status", "[Status] IN (1,2,3,4)");
+
+                            t.HasCheckConstraint("CK_ScheduledMessages_UTCOrder", "[ScheduledAtUtc] > [CreatedAtUtc]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessageAttachment", b =>
+                {
+                    b.Property<Guid>("ScheduledMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ScheduledMessageId", "FileAssetId");
+
+                    b.HasIndex("FileAssetId");
+
+                    b.ToTable("ScheduledMessageAttachments", "messaging");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessageMention", b =>
+                {
+                    b.Property<Guid>("ScheduledMessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ScheduledMessageId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ScheduledMessageMentions", "messaging");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.UserBlock", b =>
@@ -7349,6 +7519,89 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessage", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ContactUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.OrganizationPerson", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectOrganizationPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("DispatchedMessageId", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("ReplyToMessageId", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationTopic", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessageAttachment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ScheduledMessage", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("ScheduledMessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessageMention", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ScheduledMessage", null)
+                        .WithMany("Mentions")
+                        .HasForeignKey("ScheduledMessageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.UserBlock", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -7690,6 +7943,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Navigation("Price");
 
                     b.Navigation("QuotaDefinitions");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessage", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("Mentions");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Platform.PlatformMfaCredential", b =>

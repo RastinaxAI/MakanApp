@@ -270,7 +270,7 @@ public sealed partial class EfMessagingStore
                     recipientUserId,
                     SafeMessageNotificationTitle,
                     SafeMessageNotificationBody,
-                    muted)]));
+                    muted || message.IsSilent)]));
         });
         outbox.EnqueueRange(envelopes);
     }

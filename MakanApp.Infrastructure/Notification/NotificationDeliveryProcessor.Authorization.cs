@@ -43,7 +43,7 @@ public sealed partial class NotificationDeliveryProcessor
             join conversation in dbContext.Conversations.AsNoTracking() on message.ConversationId equals conversation.Id
             join participant in dbContext.ConversationParticipants.AsNoTracking() on conversation.Id equals participant.ConversationId
             where message.Id == notification.SourceEventId && conversation.Id == notification.ResourceId &&
-                message.DeletedAtUtc == null && participant.UserId == recipientId &&
+                message.DeletedAtUtc == null && !message.IsSilent && participant.UserId == recipientId &&
                 participant.Status == ConversationParticipantStatus.Active && participant.EndedAtUtc == null &&
                 message.Sequence >= participant.HistoryVisibleFromSequence &&
                 !dbContext.MessageUserVisibilities.Any(v => v.MessageId == message.Id && v.UserId == recipientId) &&
