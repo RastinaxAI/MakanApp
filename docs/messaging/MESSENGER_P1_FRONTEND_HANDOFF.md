@@ -66,7 +66,7 @@ FCM فقط service_account همان ProjectId، token URI ثابت Google و sco
 - Group، Channel و Saved پاسخ `NotSupported` با sequence/version خالی دارند؛ receipt همه اعضا یا شمار view کانال وجود ندارد.
 - event همان `ConversationChanged` است با `type:"PeerReadStateChanged"` و `peerReadThroughSequence`. event به فرستندهٔ مجاز می‌رسد، نه تمام اعضا؛ `ReadCursorAdvanced` خصوصی همچنان فقط برای خود reader است. Delta نیز field nullable مذکور را دارد.
 - پس از reconnect، snapshot read-state را تازه و Delta را از checkpoint پردازش‌شده دریافت کنید؛ eventها می‌توانند تکرار/تأخیر داشته باشند. sequence دریافت‌شدهٔ کمتر، state جدیدتر پردازش‌شده را عقب نبرد؛ در Hidden مجوز نمایش تازه را فرض نکنید. checkpoint فقط پس از پردازش کامل صفحه جلو می‌رود.
-- receipt version، opaque navigation/fact version است؛ آن را ExpectedVersion برای POST read استفاده نکنید. قرارداد قدیمی read additive و بدون ExpectedVersion باقی است. ExpectedVersion مربوط به Edit/Settings قرارداد مستقل خودش را دارد.
+- receipt version، opaque fact version است؛ آن را Delta cursor یا ExpectedVersion برای POST read استفاده نکنید. قرارداد قدیمی read additive و بدون ExpectedVersion باقی است. ExpectedVersion مربوط به Edit/Settings قرارداد مستقل خودش را دارد.
 
 نمونهٔ پاسخ Direct پیش از peer read:
 
@@ -75,6 +75,44 @@ FCM فقط service_account همان ProjectId، token URI ثابت Google و sco
 ```
 
 خطاها: 401 نشست نامعتبر؛ 404 منبع ناموجود/خارج مجوز؛ POST read با sequence نامعتبر 400. hidden و unsupported پاسخ موفق اما فاقد رسید هستند. download/search/history/Delta همچنان مجوز جاری را مستقل بررسی می‌کنند؛ دانستن MessageId یا receipt اجازهٔ فایل نمی‌دهد.
+
+## فایل، رسانه، جست‌وجو و عملیات پیام
+
+فایل خصوصی از مسیر موجود `POST /api/v1/files` به‌صورت multipart با فیلد `File` بارگذاری و سپس با `attachmentIds` به SendMessage داده می‌شود. فقط FileAsset آماده، مالکیت/مجوز جاری و scope سازگار قابل اتصال‌اند؛ فایلِ فرد دیگر، نام فایل یا شناسه به‌تنهایی مجوز نیست. دریافت bytes فقط `GET /api/v1/files/{id}/content` با session و مجوز فعلی است؛ URL عمومی دائمی یا storage key در پاسخ پیام/Shared Media نداریم. حذف عضو یا از دست‌دادن history/ForMe در لحظهٔ download اعمال می‌شود. فایل پیوست‌شده retained است؛ CHECK موجود SQL اجازهٔ downgrade آن به Pending/Rejected/Deleted را نمی‌دهد. این invariant برای عبور دادن تست تغییر نکرده است.
+
+| MessageKind | MIME و پسوند قابل پشتیبانی کد |
+|---|---|
+| Image | image/png و .png؛ image/jpeg و .jpg/.jpeg |
+| Video | video/mp4 و .mp4 |
+| Voice | audio/mpeg و .mp3 |
+| File | application/pdf و .pdf؛ text/plain UTF-8 و .txt |
+
+مجاز بودن نهایی به `Storage:AllowedContentTypes` و سقف اندازهٔ همان محیط نیز بستگی دارد؛ Video/Voice با افزودن صرف enum فعال نمی‌شوند. codecهای Ogg/Opus/WebM/WAV یا فایل اجرایی/arbitrary generic-file در این قرارداد ادعا نشده‌اند. signature حداقلی، MIME و extension بررسی می‌شوند؛ بررسی ۵۱۲ بایتِ ابتدای متن UTF-8 اکنون مرز نیمه‌کارهٔ نویسه را با EOF اشتباه نمی‌گیرد، ولی UTF-8 نامعتبر داخل نمونه یا انتهای واقعی ناقص همچنان رد می‌شود. این بررسی decoder رسانه یا اسکن کل فایل نیست؛ **AV/CDR = FUTURE PRODUCTION HARDENING** و هیچ فایل malware-free اعلام نمی‌شود.
+
+`GET /conversations/{id}/media?kind=Image&beforeSequence=...&limit=...` زیر `/api/v1`، history/ForMe/deletion و عضویت فعلی را اعمال می‌کند. limit تعداد **پیام** است؛ یک پیام با چند پیوست می‌تواند چند item بدهد. nextBeforeSequence را مصرف و با `(messageId,fileAssetId)` dedupe کنید؛ تعداد item را جای cursor نگذارید. همهٔ پیوست‌های یک پیام در همان صفحه هستند. ترتیب داخل صفحه بر پایهٔ sequence و شناسهٔ attachment پایدار است.
+
+Reply در SendMessage با `replyToMessageId` همان گفتگو است. پیام اصلیِ حذف‌شده، hidden یا خارج history به reference امن `isDeleted/isUnavailable` و بدون متن/نوع قبلی تبدیل می‌شود؛ وجود MessageId مجوز نقل متن پنهان نیست. Edit با `PATCH /conversations/{id}/messages/{messageId}` و `text/expectedVersion`، sender/current permission، مهلت یک‌ساعتهٔ سرور، نسخه و Safety فعلی را بررسی می‌کند؛ نسخهٔ قدیمی `412` است. revision تاریخی برای کاربر عادی به‌عنوان متن فعلی برنمی‌گردد.
+
+Delete For Me مسیر `DELETE .../messages/{messageId}/for-me`، فقط caller و همهٔ sessionهای خودش را پنهان می‌کند؛ peer/history او تغییر نمی‌کند. Delete For Everyone مسیر `DELETE .../messages/{messageId}/for-everyone?expectedVersion=...` و alias قبلی DELETE پیام است؛ قواعد sender/مهلت یا moderation مجاز فعلی پابرجا هستند. خروجی tombstone نوع/متن/پیوست قبلی ندارد؛ رکورد تاریخی یا شاهد moderation خودکار پاک نمی‌شود. پیام pin‌شدهٔ حذف‌شده ممکن است فقط به‌صورت tombstone قابل شناسایی بماند، نه متن یا فایل افشاشده.
+
+Reaction با POST `.../messages/{messageId}/reactions` و `reaction` و حذف با DELETE `.../reactions/{reaction}` است؛ فقط پیام مجاز و قابل مشاهده، اثر هم‌ارز idempotent، و نتیجهٔ `reactedByCurrentUser` وابسته به خود حساب است. Forward با POST `.../messages/{messageId}/forward` و `destinationConversationId/clientMessageId`، مجوز مبدأ/مقصد، تاریخچه، Block/Privacy، Safety و فایل را دوباره بررسی می‌کند؛ متن/پیوست آماده‌شده پیش از Safety باید با محتوای جاری یکسان باشد. مقصد، جایگزین مجوز نیست. Message Pin با POST/DELETE `.../pins/{messageId}` عمومیِ درون گفتگو و نیازمند permission فعلی است؛ با pin شخصی گفتگو یکسان نیست.
+
+جست‌وجوی موجود `GET /api/v1/messages/search?q=...&conversationId=...&cursor=...&limit=...` فقط گفتگو/پیام/فایل مجاز فعلی و ویرایش فعلی را برمی‌گرداند؛ نسخهٔ قبلی، ForMe، Clear و history غیرمجاز snippet نمی‌سازند. cursor opaque به query/scope بسته است؛ برای query یا گفتگو دیگر reuse نشود. موتور همان SQL bounded و normalization فارسی موجود است؛ موتور جست‌وجوی موازی اضافه نشده است.
+
+زمان‌های core Messaging در receipt تکراری، history، search/media، list، user-state، cursor-state، Group/Channel و realtime اکنون UTC با `Z` هستند. timestamp از ساعت client نمی‌آید؛ تغییر صرفاً بازیابی Kind از دست‌رفتهٔ زمان UTC ذخیره‌شده است و مقدار timestamp/deadline دیتابیس جابه‌جا نشده است.
+
+## Rate limit و قرارداد خطا
+
+| عملیات | سقف هر کاربر در هر دقیقه / هر process |
+|---|---|
+| Send و Edit، مشترک | ۳۰۰ |
+| Add/Remove Reaction، مشترک | ۳۰۰ |
+| Forward | ۱۲۰ |
+| Search / Discovery | هر policy برابر ۶۰، حفظ‌شده |
+| Upload | ۲۰، حفظ‌شده |
+| ثبت/لغو دستگاه | ۶۰ |
+
+در Testing سقف‌های named policy برای آزمون عملکردی بالا هستند؛ تست قرارداد 429 با limiter کوچک کنترل‌شده اجرا می‌شود، نه ادعای اندازه‌گیری quota واقعی Production. `Retry-After` پاسخ 429 برای writeهای Messaging و Upload نیز مانند discovery/device ارائه و از CORS expose می‌شود. backoff/retry کلاینت موقت است؛ auth نامعتبر `401`، منبع خارج مجوز عموماً `404`، policy rejection مطابق کد stable قبلی، concurrency مانند Edit برابر `412` یا device برابر `409` است. در 429 توکن را logout/rotate نکنید و ارسال را با همان ClientMessageId/payload retry کنید. کنترل‌های OTP/AI/پرداخت تغییر نکرده‌اند. limiter و SignalR backplane توزیع‌شده خارج این P1 هستند.
 
 ## اعلان، Mute و تلاش مجدد
 

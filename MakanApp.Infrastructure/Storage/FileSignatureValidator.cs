@@ -49,7 +49,7 @@ public sealed class FileSignatureValidator : IFileContentValidator
             "image/png" => sample.StartsWith(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }),
             "video/mp4" => sample.Length >= 12 && sample[4..8].SequenceEqual("ftyp"u8),
             "audio/mpeg" => IsMpegAudio(sample),
-            "text/plain" => IsPlainText(sample),
+            "text/plain" => IsPlainText(sample, initialPosition + bytesRead >= content.Length),
             _ => false
         };
         if (!valid)
@@ -62,7 +62,7 @@ public sealed class FileSignatureValidator : IFileContentValidator
         sample.StartsWith("ID3"u8) ||
         sample.Length >= 2 && sample[0] == 0xFF && (sample[1] & 0xE0) == 0xE0;
 
-    private static bool IsPlainText(ReadOnlySpan<byte> sample)
+    private static bool IsPlainText(ReadOnlySpan<byte> sample, bool isComplete)
     {
         if (sample.IsEmpty || sample.Contains((byte)0))
         {
@@ -71,8 +71,12 @@ public sealed class FileSignatureValidator : IFileContentValidator
 
         try
         {
-            var value = StrictUtf8.GetString(sample);
-            return value.All(character => !char.IsControl(character) || character is '\r' or '\n' or '\t');
+            Span<char> characters = stackalloc char[InspectionLength];
+            // پایان نمونه لزوماً پایان فایل نیست؛ flush فقط در EOF واقعی انجام می‌شود.
+            var count = StrictUtf8.GetDecoder().GetChars(sample, characters, flush: isComplete);
+            foreach (var character in characters[..count])
+                if (char.IsControl(character) && character is not ('\r' or '\n' or '\t')) return false;
+            return true;
         }
         catch (DecoderFallbackException)
         {

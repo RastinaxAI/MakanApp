@@ -108,7 +108,7 @@ public sealed class MessagingRealtimeOutboxProcessor(
                 change.ResourceId,
                 change.ResourceVersion,
                 MessagingChangeCursor.Encode(change.ConversationId, change.ChangeSequence),
-                change.OccurredAtUtc,
+                DateTime.SpecifyKind(change.OccurredAtUtc, DateTimeKind.Utc),
                 change.PayloadVersion,
                 peerReadSequence);
             await notifier.NotifyConversationChangedAsync(

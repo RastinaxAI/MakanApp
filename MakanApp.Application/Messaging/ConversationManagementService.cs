@@ -234,7 +234,7 @@ public sealed class ConversationManagementService(
                         item.OrganizationName)
                     : null,
                 item.IsJoined,
-                item.Conversation.CreatedAtUtc)).ToArray(),
+                MessagingWireTime.FromStoredUtc(item.Conversation.CreatedAtUtc))).ToArray(),
             query.Page,
             query.PageSize,
             page.HasMore);
@@ -430,8 +430,8 @@ public sealed class ConversationManagementService(
             result.Conversation.GroupHistoryPolicy,
             result.Conversation.MemberCapabilities,
             result.Conversation.Status,
-            result.Conversation.CreatedAtUtc,
-            result.Conversation.ArchivedAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Conversation.CreatedAtUtc),
+            MessagingWireTime.FromStoredUtc(result.Conversation.ArchivedAtUtc),
             Convert.ToBase64String(result.Conversation.RowVersion),
             result.Participants.Select(MapParticipant).ToArray(),
             result.AlreadyExisted);
@@ -446,8 +446,8 @@ public sealed class ConversationManagementService(
                 item.Identity.DisplayName),
             item.Participant.Role,
             item.Participant.Status,
-            item.Participant.JoinedAtUtc,
-            item.Participant.EndedAtUtc,
+            MessagingWireTime.FromStoredUtc(item.Participant.JoinedAtUtc),
+            MessagingWireTime.FromStoredUtc(item.Participant.EndedAtUtc),
             item.Participant.HistoryVisibleFromSequence,
             item.Participant.AdminPermissions,
             Convert.ToBase64String(item.Participant.RowVersion));
@@ -459,9 +459,9 @@ public sealed class ConversationManagementService(
             result.Transfer.FromUserId,
             result.Transfer.ToUserId,
             result.Transfer.Status,
-            result.Transfer.CreatedAtUtc,
-            result.Transfer.AcceptedAtUtc,
-            result.Transfer.DeclinedAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Transfer.CreatedAtUtc),
+            MessagingWireTime.FromStoredUtc(result.Transfer.AcceptedAtUtc),
+            MessagingWireTime.FromStoredUtc(result.Transfer.DeclinedAtUtc),
             result.AlreadyCompleted);
 
     private static byte[] CreatePayloadHash(

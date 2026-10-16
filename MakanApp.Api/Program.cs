@@ -132,6 +132,12 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("messaging-send", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetAuthenticatedPartitionKey(httpContext), _ => FixedWindow(builder.Environment, 300)));
+    options.AddPolicy("messaging-reaction", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetAuthenticatedPartitionKey(httpContext), _ => FixedWindow(builder.Environment, 300)));
+    options.AddPolicy("messaging-forward", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetAuthenticatedPartitionKey(httpContext), _ => FixedWindow(builder.Environment, 120)));
     options.AddPolicy("file-upload", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
@@ -159,7 +165,11 @@ builder.Services.AddRateLimiter(options =>
             "/api/v1/auth/otp",
             StringComparison.OrdinalIgnoreCase);
         var isNotificationDevice = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/notifications/devices", StringComparison.OrdinalIgnoreCase);
-        if ((isMessagingDiscovery || isNotificationDevice) && context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        var isMessagingWrite = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/conversations", StringComparison.OrdinalIgnoreCase) &&
+            !HttpMethods.IsGet(context.HttpContext.Request.Method) && !HttpMethods.IsHead(context.HttpContext.Request.Method);
+        var isFileUpload = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/files", StringComparison.OrdinalIgnoreCase) &&
+            HttpMethods.IsPost(context.HttpContext.Request.Method);
+        if ((isMessagingDiscovery || isNotificationDevice || isMessagingWrite || isFileUpload) && context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
         {
             context.HttpContext.Response.Headers.RetryAfter = Math.Max(1, Math.Ceiling(retryAfter.TotalSeconds))
                 .ToString(System.Globalization.CultureInfo.InvariantCulture);

@@ -3,6 +3,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Domain.Messaging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MakanApp.Api.Controllers;
 
@@ -121,6 +122,8 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/messages")]
+    [EnableRateLimiting("messaging-send")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType<MessageReceiptResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<MessageReceiptResult>> SendMessage(
         Guid conversationId,
@@ -134,6 +137,8 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpPatch("{conversationId:guid}/messages/{messageId:guid}")]
+    [EnableRateLimiting("messaging-send")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType<MessageMutationResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<MessageMutationResult>> EditMessage(
         Guid conversationId,
@@ -192,6 +197,8 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/messages/{messageId:guid}/forward")]
+    [EnableRateLimiting("messaging-forward")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType<MessageReceiptResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<MessageReceiptResult>> ForwardMessage(
         Guid conversationId,
@@ -207,6 +214,8 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpPost("{conversationId:guid}/messages/{messageId:guid}/reactions")]
+    [EnableRateLimiting("messaging-reaction")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType<MessageReactionResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<MessageReactionResult>> AddReaction(
         Guid conversationId,
@@ -222,6 +231,8 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpDelete("{conversationId:guid}/messages/{messageId:guid}/reactions/{reaction}")]
+    [EnableRateLimiting("messaging-reaction")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RemoveReaction(
         Guid conversationId,

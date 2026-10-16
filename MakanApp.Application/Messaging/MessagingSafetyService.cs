@@ -182,7 +182,7 @@ public sealed class MessagingSafetyService(
         Map(record.Sender),
         CreateSnippet(record.Message.Text),
         record.Message.Kind,
-        record.Message.SentAtUtc,
+        MessagingWireTime.FromStoredUtc(record.Message.SentAtUtc),
         record.Message.Sequence,
         record.Attachments.Select(item => new MessageAttachmentResult(
             item.FileAsset.Id,
@@ -190,7 +190,7 @@ public sealed class MessagingSafetyService(
             item.FileAsset.OriginalFileName,
             item.FileAsset.ContentType,
             item.FileAsset.SizeBytes,
-            item.Attachment.CreatedAtUtc)).ToArray());
+            MessagingWireTime.FromStoredUtc(item.Attachment.CreatedAtUtc))).ToArray());
 
     private static string? CreateSnippet(string? text) =>
         text is null || text.Length <= SearchSnippetLength ? text : text[..SearchSnippetLength];

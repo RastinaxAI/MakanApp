@@ -1,5 +1,19 @@
 # ممیزی و شواهد تحویل Messenger P1
 
+## فاز پنجم — رسانه، wire UTC و محدودسازی mutation
+
+دو ایراد واقعی با تست red بازتولید شدند: `FileSignatureValidator` پایان نمونهٔ ۵۱۲ بایتی را EOF فرض می‌کرد و فارسی/emoji سالم را 415 می‌داد؛ همچنین `datetime2` در بازخوانی SQL، DateTimeKind را از دست می‌داد و receipt تکراری/history/Delta/search/media/state و SignalR زمان بدون Z می‌دادند. decoder اکنون فقط در EOF واقعی flush می‌شود؛ UTF-8 خراب داخل نمونه، NUL و انتهای واقعی ناقص همچنان مردودند. `MessagingWireTime` فقط Kind مقدارِ از قبل UTC را هنگام ساخت result بازیابی می‌کند؛ ToUniversalTime، زمان client، تغییر داده/ساعت یا migration وجود ندارد. Outbox realtime نیز همان timestamp UTC را با Kind درست می‌فرستد.
+
+یک فرض اولیه دربارهٔ Shared Media **ایراد قابل بازتولید نبود**: تغییر فایل پیوست‌شدهٔ retained به Pending/Rejected/Deleted را `CK_FileAssets_RetentionState` با SQL 547 رد کرد. guard حذف/ضعیف نشد و fixture با SQL نامعتبر مجبور به عبور نشد. سه تست جدید همین constraint و باقی‌ماندن دو صفحهٔ سالم را اثبات می‌کنند. query Shared Media بازنویسی نشده است؛ paging چندپیوستی، ForMe، دسترسی خصوصی و پنج مسیر نوع رسانه با API/SQL واقعی تست شدند. فایل‌های signature fixture اثبات decoder یا malware-free بودن نیستند؛ AV/CDR آینده است.
+
+Reply/Edit/Delete/Reaction/Forward/MessagePin موجود ممیزی شدند؛ source/destination authorization، history، retention، version، window یک‌ساعته، Safety و تطبیق snapshot پیش از Forward حفظ می‌شوند. بازنویسی این قواعد یا معماری لازم نشد. rate policy برای Send/Edit مشترک ۳۰۰، Reaction مشترک ۳۰۰ و Forward برابر ۱۲۰ در دقیقه/کاربر/process افزوده شد. Search=60، Upload=20 و device=60 قبلی حفظ شدند؛ پاسخ write/upload اکنون Retry-After را expose می‌کند. OTP/AI/payment quota و ترتیب authentication تغییر نکرده‌اند. محدودسازی توزیع‌شده یا ظرفیت Production ادعا نمی‌شود.
+
+۸ Unit جدید (۴ case UTF-8 و ۴ signature رسانه) و ۱۸ Integration/contract شامل constraint، فایل خصوصی، UTC HTTP/SignalR، پنج نوع upload/send/download، صفحهٔ چندپیوستی و 429 اضافه شدند. red اولیهٔ Unit دو شکست سالم UTF-8 داشت؛ red Integration نخست سه خطای fixtureِ خلاف constraint و سه شکست واقعی داشت؛ پس از اصلاح fixture، ۳ passed/۳ failed واقعی ثبت شد. پس از fix، ۶ مورد اصلی و سپس focused گسترش‌یافتهٔ **۱۸ passed** و مجموعهٔ signature **۱۱ passed** شدند. تست یا constraint برای سبزکردن suite خاموش نشده است. full/final پس از اتمام اجرا ثبت می‌شود.
+
+Git فاز provider پیش از شروع این تغییر: `4856b284c59cdb490913268803e6aa2aba05c36e`، `feat(notifications): deliver web push and fcm transports`؛ ۲۴ فایل مرتبط، push/fetch/ls-remote برابر HEAD و worktree تمیز. هشدار ignore پوشهٔ release مانع stage نسخهٔ tracked همان register نشد؛ staged list دقیقاً ۲۴ مسیر مصوب داشت و فایل AI/OTP وارد commit نشد.
+
+Validation فاز پنجم: پس از focused/fix، restore و Build نهایی موفق با صفر warning/error؛ suite کامل نهایی **Unit=498، Integration=795، Architecture=14، Total=1307 passed، failed=0، skipped=0** در `media-full` اجرا شد. این فاز focused و یک اجرای کامل نهایی دارد، نه ادعای دو اجرای full جدا. EF pending-model check موفق و migration جدید لازم نبود. validation نهایی کل P1 دوبار در پایان پذیرش اجرا خواهد شد. هیچ دادهٔ عادی توسعه/سرور یا provider واقعی SMS/AI/Push در این فاز استفاده/تغییر نشد.
+
 ## فاز چهارم — transport استاندارد Web Push و FCM
 
 `MessengerPushNotificationProvider` روی همان port ارسال موجود، Web و Android/Ios را route می‌کند؛ اعلان/Outbox/رجیستری دوم ساخته نشده است. `WebPushNotificationProvider` از `Lib.Net.Http.WebPush 3.3.1` با VAPID و رمزنگاری استاندارد استفاده می‌کند. auto-retry کتابخانه خاموش است؛ claim/retry/recovery همان SQL worker فاز دوم مالک تلاش‌هاست. `FcmPushNotificationProvider` HTTP v1 ثابت Google و OAuth با SDK رسمی `Google.Apis.Auth 1.73.0` دارد. نصب این دو وابستگی فقط در Infrastructure است؛ Domain/Application به SDK یا HTTP implementation وابسته نشده‌اند. restore و بررسی مستقیم/انتقالی NuGet از منابع تنظیم‌شده هیچ آسیب‌پذیری شناخته‌شده‌ای گزارش نکردند.

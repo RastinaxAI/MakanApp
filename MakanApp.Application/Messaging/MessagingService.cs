@@ -37,7 +37,7 @@ public sealed class MessagingService(
             result.Conversation.Id,
             result.Conversation.Type,
             result.Conversation.Scope,
-            result.Conversation.CreatedAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Conversation.CreatedAtUtc),
             result.AlreadyExisted);
     }
 
@@ -239,7 +239,7 @@ public sealed class MessagingService(
         return new DeleteMessageForMeResult(
             result.Visibility.MessageId,
             conversationId,
-            result.Visibility.HiddenAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Visibility.HiddenAtUtc),
             result.AlreadyHidden);
     }
 
@@ -431,7 +431,7 @@ public sealed class MessagingService(
         return new MessageReactionResult(
             reaction.MessageId,
             reaction.ReactionType,
-            reaction.CreatedAtUtc);
+            MessagingWireTime.FromStoredUtc(reaction.CreatedAtUtc));
     }
 
     public async Task RemoveReactionAsync(
@@ -527,7 +527,7 @@ public sealed class MessagingService(
                 item.Message.Id,
                 item.Message.Sequence,
                 item.Message.SenderUserId,
-                item.Message.SentAtUtc,
+                MessagingWireTime.FromStoredUtc(item.Message.SentAtUtc),
                 Map(item.Attachment, item.FileAsset))).ToArray(),
             page.NextBeforeSequence);
     }
@@ -570,7 +570,7 @@ public sealed class MessagingService(
                 change.ResourceId,
                 change.ResourceVersion,
                 MessagingChangeCursor.Encode(conversationId, change.ChangeSequence),
-                change.OccurredAtUtc,
+                MessagingWireTime.FromStoredUtc(change.OccurredAtUtc),
                 change.ActorUserId,
                 change.PayloadVersion,
                 change.ChangeType == MessagingChangeType.PeerReadStateChanged &&
@@ -894,9 +894,9 @@ public sealed class MessagingService(
             message.Sequence,
             isDeleted ? null : message.Kind,
             isDeleted ? null : message.Text,
-            message.SentAtUtc,
-            message.EditedAtUtc,
-            message.DeletedAtUtc,
+            MessagingWireTime.FromStoredUtc(message.SentAtUtc),
+            MessagingWireTime.FromStoredUtc(message.EditedAtUtc),
+            MessagingWireTime.FromStoredUtc(message.DeletedAtUtc),
             message.IsEdited,
             isDeleted,
             isDeleted || record.Reply is null ? null : MapReply(record.Reply),
@@ -943,7 +943,7 @@ public sealed class MessagingService(
             fileAsset.OriginalFileName,
             fileAsset.ContentType,
             fileAsset.SizeBytes,
-            attachment.CreatedAtUtc);
+            MessagingWireTime.FromStoredUtc(attachment.CreatedAtUtc));
 
     private static DirectConversationResult Map(DirectConversationStoreResult result) =>
         new(
@@ -952,7 +952,7 @@ public sealed class MessagingService(
             result.Conversation.Scope,
             result.Conversation.OrganizationId,
             Map(result.OtherParticipant),
-            result.Conversation.CreatedAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Conversation.CreatedAtUtc),
             result.AlreadyExisted);
 
     private ConversationSummaryResult Map(ConversationSummaryStoreRecord result) =>
@@ -966,7 +966,7 @@ public sealed class MessagingService(
                 : result.Conversation.Title,
             result.OtherParticipant is null ? null : Map(result.OtherParticipant),
             result.LastMessagePreview,
-            result.LastMessageAtUtc,
+            MessagingWireTime.FromStoredUtc(result.LastMessageAtUtc),
             result.LastMessageSequence,
             result.Participant.LastDeliveredMessageSequence,
             result.Participant.LastReadMessageSequence,
@@ -975,7 +975,7 @@ public sealed class MessagingService(
             result.State?.IsArchived ?? false,
             result.State?.IsMutedAt(UtcNow()) ?? false,
             result.State?.MuteMode ?? ConversationMuteMode.None,
-            result.State?.MutedUntilUtc,
+            MessagingWireTime.FromStoredUtc(result.State?.MutedUntilUtc),
             result.State?.IsPinned ?? false,
             result.State?.IsManuallyUnread ?? false,
             result.Conversation.OrganizationId.HasValue && result.OrganizationName is not null
@@ -1026,11 +1026,11 @@ public sealed class MessagingService(
             state.IsArchived,
             state.IsMutedAt(UtcNow()),
             state.MuteMode,
-            state.MutedUntilUtc,
+            MessagingWireTime.FromStoredUtc(state.MutedUntilUtc),
             state.IsPinned,
             state.IsManuallyUnread,
             state.HistoryHiddenThroughSequence,
-            state.UpdatedAtUtc,
+            MessagingWireTime.FromStoredUtc(state.UpdatedAtUtc),
             Convert.ToBase64String(state.RowVersion));
 
     private static ConversationCursorStateResult Map(ConversationCursorStoreResult result) =>
@@ -1039,7 +1039,7 @@ public sealed class MessagingService(
             result.Participant.LastDeliveredMessageSequence,
             result.Participant.LastReadMessageSequence,
             result.UnreadCount,
-            result.Participant.CursorUpdatedAtUtc,
+            MessagingWireTime.FromStoredUtc(result.Participant.CursorUpdatedAtUtc),
             Convert.ToBase64String(result.Participant.RowVersion));
 
     private static SafeMessagingIdentityResult Map(SafeMessagingIdentityRecord result) =>
@@ -1052,7 +1052,7 @@ public sealed class MessagingService(
             message.ClientMessageId,
             message.Sequence,
             message.Kind,
-            message.SentAtUtc,
+            MessagingWireTime.FromStoredUtc(message.SentAtUtc),
             MessageReceiptStatus.Sent,
             Convert.ToBase64String(message.RowVersion));
 
@@ -1060,8 +1060,8 @@ public sealed class MessagingService(
         new(
             message.Id,
             message.Sequence,
-            message.EditedAtUtc,
-            message.DeletedAtUtc,
+            MessagingWireTime.FromStoredUtc(message.EditedAtUtc),
+            MessagingWireTime.FromStoredUtc(message.DeletedAtUtc),
             message.IsDeleted,
             Convert.ToBase64String(message.RowVersion));
 
@@ -1070,7 +1070,7 @@ public sealed class MessagingService(
             pin.ConversationId,
             pin.MessageId,
             pin.PinnedByUserId,
-            pin.PinnedAtUtc,
+            MessagingWireTime.FromStoredUtc(pin.PinnedAtUtc),
             pin.IsActive);
 
     private static void ValidateConversationId(Guid conversationId)
