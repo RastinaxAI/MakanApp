@@ -23,13 +23,14 @@ public sealed partial class EfMessagingStore : IConversationTopicStore
             await CanManageTopicsAsync(conversation, actor, userId, context, ct));
     }
 
-    public async Task PrepareTopicAsync(Guid userId, Guid conversationId, Guid topicId, string title, byte[]? expectedVersion, AccessContext context, CancellationToken ct)
+    public async Task<bool> PrepareTopicAsync(Guid userId, Guid conversationId, Guid topicId, string title, byte[]? expectedVersion, AccessContext context, CancellationToken ct)
     {
         var conversation = await dbContext.Conversations.AsNoTracking().SingleOrDefaultAsync(c => c.Id == conversationId, ct) ?? throw ConversationNotFound();
         var actor = await LoadActiveParticipantAsync(conversationId, userId, ct) ?? throw ConversationNotFound();
         await EnsureTopicManagementAsync(conversation, actor, userId, context, timeProvider.GetUtcNow().UtcDateTime, ct);
         var topic = await dbContext.ConversationTopics.AsNoTracking().SingleOrDefaultAsync(t => t.Id == topicId, ct);
         ValidateTopicMutation(topic, conversationId, userId, title, expectedVersion);
+        return expectedVersion is null && topic is not null;
     }
 
     public async Task<ConversationTopicResult> CreateTopicAsync(Guid userId, Guid sessionId, Guid conversationId, Guid topicId, string title,
@@ -110,9 +111,13 @@ public sealed partial class EfMessagingStore : IConversationTopicStore
     }
 
     private Task EnsureSafetyOperationAuthorizedAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context,
-        SendMessageStoreCommand command, DateTime now, CancellationToken ct) => command.SafetyPurpose == MessageSafetyPurpose.TopicMetadata
-            ? EnsureTopicManagementAsync(conversation, actor, userId, context, now, ct)
-            : EnsureCanSendAdvancedAsync(conversation, actor, userId, context, command.Kind, now, ct);
+        SendMessageStoreCommand command, DateTime now, CancellationToken ct) => command.SafetyPurpose switch
+        {
+            MessageSafetyPurpose.TopicMetadata => EnsureTopicManagementAsync(conversation, actor, userId, context, now, ct),
+            MessageSafetyPurpose.ConversationMetadata => EnsureInfoManagementAsync(conversation, actor, userId, context, now, ct),
+            MessageSafetyPurpose.Message => EnsureCanSendAdvancedAsync(conversation, actor, userId, context, command.Kind, now, ct),
+            _ => throw new MessagingException(MessagingErrorCodes.MessageKindInvalid, "نوع عملیات ایمنی معتبر نیست.")
+        };
 
     private async Task EnsureTopicOpenAsync(Conversation conversation, Guid? topicId, CancellationToken ct)
     {

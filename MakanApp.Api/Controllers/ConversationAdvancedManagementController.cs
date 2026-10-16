@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MakanApp.Api.Controllers;
 
 [ApiController, Authorize]
+[RequestSizeLimit(64 * 1024)]
 [EnableRateLimiting("messaging-send")]
 public sealed class ConversationAdvancedManagementController(ConversationAdvancedManagementService service) : ControllerBase
 {
@@ -22,4 +23,8 @@ public sealed class ConversationAdvancedManagementController(ConversationAdvance
     [ProducesResponseType<MemberRestrictionResult>(StatusCodes.Status200OK)]
     public Task<MemberRestrictionResult> Restrict(Guid conversationId, Guid userId, SetMemberRestrictionCommand command, CancellationToken ct) =>
         service.SetRestrictionAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), conversationId, userId, command, HttpContext.TraceIdentifier, ct);
+    [HttpGet("api/v1/conversations/{conversationId:guid}/me/restriction")]
+    [ProducesResponseType<MemberRestrictionResult>(StatusCodes.Status200OK)]
+    public Task<MemberRestrictionResult> GetOwnRestriction(Guid conversationId, CancellationToken ct) =>
+        service.GetOwnRestrictionAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), conversationId, ct);
 }

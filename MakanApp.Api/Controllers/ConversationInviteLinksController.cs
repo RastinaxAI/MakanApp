@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MakanApp.Api.Controllers;
 
 [ApiController, Authorize]
+[RequestSizeLimit(64 * 1024)]
 [EnableRateLimiting("messaging-send")]
 public sealed class ConversationInviteLinksController(ConversationAdvancedManagementService service) : ControllerBase
 {

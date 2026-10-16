@@ -14,7 +14,10 @@ public sealed record MessageSearchStoreQuery(
     DateTime? ToUtc,
     MessageSearchPosition? Position,
     int Limit,
-    string? SavedLabel = null);
+    string? SavedLabel = null,
+    bool? HasAttachment = null,
+    bool? HasLinks = null,
+    Guid? TopicId = null);
 
 public sealed record MessageSearchStoreRecord(
     Message Message,

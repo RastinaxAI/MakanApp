@@ -47,14 +47,33 @@ public sealed partial class EfMessagingStore : IConversationAdvancedManagementSt
             null, reason, nowUtc, correlationId, AdminAuditResult.Succeeded, null, null));
     }
 
+    public async Task PrepareInfoAsync(Guid actorId, Guid conversationId, byte[] expectedVersion, AccessContext context, CancellationToken ct)
+    {
+        var (conversation, actor) = await LoadAdvancedManagerAsync(actorId, conversationId, context, ConversationAdminPermission.ChangeInfo, ct);
+        await EnsureInfoManagementAsync(conversation, actor, actorId, context, timeProvider.GetUtcNow().UtcDateTime, ct);
+        if (!conversation.RowVersion.SequenceEqual(expectedVersion)) throw StateConflict();
+    }
+
+    private async Task EnsureInfoManagementAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
+    {
+        await EnsureManagedContextAsync(conversation, userId, context, true, ct);
+        RequireAdvancedPermission(actor, ConversationAdminPermission.ChangeInfo);
+        await EnsureActorCanMessageAsync(userId, now, ct);
+        await EnsureNotBannedAsync(conversation.Id, userId, now, ct);
+        await EnsurePersonalAudienceSafetyAsync(conversation, userId, now, ct);
+        if (actor.Role == ConversationParticipantRole.Owner)
+            await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
+    }
+
     public async Task<ConversationInfoResult> UpdateInfoAsync(Guid actorId, Guid sessionId, Guid conversationId,
-        UpdateConversationInfoCommand command, byte[] expectedVersion, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken ct)
+        UpdateConversationInfoCommand command, byte[] expectedVersion, bool safetyEvaluated, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken ct)
     {
         await using var transaction = await BeginManagementTransactionAsync(ct);
         var (conversation, actor) = await LoadManagedForMutationAsync(actorId, conversationId, context, ct);
         nowUtc = await EnsureAdvancedSessionAsync(actorId, sessionId, context, ct);
-        RequireAdvancedPermission(actor, ConversationAdminPermission.ChangeInfo);
+        await EnsureInfoManagementAsync(conversation, actor, actorId, context, nowUtc, ct);
         if (!conversation.RowVersion.SequenceEqual(expectedVersion)) throw StateConflict();
+        await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, ct);
         dbContext.Entry(conversation).Property(c => c.RowVersion).OriginalValue = expectedVersion;
         conversation.UpdateInformation(command.Title, command.Description);
         await AuditAdvancedAsync(actorId, sessionId, "messaging.conversation.info", "Conversation", conversation.Id.ToString("D"),
@@ -95,7 +114,8 @@ public sealed partial class EfMessagingStore : IConversationAdvancedManagementSt
             if (expectedVersion is null || !restriction.RowVersion.SequenceEqual(expectedVersion)) throw StateConflict();
             dbContext.Entry(restriction).Property(r => r.RowVersion).OriginalValue = expectedVersion;
         }
-        restriction.Update(command.IsBanned, command.DeniedCapabilities, command.UntilUtc, nowUtc);
+        try { restriction.Update(command.IsBanned, command.DeniedCapabilities, command.UntilUtc, nowUtc); }
+        catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.AdvancedManagementInvalid, "زمان محدودیت دیگر معتبر نیست.", ex); }
         var removed = command.IsBanned && target.IsActive;
         if (removed) target.Remove(actorId, nowUtc);
         await AuditAdvancedAsync(actorId, sessionId, "messaging.member.restriction", "ConversationMember", conversationId.ToString("D") + "/" + targetUserId.ToString("D"),
@@ -109,6 +129,15 @@ public sealed partial class EfMessagingStore : IConversationAdvancedManagementSt
     private static MemberRestrictionResult MapRestriction(ConversationMemberRestriction r, DateTime nowUtc) =>
         new(r.ConversationId, r.UserId, r.IsBanned, r.DeniedCapabilities, r.UntilUtc is null ? null : AdvancedUtc(r.UntilUtc.Value),
             r.IsEffective(nowUtc), Convert.ToBase64String(r.RowVersion));
+
+    public async Task<MemberRestrictionResult> GetOwnRestrictionAsync(Guid actorId, Guid conversationId, AccessContext context, DateTime nowUtc, CancellationToken ct)
+    {
+        var conversation = await dbContext.Conversations.AsNoTracking().SingleOrDefaultAsync(c => c.Id == conversationId, ct) ?? throw ConversationNotFound();
+        var actor = await LoadActiveParticipantAsync(conversationId, actorId, ct) ?? throw ConversationNotFound();
+        await EnsureCanReadAdvancedAsync(conversation, actor, actorId, context, ct);
+        var row = await dbContext.ConversationMemberRestrictions.AsNoTracking().SingleOrDefaultAsync(r => r.ConversationId == conversationId && r.UserId == actorId, ct);
+        return row is null ? new(conversationId, actorId, false, GroupMemberCapability.None, null, false, null) : MapRestriction(row, nowUtc);
+    }
     // datetime2 بازیابی‌شده Kind ندارد؛ دادهٔ معتبرِ ذخیره‌شده UTC است و ساعت جابه‌جا نمی‌شود.
     private static DateTime AdvancedUtc(DateTime value) => DateTime.SpecifyKind(value, DateTimeKind.Utc);
     private static MessagingException LinkUnavailable() => new(MessagingErrorCodes.InviteLinkUnavailable, "لینک در دسترس نیست.");

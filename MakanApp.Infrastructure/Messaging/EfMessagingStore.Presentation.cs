@@ -12,6 +12,7 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
     public async Task<IReadOnlyCollection<ChatFolderResult>> GetFoldersAsync(Guid userId, CancellationToken cancellationToken)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
+        await LockPresentationOwnerAsync(userId, cancellationToken);
         var folders = await dbContext.ChatFolders.AsNoTracking().Where(f => f.OwnerUserId == userId)
             .OrderBy(f => f.SortOrder).ThenBy(f => f.Id).Take(ChatFolder.MaximumFoldersPerUser).ToArrayAsync(cancellationToken);
         var ids = folders.Select(f => f.Id).ToArray();
@@ -27,8 +28,8 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
         // قفل مالک، سقف تعداد پوشه و ساخت هم‌زمان دو دستگاه را سریال می‌کند؛ هیچ فیلد Identity تغییر نمی‌کند.
-        await dbContext.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id] = {userId}")
-            .AsNoTracking().SingleAsync(cancellationToken);
+        await LockPresentationOwnerAsync(userId, cancellationToken);
+        await EnsureAdvancedSessionAsync(userId, context.SessionId, context, cancellationToken);
         var folder = await dbContext.ChatFolders.SingleOrDefaultAsync(f => f.Id == folderId && f.OwnerUserId == userId, cancellationToken);
         if (folder is null)
         {
@@ -54,18 +55,24 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
         return MapFolder(folder, replacements);
     }
 
-    public async Task DeleteFolderAsync(Guid userId, Guid folderId, byte[] expectedVersion, CancellationToken cancellationToken)
+    public async Task DeleteFolderAsync(Guid userId, Guid folderId, byte[] expectedVersion, AccessContext context, CancellationToken cancellationToken)
     {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        await LockPresentationOwnerAsync(userId, cancellationToken);
+        await EnsureAdvancedSessionAsync(userId, context.SessionId, context, cancellationToken);
         var folder = await dbContext.ChatFolders.SingleOrDefaultAsync(f => f.Id == folderId && f.OwnerUserId == userId, cancellationToken)
             ?? throw PresentationNotFound();
         if (!folder.RowVersion.SequenceEqual(expectedVersion)) throw PresentationConflict();
         dbContext.Entry(folder).Property(f => f.RowVersion).OriginalValue = expectedVersion;
         dbContext.ChatFolders.Remove(folder); await SavePresentationAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<SavedMessageLabelsResult> GetSavedLabelsAsync(Guid userId, Guid messageId, AccessContext context, CancellationToken cancellationToken)
     {
+        var authorized = await LoadSavedPresentationMessageAsync(userId, messageId, context, cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
+        await LockConversationAsync(authorized.Id, cancellationToken);
         await LoadSavedPresentationMessageAsync(userId, messageId, context, cancellationToken);
         var organization = await dbContext.SavedMessageOrganizations.AsNoTracking().SingleOrDefaultAsync(o => o.MessageId == messageId && o.OwnerUserId == userId, cancellationToken);
         var labels = await dbContext.SavedMessageLabels.AsNoTracking().Where(l => l.MessageId == messageId).OrderBy(l => l.Name)
@@ -78,9 +85,10 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
     public async Task<SavedMessageLabelsResult> ReplaceSavedLabelsAsync(Guid userId, Guid messageId, string[] labels,
         byte[]? expectedVersion, AccessContext context, CancellationToken cancellationToken)
     {
+        var authorized = await LoadSavedPresentationMessageAsync(userId, messageId, context, cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        var identity = await dbContext.Messages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == messageId, cancellationToken) ?? throw MessageNotFound();
-        var conversation = await LockConversationAsync(identity.ConversationId, cancellationToken) ?? throw ConversationNotFound();
+        await LockConversationAsync(authorized.Id, cancellationToken);
+        await EnsureAdvancedSessionAsync(userId, context.SessionId, context, cancellationToken);
         await LoadSavedPresentationMessageAsync(userId, messageId, context, cancellationToken);
         var organization = await dbContext.SavedMessageOrganizations.SingleOrDefaultAsync(o => o.MessageId == messageId, cancellationToken);
         if (organization is null)
@@ -102,7 +110,7 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
         return new(messageId, labels, Convert.ToBase64String(organization.RowVersion));
     }
 
-    private async Task LoadSavedPresentationMessageAsync(Guid userId, Guid messageId, AccessContext context, CancellationToken cancellationToken)
+    private async Task<Conversation> LoadSavedPresentationMessageAsync(Guid userId, Guid messageId, AccessContext context, CancellationToken cancellationToken)
     {
         var identity = await dbContext.Messages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == messageId && m.DeletedAtUtc == null, cancellationToken)
             ?? throw MessageNotFound();
@@ -112,6 +120,12 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
         await EnsureCanReadAdvancedAsync(conversation, participant, userId, context, cancellationToken);
         var visibleFrom = await GetVisibleFromSequenceAsync(conversation.Id, userId, participant.HistoryVisibleFromSequence, cancellationToken);
         if (identity.Sequence < visibleFrom || await dbContext.MessageUserVisibilities.AnyAsync(v => v.MessageId == messageId && v.UserId == userId, cancellationToken)) throw MessageNotFound();
+        return conversation;
+    }
+
+    private async Task LockPresentationOwnerAsync(Guid userId, CancellationToken ct)
+    {
+        await dbContext.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={userId}").AsNoTracking().SingleAsync(ct);
     }
 
     private static ChatFolderResult MapFolder(ChatFolder folder, IEnumerable<FolderConversationOverride> overrides) =>

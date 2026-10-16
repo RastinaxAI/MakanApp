@@ -177,7 +177,8 @@ public sealed partial class EfMessagingStore
 
     private async Task<IReadOnlyDictionary<Guid, SafeMessagingIdentityRecord>> LoadSafeIdentitiesAsync(
         IReadOnlyCollection<Guid> userIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool requireActive = false)
     {
         if (userIds.Count == 0)
         {
@@ -186,12 +187,13 @@ public sealed partial class EfMessagingStore
 
         return await (from user in dbContext.Users.AsNoTracking()
                       join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
-                      where userIds.Contains(user.Id) && user.PersonId != null &&
+                      where userIds.Contains(user.Id) && (!requireActive || user.AccountStatus == UserAccountStatus.Active) && user.PersonId != null &&
                             user.Username != null && user.ProfileCompletedAtUtc != null
                       select new SafeMessagingIdentityRecord(
                           user.Id,
                           user.Username!,
                           person.DisplayName ?? person.FirstName + " " + person.LastName))
+            .TagWith("MessagingSafeIdentityBatch")
             .ToDictionaryAsync(identity => identity.UserId, cancellationToken);
     }
 

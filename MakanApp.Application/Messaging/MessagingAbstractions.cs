@@ -57,7 +57,7 @@ public sealed record ConversationMessagePageStoreResult(
     IReadOnlyCollection<ConversationMessageStoreRecord> Messages,
     long? NextBeforeSequence);
 
-public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1 }
+public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1, ConversationMetadata = 2 }
 public sealed record ScheduledSendClaim(Guid ScheduledMessageId, Guid Token, byte[] PayloadHash);
 
 public sealed record SendMessageStoreCommand(

@@ -11,7 +11,10 @@ public sealed record SearchMessagesQuery(
     string? Cursor,
     int? Limit,
     Guid? SenderUserId = null,
-    string? SavedLabel = null);
+    string? SavedLabel = null,
+    bool? HasAttachment = null,
+    bool? HasLinks = null,
+    Guid? TopicId = null);
 
 public sealed record MessageSearchItemResult(
     Guid MessageId,

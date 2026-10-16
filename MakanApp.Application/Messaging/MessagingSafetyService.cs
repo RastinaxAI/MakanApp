@@ -27,6 +27,7 @@ public sealed class MessagingSafetyService(
             catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.SearchQueryInvalid, "برچسب جستجو معتبر نیست.", ex); }
             normalizedQuery ??= string.Empty;
         }
+        if (query.HasAttachment.HasValue || query.HasLinks.HasValue || query.TopicId.HasValue) normalizedQuery ??= string.Empty;
         if (normalizedQuery is null)
         {
             throw Error(MessagingErrorCodes.SearchQueryRequired, "عبارت جستجو الزامی است.");
@@ -35,6 +36,7 @@ public sealed class MessagingSafetyService(
         if (normalizedQuery.Length > options.MaximumSearchQueryLength ||
             query.ConversationId == Guid.Empty ||
             query.SenderUserId == Guid.Empty ||
+            query.TopicId == Guid.Empty ||
             query.Kind.HasValue && !Enum.IsDefined(query.Kind.Value) ||
             !IsUtc(query.FromUtc) || !IsUtc(query.ToUtc) ||
             query.FromUtc.HasValue && query.ToUtc.HasValue && query.FromUtc >= query.ToUtc)
@@ -67,7 +69,10 @@ public sealed class MessagingSafetyService(
                 query.ToUtc,
                 position,
                 limit,
-                savedLabel),
+                savedLabel,
+                query.HasAttachment,
+                query.HasLinks,
+                query.TopicId),
             cancellationToken);
         return new MessageSearchPageResult(
             page.Items.Select(MapSearchItem).ToArray(),

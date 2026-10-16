@@ -11,7 +11,7 @@ public sealed record ConversationTopicPageResult(IReadOnlyCollection<Conversatio
 public interface IConversationTopicStore
 {
     Task<ConversationTopicPageResult> GetTopicsAsync(Guid userId, Guid conversationId, AccessContext context, int skip, int take, CancellationToken ct);
-    Task PrepareTopicAsync(Guid userId, Guid conversationId, Guid topicId, string title,
+    Task<bool> PrepareTopicAsync(Guid userId, Guid conversationId, Guid topicId, string title,
         byte[]? expectedVersion, AccessContext context, CancellationToken ct);
     Task<ConversationTopicResult> CreateTopicAsync(Guid userId, Guid sessionId, Guid conversationId, Guid topicId, string title,
         bool safetyEvaluated, AccessContext context, string correlationId, CancellationToken ct);

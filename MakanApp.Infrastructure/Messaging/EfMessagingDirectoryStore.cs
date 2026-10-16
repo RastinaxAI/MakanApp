@@ -465,17 +465,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
             cancellationToken);
 
     private IQueryable<User> DiscoverableAccounts(Guid requesterId)
-    {
-        var related = MessengerRelationshipQuery.RelatedUsers(dbContext, requesterId, clock.GetUtcNow().UtcDateTime);
-        var requester = dbContext.Users.Where(u => u.Id == requesterId &&
-            u.AccountStatus == UserAccountStatus.Active && u.ProfileCompletedAtUtc != null && u.PersonId != null);
-        return dbContext.Users.AsNoTracking().Where(u => u.AccountStatus == UserAccountStatus.Active &&
-            requester.Any() &&
-            (u.Id == requesterId || u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified &&
-             requester.Any(a => a.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-                 a.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified) || related.Contains(u.Id)));
-    }
+        => MessengerRelationshipQuery.DiscoverableAccounts(dbContext, requesterId, clock.GetUtcNow().UtcDateTime);
 
     private static bool IsUniqueConflict(DbUpdateException exception) =>
         exception.InnerException is SqlException { Number: 2601 or 2627 };

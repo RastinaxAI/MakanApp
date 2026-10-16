@@ -35,7 +35,8 @@ public sealed partial class EfMessagingStore
                 equals new { stateValue.ConversationId, stateValue.UserId }
                 into states
             from state in states.DefaultIfEmpty()
-            where participant.Status == ConversationParticipantStatus.Active &&
+            where dbContext.Users.Any(u => u.Id == userId && u.AccountStatus == MakanApp.Domain.Identity.UserAccountStatus.Active) &&
+                  participant.Status == ConversationParticipantStatus.Active &&
                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
                    conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == userId &&
                        m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
@@ -57,11 +58,17 @@ public sealed partial class EfMessagingStore
                        membership.UserId == userId &&
                        membership.OrganizationId == organizationId &&
                        membership.Status == MembershipStatus.Active &&
-                       membership.EndedAtUtc == null)) &&
+                       membership.EndedAtUtc == null && accessContext.ActiveRole.HasValue && dbContext.RoleAssignments.Any(r =>
+                           r.MembershipId == membership.Id && r.Role == accessContext.ActiveRole && r.Status == RoleAssignmentStatus.Active && r.EndedAtUtc == null))) &&
                   (!query.ConversationId.HasValue ||
                    conversation.Id == query.ConversationId.Value) &&
                   (!query.SenderUserId.HasValue || message.SenderUserId == query.SenderUserId.Value) &&
                   (!query.Kind.HasValue || message.Kind == query.Kind.Value) &&
+                  (!query.TopicId.HasValue || message.TopicId == query.TopicId.Value) &&
+                  (!query.HasAttachment.HasValue || query.HasAttachment.Value == dbContext.MessageAttachments.Any(a => a.MessageId == message.Id &&
+                      dbContext.FileAssets.Any(f => f.Id == a.FileAssetId && f.Status == FileAssetStatus.Ready))) &&
+                  (!query.HasLinks.HasValue || query.HasLinks.Value ==
+                      ((message.SearchText ?? string.Empty).ToLower().Contains("http://") || (message.SearchText ?? string.Empty).ToLower().Contains("https://"))) &&
                   (!query.FromUtc.HasValue || message.SentAtUtc >= query.FromUtc.Value) &&
                   (!query.ToUtc.HasValue || message.SentAtUtc < query.ToUtc.Value) &&
                   (query.SavedLabel == null || conversation.Type == ConversationType.Saved && conversation.SavedOwnerUserId == userId &&
@@ -124,16 +131,12 @@ public sealed partial class EfMessagingStore
                     .Select(row => new MessageAttachmentStoreRecord(row.attachment, row.file))
                     .ToArray());
 
-        var identities = new Dictionary<Guid, SafeMessagingIdentityRecord>();
-        foreach (var senderUserId in pageRows.Select(row => row.Message.SenderUserId).Distinct())
-        {
-            identities[senderUserId] = await LoadSafeIdentityAsync(senderUserId, cancellationToken);
-        }
+        var identities = await LoadSafeIdentitiesAsync(pageRows.Select(row => row.Message.SenderUserId).Distinct().ToArray(), cancellationToken, requireActive: true);
 
         var results = pageRows.Select(row => new MessageSearchStoreRecord(
             row.Message,
             row.Conversation,
-            identities[row.Message.SenderUserId],
+            identities.GetValueOrDefault(row.Message.SenderUserId) ?? throw RecipientNotAvailable(),
             attachments.GetValueOrDefault(row.Message.Id, []))).ToArray();
         var last = pageRows[^1].Message;
         return new MessageSearchStoreResult(

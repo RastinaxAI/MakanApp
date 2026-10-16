@@ -5,6 +5,7 @@ namespace MakanApp.Application.Messaging;
 
 public sealed class MessagingPresentationService(IAccessContextResolver contexts, IMessagingPresentationStore store)
 {
+    private const int MaximumRawPresentationTextLength = 1024;
     public async Task<IReadOnlyCollection<ChatFolderResult>> GetFoldersAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken)
     {
         await contexts.ResolveAsync(userId, sessionId, cancellationToken);
@@ -15,6 +16,7 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
     {
         try
         {
+            if (command.Name is null || command.Name.Length > MaximumRawPresentationTextLength) throw new ArgumentException("ورودی نام معتبر نیست یا بیش از حد طولانی است.");
             var candidate = ChatFolder.Create(folderId, userId);
             candidate.Update(command.Name, command.SortOrder, command.IncludedTypes, command.ExcludedTypes, command.UnreadOnly);
             if (command.Overrides is null || command.Overrides.Count > ChatFolder.MaximumOverrides || command.Overrides.Any(o => o is null) ||
@@ -31,8 +33,8 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
     public async Task DeleteFolderAsync(Guid userId, Guid sessionId, Guid folderId, string expectedVersion, CancellationToken cancellationToken)
     {
         var version = Version(expectedVersion) ?? throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "نسخه الزامی است.");
-        await contexts.ResolveAsync(userId, sessionId, cancellationToken);
-        await store.DeleteFolderAsync(userId, folderId, version, cancellationToken);
+        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        await store.DeleteFolderAsync(userId, folderId, version, context, cancellationToken);
     }
 
     public async Task<SavedMessageLabelsResult> GetSavedLabelsAsync(Guid userId, Guid sessionId, Guid messageId, CancellationToken cancellationToken)
@@ -47,7 +49,7 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
         string[] labels;
         try
         {
-            if (command.Labels is null || command.Labels.Count > SavedMessageLabel.MaximumLabels) throw new ArgumentException("تعداد برچسب معتبر نیست.");
+            if (command.Labels is null || command.Labels.Count > SavedMessageLabel.MaximumLabels || command.Labels.Any(l => l is null || l.Length > MaximumRawPresentationTextLength)) throw new ArgumentException("برچسب خام معتبر نیست.");
             labels = command.Labels.Select(SavedMessageLabel.Normalize).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         }
         catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "برچسب معتبر نیست.", ex); }

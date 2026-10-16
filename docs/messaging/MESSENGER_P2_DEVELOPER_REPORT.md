@@ -180,3 +180,43 @@ Migration `20261016190927_AddScheduledAndSilentMessages`: ScheduledMessages با
 درس واقعی suite کامل: هدفمند ۲۱ مورد passed بود، اما race claim/cancel در دور کامل SQL 1205 داد؛ Unit=528، Integration=891 passed/1 failed، Architecture=14، skipped=0. queue-index UPD lock و مسیر Cancel با ترتیب متفاوت/upgrade، کافی نبودند. اکنون candidate readonly فقط hint است و claim نیز Conversation→Scheduled را رعایت و بعد از قفل، due/lease/status را دوباره می‌سنجد؛ Cancel با UPDLOCK/HOLDLOCK از conversion جلوگیری می‌کند. پنج round هم‌زمان با start barrier، بدون ضعیف‌کردن assertion، coverage regression را تقویت کردند. ۲۵ Integration هدفمندِ اصلاح‌شده passed هستند؛ suite کامل اصلاح‌شده هنوز در حال اجراست و commit/push تا نتیجه مجاز نیست. این نمونه نشان می‌دهد صرف استفاده از lock و transaction، معادل ترتیب صحیح قفل‌ها نیست.
 
 Validation واقعی نهایی فاز پنجم: restore و build/final build موفق با صفر warning/error؛ هر دو suite کامل اصلاح‌شده Unit=528، Integration=896، Architecture=14، Total=1438 passed، failed/skipped=0. EF تغییر معوق ندارد؛ migration فقط روی fixtureهای SQL ایزوله اعمال شد. ۶ Unit و ۲۵ Integration افزوده شدند؛ خطای واقعی ابتدا fix و دوباره full test شد، نه مخفی/skip. commit با پیام `feat(messaging): add durable scheduled and silent messages` پس از review است؛ hash و تأیید remote فقط پس از اجرای Git گزارش می‌شوند. محدودیت‌های cancel/recreate، نبود distributed presence و real Push مستقل همچنان پابرجا هستند.
+
+Git واقعی فاز پنجم: `4de7237233dcc8865672849f35e0cad06d6010b7` با همین پیام، branch=`messenger/p0`، remote=`origin`، upstream=`origin/main`، push/fetch موفق و HEAD==origin/main؛ ۳۶ فایل فقط همان فاز و worktree تمیز. وضعیت‌های pending مستقل تغییر نکردند.
+
+## فاز ششم — Search و بازبینی مرزهای جاری
+
+۱. خلاصه: فیلترهای واقعاً قابل اتکا و مرزهای revalidation/نسخه تکمیل شدند. قبلاً senderهای صفحهٔ Search تک‌تک بارگیری و Card subject فقط با شناسه validate می‌شد؛ اکنون batch SQL و همان visibility پروفایل برای همهٔ مخاطبان جاری اعمال می‌شود. نشست لغوشده در حین Safety نیز مجوز commit نیست.
+
+۲. معماری: Api فقط binding/route و body metadata دارد؛ Application selector/normalization و orchestration Safety را مالک است؛ Infrastructure query، current authorization و lock SQL را دارد. Domain/Schema جدید لازم نشد؛ predicate موجود کشف به `MessengerRelationshipQuery.DiscoverableAccounts` منتقل شد، نه به Controller یا Domain وابسته به EF.
+
+۳. فایل مهم جدید: `MakanApp.Infrastructure/Messaging/EfMessagingStore.ContactCards.cs`، batch بررسی subject/audience و جلوگیری از مسیر کشف فرعی است. شش فایل `tests/MakanApp.IntegrationTests/MessagingP2{SearchEndpoints,Revalidation,PresentationCoherence,RestrictionState,MetadataSafety,OpenApi}Tests.cs` شواهد رفتار واقعی‌اند؛ test helper جای تصمیم محصول/مجوز نیست.
+
+۴. فایل‌های تغییرکرده: Safety query/service/contracts و MessagesController selectorهای تازه دارند؛ Advanced.Send/Mutations/ChildSafety نشست و Card را دوباره می‌سنجند؛ Presentation transaction/قفل هم‌جهت و parent-child coherence دارد؛ AdvancedManagement endpoint self و Safety مشخصات را دارد؛ Topics retry دقیق را بدون provider اضافه اداره می‌کند. Directory predicate قبلی را reuse می‌کند و policy پروفایل عوض نشده است.
+
+۵. جریان اجرا: `MessagesController` → `MessagingSafetyService` → context/selector validation → `EfMessagingStore.SearchMessagesAsync` → SQL authorization/filter/count/page → `LoadSafeIdentitiesAsync` batch → DTO/HTTP. مسیر مشخصات: `ConversationAdvancedManagementController` → service → PrepareInfo → `MessageContentSafetyGate`/provider خارج transaction → UpdateInfo با قفل/نشست/مجوز/نسخه/audience تازه → SQL/Outbox → HTTP. metadata پیام ساختگی نیست.
+
+۶. دیتابیس: migration تازه ندارد. read/write مجموعه‌ها از قفل مشترک مالک یا Conversation استفاده می‌کنند؛ preauthorization خارج transaction سپس reauthorization زیر قفل، ترتیب معکوس Message→Conversation را حذف می‌کند. rowversion همچنان مانع lost update است. fixture تلاش برای Deleted کردن فایل retained را با CHECK واقعی رد کرد؛ کد/constraint نگه‌داری برای تست عوض نشد.
+
+۷. Endpointها: Search سه فیلتر اختیاری HasAttachment/HasLinks/TopicId دارد، bool false مکمل واقعی و empty Guid/enum/cursor/limit خطای 400 است؛ inaccessible فقط count صفر است. GET `.../{id}/me/restriction` فقط self، بدون reason، نسخه nullable برای نبود سطر، 401 نشست نامعتبر/404 عضو حذف‌شده دارد. mutation مشخصات همان contract قبلی و stale=412 را حفظ و Safety fail-closed را اضافه می‌کند. Handoff جزئیات و نمونهٔ قابل اجرا دارد.
+
+۸. مفاهیم واقعی: current-state authorization پس از I/O، projection/batch به‌جای N+1، rowversion مجموعه، lock ordering، complement filter و concealment. Card historical پاک نمی‌شود؛ اجازهٔ ارسال تازه با حق نگه‌داری تاریخچه یکی نیست.
+
+۹. تصمیم طراحی: raw-string سقف ۱۰۲۴ پیش از normalization در برابر trim/NFKC ورودی بزرگ است؛ سقف نهایی نام/label همان ۸۰/۳۲. body metadata ۶۴ KiB policy دارد. coarse lock مجموعه به‌جای retry کور یا snapshot نصفه، وضوح و consistency را با هزینهٔ serialization همان مالک/گفتگو می‌دهد. hasLinks تنها نشانگر متن واقعی است، نه crawler، URL validation یا موتور جدید Search.
+
+۱۰. تست‌ها: ۲۸ Integration جدید شامل ۶ Search، ۹ revalidation، ۴ coherence، ۲ restriction و ۷ metadata/OpenAPI؛ SQL واقعی، HTTP، دو context و barrier race دارند. شمارندهٔ query فقط tag غیرحساس را می‌شمارد. چهار حالت revoke در provider، هیچ Message/Revision/Incident تازه‌ای نمی‌سازند؛ durable intent مستقل از source session ولی بدون session جعلی اجرا می‌شود. tuple نسخه/child در GET×PUT، انقضا بین validation و transaction و permission تغییرکرده در provider اثبات می‌شوند. contract metadata آزمون server/proxy Production نیست؛ Unit/Architecture تازهٔ بی‌معنا ساخته نشد.
+
+۱۱. Validation: هدفمندهای ۲۱ و ۷ همگی passed، failed/skipped=0 و build آخر صفر warning/error است. Search اولیه یک fixture failure و تست attribute یک compile error داشتند که با SQL invariant/interface واقعی اصلاح شدند. suiteهای کامل و EF بعد از نتیجهٔ واقعی در ممیزی ثبت می‌شوند؛ تا آن زمان موفقیت نهایی/Git ادعا نمی‌شود.
+
+۱۲. Git: commit فاز ششم فقط بعد از دو suite کامل و review انجام می‌شود؛ hash/push واقعی در ممیزی خواهد آمد. فایل‌های AI/MeliPayamak/appsettings/frontend و workspace اصلی دست‌نخورده‌اند.
+
+۱۳. محدودیت: Poll/Quiz اکنون قرارداد نهایی مصوب دارند ولی از این commit پیاده‌شده حساب نمی‌شوند؛ Checklist، presence چندگرهی و دریافت واقعی Push همچنان deferred هستند. reverse proxy/بدنهٔ HTTP روی سرور تست نشده و migration سرور اجرا نشده است.
+
+۱۴. نکات آموزشی: ۱) await شبکه فرصت تغییر مجوز است. ۲) یک subject قابل مشاهده برای sender الزاماً برای همهٔ recipientها مجاز نیست. ۳) rowversion parent بدون read consistency children کافی نیست. ۴) آزمون ناموفق constraint را دور نزنید. ۵) counter ثابت query از ثبت SQL حساس بهتر است. ۶) intent پایدار را با نشست آنلاین یا credential یکی نگیرید.
+
+۱۵. مطالعه: MessagesController/AdvancedManagementController → MessagingSafetyService/AdvancedManagementService → همان Domain موجود → feature ports → Safety/ContactCards/Presentation store → configurationهای موجود → شش فایل تست بالا؛ migration جدیدی برای خواندن وجود ندارد.
+
+۱۶. ادامه: فاز مستقل Poll/Quiz مطابق قرارداد Freezeشده، سپس ماتریس پذیرش و regression کل P2. anonymous/nonanonymous و correct answer نیازمند projection صریح و transaction SQL هستند؛ Exam/Grade، frontend یا AI نباید با آن مخلوط شوند.
+
+بازبینی بعدیِ همین فاز، دو regression مهم دیگر اضافه کرد (مجموع ۳۰ Integration تازه): عضو تازهٔ کلاس پیش از درخواست یا حین provider هنوز participant ذخیره‌شده ندارد. هر دو تست ابتدا واقعاً 200 به‌جای 404 دادند؛ صرف سبزبودن دو suite قبلیِ ۱۴۶۶تایی کافی نبود. `EnsureContactCardAudienceAsync` اکنون برای کلاس رسمی از ClassMembers جاری استفاده می‌کند، نه projection ناقص participantها. درس: authorization روی read model همگام‌شونده می‌تواند عضو واقعی را جا بیندازد؛ منبع عضویت جاری و guard نهایی را با زمان‌بندی مشخص تست کنید. نتایج اصلاح‌شده در ممیزی جدا ثبت می‌شوند و تا آن زمان commit/push نداریم.
+
+نتیجهٔ واقعی نسخهٔ اصلاح‌شده: هدفمند P2 برابر ۱۲۵ Integration passed؛ restore موفق، build/final build صفر warning/error، هر دو full/final suite برابر **528 Unit + 926 Integration + 14 Architecture = 1468 passed** و failed/skipped=0. EF تغییر معوق ندارد؛ migration جدیدی ساخته نشده است. شواهد `phase6-fixed-full` و `phase6-fixed-final` هستند. سی تست Integration تازه‌اند؛ Unit/Architecture بدون تغییر حفظ شدند. پس از بازبینی diff، فقط همین ۴۰ فایل مرتبط برای commit با پیام `fix(messaging): harden advanced search and current authorization` انتخاب می‌شوند؛ نتیجهٔ push و hash باید پس از Git واقعی ثبت شود.

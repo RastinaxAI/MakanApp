@@ -20,8 +20,8 @@ public sealed class ConversationTopicService(IAccessContextResolver contexts, IC
         var title = Title(command.Title);
         if (command.ClientTopicId == Guid.Empty) throw Invalid();
         var context = await contexts.ResolveAsync(userId, sessionId, ct);
-        await topics.PrepareTopicAsync(userId, conversationId, command.ClientTopicId, title, null, context, ct);
-        var evaluated = await EvaluateAsync(userId, conversationId, command.ClientTopicId, title, null, context, ct);
+        var alreadyExisted = await topics.PrepareTopicAsync(userId, conversationId, command.ClientTopicId, title, null, context, ct);
+        var evaluated = !alreadyExisted && await EvaluateAsync(userId, conversationId, command.ClientTopicId, title, null, context, ct);
         return await topics.CreateTopicAsync(userId, sessionId, conversationId, command.ClientTopicId, title, evaluated,
             context, correlationId, ct);
     }

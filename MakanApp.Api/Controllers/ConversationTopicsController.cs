@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MakanApp.Api.Controllers;
 
 [ApiController, Authorize]
+[RequestSizeLimit(64 * 1024)]
 [Route("api/v1/conversations/{conversationId:guid}/topics")]
 [EnableRateLimiting("messaging-send")]
 public sealed class ConversationTopicsController(ConversationTopicService service) : ControllerBase

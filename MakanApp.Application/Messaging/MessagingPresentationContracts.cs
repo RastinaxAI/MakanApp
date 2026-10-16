@@ -16,7 +16,7 @@ public interface IMessagingPresentationStore
     Task<IReadOnlyCollection<ChatFolderResult>> GetFoldersAsync(Guid userId, CancellationToken cancellationToken);
     Task<ChatFolderResult> SaveFolderAsync(Guid userId, Guid folderId, SaveChatFolderCommand command, byte[]? expectedVersion,
         AccessContext context, CancellationToken cancellationToken);
-    Task DeleteFolderAsync(Guid userId, Guid folderId, byte[] expectedVersion, CancellationToken cancellationToken);
+    Task DeleteFolderAsync(Guid userId, Guid folderId, byte[] expectedVersion, AccessContext context, CancellationToken cancellationToken);
     Task<SavedMessageLabelsResult> GetSavedLabelsAsync(Guid userId, Guid messageId, AccessContext context, CancellationToken cancellationToken);
     Task<SavedMessageLabelsResult> ReplaceSavedLabelsAsync(Guid userId, Guid messageId, string[] labels, byte[]? expectedVersion,
         AccessContext context, CancellationToken cancellationToken);

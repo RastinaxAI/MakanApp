@@ -29,6 +29,7 @@ public sealed partial class EfMessagingStore
             messageId,
             accessContext,
             cancellationToken);
+        nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
         EnsureMutableConversation(conversation);
         await EnsureCanSendAdvancedAsync(conversation, participant, userId, accessContext, message.Kind, nowUtc, cancellationToken);
         await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, cancellationToken);

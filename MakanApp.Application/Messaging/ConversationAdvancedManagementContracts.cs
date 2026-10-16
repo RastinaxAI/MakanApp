@@ -17,7 +17,7 @@ public sealed record InviteLinkRedemptionResult(Guid ConversationId, bool Alread
 public sealed record CompleteJoinRequestCommand(string ExpectedVersion);
 public sealed record SetMemberRestrictionCommand(bool IsBanned, GroupMemberCapability DeniedCapabilities, DateTime? UntilUtc, string Reason, string? ExpectedVersion);
 public sealed record MemberRestrictionResult(Guid ConversationId, Guid UserId, bool IsBanned, GroupMemberCapability DeniedCapabilities,
-    DateTime? UntilUtc, bool IsEffective, string Version);
+    DateTime? UntilUtc, bool IsEffective, string? Version);
 public sealed record MemberRestrictionPageResult(IReadOnlyCollection<MemberRestrictionResult> Items, bool HasMore);
 public sealed record UpdateConversationInfoCommand(string Title, string? Description, string ExpectedVersion);
 public sealed record ConversationInfoResult(Guid ConversationId, string Title, string? Description, string Version);
@@ -37,8 +37,10 @@ public interface IConversationAdvancedManagementStore
         byte[] expectedVersion, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken cancellationToken);
     Task<MemberRestrictionPageResult> GetRestrictionsAsync(Guid actorId, Guid conversationId, AccessContext context,
         int skip, int take, DateTime nowUtc, CancellationToken cancellationToken);
+    Task<MemberRestrictionResult> GetOwnRestrictionAsync(Guid actorId, Guid conversationId, AccessContext context, DateTime nowUtc, CancellationToken cancellationToken);
     Task<MemberRestrictionResult> SetRestrictionAsync(Guid actorId, Guid sessionId, Guid conversationId, Guid targetUserId,
         SetMemberRestrictionCommand command, byte[]? expectedVersion, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken cancellationToken);
+    Task PrepareInfoAsync(Guid actorId, Guid conversationId, byte[] expectedVersion, AccessContext context, CancellationToken cancellationToken);
     Task<ConversationInfoResult> UpdateInfoAsync(Guid actorId, Guid sessionId, Guid conversationId, UpdateConversationInfoCommand command,
-        byte[] expectedVersion, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken cancellationToken);
+        byte[] expectedVersion, bool safetyEvaluated, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken cancellationToken);
 }

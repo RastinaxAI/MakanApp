@@ -159,3 +159,9 @@ Typing و Presence گذرا و تک‌process هستند؛ تاریخچهٔ SQL/
 ## اجرای P2 — مدیریت پیشرفته بدون گسترش اختیار مدرسه
 
 Group/Channel مدیریت‌شدهٔ کاربر از Owner/Admin/Member و granular permission موجود استفاده می‌کنند؛ flag تازه به Adminهای قدیمی خودکار داده نمی‌شود. لینک bearer رضایت و current-state GAP-05 را دور نمی‌زند؛ source context سازنده و context درخواست‌کننده جداگانه و دوباره سنجیده می‌شوند. approval queue با عضویت فعال یکی نیست. Ban از مسیرهای Add/Join/دعوت قبلی/لینک اعمال و Unban بدون بازگردانی خودکار عضویت است. لینک، نام کاربری، Membership و GuardianRelation مجوز مرور private Direct نمی‌سازند؛ مرز کلاس رسمی و moderation قبلی حفظ است. جزئیات پیاده‌شده و شواهد آزمون در ممیزی P2 ثبت‌اند؛ این افزوده ادعای بسته‌شدن همهٔ P2 نیست.
+
+## قرارداد نهایی مصوب Poll / Quiz در P2 — ۲۰۲۶-۱۰-۱۶
+
+مالک قرارداد جایگزین را صریحاً Freeze کرد؛ پیشنهاد aggregate-only قبلی تأیید نشد و مرجع نیست. سازندهٔ Poll هنگام ساخت Anonymous یا NonAnonymous انتخاب می‌کند. Anonymous هویت رأی‌دهندگان را در API/UI عمومی نمایش نمی‌دهد؛ NonAnonymous فقط برای اعضای دارای مجوز همان Conversation قابل مشاهده است. رأی Poll تا Close قابل تغییر است؛ Close نهایی و بدون Reopen در P2، و پس از آن ثبت یا تغییر رأی ممنوع است. بستن توسط Creator با اختیار جاری یا Owner/Admin دارای permission مناسب همان resource است؛ دانستن شناسه مجوز نیست.
+
+Quiz فقط SingleChoice، دقیقاً یک CorrectOption و برای هر User یک پاسخ نهایی غیرقابل تغییر دارد. CorrectOption پیش از پاسخ خود کاربر افشا نمی‌شود؛ Explanation اختیاری نیز راه فرعی افشای پاسخ نیست. بسته‌شدن مجوز پاسخ تازه یا افشای correct به کاربرِ پاسخ‌نداده ایجاد نمی‌کند. Close همان مرز اختیار جاری را دارد. Quiz مستقل Messenger است و Exam/Assessment/Enrollment/نمره ایجاد نمی‌کند. SQL منبع نهایی Vote، unique constraint مانع duplicate و Vote×Close تراکنشی و deterministic است. این بخش تصمیم target است؛ وجود code/migration/tests و ممیزی فاز مستقل، تنها شاهد تحویل اجرایی خواهند بود. سیاست stricter GAP-05 و history/Block/session/MFA/moderation موجود پابرجاست.

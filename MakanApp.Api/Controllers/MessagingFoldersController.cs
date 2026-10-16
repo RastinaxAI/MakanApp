@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace MakanApp.Api.Controllers;
 
 [ApiController]
+[RequestSizeLimit(64 * 1024)]
 [Authorize]
 [Route("api/v1/messaging/folders")]
 [EnableRateLimiting("messaging-send")]

@@ -74,6 +74,7 @@ public sealed partial class EfMessagingStore
         if (command.SafetyPurpose == MessageSafetyPurpose.Message)
         {
             await ValidateScheduledSendAsync(userId, conversationId, command, false, cancellationToken, accessContext);
+            await EnsureContactCardAudienceAsync(conversation, userId, command, cancellationToken);
             await EnsureTopicOpenAsync(conversation, command.TopicId, cancellationToken);
         }
 
@@ -230,6 +231,8 @@ public sealed partial class EfMessagingStore
         var conversation = await LockConversationAsync(conversationId, cancellationToken)
             ?? throw ConversationNotFound();
         nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (command.ScheduledClaim is null)
+            nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
         var participant = await LoadActiveParticipantAsync(conversationId, userId, cancellationToken)
             ?? throw ConversationNotFound();
         await EnsureSafetyOperationAuthorizedAsync(
@@ -252,7 +255,10 @@ public sealed partial class EfMessagingStore
         }
 
         if (command.SafetyPurpose == MessageSafetyPurpose.Message)
+        {
             await ValidateScheduledSendAsync(userId, conversationId, command, true, cancellationToken, accessContext);
+            await EnsureContactCardAudienceAsync(conversation, userId, command, cancellationToken);
+        }
         var existingIncident = await dbContext.SafetyIncidents
             .FromSqlInterpolated($"SELECT * FROM [messaging].[SafetyIncidents] WITH (UPDLOCK, HOLDLOCK) WHERE [ConversationId] = {conversationId} AND [ActorUserId] = {userId} AND [ClientMessageId] = {command.ClientMessageId}")
             .SingleOrDefaultAsync(cancellationToken);

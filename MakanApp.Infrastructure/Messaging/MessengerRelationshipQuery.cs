@@ -3,6 +3,7 @@ using MakanApp.Domain.Guardian;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
 
@@ -88,5 +89,16 @@ internal static class MessengerRelationshipQuery
                  db.UserContacts.Any(c => c.OwnerUserId == actorId && c.ContactUserId == target.Id))
             select target.Id;
         return related.Union(contacts);
+    }
+
+    // همان مرز موجودِ پروفایل عمومی؛ کارت مخاطب نباید مسیر کشف تازه‌ای بسازد.
+    public static IQueryable<User> DiscoverableAccounts(MakanDbContext db, Guid requesterId, DateTime nowUtc)
+    {
+        var related = RelatedUsers(db, requesterId, nowUtc);
+        var requester = db.Users.Where(u => u.Id == requesterId && u.AccountStatus == UserAccountStatus.Active && u.ProfileCompletedAtUtc != null && u.PersonId != null);
+        return db.Users.AsNoTracking().Where(u => u.AccountStatus == UserAccountStatus.Active && requester.Any() &&
+            (u.Id == requesterId || u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
+             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified &&
+             requester.Any(a => a.CommunicationAgeCategory == CommunicationAgeCategory.Adult && a.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified) || related.Contains(u.Id)));
     }
 }

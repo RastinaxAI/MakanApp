@@ -25,6 +25,9 @@ public sealed class MessagesController(IMessagingSafetyService safetyService) : 
         [FromQuery] string? cursor,
         [FromQuery] int? limit,
         [FromQuery] string? savedLabel,
+        [FromQuery] bool? hasAttachment,
+        [FromQuery] bool? hasLinks,
+        [FromQuery] Guid? topicId,
         CancellationToken cancellationToken) =>
         Ok(await safetyService.SearchMessagesAsync(
             AuthenticatedSession.GetUserId(User),
@@ -38,6 +41,9 @@ public sealed class MessagesController(IMessagingSafetyService safetyService) : 
                 cursor,
                 limit,
                 senderUserId,
-                savedLabel),
+                savedLabel,
+                hasAttachment,
+                hasLinks,
+                topicId),
             cancellationToken));
 }

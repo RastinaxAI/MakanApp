@@ -26,6 +26,8 @@ public sealed partial class EfMessagingStore
         var conversation = await LockConversationAsync(conversationId, cancellationToken)
             ?? throw ConversationNotFound();
         nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (command.ScheduledClaim is null)
+            nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
         var participant = await LoadActiveParticipantAsync(conversationId, userId, cancellationToken)
             ?? throw ConversationNotFound();
         await EnsureCanReadAdvancedAsync(
@@ -113,6 +115,7 @@ public sealed partial class EfMessagingStore
             sourceConversationId,
             destinationConversationId,
             cancellationToken);
+        nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
         var sourceConversation = conversations.SingleOrDefault(item => item.Id == sourceConversationId)
             ?? throw MessageNotFound();
         var destinationConversation = conversations.SingleOrDefault(item => item.Id == destinationConversationId)
@@ -328,8 +331,7 @@ public sealed partial class EfMessagingStore
     private async Task<(FileAsset[] Files, Guid[] MentionedUserIds)> LoadAndValidateMessageReferencesAsync(
         Conversation conversation, ConversationParticipant participant, Guid userId, SendMessageStoreCommand command, CancellationToken cancellationToken)
     {
-        if (command.Kind == MessageKind.ContactCard && command.ContactUserId.HasValue)
-            await LoadSafeIdentityAsync(command.ContactUserId.Value, cancellationToken);
+        await EnsureContactCardAudienceAsync(conversation, userId, command, cancellationToken);
         if (command.ReplyToMessageId.HasValue)
         {
             var visibleFromSequence = await GetVisibleFromSequenceAsync(

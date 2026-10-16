@@ -79,7 +79,7 @@ Migration `20261016170915_AddMessagingPersonalOrganization` چهار جدول `m
 
 ## مدیریت پیشرفته، لینک و درخواست عضویت — P2-7 تا P2-10
 
-نقش‌های Owner/Admin/Member قبلی عوض نشده‌اند. سه flag واقعی اضافه شده‌اند: `ManageInvites=512` برای لینک/درخواست، `BanMembers=1024` برای محدودیت عضو، و `ChangeInfo=2048` برای عنوان/توضیح. `All=4095` است؛ permissionهای Adminهای قبلی خودکار زیاد نمی‌شوند و LegacyAdminDefault تغییر نکرده است. ManageInvites به معنی ManageAdmins یا PublishMessages نیست. subscriber کانال هنوز نمی‌تواند منتشر کند. محدودیت scope/عضویت/پنجرهٔ history و مرزهای Group رسمی کلاس پابرجاست؛ سیستم رسمی، با API مدیریت دستی عضو یا لینک override نمی‌شود.
+نقش‌های Owner/Admin/Member قبلی عوض نشده‌اند. سه flag واقعی اضافه شده‌اند: `ManageInvites=512` برای لینک/درخواست، `BanMembers=1024` برای محدودیت عضو، و `ChangeInfo=2048` برای عنوان/توضیح. All در این فاز تاریخی 4095 بود؛ با ManageTopics در فاز بعد، **All جاری=8191** است. permissionهای Adminهای قبلی خودکار زیاد نمی‌شوند و LegacyAdminDefault تغییر نکرده است. ManageInvites به معنی ManageAdmins یا PublishMessages نیست. subscriber کانال هنوز نمی‌تواند منتشر کند. محدودیت scope/عضویت/پنجرهٔ history و مرزهای Group رسمی کلاس پابرجاست؛ سیستم رسمی، با API مدیریت دستی عضو یا لینک override نمی‌شود.
 
 همهٔ routeهای زیر authenticated و دارای policy محدودیت نرخ `messaging-send` هستند. page پیش‌فرض ۱، pageSize پیش‌فرض ۳۰ و حداکثر ۱۰۰ است. `HasMore` فقط در محدودهٔ مجاز همان پاسخ محاسبه می‌شود.
 
@@ -158,3 +158,17 @@ Cancel و dispatch با ترتیب قفل Conversation→Scheduled هماهنگ�
 خطاها: 400=`SCHEDULED_MESSAGE_INVALID`؛ 404=`SCHEDULED_MESSAGE_NOT_FOUND`/ConversationNotFound؛ 412=`SCHEDULED_MESSAGE_CONFLICT`؛ 409=`SCHEDULED_MESSAGE_ID_RESERVED`؛ نشست لغوشده 401 و current permission همان خطای فعلی Messaging است. `SCHEDULED_MESSAGE_CLAIM_LOST` گیت داخلی worker است، نه پارامتر قابل‌ارسال توسط client. loading/empty صف با []/HasMore=false نمایش داده شود؛ هیچ job در انتظار، indicator «ارسال شد» نمی‌گیرد.
 
 Migration `20261016190927_AddScheduledAndSilentMessages`: سه جدول Scheduled/Attachments/Mentions، PK/FKهای واقعی، unique conversation+user+clientMessageId، rowversion، CHECKهای lifecycle/context/hash/lease/attempt/time، index صف و فهرست؛ IsSilent bit با false برای پیام‌های قدیمی. payload typed است، نه JSON اجرایی یا fake Message. Down در حضور قصد پایدار یا پیام Silent واقعی پیش از حذف ساختار توقف دارد؛ سرور/دیتابیس عادی migrate نشده‌اند.
+
+## Search و سخت‌سازی قرارداد جاری — P2-18 و بازبینی P2-19 تا P2-30
+
+`GET /api/v1/messages/search` علاوه بر q/senderUserId/conversationId/fromUtc/toUtc/kind/savedLabel/cursor/limit، سه selector اختیاری دارد: `hasAttachment=true|false` برای وجود پیوست READY؛ `hasLinks=true|false` برای وجود نشانگر http:// یا https:// در متن فعلی، بدون واکشی یا پردازش URL؛ `topicId` برای همان Topic مجاز. presence یک فیلتر جدید یا savedLabel اجازهٔ q خالی می‌دهد، نه جست‌وجوی بدون هیچ عبارت/فیلتر. مقدار false نیز فیلتر واقعیِ مکمل است. نمونه: `/api/v1/messages/search?hasLinks=true&hasAttachment=false&limit=20`. همهٔ فیلترها پیش از count/cursor/pagination در SQL و داخل current workspace/role/membership/history اعمال می‌شوند؛ 0/[] برای محدودهٔ غیرمجاز oracle وجود گفتگو نیست. Guid خالی، enum/cursor/limit نامعتبر 400 است. هویت senderها یک batch است، نه query به‌ازای هر نتیجه.
+
+`GET /api/v1/conversations/{id}/me/restriction` فقط وضعیت محدودیت خود عضو دارای دسترسی جاری را می‌دهد: `{conversationId,userId,isBanned,deniedCapabilities,untilUtc,isEffective,version}`. نبود سطر برابر None/false/version=null است؛ انقضا IsEffective را false می‌کند، نه اینکه Ban عضویت را دوباره فعال کند. reason مدیر نمایش داده نمی‌شود و این route مجوز فهرست محدودیت دیگران نمی‌دهد. عضو حذف‌شده 404 می‌گیرد؛ capability پاسخ hint است و هر Send دوباره مجاز می‌شود.
+
+Contact Card همان پروفایل عمومیِ مجاز موجود است، نه راه کشف تازه: source و همهٔ مخاطبان بالفعلِ مجاز باید بتوانند subject را مطابق رابطهٔ جاری ببینند. دانستن UserId یا رضایت subject فقط به فرستنده کافی نیست. هر Send/Forward و dispatch زمان‌بندی دوباره بررسی می‌شود؛ شکست 404 بدون افشای علت خصوصی است. کارت تاریخی حذف/بازنویسی نمی‌شود و هیچ شمارهٔ تأییدشده‌ای در کارت قرار نمی‌گیرد. منطق کشف پروفایل تغییر محصولی نکرده و predicate موجود reuse شده است.
+
+در کلاس رسمی، مخاطب از Enrollment/TeacherAssignment جاری محاسبه می‌شود، نه صرفاً projection participantها؛ عضو ثبت‌نام‌شدهٔ تازه که هنوز در Messaging همگام نشده نیز باید بتواند subject کارت را ببیند. ثبت‌نام هم‌زمان در حین Safety، guard نهایی را دور نمی‌زند.
+
+ویرایش عنوان/توضیح گروه یا کانال با audience محافظت‌شده از همان Safety و پروندهٔ scoped می‌گذرد؛ unavailable هیچ metadata تازه‌ای ثبت نمی‌کند. permission/رابطه/نشست پس از provider و داخل transaction دوباره سنجیده می‌شوند. retry دقیقِ Topic ثبت‌شده، با current permission و همان title، به providerِ در دسترس نیاز ندارد و Topic/event تازه نمی‌سازد. Close/Reopen Topic با Close نهایی Poll یکسان نیست.
+
+GET پوشه/برچسب، parent/version و فرزندان همان نسخه را برمی‌گرداند؛ mutation و خواندن مجموعه با ترتیب قفل مشترک سریال می‌شوند. ورودی خام نام/label پیش از normalization سقف ۱۰۲۴ دارد و سقف نهایی ۸۰/۳۲ باقی است. controllerهای metadata فوق policy بدنهٔ ۶۴ KiB دارند؛ تست attribute/HTTP در TestServer اثبات محدودیت reverse proxy یا Kestrel روی سرور نیست. هیچ تنظیم جدید اجباری، migration یا event گروهی خصوصی افزوده نشده است.
