@@ -1,5 +1,7 @@
 # نقشهٔ اجرای پیشنهادی P3 Media
 
+> **ترتیب جاری مصوب مالک — ۲۰۲۶-۱۰-۱۷:** [P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) و بخش «ترتیب مصوب جایگزین» در انتهای همین سند مرجع فعلی‌اند. متن P3-0 زیر، تاریخچهٔ پیشنهاد است؛ ترتیب C.1→A.1→C.2 قدیمی با **S→A→B→C→D→E→F** جایگزین شده است. این تحویل فقط [برنامهٔ اجرایی S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) را آماده می‌کند؛ هیچ فاز رسانه‌ای اجرا نشده است.
+
 تاریخ `2026-10-17`؛ کد مبنا `5e1da895c96065380e12d04341e483d4e78539c4`. این سند **برنامهٔ آینده، نه مجوز اجرا و نه فهرست قابلیت ساخته‌شده** است. [معماری](MESSENGER_P3_MEDIA_ARCHITECTURE.md)، [تصمیم‌های A/R/D](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md) و [پذیرش](MESSENGER_P3_TEST_ACCEPTANCE_MATRIX.md) با هم خوانده شوند. Source، schema و config در P3-0 عوض نشده‌اند.
 
 ## ترتیب وابستگی و جلوگیری از تکمیل صوری
@@ -71,3 +73,23 @@
 Stories پس از call foundation با FileAsset/Privacy/Contacts/Block/Safety موجود compose شود؛ expiry/audience و viewer policy نیازمند درخواست مستقل. Bots/Mini Apps مطابق PRD v3 مسیر گستردهٔ P3 ولی independent هستند؛ token/revoke/opt-in/webhook و signed launch/CSP/sandbox/data isolation پیش‌نیازند. Business/Premium/monetization، recording/E2EE، AI/RAG و Payment/MeliPayamak به این مراحل افزوده نشوند.
 
 هر فاز یک scope محدود، تصمیم‌های شناسه‌دار، تست‌های مشخص، migration فقط در صورت نیاز واقعی و commit متمرکز دارد. workflow اجرا: Implement → restore → build/fix → full test/fix → final build/test → diff/staged review → commit → push tracked branch → fetch/remote verify → گزارش آموزشی فارسی. هیچ فایل dirty قبلی AI یا frontend وارد تغییر/commit نشود. P3-0 فقط اسناد است و درخواست جاری اجازهٔ شروع P3-A تا F نیست.
+
+## ترتیب مصوب جایگزین — P3 Media Policy v1
+
+این بخش پیشنهادهای ناسازگار بالا را فقط در حدود approval صریح مالک supersede می‌کند؛ متن تاریخی حذف نشده است. [decision mapping](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md#p3-policy-v1-owner-approval) مانع تأیید ضمنی جزئیات قدیمی است.
+
+| ترتیب | فاز مصوب و scope | dependency / خروجی عبور |
+|---|---|---|
+| 1 | **P3-S — Media Security Spike**؛ LiveKit واقعی، token scope/initial TTL≤30s، removal/rejoin/refresh، TURN و faultها؛ بدون business rollout | [plan اجرایی](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md)، lab مجاز؛ REAL security gate PASS و شواهد رسانه، نه صرف Build/TestServer |
+| 2 | **P3-A — Call Control + 1:1 Voice**؛ Domain/SQL/state، signaling/control، multidevice، privacy/Block/Child Safety، media issuance و real voice | فقط پس از PASS S؛ قراردادهای جزئی freeze‌نشده پیش از پیاده‌سازی وابسته روشن شوند؛ legacy adult-only نباید رابطهٔ Guardian مصوب را دوباره بی‌دلیل deny کند |
+| 3 | **P3-B — 1:1 Video + Screen Share**؛ SFU و یک share هم‌زمان با authority مصوب | A و S؛ consent/source grant و توقف/remove واقعی؛ بدون recording |
+| 4 | **P3-C — Media Infrastructure Acceptance**؛ forced TURN، failure/reconnect/revocation، Web/Android/iOS واقعی در صورت دسترسی | A/B؛ grace شبکه15s برای هر دو media/control و هیچ grace امنیتی؛ دستگاه غایب pending، نه PASS |
+| 5 | **P3-D — Group Voice/Video**؛ Group/Official bound، current membership/academic scopes، ManageCalls کمینه | S/A/B/C در scope مربوط؛ pilot Video8 و Voice16 active/configurable؛ join عضویت permanent نسازد |
+| 6 | **P3-E — Channel Live**؛ ManageLive صریح، Viewer receive-only، promotion server-authorized و auditable | زیربنای پذیرفته‌شده؛ Host/CoHost/Speaker/Viewer طبق policy؛ PublishMessages یا ManageCalls جای ManageLive نیست |
+| 7 | **P3-F — Production Media Acceptance**؛ real networks/load/observability/recovery/bandwidth/security/runtime deployment | تمام gateهای scope و محیط/دسترسی مجاز؛ Live viewer limit بعد benchmark و feature gate؛ background incoming call مستقل از foreground |
+| 8 | **Stories**؛ track مستقل | پس از F با قرارداد و scope مستقل؛ core Voice/Video را معطل نکند |
+| 9 | **Bots / Mini Apps**؛ track مستقل | پس از Stories طبق ترتیب مالک؛ identity/consent/sandbox قرارداد مستقل |
+
+ماتریس تماس protected، Parent/Child معتبر و محدودیت Teacher/Minor از policy جدید خوانده شوند؛ خاموشی کلی R05 و D04 قدیمی دیگر مرجع نیستند. history امن در Messenger و technical metadata30days/configurable هدف آینده‌اند؛ این ثبت permission enum، SystemEvent، جدول یا تنظیم محصول ایجاد نمی‌کند. Recording/transcription/STT archive همچنان deferred/ممنوع در v1 است.
+
+اگر REAL spike نتواند کنترل ادامهٔ تماس نامجاز پس از rejoin را رضایت‌بخش اثبات کند، `LIVEKIT_REJOIN_SECURITY_GATE_FAILED` و توقف media production approval؛ fallback نیز gate معادل می‌خواهد. در نبود محیط/شاهد، نتیجه pending یا inconclusive است و S پاس نمی‌شود. full A/B/D/E پیش از PASS S شروع نشوند؛ پایان plan به‌تنهایی اجازهٔ bypass gate نیست. `P1_PUSH_RUNTIME_PENDING` باقی است و reliability background از این ترتیب نتیجه نمی‌شود.

@@ -1,5 +1,7 @@
 # معماری پیشنهادی رسانهٔ زندهٔ Messenger — P3-0
 
+> **مرجع جاری پس از تأیید مالک — ۲۰۲۶-۱۰-۱۷:** [P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) اکنون APPROVED_FOR_IMPLEMENTATION است؛ [نگاشت تأییدها](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md#p3-policy-v1-owner-approval) مشخص می‌کند کدام پیشنهاد تاریخی جایگزین شده است. متن این ممیزی برای حفظ شواهد P3-0 باقی می‌ماند؛ مقدارهای فعلی عبارت‌اند از initial TTL≤30s، ring30s، network grace15s برای هر دو media/signaling، ManageCalls برای Group و ManageLive برای Live، cap pilot Video8/Voice16 و ماتریس Child Safety رابطه‌محور مصوب. ترتیب فعلی S→A→B→C→D→E→F است؛ [برنامهٔ P3-S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) آماده می‌شود ولی REAL rejoin gate هنوز NOT_TESTED و Production approval داده نشده است. نتیجهٔ تاریخی این سند را وضعیت امروز policy یا تماس پیاده‌شده تلقی نکنید.
+
 تاریخ ممیزی: `2026-10-17`؛ مبنا: `5e1da895c96065380e12d04341e483d4e78539c4`، شاخهٔ `messenger/p0` و upstream موجود `origin/main`. این سند **معماری پیشنهادی و ممیزی** است؛ تماس، endpoint، مدل، migration، media SDK، TURN یا استقرار تازه ایجاد نشده است. پیشنهادهای محصول فقط پس از تصمیم صریح مالک معتبر می‌شوند؛ [ثبت تصمیم‌ها](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md) مرجع وضعیت هر تصمیم است.
 
 ## ۱. منابع، اعتبار و baseline

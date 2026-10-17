@@ -1,5 +1,7 @@
 # ماتریس آزمون و پذیرش آیندهٔ P3 Media
 
+> **به‌روزرسانی مرجع — ۲۰۲۶-۱۰-۱۷:** [P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) approved و [P3-S plan](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) آمادهٔ اجراست؛ تمام gateهای رسانه همچنان PLANNED_NOT_RUN هستند. جدول‌های P3-0 برای شواهد تاریخی حفظ شده‌اند؛ expected ناسازگار آن‌ها طبق بخش «اصلاح expectedها» در انتهای همین سند و [approval mapping](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md#p3-policy-v1-owner-approval) جایگزین می‌شود. هیچ case جدید رسانه‌ای اجرا یا PASS اعلام نشده است.
+
 تاریخ `2026-10-17`؛ مبنای کد `5e1da895c96065380e12d04341e483d4e78539c4`. این جدول **طرح آزمون آینده** است، نه تست افزوده‌شده یا نتیجهٔ PASS تماس. [معماری](MESSENGER_P3_MEDIA_ARCHITECTURE.md)، [تصمیم‌ها](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md) و [roadmap](MESSENGER_P3_IMPLEMENTATION_ROADMAP.md) مرجع وابستگی‌اند.
 
 ## شواهد موجود و شیوهٔ نتیجه‌گذاری
@@ -90,3 +92,20 @@ baseline جدید P3-0: restore موفق؛ build صفر warning/error؛ **558 Un
 TestServer و LocalDB برای HTTP/Hub، policy، SQL concurrency و idempotency مناسب‌اند؛ ولی handshake مرورگر تحت origin/TLS واقعی، UDP/NAT/ICE، relay انتخاب‌شده، DTLS-SRTP/RTP، کیفیت encode/decode، دستگاه صدا/دوربین، screen permission، Bluetooth، موبایل locked/terminated، APNs/FCM واقعی، مصرف battery و ظرفیت NIC را اثبات نمی‌کنند. HTTP mock provider حتی با نام LiveKit real media نیست. headless controlled media نیز جای آزمون دو دستگاه/دو شبکه و mobile background نیست.
 
 بستن مرحلهٔ آینده به conjunction gateهای scope نیاز دارد: policy approved + کد/SQL/Hub PASS + media/security PASS + device/network/ops مربوط PASS + commit/push/remote verified. اگر scope فقط backend code باشد و runtime فراهم نباشد، CODE_COMPLETE/PENDING_ENVIRONMENT با نام دقیق gateها گزارش شود؛ protected features باز و recording/E2EE معوق به‌صورت unsupported باقی بمانند. این طرح، نتیجهٔ جدیدی برای P0/P1/P2 یا مجوز خودکار اجرای P3 ایجاد نمی‌کند.
+
+## اصلاح expectedها طبق policy مصوب — هنوز اجرا نشده
+
+| Gate / حوزه | expected جاری و test افزوده‌شدنی در فاز مربوط |
+|---|---|
+| U01/U02/S01/H03 | lifecycle شامل Created؛ first valid Accept transactional و فقط یک accepted leg؛ AnsweredElsewhere برای device بازنده نه پایان تماس برنده؛ ring پیش‌فرض30s/configurable؛ setup20s و busy policy قدیمی freeze نشده‌اند |
+| U04/U05/G02/SEC03 | Adult Contacts از دفترچهٔ مقصد؛ protected public Nobody؛ Parent↔Child فقط رابطهٔ فعال+restrictions جاری، بدون monitoring/history access؛ Teacher↔Minor و Minor↔Minor private deny؛ Teacher↔Adult نیازمند رابطه+privacy؛ Unknown مانند Minor؛ class/group با scopeهای جاری و بدون Manager private escalation |
+| U06/L01/L02 | ManageLive مستقل؛ Viewer واقعاً publish نمی‌کند؛ promotion فقط explicit/server-authorized/auditable؛ Host/CoHost/Speaker/Viewer طبق policy؛ ManageCalls+PublishMessages قدیمی مجوز Live نیست |
+| G01/G02 | ManageCalls کمینه برای Owner/Admin مجاز؛ Member پیش‌فرض start/manage ندارد؛ join عضویت نمی‌سازد؛ cap pilot8 Video/16 Voice active/configurable؛ نه benchmark یا سقف permanent اعضا |
+| M05/SEC02/SEC03 | grace15s/configurable برای media **و** signaling فقط network-only؛ session revoke/suspension/Block/remove/End/permission invalidation هیچ grace ندارد؛ 20/60 قدیمی کنار گذاشته شود |
+| SEC04/M06 | initial token حداکثر30s و scope Call/Room/User/DeviceSession/role؛ token هنوز معتبر و refresh‌شده آزمایش شود؛ remove API به‌تنهایی کافی نیست؛ current check و قطع واقعی ادامهٔ رسانه لازم؛ PS04–PS06 در S مقدم‌اند |
+| M03/O01 | TURN authenticated اجباری، UDP primary و TCP/TLS fallback، selected relay واقعی و credential منقضی/غلط؛ config صرف یا ICE TCP مستقیم PASS نیست |
+| M07 | share یک track با سقف هم‌زمان1؛ Direct هر participant مجاز؛ Group/Live Host/CoHost یا participant صریحاً مجاز؛ remove/stop share را قطع کند |
+| H05/history/SEC06 | user history امن SystemEvent یا equivalent در Messenger؛ مکانیزم جدید هنوز موجود نیست؛ فقط metadata؛ technical metadata30days/configurable نه legal/user-message deletion؛ recording/transcription/STT archive ممنوع |
+| P05/Q03/O04 | P1_PUSH_RUNTIME_PENDING باقی؛ background reliable با device واقعی؛ Video8/Voice16 فقط pilot؛ Live viewer عدد تجاری ندارد و تا load پذیرش feature-gated است |
+
+caseهای PS00–PS10 در [plan S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) روش/شاهد/exit gate مشخص دارند؛ این نام‌ها تست C# موجود نیستند. S با synthetic actor و SFU واقعی فقط media-security را ثابت می‌کند، نه GAP-05 end-to-end یا lifecycle SQL آینده. `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` باقی‌اند؛ failure اثبات‌شدهٔ امنیتی در اجرای آینده با `LIVEKIT_REJOIN_SECURITY_GATE_FAILED` گزارش شود. نبود محیط یا شاهد INCONCLUSIVE/PENDING است، نه PASS و نه failure اجراشدهٔ ساختگی.

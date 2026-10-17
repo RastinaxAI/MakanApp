@@ -146,3 +146,19 @@ Validation نهایی کد P2 انجام شد: دو suite کامل اصلاح‌
 | Stories / Bots / Mini Apps | track مستقل بعد از call foundation؛ طبق PRD v3 target گستردهٔ P3 هستند؛ دسته‌بندی P4 تاریخی بالا جای این target را نمی‌گیرد؛ Business/Premium/Monetization جدا و هیچ implementation تازه‌ای ندارند |
 
 وضعیت خروجی audit پس از validation و commit/push/remote verification: `P3_MEDIA_ARCHITECTURE_READY_FOR_OWNER_DECISIONS`؛ **نه تماس پیاده‌شده و نه مجوز اجرای خودکار P3-A..F**. جدول سه‌دستهٔ APPROVED_FROM_EXISTING_POLICY / RECOMMENDED_FOR_OWNER_APPROVAL / DEFERRED در سند تصمیم‌ها مرجع نهایی این ممیزی است؛ تصمیم باز فقط زیرمرحلهٔ وابسته را متوقف می‌کند. نتیجهٔ واقعی Git و validation نهایی در گزارش پایان اعلام می‌شود، نه self-hash اختراعی در فایل همان commit.
+
+## تأیید مالک P3 Media Policy v1 — ۲۰۲۶-۱۰-۱۷
+
+مرجع جاری: [سیاست مصوب](../messaging/MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) با وضعیت **APPROVED_FOR_IMPLEMENTATION** و [نگاشت دقیق approval](../messaging/MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md#p3-policy-v1-owner-approval). ردیف‌های AWAITING و اعداد P3-0 بالا شواهد تاریخی‌اند و در حدود تصمیم صریح مالک supersede شده‌اند؛ تاریخچه حذف نشده است. LiveKit Self-hosted primary، Janus VideoRoom+Coturn fallback مشروط، Windows/.NET control و Linux media اختصاصی، SFU همهٔ مسیرها و TURN authenticated مصوب‌اند؛ هنوز هیچ media runtime نصب یا پذیرفته نشده است.
+
+| موضوع | وضعیت جاری پس از ثبت policy |
+|---|---|
+| token/rejoin | initial TTL≤30s و scope Call/Room/User/DeviceSession/role؛ removal تنها revoke نیست؛ REAL gate در **P3-S** اجباری و اکنون NOT_TESTED؛ شکست اثبات‌شده = LIVEKIT_REJOIN_SECURITY_GATE_FAILED، نه تضعیف auth |
+| privacy/Child Safety | Adult Contacts؛ protected public Nobody؛ Parent/Child با GuardianRelation فعال و restrictions جاری؛ Teacher↔Minor و Minor↔Minor private deny؛ کلاس/گروه با scope آموزشی جاری؛ بدون monitoring/private browsing و بدون تغییر GAP-05 |
+| permission/limit | ManageCalls برای Group؛ ManageLive مستقل برای Live و promotion صریح/server-authorized/auditable؛ share1؛ pilot Video8/Voice16 active/configurable؛ عدد تجاری Live قبل load ممنوع |
+| ring/grace/history | ring30s؛ media و signaling grace15s فقط شبکه، security no-grace؛ history امن Messenger در آینده؛ technical metadata30days/configurable نه legal retention یا پاک‌کردن پیام |
+| scope جاری | فقط ثبت policy و [برنامهٔ اجرایی S](../messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md)؛ tooling/SDK/Domain/endpoint/migration/config/deployment جدید ایجاد نشده؛ MeliPayamak و AI/RAG/dirty workspace خارج تغییر |
+| dependency اجرا | S→A→B→C→D→E→F؛ بعد Stories سپس Bots/Mini Apps؛ full A/B/D/E پیش از PASS واقعی S آغاز نشوند؛ plan فعلی به معنی شروع S نیست |
+| موارد باقی | recording/transcription/STT archive همچنان deferred/ممنوع v1؛ P1_PUSH_RUNTIME_PENDING و PENDING_SCALE_INFRA تغییر نکرده؛ rate/busy/setup/DND جزئیات freeze‌نشده طبق mapping فقط قرارداد وابستهٔ آینده را منتظر می‌گذارند |
+
+وضعیت این ثبت `P3_MEDIA_POLICY_V1_APPROVED / GO_FOR_P3_MEDIA_SECURITY_SPIKE` است، نه تماس CODE_COMPLETE یا REAL PASS. `P3_S_EXECUTION=NOT_STARTED`، `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` صریح‌اند. نتایج regression/Git فقط پس از اجرای واقعی در گزارش پایان ثبت می‌شوند.

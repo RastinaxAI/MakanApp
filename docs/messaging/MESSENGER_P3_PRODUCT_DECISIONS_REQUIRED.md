@@ -1,5 +1,7 @@
 # تصمیم‌های محصول/امنیت لازم پیش از اجرای P3 Media
 
+> **وضعیت جاری — ۲۰۲۶-۱۰-۱۷:** تصمیم‌های صریح مالک در [Makan Messenger P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) با وضعیت **APPROVED_FOR_IMPLEMENTATION** freeze شده‌اند. متن و جدول‌های P3-0 در ادامه، شواهد تاریخی دست‌نخورده‌اند؛ عبارت‌های AWAITING و اعداد پیشنهادی آن‌ها دیگر وضعیت تمام ردیف‌ها نیستند. [نگاشت جاری انتهای همین سند](#p3-policy-v1-owner-approval) تأیید، جایگزینی و بخش‌های خارج تأیید را تفکیک می‌کند. اکنون فقط [برنامهٔ P3-S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) آماده می‌شود؛ spike اجرا نشده و Production approval داده نشده است.
+
 تاریخ `2026-10-17`؛ مبنا `5e1da895c96065380e12d04341e483d4e78539c4`. سند همراه: [معماری و شواهد](MESSENGER_P3_MEDIA_ARCHITECTURE.md). **هیچ ردیف پیشنهادی این سند approval مالک محسوب نمی‌شود**. عنوان Freeze در P3-0 یعنی ثبت مرزهای مصوب و مشخص‌کردن تصمیم‌های باز، نه تأیید خودکار انتخاب vendor یا قواعد تماس کودک. PRD target است؛ call runtime هنوز وجود ندارد.
 
 ## APPROVED_FROM_EXISTING_POLICY
@@ -67,3 +69,43 @@
 ## ثبت approval آینده
 
 برای هر R، ID، مقدار پذیرفته‌شده/جایگزین، مالک/تاریخ، دامنهٔ adult/protected، threat و test gate ثبت شود؛ فقط همان ردیف به وضعیت مصوب جدید منتقل گردد. پیش‌فرض‌های پیام/Presence یا قبول Master PRD به معنی قبول اعداد pilot/vendor/live-safety نیستند. تصمیم باز، blocker **اجرای وابسته** است، نه blocker آماده‌بودن این ممیزی برای تصمیم مالک. وضعیت این مرحله پس از validation و Git، `P3_MEDIA_ARCHITECTURE_READY_FOR_OWNER_DECISIONS` است، نه «تماس آماده».
+
+<a id="p3-policy-v1-owner-approval"></a>
+
+## ثبت تصمیم صریح مالک — P3 Media Policy v1
+
+مالک: Product Owner؛ تاریخ `2026-10-17`؛ مرجع: درخواست «P3 OWNER DECISIONS — APPROVED AND FROZEN». وضعیت policy: **APPROVED_FOR_IMPLEMENTATION / APPROVED_AND_FROZEN**. مرجع کامل مقادیر و مرزها [سیاست مصوب](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) است؛ این جدول فقط تطبیق با پیشنهادهای تاریخی بالاست، نه approval ضمنی جزئیات تأییدنشده.
+
+| ID تاریخی | وضعیت جاری | تصمیم مصوب / مرز تأیید |
+|---|---|---|
+| R01 | APPROVED | SFU برای همهٔ مسیرهای v1؛ production P2P جدا ممنوع |
+| R02 | APPROVED | LiveKit Self-hosted primary؛ Janus VideoRoom+Coturn فقط fallback مشروط؛ production acceptance همچنان وابسته به P3-S و gateهای عملیاتی |
+| R03 | APPROVED با topology مصوب | Windows/.NET control؛ Linux media اختصاصی؛ TURN authenticated، UDP اصلی و TCP/TLS fallback، configurable/monitored؛ pilot هم‌host مجاز و جداسازی بعدی ممکن |
+| R04 | APPROVED با استثنای رابطه‌ای صریح | Adult Personal=Contacts از دفترچهٔ مقصد؛ protected public Personal=Nobody؛ تماس Parent/Child فقط طبق رابطهٔ فعال و محدودیت جاری، نه public enablement |
+| R05 | SUPERSEDED_BY_APPROVED_POLICY | خاموشی کلی تمام تماس‌های protected دیگر تصمیم جاری نیست؛ تماس Guardian معتبر و Official/Class/Group مجاز طبق policy؛ private Teacher↔Minor و Minor↔Minor ممنوع؛ Unknown مانند Minor |
+| R06 | APPROVED با ماتریس جدید | Teacher↔Minor private deny؛ کلاس/گروه با TeacherAssignment/Enrollment/scope جاری؛ Teacher↔Adult با رابطهٔ آموزشی و target privacy؛ نقش به‌تنهایی کافی نیست |
+| R07 | APPROVED با تفکیک رابطه | Parent↔Child active GuardianRelation مجاز با restrictions جاری؛ بدون monitoring/history access؛ Minor↔Minor private deny؛ Official/Class تابع scope و Child Safety |
+| R08 | APPROVED در حدود مصوب | ManageCalls کمینه برای start/end/remove؛ Owner مجاز و Admin با permission؛ Member پیش‌فرض start/manage ندارد؛ join عضویت نمی‌سازد؛ cap اولیه Video=8 و Voice=16 active/configurable، نه cap تجاری؛ ShareScreen مستقل و جزئیات پایان Host/idle در پیشنهاد قدیمی خودکار تأیید نشده‌اند |
+| R09 | SUPERSEDED_BY_APPROVED_POLICY | Live مجزا با ManageLive؛ Owner/Admin مجاز؛ Viewer receive-only؛ promotion صریح، server-authorized و auditable؛ Host/CoHost/Speaker/Viewer برای طراحی، نه منع همیشگی promotion |
+| R10 | APPROVED با تغییر | یک share track هم‌زمان؛ Direct هر participant مجاز؛ Group/Live Host/CoHost یا participant صریحاً مجاز؛ stop/remove پایان share؛ recording ممنوع |
+| R11 | APPROVED با تغییر | history در Messenger به‌شکل SystemEvent امن یا معادل؛ technical CallSession metadata پیش‌فرض30 روز/configurable؛ نه retention حقوقی و نه تصویب پاک‌کردن پیام/نمای شخصی پس از30 روز |
+| R12 | PARTIALLY_APPROVED | ring30s/configurable مصوب؛ lifecycle Created/Ringing/Connecting/Active/Ended و outcomeهای مشخص؛ Connecting20s تاریخی صریحاً freeze نشده است |
+| R13 | SUPERSEDED_BY_APPROVED_POLICY | grace media و signaling هر دو15s/configurable فقط برای وقفهٔ عادی؛ security revoke هیچ grace ندارد؛ اعداد20/60 قدیمی مرجع نیستند |
+| R14 | PARTIALLY_APPROVED | eligible deviceها ring؛ first valid Accept transactional؛ دیگران AnsweredElsewhere، بدون دو accepted leg؛ busy سراسری، اثر decline یک device، handoff و محدودیت caller leg از این approval استنتاج نشوند |
+| R15 | APPROVED در حدود revocation صریح | Block/remove/ban/session revoke مجوز participant را invalid و رسانه را remove می‌کند؛ future issuance deny؛ rejoin current authorization؛ بدون grace امنیتی؛ جزئیات هم‌حضوری زوج Blockشده در shared Group و حذف عضویت/history صریحاً freeze نشده‌اند |
+| R16 | NOT_FROZEN_BY_THIS_APPROVAL | اعداد قدیمی rate/cooldown فرضیهٔ آزمایش‌اند؛ مجوز ساخت defaultهای قطعی نیستند و blocker اجرای P3-S نیستند |
+| R17 | APPROVED؛ REAL_GATE_NOT_TESTED | initial join TTL حداکثر30s، scope Call/Room/User/DeviceSession/role؛ removal به‌تنهایی revoke نیست؛ rejoin با token معتبر current-check و removal/admission-control می‌خواهد؛ شکست اثبات واقعی = LIVEKIT_REJOIN_SECURITY_GATE_FAILED؛ نه ادعای پاس‌شدن فعلی |
+| R18 | PARTIALLY_APPROVED | foreground مجاز و P1_PUSH_RUNTIME_PENDING حفظ؛ mobile/background تا real-device acceptance آماده نیست؛ جزئیات DND/Quiet Hours و priority در پیشنهاد قدیمی با این approval freeze نشده‌اند |
+| R19 | SUPERSEDED_BY_APPROVED_POLICY | rollout مرحله‌ای S→A→B→C→D→E→F، نه adult-only مطلقی که رابطه‌های protected مصوب را دوباره ببندد؛ هیچ business rollout در S |
+| R20 | PARTIALLY_APPROVED / CONTRACT_DESIGN_PENDING | مجوز تماس مجوز پیام/history دیگران نیست؛ Group/Live conversation-bound و user history در Messenger integrate شود؛ nullable ConversationId و route/schema شروع بدون Direct به‌طور صریح freeze نشده‌اند؛ قرارداد P3-A لازم است، نه blocker S |
+
+| ID تاریخی | وضعیت جاری تعویق |
+|---|---|
+| D01 | DEFERRED مصوب؛ hidden/server/automatic recording، transcription و STT archive در v1 ممنوع؛ approval مستقل Product/Legal/Privacy/Storage/Retention/Access لازم |
+| D04 | SUPERSEDED؛ مدل Host/CoHost/Speaker/Viewer و promotion مجازِ صریح/server-authorized/auditable در policy جدید آمده، نه الزام تحویل در همین ثبت اسناد |
+| D06 / D07 | trackهای مستقل؛ پس از P3-F ابتدا Stories، سپس Bots/Mini Apps؛ core Voice/Video را معطل نکنند |
+| D02 / D03 / D05 / D08 / D09 | از این approval اجازهٔ E2EE، call waiting/handoff، live classifier، Premium/SIP یا backend scale-out تازه نتیجه نمی‌شود |
+
+guardهای A01–A10 با policy جدید و GAP-05 پابرجا هستند. هیچ UserId، Manager role، GuardianRelation یا membership قدیمی حق شنود/private browsing نمی‌دهد. پذیرش رابطهٔ Parent/Child فقط همان تماس رابطه‌ای است؛ protected public Nobody و stored-message safety تغییر نکرده‌اند.
+
+مرحلهٔ بعد **P3-S — MEDIA SECURITY SPIKE** است؛ [برنامهٔ اجرایی](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) تنها dependency لازم برای اقدام بعدی را مشخص می‌کند. P3-C.1 تاریخی به P3-S منتقل شده؛ C اکنون acceptance پس از A/B است. تصمیم‌های جزئیِ freeze‌نشده فقط قرارداد وابستهٔ آینده را متوقف می‌کنند و موجب بازگشایی policy مصوب یا توقف بی‌دلیل کل مسیر نیستند. اکنون `P3_S_EXECUTION=NOT_STARTED` و `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` است.
