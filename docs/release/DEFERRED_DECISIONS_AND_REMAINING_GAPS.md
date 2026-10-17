@@ -162,3 +162,11 @@ Validation نهایی کد P2 انجام شد: دو suite کامل اصلاح‌
 | موارد باقی | recording/transcription/STT archive همچنان deferred/ممنوع v1؛ P1_PUSH_RUNTIME_PENDING و PENDING_SCALE_INFRA تغییر نکرده؛ rate/busy/setup/DND جزئیات freeze‌نشده طبق mapping فقط قرارداد وابستهٔ آینده را منتظر می‌گذارند |
 
 وضعیت این ثبت `P3_MEDIA_POLICY_V1_APPROVED / GO_FOR_P3_MEDIA_SECURITY_SPIKE` است، نه تماس CODE_COMPLETE یا REAL PASS. `P3_S_EXECUTION=NOT_STARTED`، `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` صریح‌اند. نتایج regression/Git فقط پس از اجرای واقعی در گزارش پایان ثبت می‌شوند.
+
+## P3-S — نیاز زیرساخت در S1، ۲۰۲۶-۱۰-۱۷
+
+درخواست اجرای spike از `3cfe196dc0de1bbb0c36653834fde544f1d1ed4e` آغاز شد؛ وضعیت فعلی **P3_S_INFRA_REQUIRED** است، نه gate امنیتی شکست‌خورده. [گزارش و فهرست دقیق provisioning](../messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) شواهد read-only را دارد: Docker CLI27.4.0 بدون Linux daemon، WSL بدون distro/kernel آماده و نبود Linux lab مجازِ معرفی/احرازشده با IP/DNS/TLS/TURN/firewall و دو client. مالک هم نبود محیط آماده را صریحاً تأیید کرد. S2–S23 اجرا نشده‌اند؛ PS00=PENDING_ENVIRONMENT و PS01–PS10=NOT_RUN. S0 و final restore/build/full tests هر دو موفق بودند:1595 passed در هر دور، صفر failed/skipped/warning/error؛ هیچ تست تازهٔ رسانه یا deployment از آن نتیجه نمی‌شود.
+
+موارد لازم برای ادامه: host غیرProduction با Docker قابل‌دسترسی، دسترسی مجاز، endpoint عمومی و TLS، طرح محدود پورت‌ها، authenticated TURN UDP+TCP/TLS، دو client synthetic و شرایط fault شبکه، authority/callback آزمایشی و secret/evidence custody. صرف نصب CLI یا رفع WSL این gate کامل را پاس نمی‌کند. version/image/digest هنوز انتخاب/مستقر نشده‌اند؛ هیچ پورت/سرور/firewall تغییر نکرد و ابزار/SDK/Call endpoint/migration محصول ساخته نشد. policy و شواهد P3-0 حفظ شدند؛ AI dirty workspace، MeliPayamak و frontend خارج تغییرند.
+
+مجوز محصول همچنان APPROVED_FOR_IMPLEMENTATION است ولی `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و Production media approval=NOT_GRANTED؛ P3-A/B/D/E پیش از PASS واقعی S آغاز نشوند. `P1_PUSH_RUNTIME_PENDING` و PENDING_SCALE_INFRA بدون تغییرند. گام بعد فقط تأمین زیرساخت و تکرار S1 است؛ window واقعی، FAIL امنیتی یا fallback اجراشده از مستندات vendor استنتاج نمی‌شود.

@@ -93,3 +93,9 @@ Stories پس از call foundation با FileAsset/Privacy/Contacts/Block/Safety �
 ماتریس تماس protected، Parent/Child معتبر و محدودیت Teacher/Minor از policy جدید خوانده شوند؛ خاموشی کلی R05 و D04 قدیمی دیگر مرجع نیستند. history امن در Messenger و technical metadata30days/configurable هدف آینده‌اند؛ این ثبت permission enum، SystemEvent، جدول یا تنظیم محصول ایجاد نمی‌کند. Recording/transcription/STT archive همچنان deferred/ممنوع در v1 است.
 
 اگر REAL spike نتواند کنترل ادامهٔ تماس نامجاز پس از rejoin را رضایت‌بخش اثبات کند، `LIVEKIT_REJOIN_SECURITY_GATE_FAILED` و توقف media production approval؛ fallback نیز gate معادل می‌خواهد. در نبود محیط/شاهد، نتیجه pending یا inconclusive است و S پاس نمی‌شود. full A/B/D/E پیش از PASS S شروع نشوند؛ پایان plan به‌تنهایی اجازهٔ bypass gate نیست. `P1_PUSH_RUNTIME_PENDING` باقی است و reliability background از این ترتیب نتیجه نمی‌شود.
+
+## اجرای درخواستی P3-S — توقف زیرساخت در S1، ۲۰۲۶-۱۰-۱۷
+
+در شروع `3cfe196dc0de1bbb0c36653834fde544f1d1ed4e`، worktree تمیز و با origin/main برابر بود. [گزارش preflight و فهرست تأمین](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) نتیجهٔ جاری را ثبت می‌کند: Docker CLI موجود ولی Linux Engine در دسترس نیست؛ WSL distro ثبت‌شده ندارد و kernel مفقود است؛ Linux lab مجاز/دسترسی/IP/DNS/TLS/firewall و دو media client آماده معرفی/احراز نشده‌اند. S1 طبق prompt با **P3_S_INFRA_REQUIRED** متوقف است؛ S2 version pin و S3–S23 رسانه اجرا نشده‌اند. هیچ harness/deployment/API/migration محصول ایجاد نشد.
+
+گام بعد تأمین اقلام بخش۳ گزارش و تکرار S1 است، نه P3-A یا fallback implementation. ریسک مستنداتی self-hosted token پابرجاست ولی window واقعی تأیید نشده؛ نتیجهٔ NOT_RUN را PASS یا LIVEKIT_REJOIN_SECURITY_GATE_FAILED ننامید. ترتیب مصوب و تمام تاریخچهٔ بالا حفظ‌اند؛ نتیجهٔ واقعی regression و Git در گزارش پس از اتمام ثبت می‌شود.

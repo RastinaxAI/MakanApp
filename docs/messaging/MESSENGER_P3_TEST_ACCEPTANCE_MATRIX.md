@@ -109,3 +109,9 @@ TestServer و LocalDB برای HTTP/Hub، policy، SQL concurrency و idempotenc
 | P05/Q03/O04 | P1_PUSH_RUNTIME_PENDING باقی؛ background reliable با device واقعی؛ Video8/Voice16 فقط pilot؛ Live viewer عدد تجاری ندارد و تا load پذیرش feature-gated است |
 
 caseهای PS00–PS10 در [plan S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) روش/شاهد/exit gate مشخص دارند؛ این نام‌ها تست C# موجود نیستند. S با synthetic actor و SFU واقعی فقط media-security را ثابت می‌کند، نه GAP-05 end-to-end یا lifecycle SQL آینده. `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` باقی‌اند؛ failure اثبات‌شدهٔ امنیتی در اجرای آینده با `LIVEKIT_REJOIN_SECURITY_GATE_FAILED` گزارش شود. نبود محیط یا شاهد INCONCLUSIVE/PENDING است، نه PASS و نه failure اجراشدهٔ ساختگی.
+
+## اجرای P3-S / توقف S1 — ۲۰۲۶-۱۰-۱۷
+
+[گزارش واقعی preflight](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) همهٔ PS00–PS10 را با همان شناسه‌ها ثبت می‌کند: PS00=PENDING_ENVIRONMENT؛ PS01–PS10=NOT_RUN. Docker Linux daemon/WSL آماده نیستند و lab عمومیِ مجاز، DNS/TLS/TURN، firewall و دو client معرفی/احراز نشده‌اند؛ نتیجهٔ دستور توقف S1 **P3_S_INFRA_REQUIRED** است. هیچ rejoin/removal/permission/token/refresh/TURN/network runtime آزمایش نشده؛ token reuse و immediate revocation همچنان NOT_TESTED/NOT_PROVEN هستند، نه security FAIL یا PASS. هیچ gate تاریخی بالا با تست Backend بسته نمی‌شود.
+
+S0 و final restore/build/full tests تازه هر دو موفق بودند: **558 Unit + 1023 Integration + 14 Architecture = 1595 passed** در هر دور، failed/skipped=0 و build صفر warning/error؛ TRX در `.artifacts/media-spike/p3-s-preflight/baseline` و `/final`، Integration به‌ترتیب حدود11:22 و6:08. بررسی docs/متن تاریخی و regression از REAL media test جدا هستند؛ تست تازهٔ رسانه اضافه نشده است. در نبود زیرساخت، ابزار و public Call feature ساخته نمی‌شوند؛ PSها در ادامه rename/حذف نشوند و P3-A پیش از PASS واقعی S آغاز نشود.
