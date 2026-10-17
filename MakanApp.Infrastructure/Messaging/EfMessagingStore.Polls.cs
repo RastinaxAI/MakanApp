@@ -69,7 +69,7 @@ public sealed partial class EfMessagingStore : IConversationPollStore
         await using var transaction = await BeginManagementTransactionAsync(ct);
         var resource = await LoadVisiblePollAsync(userId, conversationId, messageId, context, ct);
         var now = await EnsureAdvancedSessionAsync(userId, sessionId, context, ct);
-        await EnsurePollInteractionAsync(resource.Conversation, resource.Actor, userId, context, now, ct);
+        await EnsureInteractiveMessageInteractionAsync(resource.Conversation, resource.Actor, userId, context, now, ct);
         try { numbers = resource.Poll.ValidateSelection(numbers); } catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.PollInvalid, "انتخاب معتبر نیست.", ex); }
         var vote = await dbContext.ConversationPollVotes.SingleOrDefaultAsync(v => v.PollId == messageId && v.UserId == userId, ct);
         var selections = await dbContext.ConversationPollSelections.Where(s => s.PollId == messageId && s.UserId == userId).OrderBy(s => s.OptionNumber).ToArrayAsync(ct);
@@ -106,7 +106,7 @@ public sealed partial class EfMessagingStore : IConversationPollStore
         await using var transaction = await BeginManagementTransactionAsync(ct);
         var resource = await LoadVisiblePollAsync(userId, conversationId, messageId, context, ct);
         var now = await EnsureAdvancedSessionAsync(userId, sessionId, context, ct);
-        await EnsurePollInteractionAsync(resource.Conversation, resource.Actor, userId, context, now, ct);
+        await EnsureInteractiveMessageInteractionAsync(resource.Conversation, resource.Actor, userId, context, now, ct);
         if (resource.Poll.CreatorUserId == userId)
             await EnsureCanSendAdvancedAsync(resource.Conversation, resource.Actor, userId, context, MessageKind.Text, now, ct);
         else if (!resource.Actor.CanManage(ConversationAdminPermission.DeleteMessages)) throw PermissionRequired();
@@ -145,7 +145,7 @@ public sealed partial class EfMessagingStore : IConversationPollStore
         await EnsureTopicOpenAsync(conversation, topicId, ct);
     }
 
-    private async Task EnsurePollInteractionAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
+    private async Task EnsureInteractiveMessageInteractionAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
     {
         await EnsureActorCanMessageAsync(userId, now, ct);
         if (conversation.Status != ConversationStatus.Active) throw new MessagingException(MessagingErrorCodes.ConversationArchived, "گفتگوی بایگانی‌شده تعامل تازه نمی‌پذیرد.");

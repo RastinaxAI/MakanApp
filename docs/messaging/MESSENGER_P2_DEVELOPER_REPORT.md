@@ -314,3 +314,100 @@ Validation نهایی واقعی: تست SQL اصلاح‌شده۲ passed؛ rest
 Git واقعی فاز هفتم: `9e35bb3ba53ee93cfa555a024792ce50fcef6c86`، پیام `feat(messaging): add polls quizzes and p2 acceptance`،۵۳ فایل فقط P2، branch=`messenger/p0`، remote=`origin`، upstream=`origin/main`؛ commit/push/fetch و HEAD==origin/main موفق و worktree تمیز بود. تمام هفت commit فازها push و remote-verified هستند؛ تغییر بعد از این SHA فقط ثبت همین شواهد مستندات است. نتیجهٔ code/product برابر `MESSENGER_P2_CODE_COMPLETE`، نه تأیید Production/دریافت Push/scale-out است. SHA آخرین commit مستندات و تطبیق نهایی remote در گزارش تحویل اعلام می‌شود.
 
 برای مطالعهٔ کل P2: Handoff → EphemeralService و state/dispatcher → PresentationService/Store → AdvancedManagementService و Invite/JoinRequest → TopicService → ScheduledMessageService/Processor و dispatch → Search/Safety/ContactCards → PollService/Store → configuration/migration هر بخش → تست‌های نگاشت‌شدهٔ T01–T50. این ترتیب فرق state گذرا، دادهٔ presentation و intent پایدار را روشن می‌کند. مرحلهٔ بعد فقط با درخواست مستقل، محیط Web Push/FCM واقعی یا قرارداد Checklist است؛ AI/RAG، frontend و P3/P4 بخشی از این تحویل نیستند.
+
+## مرحلهٔ مستقل بستن Checklist v1 — ۲۰۲۶-۱۰-۱۷
+
+این گزارش ادامهٔ تاریخی بالا را جایگزین نمی‌کند؛ قرارداد جدید مالک فقط تصمیم باز Checklist را بسته است. شروع `0cefab535f01fd7e3e47569bcfe18d999b223bca`، worktree مستقل Messenger و بدون تغییر workspace اصلی AI است. شواهد تست/Git نهایی در افزودهٔ Validation انتهای همین بخش ثبت می‌شوند.
+
+### ۱. خلاصهٔ مرحله
+
+قبلاً MessageKind/DTO/schema/API برای Checklist نداشتیم؛ Poll/Quiz و Saved موجود بودند و نباید به مدل task/نمره تبدیل می‌شدند. اکنون Checklist پیام‌رسان با تعریف مشترک، state شخصی یا مشترک، تیک/برداشتن تیک، ویرایش نسخه‌دار تعریف و همگرایی چنددستگاهی داریم. Completed محاسبه می‌شود؛ Grade، Exam یا AssignmentSubmission تولید نمی‌شود. ۵۰ Integration تازه، ۱۴ Unit و regression موجود، رفتار را اثبات می‌کنند؛ موفقیت هدفمند جای گیت کامل/Git نیست.
+
+### ۲. معماری و وابستگی
+
+Domain فقط معنا و invariantهای mode/item/state/version/UTC را دارد و هیچ EF/HTTP/SignalR نمی‌شناسد. Application قرارداد، normalization، context، orchestrate گیت Safety و port اختصاصی را مالک است. Infrastructure از Domain/Application به EF/SQL، transaction، مجوز جاری، audit و Outbox موجود می‌رسد. Api فقط transport/Authorize/rate/body/خطای HTTP را نگه می‌دارد. وابستگی `Api → Application ← Infrastructure → Domain` است؛ Domain و Application به لایهٔ بیرونی وابسته نشده‌اند. .NET9، EF9 SQL Server، Onion و Modular Monolith تغییر نکرده‌اند.
+
+### ۳. فایل‌های مهم ایجادشده
+
+| مسیر نسبی | مسئولیت، دلیل و نکتهٔ یادگیری |
+|---|---|
+| `MakanApp.Api/Controllers/ConversationChecklistsController.cs` | چهار action باریک؛ shape Checklist با Vote/Close یکی نیست، پس Controller مستقل بهتر از آلوده‌کردن Poll است |
+| `MakanApp.Application/Messaging/ConversationChecklistContracts.cs` | DTOهای صریح و IConversationChecklistStore؛ هیچ UserId برای تعیین مالک state ورودی نیست |
+| `MakanApp.Application/Messaging/ConversationChecklistService.cs` | context، hash ساخت، نسخه، preflight و Safety بیرون transaction؛ قواعد HTTP/EF وارد use case نمی‌شوند |
+| `MakanApp.Domain/Messaging/ConversationChecklistDefinition.cs` | mode، snapshot immutable و itemId/text معتبر؛ کپی collection مانع تغییر ورودی بعد از validation است |
+| `MakanApp.Domain/Messaging/ConversationChecklist.cs` | شناسهٔ Message، mode ثابت، hash اولیه و نسخهٔ تعریف؛ تیک خصوصی نسخهٔ عمومی را عوض نمی‌کند |
+| `MakanApp.Domain/Messaging/ConversationChecklistItem.cs` | متن ثابت، ترتیب، revision ایجاد/بازنشستگی و state مشترک؛ حذف منطقی با حذف سابقه فرق دارد |
+| `MakanApp.Domain/Messaging/ConversationChecklistPersonalState.cs` | state هر User/Item و idempotency تغییر؛ ردیف false پس از uncheck هم برای تشخیص stale لازم است |
+| `MakanApp.Infrastructure/Messaging/EfMessagingStore.Checklists.cs` | ساخت/read/tick، قفل و projection فقط caller؛ یک predicate UserId در query از redact دیرهنگام بهتر است |
+| `MakanApp.Infrastructure/Messaging/EfMessagingStore.ChecklistDefinitions.cs` | اختیار تعریف، version، retirement، audit و final reauthorization؛ preflight مجوز دائمی نیست |
+| `MakanApp.Infrastructure/Persistence/Configurations/Messaging/ConversationChecklistConfiguration.cs` | ریشه و FK Message/Creator و mode key؛ اتصال دیتابیس با invariant Domain مکمل‌اند |
+| همان پوشه، `ConversationChecklistItemConfiguration.cs` | FK mode، CHECK shared/private، text/order/retirement و rowversion |
+| همان پوشه، `ConversationChecklistPersonalStateConfiguration.cs` | PK سه‌جزئی و FK mode/User؛ duplicate و state شخصی روی Collaborative در خود SQL رد می‌شوند |
+| `MakanApp.Infrastructure/Persistence/Migrations/20261017033804_AddConversationChecklists.cs` و Designer | schema قابل بازتولید و Down محافظت‌شده؛ تولید migration پایان review نیست |
+| `tests/MakanApp.UnitTests/Messaging/ConversationChecklistTests.cs` و هشت `MessagingP2Checklist*Tests.cs` در IntegrationTests | invariant خالص در برابر SQL/API/realtime واقعی؛ نگاشت دقیق C01–C35 در ممیزی است |
+
+### ۴. فایل‌های مهم تغییرکرده
+
+`MessageKind/Message/MessagingChangeType` نوع Checklist، event15 و مسیر اختصاصی عنوان را می‌شناسند؛ generic Edit تعریف را دور نمی‌زند. `MessageCommandValidation` ارسال و زمان‌بندی Checklist بدون تعریف را رد می‌کند. `MessagingAbstractions/MessagingService` یک purpose و شناسهٔ داخلی Safety برای metadata دارند؛ hash درخواست قدیمی بدون این فیلد عوض نشده است. `EfMessagingStore.Topics/ChildSafety/Advanced.Mutations/Polls/PollForward/Sync` همان مجوز تعامل، safety، snapshot و فیلتر visibility را compose می‌کنند؛ موتور ایمنی یا dispatcher موازی ساخته نشد. `DependencyInjection` service/port را وصل و `MakanDbContext`/سه configuration و CHECKهای Kind/ChangeEvent مدل را کامل می‌کنند. snapshot EF و شش سند درخواستی همگام شده‌اند؛ MeliPayamak/AI/Payment/appsettings دست‌نخورده‌اند.
+
+### ۵. جریان واقعی اجرا
+
+`HTTP → ConversationChecklistsController.Create → ConversationChecklistService.CreateAsync → ConversationChecklistDefinition.Create → IConversationChecklistStore.PrepareChecklistCreationAsync → MessageContentSafetyGate.ApplyAsync → IContentSafetyProvider خارج transaction → EfMessagingStore.CreateChecklistAsync → Conversation lock → EnsureAdvancedSessionAsync/current Send/relationship/Safety → Message.Create + ConversationChecklist.Create + Item.Create → SQL/MessageRevision/Notification/Outbox → commit → MessageReceiptResult → HTTP200`.
+
+Tick از `SetItemAsync → SetChecklistItemAsync` به current authorization، definition CAS و state CAS می‌رود؛ `SetChecked/SetSharedChecked` تنها تغییر مؤثر را ثبت می‌کنند. سپس ChecklistChanged در SQL/Outbox ثبت، commit و resolver فعلی Delta/SignalR، sessionهای مجاز را انتخاب می‌کند. Update از `PrepareChecklistDefinitionAsync → Safety → UpdateChecklistDefinitionAsync` می‌گذرد؛ actor/Conversation پس از provider Reload می‌شوند تا tracking قبلی EF اختیار revokeشده را زنده نکند.
+
+### ۶. دیتابیس و مرز transaction
+
+سه جدول در schema messaging: `ConversationChecklists` با PK Id همان MessageId، FK مرکب Message/Conversation، Creator FK، Mode و CreationHash(binary32)، DefinitionRevision، UTC و rowversion؛ `ConversationChecklistItems` با PK(ChecklistId,Id)، متن nvarchar150، Position، CreatedAtRevision/RetiredAtRevision، IsChecked/StateRevision مشترک و rowversion؛ `ConversationChecklistPersonalStates` با PK(ChecklistId,ItemId,UserId)، IsChecked/Revision و rowversion. alternate mode key/FK مانع اتصال state Personal به آیتم Collaborative است؛ CHECK mode=Personal، shared=false/revision1 را روی آیتم شخصی enforce می‌کند. روابط Restrict و index فعال/ترتیب و User/Checklist برای query محدودند. unique اضافهٔ بی‌دلیل برای position ساخته نشد؛ تعویض ترتیب زیر قفل و Domain validation انجام می‌شود.
+
+`Completed`، checkedBy/time عمومی و مدل state آموزشی نداریم. تعریف، آیتم‌ها و پیام/Revision/Outbox در یک transaction کوتاه‌اند؛ provider داخل آن نیست. تغییر item/تعریف با ترتیب Conversation lock و isolation Serializable هم‌سو با remove/delete/Forward موجود است. retired row و state باقی می‌مانند؛ قرار نیست Down بعد از مصرف قابلیت تاریخچه را پاک کند.
+
+### ۷. Endpointها و قرارداد
+
+چهار route کامل، Request/Response و نمونهٔ JSON در Handoff آمده‌اند: POST `/api/v1/conversations/{conversationId}/checklists`، GET/PUT `/api/v1/conversations/{conversationId}/messages/{messageId}/checklist` و PUT زیرمسیر `/items/{itemId}`. body=64KiB و rate policy موجود، Bearer/session جاری و مجوز resource لازم است. create receipt پیام می‌دهد؛ دیگر actionها ConversationChecklistResult شامل title/mode/items/isCompleted و version/messageVersion هستند؛ stateVersion برای هر آیتم مستقل است. Personal بدون تغییر قبلی false/null، Collaborative false/نسخهٔ واقعی است. حدود فنی عنوان۳۰۰، آیتم۱..۲۰، متن۱۵۰ و Guid/control-character/version معتبرند. unknown enum امن رد می‌شود؛ enumهای runtime/OpenAPI string هستند، status مصنوعی اضافه نشده است.
+
+خطاهای Checklist 400 Invalid، 404 NotFound/concealment، 409 StructureImmutable/idempotency و 412 Definition/StateConflict هستند؛ revoked=401، permission=403/404، Safety=422/503 و EditWindow کد قبلی را حفظ کرده‌اند. client باید پس از conflict GET کند و تصمیم جدید بگیرد؛ نسخهٔ Message را به‌جای version تعریف/state نفرستد.
+
+### ۸. مفاهیم فنیِ واقعاً استفاده‌شده
+
+SQL rowversion برای optimistic concurrency، transaction Serializable و UPDLOCK/HOLDLOCK موجود برای serialize عملیات Conversation، PK/FK/check برای integrity، canonical creation hash برای retry، immutable definition input، soft retirement برای حفظ معنی، projection user-owned برای حریم خصوصی، Outbox و Delta برای recovery و DI/CancellationToken برای I/O استفاده شدند. CQRS/MediatR، generic repository، event sourcing و engine تازه‌ای ساخته نشده‌اند.
+
+### ۹. تصمیم و trade-off
+
+استفاده از Poll table کنار گذاشته شد چون رأی/انتخاب/کلید Quiz با state task مالک‌محور هم‌معنا نیست. سه جدول کمینه، shared state روی Item و state شخصی جدا انتخاب شدند؛ duplication Completed و actor/time غیرضروری حذف شد. به‌جای بازنویسی متن آیتم یا تغییر mode بعد از انتشار، meaning ثابت و replace با Guid تازه انتخاب شد؛ حفاظت حتی بدون تیک هم برقرار است تا پاسخ edit، فعالیت شخصی دیگران را لو ندهد. هزینه: UI برای تغییر معنا/Mode باید آیتم/Checklist تازه بسازد، و هر Conversation serialize می‌شود؛ این تحویل ادعای benchmark یا scale-out نیست.
+
+Creator با Send جاری فقط در پنجرهٔ یک‌ساعتهٔ قبلی، Owner/Admin غیرسازنده با DeleteMessages و حق جاری Send، مجازند. برای کانال PublishMessages هم لازم است. این محافظه‌کاری permission موازی نمی‌سازد و مجوز مدرسه/Guardian را گسترش نمی‌دهد. Subscriber کانال حق interaction دارد، نه publication. افزودن/retire/reorder عنوان نسخه‌دار است؛ state فعال قدیمی به ID تازه منتقل نمی‌شود.
+
+### ۱۰. تست‌ها و دلیل نوع آن‌ها
+
+۱۴ Unit خالص Domain، بدون DB/host، normalization/enum/ID/bounds، ownership، idempotency و retirement/UTC/generic edit را بررسی می‌کنند. ۵۰ Integration با SQL Server واقعی روی fixture ایزوله، موارد C01–C35، دو device/دو member، conflict/race، unique/FK/CHECK، fresh/upgrade/Down-safe/Down-refused، HTTP و JSON/OpenAPI، Hub و resolver واقعی، provider واقعی Internal، revocation پس از Safety و rollback/retry Outbox را اثبات می‌کنند. count تمام جدول‌های schema assessment پیش و پس از completion تغییری نمی‌کند. هیچ تستی با EF InMemory، skip یا count ساختگی جایگزین نشده است. ۱۴ Architecture موجود همچنان Onion را enforce می‌کنند؛ افزودن معماری بی‌معنای تازه صرفاً برای تعداد انجام نشده است.
+
+### ۱۱. Validation
+
+baseline دوباره اجرا شد: **544/973/14، مجموع1531 passed**، صفر failed/skipped/warning/error. ۱۴ Unit جدید و سپس همهٔ **۲۲۲ Integration P2** با ۵۰ Checklist و۱۷۲ قبلی موفق شدند. یک شکست واقعی در تست تازه (فرض حذف دوباره بعد از Ban) اصلاح و جداگانه Ban/Remove تست شدند. warning EF1002 query تست با parameterized SqlQuery و QUOTENAME سمت SQL اصلاح شد، نه خاموش‌کردن analyzer. restore/build پس از تکمیل موفق و zero warning/error؛ EF بدون تغییر معوق. اجرای کامل و نهایی/نتیجه Git در افزودهٔ پایانی همین بخش باید از خروجی واقعی ثبت شود؛ pending به معنی PASS نیست.
+
+دور کامل اول واقعاً موفق شد: **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، صفر failed/skipped و Integration۱۴:۳۲؛ final build نیز صفر warning/error است. خطای موقت CS4034 در تست هم با await کردن نتیجه پیش از ساخت expression query رفع شد؛ lambda ترجمه‌شونده به SQL محل await نیست. Source در طول این دور ثابت ماند؛ جزئیات runner نهایی پس از پایان واقعی افزوده می‌شوند.
+
+### ۱۲. Git
+
+فهرست تغییرات فقط Checklist و completion سند P2 است؛ allowlist صریح برای stage و review cached لازم است. پیام این مرحله `feat(messaging): add collaborative and personal checklists`، branch=`messenger/p0`، remote=`origin` و upstream=`origin/main` است. نتیجهٔ commit/push/fetch، SHA واقعی و HEAD/remote در گزارش تحویل پس از انجام عملیات اعلام می‌شوند؛ self-hash در فایل جعل یا amend نمی‌شود. هیچ push نامرتبط، force یا تغییر workspace dirty AI مجاز نیست.
+
+### ۱۳. محدودیت‌های فعلی
+
+Mode و متن شناسهٔ منتشرشده immutable، title/definition Creator مشمول پنجرهٔ موجود، Search فقط روی عنوان، و نبود API عمومی تاریخچهٔ retiredها تعمدی‌اند. state Personal برای creator/Admin عمومی نیست. نبود checkedBy/time مشترک کمینه‌سازی داده است، نه fake field. Checklist زمان‌بندی‌شده، ضمیمهٔ مستقل، Grade و سیستم وظایف آموزشی ساخته نشده‌اند. هیچ تنظیم الزامی یا migration سرور اعمال نشده است. Push واقعی و distributed presence هنوز pending محیط‌اند؛ frontend/AI/RAG/SMS/Payment/P3/P4 خارج scope‌اند.
+
+### ۱۴. نکات آموزشی
+
+۱) نسخهٔ تعریف را با نسخهٔ state یک User یکی نکنید؛ حتی شمار تغییر نسخه می‌تواند حریم خصوصی را تضعیف کند. ۲) false بعد از uncheck، با «هیچ ردیفی وجود ندارد» هم‌معنا نیست. ۳) ID پایدار یعنی معنی پایدار؛ replace با ID تازه از انتقال اشتباه تاریخچه جلوگیری می‌کند. ۴) current authorization بعد از provider باید از SQL تازه باشد، نه identity map قدیمی. ۵) audience hint مجوز نیست؛ Delta همان event باید برای session فعلی مجاز باشد. ۶) idempotent no-op نباید Outbox/Notification تازه بسازد. ۷) migration rollback موفق بدون داده، مجوز حذف history پس از مصرف قابلیت نیست.
+
+### ۱۵. مسیر مطالعهٔ کد
+
+`ConversationChecklistsController → ConversationChecklistService/Contracts → ConversationChecklistDefinition/Checklist/Item/PersonalState → IConversationChecklistStore → EfMessagingStore.Checklists/ChecklistDefinitions → MessageContentSafetyGate و shared interaction/Forward/Sync → سه EF Configuration → AddConversationChecklists → ConversationChecklistTests → Checklist Endpoints/Authorization/Concurrency/Realtime/Safety/History/Contract/Migration tests → نگاشت C01–C35 در ممیزی`.
+
+### ۱۶. مرحلهٔ بعد
+
+فقط پس از closure واقعی Git، مرحلهٔ بعد پیشنهادی فراهم‌کردن محیط دریافت واقعی Web Push/FCM یا تصمیم زیرساخت scale-out در درخواست مستقل است. هیچ‌یک با تست محلی Checklist ثابت نمی‌شوند؛ AI/RAG، Payment و frontend را نباید با این مرحله مخلوط کرد. وضعیت‌های `MESSENGER_P1_REAL_PUSH=PENDING_ENVIRONMENT`، `P1_PUSH_RUNTIME_PENDING` و `MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA` تغییر نکرده‌اند.
+
+### ثبت نهایی Validation و تحویل
+
+دور final نیز پس از build نهایی صفر warning/error با **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، صفر failed/skipped تمام شد؛ Integration۵:۴۱ و TRX در `.artifacts/messenger-p2-checklist/final`. دور کامل اول۱۴:۳۲ با همین counts بود؛ Source/Test بین دو دور تغییر نکرد. restore/build/final build موفق، EF بدون تغییر معوق، ۲۲۲ Integration هدفمند P2 و ماتریس C01–C35 موفق‌اند. Checklist=PASS در محدودهٔ کد/تست محلی است؛ هیچ Production، Push واقعی یا scale-out ادعا نمی‌شود. ۵۰ مسیر تنها شامل قابلیت و شش سندند؛ SHA نهایی، commit/push و HEAD==origin/main بعد از اجرای واقعی Git در گزارش تحویل اعلام می‌شوند. این ثبت، موفقیت Gitِ انجام‌نشده یا self-hash اختراع نمی‌کند.

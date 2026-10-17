@@ -8,5 +8,6 @@ public enum MessageKind
     Voice = 4,
     File = 5,
     ContactCard = 6,
-    Poll = 7
+    Poll = 7,
+    Checklist = 8
 }

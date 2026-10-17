@@ -222,4 +222,59 @@ Forward طبق تأیید نهایی مالک، یک **Message متنی مستق
 
 Migration `20261016211112_AddConversationPollsAndQuiz` پنج جدول Polls/Options/Votes/Selections/QuizAnswers، rowversion والد/رأی، PK/FK مرکب، unique هر User/Poll، CHECK وضعیت/گزینه/نوع و index صفحه دارد؛ پاسخ صحیح از projection عمومی جداست. ایجاد همهٔ گزینه‌ها/کلید و پیام/Revision/Notification/Outbox یک transaction است. SQL FK/unique اتصال و عدم duplicate را enforce می‌کند؛ تک‌گزینه‌ای بودن و immutable بودن پاسخ از قواعد Domain و transaction برنامه می‌آیند، نه ادعای CHECK چندسطره. Down پیش از حذف ساختار، در حضور رأی‌گیری/رویداد/شواهد جدید ایمن توقف می‌کند. فقط دیتابیس‌های تست ایزوله migrate می‌شوند؛ هیچ migration روی سرور یا دیتابیس عادی اجرا نشده است.
 
-Checklist طبق استثنای مصوب prompt، `P2_CHECKLIST_REQUIRES_PRODUCT_DECISION` است؛ contract مالک/item/actor/completion/version هنوز Freeze نشده و placeholder ساخته نشده است. دریافت واقعی Web Push/FCM همچنان `P1_PUSH_RUNTIME_PENDING` و presence چندگرهی `PENDING_SCALE_INFRA` است.
+## Checklist v1 — قرارداد مصوب ۲۰۲۶-۱۰-۱۷
+
+تصمیم مستقل مالک، تعویق قبلی `P2_CHECKLIST_REQUIRES_PRODUCT_DECISION` را رفع کرده است. نوع واقعی `MessageKind.Checklist=8` مستقل از Poll/Quiz و Assessment است. عنوان در Message و تعریف/آیتم/وضعیت در سه جدول Messenger قرار دارند؛ پاسخ history/search فقط عنوان را دارد و جزئیات از GET مجاز خوانده می‌شود. گیت نهایی تست/Git در ممیزی ثبت می‌شود؛ وجود این قرارداد ادعای deploy نیست.
+
+### Endpoint و DTO
+
+همهٔ مسیرها Bearer و session جاری، بدنهٔ حداکثر ۶۴ KiB و rate policy موجود `messaging-send` دارند. prefix زیر `/api/v1/conversations/{conversationId}` است.
+
+| Method / مسیر | Request | Response |
+|---|---|---|
+| POST `/checklists` | `CreateConversationChecklistCommand`: clientMessageId، title، mode، items، topicId اختیاری، isSilent پیش‌فرض false | `MessageReceiptResult` موجود؛ نسخهٔ Message، نه نسخهٔ تعریف |
+| GET `/messages/{messageId}/checklist` | بدون body | `ConversationChecklistResult` |
+| PUT همان مسیر | `UpdateConversationChecklistCommand`: title، mode، کل items فعال به ترتیب، expectedVersion تعریف | `ConversationChecklistResult` |
+| PUT `/messages/{messageId}/checklist/items/{itemId}` | `SetChecklistItemCommand`: isChecked صریح، expectedDefinitionVersion، expectedStateVersion اختیاری | `ConversationChecklistResult` |
+
+`ChecklistItemInput={itemId,text}`؛ Guid پایدار، غیرخالی و یکتای هر آیتم را کلاینت تعیین می‌کند و retry ساخت همان شناسه‌ها را می‌فرستد. mode باید صریح `Personal` یا `Collaborative` باشد؛ null، string یا عدد ناشناخته رد می‌شود. enum در runtime و OpenAPI رشته‌ای است؛ lifecycle/status enum مصنوعی ندارد. سقف‌های فنی این v1: عنوان ۳۰۰ نویسه، ۱ تا ۲۰ آیتم، متن هر آیتم ۱۵۰، بدون control character و با Trim. این‌ها safeguard بدنه/SQL هستند، نه محدودیت تجاری PRD. متن تکراری با شناسهٔ متفاوت مجاز است.
+
+```json
+{
+  "clientMessageId": "a5d978e2-8652-4321-a9ce-ab36eb600001",
+  "title": "وسایل فردا",
+  "mode": "Personal",
+  "items": [
+    { "itemId": "a5d978e2-8652-4321-a9ce-ab36eb600002", "text": "دفتر" },
+    { "itemId": "a5d978e2-8652-4321-a9ce-ab36eb600003", "text": "کتاب" }
+  ],
+  "topicId": null,
+  "isSilent": false
+}
+```
+
+Result شامل `messageId/conversationId/title/mode/items/isCompleted/version/messageVersion` است. هر آیتم فقط `itemId/text/isChecked/stateVersion` دارد. **version** فقط نسخهٔ تعریف است؛ **messageVersion** برای actionهای عادی پیام مانند حذف؛ **stateVersion** نسخهٔ تیک همان آیتم است. این سه را جای هم نفرستید. هیچ `UserId` ورودی برای انتخاب مالک state وجود ندارد؛ extra UserId نیز authority ایجاد نمی‌کند.
+
+### مالکیت، هم‌زمانی و retry
+
+Personal: هر User وضعیت مستقل دارد؛ GET سازنده/Admin نیز فقط وضعیت خودش را می‌خواند. پیش از اولین تغییر، false و stateVersion=null است. ردیف پس از uncheck نگه داشته می‌شود تا null قدیمی نتواند تغییر دستگاه دیگر را overwrite کند. دو session همان User state یکسان را بازیابی می‌کنند؛ B وضعیت یا شمار تیک A را نمی‌بیند. Collaborative: هر آیتم یک وضعیت مشترک دارد و stateVersion از ابتدا موجود است؛ identity/time فرد تیک‌زن در DTO قرار ندارد. `isCompleted` از همهٔ آیتم‌های فعال و برای Personal فقط همان بیننده مشتق می‌شود؛ ستون Completed، Grade/Score/Exam/Submission ساخته نشده است.
+
+Mutation ابتدا session، history، عضویت/role، محدودیت حساب/عضو، Block در Direct و رابطهٔ جاری GAP-05 را بررسی می‌کند؛ سپس expectedDefinitionVersion باید جاری باشد. equivalent check/uncheck با تعریف جاری، بدون رویداد یا تغییر نسخهٔ تازه برمی‌گردد، حتی اگر expectedStateVersion قدیمی باشد؛ این retry اثر جدید نیست. تغییر واقعی، نسخهٔ جاری state را می‌خواهد: Personal اولیه null، پس از آن مقدار پاسخ؛ Collaborative مقدار آیتم. درخواست staleِ متضاد 412 است. پس از تغییر تعریف نیز GET و تصمیم کاربر لازم است، نه overwrite خودکار.
+
+تمام read/mutate/definition در transaction کوتاه Serializable و با قفل Conversation انجام می‌شوند. SQL PK/FK/rowversion مرجع‌اند؛ قفل حافظه‌ای وجود ندارد. رقابت بازنشستگی/تیک: اگر تیک اول commit شود state قدیمی با آیتم بازنشسته حفظ می‌شود؛ اگر تعریف اول commit شود، mutation با نسخهٔ تعریف قبلی 412 می‌گیرد. هیچ state به آیتم جایگزین نسبت داده نمی‌شود.
+
+### مجوز و ویرایش تعریف
+
+ساخت و ویرایش تعریف، مجوز جاری **ارسال متن** می‌خواهند؛ subscriber کانال می‌تواند تیک بزند، ولی بدون PublishMessages نمی‌تواند بسازد/تعریف را ویرایش کند. تعریف را Creator در پنجرهٔ یک‌ساعتهٔ مصوب Message یا Owner/Admin جاریِ گروه/کانال UserManaged با `DeleteMessages` می‌تواند تغییر دهد؛ برای کانال PublishMessages نیز لازم است. مالکِ فرستنده استثنای دورزدن پنجره ندارد. School Manager یا Guardian اختیار تازه‌ای نمی‌گیرند. تغییر تعریف Audit امن دارد؛ مجوز و نشست بعد از Content Safety دوباره از SQL خوانده می‌شوند، نه tracking قدیمی EF.
+
+برای حفظ معنای تاریخی و جلوگیری از افشای تعامل شخصی از طریق نتیجهٔ ویرایش، **Mode از زمان انتشار ثابت است و متن هر ItemId نیز همیشه ثابت است**؛ این محافظ فقط بعد از مشاهدهٔ تیک دیگران فعال نمی‌شود. تغییر معنا: آیتم قدیمی را از لیست فعال حذف و آیتم تازه با Guid تازه اضافه کنید. افزودن، ترتیب جدید و عنوان جدید با expectedVersion مجازند؛ حذف، soft-retire است، نه حذف state. شناسهٔ بازنشسته دوباره فعال نمی‌شود. MessageRevision عنوان قبلی و ردیف آیتم متن/نسخهٔ ایجاد و بازنشستگی را نگه می‌دارند؛ API عادی تاریخچهٔ خصوصی یا آیتم بازنشسته را نمایش نمی‌دهد. برای Mode متفاوت Checklist مستقل بسازید. generic Edit پیام Checklist عمداً 409 می‌گیرد.
+
+### Realtime، ارتباط با پیام و خطاها
+
+`ChecklistChanged=15` روی event موجود `ConversationChanged` فقط messageId/resourceVersion/cursor و metadata کمینهٔ sync دارد؛ خود وضعیت/متن/actor تیک در payload نیست. تغییر Personal با `AudienceUserId` خود User و actor=null ثبت می‌شود؛ resolver حتی با audience hint عمومی نیز از Delta خصوصی عبور می‌کند. تغییر Collaborative و تعریف به اعضای فعلیِ مجاز می‌رسد. revoked session، FromJoin، Clear و DeleteForMe/Everyone در replay هم معتبرند. بعد از hint یا reconnect، Delta و GET را مصرف کنید؛ mutation تازهٔ Hub ساخته نشده است. تیک Notification، unread یا Message تازه نمی‌سازد؛ create همان Notification و Silent موجود را reuse می‌کند.
+
+Forward فقط یک Message **Text مستقل** شامل عنوان و متن شماره‌دار آیتم‌های فعال است؛ بدون checked state، actor/time، ItemId، version، history یا Checklist زنده. ارجاع امن مبدأ همان قواعد visibility پیام موجود را دارد. DeleteForMe شخصی، DeleteForEveryone با مجوز/نسخه/پنجرهٔ فعلی، و Reply unavailable بدون متن آیتم/state هستند. Search فعلی روی **عنوان** و kind=Checklist است؛ index جدید متن آیتم ساخته نشده. گزارش abuse فقط snapshot تعریف را به پروندهٔ موجود می‌دهد؛ MFA، audit و case scope reviewer تغییر نکرده‌اند. همهٔ عنوان/متن آیتم در create/update برای audience محافظت‌شده از Internal Makan Safety موجود می‌گذرند؛ provider بیرون transaction، بازبینی نهایی داخل آن، شکست unavailable برابر fail-closed است.
+
+خطاها: 400=`CONVERSATION_CHECKLIST_INVALID`؛ 404=`CONVERSATION_CHECKLIST_NOT_FOUND` یا concealment گفتگو؛ 412=`CONVERSATION_CHECKLIST_CONFLICT` برای تعریف و `CONVERSATION_CHECKLIST_STATE_CONFLICT` برای state؛ 409=`CONVERSATION_CHECKLIST_STRUCTURE_IMMUTABLE` برای Mode/معنای شناسه/بازفعال‌سازی یا idempotency conflict ساخت. مجوز 403/404، revoked=401، پنجرهٔ ویرایش همان کد قبلی، Safety blocked/review=422 و unavailable=503 است. کاربر loading/error/empty خود را از پاسخ واقعی بسازد؛ ساخت Checklist خالی یا completed ساختگی مجاز نیست.
+
+Migration `20261017033804_AddConversationChecklists` مستقل است؛ startup migration یا appsettings/provider تازه ندارد. ارتقای نسخهٔ سرور باید طبق workflow migration موجود و پس از backup/approval انجام شود؛ این تحویل فقط LocalDB ایزوله را آزمایش کرده است. دریافت واقعی Web Push/FCM همچنان `P1_PUSH_RUNTIME_PENDING` و presence چندگرهی `PENDING_SCALE_INFRA` است.

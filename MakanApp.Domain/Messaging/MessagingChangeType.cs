@@ -15,5 +15,6 @@ public enum MessagingChangeType
     ConversationUserStateChanged = 11,
     PeerReadStateChanged = 12,
     TopicChanged = 13,
-    PollChanged = 14
+    PollChanged = 14,
+    ChecklistChanged = 15
 }

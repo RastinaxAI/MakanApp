@@ -69,11 +69,12 @@ public sealed partial class EfMessagingStore
                               change.ChangeType != MessagingChangeType.MessageDeleted &&
                               change.ChangeType != MessagingChangeType.ReactionChanged &&
                               change.ChangeType != MessagingChangeType.PollChanged &&
+                              change.ChangeType != MessagingChangeType.ChecklistChanged &&
                               change.ChangeType != MessagingChangeType.PinChanged ||
                               dbContext.Messages.Any(message =>
                                   message.Id == change.ResourceId &&
                                   message.Sequence >= visibleFromSequence &&
-                                  (change.ChangeType != MessagingChangeType.PollChanged || message.DeletedAtUtc == null) &&
+                                  (change.ChangeType != MessagingChangeType.PollChanged && change.ChangeType != MessagingChangeType.ChecklistChanged || message.DeletedAtUtc == null) &&
                                   !dbContext.MessageUserVisibilities.Any(hidden =>
                                       hidden.MessageId == message.Id && hidden.UserId == userId))))
             .OrderBy(change => change.ChangeSequence)

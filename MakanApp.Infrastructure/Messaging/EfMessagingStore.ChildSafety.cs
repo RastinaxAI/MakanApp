@@ -18,7 +18,7 @@ public sealed partial class EfMessagingStore
         var participant = await LoadActiveParticipantAsync(conversationId, userId, ct) ?? throw ConversationNotFound();
         await EnsureCanReadAdvancedAsync(conversation, participant, userId, access, ct);
         var message = await dbContext.Messages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == messageId && m.ConversationId == conversationId, ct) ?? throw MessageNotFound();
-        if (message.Kind == MessageKind.Poll) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "تعریف نظرسنجی منتشرشده تغییر نمی‌کند.");
+        if (message.Kind is MessageKind.Poll or MessageKind.Checklist) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "محتوای تعاملی به مسیر اختصاصی تعریف نیاز دارد.");
         if (message.SenderUserId != userId) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "فقط فرستنده می‌تواند ویرایش کند.");
         if (message.IsDeleted) throw new MessagingException(MessagingErrorCodes.MessageDeleted, "پیام حذف شده است.");
         if (!message.RowVersion.SequenceEqual(expectedVersion)) throw MessageConflict();

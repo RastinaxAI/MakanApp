@@ -188,6 +188,8 @@ public static class DependencyInjection
         services.AddScoped<IConversationTopicStore>(provider => provider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<ConversationTopicService>();
         services.AddScoped<ConversationPollService>();
+        services.AddScoped<ConversationChecklistService>();
+        services.AddScoped<IConversationChecklistStore>(sp => sp.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IConversationPollStore>(sp => sp.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IScheduledMessageStore>(provider => provider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<ScheduledMessageService>();

@@ -2726,7 +2726,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("AbuseReports", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_AbuseReports_MessageKind", "[ReportedMessageKind] IN (1, 2, 3, 4, 5, 6, 7)");
+                            t.HasCheckConstraint("CK_AbuseReports_MessageKind", "[ReportedMessageKind] IN (1, 2, 3, 4, 5, 6, 7, 8)");
 
                             t.HasCheckConstraint("CK_AbuseReports_Reason", "[Reason] IN (1, 2, 3, 4, 5, 6, 7)");
 
@@ -2931,6 +2931,144 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_Conversations_UserManagedCreation", "([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_Conversations_Visibility", "[Visibility] IN (1, 2)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<byte[]>("CreationHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<Guid>("CreatorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("DefinitionRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorUserId");
+
+                    b.HasIndex("Id", "ConversationId");
+
+                    b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("ConversationChecklists", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationChecklists_Definition", "[Mode] IN (1,2) AND [DefinitionRevision]>0 AND DATALENGTH([CreationHash])=32 AND [UpdatedAtUtc]>=[CreatedAtUtc]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklistItem", b =>
+                {
+                    b.Property<Guid>("ChecklistId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("CreatedAtRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<long?>("RetiredAtRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("StateRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("ChecklistId", "Id");
+
+                    b.HasIndex("ChecklistId", "Mode");
+
+                    b.HasIndex("ChecklistId", "RetiredAtRevision", "Position");
+
+                    b.ToTable("ConversationChecklistItems", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationChecklistItems_Definition", "LEN(LTRIM(RTRIM([Text])))>0 AND [Position] BETWEEN 1 AND 20 AND [CreatedAtRevision]>0 AND ([RetiredAtRevision] IS NULL OR [RetiredAtRevision]>[CreatedAtRevision])");
+
+                            t.HasCheckConstraint("CK_ConversationChecklistItems_State", "[StateRevision]>0 AND ([Mode]=2 OR ([Mode]=1 AND [IsChecked]=0 AND [StateRevision]=1))");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklistPersonalState", b =>
+                {
+                    b.Property<Guid>("ChecklistId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsChecked")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Revision")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("ChecklistId", "ItemId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ChecklistId", "ItemId", "Mode");
+
+                    b.HasIndex("ChecklistId", "UserId", "ItemId");
+
+                    b.ToTable("ConversationChecklistPersonalStates", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationChecklistPersonalStates_Mode", "[Mode]=1 AND [Revision]>0");
                         });
                 });
 
@@ -3776,11 +3914,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Messages_ContactCardShape", "([Kind] = 6 AND [SharedContactUserId] IS NOT NULL AND LEN(LTRIM(RTRIM([SharedContactUsername]))) > 0 AND LEN(LTRIM(RTRIM([SharedContactDisplayName]))) > 0) OR ([Kind] <> 6 AND [SharedContactUserId] IS NULL AND [SharedContactUsername] IS NULL AND [SharedContactDisplayName] IS NULL)");
 
-                            t.HasCheckConstraint("CK_Messages_Content", "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] IN (1, 7) AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))");
+                            t.HasCheckConstraint("CK_Messages_Content", "([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] IN (1, 7, 8) AND [Text] IS NOT NULL AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))");
 
                             t.HasCheckConstraint("CK_Messages_CurrentRevision", "[CurrentRevisionNumber] > 0");
 
-                            t.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6, 7)");
+                            t.HasCheckConstraint("CK_Messages_Kind", "[Kind] IN (1, 2, 3, 4, 5, 6, 7, 8)");
 
                             t.HasCheckConstraint("CK_Messages_Sequence", "[Sequence] > 0");
                         });
@@ -3997,7 +4135,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_ChangeEvents_Sequence", "[ChangeSequence] > 0");
 
-                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)");
+                            t.HasCheckConstraint("CK_ChangeEvents_Type", "[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)");
                         });
                 });
 
@@ -4325,7 +4463,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("SafetyIncidents", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5, 6, 7)");
+                            t.HasCheckConstraint("CK_SafetyIncidents_ContentKind", "[ContentKind] IN (1, 2, 3, 4, 5, 6, 7, 8)");
 
                             t.HasCheckConstraint("CK_SafetyIncidents_Decision", "[Decision] IN (2, 3)");
 
@@ -7235,6 +7373,48 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId", "AcademicClassId")
                         .HasPrincipalKey("OrganizationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklist", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.Message", null)
+                        .WithMany()
+                        .HasForeignKey("Id", "ConversationId")
+                        .HasPrincipalKey("Id", "ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklistItem", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationChecklist", null)
+                        .WithMany()
+                        .HasForeignKey("ChecklistId", "Mode")
+                        .HasPrincipalKey("Id", "Mode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationChecklistPersonalState", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationChecklistItem", null)
+                        .WithMany()
+                        .HasForeignKey("ChecklistId", "ItemId", "Mode")
+                        .HasPrincipalKey("ChecklistId", "Id", "Mode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInvitation", b =>

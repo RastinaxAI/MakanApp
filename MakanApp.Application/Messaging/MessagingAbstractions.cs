@@ -57,7 +57,7 @@ public sealed record ConversationMessagePageStoreResult(
     IReadOnlyCollection<ConversationMessageStoreRecord> Messages,
     long? NextBeforeSequence);
 
-public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1, ConversationMetadata = 2, PollMetadata = 3 }
+public enum MessageSafetyPurpose { Message = 0, TopicMetadata = 1, ConversationMetadata = 2, PollMetadata = 3, ChecklistMetadata = 4 }
 public sealed record ScheduledSendClaim(Guid ScheduledMessageId, Guid Token, byte[] PayloadHash);
 
 public sealed record SendMessageStoreCommand(
@@ -73,7 +73,8 @@ public sealed record SendMessageStoreCommand(
     Guid? TopicId = null,
     MessageSafetyPurpose SafetyPurpose = MessageSafetyPurpose.Message,
     bool IsSilent = false,
-    ScheduledSendClaim? ScheduledClaim = null);
+    ScheduledSendClaim? ScheduledClaim = null,
+    Guid? SafetyResourceId = null);
 
 public sealed record MessageSafetyPreparationStoreResult(
     Message? ExistingMessage,

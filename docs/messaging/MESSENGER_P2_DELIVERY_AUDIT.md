@@ -229,3 +229,61 @@ MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA
 شش migration این تحویل به ترتیب: `20261016163433_AddMessagingPresencePrivacy`، `20261016170915_AddMessagingPersonalOrganization`، `20261016174429_AddConversationInvitesAndRestrictions`، `20261016183900_AddConversationTopics`، `20261016190927_AddScheduledAndSilentMessages` و `20261016211112_AddConversationPollsAndQuiz`. pending model changes=NONE؛ migration خودکار startup، apply روی سرور یا دیتابیس عادی انجام نشده است. workspace تحویل همین worktree مستقل است؛ workspace اصلی دارای dirtyهای AI نه تغییر داده شد و نه وارد index/commit شد.
 
 اعتبارسنجی ثبتِ صرفاً مستندات: restore، build و final build موفق با صفر warning/error؛ دو دور هدفمند، هرکدام **۳ Integration قرارداد OpenAPI/body + ۱۴ Architecture = ۱۷ passed** و failed/skipped=0 در `final-doc-contracts` و `final-doc-contracts-repeat`. این ۱۷ مورد جای دو suite کامل۱۵۳۱تایی کد نهایی نیستند و با آن جمع زده نمی‌شوند؛ بعد از SHA کد بالا فقط همین سه فایل سند تغییر کرده‌اند. پیام ثبت نهایی `docs(messaging): finalize p2 delivery evidence` است؛ SHA و تأیید مستقیم remote پس از اجرای Git در گزارش تحویل اعلام می‌شوند.
+
+## تحویل مستقل Checklist v1 — ۲۰۲۶-۱۰-۱۷
+
+مرجع جدید، درخواست صریح «MakanApp Messenger — P2 CHECKLIST CLOSURE» است؛ تعویق T34 و تصمیم Checklist در گزارش تاریخی بالا اکنون با قرارداد APPROVED جایگزین شده‌اند. نقطهٔ شروع دقیق `0cefab535f01fd7e3e47569bcfe18d999b223bca`، branch=`messenger/p0`، upstream=`origin/main` است. fetch و برابری HEAD/remote و worktree تمیز پیش از تغییر تأیید شدند؛ workspace اصلی AI خوانده/ویرایش/stage نشده است. baseline دوباره اجرا شد، نه از گزارش قبلی کپی: restore/build موفق، صفر warning/error، **544 Unit + 973 Integration + 14 Architecture = 1531 passed**، failed/skipped=0؛ TRX در `.artifacts/messenger-p2-checklist/baseline`، Integration حدود۱۰:۰۳.
+
+سه جدول مستقل Checklist/Items/PersonalStates با mode key مرکب، PK/FK Restrict، rowversion و CHECK اضافه شدند؛ Poll، QuizKey یا Assessment جدول مشترک ندارند. تعریف با state نسخهٔ مستقل دارد؛ تیک شخصی هیچ نسخه/Notification عمومیِ Checklist را عوض نمی‌کند. hash ساخت ثابت، state شخصی User-owned، Collaborative روی آیتم، completion مشتق، soft-retire و متن ثابت ItemId معنای تاریخچه را نگه می‌دارند. Mode از انتشار ثابت است تا تبدیل مالکیت، حریم خصوصی/سابقه را بازنویسی نکند. Creator با Send جاری و پنجرهٔ موجود، Owner/Admin غیرسازنده با DeleteMessages و Send جاری، و کانال با PublishMessages تعریف را تغییر می‌دهند؛ audit و Safety موجود reuse شده‌اند.
+
+کنترلر Poll قبل از طراحی بازبینی شد؛ اضافه‌کردن ownership و structural editing به DTO/Controller رأی‌گیری تمیز نبود، بنابراین Controller/Service/port باریک مستقل و مشترک‌بودن سیاست تعامل/Safety/Forward/Delta انتخاب شد. هیچ permission موازی، provider یا تنظیم تازه نیست. خواندن دوبارهٔ actor و Conversation پس از provider، identity map قدیمی EF را مرجع authorization نمی‌گیرد؛ تست revoke permission داخل provider این مرز را اثبات می‌کند.
+
+Migration بررسی‌شده `20261017033804_AddConversationChecklists`: نصب تازه در fixture، ارتقا از `20261016211112_AddConversationPollsAndQuiz` با پیام قدیمی واقعی، Down فقط وقتی جداول/شواهد جدید خالی‌اند، ارتقای مجدد و رد Down با state واقعی (SQL51071) تست شدند. CHECK صریح Text IS NOT NULL جلوی UNKNOWN را می‌گیرد؛ FK mode مانع state شخصی روی Collaborative و PK مانع duplicate هستند. تست ارتقا DB یکتای خود را پاک می‌کند، نه DB fixture/عادی/سرور. EF pending model changes=NONE. هیچ startup migration یا apply روی سرور انجام نشد.
+
+### نگاشت پذیرش C01 تا C35
+
+نام‌ها متدهای واقعی در `tests/MakanApp.IntegrationTests/MessagingP2Checklist*.cs` هستند؛ Theoryهای Mode/age/group/channel هرکدام چند case واقعی دارند، نه تست skip یا ادعای محیط.
+
+| Gate | شاهد واقعی |
+|---|---|
+| C01–C02 | P2ChecklistCreateHasExplicitModeStableItemsAndIdempotentReceipt، Personal/Collaborative |
+| C03–C05 | P2ChecklistPersonalStateAndDerivedCompletionArePrivateAndConvergeAcrossSessions؛ P2ChecklistClientSuppliedUserIdCannotSelectOrOverwriteAnotherUsersPersonalState |
+| C06–C07 | P2ChecklistCollaborativeCheckUncheckAndCompletionUseOneSharedState |
+| C08–C09 | P2ChecklistEquivalentCheckAndUncheckHaveNoDuplicateEventOrVersion |
+| C10 | همان تست stale state؛ P2ChecklistAddingAndReorderingItemsAreVersionSafeAndPreserveOwnState برای stale definition |
+| C11 | P2ChecklistCheckVersusUncheckCannotSilentlyRestoreStaleState؛ هر دو Mode |
+| C12 | P2ChecklistRemovedAndBannedMembersCannotMutateOldIdsAndRevokedSessionIsUnauthorized؛ P2ChecklistRemovalRacingMutationAlwaysRevokesFutureWrites |
+| C13–C14 | همان تست REST؛ P2ChecklistCollaborativeRealtimeAndReplayRecheckRevocationRemovalAndVisibility |
+| C15–C16 | P2ChecklistDefinitionRequiresCurrentSendAndContentManagementPermission؛ P2ChecklistAdminPermissionRevokedDuringSafetyCannotUseTrackedPreflightAuthority |
+| C17 | P2ChecklistAddingAndReorderingItemsAreVersionSafeAndPreserveOwnState |
+| C18 | P2ChecklistVersionedReplacementRetainsHistoryWithoutReusingMeaningOrExposingPrivateActivity؛ P2ChecklistDefinitionRetirementRacingInteractionNeverOrphansOrReattributesState |
+| C19–C20 | تست‌های PersonalStateAndDerivedCompletion و CollaborativeCheckUncheckAndCompletion با دو User |
+| C21 | P2ChecklistNeverCreatesPollQuizAssessmentOrGradeArtifacts؛ count تمام جدول‌های schema assessment و Poll/Quiz قبل/بعد |
+| C22 | P2ChecklistProtectedCreationAndDefinitionSafetyInspectAllTextAndFailClosed؛ P2ChecklistRealInternalSafetyRejectsUnsafeItemInsteadOfOnlyCheckingTitle |
+| C23 | P2ChecklistProtectedRelationshipAndBlockAreReevaluatedWithoutErasingHistory؛ P2ChecklistOfficialClassUsesCurrentEnrollmentNotGuardianOrManagerPrivateAccess؛ P2ChecklistCreationRevalidatesSessionAndBlockAfterSafety |
+| C24–C26 | P2ChecklistForwardIsIndependentTextWithoutAnyStateIdentityVersionOrInteractiveRow؛ هر دو Mode و عدم row زندهٔ مقصد |
+| C27–C28 | P2ChecklistDeleteForMeIsPrivateAndDeleteForEveryoneRetainsHistoryButConcealsAllDetailsAndDelta |
+| C29–C30 | P2ChecklistUnavailableReplySearchAndGenericEditNeverLeakItemsOrPersonalState؛ P2ChecklistFromJoinAndClearHistoryHideOldDefinitionItemsAndChanges |
+| C31 | P2ChecklistPersonalRealtimeReachesSameUsersSecondDeviceButNotPeerEvenWithBroadAudienceHint |
+| C32 | P2ChecklistCollaborativeRealtimeAndReplayRecheckRevocationRemovalAndVisibility؛ P2ChecklistDefinitionEventIsSharedButNeverIncludesPersonalInteractionState |
+| C33 | تست realtime دستگاه دوم، بازیابی REST و P2ChecklistConcurrentTwoDeviceDoubleCheckHasOneSqlEffect |
+| C34 | P2ChecklistCurrentMemberCanInteractButChannelSubscriberCannotPublish؛ تعریف group/channel و suite موجود |
+| C35 | اجرای ۲۲۲ Integration تمام P2 شامل Poll/Quiz موجود؛ اجرای کامل Solution نیز gate جداست |
+
+شواهد تکمیلی: P2ChecklistSqlUniquenessAndModeKeysPreventDuplicateOrCrossModePersonalState (SQL2601/2627/547)، P2ChecklistMigrationUpgradesBaselinePreservesDataAndRefusesDestructiveRollbackAfterUse، P2ChecklistOutboxFailureRollsBackMessageDefinitionAndItemsBeforeSafeRetry، دو تست قرارداد OpenAPI/unknown value و Topic بسته. ۱۴ Unit خالص در `ConversationChecklistTests.cs` برای تعریف immutable، enum/ID/حدود ورودی، مالکیت، mode، shared/private idempotency، retirement، UTC و منع generic edit وجود دارند؛ Architecture موجود dependency flow را بررسی می‌کند.
+
+Validation هدفمند واقعی: ۱۴ Unit passed؛ دور اول API **۳۲ passed / ۱ failed** بود چون تست پس از Ban (که عضویت را پایان می‌دهد) حذف دوم را موفق فرض کرده بود؛ تست به دو حالت مستقل Ban/Remove اصلاح شد، production behavior ضعیف نشد. دور بعد **۴۹ Integration Checklist passed**؛ سپس تست spoofed UserId و شمار همهٔ جدول‌های Assessment افزوده و **تمام ۲۲۲ Integration P2 passed** (۵۰ Checklist + ۱۷۲ قبلی)، failed/skipped=0، حدود۲:۲۲. warning EF1002 در query تست با پارامتر واقعی و QUOTENAME سمت SQL رفع شد، نه suppress. build بعدی صفر warning/error است. نتایج کامل/نهایی و Git فقط پس از پایان واقعی در افزودهٔ بعدی ثبت می‌شوند.
+
+دور کامل اول Checklist واقعاً پایان یافت: restore/build موفق با صفر warning/error؛ **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، failed/skipped=0، Integration حدود۱۴:۳۲، TRX در `.artifacts/messenger-p2-checklist/full`. تمام regressionهای P0/P1/GAP-05/P2 و code مستقل دیگر در همین Solution اجرا شدند، نه فقط filter. Source از شروع همین دور عوض نشده؛ فقط شواهد سند تکمیل شدند. final build نیز zero warning/error موفق است؛ runner نهایی باید پیش از commit/push پایان یابد. گزارش نهایی تحویل SHA واقعی و نتیجهٔ remote را اعلام می‌کند.
+
+### نتیجهٔ نهایی پذیرش Checklist
+
+runner نهایی نیز واقعاً پایان یافت: **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، failed=0، skipped=0؛ Integration حدود۵:۴۱، شواهد `.artifacts/messenger-p2-checklist/final`. دو دور کامل روی Source/Test ثابت انجام شدند؛ فقط متن شواهد سند در طول آن تکمیل شد. restore، build و final build همگی موفق با صفر warning/error، و EF pending model changes=NONE است. ۶۴ تست معنادار تازه (۱۴ Unit،۵۰ Integration)، regression تمام P0/P1/P2، و ماتریس C01–C35 موفق‌اند؛ هدفمند ۲۲۲تایی با suite کامل جمع زده نمی‌شود. Checklist v1 اکنون **APPROVED و implemented/tested** است؛ T34 در تحویل قبلی deferred بود و در این تحویل مستقل رفع شد.
+
+```text
+MESSENGER_P2_CHECKLIST=PASS
+MESSENGER_P1_REAL_PUSH=PENDING_ENVIRONMENT
+MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA
+```
+
+حدود تحویل: ۵۰ مسیر فقط همین قابلیت/شش سند؛ بدون appsettings، تغییر sln/csproj/package، AI/RAG، ملی‌پیامک، Commerce، frontend یا سرور. branch=`messenger/p0` و upstream=`origin/main`؛ پیام commit `feat(messaging): add collaborative and personal checklists` است. index باید با allowlist صریح همین ۵۰ مسیر برابر باشد. hash commit و HEAD/remote پس از commit/push/fetch از خروجی واقعی Git در گزارش نهایی اعلام می‌شوند؛ این سند self-hash یا موفقیت Gitِ اجرا‌نشده جعل نمی‌کند. وضعیت نهایی MESSENGER_P2_COMPLETE فقط پس از تأیید remote در گزارش تحویل معتبر است؛ operational pendingها همچنان باقی‌اند.

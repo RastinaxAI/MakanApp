@@ -13,7 +13,7 @@ internal static class MessageCommandValidation
             throw new MessagingException(MessagingErrorCodes.MessageClientIdRequired, "شناسه پایدار پیام کلاینت الزامی است.");
         }
 
-        if (!Enum.IsDefined(command.Kind) || command.Kind == MessageKind.Poll)
+        if (!Enum.IsDefined(command.Kind) || command.Kind is MessageKind.Poll or MessageKind.Checklist)
         {
             throw new MessagingException(MessagingErrorCodes.MessageKindInvalid, "نوع پیام معتبر نیست.");
         }

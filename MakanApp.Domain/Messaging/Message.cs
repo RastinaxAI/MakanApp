@@ -161,7 +161,18 @@ public sealed class Message
 
     public int EditText(string? text, int maximumTextLength, DateTime editedAtUtc)
     {
-        if (Kind == MessageKind.Poll) throw new InvalidOperationException("تعریف منتشرشدهٔ نظرسنجی قابل بازنویسی نیست.");
+        if (Kind is MessageKind.Poll or MessageKind.Checklist) throw new InvalidOperationException("محتوای تعاملی به مسیر اختصاصی تعریف نیاز دارد.");
+        return EditContent(text, maximumTextLength, editedAtUtc);
+    }
+
+    public int EditChecklistTitle(string title, DateTime editedAtUtc)
+    {
+        if (Kind != MessageKind.Checklist) throw new InvalidOperationException("پیام چک‌لیست نیست.");
+        return EditContent(title, ConversationChecklistDefinition.MaximumTitleLength, editedAtUtc);
+    }
+
+    private int EditContent(string? text, int maximumTextLength, DateTime editedAtUtc)
+    {
         if (IsDeleted)
         {
             throw new InvalidOperationException("پیام حذف‌شده قابل ویرایش نیست.");
@@ -170,7 +181,7 @@ public sealed class Message
         ValidateContent(
             Kind,
             text,
-            Kind == MessageKind.Text ? 0 : 1,
+            Kind is MessageKind.Text or MessageKind.Checklist ? 0 : 1,
             maximumTextLength);
         ValidateUtc(editedAtUtc, nameof(editedAtUtc));
         if (editedAtUtc < SentAtUtc)
@@ -238,7 +249,7 @@ public sealed class Message
             throw new ArgumentOutOfRangeException(nameof(attachmentCount));
         }
 
-        if (kind is MessageKind.Text or MessageKind.Poll)
+        if (kind is MessageKind.Text or MessageKind.Poll or MessageKind.Checklist)
         {
             if (string.IsNullOrWhiteSpace(text))
             {

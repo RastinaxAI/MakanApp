@@ -30,7 +30,7 @@ public sealed partial class EfMessagingStore
             accessContext,
             cancellationToken);
         nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
-        if (message.Kind == MessageKind.Poll) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "تعریف نظرسنجی منتشرشده تغییر نمی‌کند.");
+        if (message.Kind is MessageKind.Poll or MessageKind.Checklist) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "محتوای تعاملی به مسیر اختصاصی تعریف نیاز دارد.");
         EnsureMutableConversation(conversation);
         await EnsureCanSendAdvancedAsync(conversation, participant, userId, accessContext, message.Kind, nowUtc, cancellationToken);
         await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, cancellationToken);

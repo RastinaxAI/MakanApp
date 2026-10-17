@@ -676,6 +676,11 @@ public sealed class MessagingService(
                 writer.Write((int)command.SafetyPurpose);
             }
             if (command.IsSilent) writer.Write("messaging-p2-silent-v1");
+            if (command.SafetyResourceId.HasValue)
+            {
+                writer.Write("messaging-p2-checklist-resource-v1");
+                writer.Write(command.SafetyResourceId.Value.ToByteArray());
+            }
         }
 
         return SHA256.HashData(stream.ToArray());

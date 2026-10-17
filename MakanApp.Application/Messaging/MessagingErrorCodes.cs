@@ -61,6 +61,11 @@ public static class MessagingErrorCodes
     public const string ScheduledReserved = "SCHEDULED_MESSAGE_ID_RESERVED";
     public const string ScheduledClaimLost = "SCHEDULED_MESSAGE_CLAIM_LOST";
     public const string PollInvalid = "CONVERSATION_POLL_INVALID";
+    public const string ChecklistInvalid = "CONVERSATION_CHECKLIST_INVALID";
+    public const string ChecklistNotFound = "CONVERSATION_CHECKLIST_NOT_FOUND";
+    public const string ChecklistConflict = "CONVERSATION_CHECKLIST_CONFLICT";
+    public const string ChecklistStateConflict = "CONVERSATION_CHECKLIST_STATE_CONFLICT";
+    public const string ChecklistStructureImmutable = "CONVERSATION_CHECKLIST_STRUCTURE_IMMUTABLE";
     public const string PollNotFound = "CONVERSATION_POLL_NOT_FOUND";
     public const string PollClosed = "CONVERSATION_POLL_CLOSED";
     public const string PollConflict = "CONVERSATION_POLL_CONFLICT";
