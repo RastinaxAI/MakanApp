@@ -124,3 +124,25 @@ Validation نهایی کد P2 انجام شد: دو suite کامل اصلاح‌
 `MESSENGER_P1_REAL_PUSH=PENDING_ENVIRONMENT`، `P1_PUSH_RUNTIME_PENDING` و `MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA` بدون تغییرند. Recording، AV/CDR، scale-out/backplane/rate-limit، دریافت واقعی Web Push/FCM، P3/P4/Calls، frontend، AI/RAG و پرداخت از این کار نتیجهٔ تازه نمی‌گیرند. سرور یا تنظیم MeliPayamak و appsettings تغییر نکرده است؛ محدودیت پنجرهٔ ویرایش، عنوان-only Search و نبود API عمومی تاریخچهٔ آیتم‌های retired در Handoff صریح‌اند.
 
 پذیرش نهایی محلی Checklist تکمیل شد: دو suite کامل **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، صفر failed/skipped/warning/error، EF بدون تغییر معوق. بنابراین `MESSENGER_P2_CHECKLIST=PASS` و این تصمیم محصول دیگر gap باز نیست. وضعیت Commit/Push/remote واقعی و حکم نهایی تحویل در گزارش پایانی ثبت می‌شود؛ کد بدون آن گیت Git تحویل نهایی محسوب نمی‌شود. pending محیط Push و زیرساخت Presence دقیقاً همان مقادیر بالا باقی‌اند.
+
+## P3-0 — ممیزی معماری Voice / Video / Group Call / Screen Share / Live
+
+تاریخ `2026-10-17`؛ مبنای committed/remote برابر `5e1da895c96065380e12d04341e483d4e78539c4` و worktree مستقل Messenger در شروع تمیز بود. P0/P2 کد کامل دارند؛ P1 همچنان `MESSENGER_P1_CODE_COMPLETE / P1_PUSH_RUNTIME_PENDING` است. baseline همین ممیزی دوباره اجرا شد: restore/build موفق، صفر warning/error، **558 Unit + 1023 Integration + 14 Architecture = 1595 passed**، failed/skipped=0. این شواهد تماس واقعی یا استقرار را اثبات نمی‌کنند.
+
+چهار خروجی documentation-only: [معماری رسانه و شواهد کد](../messaging/MESSENGER_P3_MEDIA_ARCHITECTURE.md)، [تصمیم‌های لازم مالک](../messaging/MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md)، [نقشهٔ اجرا و dependency](../messaging/MESSENGER_P3_IMPLEMENTATION_ROADMAP.md)، [ماتریس آزمون آینده](../messaging/MESSENGER_P3_TEST_ACCEPTANCE_MATRIX.md). هیچ Domain/Controller/API/Migration/SDK/TURN config/deployment تازه‌ای ایجاد نشد. تاریخی P0/P1/P2 بازنویسی نشد؛ MeliPayamak، AI/RAG، Payment، appsettings و frontend خارج تغییرند.
+
+| موضوع | وضعیت جاری و مرز |
+|---|---|
+| control plane قابل reuse | Identity/UserSession، current authorization، session-targeted SignalR، SQL/outbox، Block/Privacy/Contacts/Group permissions و GAP-05؛ هیچ‌کدام call runtime نیستند |
+| P2P/SFU/platform | پیشنهاد R01–R03: SFU حتی 1:1، primary LiveKit self-hosted و fallback Janus+Coturn؛ **AWAITING_OWNER_APPROVAL** و بدون نصب/خرید |
+| revoke رسانه / R17 | gate فنی مهم: self-hosted LiveKit حذف participant را معادل باطل‌شدن token نمی‌داند؛ TTL/refresh و rejoin نیازمند admission غیرقابل bypass و eviction/reconciliation اثبات‌شده؛ primary تا آن آزمون GO نیست |
+| call privacy / سن / consent | R04–R07/R15 هنوز تصمیم خاص live می‌خواهند؛ Unknown مانند Minor، stranger deny و منع guardian/manager monitoring مصوب قبلی حفظ‌اند؛ Safety متن مجوز audio/video زنده نمی‌دهد |
+| group / Live / share | R08–R10/R14 برای permission، cap فنی، Host/Viewer، first valid accept و share source؛ همه فقط طرح آینده، نه API یا permission موجود |
+| history / timeout / reconnect / abuse / DND | R11–R13/R16/R18/R19 پیشنهاد pilot قابل‌تصویب‌اند؛ اعداد، retention، release scope و production SLO خودکار freeze نشده‌اند |
+| استقلال Call/Message | R20 پیشنهاد شروع 1:1 با target مجاز و Conversation اختیاری است؛ مجوز تماس نه Send/Read پیام می‌سازد و نه Contact/Direct خودکار؛ Group/Live conversation-bound می‌مانند |
+| recording / E2EE | DEFERRED؛ بدون ضبط، transcript، observer پنهان یا ادعای E2EE |
+| operational gates | HTTPS/WSS/CA، Linux media و authenticated TURN/SFU، public IP/UDP/TCP/TLS، bandwidth، monitor و دستگاه/شبکهٔ واقعی برای مرحلهٔ اجرایی لازم‌اند؛ اکنون provision نشده‌اند |
+| P1 و چندگرهی | `P1_PUSH_RUNTIME_PENDING` و `MESSENGER_P2_DISTRIBUTED_PRESENCE=PENDING_SCALE_INFRA` بدون تغییر؛ APNs VoIP/CallKit incoming-call با FCM معمولی یکی نیست |
+| Stories / Bots / Mini Apps | track مستقل بعد از call foundation؛ طبق PRD v3 target گستردهٔ P3 هستند؛ دسته‌بندی P4 تاریخی بالا جای این target را نمی‌گیرد؛ Business/Premium/Monetization جدا و هیچ implementation تازه‌ای ندارند |
+
+وضعیت خروجی audit پس از validation و commit/push/remote verification: `P3_MEDIA_ARCHITECTURE_READY_FOR_OWNER_DECISIONS`؛ **نه تماس پیاده‌شده و نه مجوز اجرای خودکار P3-A..F**. جدول سه‌دستهٔ APPROVED_FROM_EXISTING_POLICY / RECOMMENDED_FOR_OWNER_APPROVAL / DEFERRED در سند تصمیم‌ها مرجع نهایی این ممیزی است؛ تصمیم باز فقط زیرمرحلهٔ وابسته را متوقف می‌کند. نتیجهٔ واقعی Git و validation نهایی در گزارش پایان اعلام می‌شود، نه self-hash اختراعی در فایل همان commit.
