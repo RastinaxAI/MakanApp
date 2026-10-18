@@ -31,7 +31,7 @@ public sealed class WorkerRecoverySqlCollection
 }
 
 [Collection(WorkerRecoverySqlCollection.Name)]
-public sealed class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixture sql) : IClassFixture<WorkerRecoverySqlFixture>, IAsyncLifetime
+public sealed partial class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixture sql) : IClassFixture<WorkerRecoverySqlFixture>, IAsyncLifetime
 {
     private readonly RecoveryClock _clock = new();
 

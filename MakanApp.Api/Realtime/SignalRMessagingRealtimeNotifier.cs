@@ -8,27 +8,27 @@ public sealed class SignalRMessagingRealtimeNotifier(
     IMessagingRealtimeAudienceResolver audienceResolver,
     TimeProvider timeProvider) : IMessagingRealtimeNotifier
 {
+    public const int MaximumGroupBatchSize = 128;
+
     public async Task NotifyConversationChangedAsync(
         MessagingRealtimeNotification notification,
         Guid? audienceUserId,
         CancellationToken cancellationToken)
     {
-        var sessionIds = await audienceResolver.GetActiveSessionIdsAsync(
+        var sessions = audienceResolver.GetActiveSessionIdsAsync(
             notification,
             audienceUserId,
             timeProvider.GetUtcNow().UtcDateTime,
             cancellationToken);
-        if (sessionIds.Count == 0)
+        var groups = new List<string>(MaximumGroupBatchSize);
+        await foreach (var sessionId in sessions.WithCancellation(cancellationToken))
         {
-            return;
+            groups.Add(MessagingRealtimeGroups.Session(sessionId));
+            if (groups.Count < MaximumGroupBatchSize) continue;
+            await hubContext.Clients.Groups(groups.ToArray()).ConversationChanged(notification).WaitAsync(cancellationToken);
+            groups.Clear();
         }
-
-        var groups = sessionIds
-            .Select(MessagingRealtimeGroups.Session)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-        await hubContext.Clients.Groups(groups)
-            .ConversationChanged(notification)
-            .WaitAsync(cancellationToken);
+        if (groups.Count > 0)
+            await hubContext.Clients.Groups(groups.ToArray()).ConversationChanged(notification).WaitAsync(cancellationToken);
     }
 }

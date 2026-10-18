@@ -86,6 +86,7 @@ Meter و ActivitySource با نام `MakanApp.Workers` مستقل از vendor ه
 | `makan.worker.batches` | تعداد batch، `worker` از فهرست ثابت |
 | `makan.worker.items` | تعداد مورد claim/پردازش‌شدهٔ گزارش‌شده توسط worker؛ اثبات تحویل خارجی نیست |
 | `makan.worker.failures` | شکست با `worker` و `stage` محدود |
+| `makan.worker.outcomes` | transition تأییدشده با `worker` و `outcome` محدود؛ claim با completion یکی نیست |
 | `makan.worker.duration` | مدت batch به `ms` |
 | `makan.file_cleanup.results` | PH-6؛ Examined/Deleted/AlreadyMissing/Skipped/Failed/Other با label محدود outcome؛ حذف SQL row نیست |
 | `makan.queue.items` | تعداد در snapshot با `queue` و `state` محدود |
@@ -99,6 +100,15 @@ publisher با `Observability:OperationalMetrics:SnapshotIntervalSeconds` (پی�
 و بودجهٔ ده‌ثانیه‌ای snapshot می‌گیرد. failure مقدار موفق قبلی را با سن افزاینده و available صفر نگه می‌دارد؛
 پیش از اولین موفقیت، صف خالی و سلامت ساختگی منتشر نمی‌شود.
 این snapshot می‌تواند برای چند ثانیه از SQL عقب باشد؛ SQL و endpoint محافظت‌شده مرجع جاری‌اند.
+
+در ممیزی مجدد PH-4، outcome فقط یکی از `Claimed`، `Completed`، `RetryScheduled`، `Failed`،
+`LeaseRecovered`، `Deferred`، `Suppressed`، `LeaseLost` یا `Other` است؛ count غیرمثبت ثبت نمی‌شود.
+transition پایدار فقط پس از acknowledgement موفق commit شمرده می‌شود. `LeaseLost` نتیجهٔ guard جاری است،
+نه شکست تجاری تازه؛ recovery تعداد leaseهای منقضیِ واقعاً دوباره claim‌شده است، نه هر poll صف.
+گم‌شدن acknowledgement می‌تواند باعث کم‌شماری شود؛ metric جای ledger SQL و deduplication نیست.
+`Completed` در Notification به معنی پذیرش provider است، نه دریافت دستگاه. هیچ job/message/user ID
+یا کد خطای آزاد به این labelها اضافه نشده است. failed terminal/repair و خطای schema با کد ثابت و
+سطح Error ثبت می‌شوند؛ payload و exception خام در این signalها وجود ندارند.
 
 وجود instrument، به معنی نصب collector یا دریافت alert نیست:
 

@@ -21,7 +21,7 @@ public sealed partial class MessagingEndpointsTests
         var resolver = audienceScope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>();
         var now = factory.Clock.GetUtcNow().UtcDateTime;
         var notification = await ReadP0ConversationNotificationAsync(setup.FirstClient, setup.ConversationId);
-        var before = await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, now, default);
+        var before = await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, now, default).ToTestArrayAsync();
         var sessionId = Assert.Single(before);
         await using (var mutationScope = factory.Services.CreateAsyncScope())
         {
@@ -36,8 +36,8 @@ public sealed partial class MessagingEndpointsTests
             }
             await db.SaveChangesAsync();
         }
-        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, now, default));
-        Assert.NotEmpty(await resolver.GetActiveSessionIdsAsync(notification, setup.First.UserId, now, default));
+        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, now, default).ToTestArrayAsync());
+        Assert.NotEmpty(await resolver.GetActiveSessionIdsAsync(notification, setup.First.UserId, now, default).ToTestArrayAsync());
         Assert.Equal(HttpStatusCode.Unauthorized, (await setup.SecondClient.GetAsync($"/api/v1/conversations/{setup.ConversationId}/messages")).StatusCode);
     }
 
@@ -60,7 +60,7 @@ public sealed partial class MessagingEndpointsTests
         var resolver = scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>();
         var now = factory.Clock.GetUtcNow().UtcDateTime;
         var notification = await ReadP0ConversationNotificationAsync(ownerClient, conversation.ConversationId);
-        Assert.Single(await resolver.GetActiveSessionIdsAsync(notification, member.UserId, now, default));
+        Assert.Single(await resolver.GetActiveSessionIdsAsync(notification, member.UserId, now, default).ToTestArrayAsync());
         if (suspendOrganization)
         {
             await using var mutationScope = factory.Services.CreateAsyncScope();
@@ -69,7 +69,7 @@ public sealed partial class MessagingEndpointsTests
             await db.SaveChangesAsync();
         }
         else await factory.EndRoleAssignmentAsync(teacher.RoleAssignmentId);
-        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, member.UserId, now, default));
+        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, member.UserId, now, default).ToTestArrayAsync());
         Assert.Equal(HttpStatusCode.Forbidden, (await memberClient.GetAsync($"/api/v1/conversations/{conversation.ConversationId}/messages")).StatusCode);
     }
 }

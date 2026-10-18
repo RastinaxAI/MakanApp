@@ -66,22 +66,41 @@ public sealed partial class EfNotificationPreferenceStore(MakanDbContext dbConte
                             registration.RevokedAtUtc == null,
             cancellationToken);
 
-    public async Task<IReadOnlyCollection<Guid>> GetActivePushDeviceIdsAsync(
+    public const int PushDeviceBatchSize = 128;
+
+    public async IAsyncEnumerable<IReadOnlyList<Guid>> GetActivePushDeviceIdBatchesAsync(
         Guid userId,
         DateTime nowUtc,
-        CancellationToken cancellationToken) =>
-        await (
-            from registration in dbContext.PushDeviceRegistrations.AsNoTracking()
-            join session in dbContext.UserSessions.AsNoTracking()
-                on new { Id = registration.UserSessionId, registration.UserId }
-                equals new { session.Id, session.UserId }
-            where registration.UserId == userId &&
-                  registration.RevokedAtUtc == null &&
-                  session.RevokedAtUtc == null &&
-                  session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
-                  dbContext.Users.Any(user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active)
-            select registration.Id)
-            .ToArrayAsync(cancellationToken);
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        Guid? afterId = null;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var query = (
+                from registration in dbContext.PushDeviceRegistrations.AsNoTracking()
+                join session in dbContext.UserSessions.AsNoTracking()
+                    on new { Id = registration.UserSessionId, registration.UserId }
+                    equals new { session.Id, session.UserId }
+                where registration.UserId == userId &&
+                      registration.RevokedAtUtc == null &&
+                      session.RevokedAtUtc == null &&
+                      session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
+                      dbContext.Users.Any(user => user.Id == userId && user.AccountStatus == UserAccountStatus.Active)
+                select registration.Id);
+            if (afterId.HasValue)
+            {
+                var cursor = afterId.Value;
+                query = query.Where(id => id.CompareTo(cursor) > 0);
+            }
+            var page = await query.OrderBy(id => id).Take(PushDeviceBatchSize).ToArrayAsync(cancellationToken);
+            if (page.Length == 0) yield break;
+            afterId = page[^1];
+            // reader پیش از yield بسته است؛ ذخیرهٔ تلاش‌ها با همین DbContext هم‌زمان اجرا نمی‌شود.
+            yield return page;
+            if (page.Length < PushDeviceBatchSize) yield break;
+        }
+    }
 
     public Task<Guid?> GetVerifiedMobileCredentialIdAsync(
         Guid userId,
@@ -95,6 +114,18 @@ public sealed partial class EfNotificationPreferenceStore(MakanDbContext dbConte
 
     public void AddRange(IEnumerable<NotificationDeliveryAttempt> attempts) =>
         dbContext.NotificationDeliveryAttempts.AddRange(attempts);
+
+    public async Task AddBatchAsync(IReadOnlyCollection<NotificationDeliveryAttempt> attempts, CancellationToken cancellationToken)
+    {
+        if (dbContext.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("ذخیرهٔ batch اعلان به transaction موجود Outbox نیاز دارد.");
+        if (attempts.Count > PushDeviceBatchSize)
+            throw new ArgumentOutOfRangeException(nameof(attempts));
+        dbContext.NotificationDeliveryAttempts.AddRange(attempts);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        // فقط entityهای همین batch جدا می‌شوند؛ notification/Outbox تا commit نهایی تحت مالکیت caller هستند.
+        foreach (var attempt in attempts) dbContext.Entry(attempt).State = EntityState.Detached;
+    }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {

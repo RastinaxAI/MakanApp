@@ -9,7 +9,7 @@ public sealed record ScheduledMessageResult(Guid Id, Guid ConversationId, Guid C
     DateTime ScheduledAtUtc, DateTime CreatedAtUtc, DateTime? CompletedAtUtc, Guid? DispatchedMessageId, string? LastFailureCode,
     ScheduledMessageContent Content, string Version, bool AlreadyExisted = false);
 public sealed record ScheduledMessagePageResult(IReadOnlyCollection<ScheduledMessageResult> Items, bool HasMore);
-public sealed record ScheduledMessageClaim(Guid Id, Guid Token);
+public sealed record ScheduledMessageClaim(Guid Id, Guid Token, bool IsTerminal = false);
 public sealed record ScheduledMessageWork(Guid Id, Guid ConversationId, Guid UserId, ScheduledMessageAuthority Authority, SendMessageStoreCommand Command);
 public interface IScheduledMessageStore
 {

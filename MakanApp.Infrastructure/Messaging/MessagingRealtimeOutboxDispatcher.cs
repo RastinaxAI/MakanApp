@@ -41,7 +41,7 @@ public sealed class MessagingRealtimeOutboxDispatcher(
                 catch (SqlException exception) when (exception.Number == 208)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Loop");
-                    logger.LogDebug("جدول Outbox پیام‌رسانی هنوز آماده نیست.");
+                    logger.LogError("ساختار لازم برای Outbox پیام‌رسانی آماده نیست. Code={FailureCode}", "REALTIME_OUTBOX_SCHEMA_UNAVAILABLE");
                 }
                 catch (Exception)
                 {
@@ -101,6 +101,12 @@ public sealed class MessagingRealtimeOutboxProcessor(
                    OR ([ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NOT NULL))
             """, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        if (repaired > 0)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, "Failed", repaired);
+            logger.LogError("کارهای رهاشده realtime پس از سقف تلاش نهایی شدند. Count={Count}; Code={FailureCode}",
+                repaired, "REALTIME_OUTBOX_ATTEMPTS_EXHAUSTED");
+        }
         return repaired;
     }
 
@@ -121,12 +127,18 @@ public sealed class MessagingRealtimeOutboxProcessor(
             .ToArrayAsync(cancellationToken);
         var message = pending.FirstOrDefault();
         var claimedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var recovered = message?.ClaimedUntilUtc is DateTime previousLease && previousLease <= claimedAtUtc;
         message?.Claim(claimedAtUtc, claimedAtUtc.Add(ClaimLease));
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         var claim = message is null ? null : new RealtimeClaim(message.Id, message.ChangeEventId, message.AttemptCount, message.RowVersion.ToArray());
         dbContext.ChangeTracker.Clear();
+        if (claim is not null)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, "Claimed");
+            if (recovered) telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, "LeaseRecovered");
+        }
         return claim;
     }
 
@@ -156,6 +168,7 @@ public sealed class MessagingRealtimeOutboxProcessor(
             if (!await OwnedClaim(claim).AnyAsync(cancellationToken))
             {
                 telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Claim");
+                telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, "LeaseLost");
                 return true;
             }
 
@@ -176,12 +189,9 @@ public sealed class MessagingRealtimeOutboxProcessor(
                 }
             }
 
-            var dispatchedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
-            var updated = await OwnedClaim(claim).ExecuteUpdateAsync(setters => setters
-                .SetProperty(item => item.DispatchedAtUtc, dispatchedAtUtc)
-                .SetProperty(item => item.ClaimedUntilUtc, (DateTime?)null)
-                .SetProperty(item => item.NextAttemptAtUtc, (DateTime?)null), cancellationToken);
-            if (updated == 0) telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Claim");
+            var outcome = await FinalizeClaimAsync(claim, true, cancellationToken);
+            telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, outcome.ToString());
+            if (outcome == ClaimOutcome.LeaseLost) telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Claim");
             return true;
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested)
@@ -198,15 +208,11 @@ public sealed class MessagingRealtimeOutboxProcessor(
                     "REALTIME_NOTIFIER_COMPLETION_PENDING");
                 return false;
             }
-            var retrySeconds = Math.Min(30, Math.Max(2, claim.AttemptCount * 2));
-            DateTime? nextAttempt = claim.AttemptCount >= MaximumAttempts
-                ? null : timeProvider.GetUtcNow().UtcDateTime.AddSeconds(retrySeconds);
             using var completion = WorkerCompletionBudget.Create();
-            var updated = await OwnedClaim(claim).ExecuteUpdateAsync(setters => setters
-                .SetProperty(item => item.ClaimedUntilUtc, (DateTime?)null)
-                .SetProperty(item => item.NextAttemptAtUtc, nextAttempt), completion.Token);
-            if (updated == 0) return true;
-            if (claim.AttemptCount >= MaximumAttempts)
+            var outcome = await FinalizeClaimAsync(claim, false, completion.Token);
+            telemetry.RecordOutcome(WorkerTelemetry.MessagingRealtimeOutbox, outcome.ToString());
+            if (outcome == ClaimOutcome.LeaseLost) return true;
+            if (outcome == ClaimOutcome.Failed)
             {
                 logger.LogError(
                     "اعلان realtime برای ChangeEvent {ChangeEventId} پس از سقف تلاش متوقف شد. Code={FailureCode}",
@@ -224,6 +230,47 @@ public sealed class MessagingRealtimeOutboxProcessor(
         }
     }
 
+    private async Task<ClaimOutcome> FinalizeClaimAsync(RealtimeClaim claim, bool completed, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.ReadCommitted, cancellationToken);
+        var current = await dbContext.MessagingRealtimeOutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM [messaging].[RealtimeOutbox] WITH (UPDLOCK, HOLDLOCK)
+            WHERE [Id] = {claim.Id}
+            """).AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+        // ساعت پس از انتظار واقعی قفل خوانده می‌شود؛ پارامتر زمانیِ پیش از انتظار مجوز completion نیست.
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (current is null || !current.RowVersion.SequenceEqual(claim.RowVersion) ||
+            current.DispatchedAtUtc.HasValue || current.ClaimedUntilUtc is not DateTime lease || lease <= nowUtc)
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return ClaimOutcome.LeaseLost;
+        }
+
+        var owned = dbContext.MessagingRealtimeOutboxMessages.Where(item => item.Id == claim.Id &&
+            item.RowVersion.SequenceEqual(claim.RowVersion) && item.DispatchedAtUtc == null);
+        int updated;
+        if (completed)
+        {
+            updated = await owned.ExecuteUpdateAsync(setters => setters
+                .SetProperty(item => item.DispatchedAtUtc, nowUtc)
+                .SetProperty(item => item.ClaimedUntilUtc, (DateTime?)null)
+                .SetProperty(item => item.NextAttemptAtUtc, (DateTime?)null), cancellationToken);
+        }
+        else
+        {
+            DateTime? nextAttempt = current.AttemptCount >= MaximumAttempts ? null :
+                nowUtc.AddSeconds(Math.Min(30, Math.Max(2, current.AttemptCount * 2)));
+            updated = await owned.ExecuteUpdateAsync(setters => setters
+                .SetProperty(item => item.ClaimedUntilUtc, (DateTime?)null)
+                .SetProperty(item => item.NextAttemptAtUtc, nextAttempt), cancellationToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
+        if (updated != 1) return ClaimOutcome.LeaseLost;
+        return completed ? ClaimOutcome.Completed :
+            current.AttemptCount >= MaximumAttempts ? ClaimOutcome.Failed : ClaimOutcome.RetryScheduled;
+    }
+
     private IQueryable<MessagingRealtimeOutboxMessage> OwnedClaim(RealtimeClaim claim)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
@@ -237,5 +284,6 @@ public sealed class MessagingRealtimeOutboxProcessor(
         catch (Exception) { }
     }
 
+    private enum ClaimOutcome { Completed, RetryScheduled, Failed, LeaseLost }
     private sealed record RealtimeClaim(Guid Id, Guid ChangeEventId, int AttemptCount, byte[] RowVersion);
 }

@@ -4,6 +4,7 @@ using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Storage;
+using MakanApp.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
@@ -50,6 +51,7 @@ public sealed partial class EfMessagingStore
                 await SaveScheduledAsync(cancellationToken);
             }
             await transaction.CommitAsync(cancellationToken);
+            if (command.ScheduledClaim is not null) telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "Completed");
             return existing;
         }
 
@@ -92,6 +94,7 @@ public sealed partial class EfMessagingStore
             null,
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        if (scheduled is not null) telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "Completed");
         outboxWakeSignal.Signal();
         return created.Message;
     }

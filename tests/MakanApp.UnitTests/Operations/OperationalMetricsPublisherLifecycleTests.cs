@@ -84,7 +84,34 @@ public sealed class OperationalMetricsPublisherLifecycleTests
             value => value.Name == "makan.operational.snapshot.available").Value);
     }
 
-    public enum StoreBehavior { Success, Failure, BlockThenCancel, BlockThenNonCancellationFailure }
+    [Fact]
+    public async Task SamePublisherRecoversItsSnapshotWhenTheDependencyBecomesHealthy()
+    {
+        var store = new ControlledSnapshotStore(StoreBehavior.FailOnceThenSucceed);
+        await using var fixture = new PublisherFixture(store);
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        Assert.False(await fixture.Publisher.PublishOnceAsync(deadline.Token));
+        fixture.Measurements.Collect();
+        Assert.Equal(0, Assert.Single(fixture.Measurements.Values,
+            value => value.Name == "makan.operational.snapshot.available").Value);
+        Assert.Single(fixture.Measurements.Values, value => value.Name == "makan.worker.failures");
+        fixture.Measurements.Values.Clear();
+
+        Assert.True(await fixture.Publisher.PublishOnceAsync(deadline.Token));
+
+        fixture.Measurements.Collect();
+        Assert.Equal(1, Assert.Single(fixture.Measurements.Values,
+            value => value.Name == "makan.operational.snapshot.available").Value);
+        Assert.DoesNotContain(fixture.Measurements.Values, value => value.Name == "makan.worker.failures");
+        Assert.Equal(2, store.JobReads);
+        Assert.Equal(1, store.NotificationReads);
+        Assert.Equal(2, store.DisposedScopes);
+        var warning = Assert.Single(fixture.Logs.Entries);
+        Assert.Null(warning.Exception);
+        Assert.DoesNotContain(ControlledSnapshotStore.SensitiveMarker, warning.Message, StringComparison.Ordinal);
+    }
+
+    public enum StoreBehavior { Success, Failure, BlockThenCancel, BlockThenNonCancellationFailure, FailOnceThenSucceed }
 
     private static PlatformNotificationOperations Notifications() => new(0, 0, 0, 0, null, "Unavailable", "Unavailable", []);
 
@@ -174,7 +201,8 @@ public sealed class OperationalMetricsPublisherLifecycleTests
         {
             Interlocked.Increment(ref _jobReads);
             QueryEntered.TrySetResult();
-            if (behavior == StoreBehavior.Failure) throw new IOException(SensitiveMarker);
+            if (behavior == StoreBehavior.Failure || behavior == StoreBehavior.FailOnceThenSucceed && JobReads == 1)
+                throw new IOException(SensitiveMarker);
             if (behavior is StoreBehavior.BlockThenCancel or StoreBehavior.BlockThenNonCancellationFailure)
             {
                 try { await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken); }

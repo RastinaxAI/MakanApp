@@ -1,11 +1,17 @@
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Domain.Reports;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Reports.Exports;
 
-public sealed class EfReportExportJobStore(MakanDbContext dbContext, TimeProvider timeProvider) : IReportExportJobStore
+public sealed class EfReportExportJobStore(
+    MakanDbContext dbContext,
+    TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
+    ILogger<EfReportExportJobStore> logger) : IReportExportJobStore
 {
     public const int MaximumRepairBatchSize = 100;
 
@@ -25,7 +31,7 @@ public sealed class EfReportExportJobStore(MakanDbContext dbContext, TimeProvide
         CancellationToken cancellationToken)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+        var repaired = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE TOP ({MaximumRepairBatchSize}) [reports].[ReportExportJobs] WITH (UPDLOCK, READPAST, READCOMMITTEDLOCK)
             SET [Status] = {(int)ReportExportJobStatus.Failed},
                 [FailedAtUtc] = {nowUtc},
@@ -52,13 +58,18 @@ public sealed class EfReportExportJobStore(MakanDbContext dbContext, TimeProvide
         if (job is null)
         {
             await transaction.CommitAsync(cancellationToken);
+            RecordRepairedFailures(repaired);
             return null;
         }
 
+        var recoveredLease = job.Status == ReportExportJobStatus.Processing;
         var claimedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
         job.Claim(claimedAtUtc, claimedAtUtc.Add(lease));
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        RecordRepairedFailures(repaired);
+        telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "Claimed");
+        if (recoveredLease) telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "LeaseRecovered");
         return job;
     }
 
@@ -76,13 +87,36 @@ public sealed class EfReportExportJobStore(MakanDbContext dbContext, TimeProvide
         {
             await transaction.CommitAsync(cancellationToken);
             dbContext.Entry(job).State = EntityState.Detached;
+            telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "LeaseLost");
             return false;
         }
 
         dbContext.Entry(job).Property(item => item.RowVersion).OriginalValue = expectedClaimRowVersion;
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        // فقط transition دارای acknowledgement موفق شمرده می‌شود؛ خطای Commit ممکن است نتیجهٔ نامعلوم داشته باشد.
+        switch (job.Status)
+        {
+            case ReportExportJobStatus.Completed:
+                telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "Completed");
+                break;
+            case ReportExportJobStatus.Queued:
+                telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "RetryScheduled");
+                break;
+            case ReportExportJobStatus.Failed:
+                telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "Failed");
+                logger.LogError("job خروجی گزارش به شکست نهایی رسید. Code={FailureCode}", "REPORT_EXPORT_TERMINAL_FAILED");
+                break;
+        }
         return true;
+    }
+
+    private void RecordRepairedFailures(int count)
+    {
+        if (count <= 0) return;
+        telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "Failed", count);
+        logger.LogError("تلاش نهایی رهاشدهٔ خروجی گزارش terminal شد. Count={Count}; Code={FailureCode}",
+            count, "REPORT_EXPORT_EXHAUSTED_REPAIR");
     }
 }
 

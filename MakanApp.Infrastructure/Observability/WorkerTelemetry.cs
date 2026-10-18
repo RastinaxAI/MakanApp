@@ -23,6 +23,7 @@ public sealed class WorkerTelemetry : IDisposable
     private readonly Counter<long> _batches;
     private readonly Counter<long> _items;
     private readonly Counter<long> _failures;
+    private readonly Counter<long> _outcomes;
     private readonly Counter<long> _cleanupResults;
     private readonly Histogram<double> _duration;
     private Snapshot _snapshot = new(false, null, []);
@@ -34,6 +35,7 @@ public sealed class WorkerTelemetry : IDisposable
         _batches = meter.CreateCounter<long>("makan.worker.batches");
         _items = meter.CreateCounter<long>("makan.worker.items");
         _failures = meter.CreateCounter<long>("makan.worker.failures");
+        _outcomes = meter.CreateCounter<long>("makan.worker.outcomes");
         _cleanupResults = meter.CreateCounter<long>("makan.file_cleanup.results");
         _duration = meter.CreateHistogram<double>("makan.worker.duration", "ms");
         meter.CreateObservableGauge<long>("makan.queue.items", ObserveQueueItems, "{item}");
@@ -59,6 +61,15 @@ public sealed class WorkerTelemetry : IDisposable
 
     public void RecordFailure(string worker, string stage) =>
         _failures.Add(1, Tag("worker", NormalizeWorker(worker)), Tag("stage", NormalizeStage(stage)));
+
+    // فقط transition تأییدشده ثبت شود؛ claim و completion یک شمارنده نیستند.
+    public void RecordOutcome(string worker, string outcome, int count = 1)
+    {
+        if (count <= 0) return;
+        var bounded = outcome is "Claimed" or "Completed" or "RetryScheduled" or "Failed" or
+            "LeaseRecovered" or "Deferred" or "Suppressed" or "LeaseLost" ? outcome : Other;
+        _outcomes.Add(count, Tag("worker", NormalizeWorker(worker)), Tag("outcome", bounded));
+    }
 
     public void RecordCleanup(string outcome, int count)
     {

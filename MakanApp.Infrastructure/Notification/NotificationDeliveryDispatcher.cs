@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Data;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Messaging;
 using MakanApp.Domain.Identity;
@@ -42,7 +43,7 @@ public sealed class NotificationDeliveryDispatcher(
                 catch (SqlException exception) when (exception.Number == 208)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Loop");
-                    logger.LogDebug("جدول تلاش‌های ارسال اعلان هنوز آماده نیست.");
+                    logger.LogError("جدول تلاش‌های ارسال اعلان هنوز آماده نیست. Code={FailureCode}", "NOTIFICATION_DELIVERY_SCHEMA_UNAVAILABLE");
                 }
                 catch (Exception)
                 {
@@ -97,7 +98,7 @@ public sealed partial class NotificationDeliveryProcessor(
         var pending = (int)NotificationDeliveryStatus.Pending;
         var processing = (int)NotificationDeliveryStatus.Processing;
         var deferred = (int)NotificationDeliveryStatus.Deferred;
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
         var attempts = await dbContext.NotificationDeliveryAttempts
             .FromSqlInterpolated($"""
                 SELECT TOP (1) *
@@ -110,9 +111,12 @@ public sealed partial class NotificationDeliveryProcessor(
                 """)
             .ToArrayAsync(cancellationToken);
         DeliveryClaim? claim = null;
+        var recovered = false;
         if (attempts.Length != 0)
         {
             var attempt = attempts[0];
+            nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+            recovered = attempt.Status == NotificationDeliveryStatus.Processing;
             if (attempt.AttemptCount >= options.MaximumAttempts)
             {
                 attempt.FailExhaustedAbandonedClaim(nowUtc, options.MaximumAttempts);
@@ -128,6 +132,12 @@ public sealed partial class NotificationDeliveryProcessor(
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
+        if (claim is not null)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, claim.IsTerminal ? "Failed" : "Claimed");
+            if (recovered && !claim.IsTerminal) telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, "LeaseRecovered");
+            if (claim.IsTerminal) logger.LogError("تلاش رهاشدهٔ اعلان به سقف رسید. Code={FailureCode}", "NOTIFICATION_DELIVERY_ATTEMPTS_EXHAUSTED");
+        }
         return claim;
     }
 
@@ -161,18 +171,20 @@ public sealed partial class NotificationDeliveryProcessor(
                 return;
             }
             // بررسی مجوز ممکن است زمان ببرد؛ پیش از شبکه، مالکیت claim دوباره تثبیت می‌شود.
-            var claimedUntilUtc = timeProvider.GetUtcNow().UtcDateTime.Add(options.ClaimLease);
-            var owned = await dbContext.NotificationDeliveryAttempts.Where(a => a.Id == attemptId &&
-                    a.ClaimToken == claimToken && a.Status == NotificationDeliveryStatus.Processing)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.ClaimedUntilUtc, claimedUntilUtc), cancellationToken);
-            if (owned == 0) return;
+            if (!await TryRenewClaimAsync(attemptId, claimToken, cancellationToken)) return;
 
             using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutSource.CancelAfter(options.ProviderTimeout);
             registrationVersion = work.Push?.RegistrationVersion;
-            result = work.Push is not null
-                ? await pushProvider.SendAsync(work.Push, timeoutSource.Token)
-                : await smsProvider.SendAsync(work.Sms!, timeoutSource.Token);
+            var sending = work.Push is not null
+                ? pushProvider.SendAsync(work.Push, timeoutSource.Token)
+                : smsProvider.SendAsync(work.Sms!, timeoutSource.Token);
+            try { result = await sending.WaitAsync(timeoutSource.Token); }
+            catch
+            {
+                _ = ObserveLateProviderAsync(sending);
+                throw;
+            }
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
@@ -181,15 +193,14 @@ public sealed partial class NotificationDeliveryProcessor(
         catch (OperationCanceledException)
         {
             telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Send");
+            logger.LogError("مهلت provider اعلان تمام شد. Code={FailureCode}", "NOTIFICATION_DELIVERY_PROVIDER_TIMEOUT");
             result = DeliveryProviderResult.Transient(
                 NotificationDeliveryFailureReason.ProviderTimeout);
         }
         catch (Exception)
         {
             telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Send");
-            logger.LogWarning(
-                "Provider ارسال اعلان برای DeliveryAttempt {DeliveryAttemptId} پاسخ قابل استفاده نداد.",
-                attemptId);
+            logger.LogError("Provider ارسال اعلان پاسخ قابل استفاده نداد. Code={FailureCode}", "NOTIFICATION_DELIVERY_PROVIDER_UNAVAILABLE");
             result = DeliveryProviderResult.Transient(
                 NotificationDeliveryFailureReason.ProviderUnavailable);
         }
@@ -297,36 +308,35 @@ public sealed partial class NotificationDeliveryProcessor(
         string? registrationVersion = null)
     {
         dbContext.ChangeTracker.Clear();
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        var attempt = await dbContext.NotificationDeliveryAttempts.SingleOrDefaultAsync(
-            item => item.Id == attemptId &&
-                    item.ClaimToken == claimToken &&
-                    item.Status == NotificationDeliveryStatus.Processing,
-            cancellationToken);
-        if (attempt is null)
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
+        var attempt = await LockAttemptAsync(attemptId, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (!IsLiveOwner(attempt, claimToken, nowUtc))
         {
+            await transaction.CommitAsync(cancellationToken);
+            telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, "LeaseLost");
             return;
         }
 
-        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var ownedAttempt = attempt!;
         var reason = result.FailureReason ?? NotificationDeliveryFailureReason.ProviderUnavailable;
         switch (result.Outcome)
         {
             case DeliveryProviderOutcome.Delivered:
-                attempt.MarkDelivered(claimToken, nowUtc, result.ProviderMessageId);
+                ownedAttempt.MarkDelivered(claimToken, nowUtc, result.ProviderMessageId);
                 break;
             case DeliveryProviderOutcome.TransientFailure:
-                attempt.MarkTransientFailure(
+                ownedAttempt.MarkTransientFailure(
                     claimToken,
                     reason,
-                    nowUtc.Add(CalculateRetryDelay(attempt.AttemptCount, result)),
+                    nowUtc.Add(CalculateRetryDelay(ownedAttempt.AttemptCount, result)),
                     options.MaximumAttempts);
                 break;
             case DeliveryProviderOutcome.PermanentFailure:
-                attempt.MarkPermanentFailure(claimToken, reason);
+                ownedAttempt.MarkPermanentFailure(claimToken, reason);
                 break;
             case DeliveryProviderOutcome.Suppressed:
-                attempt.MarkSuppressed(claimToken, reason);
+                ownedAttempt.MarkSuppressed(claimToken, reason);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(result));
@@ -334,8 +344,8 @@ public sealed partial class NotificationDeliveryProcessor(
 
         if (result.Outcome == DeliveryProviderOutcome.PermanentFailure &&
             reason == NotificationDeliveryFailureReason.InvalidRegistration &&
-            attempt.Channel == NotificationDeliveryChannel.Push &&
-            Guid.TryParseExact(attempt.DestinationReference, "N", out var registrationId) &&
+            ownedAttempt.Channel == NotificationDeliveryChannel.Push &&
+            Guid.TryParseExact(ownedAttempt.DestinationReference, "N", out var registrationId) &&
             !string.IsNullOrEmpty(registrationVersion))
         {
             var version = Convert.FromBase64String(registrationVersion);
@@ -345,6 +355,51 @@ public sealed partial class NotificationDeliveryProcessor(
         }
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, ownedAttempt.Status switch
+        {
+            NotificationDeliveryStatus.Delivered => "Completed",
+            NotificationDeliveryStatus.Deferred => "RetryScheduled",
+            NotificationDeliveryStatus.Suppressed => "Suppressed",
+            _ => "Failed"
+        });
+        if (result.Outcome is DeliveryProviderOutcome.TransientFailure or DeliveryProviderOutcome.PermanentFailure)
+        {
+            telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Process");
+            logger.LogError("نتیجهٔ ناموفق provider اعلان به‌صورت پایدار ثبت شد. Code={FailureCode}", "NOTIFICATION_DELIVERY_PROVIDER_FAILED");
+        }
+    }
+
+    private async Task<bool> TryRenewClaimAsync(Guid attemptId, Guid claimToken, CancellationToken cancellationToken)
+    {
+        dbContext.ChangeTracker.Clear();
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
+        var attempt = await LockAttemptAsync(attemptId, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (!IsLiveOwner(attempt, claimToken, nowUtc))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, "LeaseLost");
+            return false;
+        }
+        dbContext.Entry(attempt!).Property(item => item.ClaimedUntilUtc).CurrentValue = nowUtc.Add(options.ClaimLease);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
+    }
+
+    private Task<NotificationDeliveryAttempt?> LockAttemptAsync(Guid attemptId, CancellationToken cancellationToken) =>
+        dbContext.NotificationDeliveryAttempts.FromSqlInterpolated($"""
+            SELECT * FROM [notification].[NotificationDeliveryAttempts] WITH (UPDLOCK, HOLDLOCK, ROWLOCK)
+            WHERE [Id] = {attemptId}
+            """).SingleOrDefaultAsync(cancellationToken);
+
+    private static bool IsLiveOwner(NotificationDeliveryAttempt? attempt, Guid token, DateTime nowUtc) =>
+        attempt is { Status: NotificationDeliveryStatus.Processing } && attempt.ClaimToken == token && attempt.ClaimedUntilUtc > nowUtc;
+
+    private static async Task ObserveLateProviderAsync(Task<DeliveryProviderResult> sending)
+    {
+        try { await sending; }
+        catch (Exception) { /* خطای دیررس فقط مشاهده می‌شود؛ هیچ state یا متن provider منتشر نمی‌شود. */ }
     }
 
     private TimeSpan CalculateRetryDelay(int attemptCount, DeliveryProviderResult result)

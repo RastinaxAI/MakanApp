@@ -26,7 +26,7 @@ public sealed class ScheduledMessageDispatcher(IServiceScopeFactory scopes, Work
                 catch (Exception)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.ScheduledMessage, "Loop");
-                    logger.LogWarning("پردازش پیام زمان‌بندی‌شده ناموفق بود؛ کار پایدار پس از پایان lease قابل بازیابی است. Code={FailureCode}", "SCHEDULED_MESSAGE_LOOP_FAILED");
+                    logger.LogError("پردازش پیام زمان‌بندی‌شده ناموفق بود؛ کار پایدار پس از پایان lease قابل بازیابی است. Code={FailureCode}", "SCHEDULED_MESSAGE_LOOP_FAILED");
                 }
                 finally
                 {

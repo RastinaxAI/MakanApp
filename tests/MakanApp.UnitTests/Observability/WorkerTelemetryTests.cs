@@ -11,6 +11,45 @@ namespace MakanApp.UnitTests.Observability;
 
 public sealed class WorkerTelemetryTests
 {
+    [Theory]
+    [InlineData("Claimed")]
+    [InlineData("Completed")]
+    [InlineData("RetryScheduled")]
+    [InlineData("Failed")]
+    [InlineData("LeaseRecovered")]
+    [InlineData("Deferred")]
+    [InlineData("Suppressed")]
+    [InlineData("LeaseLost")]
+    public void ConfirmedOutcomesAreDistinctFromBatchCountsAndHaveBoundedLabels(string outcome)
+    {
+        using var services = BuildServices(new TestClock());
+        var telemetry = services.GetRequiredService<WorkerTelemetry>();
+        using var capture = new MetricCapture(services.GetRequiredService<IMeterFactory>().Create(WorkerTelemetry.MeterName));
+        telemetry.RecordOutcome(WorkerTelemetry.NotificationDelivery, outcome, 3);
+        var value = Assert.Single(capture.Values);
+        Assert.Equal("makan.worker.outcomes", value.Name);
+        Assert.Equal(3, value.Value);
+        Assert.Equal(WorkerTelemetry.NotificationDelivery, value.Tags["worker"]);
+        Assert.Equal(outcome, value.Tags["outcome"]);
+        Assert.Equal(2, value.Tags.Count);
+    }
+
+    [Fact]
+    public void OutcomesDoNotLeakUntrustedLabelsOrRecordNonPositiveCounts()
+    {
+        using var services = BuildServices(new TestClock());
+        var telemetry = services.GetRequiredService<WorkerTelemetry>();
+        using var capture = new MetricCapture(services.GetRequiredService<IMeterFactory>().Create(WorkerTelemetry.MeterName));
+        telemetry.RecordOutcome("private-user-marker", "private-content-marker", 0);
+        telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "Completed", -1);
+        Assert.Empty(capture.Values);
+        telemetry.RecordOutcome("private-user-marker", "private-content-marker");
+        var value = Assert.Single(capture.Values);
+        Assert.Equal("Other", value.Tags["worker"]);
+        Assert.Equal("Other", value.Tags["outcome"]);
+        Assert.DoesNotContain(capture.Values.SelectMany(item => item.Tags), tag => tag.Value.Contains("private-", StringComparison.Ordinal));
+    }
+
     [Fact]
     public void BatchAndFailureMeasurementsUseOnlyFixedWorkerAndStageLabels()
     {

@@ -42,7 +42,7 @@ public sealed class OutboxDispatcher(
                 catch (SqlException exception) when (exception.Number == 208)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Loop");
-                    logger.LogDebug("جدول Outbox اعلان هنوز آماده نیست.");
+                    logger.LogError("ساختار لازم برای Outbox اعلان آماده نیست. Code={FailureCode}", "OUTBOX_SCHEMA_UNAVAILABLE");
                 }
                 catch (Exception)
                 {
@@ -107,6 +107,12 @@ public sealed class OutboxProcessor(
                    OR ([ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NOT NULL))
             """, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        if (repaired > 0)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "Failed", repaired);
+            logger.LogError("کارهای رهاشده Outbox پس از سقف تلاش نهایی شدند. Count={Count}; Code={FailureCode}",
+                repaired, AttemptsExhaustedErrorCode);
+        }
         return repaired;
     }
 
@@ -127,17 +133,24 @@ public sealed class OutboxProcessor(
                 """)
             .ToArrayAsync(cancellationToken);
         OutboxClaim? claim = null;
+        var recovered = false;
         if (pending.Length != 0)
         {
             var message = pending[0];
             var token = Guid.NewGuid();
             var claimedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+            recovered = message.ClaimedUntilUtc.HasValue && message.ClaimedUntilUtc <= claimedAtUtc;
             message.Claim(token, claimedAtUtc, claimedAtUtc.Add(ClaimLease));
             claim = new OutboxClaim(message.Id, token);
         }
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
+        if (claim is not null)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "Claimed");
+            if (recovered) telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "LeaseRecovered");
+        }
         return claim;
     }
 
@@ -157,6 +170,7 @@ public sealed class OutboxProcessor(
                 claimedUntilUtc <= timeProvider.GetUtcNow().UtcDateTime)
             {
                 await transaction.RollbackAsync(cancellationToken);
+                telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "LeaseLost");
                 return;
             }
 
@@ -175,12 +189,10 @@ public sealed class OutboxProcessor(
                     throw new JsonException("قرارداد پیام Outbox اعلان معتبر نیست.");
                 }
 
-                var existingRecipients = await dbContext.Notifications
-                    .Where(notification => notification.SourceEventId == payload.SourceEventId)
-                    .Select(notification => notification.RecipientUserId)
-                    .ToArrayAsync(cancellationToken);
-                var existing = existingRecipients.ToHashSet();
-                if (payload.Recipient.UserId != Guid.Empty && !existing.Contains(payload.Recipient.UserId))
+                var exists = await dbContext.Notifications.AnyAsync(notification =>
+                    notification.SourceEventId == payload.SourceEventId &&
+                    notification.RecipientUserId == payload.Recipient.UserId, cancellationToken);
+                if (payload.Recipient.UserId != Guid.Empty && !exists)
                 {
                     var notification = Domain.Notification.Notification.Create(
                         payload.SourceEventId,
@@ -204,6 +216,7 @@ public sealed class OutboxProcessor(
             message.MarkProcessed(claimToken, timeProvider.GetUtcNow().UtcDateTime);
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "Completed");
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
@@ -214,15 +227,16 @@ public sealed class OutboxProcessor(
             telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Process");
             dbContext.ChangeTracker.Clear();
             using var completion = WorkerCompletionBudget.Create();
-            await ScheduleRetryAsync(messageId, claimToken, completion.Token);
-            if (await HasReachedAttemptLimitAsync(messageId, completion.Token))
+            var outcome = await ScheduleRetryAsync(messageId, claimToken, completion.Token);
+            telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, outcome.ToString());
+            if (outcome == RetryOutcome.Failed)
             {
                 logger.LogError(
                     "پردازش پیام اعلان {MessageId} پس از سقف تلاش متوقف شد. Code={FailureCode}",
                     messageId,
                     AttemptsExhaustedErrorCode);
             }
-            else
+            else if (outcome == RetryOutcome.RetryScheduled)
             {
                 logger.LogWarning(
                     "پردازش پیام اعلان {MessageId} ناموفق بود و دوباره تلاش می‌شود. Code={FailureCode}",
@@ -236,7 +250,7 @@ public sealed class OutboxProcessor(
         }
     }
 
-    private async Task ScheduleRetryAsync(
+    private async Task<RetryOutcome> ScheduleRetryAsync(
         Guid messageId,
         Guid claimToken,
         CancellationToken cancellationToken)
@@ -249,7 +263,7 @@ public sealed class OutboxProcessor(
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         if (message is null || message.ClaimedUntilUtc is not DateTime claimedUntilUtc || claimedUntilUtc <= nowUtc)
         {
-            return;
+            return RetryOutcome.LeaseLost;
         }
 
         if (message.AttemptCount >= MaximumAttempts)
@@ -263,14 +277,9 @@ public sealed class OutboxProcessor(
         }
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        return message.AttemptCount >= MaximumAttempts ? RetryOutcome.Failed : RetryOutcome.RetryScheduled;
     }
 
-    private Task<bool> HasReachedAttemptLimitAsync(
-        Guid messageId,
-        CancellationToken cancellationToken) =>
-        dbContext.OutboxMessages.AsNoTracking().AnyAsync(
-            message => message.Id == messageId && message.AttemptCount >= MaximumAttempts,
-            cancellationToken);
-
+    private enum RetryOutcome { RetryScheduled, Failed, LeaseLost }
     private sealed record OutboxClaim(Guid Id, Guid Token);
 }

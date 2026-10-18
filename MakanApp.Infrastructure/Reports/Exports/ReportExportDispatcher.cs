@@ -111,6 +111,8 @@ public sealed class ReportExportProcessor(
 
             if (!outputFileId.HasValue)
             {
+                // خروجی null یعنی guard مالکیت در transaction انتشار، تلاش قدیمی را رد کرده است.
+                telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "LeaseLost");
                 return true;
             }
 
