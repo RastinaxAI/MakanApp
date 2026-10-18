@@ -13,6 +13,7 @@ using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Notification;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -103,6 +104,9 @@ public sealed partial class MakanAppWebApplicationFactory :
         });
         builder.ConfigureTestServices(services =>
         {
+            var operationalMetricsPublisher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(OperationalMetricsPublisher));
+            if (operationalMetricsPublisher is not null) services.Remove(operationalMetricsPublisher);
             services.AddSingleton<MessagingEphemeralTestControl>();
             services.RemoveAll<IMessagingEphemeralNotifier>();
             services.AddScoped<IMessagingEphemeralNotifier>(provider => new RecordingMessagingEphemeralNotifier(

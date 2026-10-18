@@ -25,6 +25,7 @@ using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Outbox;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Platform;
 using MakanApp.Infrastructure.Reports.Dashboards;
@@ -54,6 +55,11 @@ public static class DependencyInjection
 
         services.AddDbContext<MakanDbContext>(options =>
             options.UseSqlServer(connectionString));
+
+        services.AddMetrics();
+        services.AddSingleton<WorkerTelemetry>();
+        services.AddSingleton(OperationalMetricsOptions.FromConfiguration(configuration));
+        services.AddHostedService<OperationalMetricsPublisher>();
 
         services.AddScoped<IIdentityStore, EfIdentityStore>();
         services.AddScoped<IIdentityService, IdentityService>();

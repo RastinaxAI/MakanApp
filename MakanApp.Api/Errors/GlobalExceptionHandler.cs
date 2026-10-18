@@ -13,6 +13,7 @@ using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace MakanApp.Api.Errors;
 
@@ -69,17 +70,24 @@ public sealed class GlobalExceptionHandler(
             ReportExportException reportExportException => CreateKnownProblem(
                 reportExportException.Code,
                 reportExportException.Message),
-            _ => CreateUnexpectedProblem(exception, httpContext.TraceIdentifier)
+            _ => CreateUnexpectedProblem(httpContext.TraceIdentifier)
         };
 
         httpContext.Response.StatusCode = problemDetails.Status
             ?? StatusCodes.Status500InternalServerError;
 
-        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        if (await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             ProblemDetails = problemDetails
-        });
+        })) return true;
+
+        // Accept نامنطبق نباید باعث خروج exception اصلی از handler شود.
+        problemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? httpContext.TraceIdentifier);
+        problemDetails.Extensions.TryAdd("correlationId", httpContext.TraceIdentifier);
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, options: (System.Text.Json.JsonSerializerOptions?)null,
+            contentType: "application/problem+json", cancellationToken: cancellationToken);
+        return true;
     }
 
     private static ProblemDetails CreateKnownProblem(string code, string message)
@@ -414,12 +422,12 @@ public sealed class GlobalExceptionHandler(
         };
     }
 
-    private ProblemDetails CreateUnexpectedProblem(Exception exception, string traceId)
+    private ProblemDetails CreateUnexpectedProblem(string correlationId)
     {
-        logger.LogError(
-            exception,
-            "An unhandled error occurred while processing the request. TraceId: {TraceId}",
-            traceId);
+        logger.LogError(new EventId(1001, "UnexpectedError"),
+            "خطای امن {ErrorCode} با {StatusCode} رخ داد. CorrelationId: {CorrelationId}; TraceId: {TraceId}",
+            "UNEXPECTED_ERROR", StatusCodes.Status500InternalServerError, correlationId,
+            Activity.Current?.TraceId.ToString() ?? correlationId);
 
         return new ProblemDetails
         {

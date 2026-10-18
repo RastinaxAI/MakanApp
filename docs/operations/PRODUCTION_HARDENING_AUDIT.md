@@ -158,3 +158,34 @@ assertionها ضعیف نشدند و classifier از factory/DB واقعاً م�
 `CoreReadinessHealthCheck` → `PlatformSystemOperationsController` →
 `EfPlatformCommerceOperationsStore` → `ProductionReadinessTests` و تست‌های Platform operations.
 Migration و عملیات سرور ندارد؛ snapshot عملیاتی تضمین transactional counter یا تحویل provider نیست.
+
+### PH-3 — پیگیری پیاده‌سازی و مرز مشاهده‌پذیری
+
+Correlation موجود یکپارچه شد؛ ورودی تک‌مقداری، کوتاه و ASCII پذیرفته می‌شود و همان شناسه در
+header، scope و ProblemDetails قرار می‌گیرد. TraceId واقعی Activity مستقل و قابل ارتباط است،
+نه شناسهٔ رقابتی جدید. metric درخواست بیرون از handler قرار گرفت تا status نهایی mapped را ببیند؛
+route فقط template و method فقط مجموعهٔ محدود است. خطای پس از شروع پاسخ با outcome مجزا شمرده
+می‌شود؛ status ارسال‌شده بازنویسی نمی‌شود و failure به host منتقل می‌شود.
+
+با تأیید صریح مالک، فقط logger مشخص ExceptionHandlerMiddleware در Production/Staging از ثبت
+exception خام منع شد؛ رخداد امن جایگزین شامل code/status/correlation است. فیلتر عمومی EF،
+Data Protection، Health یا HTTP provider اعمال نشده است. این تغییر جای audit تنظیمات collector،
+DiagnosticSource یا logger سفارشی آینده را نمی‌گیرد. بدنه، query، token و متن exception وارد
+رخدادهای جدید برنامه و labelهای metric نمی‌شوند.
+
+شش worker قبلی telemetry با worker/stage ثابت دارند؛ `OperationalMetricsPublisher` هفتمین
+worker واقعی است و aggregateهای موجود را با budget و cancellation می‌خواند. gauge callback
+فقط snapshot حافظه را می‌بیند؛ failure دادهٔ قبلی را صفر نمی‌کند و stale بودن نمایان می‌ماند.
+پیاده‌سازی در Api و Infrastructure است؛ Domain/Application و schema تغییر ندارند.
+مسیر مطالعه: `CorrelationIdMiddleware` → `HttpRequestMetricsMiddleware` →
+`GlobalExceptionHandler` → `ProductionLoggingSafety` → `WorkerTelemetry` →
+`OperationalMetricsPublisher` → تست‌های Production observability و worker telemetry.
+
+Validation متمرکز: **25 Unit + 52 Integration** موفق؛ build با ۰ warning/error.
+تست cancellation ابتدا وابستگی نادرست به data lock داشت؛ با اثبات `READ_COMMITTED_SNAPSHOT=True`
+و مشاهدهٔ انتظار واقعی `LCK_M_SCH_S` در DB مصنوعی، barrier قطعی و rollback تست اضافه شد.
+همچنین cancellation با exception غیر از OCE دیگر در catch عمومی به failure عادی تبدیل نمی‌شود.
+restore و final build موفق با ۰ warning/error؛ final suite برابر
+**631 Unit + 1093 Integration + 14 Architecture = 1738**، failed/skipped=0 است.
+**47** مورد جدید (25 Unit و 22 Integration) به PH-2 افزوده شد؛ assertion یا تستی حذف/غیرفعال نشد.
+Migration، package و endpoint محصول جدید ندارد؛ exporter/collector/alert بیرونی نصب نشده‌اند.

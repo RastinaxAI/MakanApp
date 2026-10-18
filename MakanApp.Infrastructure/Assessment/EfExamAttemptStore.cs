@@ -202,7 +202,7 @@ public sealed class EfExamAttemptStore(
         catch (DbUpdateException exception)
             when (exception.InnerException is SqlException { Number: 2601 or 2627 })
         {
-            logger.LogWarning(exception, "Exam attempt database uniqueness conflict.");
+            logger.LogWarning("شروع تلاش آزمون با تعارض یکتایی مواجه شد؛ جزئیات SQL ثبت نمی‌شود.");
             throw new AssessmentException(
                 AssessmentErrorCodes.ConcurrencyConflict,
                 "شروع آزمون با درخواست هم‌زمان تداخل داشت؛ دوباره تلاش کنید.");

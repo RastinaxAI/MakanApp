@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Text.Json;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Notification;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,7 @@ namespace MakanApp.Infrastructure.Outbox;
 
 public sealed class OutboxDispatcher(
     IServiceScopeFactory scopeFactory,
+    WorkerTelemetry telemetry,
     ILogger<OutboxDispatcher> logger) : BackgroundService
 {
     private static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(2);
@@ -21,24 +24,34 @@ public sealed class OutboxDispatcher(
         while (!stoppingToken.IsCancellationRequested)
         {
             var processed = 0;
-            try
+            var started = Stopwatch.GetTimestamp();
+            using (telemetry.BeginBatch(WorkerTelemetry.IntegrationOutbox))
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                processed = await scope.ServiceProvider
-                    .GetRequiredService<OutboxProcessor>()
-                    .DispatchBatchAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (SqlException exception) when (exception.Number == 208)
-            {
-                logger.LogDebug("جدول Outbox اعلان هنوز آماده نیست.");
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "پردازش Outbox اعلان ناموفق بود.");
+                try
+                {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    processed = await scope.ServiceProvider
+                        .GetRequiredService<OutboxProcessor>()
+                        .DispatchBatchAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (SqlException exception) when (exception.Number == 208)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Loop");
+                    logger.LogDebug("جدول Outbox اعلان هنوز آماده نیست.");
+                }
+                catch (Exception)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Loop");
+                    logger.LogError("پردازش Outbox اعلان ناموفق بود. Code={FailureCode}", "OUTBOX_LOOP_FAILED");
+                }
+                finally
+                {
+                    telemetry.RecordBatch(WorkerTelemetry.IntegrationOutbox, processed, started);
+                }
             }
 
             if (processed < OutboxProcessor.BatchSize)
@@ -54,6 +67,7 @@ public sealed class OutboxProcessor(
     INotificationDeliveryCoordinator deliveryCoordinator,
     ISubscriptionActivationHandler subscriptionActivationHandler,
     TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
     ILogger<OutboxProcessor> logger)
 {
     public const int BatchSize = 50;
@@ -166,23 +180,24 @@ public sealed class OutboxProcessor(
         {
             throw;
         }
-        catch (Exception exception)
+        catch (Exception)
         {
+            telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Process");
             dbContext.ChangeTracker.Clear();
             await ScheduleRetryAsync(messageId, claimToken, CancellationToken.None);
             if (await HasReachedAttemptLimitAsync(messageId, CancellationToken.None))
             {
                 logger.LogError(
-                    exception,
-                    "پردازش پیام اعلان {MessageId} پس از سقف تلاش متوقف شد.",
-                    messageId);
+                    "پردازش پیام اعلان {MessageId} پس از سقف تلاش متوقف شد. Code={FailureCode}",
+                    messageId,
+                    ProcessingErrorCode);
             }
             else
             {
                 logger.LogWarning(
-                    exception,
-                    "پردازش پیام اعلان {MessageId} ناموفق بود و دوباره تلاش می‌شود.",
-                    messageId);
+                    "پردازش پیام اعلان {MessageId} ناموفق بود و دوباره تلاش می‌شود. Code={FailureCode}",
+                    messageId,
+                    ProcessingErrorCode);
             }
         }
         finally

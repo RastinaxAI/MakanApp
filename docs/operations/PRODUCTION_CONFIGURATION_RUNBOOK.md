@@ -66,6 +66,23 @@ artifact اپراتوریِ شامل این فایل محرمانه است و ن
 
 ## rollout و gateهای مستقل
 
+### snapshot عملیاتی — PH-3
+
+`Observability:OperationalMetrics:SnapshotIntervalSeconds` فاصلهٔ refresh وضعیت صف‌هاست؛
+پیش‌فرض ۳۰ و محدودهٔ مجاز ۵ تا ۳۶۰۰ ثانیه است. معادل محیطی آن
+`Observability__OperationalMetrics__SnapshotIntervalSeconds` است؛ مقدار نامعتبر
+در startup با پیام ثابت رد می‌شود. هر refresh حداکثر budget ده‌ثانیه‌ای و cancellation
+مشترک با shutdown دارد؛ این worker فقط aggregateهای SQL موجود را می‌خواند و اثر کسب‌وکاری ندارد.
+
+`OperationalMetricsPublisher` snapshot را در حافظه نگه می‌دارد؛ callbackهای gauge هیچ
+SQL، شبکه یا I/O ندارند. شکست refresh، آخرین مقادیر را به صفر تبدیل نمی‌کند؛
+`makan.operational.snapshot.available=0` و سن آخرین موفقیت، stale بودن داده را نشان می‌دهند.
+پیش از اولین موفقیت، queue خالیِ ساختگی منتشر نمی‌شود. snapshot و limiter/presence
+همچنان process-local هستند؛ این تغییر exporter/collector، داشبورد بیرونی یا تحویل alert ایجاد نمی‌کند.
+تعداد items برای worker جمع‌آوری metrics، تعداد خلاصه‌صف‌های خوانده‌شده است، نه پیام تحویل‌شده.
+
+### ترتیب rollout
+
 1. commit مورد انتظار و backup سازگار DB/Storage/ring را ثبت کنید؛ محتوا/secret چاپ نشود.
 2. مسیر و محافظ قبلی را از تنظیم مجاز سرور حفظ کنید؛ نمونهٔ جدید را روی فایل خصوصی overwrite نکنید.
 3. external directory/ACL را پیش از start با identity واقعی AppPool آماده کنید.

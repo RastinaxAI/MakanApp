@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
+ProductionLoggingSafety.Configure(builder.Services, builder.Environment);
 
 ProductionConfigurationValidator.Validate(
     builder.Configuration,
@@ -249,6 +250,7 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Extensions.TryAdd(
             "traceId",
             Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+        context.ProblemDetails.Extensions.TryAdd("correlationId", context.HttpContext.TraceIdentifier);
     };
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -298,9 +300,9 @@ if (builder.Configuration.GetValue("ReverseProxy:Enabled", false))
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<HttpRequestMetricsMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseMiddleware<HttpRequestMetricsMiddleware>();
 
 var exposeOpenApi = !(app.Environment.IsProduction() || app.Environment.IsStaging()) ||
                     builder.Configuration.GetValue("Swagger:Enabled", false);

@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Messaging;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Notification;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,7 @@ namespace MakanApp.Infrastructure.Notification;
 public sealed class NotificationDeliveryDispatcher(
     IServiceScopeFactory scopeFactory,
     NotificationDeliveryOptions options,
+    WorkerTelemetry telemetry,
     ILogger<NotificationDeliveryDispatcher> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -21,24 +24,34 @@ public sealed class NotificationDeliveryDispatcher(
         while (!stoppingToken.IsCancellationRequested)
         {
             var processed = 0;
-            try
+            var started = Stopwatch.GetTimestamp();
+            using (telemetry.BeginBatch(WorkerTelemetry.NotificationDelivery))
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                processed = await scope.ServiceProvider
-                    .GetRequiredService<NotificationDeliveryProcessor>()
-                    .DispatchBatchAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (SqlException exception) when (exception.Number == 208)
-            {
-                logger.LogDebug("جدول تلاش‌های ارسال اعلان هنوز آماده نیست.");
-            }
-            catch (Exception)
-            {
-                logger.LogError("پردازش تلاش‌های ارسال اعلان ناموفق بود.");
+                try
+                {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    processed = await scope.ServiceProvider
+                        .GetRequiredService<NotificationDeliveryProcessor>()
+                        .DispatchBatchAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (SqlException exception) when (exception.Number == 208)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Loop");
+                    logger.LogDebug("جدول تلاش‌های ارسال اعلان هنوز آماده نیست.");
+                }
+                catch (Exception)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Loop");
+                    logger.LogError("پردازش تلاش‌های ارسال اعلان ناموفق بود. Code={FailureCode}", "NOTIFICATION_DELIVERY_LOOP_FAILED");
+                }
+                finally
+                {
+                    telemetry.RecordBatch(WorkerTelemetry.NotificationDelivery, processed, started);
+                }
             }
 
             if (processed < options.BatchSize)
@@ -57,6 +70,7 @@ public sealed partial class NotificationDeliveryProcessor(
     IMessagingPrivacyResolver privacyResolver,
     NotificationDeliveryOptions options,
     TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
     ILogger<NotificationDeliveryProcessor> logger)
 {
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken)
@@ -165,11 +179,13 @@ public sealed partial class NotificationDeliveryProcessor(
         }
         catch (OperationCanceledException)
         {
+            telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Send");
             result = DeliveryProviderResult.Transient(
                 NotificationDeliveryFailureReason.ProviderTimeout);
         }
         catch (Exception)
         {
+            telemetry.RecordFailure(WorkerTelemetry.NotificationDelivery, "Send");
             logger.LogWarning(
                 "Provider ارسال اعلان برای DeliveryAttempt {DeliveryAttemptId} پاسخ قابل استفاده نداد.",
                 attemptId);

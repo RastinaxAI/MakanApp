@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using MakanApp.Application.Messaging;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +13,7 @@ namespace MakanApp.Infrastructure.Messaging;
 public sealed class MessagingRealtimeOutboxDispatcher(
     IServiceScopeFactory scopeFactory,
     MessagingOutboxWakeSignal wakeSignal,
+    WorkerTelemetry telemetry,
     ILogger<MessagingRealtimeOutboxDispatcher> logger) : BackgroundService
 {
     private static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(2);
@@ -20,24 +23,34 @@ public sealed class MessagingRealtimeOutboxDispatcher(
         while (!stoppingToken.IsCancellationRequested)
         {
             var processed = 0;
-            try
+            var started = Stopwatch.GetTimestamp();
+            using (telemetry.BeginBatch(WorkerTelemetry.MessagingRealtimeOutbox))
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                processed = await scope.ServiceProvider
-                    .GetRequiredService<MessagingRealtimeOutboxProcessor>()
-                    .DispatchBatchAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (SqlException exception) when (exception.Number == 208)
-            {
-                logger.LogDebug("جدول Outbox پیام‌رسانی هنوز آماده نیست.");
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "پردازش Outbox پیام‌رسانی ناموفق بود.");
+                try
+                {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    processed = await scope.ServiceProvider
+                        .GetRequiredService<MessagingRealtimeOutboxProcessor>()
+                        .DispatchBatchAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (SqlException exception) when (exception.Number == 208)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Loop");
+                    logger.LogDebug("جدول Outbox پیام‌رسانی هنوز آماده نیست.");
+                }
+                catch (Exception)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Loop");
+                    logger.LogError("پردازش Outbox پیام‌رسانی ناموفق بود. Code={FailureCode}", "REALTIME_OUTBOX_LOOP_FAILED");
+                }
+                finally
+                {
+                    telemetry.RecordBatch(WorkerTelemetry.MessagingRealtimeOutbox, processed, started);
+                }
             }
 
             if (processed < MessagingRealtimeOutboxProcessor.BatchSize)
@@ -52,6 +65,7 @@ public sealed class MessagingRealtimeOutboxProcessor(
     MakanDbContext dbContext,
     IMessagingRealtimeNotifier notifier,
     TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
     ILogger<MessagingRealtimeOutboxProcessor> logger)
 {
     public const int BatchSize = 50;
@@ -122,24 +136,25 @@ public sealed class MessagingRealtimeOutboxProcessor(
         {
             throw;
         }
-        catch (Exception exception)
+        catch (Exception)
         {
+            telemetry.RecordFailure(WorkerTelemetry.MessagingRealtimeOutbox, "Dispatch");
             var retrySeconds = Math.Min(30, Math.Max(2, outboxMessage.AttemptCount * 2));
             outboxMessage.ScheduleRetry(timeProvider.GetUtcNow().UtcDateTime.AddSeconds(retrySeconds));
             await dbContext.SaveChangesAsync(CancellationToken.None);
             if (outboxMessage.AttemptCount >= MaximumAttempts)
             {
                 logger.LogError(
-                    exception,
-                    "اعلان realtime برای ChangeEvent {ChangeEventId} پس از سقف تلاش متوقف شد.",
-                    outboxMessage.ChangeEventId);
+                    "اعلان realtime برای ChangeEvent {ChangeEventId} پس از سقف تلاش متوقف شد. Code={FailureCode}",
+                    outboxMessage.ChangeEventId,
+                    "REALTIME_OUTBOX_DISPATCH_FAILED");
             }
             else
             {
                 logger.LogWarning(
-                    exception,
-                    "اعلان realtime برای ChangeEvent {ChangeEventId} ارسال نشد و دوباره تلاش می‌شود.",
-                    outboxMessage.ChangeEventId);
+                    "اعلان realtime برای ChangeEvent {ChangeEventId} ارسال نشد و دوباره تلاش می‌شود. Code={FailureCode}",
+                    outboxMessage.ChangeEventId,
+                    "REALTIME_OUTBOX_DISPATCH_FAILED");
             }
         }
     }
