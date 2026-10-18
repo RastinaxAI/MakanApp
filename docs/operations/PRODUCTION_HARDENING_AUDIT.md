@@ -189,3 +189,36 @@ restore و final build موفق با ۰ warning/error؛ final suite برابر
 **631 Unit + 1093 Integration + 14 Architecture = 1738**، failed/skipped=0 است.
 **47** مورد جدید (25 Unit و 22 Integration) به PH-2 افزوده شد؛ assertion یا تستی حذف/غیرفعال نشد.
 Migration، package و endpoint محصول جدید ندارد؛ exporter/collector/alert بیرونی نصب نشده‌اند.
+
+### PH-4 — بازیابی و مرز اثر Workerها
+
+موجودی واقعی هفت worker و محدودیت هرکدام در
+[قرارداد بازیابی](WORKER_RELIABILITY_AND_RECOVERY.md) آمده است. Outboxها تک‌کار claim می‌کنند؛
+repair نهایی bounded و غیرتکراری است. SQL-only effect عمومی با token/قفل و realtime با
+نسل rowversion/lease محافظت می‌شوند. notifier ناتمام پس از timeout باعث query هم‌زمان در همان
+scope نمی‌شود؛ claim برای recovery باقی می‌ماند. نتیجه‌های مستقل budget مشترک 5s دارند.
+
+برای export، فایل هر تلاش مستقل است و فقط publication کوتاه SQL اجازهٔ اتصال آن به شناسهٔ
+canonical job را می‌دهد؛ Ready تاریخی mutate نمی‌شود. گم‌شدن acknowledgement مجوز حذف فایل
+نیست؛ FileAsset متعلق به publication ناموفق از tracker جدا می‌شود تا ذخیرهٔ retryِ job آن را
+ناخواسته دوباره منتشر نکند. completion خارج catch تولید است و انتقال نامعتبر Completed→Retry
+نمی‌سازد. متد Domain فقط تعویض keyِ Pending را مجاز می‌کند؛ portهای داخلی Application نسل claim
+را منتقل می‌کنند؛ پیاده‌سازی قفل/I/O در Infrastructure است و API محصول تغییر ندارد.
+
+مرزهای صریح: duplicate hint یا ارسال دوبارهٔ provider پس از شکاف acknowledgement ممکن است؛
+اثر durable و شناسهٔ منطقی یکتا با تحویل خارجی exactly-once یکی نیستند. orphan محدود به تلاش
+هر job همچنان reconciliation مستقل می‌خواهد. اولین rollout باید legacy worker را کاملاً drain
+کند؛ concurrency جدید/جدید به معنی ایمنی باینری قدیمی/جدید نیست.
+
+مسیر مطالعه: `OutboxProcessor` و `MessagingRealtimeOutboxProcessor` →
+`WorkerCompletionBudget` → `ReportExportProcessor` → `EfReportExportJobStore`/claim lock →
+`ReportExportOutputStore` → `FileAsset.ReplacePendingStorageKey` → تست‌های recovery نام‌برده در runbook.
+restore و final Debug build موفق با ۰ warning/error؛ validation متمرکز نهایی **13 Unit + 86 Integration**
+و final suite برابر **644 Unit + 1120 Integration + 14 Architecture = 1778**، failed/skipped=0 است.
+**40** مورد جدید (13 Unit و 27 Integration) افزوده شد. اجرای اولیهٔ گسترده چهار regression قدیمی
+Notification را آشکار کرد: repair بیرون transaction با isolation باقی‌ماندهٔ connection pooled
+ناسازگار بود. transaction کوتاه صریح ReadCommitted و دو regression همان connection علت را رفع کردند؛
+بعد از اصلاح، تست‌های قبلی و جدید اجرا و موفق شدند، نه اینکه کنار گذاشته شوند.
+تست‌های لغو OCE/غیر-OCE، صفر بودن failure کاذب را می‌سنجند و موفقیت واقعی provider درست پیش از
+لغو caller همچنان با budget مستقل ثبت می‌شود؛ ادعای OCE یکسان از تمام I/Oهای claim مطرح نیست.
+Migration، package، endpoint محصول یا عملیات سرور انجام نشده است.

@@ -97,6 +97,16 @@ public sealed class FileAsset
         Status = FileAssetStatus.Ready;
     }
 
+    public void ReplacePendingStorageKey(string storageKey)
+    {
+        if (Status != FileAssetStatus.Pending || string.IsNullOrWhiteSpace(storageKey))
+        {
+            throw new InvalidOperationException("فقط کلید فایل در انتظار قابل جایگزینی است.");
+        }
+
+        StorageKey = storageKey;
+    }
+
     public void MarkRejected(DateTime rejectedAtUtc)
     {
         if (Status is FileAssetStatus.Rejected or FileAssetStatus.Deleted)

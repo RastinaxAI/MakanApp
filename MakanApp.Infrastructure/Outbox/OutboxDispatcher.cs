@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Notification;
+using MakanApp.Infrastructure.Hosting;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -34,7 +35,7 @@ public sealed class OutboxDispatcher(
                         .GetRequiredService<OutboxProcessor>()
                         .DispatchBatchAsync(stoppingToken);
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                catch (Exception) when (stoppingToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -74,27 +75,50 @@ public sealed class OutboxProcessor(
     public const int MaximumAttempts = 10;
     private static readonly TimeSpan ClaimLease = TimeSpan.FromSeconds(30);
     private const string ProcessingErrorCode = "notification_processing_failed";
+    public const string AttemptsExhaustedErrorCode = "notification_processing_exhausted";
 
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken)
     {
-        var claims = await ClaimBatchAsync(cancellationToken);
-        foreach (var claim in claims)
+        await RepairExhaustedClaimsAsync(cancellationToken);
+        var processed = 0;
+        while (processed < BatchSize)
         {
+            var claim = await ClaimNextAsync(cancellationToken);
+            if (claim is null) break;
+            processed++;
             await ProcessOneAsync(claim.Id, claim.Token, cancellationToken);
         }
 
-        return claims.Count;
+        return processed;
     }
 
-    private async Task<IReadOnlyCollection<OutboxClaim>> ClaimBatchAsync(
+    private async Task<int> RepairExhaustedClaimsAsync(CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.ReadCommitted, cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        // فقط claim منقضی یا retry مصرف‌شده اصلاح می‌شود؛ رکورد نهایی دوباره وارد همان batch نمی‌شود.
+        var repaired = await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            UPDATE TOP ({BatchSize}) [platform].[OutboxMessages] WITH (UPDLOCK, READPAST, READCOMMITTEDLOCK)
+            SET [ClaimToken] = NULL, [ClaimedUntilUtc] = NULL, [NextAttemptAtUtc] = NULL,
+                [LastErrorCode] = {AttemptsExhaustedErrorCode}
+            WHERE [ProcessedAtUtc] IS NULL AND [AttemptCount] >= {MaximumAttempts}
+              AND (([ClaimedUntilUtc] IS NOT NULL AND [ClaimedUntilUtc] <= {nowUtc})
+                   OR ([ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NOT NULL))
+            """, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return repaired;
+    }
+
+    private async Task<OutboxClaim?> ClaimNextAsync(
         CancellationToken cancellationToken)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         var pending = await dbContext.OutboxMessages
             .FromSqlInterpolated($"""
-                SELECT TOP ({BatchSize}) *
-                FROM [platform].[OutboxMessages] WITH (UPDLOCK, READPAST, ROWLOCK)
+                SELECT TOP (1) *
+                FROM [platform].[OutboxMessages] WITH (UPDLOCK, READPAST, READCOMMITTEDLOCK)
                 WHERE [ProcessedAtUtc] IS NULL
                   AND [AttemptCount] < {MaximumAttempts}
                   AND ([ClaimedUntilUtc] IS NULL OR [ClaimedUntilUtc] <= {nowUtc})
@@ -102,16 +126,19 @@ public sealed class OutboxProcessor(
                 ORDER BY [OccurredAtUtc], [Id]
                 """)
             .ToArrayAsync(cancellationToken);
-        var claims = pending.Select(message =>
+        OutboxClaim? claim = null;
+        if (pending.Length != 0)
         {
+            var message = pending[0];
             var token = Guid.NewGuid();
-            message.Claim(token, nowUtc, nowUtc.Add(ClaimLease));
-            return new OutboxClaim(message.Id, token);
-        }).ToArray();
+            var claimedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+            message.Claim(token, claimedAtUtc, claimedAtUtc.Add(ClaimLease));
+            claim = new OutboxClaim(message.Id, token);
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
-        return claims;
+        return claim;
     }
 
     private async Task ProcessOneAsync(
@@ -122,10 +149,12 @@ public sealed class OutboxProcessor(
         try
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-            var message = await dbContext.OutboxMessages.SingleOrDefaultAsync(
-                item => item.Id == messageId && item.ClaimToken == claimToken && item.ProcessedAtUtc == null,
-                cancellationToken);
-            if (message is null)
+            var message = await dbContext.OutboxMessages.FromSqlInterpolated($"""
+                SELECT * FROM [platform].[OutboxMessages] WITH (UPDLOCK, HOLDLOCK)
+                WHERE [Id] = {messageId} AND [ClaimToken] = {claimToken} AND [ProcessedAtUtc] IS NULL
+                """).SingleOrDefaultAsync(cancellationToken);
+            if (message is null || message.ClaimedUntilUtc is not DateTime claimedUntilUtc ||
+                claimedUntilUtc <= timeProvider.GetUtcNow().UtcDateTime)
             {
                 await transaction.RollbackAsync(cancellationToken);
                 return;
@@ -176,21 +205,22 @@ public sealed class OutboxProcessor(
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            throw new OperationCanceledException(cancellationToken);
         }
         catch (Exception)
         {
             telemetry.RecordFailure(WorkerTelemetry.IntegrationOutbox, "Process");
             dbContext.ChangeTracker.Clear();
-            await ScheduleRetryAsync(messageId, claimToken, CancellationToken.None);
-            if (await HasReachedAttemptLimitAsync(messageId, CancellationToken.None))
+            using var completion = WorkerCompletionBudget.Create();
+            await ScheduleRetryAsync(messageId, claimToken, completion.Token);
+            if (await HasReachedAttemptLimitAsync(messageId, completion.Token))
             {
                 logger.LogError(
                     "پردازش پیام اعلان {MessageId} پس از سقف تلاش متوقف شد. Code={FailureCode}",
                     messageId,
-                    ProcessingErrorCode);
+                    AttemptsExhaustedErrorCode);
             }
             else
             {
@@ -211,20 +241,28 @@ public sealed class OutboxProcessor(
         Guid claimToken,
         CancellationToken cancellationToken)
     {
-        var message = await dbContext.OutboxMessages.SingleOrDefaultAsync(
-            item => item.Id == messageId && item.ClaimToken == claimToken && item.ProcessedAtUtc == null,
-            cancellationToken);
-        if (message is null)
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var message = await dbContext.OutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM [platform].[OutboxMessages] WITH (UPDLOCK, HOLDLOCK)
+            WHERE [Id] = {messageId} AND [ClaimToken] = {claimToken} AND [ProcessedAtUtc] IS NULL
+            """).SingleOrDefaultAsync(cancellationToken);
+        var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
+        if (message is null || message.ClaimedUntilUtc is not DateTime claimedUntilUtc || claimedUntilUtc <= nowUtc)
         {
             return;
         }
 
-        var retrySeconds = Math.Min(300, Math.Max(2, message.AttemptCount * message.AttemptCount * 2));
-        message.ScheduleRetry(
-            claimToken,
-            timeProvider.GetUtcNow().UtcDateTime.AddSeconds(retrySeconds),
-            ProcessingErrorCode);
+        if (message.AttemptCount >= MaximumAttempts)
+        {
+            message.MarkFailed(claimToken, AttemptsExhaustedErrorCode);
+        }
+        else
+        {
+            var retrySeconds = Math.Min(300, Math.Max(2, message.AttemptCount * message.AttemptCount * 2));
+            message.ScheduleRetry(claimToken, nowUtc.AddSeconds(retrySeconds), ProcessingErrorCode);
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private Task<bool> HasReachedAttemptLimitAsync(

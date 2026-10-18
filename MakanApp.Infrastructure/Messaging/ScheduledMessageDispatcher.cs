@@ -22,7 +22,7 @@ public sealed class ScheduledMessageDispatcher(IServiceScopeFactory scopes, Work
                     await using var scope = scopes.CreateAsyncScope();
                     processed = await scope.ServiceProvider.GetRequiredService<ScheduledMessageProcessor>().DispatchBatchAsync(stoppingToken);
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
+                catch (Exception) when (stoppingToken.IsCancellationRequested) { break; }
                 catch (Exception)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.ScheduledMessage, "Loop");

@@ -22,6 +22,7 @@ public interface IReportExportJobStore
     Task AddAsync(ReportExportJob job, CancellationToken cancellationToken);
     Task<ReportExportJob?> GetAsync(Guid jobId, CancellationToken cancellationToken);
     Task<ReportExportJob?> TryClaimNextAsync(DateTime nowUtc, TimeSpan lease, int maximumAttempts, CancellationToken cancellationToken);
+    Task<bool> TrySaveClaimChangesAsync(ReportExportJob job, byte[] expectedClaimRowVersion, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
@@ -39,5 +40,5 @@ public interface IReportExporter
 public interface IReportExportOutputStore
 {
     Task<Guid?> FindReusableOutputAsync(ReportExportJob job, CancellationToken cancellationToken);
-    Task<Guid> SaveAsync(ReportExportJob job, GeneratedReportFile file, long maximumSizeBytes, CancellationToken cancellationToken);
+    Task<Guid?> SaveAsync(ReportExportJob job, byte[] expectedClaimRowVersion, GeneratedReportFile file, long maximumSizeBytes, CancellationToken cancellationToken);
 }

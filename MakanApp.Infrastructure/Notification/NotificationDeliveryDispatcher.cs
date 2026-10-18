@@ -3,6 +3,7 @@ using MakanApp.Application.Notification;
 using MakanApp.Application.Messaging;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Notification;
+using MakanApp.Infrastructure.Hosting;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
@@ -34,7 +35,7 @@ public sealed class NotificationDeliveryDispatcher(
                         .GetRequiredService<NotificationDeliveryProcessor>()
                         .DispatchBatchAsync(stoppingToken);
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                catch (Exception) when (stoppingToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -100,7 +101,7 @@ public sealed partial class NotificationDeliveryProcessor(
         var attempts = await dbContext.NotificationDeliveryAttempts
             .FromSqlInterpolated($"""
                 SELECT TOP (1) *
-                FROM [notification].[NotificationDeliveryAttempts] WITH (UPDLOCK, READPAST, ROWLOCK)
+                FROM [notification].[NotificationDeliveryAttempts] WITH (UPDLOCK, READPAST, READCOMMITTEDLOCK)
                 WHERE (
                     ([AttemptCount] < {options.MaximumAttempts} AND [Status] IN ({pending}, {deferred}) AND ([NextAttemptAtUtc] IS NULL OR [NextAttemptAtUtc] <= {nowUtc}))
                     OR ([Status] = {processing} AND [ClaimedUntilUtc] <= {nowUtc})
@@ -173,9 +174,9 @@ public sealed partial class NotificationDeliveryProcessor(
                 ? await pushProvider.SendAsync(work.Push, timeoutSource.Token)
                 : await smsProvider.SendAsync(work.Sms!, timeoutSource.Token);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            throw new OperationCanceledException(cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -193,7 +194,8 @@ public sealed partial class NotificationDeliveryProcessor(
                 NotificationDeliveryFailureReason.ProviderUnavailable);
         }
 
-        await SaveResultAsync(attemptId, claimToken, result, CancellationToken.None, registrationVersion);
+        using var completion = WorkerCompletionBudget.Create();
+        await SaveResultAsync(attemptId, claimToken, result, completion.Token, registrationVersion);
     }
 
     private async Task<DeliveryWork?> LoadWorkAsync(

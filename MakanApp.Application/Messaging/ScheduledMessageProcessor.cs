@@ -27,7 +27,7 @@ public sealed class ScheduledMessageProcessor(IScheduledMessageStore schedules, 
                 await messages.SendMessageAsync(work.UserId, work.ConversationId, context, command, evaluated.Evaluated,
                     options.MaximumTextLength, clock.GetUtcNow().UtcDateTime, ct);
             }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (Exception) when (ct.IsCancellationRequested) { ct.ThrowIfCancellationRequested(); throw; }
             catch (MessagingException ex)
             {
                 await schedules.FailScheduledMessageAsync(claim, ex.Code, ex.Code == MessagingErrorCodes.MessageSafetyUnavailable, ct);

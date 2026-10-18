@@ -6,6 +6,7 @@ using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Observability;
+using MakanApp.Infrastructure.Hosting;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,7 +36,7 @@ public sealed class ReportExportDispatcher(
                         .GetRequiredService<ReportExportProcessor>()
                         .ProcessNextAsync(stoppingToken);
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                catch (Exception) when (stoppingToken.IsCancellationRequested)
                 {
                     break;
                 }
@@ -86,6 +87,9 @@ public sealed class ReportExportProcessor(
             return false;
         }
 
+        var claimRowVersion = job.RowVersion.ToArray();
+        Guid? outputFileId = null;
+        var outputReady = false;
         try
         {
             await dataSource.EnsureCurrentAccessAsync(
@@ -93,29 +97,34 @@ public sealed class ReportExportProcessor(
                 job.RequestedBySessionId,
                 job,
                 cancellationToken);
-            var outputFileId = await outputStore.FindReusableOutputAsync(job, cancellationToken);
+            outputFileId = await outputStore.FindReusableOutputAsync(job, cancellationToken);
             if (!outputFileId.HasValue)
             {
                 await using var generated = await exporter.GenerateAsync(job, cancellationToken);
                 outputFileId = await outputStore.SaveAsync(
                     job,
+                    claimRowVersion,
                     generated,
                     options.MaximumFileSizeBytes,
                     cancellationToken);
             }
 
-            job.Complete(outputFileId.Value, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(cancellationToken);
+            if (!outputFileId.HasValue)
+            {
+                return true;
+            }
+
+            outputReady = true;
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             throw;
         }
         catch (Exception exception) when (IsAuthorizationFailure(exception))
         {
             telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Process");
             job.Fail(ReportExportErrorCodes.DataNoLongerAuthorized, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(CancellationToken.None);
             logger.LogWarning("دسترسی job خروجی گزارش {JobId} پیش از تولید معتبر نبود.", job.Id);
         }
         catch (ReportExportException exception) when (
@@ -123,7 +132,6 @@ public sealed class ReportExportProcessor(
         {
             telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Process");
             job.Fail(exception.Code, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(CancellationToken.None);
             logger.LogWarning("تولید job خروجی گزارش {JobId} با کد {FailureCode} متوقف شد.", job.Id, exception.Code);
         }
         catch (Exception)
@@ -138,10 +146,17 @@ public sealed class ReportExportProcessor(
                 job.Fail(ReportExportErrorCodes.GenerationFailed, timeProvider.GetUtcNow().UtcDateTime);
             }
 
-            await jobStore.SaveChangesAsync(CancellationToken.None);
             logger.LogError("تولید job خروجی گزارش {JobId} ناموفق بود. Code={FailureCode}", job.Id, ReportExportErrorCodes.GenerationFailed);
         }
 
+        if (outputReady && outputFileId is Guid readyFileId)
+        {
+            job.Complete(readyFileId, timeProvider.GetUtcNow().UtcDateTime);
+        }
+
+        // خطای ذخیره Completed نباید دوباره به ScheduleRetry روی همان شیء Completed تبدیل شود.
+        using var completion = WorkerCompletionBudget.Create();
+        await jobStore.TrySaveClaimChangesAsync(job, claimRowVersion, completion.Token);
         return true;
     }
 

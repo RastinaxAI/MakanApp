@@ -21,7 +21,7 @@ public sealed class MessagingEphemeralDispatcher(IServiceScopeFactory scopes, Wo
                     await using var scope = scopes.CreateAsyncScope();
                     await scope.ServiceProvider.GetRequiredService<MessagingEphemeralService>().FlushAsync(stoppingToken);
                 }
-                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
+                catch (Exception) when (stoppingToken.IsCancellationRequested) { break; }
                 catch (Exception)
                 {
                     telemetry.RecordFailure(WorkerTelemetry.MessagingEphemeral, "Loop");
