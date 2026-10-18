@@ -22,9 +22,9 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | حوزه | وضعیت | شاهد یا محدودیت |
 |---|---|---|
 | Authentication | READY | opaque bearer، access یک‌ساعته، refresh چرخشی ۳۰روزه و revocation سمت سرور |
-| MFA | COMPLETE_IN_CODE / OPS_PENDING | TOTP، recovery، replay guard و step-up session-scoped؛ نگه‌داری key ring محیط جداست |
+| MFA | COMPLETE_IN_CODE / OPS_PENDING | TOTP، recovery، replay guard و step-up session-scoped؛ PH-1 حلقهٔ پایدار را در startup عملیاتی الزام می‌کند؛ custody/ACL و انتقال واقعی محیط همچنان جداست |
 | Authorization | READY | context از session/membership/resource سمت سرور resolve می‌شود |
-| Secrets | CONFIGURED_LOCALLY / OPS_PENDING | فایل واقعی Production محلی و ignored است؛ نمونهٔ عمومی بدون secret؛ ACL/انتقال امن و حفظ کلیدهای قبلی وظیفهٔ اپراتور است |
+| Secrets | CONFIGURED_LOCALLY / OPS_PENDING | فایل واقعی Production محلی و ignored است؛ نمونهٔ عمومی بدون secret؛ aliasهای Data Protection و تعارضشان validate می‌شوند؛ ACL/انتقال امن و حفظ کلیدهای قبلی وظیفهٔ اپراتور است |
 | SQL Server | READY_WITH_LIMITATION | TLS و least privilege مستند/اسکریپت شده؛ ایجاد principal روی سرور باقی است |
 | Storage | READY_WITH_LIMITATION | root مطلق، probe، authorization و امضای حداقلی؛ AV/CDR provider وجود ندارد |
 | CORS | IMPLEMENTED | allowlist صریح؛ HTTP فقط با Hosting:AllowInsecureHttp تأییدشده، بدون wildcard یا credentials |
@@ -52,6 +52,8 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 ### MFA / Step-up
 
 پیاده‌سازی جاری GAP-04 نتیجهٔ TOTP/recovery را سمت سرور بررسی و assurance/freshness همان Session را ثبت می‌کند؛ counter، replay، محدودیت تلاش و audit دارد. OTP ورود عامل دوم نامیده نمی‌شود. برای عامل آینده سیستم موازی نسازید؛ port و قواعد موجود reuse شوند. [قرارداد جاری](../release/GAP_04_BACKOFFICE_TOTP_MFA.md).
+
+PH-1 همان Data Protection را با discriminator و purpose قبلی حفظ می‌کند؛ host عملیاتی بدون حلقهٔ پایدار شروع نمی‌شود و مسیر صریح نامعتبر یا محافظ خراب خطای ثابت و امن دارد. keyهای `BackofficeSecurity:*` همچنان معتبرند؛ `Security:DataProtection:*` aliasهای جدید با رد تعارض‌اند. probe runtime حلقهٔ گم‌شده را reseed نمی‌کند. تست recreation/isolation جای custody DPAPI/PFX یا پذیرش recycle/reboot سرور نیست؛ [runbook IIS](DEPLOYMENT_IIS.md) و [پیکربندی](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) مرجع اجرا هستند.
 
 ### Payment
 

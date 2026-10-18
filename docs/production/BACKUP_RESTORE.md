@@ -18,6 +18,12 @@
 - پس از GAP-04، key ring پایدار MFA و custody محافظ DPAPI/certificate نیز دارایی recovery هستند؛ DB backup به‌تنهایی TOTP را بازیابی نمی‌کند. DPAPI به همان هویت Windows/ماشین وابسته است و کپی XML به سرور دیگر کافی نیست.
 - فایل خصوصی appsettings.Production.json، کلید Identity و tokenهای provider فقط در نسخهٔ پشتیبان محرمانه با ACL و روش بازیابی کنترل‌شده نگه‌داری شوند؛ داخل artifact مشترک، log یا Git نباشند. انتشار جدید نباید کلید Identity یا مسیر/کلیدهای MFA قبلی را عوض کند.
 
+### تکمیل custody کلید در PH-1
+
+Data Protection همچنان از provider قبلی با discriminator پیش‌فرض `MakanApp.BackofficeMfa.v1` و purposeهای MFA قبلی استفاده می‌کند. aliasهای `Security:DataProtection:*` روش جایگزین تنظیم‌اند، نه مجوز جابه‌جایی حلقه. تمام XMLهای لازم برای داده‌های تاریخی، protector، هویت/profile ویندوز یا PFX/private key/رمز و `ApplicationName` جزو inventory محرمانهٔ recovery باشند. DPAPI جاری به current-user وابسته است؛ XML تنها روی سرور دیگر قابل بازیابی فرض نشود. مسیر PFX موجود گزینهٔ قابل انتقال با custody مستقل است؛ certificate store/thumbprint یا rotation تازه‌ای در PH-1 ساخته نشده است.
+
+startup عملیاتی اکنون وجود حلقهٔ پایدار قابل نوشتن و roundtrip حفاظت را الزام می‌کند؛ readiness probe پوشه/کلید گم‌شده را بازسازی نمی‌کند و حذف کلیدهای دیده‌شده در startup را حتی با provider cache تشخیص می‌دهد. این شاهد، decrypt تمام payloadهای تاریخی پس از disaster را ثابت نمی‌کند. پیش از بازکردن traffic پس از restore، با **همان** `ApplicationName` و purpose، یک payload مصنوعی ثبت‌شده پیش از backup را روی instance بازیابی‌شده بررسی کنید؛ از چاپ secret TOTP یا محتوای کلید در evidence خودداری شود. شواهد محلی recreate provider جای drill انتقال واقعی IIS/ماشین را نمی‌گیرند و هیچ job/off-server copy تازه‌ای اجرا نشده است.
+
 ## سازگاری DB و Storage
 
 DB مرجع metadata و authorization فایل است و storage بایت‌ها را نگه می‌دارد. برای نقطه‌ی سازگار، ابتدا writeها drain شوند؛ زمان/شناسه‌ی backup DB و snapshot storage با هم ثبت شود. بازیابی فقط یکی از این دو می‌تواند metadata یتیم یا فایل بدون metadata ایجاد کند.

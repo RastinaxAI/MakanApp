@@ -125,3 +125,16 @@ Notification، scheduled و report دارای terminal state هستند؛ outbox
 
 وضعیت نهایی هر PH و نتایج دقیق validation/commit در ادامهٔ اجرای همین برنامه ثبت خواهد شد؛
 این جدول مبنا به‌تنهایی ادعای بسته‌شدن فاصله‌ها نیست.
+
+### PH-1 — تکمیل‌شده در کد و تست محلی
+
+همان provider سراسری با نام/purpose و مسیر legacy حفظ شد؛ aliasهای canonical، رد تعارض،
+startup lifecycle validation و probe جاری بدون reseed اضافه شدند. host عملیاتی بدون ring پایدار
+دیگر شروع نمی‌شود. DPAPI current-user و PFX موجود حفظ شده‌اند؛ custody/ACL/انتقال واقعی gate اپراتوری‌اند.
+مسیر مطالعه: `BackofficeMfaConfiguration` → `DataProtectionKeyRingSettings` →
+`DataProtectionKeyRingStartupValidator` → `DataProtectionKeyRingProbe` → `ProductionDataProtectionTests`.
+
+Validation واقعی: restore موفق؛ build و final build با ۰ warning/error؛ **49** تست متمرکز موفق؛
+final suite: **606 Unit + 1060 Integration + 14 Architecture = 1680**؛ failed/skipped=0.
+**26** مورد تست Integration به مبنا اضافه شد. migration و endpoint جدید ندارد.
+XML/PFX تستی از secret عملیاتی مستقل‌اند. اجرای IIS/recycle/reboot یا secret provisioning سرور انجام نشده است.

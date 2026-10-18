@@ -63,6 +63,28 @@ Web SDK فایل خصوصی `appsettings.Production.json` موجود را همر
 
 پیش از استفاده از MFA، پوشهٔ KeyRing را بیرون Publish و Storage بسازید و فقط به هویت App Pool و اپراتور مجاز دسترسی لازم بدهید. بدون certificate، محافظ Windows از DPAPI استفاده می‌کند؛ هویت App Pool باید ثابت و `Load User Profile` مناسب باشد. اگر MFA قبلاً فعال بوده، همان مسیر و کلیدهای قبلی را در `web.config` نگه دارید؛ تعویض مسیر، حذف پوشه یا کپی XML به ماشین دیگر بازیابی secretهای TOTP را تضمین نمی‌کند. این فایل پوشه/ACL یا تنظیمات App Pool سرور را خودکار ایجاد نمی‌کند. جزئیات در [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) است.
 
+### الزام Data Protection در PH-1
+
+در PH-1 همان provider سراسری قبلی reuse شده است، نه سیستم MFA موازی. مقدار پیش‌فرض `ApplicationName` دقیقاً `MakanApp.BackofficeMfa.v1` و purposeهای MFA بدون تغییرند. aliasهای جدید `Security:DataProtection:KeyRingPath`، `CertificatePath` و `CertificatePassword` با `BackofficeSecurity:*` سازگارند؛ اگر هر دو namespace مقدار غیرخالی متفاوت بدهند، startup متوقف می‌شود. وجود مقدار خالی در فایل نمونه، مسیر واقعی legacy در `web.config` را پاک نمی‌کند. راهنمای مرجع تنظیمات در [Production Configuration](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) است.
+
+تغییر عمدی نسبت به GAP-04: host عملیاتی بدون key ring پایدار دیگر شروع نمی‌شود؛ فقط resolve مستقیم سرویس MFA همچنان `MFA_UNAVAILABLE` می‌دهد. مسیر موجود `web.config` تغییر نکرده است. پیش از deploy، همان مسیر و محافظ قبلی را برای instance دارای MFA حفظ کنید؛ تنظیم یک مسیر تازه یا تغییر `ApplicationName` روش migration کلیدها نیست.
+
+`DataProtectionKeyRingStartupValidator` پیش از شروع workerها مسیر صریح، امکان write/read و protect/unprotect را بررسی می‌کند. probe runtime از همان تنظیمات استفاده می‌کند و پوشه یا کلیدهای گم‌شده را دوباره نمی‌سازد؛ نبود هر کلید غیرلغوشدهٔ مشاهده‌شده در startup یا checkهای موفق بعدی باعث عدم آمادگی می‌شود، حتی اگر provider کلید را cache کرده باشد. تعداد descriptorهای خوانده‌شده نیز با فایل‌های استاندارد `key-*.xml` تطبیق می‌یابد تا descriptor خراب بی‌صدا کنار گذاشته و حلقه از نو ساخته نشود؛ نام فایل‌های کلید را دستی تغییر ندهید. revocation XMLها فایل کلید محسوب نمی‌شوند. این کنترل جای custody و restore تمام کلیدهای تاریخی را نمی‌گیرد. Development/Testing بدون مسیر عملیاتی قابل اجرا باقی می‌مانند.
+
+نمونهٔ زیر فقط فرمان اپراتور است و در این تحویل روی سرور اجرا نشده؛ نام App Pool نمونه را با نام تأییدشدهٔ خودتان عوض کنید و مسیر **موجود** را حفظ کنید:
+
+```powershell
+$keyRingPath = 'C:\ProgramData\MakanApp\BackofficeMfaKeys'
+New-Item -ItemType Directory -Path $keyRingPath -Force | Out-Null
+icacls $keyRingPath /grant:r 'IIS AppPool\MakanApp:(OI)(CI)M' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F'
+icacls $keyRingPath /inheritance:r
+icacls $keyRingPath
+```
+
+دستور ACL در PowerShell مدیریتی و پس از ثبت ACL قبلی اجرا شود؛ custodianهای مجاز دیگر را بدون بررسی حذف نکنید. App Pool روی publish به‌طور عادی Read/Execute، روی key ring و Storage مجوز لازم، و روی private certificate حداقل Read می‌خواهد. key ring، PFX و JSON خصوصی نباید زیر publish، storage عمومی، Git یا ZIP قابل‌اشتراک باشند. symlink/junction و دسترسی physical path نیز باید توسط اپراتور بررسی شود.
+
+DPAPI موجود **current-user** است، نه `LocalMachine`؛ تغییر Windows identity/profile یا انتقال صرف XML به ماشین جدید قابل بازیابی فرض نشود. برای قابلیت انتقال، گزینهٔ certificate/PFX موجود کافی است و نیاز به certificate store دوم ندارد: `CertificatePath` مطلق و `CertificatePassword` فقط از secret store محیط تأمین شوند، PFX/private key و رمز تحت custody امن و جدا از backup عادی باشند. اضافه‌کردن store/thumbprint در این مرحله ارزش ضروری نسبت به مسیر PFX موجود ندارد و انجام نشده است. تعویض محافظ به certificate، کلیدهای DPAPI قدیمی را خودکار قابل انتقال نمی‌کند؛ migration و drill جدا لازم است. جزئیات [Backup/Restore](BACKUP_RESTORE.md) همچنان معتبر است.
+
 ## فایل SQL مایگریشن‌ها
 
 Migration تازه‌ای برای این تغییر کانفیگ لازم نیست. دو Migration موجود مرتبط با MFA و Child Safety عبارت‌اند از `20261015073418_AddPlatformTotpMfa` و `20261015091336_EnforceApprovedMessengerChildSafety`. اگر پایگاه هدف قدیمی‌تر از GAP-01 است، اسکریپت محدود این دو مرحله کافی نیست. خروجی کامل idempotent را بدون اتصال به دیتابیس می‌توان تولید کرد:
