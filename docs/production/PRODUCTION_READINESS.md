@@ -1,6 +1,10 @@
 # آمادگی جاری Production و حدود انتشار
 
-بازبینی `2026-10-15`، مبنا `main@80d6a14`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
+بازبینی `2026-10-18`، مبنا `main@ef67624`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
+
+## تغییرات Messenger در این بازبینی
+
+P0/P1/P2 تا Checklist در کد و تست‌های محلی موجودند؛ Enum/OpenAPI در snapshot جاری mismatch قدیمی ندارد. Web Push/FCM transport واقعی دارند ولی دستگاه واقعی تأیید نشده است. Typing/Presence حافظه‌ای تک‌instance‌اند و PENDING_SCALE_INFRA برقرار است. P3 فقط policy مصوب دارد و در S1 با P3_S_INFRA_REQUIRED متوقف است؛ LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED و P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED. [وضعیت و منابع دقیق](../messaging/CURRENT_MESSENGER_STATUS.md).
 
 ## Blockerهای الزامی
 
@@ -29,7 +33,7 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Rate limiting | READY_WITH_LIMITATION | policyهای local-process؛ چند instance به limiter مشترک نیاز دارد |
 | Payment | BLOCKED | provider واقعی وجود ندارد و موفقیت دستی ممنوع است |
 | Child Safety | COMPLETE_IN_CODE / OPS_PENDING | Policy v1 و Unknown=protected، رابطه/رضایت، current-state Send و provider داخلی واقعی؛ بدون ادعای ML یا تحلیل معنایی رسانه |
-| Notifications | READY_WITH_LIMITATION | durable delivery موجود؛ providerهای Production باید پیکربندی شوند |
+| Notifications | CODE_COMPLETE / DEVICE_RUNTIME_PENDING | Web Push/VAPID و FCM HTTP v1 واقعی؛ credential/device واقعی و دریافت روی دستگاه تأیید نشده؛ P1_PUSH_RUNTIME_PENDING |
 | Logging | READY | structured logging، correlation ID و حداقل سطح Information |
 | Metrics | READY_WITH_LIMITATION | `System.Diagnostics.Metrics` vendor-neutral؛ exporter در محیط نصب می‌شود |
 | Tracing | READY_WITH_LIMITATION | ASP.NET/Activity و trace ID موجود؛ collector/exporter عملیات محیط است |

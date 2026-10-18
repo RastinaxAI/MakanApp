@@ -1,5 +1,9 @@
 # Makan Messenger P3 Media Policy v1
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 وضعیت محصول: **APPROVED_FOR_IMPLEMENTATION / APPROVED_AND_FROZEN**.
 
 مالک تصمیم: Product Owner؛ تاریخ ثبت `2026-10-17`؛ منبع تأیید: درخواست صریح «P3 OWNER DECISIONS — APPROVED AND FROZEN». مبنای مخزن پیش از ثبت: `47e620077c5809b6d8e1b6ad2515f1afec48c247` در worktree مستقل Messenger. این approval محصول، **اثبات implementation، موفقیت P3-S یا پذیرش Production نیست**. اقدام این تحویل فقط ثبت سیاست و آماده‌کردن [برنامهٔ اجرایی P3-S](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) است.

@@ -7,12 +7,12 @@
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۲۸۴ عملیات در ۴۸ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۴۸۸ schema استخراج‌شده از OpenAPI.
+- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۲۵ عملیات در ۵۷ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۵۱ schema استخراج‌شده از OpenAPI.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
-بازبینی جاری در `2026-10-15` از سورس commit `80d6a14` انجام شده است: ۲۸۴ عملیات Controller در ۲۵۶ مسیر متمایز، ۴۸ Controller، ۴۸۸ schema، ۸۸ جدول و ۳۷ Migration. Health/OpenAPI/Hub در شمار Controller operation نیستند. شمارش از TestServer و مدل طراحی EF، بدون اتصال SQL، worker، SMS یا AI واقعی استخراج شده است؛ این شواهد وضعیت یک سرور مستقرشده را تأیید نمی‌کنند.
+بازبینی `2026-10-18` از `main@ef67624`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. اعداد از TestServer بدون worker و مدل طراحی EF آمده‌اند؛ هیچ provider/دیتابیس واقعی فراخوانی نشده است. [شاخص وضعیت پروژه و gateها](docs/CURRENT_PROJECT_STATUS.md).
 
 Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
 
@@ -24,7 +24,7 @@ Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HT
 | Organization / Guardian | onboarding پرونده، دعوت اتصال حساب با رضایت، lifecycle سرپرستی؛ بدون merge یا ساخت ضمنی حساب |
 | Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
 | Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
-| Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان داخلی و outbox/preferences؛ Push و SMS اعلان provider واقعی ندارند |
+| Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
 | Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ MFA/step-up واقعی TOTP موجود است |
 | AI | ۱۲ API سمت Backend؛ پیش‌فرض غیرفعال، source lifecycle RAG deferred و real Backend↔AI E2E از شواهد commit‌شده بسته نشده است |
 | Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
@@ -32,6 +32,10 @@ Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HT
 انتشار فعلی مالک **Production روی HTTP** است؛ فایل Staging حذف شده. `appsettings.Production.json` واقعی محلی/ignored و نمونهٔ بدون secret آن `appsettings.Production.json.example` است. دو استثنای تأییدشدهٔ `Hosting:AllowInsecureHttp` و `Database:AllowUntrustedServerCertificate` فقط در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض پایه امن است. HTTP رمزگذاری ندارد و این استثناها gate امن GAP-02 را نمی‌بندند. [مراحل دقیق سرور IIS](docs/production/DEPLOYMENT_IIS.md) شامل حفظ Storage، کلید Identity و key ring پایدار MFA است؛ هیچ اتصال/تغییر سرور با این اسناد ادعا نمی‌شود.
 
 بخش‌های معرفی مراحل توسعه در ادامه سابقهٔ تکمیل همان مرحله‌اند؛ برای قرارداد جاری از مرجع API، مدل دیتابیس و اسناد عملیاتی بالا استفاده کنید. PDFهای اصلی محصول در project-context دست‌نخورده و فقط مرجع نیازمندی‌اند؛ MySQL قدیمی همچنان منسوخ است.
+
+## تغییرات جاری Messenger
+
+P0/P1/P2 تا Checklist در کد موجودند: Peer Read، Typing/Presence، Folder/Labels، Invite/Join، Topic، Scheduled/Silent، Poll/Quiz و Checklist. [وضعیت یکپارچه و منابع](docs/messaging/CURRENT_MESSENGER_STATUS.md). P1_PUSH_RUNTIME_PENDING و PENDING_SCALE_INFRA برقرارند؛ رسانه P3 در انتظار زیرساخت S است و runtime پذیرفته‌شده ندارد. اختلاف قدیمی Enum/OpenAPI در snapshot جاری دیده نشد.
 
 ## مسیرها
 
@@ -108,7 +112,7 @@ ConnectionStrings:MakanDatabase
 dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=MakanApp;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project MakanApp.Api/MakanApp.Api.csproj
 ~~~
 
-در محیط‌های دیگر مقدار از secret store، environment یا فایل خصوصی دارای ACL تأمین می‌شود. ۳۷ Migration نسخه‌بندی‌شده داریم؛ آخرین شناسه `20261015091336_EnforceApprovedMessengerChildSafety` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال آن عملیات کنترل‌شده و جداگانه است. [ساختار جاری دیتابیس](docs/database-current-structure.md) و ابزار SQL بررسی‌شده در [runbook IIS](docs/production/DEPLOYMENT_IIS.md) را ببینید؛ این تغییر مستندات Migration تازه نمی‌خواهد.
+در محیط‌های دیگر مقدار از secret store، environment یا فایل خصوصی دارای ACL تأمین می‌شود. ۴۸ Migration نسخه‌بندی‌شده داریم؛ آخرین شناسه `20261017033804_AddConversationChecklists` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال آن عملیات کنترل‌شده و جداگانه است. [ساختار جاری دیتابیس](docs/database-current-structure.md) و ابزار SQL بررسی‌شده در [runbook IIS](docs/production/DEPLOYMENT_IIS.md) را ببینید؛ این تغییر مستندات Migration تازه نمی‌خواهد.
 
 زیرساخت Order/Payment فعلاً provider واقعی ندارد. مقدار commit‌شده `Payments:Provider=Unavailable` است و secret پرداختی در appsettings نگهداری نمی‌شود. Integration Testها `RecordingPaymentGateway` داخلی را جایگزین می‌کنند و هیچ تماس مالی واقعی ندارند. جزئیات در `docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md` ثبت شده است.
 

@@ -1,16 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-## افزودهٔ Messenger P0 — ۲۰۲۶-۱۰-۱۶
+مدل طراحی EF Core در `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ بازبینی `2026-10-18`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-Migration جدید `20261016050425_AddPersonalCommunicationAgeVerification`، شمار migration را به ۳۸ می‌رساند. تعداد جدول/ستون/PK/FK/index تغییر نکرده است. تنها CHECK موجود `identity.CommunicationAgeVerifications.CK_CommunicationAgeVerifications_Source` توسعه یافت: School/source=1 با OrganizationId غیرخالی؛ PlatformResolution/source=2 و PlatformVerification/source=3 با OrganizationId خالی. شاهد append-only، rowversion کاربر و audit موجود reuse می‌شوند؛ SQL default/backfill یا مدل سن موازی ایجاد نشده است.
-
-migration در SQL Server LocalDB ایزوله از صفر تست می‌شود؛ این سند اثبات schema سرور نیست و هیچ migration سرور اجرا نشد. در صورت وجود شاهد source=3، Down نمی‌تواند بدون تصمیم داده‌ای به constraint قدیمی برگردد؛ حذف شاهد یا rollback کور مجاز نیست. [workflow و شواهد P0](messaging/MESSENGER_P0_DELIVERY_AUDIT.md).
-
-## snapshot مبنا
-
-مدل طراحی EF Core در `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ بازبینی `2026-10-15`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
-
-**88 جدول، 901 ستون، 193 FK، 245 index مستقل از key و 238 CHECK؛ 37 Migration.**
+**107 جدول، 1055 ستون، 239 FK، 295 index مستقل از key و 279 CHECK؛ 48 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -32,7 +24,7 @@ migration در SQL Server LocalDB ایزوله از صفر تست می‌شود�
 | commerce | 10 |
 | guardian | 1 |
 | identity | 7 |
-| messaging | 23 |
+| messaging | 42 |
 | notification | 4 |
 | organization | 5 |
 | platform | 9 |
@@ -80,6 +72,17 @@ migration در SQL Server LocalDB ایزوله از صفر تست می‌شود�
 | 35 | 20261014214734_AddOperationalPersonGuardianOnboarding | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261014214734_AddOperationalPersonGuardianOnboarding.cs) |
 | 36 | 20261015073418_AddPlatformTotpMfa | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261015073418_AddPlatformTotpMfa.cs) |
 | 37 | 20261015091336_EnforceApprovedMessengerChildSafety | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261015091336_EnforceApprovedMessengerChildSafety.cs) |
+| 38 | 20261016050425_AddPersonalCommunicationAgeVerification | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016050425_AddPersonalCommunicationAgeVerification.cs) |
+| 39 | 20261016072600_AddDirectPeerReadReceipts | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016072600_AddDirectPeerReadReceipts.cs) |
+| 40 | 20261016074318_HardenNotificationDeliveryRecovery | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016074318_HardenNotificationDeliveryRecovery.cs) |
+| 41 | 20261016081315_ExtendPushDeviceSubscriptions | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016081315_ExtendPushDeviceSubscriptions.cs) |
+| 42 | 20261016163433_AddMessagingPresencePrivacy | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016163433_AddMessagingPresencePrivacy.cs) |
+| 43 | 20261016170915_AddMessagingPersonalOrganization | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016170915_AddMessagingPersonalOrganization.cs) |
+| 44 | 20261016174429_AddConversationInvitesAndRestrictions | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016174429_AddConversationInvitesAndRestrictions.cs) |
+| 45 | 20261016183900_AddConversationTopics | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016183900_AddConversationTopics.cs) |
+| 46 | 20261016190927_AddScheduledAndSilentMessages | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016190927_AddScheduledAndSilentMessages.cs) |
+| 47 | 20261016211112_AddConversationPollsAndQuiz | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016211112_AddConversationPollsAndQuiz.cs) |
+| 48 | 20261017033804_AddConversationChecklists | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261017033804_AddConversationChecklists.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -1842,7 +1845,7 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_CommunicationAgeVerifications_Categories | `[PreviousCategory] IN (0,1,2) AND [ProposedCategory] IN (1,2)` |
-| CK_CommunicationAgeVerifications_Source | `([Source]=1 AND [OrganizationId] IS NOT NULL) OR ([Source]=2 AND [OrganizationId] IS NULL)` |
+| CK_CommunicationAgeVerifications_Source | `([Source]=1 AND [OrganizationId] IS NOT NULL) OR ([Source] IN (2,3) AND [OrganizationId] IS NULL)` |
 | CK_CommunicationAgeVerifications_Status | `[Status] IN (1,2)` |
 
 ### identity.OtpChallenges
@@ -2118,7 +2121,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_AbuseReports_MessageKind | `[ReportedMessageKind] IN (1, 2, 3, 4, 5)` |
+| CK_AbuseReports_MessageKind | `[ReportedMessageKind] IN (1, 2, 3, 4, 5, 6, 7, 8)` |
 | CK_AbuseReports_Reason | `[Reason] IN (1, 2, 3, 4, 5, 6, 7)` |
 | CK_AbuseReports_Status | `[Status] IN (1, 2, 3, 4)` |
 
@@ -2168,7 +2171,179 @@ CHECKها:
 |---|---|
 | CK_ChangeEvents_PayloadVersion | `[PayloadVersion] = 1` |
 | CK_ChangeEvents_Sequence | `[ChangeSequence] > 0` |
-| CK_ChangeEvents_Type | `[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)` |
+| CK_ChangeEvents_Type | `[ChangeType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)` |
+
+### messaging.ChatFolders
+
+Entity: `MakanApp.Domain.Messaging.ChatFolder`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ExcludedTypes | `int` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IncludedTypes | `int` | خیر | خیر | Never |
+| Name | `nvarchar(80)` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SortOrder | `int` | خیر | خیر | Never |
+| UnreadOnly | `bit` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ChatFolders | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ChatFolders_OwnerUserId_SortOrder_Id | OwnerUserId, SortOrder, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ChatFolders_Name | `LEN(LTRIM(RTRIM([Name]))) > 0` |
+| CK_ChatFolders_Revision | `[Revision] > 0` |
+| CK_ChatFolders_SortOrder | `[SortOrder] BETWEEN 0 AND 10000` |
+| CK_ChatFolders_Types | `([IncludedTypes] & ~15) = 0 AND ([ExcludedTypes] & ~15) = 0` |
+
+### messaging.ConversationChecklistItems
+
+Entity: `MakanApp.Domain.Messaging.ConversationChecklistItem`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ChecklistId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtRevision | `bigint` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| IsChecked | `bit` | خیر | خیر | Never |
+| Mode | `int` | خیر | خیر | Never |
+| Position | `int` | خیر | خیر | Never |
+| RetiredAtRevision | `bigint` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| StateRevision | `bigint` | خیر | خیر | Never |
+| Text | `nvarchar(150)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationChecklistItems | PK | ChecklistId, Id |
+| AK_ConversationChecklistItems_ChecklistId_Id_Mode | Alternate Key | ChecklistId, Id, Mode |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationChecklistItems_ChecklistId_Mode | ChecklistId, Mode | False | — |
+| IX_ConversationChecklistItems_ChecklistId_RetiredAtRevision_Position | ChecklistId, RetiredAtRevision, Position | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ChecklistId, Mode | messaging.ConversationChecklists | Id, Mode | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationChecklistItems_Definition | `LEN(LTRIM(RTRIM([Text])))>0 AND [Position] BETWEEN 1 AND 20 AND [CreatedAtRevision]>0 AND ([RetiredAtRevision] IS NULL OR [RetiredAtRevision]>[CreatedAtRevision])` |
+| CK_ConversationChecklistItems_State | `[StateRevision]>0 AND ([Mode]=2 OR ([Mode]=1 AND [IsChecked]=0 AND [StateRevision]=1))` |
+
+### messaging.ConversationChecklistPersonalStates
+
+Entity: `MakanApp.Domain.Messaging.ConversationChecklistPersonalState`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ChecklistId | `uniqueidentifier` | خیر | خیر | Never |
+| IsChecked | `bit` | خیر | خیر | Never |
+| ItemId | `uniqueidentifier` | خیر | خیر | Never |
+| Mode | `int` | خیر | خیر | Never |
+| Revision | `bigint` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationChecklistPersonalStates | PK | ChecklistId, ItemId, UserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationChecklistPersonalStates_UserId | UserId | False | — |
+| IX_ConversationChecklistPersonalStates_ChecklistId_ItemId_Mode | ChecklistId, ItemId, Mode | False | — |
+| IX_ConversationChecklistPersonalStates_ChecklistId_UserId_ItemId | ChecklistId, UserId, ItemId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| UserId | identity.Users | Id | Restrict |
+| ChecklistId, ItemId, Mode | messaging.ConversationChecklistItems | ChecklistId, Id, Mode | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationChecklistPersonalStates_Mode | `[Mode]=1 AND [Revision]>0` |
+
+### messaging.ConversationChecklists
+
+Entity: `MakanApp.Domain.Messaging.ConversationChecklist`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreationHash | `binary(32)` | خیر | خیر | Never |
+| CreatorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| DefinitionRevision | `bigint` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| Mode | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UpdatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationChecklists | PK | Id |
+| AK_ConversationChecklists_Id_Mode | Alternate Key | Id, Mode |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationChecklists_CreatorUserId | CreatorUserId | False | — |
+| IX_ConversationChecklists_Id_ConversationId | Id, ConversationId | False | — |
+| IX_ConversationChecklists_ConversationId_CreatedAtUtc_Id | ConversationId, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CreatorUserId | identity.Users | Id | Restrict |
+| Id, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationChecklists_Definition | `[Mode] IN (1,2) AND [DefinitionRevision]>0 AND DATALENGTH([CreationHash])=32 AND [UpdatedAtUtc]>=[CreatedAtUtc]` |
 
 ### messaging.ConversationInvitations
 
@@ -2215,6 +2390,152 @@ CHECKها:
 | CK_ConversationInvitations_Pair | `[InviterUserId] <> [TargetUserId]` |
 | CK_ConversationInvitations_Status | `[Status] IN (1,2,3,4,5)` |
 | CK_ConversationInvitations_Times | `[ExpiresAtUtc] > [CreatedAtUtc] AND (([Status]=1 AND [CompletedAtUtc] IS NULL) OR ([Status]<>1 AND [CompletedAtUtc] IS NOT NULL))` |
+
+### messaging.ConversationInviteLinks
+
+Entity: `MakanApp.Domain.Messaging.ConversationInviteLink`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatorMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatorRole | `int` | بله | خیر | Never |
+| ExpiresAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| MaximumUses | `int` | خیر | خیر | Never |
+| RequiresApproval | `bit` | خیر | خیر | Never |
+| RevokedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| TokenHash | `char(64)` | خیر | خیر | Never |
+| UsedCount | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationInviteLinks | PK | Id |
+| AK_ConversationInviteLinks_Id_ConversationId | Alternate Key | Id, ConversationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationInviteLinks_CreatedByUserId | CreatedByUserId | False | — |
+| IX_ConversationInviteLinks_CreatorMembershipId | CreatorMembershipId | False | — |
+| IX_ConversationInviteLinks_TokenHash | TokenHash | True | — |
+| IX_ConversationInviteLinks_ConversationId_CreatedAtUtc_Id | ConversationId, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| CreatedByUserId | identity.Users | Id | Restrict |
+| CreatorMembershipId | organization.Memberships | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationInviteLinks_CreatorContext | `([CreatorMembershipId] IS NULL AND [CreatorRole] IS NULL) OR ([CreatorMembershipId] IS NOT NULL AND [CreatorRole] IS NOT NULL AND [CreatorRole] IN (1,2,3,4))` |
+| CK_ConversationInviteLinks_Expiry | `[ExpiresAtUtc] > [CreatedAtUtc]` |
+| CK_ConversationInviteLinks_Hash | `LEN([TokenHash]) = 64` |
+| CK_ConversationInviteLinks_Uses | `[MaximumUses] BETWEEN 1 AND 10000 AND [UsedCount] BETWEEN 0 AND [MaximumUses]` |
+
+### messaging.ConversationJoinRequests
+
+Entity: `MakanApp.Domain.Messaging.ConversationJoinRequest`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| ExpiresAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| InviteLinkId | `uniqueidentifier` | خیر | خیر | Never |
+| RequesterMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| RequesterRole | `int` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationJoinRequests | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationJoinRequests_RequesterMembershipId | RequesterMembershipId | False | — |
+| IX_ConversationJoinRequests_ConversationId_UserId | ConversationId, UserId | True | [Status] = 1 |
+| IX_ConversationJoinRequests_InviteLinkId_ConversationId | InviteLinkId, ConversationId | False | — |
+| IX_ConversationJoinRequests_ConversationId_CreatedAtUtc_Id | ConversationId, CreatedAtUtc, Id | False | — |
+| IX_ConversationJoinRequests_UserId_CreatedAtUtc_Id | UserId, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| RequesterMembershipId | organization.Memberships | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+| InviteLinkId, ConversationId | messaging.ConversationInviteLinks | Id, ConversationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationJoinRequests_Expiry | `[ExpiresAtUtc] > [CreatedAtUtc]` |
+| CK_ConversationJoinRequests_Lifecycle | `([Status] = 1 AND [CompletedAtUtc] IS NULL) OR ([Status] <> 1 AND [CompletedAtUtc] IS NOT NULL)` |
+| CK_ConversationJoinRequests_RequesterContext | `([RequesterMembershipId] IS NULL AND [RequesterRole] IS NULL) OR ([RequesterMembershipId] IS NOT NULL AND [RequesterRole] IS NOT NULL AND [RequesterRole] IN (1,2,3,4))` |
+| CK_ConversationJoinRequests_Status | `[Status] IN (1,2,3,4,5)` |
+
+### messaging.ConversationMemberRestrictions
+
+Entity: `MakanApp.Domain.Messaging.ConversationMemberRestriction`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| DeniedCapabilities | `int` | خیر | خیر | Never |
+| IsBanned | `bit` | خیر | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UntilUtc | `datetime2(7)` | بله | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationMemberRestrictions | PK | ConversationId, UserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationMemberRestrictions_UserId | UserId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationMemberRestrictions_Capabilities | `[DeniedCapabilities] BETWEEN 0 AND 7` |
+| CK_ConversationMemberRestrictions_Clear | `[IsBanned] = 1 OR [DeniedCapabilities] <> 0 OR [UntilUtc] IS NULL` |
+| CK_ConversationMemberRestrictions_Revision | `[Revision] > 0` |
 
 ### messaging.ConversationOwnershipTransfers
 
@@ -2316,7 +2637,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_ConversationParticipants_AdminPermissions | `[AdminPermissions] BETWEEN 0 AND 511 AND (([Role] = 2) OR [AdminPermissions] = 0)` |
+| CK_ConversationParticipants_AdminPermissions | `[AdminPermissions] BETWEEN 0 AND 8191 AND (([Role] = 2) OR [AdminPermissions] = 0)` |
 | CK_ConversationParticipants_CursorTimestamp | `([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)` |
 | CK_ConversationParticipants_Cursors | `[LastDeliveredMessageSequence] >= 0 AND [LastReadMessageSequence] >= 0 AND [LastReadMessageSequence] <= [LastDeliveredMessageSequence]` |
 | CK_ConversationParticipants_HistoryBoundary | `[HistoryVisibleFromSequence] > 0` |
@@ -2367,6 +2688,194 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_ConversationPins_Lifecycle | `([UnpinnedAtUtc] IS NULL AND [UnpinnedByUserId] IS NULL) OR ([UnpinnedAtUtc] IS NOT NULL AND [UnpinnedByUserId] IS NOT NULL AND [UnpinnedAtUtc] >= [PinnedAtUtc])` |
+
+### messaging.ConversationPollOptions
+
+Entity: `MakanApp.Domain.Messaging.ConversationPollOption`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Number | `int` | خیر | خیر | Never |
+| PollId | `uniqueidentifier` | خیر | خیر | Never |
+| Text | `nvarchar(150)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationPollOptions | PK | PollId, Number |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PollId | messaging.ConversationPolls | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationPollOptions_Value | `[Number] BETWEEN 1 AND 10 AND LEN(LTRIM(RTRIM([Text])))>0` |
+
+### messaging.ConversationPolls
+
+Entity: `MakanApp.Domain.Messaging.ConversationPoll`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AllowsMultipleAnswers | `bit` | خیر | خیر | Never |
+| ClosedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| ClosedByUserId | `uniqueidentifier` | بله | خیر | Never |
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreatorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| DefinitionHash | `binary(32)` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| IsAnonymous | `bit` | خیر | خیر | Never |
+| IsQuiz | `bit` | خیر | خیر | Never |
+| OptionCount | `int` | خیر | خیر | Never |
+| Revision | `bigint` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationPolls | PK | Id |
+| AK_ConversationPolls_Id_IsQuiz | Alternate Key | Id, IsQuiz |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationPolls_ClosedByUserId | ClosedByUserId | False | — |
+| IX_ConversationPolls_CreatorUserId | CreatorUserId | False | — |
+| IX_ConversationPolls_Id_ConversationId | Id, ConversationId | False | — |
+| IX_ConversationPolls_ConversationId_CreatedAtUtc_Id | ConversationId, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ClosedByUserId | identity.Users | Id | Restrict |
+| CreatorUserId | identity.Users | Id | Restrict |
+| Id, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationPolls_Definition | `[OptionCount] BETWEEN 2 AND 10 AND DATALENGTH([DefinitionHash])=32 AND ([IsQuiz]=0 OR [AllowsMultipleAnswers]=0)` |
+| CK_ConversationPolls_State | `[Revision]>0 AND [UpdatedAtUtc]>=[CreatedAtUtc] AND (([Status]=1 AND [ClosedAtUtc] IS NULL AND [ClosedByUserId] IS NULL) OR ([Status]=2 AND [ClosedAtUtc] IS NOT NULL AND [ClosedAtUtc]>=[CreatedAtUtc] AND [ClosedByUserId] IS NOT NULL))` |
+
+### messaging.ConversationPollSelections
+
+Entity: `MakanApp.Domain.Messaging.ConversationPollSelection`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| OptionNumber | `int` | خیر | خیر | Never |
+| PollId | `uniqueidentifier` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationPollSelections | PK | PollId, UserId, OptionNumber |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationPollSelections_PollId_OptionNumber_UserId | PollId, OptionNumber, UserId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PollId, OptionNumber | messaging.ConversationPollOptions | PollId, Number | Restrict |
+| PollId, UserId | messaging.ConversationPollVotes | PollId, UserId | Restrict |
+
+### messaging.ConversationPollVotes
+
+Entity: `MakanApp.Domain.Messaging.ConversationPollVote`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| IsQuiz | `bit` | خیر | خیر | Never |
+| PollId | `uniqueidentifier` | خیر | خیر | Never |
+| Revision | `bigint` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UpdatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationPollVotes | PK | PollId, UserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationPollVotes_UserId | UserId | False | — |
+| IX_ConversationPollVotes_PollId_IsQuiz | PollId, IsQuiz | False | — |
+| IX_ConversationPollVotes_PollId_CreatedAtUtc_UserId | PollId, CreatedAtUtc, UserId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| UserId | identity.Users | Id | Restrict |
+| PollId, IsQuiz | messaging.ConversationPolls | Id, IsQuiz | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationPollVotes_State | `[Revision]>0 AND ([IsQuiz]=0 OR [Revision]=1) AND [UpdatedAtUtc]>=[CreatedAtUtc]` |
+
+### messaging.ConversationQuizAnswers
+
+Entity: `MakanApp.Domain.Messaging.ConversationQuizAnswer`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CorrectOptionNumber | `int` | خیر | خیر | Never |
+| Explanation | `nvarchar(1000)` | بله | خیر | Never |
+| IsQuiz | `bit` | خیر | خیر | Never |
+| PollId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationQuizAnswers | PK | PollId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationQuizAnswers_PollId_CorrectOptionNumber | PollId, CorrectOptionNumber | False | — |
+| IX_ConversationQuizAnswers_PollId_IsQuiz | PollId, IsQuiz | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PollId, CorrectOptionNumber | messaging.ConversationPollOptions | PollId, Number | Restrict |
+| PollId, IsQuiz | messaging.ConversationPolls | Id, IsQuiz | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationQuizAnswers_IsQuiz | `[IsQuiz]=1` |
 
 ### messaging.Conversations
 
@@ -2451,6 +2960,51 @@ CHECKها:
 | CK_Conversations_UserManagedCreation | `([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)` |
 | CK_Conversations_Visibility | `[Visibility] IN (1, 2)` |
 
+### messaging.ConversationTopics
+
+Entity: `MakanApp.Domain.Messaging.ConversationTopic`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| Revision | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| Title | `nvarchar(160)` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationTopics | PK | Id |
+| AK_ConversationTopics_Id_ConversationId | Alternate Key | Id, ConversationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationTopics_CreatedByUserId | CreatedByUserId | False | — |
+| IX_ConversationTopics_ConversationId_CreatedAtUtc_Id | ConversationId, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| CreatedByUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationTopics_Revision | `[Revision] > 0` |
+| CK_ConversationTopics_Status | `[Status] IN (1,2)` |
+| CK_ConversationTopics_Title | `LEN(LTRIM(RTRIM([Title]))) > 0` |
+
 ### messaging.ConversationUserStates
 
 Entity: `MakanApp.Domain.Messaging.ConversationUserState`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -2494,6 +3048,43 @@ CHECKها:
 | CK_ConversationUserStates_HistoryHiddenThroughSequence | `[HistoryHiddenThroughSequence] >= 0` |
 | CK_ConversationUserStates_MuteMode | `[MuteMode] IN (0, 1, 2)` |
 | CK_ConversationUserStates_MuteShape | `([MuteMode] IN (0, 1) AND [MutedUntilUtc] IS NULL) OR ([MuteMode] = 2 AND [MutedUntilUtc] IS NOT NULL)` |
+
+### messaging.FolderConversationOverrides
+
+Entity: `MakanApp.Domain.Messaging.FolderConversationOverride`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| FolderId | `uniqueidentifier` | خیر | خیر | Never |
+| Included | `bit` | خیر | خیر | Never |
+| PinOrder | `int` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_FolderConversationOverrides | PK | FolderId, ConversationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_FolderConversationOverrides_ConversationId | ConversationId | False | — |
+| IX_FolderConversationOverrides_FolderId_PinOrder | FolderId, PinOrder | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| FolderId | messaging.ChatFolders | Id | Cascade |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_FolderConversationOverrides_Pin | `[PinOrder] IS NULL OR ([Included] = 1 AND [PinOrder] BETWEEN 0 AND 199)` |
 
 ### messaging.MessageAttachments
 
@@ -2658,6 +3249,7 @@ Entity: `MakanApp.Domain.Messaging.Message`؛ مالک نگاشت: [EF Configura
 | EditedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ForwardedFromMessageId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsSilent | `bit` | خیر | خیر | Never |
 | Kind | `int` | خیر | خیر | Never |
 | ReplyToMessageId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
@@ -2670,6 +3262,7 @@ Entity: `MakanApp.Domain.Messaging.Message`؛ مالک نگاشت: [EF Configura
 | SharedContactUserId | `uniqueidentifier` | بله | خیر | Never |
 | SharedContactUsername | `nvarchar(32)` | بله | خیر | Never |
 | Text | `nvarchar(4000)` | بله | خیر | Never |
+| TopicId | `uniqueidentifier` | بله | خیر | Never |
 
 کلیدها:
 
@@ -2688,8 +3281,10 @@ Indexها:
 | IX_Messages_SharedContactUserId | SharedContactUserId | False | — |
 | UX_Messages_Conversation_Sequence | ConversationId, Sequence | True | — |
 | IX_Messages_ReplyToMessageId_ConversationId | ReplyToMessageId, ConversationId | False | — |
+| IX_Messages_TopicId_ConversationId | TopicId, ConversationId | False | — |
 | UX_Messages_Conversation_Sender_ClientMessageId | ConversationId, SenderUserId, ClientMessageId | True | — |
 | IX_Messages_Search_Access | ConversationId, SentAtUtc, Id | False | — |
+| IX_Messages_ConversationId_TopicId_Sequence | ConversationId, TopicId, Sequence | False | — |
 | IX_Messages_SenderParticipantId_ConversationId_SenderUserId | SenderParticipantId, ConversationId, SenderUserId | False | — |
 
 روابط:
@@ -2701,6 +3296,7 @@ Indexها:
 | ForwardedFromMessageId | messaging.Messages | Id | Restrict |
 | SharedContactUserId | identity.Users | Id | Restrict |
 | ReplyToMessageId, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+| TopicId, ConversationId | messaging.ConversationTopics | Id, ConversationId | Restrict |
 | SenderParticipantId, ConversationId, SenderUserId | messaging.ConversationParticipants | Id, ConversationId, UserId | Restrict |
 
 CHECKها:
@@ -2708,9 +3304,9 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_Messages_ContactCardShape | `([Kind] = 6 AND [SharedContactUserId] IS NOT NULL AND LEN(LTRIM(RTRIM([SharedContactUsername]))) > 0 AND LEN(LTRIM(RTRIM([SharedContactDisplayName]))) > 0) OR ([Kind] <> 6 AND [SharedContactUserId] IS NULL AND [SharedContactUsername] IS NULL AND [SharedContactDisplayName] IS NULL)` |
-| CK_Messages_Content | `([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] = 1 AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))` |
+| CK_Messages_Content | `([DeletedAtUtc] IS NOT NULL AND [DeletedByUserId] IS NOT NULL AND [Text] IS NULL) OR ([DeletedAtUtc] IS NULL AND [DeletedByUserId] IS NULL AND (([Kind] IN (1, 7, 8) AND [Text] IS NOT NULL AND LEN(LTRIM(RTRIM([Text]))) > 0) OR ([Kind] IN (2, 3, 4, 5) AND ([Text] IS NULL OR LEN(LTRIM(RTRIM([Text]))) > 0)) OR ([Kind] = 6 AND [Text] IS NULL)))` |
 | CK_Messages_CurrentRevision | `[CurrentRevisionNumber] > 0` |
-| CK_Messages_Kind | `[Kind] IN (1, 2, 3, 4, 5, 6)` |
+| CK_Messages_Kind | `[Kind] IN (1, 2, 3, 4, 5, 6, 7, 8)` |
 | CK_Messages_Sequence | `[Sequence] > 0` |
 
 ### messaging.MessageUserVisibilities
@@ -2751,6 +3347,8 @@ Entity: `MakanApp.Domain.Messaging.MessagingPrivacySettings`؛ مالک نگاش
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | DirectMessagesAudience | `int` | خیر | خیر | Never |
 | GroupInvitesAudience | `int` | خیر | خیر | Never |
+| LastSeenAudience | `int` | خیر | خیر | OnAdd |
+| OnlineAudience | `int` | خیر | خیر | OnAdd |
 | PhoneNumberDiscoveryAudience | `int` | خیر | خیر | Never |
 | PhoneNumberVisibilityAudience | `int` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
@@ -2775,6 +3373,8 @@ CHECKها:
 |---|---|
 | CK_MessagingPrivacySettings_DirectMessagesAudience | `[DirectMessagesAudience] IN (1, 2, 3)` |
 | CK_MessagingPrivacySettings_GroupInvitesAudience | `[GroupInvitesAudience] IN (1, 2, 3)` |
+| CK_MessagingPrivacySettings_LastSeenAudience | `[LastSeenAudience] IN (1, 2, 3)` |
+| CK_MessagingPrivacySettings_OnlineAudience | `[OnlineAudience] IN (1, 2, 3)` |
 | CK_MessagingPrivacySettings_PhoneNumberDiscoveryAudience | `[PhoneNumberDiscoveryAudience] IN (1, 2, 3)` |
 | CK_MessagingPrivacySettings_PhoneNumberVisibilityAudience | `[PhoneNumberVisibilityAudience] IN (1, 2, 3)` |
 
@@ -3036,10 +3636,218 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_SafetyIncidents_ContentKind | `[ContentKind] IN (1, 2, 3, 4, 5)` |
+| CK_SafetyIncidents_ContentKind | `[ContentKind] IN (1, 2, 3, 4, 5, 6, 7, 8)` |
 | CK_SafetyIncidents_Decision | `[Decision] IN (2, 3)` |
 | CK_SafetyIncidents_Lifecycle | `([Status] = 1 AND [ClosedAtUtc] IS NULL) OR ([Status] IN (2, 3) AND [ClosedAtUtc] IS NOT NULL)` |
 | CK_SafetyIncidents_Status | `[Status] IN (1, 2, 3)` |
+
+### messaging.SavedMessageLabels
+
+Entity: `MakanApp.Domain.Messaging.SavedMessageLabel`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| MessageId | `uniqueidentifier` | خیر | خیر | Never |
+| Name | `nvarchar(32)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SavedMessageLabels | PK | MessageId, Name |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SavedMessageLabels_Name_MessageId | Name, MessageId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| MessageId | messaging.SavedMessageOrganizations | MessageId | Cascade |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SavedMessageLabels_Name | `LEN(LTRIM(RTRIM([Name]))) > 0` |
+
+### messaging.SavedMessageOrganizations
+
+Entity: `MakanApp.Domain.Messaging.SavedMessageOrganization`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| MessageId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SavedMessageOrganizations | PK | MessageId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SavedMessageOrganizations_OwnerUserId_MessageId | OwnerUserId, MessageId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| MessageId | messaging.Messages | Id | Cascade |
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SavedMessageOrganizations_Revision | `[Revision] > 0` |
+
+### messaging.ScheduledMessageAttachments
+
+Entity: `MakanApp.Domain.Messaging.ScheduledMessageAttachment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| ScheduledMessageId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ScheduledMessageAttachments | PK | ScheduledMessageId, FileAssetId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ScheduledMessageAttachments_FileAssetId | FileAssetId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| ScheduledMessageId | messaging.ScheduledMessages | Id | Restrict |
+
+### messaging.ScheduledMessageMentions
+
+Entity: `MakanApp.Domain.Messaging.ScheduledMessageMention`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ScheduledMessageId | `uniqueidentifier` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ScheduledMessageMentions | PK | ScheduledMessageId, UserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ScheduledMessageMentions_UserId | UserId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ScheduledMessageId | messaging.ScheduledMessages | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+
+### messaging.ScheduledMessages
+
+Entity: `MakanApp.Domain.Messaging.ScheduledMessage`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| ClaimedUntilUtc | `datetime2(7)` | بله | خیر | Never |
+| ClaimToken | `uniqueidentifier` | بله | خیر | Never |
+| ClientMessageId | `uniqueidentifier` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| ContactUserId | `uniqueidentifier` | بله | خیر | Never |
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| DispatchedMessageId | `uniqueidentifier` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsSilent | `bit` | خیر | خیر | Never |
+| Kind | `int` | خیر | خیر | Never |
+| LastFailureCode | `nvarchar(100)` | بله | خیر | Never |
+| MembershipId | `uniqueidentifier` | بله | خیر | Never |
+| NextAttemptAtUtc | `datetime2(7)` | بله | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PayloadHash | `binary(32)` | خیر | خیر | Never |
+| ReplyToMessageId | `uniqueidentifier` | بله | خیر | Never |
+| Role | `int` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| ScheduledAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| SubjectOrganizationPersonId | `uniqueidentifier` | بله | خیر | Never |
+| Text | `nvarchar(4000)` | بله | خیر | Never |
+| TopicId | `uniqueidentifier` | بله | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+| WorkspaceType | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ScheduledMessages | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ScheduledMessages_ContactUserId | ContactUserId | False | — |
+| IX_ScheduledMessages_MembershipId | MembershipId | False | — |
+| IX_ScheduledMessages_OrganizationId | OrganizationId | False | — |
+| IX_ScheduledMessages_SubjectOrganizationPersonId | SubjectOrganizationPersonId | False | — |
+| IX_ScheduledMessages_UserId | UserId | False | — |
+| IX_ScheduledMessages_DispatchedMessageId_ConversationId | DispatchedMessageId, ConversationId | False | — |
+| IX_ScheduledMessages_ReplyToMessageId_ConversationId | ReplyToMessageId, ConversationId | False | — |
+| IX_ScheduledMessages_TopicId_ConversationId | TopicId, ConversationId | False | — |
+| IX_ScheduledMessages_ConversationId_UserId_ClientMessageId | ConversationId, UserId, ClientMessageId | True | — |
+| IX_ScheduledMessages_ConversationId_UserId_Status | ConversationId, UserId, Status | False | — |
+| IX_ScheduledMessages_Status_ScheduledAtUtc_Id | Status, ScheduledAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ContactUserId | identity.Users | Id | Restrict |
+| ConversationId | messaging.Conversations | Id | Restrict |
+| MembershipId | organization.Memberships | Id | Restrict |
+| OrganizationId | organization.Organizations | Id | Restrict |
+| SubjectOrganizationPersonId | organization.OrganizationPersons | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+| DispatchedMessageId, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+| ReplyToMessageId, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+| TopicId, ConversationId | messaging.ConversationTopics | Id, ConversationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ScheduledMessages_Attempts | `[AttemptCount] BETWEEN 0 AND 5` |
+| CK_ScheduledMessages_Context | `([WorkspaceType]=1 AND [OrganizationId] IS NULL AND [MembershipId] IS NULL AND [Role] IS NULL AND [SubjectOrganizationPersonId] IS NULL) OR ([WorkspaceType]=2 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [Role] IN (1,2,3,4))` |
+| CK_ScheduledMessages_Hash | `DATALENGTH([PayloadHash]) = 32` |
+| CK_ScheduledMessages_Kind | `[Kind] IN (1,2,3,4,5,6)` |
+| CK_ScheduledMessages_Lease | `([ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL) OR ([Status]=1 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL)` |
+| CK_ScheduledMessages_Lifecycle | `([Status]=1 AND [CompletedAtUtc] IS NULL AND [DispatchedMessageId] IS NULL) OR ([Status]=2 AND [CompletedAtUtc] IS NOT NULL AND [DispatchedMessageId] IS NOT NULL) OR ([Status] IN (3,4) AND [CompletedAtUtc] IS NOT NULL AND [DispatchedMessageId] IS NULL)` |
+| CK_ScheduledMessages_Status | `[Status] IN (1,2,3,4)` |
+| CK_ScheduledMessages_UTCOrder | `[ScheduledAtUtc] > [CreatedAtUtc]` |
 
 ### messaging.UserBlocks
 
@@ -3175,7 +3983,7 @@ CHECKها:
 | CK_NotificationDeliveryAttempts_AttemptCount | `[AttemptCount] >= 0` |
 | CK_NotificationDeliveryAttempts_Channel | `[Channel] IN (1, 2)` |
 | CK_NotificationDeliveryAttempts_Delivered | `([Status] = 4 AND [DeliveredAtUtc] IS NOT NULL) OR ([Status] <> 4 AND [DeliveredAtUtc] IS NULL)` |
-| CK_NotificationDeliveryAttempts_FailureReason | `[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 8` |
+| CK_NotificationDeliveryAttempts_FailureReason | `[FailureReason] IS NULL OR [FailureReason] BETWEEN 1 AND 13` |
 | CK_NotificationDeliveryAttempts_Lifecycle | `([Status] = 2 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL) OR ([Status] <> 2 AND [ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL)` |
 | CK_NotificationDeliveryAttempts_Status | `[Status] BETWEEN 1 AND 6` |
 
@@ -3293,6 +4101,8 @@ Entity: `MakanApp.Domain.Notification.PushDeviceRegistration`؛ مالک نگا�
 | TokenHash | `varbinary(32)` | خیر | خیر | Never |
 | UserId | `uniqueidentifier` | خیر | خیر | Never |
 | UserSessionId | `uniqueidentifier` | خیر | خیر | Never |
+| WebPushAuth | `varchar(22)` | بله | خیر | Never |
+| WebPushP256dh | `varchar(87)` | بله | خیر | Never |
 
 کلیدها:
 
@@ -3320,6 +4130,7 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_PushDeviceRegistrations_Platform | `[Platform] IN (1, 2, 3)` |
+| CK_PushDeviceRegistrations_WebKeys | `([WebPushP256dh] IS NULL AND [WebPushAuth] IS NULL) OR ([Platform] = 3 AND [WebPushP256dh] IS NOT NULL AND LEN([WebPushP256dh]) = 87 AND [WebPushAuth] IS NOT NULL AND LEN([WebPushAuth]) = 22)` |
 
 ### organization.Invitations
 

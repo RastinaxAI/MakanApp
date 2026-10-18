@@ -1,6 +1,6 @@
 # قرارداد تحویل Backoffice به Frontend
 
-بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14، شامل Backoffice نهایی، TOTP واقعی GAP-04 و Child Safety مصوب GAP-05 است. گزارش‌های STEP 15E تاریخچهٔ همان مرحله‌اند. این سند فقط قرارداد مصرف API است و مجوز ساخت یا تغییر frontend نیست؛ [مرجع جاری HTTP/DTO](../backend-api-reference.md) همهٔ endpointهای این حوزه را دارد.
+بازبینی جاری ۲۰۲۶-۱۰-۱۸ از main@ef67624، شامل Backoffice نهایی، TOTP واقعی GAP-04 و Child Safety مصوب GAP-05 است. گزارش‌های STEP 15E تاریخچهٔ همان مرحله‌اند. این سند فقط قرارداد مصرف API است و مجوز ساخت یا تغییر frontend نیست؛ [مرجع جاری HTTP/DTO](../backend-api-reference.md) همهٔ endpointهای این حوزه را دارد.
 
 ## مرز محصول
 
@@ -178,3 +178,7 @@ Health یک مشاهده‌ی امن از وضعیت adapter و queue است، �
 - [Education/Messaging/Safety](../architecture/STEP_15C_EDUCATION_MESSAGING_PLATFORM_SAFETY.md)
 - [Commerce/Finance/Operations](../architecture/STEP_15D_COMMERCE_FINANCE_OPERATIONS.md)
 - [پذیرش نهایی](../architecture/STEP_15E_BACKOFFICE_FINAL_ACCEPTANCE.md)
+
+## افزوده‌های Messenger پس از تحویل اولیه
+
+تأیید رسمی اولیه سن و وضعیت self طبق Handoff P0 وجود دارند؛ policy جاری GAP-05 و مجوز UsersManage/MFA مربوط ملاک‌اند. availability امن Push می‌تواند Configured/PartiallyConfigured/Unavailable باشد؛ این metadata تحویل واقعی دستگاه نیست. نقش Platform، Guardian یا Manager مجوز مرور Direct خصوصی، presence مخفی یا افشای کلید Quiz نمی‌سازد. [مرزهای جاری Messenger](../messaging/CURRENT_MESSENGER_STATUS.md) و [آمادگی محیط](../production/PRODUCTION_READINESS.md) را کنار کاتالوگ HTTP بخوانید.

@@ -1,5 +1,9 @@
 # ممیزی و شواهد تحویل Messenger P1
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## نتیجهٔ validation نهایی کل P1
 
 پس از آخرین اصلاح FCM، ترتیب restore -> Build -> full test -> final Build -> final full test اجرا شد. restore موفق؛ هر دو Build برابر **۰ warning / ۰ error**؛ هر دو suite برابر **Unit=499، Integration=801، Architecture=14، Total=1314 passed، failed=0، skipped=0**. شواهد TRX به‌ترتیب در `.artifacts/messenger-p1/tests/acceptance-reviewed` و `.artifacts/messenger-p1/tests/acceptance-final` هستند. نسبت به baseline، ۸۶ Unit و ۷۵ Integration، مجموعاً ۱۶۱ case افزوده شده‌اند؛ ۱۴ Architecture موجود حفظ شدند. EF مجدداً no pending model changes گزارش کرد. ۳۵ سناریوی جدول زیر محلی PASS هستند؛ هیچ‌یک جای REAL-PUSH-01 تا 04 نیستند.

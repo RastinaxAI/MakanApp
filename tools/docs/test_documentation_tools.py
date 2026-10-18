@@ -37,5 +37,18 @@ class DocumentationToolsTests(unittest.TestCase):
         self.assertIn('تصمیم مصوب نباید تغییر کند.', first)
 
 
+    def test_enum_notice_closes_the_resolved_integer_string_gap(self):
+        api = {'components': {'schemas': {'MessageKind': {'type': 'string'}}}}
+        inventory = {'Enums': [{'Name': 'MessageKind', 'Values': ['Text', 'Poll']}]}
+        self.assertEqual([], sync.enum_contract_mismatches(api, inventory))
+        self.assertIn('CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS', sync.enum_contract_notice(api, inventory))
+
+    def test_enum_notice_keeps_a_remaining_transport_mismatch_open(self):
+        api = {'components': {'schemas': {'MessageKind': {'type': 'integer'}}}}
+        inventory = {'Enums': [{'Name': 'MessageKind', 'Values': ['Text', 'Poll']}]}
+        self.assertEqual(['MessageKind'], sync.enum_contract_mismatches(api, inventory))
+        self.assertNotIn('CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS', sync.enum_contract_notice(api, inventory))
+
+
 if __name__ == '__main__':
     unittest.main()

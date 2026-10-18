@@ -1,5 +1,9 @@
 # برنامه‌ی Load و Performance
 
+<!-- CURRENT-REVIEW:BEGIN -->
+بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+<!-- CURRENT-REVIEW:END -->
+
 اسکریپت `tools/production/load/k6-critical-apis.js` فقط باید روی staging یا SQL Server ایزوله اجرا شود. `CONFIRM_ISOLATED_STAGING=YES` gate اجباری است؛ Production مجاز نیست.
 
 انتشار جاری مالک Production/HTTP است و فایل appsettings.Staging.json حذف شده؛ این تغییر هیچ load test یا محیط staging تازه‌ای را فعال نمی‌کند. نام تاریخی پارامتر ایمنی ابزار حفظ شده است. نبود محیط ایزوله دلیل مجاز شدن تست بار روی Production نیست و تأیید استثنای HTTP، نتیجهٔ Performance یا smoke امن ایجاد نمی‌کند.
@@ -36,3 +40,7 @@ k6 run -e CONFIRM_ISOLATED_STAGING=YES -e BASE_URL=$env:BASE_URL -e ACCESS_TOKEN
 p50، p95، p99، throughput، error rate، تعداد 429/5xx و queryهای کند SQL ثبت شوند. threshold موجود صرفاً smoke guard برای 5xx است و SLA محصول محسوب نمی‌شود. SLA و ظرفیت تنها پس از baseline چند مرحله‌ای و با hardware/profile واقعی تعیین می‌شوند.
 
 در STEP 16 baseline اجرا نشد، چون staging ایزوله و k6 در اختیار این workspace تأیید نشده بود. این محدودیت باید پیش از Production بسته شود.
+
+## سناریوهای جدید Messenger
+
+subscription/reconnect و budget lease گذرا، ظرفیت اتصال و expiry، dispatch موازی و بازیابی intent، polling رأی/Checklist با conflict، جست‌وجوی فیلترشده و transport delivery در سناریوهای مصنوعی بررسی شوند. حالت حافظه‌ای تک‌instance است؛ وجود workerهای SQL، backplane یا scale-out Presence را ثابت نمی‌کند. این برنامه آزمون است، نه benchmark یا عدد ظرفیت Production. رسانه P3 تا رفع P3_S_INFRA_REQUIRED و gate واقعی S نتیجه load ندارد.

@@ -2,7 +2,7 @@
 
 این سند روش استقرار backend فعلی MakanApp و تأمین امن تنظیمات محرمانه را توضیح می‌دهد. مثال‌ها برای `.NET 9`، `SQL Server` و provider واقعی `MeliPayamakOtp` نوشته شده‌اند.
 
-مبنای جاری: `main@80d6a14` در `2026-10-15`؛ ۲۸۴ عملیات HTTP، ۳۷ Migration، MFA واقعی Backoffice و سیاست مصوب Child Safety. این سند دستورالعمل است و اجرای استقرار Windows/Linux/Docker یا تغییر سرور را ادعا نمی‌کند. [قرارداد مصرف API](frontend-contract/README.md)، [مرجع جاری](backend-api-reference.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) مکمل آن‌اند.
+مبنای جاری `ef67624` در `2026-10-18`؛ 325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration. این سند runbook است و اجرای استقرار یا تغییر سرور را ادعا نمی‌کند. [وضعیت فعلی پروژه](CURRENT_PROJECT_STATUS.md)، [قرارداد فرانت](frontend-contract/README.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) مکمل آن‌اند.
 
 انتشار انتخابی فعلی مالک Production روی HTTP است؛ appsettings.Staging.json حذف شده. فایل واقعی Production محلی و ignored است و نمونهٔ عمومی .json.example بدون secret نسخه‌بندی می‌شود. دو استثنای Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate فقط با تأیید صریح مالک در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض امن تغییر نکرده است. HTTP، OTP و توکن را رمزگذاری نمی‌کند. این تصمیم gate امن [GAP-02](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) را نمی‌بندد و ابزارهای HTTPS-only را دور نمی‌زند. [مراحل جاری IIS](production/DEPLOYMENT_IIS.md) مبنای Windows است؛ نمونه‌های Linux/Docker حالت امن و مقادیر مختص محیط می‌خواهند.
 
@@ -567,7 +567,7 @@ dotnet tool run dotnet-ef database update `
 
 Migration را داخل startup عادی container یا IIS قرار ندهید؛ اجرای هم‌زمان چند instance می‌تواند عملیات schema را مبهم و پرخطر کند.
 
-شاهد تاریخی GAP-02 شامل ۳۵ Migration تا AddOperationalPersonGuardianOnboarding بود. اکنون ۳۷ Migration تا 20261015091336_EnforceApprovedMessengerChildSafety داریم؛ وجود آن‌ها در سورس یا تست LocalDB به معنی اعمال روی SQL هدف نیست. این همگام‌سازی docs Migration تازه نمی‌خواهد. اگر اسکریپت قبلی روی سرور اجرا شده، history را بررسی و تغییر تازهٔ schema فرض نکنید.
+شاهد تاریخی GAP-02 شامل ۳۵ Migration تا AddOperationalPersonGuardianOnboarding بود. اکنون 48 migration تا 20261015091336_EnforceApprovedMessengerChildSafety داریم؛ وجود آن‌ها در سورس یا تست LocalDB به معنی اعمال روی SQL هدف نیست. این همگام‌سازی docs Migration تازه نمی‌خواهد. اگر اسکریپت قبلی روی سرور اجرا شده، history را بررسی و تغییر تازهٔ schema فرض نکنید.
 
 برای artifact قابل بازبینی، از ریشه مخزن و SDK سازگار SQL idempotent بسازید؛ این فرمان به‌خودی‌خود آن را روی سرور اجرا نمی‌کند:
 
@@ -702,3 +702,41 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 - [Host ASP.NET Core on Linux with Nginx](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-9.0)
 - [.NET container images](https://learn.microsoft.com/en-us/dotnet/core/docker/container-images)
 - [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/)
+
+
+## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-18
+
+مبنای این بخش `main@ef67624` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
+
+### انتخاب transport اعلان
+
+`Notifications:PushProvider=WebPushAndFcm` provider واقعی Web Push/VAPID و FCM HTTP v1 را ثبت می‌کند. کلیدهای تنظیمات زیر از کد DI/Options هستند؛ مقادیر واقعی فقط در secret/config محیط مجاز قرار بگیرند:
+
+| کلید | مسئولیت |
+|---|---|
+| `Notifications:WebPush:VapidSubject` | subject معتبر VAPID مطابق validation موجود |
+| `Notifications:WebPush:VapidPublicKey` | کلید عمومی EC؛ برای client مجاز قابل مصرف |
+| `Notifications:WebPush:VapidPrivateKey` | secret امضای VAPID؛ هرگز در frontend/log/مخزن نباشد |
+| `Notifications:WebPush:AllowedEndpointHosts` | allowlist دقیق hostهای HTTPS مقصد subscription؛ بدون آن ثبت Web Push آماده نیست |
+| `Notifications:WebPush:TimeToLiveSeconds` | TTL transport با حدود معتبر options |
+| `Notifications:Fcm:ProjectId` | پروژه مورد انتظار FCM |
+| `Notifications:Fcm:ServiceAccountPath` | مسیر مطلق فایل credential با ACL محدود؛ fallback فقط `GOOGLE_APPLICATION_CREDENTIALS` |
+| `Notifications:Fcm:TimeToLiveSeconds` | TTL پیام FCM طبق options |
+
+وجود فایل credential یا معتبر بودن شکل VAPID، اعتبار حساب/provider یا تحویل دستگاه را اثبات نمی‌کند. worker خطای timeout/credential/registration را طبق طبقه‌بندی جاری نگه می‌دارد؛ secret، endpoint کامل subscription، registration token یا body پیام در log منتشر نشود. `Unavailable` موفقیت ساختگی نمی‌دهد؛ Development provider فقط برای Development/Testing است. رجیستری دستگاه به حساب مالک و چرخه logout/switch account وابسته است؛ حساب جدید نباید device فعال حساب قبلی را تصاحب کند.
+
+وضعیت runtime هنوز `P1_PUSH_RUNTIME_PENDING` است. برای بستن این gate باید Web Push و FCM در محیط مجاز با credential و دستگاه واقعی، revoke/expiry، retry/recovery و اثبات دریافت آزمایش شوند. ثبت subscription، Sent، SignalR و provider acceptance جای این شاهد را نمی‌گیرند. SMS عمومی اعلان و gateway پرداخت واقعی همچنان unavailable‌اند؛ SMS ورود ملی‌پیامک مسیر جدا دارد.
+
+Web Push مرورگر به Service Worker و secure context/HTTPS معتبر در محیط واقعی نیاز دارد. استثنای HTTP انتشار قبلی، این شرط یا gate دریافت دستگاه را رفع نمی‌کند. FCM روی iOS نیز پیکربندی بستر/APNs مربوط را می‌خواهد؛ داشتن credential سرور به‌تنهایی پیکربندی client را ثابت نمی‌کند. برای lifecycle دقیق به Handoff P1 رجوع شود.
+
+### worker و چند instance
+
+scheduled-message dispatcher و notification/outbox workerها به migration، ساعت UTC و دسترسی SQL درست نیاز دارند. intent Scheduled را Sent گزارش نکنید؛ ارسال واقعی پس از بازبینی دوباره permission، Block، Child Safety، attachment و topic اتفاق می‌افتد. reboot/recovery و رقابت worker باید در محیط مقصد smoke شوند؛ بازیابی notification از SQL/Delta است.
+
+typing/presence در `InMemoryMessagingEphemeralState` تک‌instance‌اند. پیش‌فرض heartbeat ده ثانیه و lease چهل‌وپنج ثانیه است؛ idle/connection/proxy timeout محیط نباید این قرارداد را بی‌خبر قطع کند. reconnect باید subscription جدید بسازد. تنظیم چند worker دیتابیس به معنی وجود backplane و state مشترک Presence نیست؛ `PENDING_SCALE_INFRA` همچنان برقرار است. هیچ scale-out اثبات‌نشده‌ای از sticky session نتیجه نشود.
+
+### gateهای رسانه و smokeهای لازم
+
+`P3_S_INFRA_REQUIRED`، `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` وضعیت فعلی‌اند. رسانهٔ صوتی/تصویری/Live محصول هنوز deployment پذیرفته‌شده ندارد. spec مصوب LiveKit/SFU/TURN را با runtime نصب‌شده اشتباه نگیرید؛ جزئیات Linux lab، DNS/TLS، TURN و دو client در [گزارش S](messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) است.
+
+بعد از انتشار Backend، روی حساب/سازمان آزمایشی از پیش مجاز، علاوه بر core قبلی این موارد را بررسی کنید: تأیید self/سن طبق policy، Direct و Peer Read مجاز/Hidden، expiry و reconnect Typing/Presence، registration/revoke Push، تأخیر و cancel/dispatch intent، topic و محدودیت عضو، Poll/Quiz و دو حالت Checklist. این‌ها دستور smoke هستند؛ در این مرحله روی سرور واقعی اجرا نشده‌اند. فایل خصوصی Production، کلیدهای OTP/MFA و موارد استثنای HTTP/SQL قبلی بدون تصمیم تازه تغییر نکنند.

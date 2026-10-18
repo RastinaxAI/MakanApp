@@ -1,5 +1,9 @@
 # Release Checklist
 
+<!-- CURRENT-REVIEW:BEGIN -->
+بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+<!-- CURRENT-REVIEW:END -->
+
 بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
 
 ## پیش از انتشار
@@ -41,3 +45,12 @@
 - [ ] migration backward compatibility ارزیابی شده؛ downgrade خودکار فرض نشده است.
 - [ ] برای schema ناسازگار، forward-fix یا restore نقطه‌ی سازگار DB+storage تعیین شده است.
 - [ ] trace IDها، log window و incident notes پیش از rollback حفظ می‌شوند.
+
+## gateهای افزوده Messenger
+
+- [ ] migrationها تا AddConversationChecklists بررسی و فقط با principal مجاز محیط اجرا شده‌اند.
+- [ ] Web Push/FCM با credential/device واقعی آزمایش و P1_PUSH_RUNTIME_PENDING با شاهد رفع شده است.
+- [ ] expiry/reconnect و privacy حالت‌های Typing/Presence روی topology هدف بررسی شده‌اند.
+- [ ] dispatch/cancel/recovery پیام زمان‌بندی‌شده و تغییر مجوز پس از ثبت intent بررسی شده‌اند.
+- [ ] Topic، Poll/Quiz و Checklist با role و optimistic concurrency معتبر smoke شده‌اند.
+- [ ] scale-out بدون backplane/state مشترک ادعا نشده و P3 رسانه بدون PASS واقعی S منتشر نمی‌شود.

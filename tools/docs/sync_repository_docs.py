@@ -53,6 +53,23 @@ def canonical(path):
     return re.sub(r'\{([^}:]+):[^}]+\}', r'{\1}', path).rstrip('/')
 
 
+def enum_contract_mismatches(api, inventory):
+    by_name = {item['Name']: item for item in inventory['Enums']}
+    return sorted(name for name, schema in api['components']['schemas'].items()
+                  if name in by_name and schema.get('type') == 'integer'
+                  and any(isinstance(value, str) for value in by_name[name]['Values']))
+
+
+def enum_contract_notice(api, inventory):
+    mismatches = enum_contract_mismatches(api, inventory)
+    if mismatches:
+        return ('DOC-CONTRACT-01: اختلاف Enum/OpenAPI هنوز در این snapshot وجود دارد: ' +
+                '، '.join(mismatches) + '؛ literal مرجع از JsonOptions واقعی MVC استخراج می‌شود. client از نوع خام عددی، قرارداد canonical عددی استنتاج نکند.')
+    return ('DOC-CONTRACT-01 در نسخهٔ مبنا CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ اختلاف integer/String قبلی در snapshot جاری دیده نشد. '
+            'OpenAPI با serializer رشته‌ای MVC هم‌تراز شده است؛ literalهای زیر از همان CLR/JsonOptions استخراج می‌شوند. '
+            'این نتیجه شاهد انتشار OpenAPI روی سرور نیست؛ named Flags همهٔ ترکیب‌های مجاز یا ورودی‌های مجاز use case را تعریف نمی‌کند.')
+
+
 def review_notice(source, notice):
     source = re.sub(r'\n<!-- DOC-SYNC:BEGIN -->.*?<!-- DOC-SYNC:END -->\n', '', source, flags=re.S)
     title, separator, body = source.partition('\n')
@@ -107,14 +124,14 @@ def write_reference(api, inventory, baseline, date):
     assert not any(len(items) != 1 and name in api['components']['schemas'] for name, items in enum_groups.items()), 'نام Enum مبهم است؛ mapping صریح لازم است.'
     wire_enums = {name: items[0] for name, items in enum_groups.items() if len(items) == 1}
     lines += ['## قراردادهای JSON و Enum', '', 'Required زیر همان required در OpenAPI است؛ اختیاری بودن schema به معنی عبور از قواعد Application نیست. bounds فقط در صورت انتشار نشان داده می‌شوند.', '',
-              'اختلاف کشف‌شده در DOC-CONTRACT-01: OpenAPI این نسخه برخی Enumها را integer بدون literal معرفی می‌کند، ولی JsonOptions واقعی MVC، JsonStringEnumConverter دارد. برای Enumهای زیر literal از serialize کردن CLR Enum با همان گزینه‌های MVC استخراج شده و نوع خام OpenAPI جدا نشان داده می‌شود. client به‌جای تولید کور نوع عددی، نام‌های canonical رشته‌ای را مصرف کند. این همگام‌سازی کد/قرارداد اجرایی یا OpenAPI برنامه را تغییر نداده است؛ اصلاح runtime OpenAPI یک کار مستقل است. literalهای نام‌دار Flags، مجموعهٔ کامل همهٔ ترکیب‌ها نیستند و پذیرش ورودی عددی باید با serializer/use case بررسی شود.', '']
+              enum_contract_notice(api, inventory), '']
     for name, schema in sorted(api['components']['schemas'].items()):
         lines += [f'<a id="contract-{html.escape(name, quote=True)}"></a>', f'### {name}', '']
         if name in wire_enums:
             item = wire_enums[name]
             lines += ['CLR واقعی: `' + item['ClrType'] + '`؛ Flags: ' + str(item['IsFlags']), '',
                       'literalهای JSON واقعی MVC: `' + json.dumps(item['Values'], ensure_ascii=False) + '`', '',
-                      'نوع خام OpenAPI: `' + schema.get('type', 'object') + '`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.', '']
+                      'نوع خام OpenAPI: `' + schema.get('type', 'object') + '`؛ اختلاف integer/String: ' + ('وجود دارد؛ هشدار DOC-CONTRACT-01' if name in enum_contract_mismatches(api, inventory) else 'در این snapshot دیده نشد') + '؛ قید use case و Flags جدا بررسی شود.', '']
         else:
             lines += [schema_label(schema), '']
         if schema.get('properties'):
@@ -175,7 +192,7 @@ def write_database(inventory, baseline, date):
 def write_frontend(inventory, api, baseline, date):
     lines = ['# قرارداد جاری مصرف Backend برای Web و Mobile', '',
              f'بازبینی `{date}` از `main@{baseline}`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.', '',
-             f'پوشش جاری: {len(inventory["Operations"])} عملیات HTTP در {len(api["paths"])} مسیر، ۴۸ Controller، {len(api["components"]["schemas"])} schema، ۸۸ جدول و ۳۷ Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.', '',
+             f'پوشش جاری: {len(inventory["Operations"])} عملیات HTTP در {len(api["paths"])} مسیر، {len({item["Controller"] for item in inventory["Operations"]})} Controller، {len(api["components"]["schemas"])} schema، {len(inventory["Tables"])} جدول و {len(inventory["Migrations"])} Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.', '',
              '- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.',
              '- [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).',
              '- [UX مرجع اصلی](../project-context/03_Makan_User_Flows_and_Screens_UX_v1.0.pdf) و [نقشه Flow](../project-context/04_Flow.png) نیازمندی‌اند، نه اثبات وجود screen یا frontend در این workspace. اطلاعات snapshot قدیمی ۱۴۱ عملیات/۲۰ Migration وضعیت جاری نیست.', '',
@@ -184,7 +201,7 @@ def write_frontend(inventory, api, baseline, date):
              '- Bearer در Authorization header ارسال می‌شود؛ cookie session، query-token برای SignalR و هدر عمومی Idempotency-Key نداریم. public بودن OTP/refresh مجوز دسترسی به resource نیست.',
              '- role، organization، membership و child جاری را سرور resolve می‌کند؛ selectorهای client مدرک مجوز نیستند. 401 ورود، 403 منع مجوز، 404 پنهان‌سازی/نبود منبع، 409/412 تضاد و 429 محدودیت باید از ProblemDetails/code خوانده شوند.',
              '- تمام listها یک شکل paging ندارند؛ پارامتر، بدنه، status و schema دقیق هر عملیات در مرجع جاری است. validation کسب‌وکاری فراتر از nullable/required در OpenAPI اجرا می‌شود.', '',
-             'هشدار DOC-CONTRACT-01: OpenAPI خام این نسخه بعضی Enumها را integer معرفی می‌کند، در حالی که serializer واقعی MVC خروجی canonical رشته‌ای دارد. literalهای مرجع از همان JsonOptions استخراج شده‌اند؛ client را بدون کنترل این اختلاف از schema عددی تولید نکنید. runtime برنامه در این همگام‌سازی اصلاح نشده است.', '',
+             enum_contract_notice(api, inventory), '',
              '## ورود، نشست و OTP', '',
              'POST /api/v1/auth/otp/challenges -> challengeId/expiresAtUtc/resendAvailableAtUtc؛ سپس verify با همان challengeId/phoneNumber و code رشته‌ای. کد در پاسخ/log نیست و UI نباید طول ثابت شش‌رقمی فرض کند. lifetime پایه ۳۰۰ ثانیه و فاصله resend سی ثانیه است. ارقام فارسی/عربی normalize می‌شوند. challenge جدید قبلی را supersede می‌کند و OTP مصرف‌شده دوباره معتبر نیست.', '',
              'VerifyOtpResult شامل accessToken، tokenType، expiresAtUtc، refreshToken، refreshExpiresAtUtc و user است. access پایه یک ساعت و refresh چرخشی با عمر مطلق ۳۰ روز است؛ refresh token و OTP دادهٔ محرمانه‌اند. POST /api/v1/auth/refresh و APIهای sessions/logout برای lifecycle موجودند. storage امن سمت client تصمیم اجرایی جدا می‌خواهد؛ credential در URL، screenshot یا telemetry قرار نگیرد.', '',
@@ -199,10 +216,10 @@ def write_frontend(inventory, api, baseline, date):
              'Contacts/profile privacy/discovery، Personal Direct، group/channel و مالکیت، revision/reaction/reply/mention، Saved Messages، state و delta sync وجود دارند. نام/شماره/UserId به‌تنهایی اجازهٔ CreateDirect/Send/Read نمی‌سازد.', '',
              'Policy مصوب GAP-05 حاکم است: UnknownAge مانند Minor محافظت می‌شود؛ Stranger -> Minor/Unknown ممنوع است؛ هر Send، Block و رابطه/عضویت/permission جاری را دوباره بررسی می‌کند. پایان رابطه تاریخچه را خودکار حذف نمی‌کند. گروه/کانال شخصی و Official Class Group قواعد جدا دارند؛ نقش Manager یا Guardian مجوز Direct browsing نیست.', '',
              'Internal Makan Content Safety provider واقعی قاعده‌محور محدود متن است، نه AI یا ادعای اسکن معنایی کامل. unavailable در مسیر محافظت‌شده fail-closed و رسانه unsupported ReviewRequired است؛ خطای safety را Sent نمایش ندهید. ارزیابی سنِ خوداظهاری تأیید رسمی نیست و AGE_VERIFICATION_CONFLICT با retry کور overwrite نمی‌شود.', '',
-             'SignalR اعلان تغییر است؛ SQL و delta/read رسمی مرجع‌اند. handler فقط Bearer header می‌خواند؛ مرورگر می‌تواند LongPolling همراه accessTokenFactory و withCredentials:false را در محیط مجاز آزمایش کند. دریافت event یا online بودن، receipt تحویل/خواندن مخاطب را به‌تنهایی ثابت نمی‌کند. scale-out/backplane آماده فرض نشود.', '',
+             'SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرجع پیام و read-state هستند. TypingChanged و PresenceChanged hint گذرا با TTL و privacy جاری‌اند، نه Message/Delta. handler فقط Bearer header می‌خواند؛ browser از LongPolling و withCredentials:false طبق allowlist میزبان استفاده کند. reconnect نیازمند subscription تازه و بازیابی Delta است؛ backplane و ephemeral state مشترک چند instance فراهم نیست.', '',
              '## گزارش، اعلان و تجارت', '',
              'چهار داشبورد نقش‌محور، گزارش‌های filtered/paginated و export خصوصی CSV با Queued/Processing/Completed/Failed وجود دارند. مجوز ایجاد، worker و download دوباره بررسی می‌شود؛ job pending را فایل آماده نمایش ندهید.', '',
-             'اعلان داخلی، read state، durable outbox، preferences و device lifecycle API دارند. Push و SMS عمومی اعلان provider واقعی ندارند؛ آن‌ها را با OTP ملی‌پیامک اشتباه نگیرید.', '',
+             'اعلان داخلی، outbox، preferences و device lifecycle موجودند. Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.', '',
              'Plan/PlanVersion/Subscription/Entitlement/Quota و Order/PaymentAttempt/verification lifecycle موجودند؛ gateway واقعی unavailable است. callback یا UI هرگز پرداخت را بدون تأیید server موفق اعلام نمی‌کند؛ refund/reconcile دستی ساختگی نسازید.', '',
              '## Backoffice و MFA', '',
              'Platform IAM/permission، organization/user/provisioning، education read model، moderation، commerce/finance و operations API دارند؛ Manager مدرسه Platform Admin نیست. GET /api/admin/v1/me منبع capability است، نه مجوز client-side.', '',
@@ -217,20 +234,29 @@ def write_frontend(inventory, api, baseline, date):
              'ابزار DocumentationSnapshot فقط TestServer بدون worker و مدل طراحی EF را می‌خواند؛ SMS/AI/SQL واقعی فراخوانی نمی‌شود. sync_repository_docs.py همهٔ method/routeها و ارجاع schemaها را تطبیق می‌دهد و build_backend_docs.py خروجی‌های HTML/PDF را می‌سازد. نام/فیلد/enum از metadata است؛ موفقیت سناریوی محصول یا محیط هدف از آن استنتاج نمی‌شود. [فهرست نگه‌داری اسناد](../documentation-inventory.csv).', '',
              '## مسیر مطالعه', '',
              'این راهنما -> مرجع جاری endpoint/DTO -> Controller واقعی -> سرویس Application -> Domain و port -> Infrastructure/EF configuration -> Migration -> Unit/Integration/Architecture tests. اسناد مرحله‌ای و PDFهای اصلی برای دلیل تصمیم و UX خوانده شوند؛ اعداد تست تاریخی به‌جای validation امروز استفاده نشوند.', '']
+    current_messenger = ROOT / 'docs/messaging/CURRENT_MESSENGER_STATUS.md'
+    if current_messenger.exists():
+        current = current_messenger.read_text(encoding='utf-8-sig')
+        capability_table = current[current.index('| حوزه'):current.index('### جریان‌های گذرا')]
+        lines += ['', '## افزوده‌های جاری Messenger', '',
+                  '[وضعیت یکپارچه P0/P1/P2 و gate رسانه](../messaging/CURRENT_MESSENGER_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) مکمل کارت‌های کامل HTTP همین خروجی‌اند.', '',
+                  capability_table.replace('(messaging/', '(../messaging/'),
+                  'Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.', '']
     (ROOT / 'docs/frontend-contract/README.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
-def document_inventory(baseline, date):
+def document_inventory(baseline, date, preserve_paths=()):
     paths = [path for path in subprocess.check_output(['git', 'ls-files', 'docs'], cwd=ROOT, text=True).splitlines()
              if path != 'docs/documentation-inventory.csv']
     live = {'backend-api-guide.md', 'backend-api-reference.md', 'database-current-structure.md',
-            'deployment-windows-linux-docker.md', 'frontend-contract/README.md'}
+            'deployment-windows-linux-docker.md', 'frontend-contract/README.md',
+            'CURRENT_PROJECT_STATUS.md', 'messaging/CURRENT_MESSENGER_STATUS.md'}
     rows = []
     for relative in paths:
         path = ROOT / relative
         inner = path.relative_to(ROOT / 'docs').as_posix()
         generated = path.suffix in ('.html', '.pdf') and (inner.startswith('backend-api-') or inner.startswith('database-current-structure.') or inner.startswith('frontend-contract/'))
-        if inner.startswith('project-context/') or inner == 'MakanApp_Business_and_Functional_Logic_FA_v1.0.pdf':
+        if inner.startswith('project-context/') or (path.suffix == '.pdf' and not generated):
             kind, handling = 'مرجع اصلی/تاریخی محصول', 'حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر'
         elif generated:
             kind, handling = 'خروجی فنی جاری', 'بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است'
@@ -238,11 +264,13 @@ def document_inventory(baseline, date):
             kind, handling = 'راهنمای جاری', 'همگام‌سازی با کد؛ بدون ادعای deployment'
         elif inner.startswith('ai-handoff/') or inner.startswith('contracts/') or '/AI_' in inner:
             kind, handling = 'قرارداد/شاهد موضوعی AI', 'حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود'
-        elif inner.startswith('architecture/') or inner.startswith('release/'):
+        elif inner.startswith('architecture/') or inner.startswith('release/') or inner.startswith('messaging/'):
             kind, handling = 'قرارداد/گزارش مرحله‌ای', 'حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری'
         else:
             kind, handling = 'سند موضوعی', 'حفظ محتوا و تفکیک تاریخچه از وضعیت جاری'
-        if path.suffix == '.md' and inner not in live and not inner.startswith('production/') and not inner.startswith('platform/'):
+        if relative in preserve_paths:
+            handling = 'کار قبلی کاربر؛ بدون بازنویسی و خارج تغییرات این همگام‌سازی'
+        if relative not in preserve_paths and path.suffix == '.md' and inner not in live and not inner.startswith('production/') and not inner.startswith('platform/'):
             source = path.read_text(encoding='utf-8-sig')
             root_link = os.path.relpath(ROOT / 'README.md', path.parent).replace('\\', '/')
             readiness = os.path.relpath(ROOT / 'docs/production/PRODUCTION_READINESS.md', path.parent).replace('\\', '/')
@@ -254,7 +282,7 @@ def document_inventory(baseline, date):
         relative = f'docs/database-current-structure.{suffix}'
         if relative not in paths:
             rows.append([relative, 'خروجی فنی محلی/ignored', 'بازتولید از مدل جاری؛ مطابق gitignore وارد commit نمی‌شود', baseline, date])
-    for name in ('10_BACKEND_REAL_E2E_GATE.md', '11_STEP10G_FAILURE_EVIDENCE_SANITIZED.md'):
+    for name in ('10_BACKEND_REAL_E2E_GATE.md', '11_STEP10G_FAILURE_EVIDENCE_SANITIZED.md', '12_STEP10G_FINAL_REAL_E2E_REPORT.md'):
         relative = 'docs/ai-handoff/' + name
         if (ROOT / relative).exists() and relative not in paths:
             rows.append([relative, 'فایل dirty قبلی AI', 'خارج تحویل؛ بدون تغییر، stage یا استنتاج closure', baseline, date])
@@ -270,6 +298,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--snapshot', type=Path, required=True)
     parser.add_argument('--reviewed-date', required=True)
+    parser.add_argument('--preserve-path', action='append', default=[], help='سند دارای تغییر قبلی؛ بازنویسی نشود')
     args = parser.parse_args()
     inventory = json.loads((args.snapshot / 'repository-inventory.json').read_text(encoding='utf-8-sig'))
     baseline = inventory['SourceCommit']
@@ -286,7 +315,7 @@ def main():
     write_reference(api, inventory, baseline, args.reviewed_date)
     write_database(inventory, baseline, args.reviewed_date)
     write_frontend(inventory, api, baseline, args.reviewed_date)
-    documents = document_inventory(baseline, args.reviewed_date)
+    documents = document_inventory(baseline, args.reviewed_date, args.preserve_path)
     print(json.dumps({'baseline': baseline, 'documents': documents, 'operations': len(inventory['Operations']), 'schemas': len(schemas), 'tables': len(inventory['Tables']), 'migrations': len(inventory['Migrations']), 'databaseConnected': False}))
 
 

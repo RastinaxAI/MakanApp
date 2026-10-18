@@ -46,6 +46,8 @@ def main():
                        if name in wire_enums and schema.get('type') == 'integer'
                        and any(isinstance(value, str) for value in wire_enums[name]['Values'])]
     assert 'DOC-CONTRACT-01' in reference
+    if not enum_mismatches:
+        assert 'CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS' in reference, 'وضعیت قدیمی اختلاف Enum نباید باز گزارش شود.'
     for name in enum_mismatches:
         assert json.dumps(wire_enums[name]['Values'], ensure_ascii=False) in reference, 'literal واقعی Enum مستند نشده است.'
     assert len({(item['Schema'], item['Table']) for item in inventory['Tables']}) == len(inventory['Tables']), 'مدل شامل table sharing است؛ شمارش باید بازبینی شود.'

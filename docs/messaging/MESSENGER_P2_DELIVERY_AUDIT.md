@@ -1,5 +1,9 @@
 # ممیزی و شواهد تحویل Messenger P2
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## P2-0 — مبنای واقعی و منابع
 
 شروع از `0a93e800cb5c91d0545ae6a11513fd2fed98f5a5` در worktree مستقل `D:\Project\MakanApp\MakanApp-Backend-Messenger-P0`، شاخهٔ `messenger/p0` با upstream موجود `origin/main`. workspace اصلی و dirtyهای AI دست‌نخورده‌اند. PDF مرجع جدید، ورودی صاحب پروژه و در شروع این اجرا untracked بود؛ bytes آن تغییر نمی‌کنند.

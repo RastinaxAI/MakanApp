@@ -1,5 +1,9 @@
 # ممیزی و تحویل P0 پیام‌رسان ماکان
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 ## مبنای مستقل و مرز کار
 
 تاریخ شروع: ۲۰۲۶-۱۰-۱۶. worktree مستقل `MakanApp-Backend-Messenger-P0`، شاخه `messenger/p0` با upstream برابر `origin/main` و commit مبنا `ab0090108e6fcd26b6160307219d331c5c8c23cf` است. ۲۲ فایل dirty workspace قبلی AI پیش از شروع hash شدند؛ reset/stash/clean/revert یا انتقال تغییرات AI انجام نمی‌شود.

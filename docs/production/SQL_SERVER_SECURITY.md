@@ -1,5 +1,9 @@
 # امنیت SQL Server
 
+<!-- CURRENT-REVIEW:BEGIN -->
+بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+<!-- CURRENT-REVIEW:END -->
+
 ## اصل least privilege
 
 برنامه نباید با `sa`، Windows Administrator یا `db_owner` اجرا شود. دو principal جدا لازم است:

@@ -1,5 +1,9 @@
 # Observability و عملیات
 
+<!-- CURRENT-REVIEW:BEGIN -->
+بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+<!-- CURRENT-REVIEW:END -->
+
 ## Logging و correlation
 
 logها structured هستند و سطح Production پیش‌فرض `Information` با overrideهای `Microsoft.AspNetCore=Warning` و `Microsoft.EntityFrameworkCore.Database.Command=Warning` است. `X-Correlation-ID` امن با سقف ۶۴ نویسه پذیرفته یا از trace جاری تولید می‌شود و در پاسخ و `ProblemDetails.traceId` برمی‌گردد.
@@ -36,3 +40,7 @@ thresholdها باید بعد از baseline staging تعیین شوند و SLA �
 - `/health`: alias کم‌جزئیات liveness برای سازگاری.
 
 خروجی عمومی فقط Healthy/Unhealthy است و connection string، path، payload provider یا stack trace منتشر نمی‌کند. جزئیات عملیات موجود از endpointهای permissionدار Backoffice خوانده می‌شود.
+
+## worker و hintهای Messenger
+
+علاوه بر Outbox، backlog/age/failure و recovery پیام‌های Scheduled و NotificationDelivery پایش شوند؛ registration/token/endpoint کامل Push و محتوای پیام log نشوند. Typing/Presence hint گذرا هستند و مسیر audit پیام دائمی نیستند. موفقیت provider با رسیدن به دستگاه تفاوت دارد؛ gate runtime و sample کاربران آزمایشی جدا ثبت شود.

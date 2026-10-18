@@ -1,5 +1,9 @@
 # گزارش P3-S — توقف در S1 به‌علت نیاز زیرساخت
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 تاریخ بررسی `2026-10-17`؛ starting commit: `3cfe196dc0de1bbb0c36653834fde544f1d1ed4e`؛ worktree مستقل Messenger، شاخهٔ `messenger/p0` و upstream موجود `origin/main`. در شروع `git status --short` خالی بود و پس از fetch، HEAD و origin/main برابر starting commit بودند. مرجع محصول همان [P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) است؛ policy و تصمیم‌های تاریخی P3-0 تغییر نکرده‌اند.
 
 **نتیجهٔ preflight: P3_S_INFRA_REQUIRED.** S0 با regression موفق اجرا شد و S1 فقط بررسی read-only محیط بود؛ آزمایش رسانه و فازهای S2–S23 شروع نشده‌اند. این گزارش نتیجهٔ موفق/ناموفق LiveKit نیست و هیچ stale-token window را اندازه‌گیری نکرده است. طبق شرط صریح S1، تا تأمین محیط مجاز، harness، Docker deployment، token issuer و endpoint محصول ایجاد نمی‌شوند. P3-A نیز آغاز نشود.

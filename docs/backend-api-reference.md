@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-10-15` از `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-10-18` از `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **284 عملیات HTTP، 256 مسیر متمایز، 48 Controller و 488 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **325 عملیات HTTP، 290 مسیر متمایز، 57 Controller و 551 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -29,11 +29,16 @@
 | Auth | 7 | [AuthController](../MakanApp.Api/Controllers/AuthController.cs) |
 | Classes | 6 | [ClassesController](../MakanApp.Api/Controllers/ClassesController.cs) |
 | Commerce | 5 | [CommerceController](../MakanApp.Api/Controllers/CommerceController.cs) |
-| CommunicationAge | 3 | [CommunicationAgeController](../MakanApp.Api/Controllers/CommunicationAgeController.cs) |
+| CommunicationAge | 6 | [CommunicationAgeController](../MakanApp.Api/Controllers/CommunicationAgeController.cs) |
 | Contacts | 5 | [ContactsController](../MakanApp.Api/Controllers/ContactsController.cs) |
+| ConversationAdvancedManagement | 4 | [ConversationAdvancedManagementController](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs) |
+| ConversationChecklists | 4 | [ConversationChecklistsController](../MakanApp.Api/Controllers/ConversationChecklistsController.cs) |
 | ConversationInvitations | 5 | [ConversationInvitationsController](../MakanApp.Api/Controllers/ConversationInvitationsController.cs) |
+| ConversationInviteLinks | 9 | [ConversationInviteLinksController](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs) |
 | ConversationModeration | 6 | [ConversationModerationController](../MakanApp.Api/Controllers/ConversationModerationController.cs) |
-| Conversations | 41 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
+| ConversationPolls | 5 | [ConversationPollsController](../MakanApp.Api/Controllers/ConversationPollsController.cs) |
+| ConversationTopics | 3 | [ConversationTopicsController](../MakanApp.Api/Controllers/ConversationTopicsController.cs) |
+| Conversations | 42 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
 | Courses | 1 | [CoursesController](../MakanApp.Api/Controllers/CoursesController.cs) |
 | Dashboards | 4 | [DashboardsController](../MakanApp.Api/Controllers/DashboardsController.cs) |
 | Evaluations | 8 | [EvaluationsController](../MakanApp.Api/Controllers/EvaluationsController.cs) |
@@ -44,14 +49,16 @@
 | Invitations | 3 | [InvitationsController](../MakanApp.Api/Controllers/InvitationsController.cs) |
 | MessageReports | 1 | [MessageReportsController](../MakanApp.Api/Controllers/MessageReportsController.cs) |
 | Messages | 1 | [MessagesController](../MakanApp.Api/Controllers/MessagesController.cs) |
+| MessagingFolders | 3 | [MessagingFoldersController](../MakanApp.Api/Controllers/MessagingFoldersController.cs) |
 | MessagingPrivacy | 2 | [MessagingPrivacyController](../MakanApp.Api/Controllers/MessagingPrivacyController.cs) |
 | MessagingSafety | 4 | [MessagingSafetyController](../MakanApp.Api/Controllers/MessagingSafetyController.cs) |
-| NotificationDevices | 2 | [NotificationDevicesController](../MakanApp.Api/Controllers/NotificationDevicesController.cs) |
+| NotificationDevices | 5 | [NotificationDevicesController](../MakanApp.Api/Controllers/NotificationDevicesController.cs) |
 | NotificationPreferences | 2 | [NotificationPreferencesController](../MakanApp.Api/Controllers/NotificationPreferencesController.cs) |
 | Notifications | 3 | [NotificationsController](../MakanApp.Api/Controllers/NotificationsController.cs) |
 | OfficialClassConversations | 1 | [OfficialClassConversationsController](../MakanApp.Api/Controllers/OfficialClassConversationsController.cs) |
 | OrganizationPeople | 7 | [OrganizationPeopleController](../MakanApp.Api/Controllers/OrganizationPeopleController.cs) |
 | People | 3 | [PeopleController](../MakanApp.Api/Controllers/PeopleController.cs) |
+| PeoplePresence | 1 | [PeoplePresenceController](../MakanApp.Api/Controllers/PeoplePresenceController.cs) |
 | PlatformCommerce | 7 | [PlatformCommerceController](../MakanApp.Api/Controllers/PlatformCommerceController.cs) |
 | PlatformEducation | 6 | [PlatformEducationController](../MakanApp.Api/Controllers/PlatformEducationController.cs) |
 | PlatformFinance | 2 | [PlatformFinanceController](../MakanApp.Api/Controllers/PlatformFinanceController.cs) |
@@ -65,7 +72,9 @@
 | PlatformUsers | 6 | [PlatformUsersController](../MakanApp.Api/Controllers/PlatformUsersController.cs) |
 | Profile | 2 | [ProfileController](../MakanApp.Api/Controllers/ProfileController.cs) |
 | Reports | 19 | [ReportsController](../MakanApp.Api/Controllers/ReportsController.cs) |
+| SavedMessageLabels | 2 | [SavedMessageLabelsController](../MakanApp.Api/Controllers/SavedMessageLabelsController.cs) |
 | Schedule | 3 | [ScheduleController](../MakanApp.Api/Controllers/ScheduleController.cs) |
+| ScheduledMessages | 3 | [ScheduledMessagesController](../MakanApp.Api/Controllers/ScheduledMessagesController.cs) |
 | SchoolGuardianRelations | 6 | [SchoolGuardianRelationsController](../MakanApp.Api/Controllers/SchoolGuardianRelationsController.cs) |
 | Sessions | 8 | [SessionsController](../MakanApp.Api/Controllers/SessionsController.cs) |
 | Submissions | 8 | [SubmissionsController](../MakanApp.Api/Controllers/SubmissionsController.cs) |
@@ -732,6 +741,26 @@ policy: `platform.audit.read`
 
 ## CommunicationAge
 
+### GET /api/admin/v1/users/{userId}/communication-age
+
+کد واقعی: [CommunicationAgeController.GetPlatform](../MakanApp.Api/Controllers/CommunicationAgeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.users.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.CommunicationAgeService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `userId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+
 ### POST /api/admin/v1/users/{userId}/communication-age/resolve
 
 کد واقعی: [CommunicationAgeController.Resolve](../MakanApp.Api/Controllers/CommunicationAgeController.cs).
@@ -751,6 +780,40 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+
+### POST /api/admin/v1/users/{userId}/communication-age/verifications
+
+کد واقعی: [CommunicationAgeController.VerifyInitial](../MakanApp.Api/Controllers/CommunicationAgeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.users.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.CommunicationAgeService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `userId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [VerifyCommunicationAgeCommand](#contract-VerifyCommunicationAgeCommand)<br>`text/json`: [VerifyCommunicationAgeCommand](#contract-VerifyCommunicationAgeCommand)<br>`application/*+json`: [VerifyCommunicationAgeCommand](#contract-VerifyCommunicationAgeCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+
+### GET /api/v1/me/messaging-status
+
+کد واقعی: [CommunicationAgeController.GetSelfStatus](../MakanApp.Api/Controllers/CommunicationAgeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.CommunicationAgeService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MessagingStatusResult](#contract-MessagingStatusResult)<br>`application/json`: [MessagingStatusResult](#contract-MessagingStatusResult)<br>`text/json`: [MessagingStatusResult](#contract-MessagingStatusResult) |
 
 ### GET /api/v1/organization/people/{personId}/communication-age
 
@@ -883,6 +946,163 @@ policy: `platform.users.manage`
 | 200 | OK | `text/plain`: [UserContactResult](#contract-UserContactResult)<br>`application/json`: [UserContactResult](#contract-UserContactResult)<br>`text/json`: [UserContactResult](#contract-UserContactResult) |
 
 
+## ConversationAdvancedManagement
+
+### PATCH /api/v1/conversations/{conversationId}/info
+
+کد واقعی: [ConversationAdvancedManagementController.UpdateInfo](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateConversationInfoCommand](#contract-UpdateConversationInfoCommand)<br>`text/json`: [UpdateConversationInfoCommand](#contract-UpdateConversationInfoCommand)<br>`application/*+json`: [UpdateConversationInfoCommand](#contract-UpdateConversationInfoCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationInfoResult](#contract-ConversationInfoResult)<br>`application/json`: [ConversationInfoResult](#contract-ConversationInfoResult)<br>`text/json`: [ConversationInfoResult](#contract-ConversationInfoResult) |
+
+### GET /api/v1/conversations/{conversationId}/me/restriction
+
+کد واقعی: [ConversationAdvancedManagementController.GetOwnRestriction](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`application/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`text/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult) |
+
+### GET /api/v1/conversations/{conversationId}/member-restrictions
+
+کد واقعی: [ConversationAdvancedManagementController.GetRestrictions](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult)<br>`application/json`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult)<br>`text/json`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult) |
+
+### PUT /api/v1/conversations/{conversationId}/members/{userId}/restriction
+
+کد واقعی: [ConversationAdvancedManagementController.Restrict](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `userId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SetMemberRestrictionCommand](#contract-SetMemberRestrictionCommand)<br>`text/json`: [SetMemberRestrictionCommand](#contract-SetMemberRestrictionCommand)<br>`application/*+json`: [SetMemberRestrictionCommand](#contract-SetMemberRestrictionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`application/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`text/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult) |
+
+
+## ConversationChecklists
+
+### POST /api/v1/conversations/{conversationId}/checklists
+
+کد واقعی: [ConversationChecklistsController.Create](../MakanApp.Api/Controllers/ConversationChecklistsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationChecklistService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateConversationChecklistCommand](#contract-CreateConversationChecklistCommand)<br>`text/json`: [CreateConversationChecklistCommand](#contract-CreateConversationChecklistCommand)<br>`application/*+json`: [CreateConversationChecklistCommand](#contract-CreateConversationChecklistCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+
+### GET /api/v1/conversations/{conversationId}/messages/{messageId}/checklist
+
+کد واقعی: [ConversationChecklistsController.Get](../MakanApp.Api/Controllers/ConversationChecklistsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationChecklistService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+
+### PUT /api/v1/conversations/{conversationId}/messages/{messageId}/checklist
+
+کد واقعی: [ConversationChecklistsController.Update](../MakanApp.Api/Controllers/ConversationChecklistsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationChecklistService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateConversationChecklistCommand](#contract-UpdateConversationChecklistCommand)<br>`text/json`: [UpdateConversationChecklistCommand](#contract-UpdateConversationChecklistCommand)<br>`application/*+json`: [UpdateConversationChecklistCommand](#contract-UpdateConversationChecklistCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+
+### PUT /api/v1/conversations/{conversationId}/messages/{messageId}/checklist/items/{itemId}
+
+کد واقعی: [ConversationChecklistsController.SetItem](../MakanApp.Api/Controllers/ConversationChecklistsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationChecklistService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+| `itemId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SetChecklistItemCommand](#contract-SetChecklistItemCommand)<br>`text/json`: [SetChecklistItemCommand](#contract-SetChecklistItemCommand)<br>`application/*+json`: [SetChecklistItemCommand](#contract-SetChecklistItemCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+
+
 ## ConversationInvitations
 
 ### POST /api/v1/conversations/{conversationId}/invitations
@@ -970,6 +1190,173 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+
+
+## ConversationInviteLinks
+
+### GET /api/v1/conversations/{conversationId}/invite-links
+
+کد واقعی: [ConversationInviteLinksController.List](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [InviteLinkPageResult](#contract-InviteLinkPageResult)<br>`application/json`: [InviteLinkPageResult](#contract-InviteLinkPageResult)<br>`text/json`: [InviteLinkPageResult](#contract-InviteLinkPageResult) |
+
+### POST /api/v1/conversations/{conversationId}/invite-links
+
+کد واقعی: [ConversationInviteLinksController.Create](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateInviteLinkCommand](#contract-CreateInviteLinkCommand)<br>`text/json`: [CreateInviteLinkCommand](#contract-CreateInviteLinkCommand)<br>`application/*+json`: [CreateInviteLinkCommand](#contract-CreateInviteLinkCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult)<br>`application/json`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult)<br>`text/json`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult) |
+
+### POST /api/v1/conversations/{conversationId}/invite-links/{linkId}/revoke
+
+کد واقعی: [ConversationInviteLinksController.Revoke](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `linkId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [RevokeInviteLinkCommand](#contract-RevokeInviteLinkCommand)<br>`text/json`: [RevokeInviteLinkCommand](#contract-RevokeInviteLinkCommand)<br>`application/*+json`: [RevokeInviteLinkCommand](#contract-RevokeInviteLinkCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [InviteLinkResult](#contract-InviteLinkResult)<br>`application/json`: [InviteLinkResult](#contract-InviteLinkResult)<br>`text/json`: [InviteLinkResult](#contract-InviteLinkResult) |
+
+### GET /api/v1/conversations/{conversationId}/join-requests
+
+کد واقعی: [ConversationInviteLinksController.ListRequests](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`application/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`text/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult) |
+
+### POST /api/v1/messaging/invite-links/redeem
+
+کد واقعی: [ConversationInviteLinksController.Redeem](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+بدنه درخواست: `application/json`: [RedeemInviteLinkCommand](#contract-RedeemInviteLinkCommand)<br>`text/json`: [RedeemInviteLinkCommand](#contract-RedeemInviteLinkCommand)<br>`application/*+json`: [RedeemInviteLinkCommand](#contract-RedeemInviteLinkCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult)<br>`application/json`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult)<br>`text/json`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult) |
+
+### GET /api/v1/messaging/join-requests
+
+کد واقعی: [ConversationInviteLinksController.MyRequests](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`application/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`text/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult) |
+
+### POST /api/v1/messaging/join-requests/{requestId}/approve
+
+کد واقعی: [ConversationInviteLinksController.Approve](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`text/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`application/*+json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
+
+### POST /api/v1/messaging/join-requests/{requestId}/cancel
+
+کد واقعی: [ConversationInviteLinksController.Cancel](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`text/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`application/*+json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
+
+### POST /api/v1/messaging/join-requests/{requestId}/reject
+
+کد واقعی: [ConversationInviteLinksController.Reject](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationAdvancedManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`text/json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)<br>`application/*+json`: [CompleteJoinRequestCommand](#contract-CompleteJoinRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
 
 
 ## ConversationModeration
@@ -1093,6 +1480,166 @@ policy: `platform.users.manage`
 | 200 | OK | `text/plain`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`application/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`text/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult) |
 
 
+## ConversationPolls
+
+### GET /api/v1/conversations/{conversationId}/messages/{messageId}/poll
+
+کد واقعی: [ConversationPollsController.Get](../MakanApp.Api/Controllers/ConversationPollsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPollService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+
+### POST /api/v1/conversations/{conversationId}/messages/{messageId}/poll/close
+
+کد واقعی: [ConversationPollsController.Close](../MakanApp.Api/Controllers/ConversationPollsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPollService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CloseConversationPollCommand](#contract-CloseConversationPollCommand)<br>`text/json`: [CloseConversationPollCommand](#contract-CloseConversationPollCommand)<br>`application/*+json`: [CloseConversationPollCommand](#contract-CloseConversationPollCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+
+### POST /api/v1/conversations/{conversationId}/messages/{messageId}/poll/vote
+
+کد واقعی: [ConversationPollsController.Vote](../MakanApp.Api/Controllers/ConversationPollsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPollService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [VoteConversationPollCommand](#contract-VoteConversationPollCommand)<br>`text/json`: [VoteConversationPollCommand](#contract-VoteConversationPollCommand)<br>`application/*+json`: [VoteConversationPollCommand](#contract-VoteConversationPollCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+
+### GET /api/v1/conversations/{conversationId}/messages/{messageId}/poll/voters
+
+کد واقعی: [ConversationPollsController.Voters](../MakanApp.Api/Controllers/ConversationPollsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPollService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `messageId` | path | بله | string / uuid |
+| `optionNumber` | query | خیر | integer / int32 |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult)<br>`application/json`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult)<br>`text/json`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult) |
+
+### POST /api/v1/conversations/{conversationId}/polls
+
+کد واقعی: [ConversationPollsController.Create](../MakanApp.Api/Controllers/ConversationPollsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPollService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateConversationPollCommand](#contract-CreateConversationPollCommand)<br>`text/json`: [CreateConversationPollCommand](#contract-CreateConversationPollCommand)<br>`application/*+json`: [CreateConversationPollCommand](#contract-CreateConversationPollCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+
+
+## ConversationTopics
+
+### GET /api/v1/conversations/{conversationId}/topics
+
+کد واقعی: [ConversationTopicsController.Get](../MakanApp.Api/Controllers/ConversationTopicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationTopicService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult)<br>`application/json`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult)<br>`text/json`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult) |
+
+### POST /api/v1/conversations/{conversationId}/topics
+
+کد واقعی: [ConversationTopicsController.Create](../MakanApp.Api/Controllers/ConversationTopicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationTopicService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateConversationTopicCommand](#contract-CreateConversationTopicCommand)<br>`text/json`: [CreateConversationTopicCommand](#contract-CreateConversationTopicCommand)<br>`application/*+json`: [CreateConversationTopicCommand](#contract-CreateConversationTopicCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`application/json`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`text/json`: [ConversationTopicResult](#contract-ConversationTopicResult) |
+
+### PUT /api/v1/conversations/{conversationId}/topics/{topicId}
+
+کد واقعی: [ConversationTopicsController.Update](../MakanApp.Api/Controllers/ConversationTopicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationTopicService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `topicId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateConversationTopicCommand](#contract-UpdateConversationTopicCommand)<br>`text/json`: [UpdateConversationTopicCommand](#contract-UpdateConversationTopicCommand)<br>`application/*+json`: [UpdateConversationTopicCommand](#contract-UpdateConversationTopicCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`application/json`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`text/json`: [ConversationTopicResult](#contract-ConversationTopicResult) |
+
+
 ## Conversations
 
 ### GET /api/v1/conversations
@@ -1105,10 +1652,11 @@ policy: `platform.users.manage`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
-| `filter` | query | خیر | integer |
+| `filter` | query | خیر | string / All, Direct, Group, Channel, Unread, Archived, Saved |
 | `page` | query | خیر | integer / int32 |
 | `pageSize` | query | خیر | integer / int32 |
 | `q` | query | خیر | string |
+| `folderId` | query | خیر | string / uuid |
 
 بدنه درخواست: ندارد.
 
@@ -1490,6 +2038,7 @@ policy: `platform.users.manage`
 | `conversationId` | path | بله | string / uuid |
 | `beforeSequence` | query | خیر | integer / int64 |
 | `limit` | query | خیر | integer / int32 |
+| `topicId` | query | خیر | string / uuid |
 
 بدنه درخواست: ندارد.
 
@@ -1513,6 +2062,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}
@@ -1552,6 +2102,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 200 | OK | `text/plain`: [MessageMutationResult](#contract-MessageMutationResult)<br>`application/json`: [MessageMutationResult](#contract-MessageMutationResult)<br>`text/json`: [MessageMutationResult](#contract-MessageMutationResult) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}/for-everyone
@@ -1610,6 +2161,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
 
 ### POST /api/v1/conversations/{conversationId}/messages/{messageId}/reactions
@@ -1629,6 +2181,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReactionResult](#contract-MessageReactionResult)<br>`application/json`: [MessageReactionResult](#contract-MessageReactionResult)<br>`text/json`: [MessageReactionResult](#contract-MessageReactionResult) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}/reactions/{reaction}
@@ -1649,6 +2202,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 204 | No Content | بدون بدنهٔ منتشرشده |
 
 ### DELETE /api/v1/conversations/{conversationId}/mute
@@ -1798,6 +2352,25 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`application/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`text/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult) |
+
+### GET /api/v1/conversations/{conversationId}/read-states
+
+کد واقعی: [ConversationsController.GetReadStates](../MakanApp.Api/Controllers/ConversationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult)<br>`application/json`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult)<br>`text/json`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult) |
+| 404 | Not Found | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 
 ### PATCH /api/v1/conversations/{conversationId}/settings
 
@@ -2848,12 +3421,70 @@ policy: `platform.users.manage`
 | `toUtc` | query | خیر | string / date-time |
 | `cursor` | query | خیر | string |
 | `limit` | query | خیر | integer / int32 |
+| `savedLabel` | query | خیر | string |
+| `hasAttachment` | query | خیر | boolean |
+| `hasLinks` | query | خیر | boolean |
+| `topicId` | query | خیر | string / uuid |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageSearchPageResult](#contract-MessageSearchPageResult)<br>`application/json`: [MessageSearchPageResult](#contract-MessageSearchPageResult)<br>`text/json`: [MessageSearchPageResult](#contract-MessageSearchPageResult) |
+
+
+## MessagingFolders
+
+### GET /api/v1/messaging/folders
+
+کد واقعی: [MessagingFoldersController.Get](../MakanApp.Api/Controllers/MessagingFoldersController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingPresentationService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [ChatFolderResult](#contract-ChatFolderResult)<br>`application/json`: آرایه از [ChatFolderResult](#contract-ChatFolderResult)<br>`text/json`: آرایه از [ChatFolderResult](#contract-ChatFolderResult) |
+
+### DELETE /api/v1/messaging/folders/{folderId}
+
+کد واقعی: [MessagingFoldersController.Delete](../MakanApp.Api/Controllers/MessagingFoldersController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingPresentationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `folderId` | path | بله | string / uuid |
+| `expectedVersion` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+
+### PUT /api/v1/messaging/folders/{folderId}
+
+کد واقعی: [MessagingFoldersController.Save](../MakanApp.Api/Controllers/MessagingFoldersController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingPresentationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `folderId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SaveChatFolderCommand](#contract-SaveChatFolderCommand)<br>`text/json`: [SaveChatFolderCommand](#contract-SaveChatFolderCommand)<br>`application/*+json`: [SaveChatFolderCommand](#contract-SaveChatFolderCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ChatFolderResult](#contract-ChatFolderResult)<br>`application/json`: [ChatFolderResult](#contract-ChatFolderResult)<br>`text/json`: [ChatFolderResult](#contract-ChatFolderResult) |
 
 
 ## MessagingPrivacy
@@ -2961,13 +3592,33 @@ policy: `platform.users.manage`
 
 ## NotificationDevices
 
+### GET /api/v1/notifications/devices
+
+کد واقعی: [NotificationDevicesController.GetPage](../MakanApp.Api/Controllers/NotificationDevicesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`، `MakanApp.Application.Notification.IPushClientConfigurationProvider`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+| `includeRevoked` | query | خیر | boolean |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PushDevicePageResult](#contract-PushDevicePageResult)<br>`application/json`: [PushDevicePageResult](#contract-PushDevicePageResult)<br>`text/json`: [PushDevicePageResult](#contract-PushDevicePageResult) |
+
 ### POST /api/v1/notifications/devices
 
 کد واقعی: [NotificationDevicesController.Register](../MakanApp.Api/Controllers/NotificationDevicesController.cs).
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`، `MakanApp.Application.Notification.IPushClientConfigurationProvider`
 
 بدنه درخواست: `application/json`: [RegisterPushDeviceCommand](#contract-RegisterPushDeviceCommand)<br>`text/json`: [RegisterPushDeviceCommand](#contract-RegisterPushDeviceCommand)<br>`application/*+json`: [RegisterPushDeviceCommand](#contract-RegisterPushDeviceCommand)؛ required
 
@@ -2975,13 +3626,44 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`application/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`text/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult) |
 
+### POST /api/v1/notifications/devices/web-push
+
+کد واقعی: [NotificationDevicesController.RegisterWebPush](../MakanApp.Api/Controllers/NotificationDevicesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`، `MakanApp.Application.Notification.IPushClientConfigurationProvider`
+
+بدنه درخواست: `application/json`: [RegisterWebPushCommand](#contract-RegisterWebPushCommand)<br>`text/json`: [RegisterWebPushCommand](#contract-RegisterWebPushCommand)<br>`application/*+json`: [RegisterWebPushCommand](#contract-RegisterWebPushCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`application/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`text/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+
+### GET /api/v1/notifications/devices/web-push/configuration
+
+کد واقعی: [NotificationDevicesController.GetWebPushConfiguration](../MakanApp.Api/Controllers/NotificationDevicesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`، `MakanApp.Application.Notification.IPushClientConfigurationProvider`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration)<br>`application/json`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration)<br>`text/json`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration) |
+
 ### DELETE /api/v1/notifications/devices/{registrationId}
 
 کد واقعی: [NotificationDevicesController.Revoke](../MakanApp.Api/Controllers/NotificationDevicesController.cs).
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.IPushDeviceService`، `MakanApp.Application.Notification.IPushClientConfigurationProvider`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -3299,6 +3981,27 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult)<br>`application/json`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult)<br>`text/json`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult) |
+
+
+## PeoplePresence
+
+### GET /api/v1/people/{userId}/presence
+
+کد واقعی: [PeoplePresenceController.Get](../MakanApp.Api/Controllers/PeoplePresenceController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingEphemeralService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `userId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PresenceResult](#contract-PresenceResult)<br>`application/json`: [PresenceResult](#contract-PresenceResult)<br>`text/json`: [PresenceResult](#contract-PresenceResult) |
 
 
 ## PlatformCommerce
@@ -4970,6 +5673,45 @@ policy: `platform.users.manage`
 | 200 | OK | `text/plain`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto)<br>`application/json`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto)<br>`text/json`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto) |
 
 
+## SavedMessageLabels
+
+### GET /api/v1/conversations/saved/messages/{messageId}/labels
+
+کد واقعی: [SavedMessageLabelsController.Get](../MakanApp.Api/Controllers/SavedMessageLabelsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingPresentationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`application/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`text/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult) |
+
+### PUT /api/v1/conversations/saved/messages/{messageId}/labels
+
+کد واقعی: [SavedMessageLabelsController.Replace](../MakanApp.Api/Controllers/SavedMessageLabelsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.MessagingPresentationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `messageId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ReplaceSavedLabelsCommand](#contract-ReplaceSavedLabelsCommand)<br>`text/json`: [ReplaceSavedLabelsCommand](#contract-ReplaceSavedLabelsCommand)<br>`application/*+json`: [ReplaceSavedLabelsCommand](#contract-ReplaceSavedLabelsCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`application/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`text/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult) |
+
+
 ## Schedule
 
 ### POST /api/v1/academic/classes/{classId}/schedule-rules
@@ -5026,6 +5768,66 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`application/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`text/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult) |
+
+
+## ScheduledMessages
+
+### GET /api/v1/conversations/{conversationId}/scheduled-messages
+
+کد واقعی: [ScheduledMessagesController.Get](../MakanApp.Api/Controllers/ScheduledMessagesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ScheduledMessageService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult)<br>`application/json`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult)<br>`text/json`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult) |
+
+### POST /api/v1/conversations/{conversationId}/scheduled-messages
+
+کد واقعی: [ScheduledMessagesController.Schedule](../MakanApp.Api/Controllers/ScheduledMessagesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ScheduledMessageService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ScheduleMessageCommand](#contract-ScheduleMessageCommand)<br>`text/json`: [ScheduleMessageCommand](#contract-ScheduleMessageCommand)<br>`application/*+json`: [ScheduleMessageCommand](#contract-ScheduleMessageCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`application/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`text/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult) |
+
+### POST /api/v1/conversations/{conversationId}/scheduled-messages/{id}/cancel
+
+کد واقعی: [ScheduledMessagesController.Cancel](../MakanApp.Api/Controllers/ScheduledMessagesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ScheduledMessageService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CancelScheduledMessageCommand](#contract-CancelScheduledMessageCommand)<br>`text/json`: [CancelScheduledMessageCommand](#contract-CancelScheduledMessageCommand)<br>`application/*+json`: [CancelScheduledMessageCommand](#contract-CancelScheduledMessageCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`application/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`text/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult) |
 
 
 ## SchoolGuardianRelations
@@ -5483,7 +6285,7 @@ policy: `platform.users.manage`
 
 Required زیر همان required در OpenAPI است؛ اختیاری بودن schema به معنی عبور از قواعد Application نیست. bounds فقط در صورت انتشار نشان داده می‌شوند.
 
-اختلاف کشف‌شده در DOC-CONTRACT-01: OpenAPI این نسخه برخی Enumها را integer بدون literal معرفی می‌کند، ولی JsonOptions واقعی MVC، JsonStringEnumConverter دارد. برای Enumهای زیر literal از serialize کردن CLR Enum با همان گزینه‌های MVC استخراج شده و نوع خام OpenAPI جدا نشان داده می‌شود. client به‌جای تولید کور نوع عددی، نام‌های canonical رشته‌ای را مصرف کند. این همگام‌سازی کد/قرارداد اجرایی یا OpenAPI برنامه را تغییر نداده است؛ اصلاح runtime OpenAPI یک کار مستقل است. literalهای نام‌دار Flags، مجموعهٔ کامل همهٔ ترکیب‌ها نیستند و پذیرش ورودی عددی باید با serializer/use case بررسی شود.
+DOC-CONTRACT-01 در نسخهٔ مبنا CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ اختلاف integer/String قبلی در snapshot جاری دیده نشد. OpenAPI با serializer رشته‌ای MVC هم‌تراز شده است؛ literalهای زیر از همان CLR/JsonOptions استخراج می‌شوند. این نتیجه شاهد انتشار OpenAPI روی سرور نیست؛ named Flags همهٔ ترکیب‌های مجاز یا ورودی‌های مجاز use case را تعریف نمی‌کند.
 
 <a id="contract-AbuseReportReason"></a>
 ### AbuseReportReason
@@ -5492,7 +6294,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.AbuseReportReason`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Harassment", "Spam", "Threat", "InappropriateContent", "Impersonation", "Other", "ChildSafetyConcern"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AbuseReportReceiptResult"></a>
 ### AbuseReportReceiptResult
@@ -5515,7 +6317,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.AbuseReportStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Submitted", "UnderReview", "Resolved", "Dismissed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AcademicPeriodResult"></a>
 ### AcademicPeriodResult
@@ -5538,7 +6340,7 @@ CLR واقعی: `MakanApp.Domain.Academic.AcademicPeriodStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Closed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AcceptInvitationCommand"></a>
 ### AcceptInvitationCommand
@@ -5842,7 +6644,7 @@ CLR واقعی: `MakanApp.Application.Ai.AiSeverity`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Info", "Low", "Medium", "High", "Critical"]`
 
-نوع خام OpenAPI: `object`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AiSourceReference"></a>
 ### AiSourceReference
@@ -5965,7 +6767,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.AssignmentStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Published", "Closed", "Archived"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AttachSubmissionFileCommand"></a>
 ### AttachSubmissionFileCommand
@@ -6070,7 +6872,7 @@ CLR واقعی: `MakanApp.Domain.Academic.AttendanceStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["NotRecorded", "Present", "Absent", "Late", "Excused"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-AuthorizedChildResult"></a>
 ### AuthorizedChildResult
@@ -6097,6 +6899,15 @@ object
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-CancelScheduledMessageCommand"></a>
+### CancelScheduledMessageCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ChangeConversationMemberRoleCommand"></a>
 ### ChangeConversationMemberRoleCommand
 
@@ -6117,6 +6928,32 @@ object
 | `fromRole` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
 | `toRole` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ChatFolderResult"></a>
+### ChatFolderResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `name` | string | بله | خیر/تصریح نشده | — |
+| `sortOrder` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `includedTypes` | [FolderConversationTypes](#contract-FolderConversationTypes) | بله | خیر/تصریح نشده | — |
+| `excludedTypes` | [FolderConversationTypes](#contract-FolderConversationTypes) | بله | خیر/تصریح نشده | — |
+| `unreadOnly` | boolean | بله | خیر/تصریح نشده | — |
+| `overrides` | آرایه از [FolderOverrideCommand](#contract-FolderOverrideCommand) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ChecklistItemInput"></a>
+### ChecklistItemInput
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `itemId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `text` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ClassResult"></a>
 ### ClassResult
@@ -6142,7 +6979,16 @@ CLR واقعی: `MakanApp.Domain.Academic.ClassStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Active", "Completed", "Archived"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-CloseConversationPollCommand"></a>
+### CloseConversationPollCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CommerceEntitlementDto"></a>
 ### CommerceEntitlementDto
@@ -6193,7 +7039,7 @@ CLR واقعی: `MakanApp.Application.Commerce.CommerceSummaryState`؛ Flags: Fa
 
 literalهای JSON واقعی MVC: `["NoSubscription", "Active", "Inactive"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-CommunicationAgeCategory"></a>
 ### CommunicationAgeCategory
@@ -6202,7 +7048,7 @@ CLR واقعی: `MakanApp.Domain.Identity.CommunicationAgeCategory`؛ Flags: Fal
 
 literalهای JSON واقعی MVC: `["Unknown", "Minor", "Adult"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-CommunicationAgeResult"></a>
 ### CommunicationAgeResult
@@ -6223,7 +7069,7 @@ CLR واقعی: `MakanApp.Domain.Identity.CommunicationAgeVerificationStatus`؛ 
 
 literalهای JSON واقعی MVC: `["Unverified", "Verified", "Conflict"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-CompleteExamGradeCommand"></a>
 ### CompleteExamGradeCommand
@@ -6236,6 +7082,15 @@ object
 | `guardianVisibleFeedback` | string | بله | بله | — |
 | `evaluatorPrivateNote` | string | بله | بله | — |
 | `expectedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CompleteJoinRequestCommand"></a>
+### CompleteJoinRequestCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CompleteModerationCaseCommand"></a>
 ### CompleteModerationCaseCommand
@@ -6287,21 +7142,21 @@ CLR واقعی: `MakanApp.Domain.Messaging.ContentSafetyDecision`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Allowed", "Blocked", "ReviewRequired", "Unavailable"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationAdminPermission"></a>
 ### ConversationAdminPermission
 
 CLR واقعی: `MakanApp.Domain.Messaging.ConversationAdminPermission`؛ Flags: True
 
-literalهای JSON واقعی MVC: `["None", "ManageMembers", "RemoveMembers", "ManageAdmins", "DeleteMessages", "PinMessages", "PublishMessages", "LegacyAdminDefault", "ManageHistory", "ManageVisibility", "ReviewReports", "All"]`
+literalهای JSON واقعی MVC: `["None", "ManageMembers", "RemoveMembers", "ManageAdmins", "DeleteMessages", "PinMessages", "PublishMessages", "LegacyAdminDefault", "ManageHistory", "ManageVisibility", "ReviewReports", "ManageInvites", "BanMembers", "ChangeInfo", "ManageTopics", "All"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationAdminPermission2"></a>
 ### ConversationAdminPermission2
 
-integer
+string
 
 <a id="contract-ConversationChangePageResult"></a>
 ### ConversationChangePageResult
@@ -6329,6 +7184,44 @@ object
 | `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `actorUserId` | string / uuid | بله | بله | — |
 | `payloadVersion` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `peerReadThroughSequence` | integer / int64 | خیر | بله | {"default": null} |
+
+<a id="contract-ConversationChecklistItemResult"></a>
+### ConversationChecklistItemResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `itemId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `text` | string | بله | خیر/تصریح نشده | — |
+| `isChecked` | boolean | بله | خیر/تصریح نشده | — |
+| `stateVersion` | string | بله | بله | — |
+
+<a id="contract-ConversationChecklistMode"></a>
+### ConversationChecklistMode
+
+CLR واقعی: `MakanApp.Domain.Messaging.ConversationChecklistMode`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Personal", "Collaborative"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ConversationChecklistResult"></a>
+### ConversationChecklistResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `messageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `mode` | [ConversationChecklistMode](#contract-ConversationChecklistMode) | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [ConversationChecklistItemResult](#contract-ConversationChecklistItemResult) | بله | خیر/تصریح نشده | — |
+| `isCompleted` | boolean | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `messageVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ConversationCursorStateResult"></a>
 ### ConversationCursorStateResult
@@ -6342,6 +7235,18 @@ object
 | `lastReadMessageSequence` | integer / int64 | بله | خیر/تصریح نشده | — |
 | `unreadCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `updatedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationInfoResult"></a>
+### ConversationInfoResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ConversationInvitationResult"></a>
@@ -6365,7 +7270,56 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationInvitationStatus`؛ Flags
 
 literalهای JSON واقعی MVC: `["Pending", "Accepted", "Declined", "Revoked", "Expired"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ConversationJoinRequestPageResult"></a>
+### ConversationJoinRequestPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationJoinRequestResult"></a>
+### ConversationJoinRequestResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [ConversationJoinRequestStatus](#contract-ConversationJoinRequestStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationJoinRequestResult2"></a>
+### ConversationJoinRequestResult2
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [ConversationJoinRequestStatus](#contract-ConversationJoinRequestStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationJoinRequestStatus"></a>
+### ConversationJoinRequestStatus
+
+CLR واقعی: `MakanApp.Domain.Messaging.ConversationJoinRequestStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Pending", "Approved", "Rejected", "Cancelled", "Expired"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationManagementPolicy"></a>
 ### ConversationManagementPolicy
@@ -6374,7 +7328,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationManagementPolicy`؛ Flags
 
 literalهای JSON واقعی MVC: `["None", "UserManaged", "SystemManagedAcademic"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationMediaItemResult"></a>
 ### ConversationMediaItemResult
@@ -6437,6 +7391,8 @@ object
 | `contactCard` | [ContactCardResult](#contract-ContactCardResult) | بله | خیر/تصریح نشده | — |
 | `isPinned` | boolean | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+| `topicId` | string / uuid | خیر | بله | {"default": null} |
+| `isSilent` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
 <a id="contract-ConversationMuteMode"></a>
 ### ConversationMuteMode
@@ -6445,7 +7401,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationMuteMode`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["None", "Permanent", "Until"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationOrganizationBadgeResult"></a>
 ### ConversationOrganizationBadgeResult
@@ -6493,7 +7449,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationParticipantRole`؛ Flags:
 
 literalهای JSON واقعی MVC: `["Owner", "Admin", "Member"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationParticipantStatus"></a>
 ### ConversationParticipantStatus
@@ -6502,7 +7458,19 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationParticipantStatus`؛ Flag
 
 literalهای JSON واقعی MVC: `["Active", "Removed", "Left"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ConversationPeerReadStateResult"></a>
+### ConversationPeerReadStateResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `peerReadThroughSequence` | integer / int64 | بله | بله | — |
+| `visibility` | [PeerReadVisibility](#contract-PeerReadVisibility) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | بله | — |
 
 <a id="contract-ConversationPinResult"></a>
 ### ConversationPinResult
@@ -6517,6 +7485,71 @@ object
 | `pinnedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `isPinned` | boolean | بله | خیر/تصریح نشده | — |
 
+<a id="contract-ConversationPollOptionResult"></a>
+### ConversationPollOptionResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `number` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `text` | string | بله | خیر/تصریح نشده | — |
+| `voteCount` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `isSelected` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationPollResult"></a>
+### ConversationPollResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `messageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `question` | string | بله | خیر/تصریح نشده | — |
+| `allowsMultipleAnswers` | boolean | بله | خیر/تصریح نشده | — |
+| `isAnonymous` | boolean | بله | خیر/تصریح نشده | — |
+| `isQuiz` | boolean | بله | خیر/تصریح نشده | — |
+| `status` | [ConversationPollStatus](#contract-ConversationPollStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `closedAtUtc` | string / date-time | بله | بله | — |
+| `options` | آرایه از [ConversationPollOptionResult](#contract-ConversationPollOptionResult) | بله | خیر/تصریح نشده | — |
+| `totalVoters` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `ownVoteVersion` | string | بله | بله | — |
+| `correctOptionNumber` | integer / int32 | بله | بله | — |
+| `explanation` | string | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationPollStatus"></a>
+### ConversationPollStatus
+
+CLR واقعی: `MakanApp.Domain.Messaging.ConversationPollStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Open", "Closed"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ConversationPollVoterPageResult"></a>
+### ConversationPollVoterPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ConversationPollVoterResult](#contract-ConversationPollVoterResult) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationPollVoterResult"></a>
+### ConversationPollVoterResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `user` | [SafeMessagingIdentityResult](#contract-SafeMessagingIdentityResult) | بله | خیر/تصریح نشده | — |
+| `optionNumbers` | آرایه از integer / int32 | بله | خیر/تصریح نشده | — |
+| `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ConversationScope"></a>
 ### ConversationScope
 
@@ -6524,7 +7557,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationScope`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationStatus"></a>
 ### ConversationStatus
@@ -6533,7 +7566,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Archived"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationSummaryResult"></a>
 ### ConversationSummaryResult
@@ -6563,6 +7596,42 @@ object
 | `isManuallyUnread` | boolean | بله | خیر/تصریح نشده | — |
 | `organization` | [ConversationOrganizationBadgeResult](#contract-ConversationOrganizationBadgeResult) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-ConversationTopicPageResult"></a>
+### ConversationTopicPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ConversationTopicResult](#contract-ConversationTopicResult) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+| `canManage` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationTopicResult"></a>
+### ConversationTopicResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `topicId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `createdByUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [ConversationTopicStatus](#contract-ConversationTopicStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `alreadyExisted` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
+<a id="contract-ConversationTopicStatus"></a>
+### ConversationTopicStatus
+
+CLR واقعی: `MakanApp.Domain.Messaging.ConversationTopicStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Open", "Closed"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-ConversationType"></a>
 ### ConversationType
 
@@ -6570,7 +7639,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Direct", "Group", "Channel", "Saved"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationUserStateResult"></a>
 ### ConversationUserStateResult
@@ -6597,12 +7666,12 @@ CLR واقعی: `MakanApp.Domain.Messaging.ConversationVisibility`؛ Flags: Fals
 
 literalهای JSON واقعی MVC: `["Private", "Public"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ConversationVisibility2"></a>
 ### ConversationVisibility2
 
-integer
+string / Private, Public
 
 <a id="contract-CorrectAttendanceCommand"></a>
 ### CorrectAttendanceCommand
@@ -6658,7 +7727,7 @@ CLR واقعی: `MakanApp.Domain.Academic.CourseStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Archived"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-CreateAcademicPeriodCommand"></a>
 ### CreateAcademicPeriodCommand
@@ -6698,6 +7767,20 @@ object
 | `capacity` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `activateImmediately` | boolean | بله | خیر/تصریح نشده | — |
 
+<a id="contract-CreateConversationChecklistCommand"></a>
+### CreateConversationChecklistCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientMessageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `mode` | [NullableOfConversationChecklistMode](#contract-NullableOfConversationChecklistMode) | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [ChecklistItemInput](#contract-ChecklistItemInput) | بله | خیر/تصریح نشده | — |
+| `topicId` | string / uuid | خیر | بله | {"default": null} |
+| `isSilent` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
 <a id="contract-CreateConversationInvitationCommand"></a>
 ### CreateConversationInvitationCommand
 
@@ -6707,6 +7790,34 @@ object
 |---|---|---|---|---|
 | `targetUserId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CreateConversationPollCommand"></a>
+### CreateConversationPollCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientMessageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `question` | string | بله | خیر/تصریح نشده | — |
+| `options` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `allowsMultipleAnswers` | boolean | بله | خیر/تصریح نشده | — |
+| `isAnonymous` | boolean | بله | بله | — |
+| `isQuiz` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `correctOptionNumber` | integer / int32 | خیر | بله | {"default": null} |
+| `explanation` | string | خیر | بله | {"default": null} |
+| `topicId` | string / uuid | خیر | بله | {"default": null} |
+| `isSilent` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
+<a id="contract-CreateConversationTopicCommand"></a>
+### CreateConversationTopicCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientTopicId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CreateCourseCommand"></a>
 ### CreateCourseCommand
@@ -6732,6 +7843,18 @@ object
 | `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `maxScore` | number / double | بله | خیر/تصریح نشده | — |
 | `randomizationPolicy` | [ExamRandomizationPolicy](#contract-ExamRandomizationPolicy) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CreateInviteLinkCommand"></a>
+### CreateInviteLinkCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientLinkId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `maximumUses` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `requiresApproval` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CreateManagedConversationCommand"></a>
 ### CreateManagedConversationCommand
@@ -6914,6 +8037,17 @@ object
 | `availableMinutes` | integer / int32 | بله | بله | — |
 | `notes` | string | بله | بله | — |
 
+<a id="contract-CreatedInviteLinkResult"></a>
+### CreatedInviteLinkResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `link` | [InviteLinkResult](#contract-InviteLinkResult) | بله | خیر/تصریح نشده | — |
+| `token` | string | بله | بله | — |
+| `alreadyExisted` | boolean | بله | خیر/تصریح نشده | — |
+
 <a id="contract-CurrencyCode"></a>
 ### CurrencyCode
 
@@ -6921,7 +8055,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.CurrencyCode`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Irr"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-CurrentUserResult"></a>
 ### CurrentUserResult
@@ -7009,7 +8143,7 @@ CLR واقعی: `MakanApp.Application.Reports.Dashboards.DashboardAudience`؛ Fl
 
 literalهای JSON واقعی MVC: `["Student", "Parent", "Teacher", "Manager"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-DashboardClassItem"></a>
 ### DashboardClassItem
@@ -7096,7 +8230,7 @@ CLR واقعی: `System.DayOfWeek`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-DeclineInvitationResult"></a>
 ### DeclineInvitationResult
@@ -7137,7 +8271,7 @@ CLR واقعی: `MakanApp.Application.Reports.Detailed.DetailedReportAssessmentK
 
 literalهای JSON واقعی MVC: `["Assignment", "Exam"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-DetailedReportGradeKind"></a>
 ### DetailedReportGradeKind
@@ -7146,7 +8280,7 @@ CLR واقعی: `MakanApp.Application.Reports.Detailed.DetailedReportGradeKind`�
 
 literalهای JSON واقعی MVC: `["Assignment", "Exam"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-DirectConversationResult"></a>
 ### DirectConversationResult
@@ -7259,7 +8393,7 @@ CLR واقعی: `MakanApp.Domain.Academic.EnrollmentStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Completed", "Withdrawn"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-EntitlementKey"></a>
 ### EntitlementKey
@@ -7268,7 +8402,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.EntitlementKey`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Academic", "Assignments", "Exams", "Messaging", "Reports", "Storage"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-EntityTagHeaderValue"></a>
 ### EntityTagHeaderValue
@@ -7308,7 +8442,7 @@ CLR واقعی: `MakanApp.Application.Assessment.EvaluationReviewStatus`؛ Flags
 
 literalهای JSON واقعی MVC: `["AwaitingEvaluation", "Draft", "Released", "CorrectionDraft"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-EvaluationRevisionStatus"></a>
 ### EvaluationRevisionStatus
@@ -7317,7 +8451,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.EvaluationRevisionStatus`؛ Flags: F
 
 literalهای JSON واقعی MVC: `["Draft", "Released", "Superseded"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-EvaluatorEvaluationResult"></a>
 ### EvaluatorEvaluationResult
@@ -7366,7 +8500,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamAttemptStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["InProgress", "Expired", "Finalized"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamEditorDto"></a>
 ### ExamEditorDto
@@ -7498,7 +8632,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamGradeRevisionStatus`؛ Flags: Fa
 
 literalهای JSON واقعی MVC: `["Draft", "ReadyForRelease", "Released", "Superseded"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamGradingQueueItemDto"></a>
 ### ExamGradingQueueItemDto
@@ -7527,7 +8661,7 @@ CLR واقعی: `MakanApp.Application.Assessment.ExamGradingQueueStatus`؛ Flags
 
 literalهای JSON واقعی MVC: `["AwaitingGrading", "Draft", "ReadyForRelease", "Released", "CorrectionDraft"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamGradingQueueSummary"></a>
 ### ExamGradingQueueSummary
@@ -7572,7 +8706,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamQuestionGradingMode`؛ Flags: Fa
 
 literalهای JSON واقعی MVC: `["Objective", "Manual"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamQuestionOptionCommand"></a>
 ### ExamQuestionOptionCommand
@@ -7592,7 +8726,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamQuestionType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["ObjectiveSingleChoice", "Descriptive"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamRandomizationPolicy"></a>
 ### ExamRandomizationPolicy
@@ -7601,7 +8735,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamRandomizationPolicy`؛ Flags: Fa
 
 literalهای JSON واقعی MVC: `["None", "QuestionOrder"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamResultReleaseStatus"></a>
 ### ExamResultReleaseStatus
@@ -7610,7 +8744,7 @@ CLR واقعی: `MakanApp.Application.Assessment.ExamResultReleaseStatus`؛ Flag
 
 literalهای JSON واقعی MVC: `["AwaitingGrading", "AwaitingRelease", "Released"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamStatus"></a>
 ### ExamStatus
@@ -7619,7 +8753,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Published"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamTeacherPreview"></a>
 ### ExamTeacherPreview
@@ -7638,7 +8772,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.ExamVersionStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Published"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ExamWriteLeaseDto"></a>
 ### ExamWriteLeaseDto
@@ -7693,7 +8827,7 @@ CLR واقعی: `MakanApp.Domain.Storage.FileAssetStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Pending", "Ready", "Rejected", "Deleted"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-FileStreamResult"></a>
 ### FileStreamResult
@@ -7729,6 +8863,26 @@ object
 | `expectedAnswerSetVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
 | `writeLeaseVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-FolderConversationTypes"></a>
+### FolderConversationTypes
+
+CLR واقعی: `MakanApp.Domain.Messaging.FolderConversationTypes`؛ Flags: True
+
+literalهای JSON واقعی MVC: `["None", "Direct", "Group", "Channel", "Saved", "All"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-FolderOverrideCommand"></a>
+### FolderOverrideCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `included` | boolean | بله | خیر/تصریح نشده | — |
+| `pinOrder` | integer / int32 | خیر | بله | {"default": null} |
+
 <a id="contract-ForwardMessageCommand"></a>
 ### ForwardMessageCommand
 
@@ -7738,6 +8892,8 @@ object
 |---|---|---|---|---|
 | `destinationConversationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `clientMessageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `destinationTopicId` | string / uuid | خیر | بله | {"default": null} |
+| `isSilent` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
 <a id="contract-GradeExamQuestionCommand"></a>
 ### GradeExamQuestionCommand
@@ -7785,12 +8941,12 @@ CLR واقعی: `MakanApp.Domain.Messaging.GroupHistoryPolicy`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["FullHistory", "FromJoin"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-GroupHistoryPolicy2"></a>
 ### GroupHistoryPolicy2
 
-integer
+string / FullHistory, FromJoin
 
 <a id="contract-GroupMemberCapability"></a>
 ### GroupMemberCapability
@@ -7799,7 +8955,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.GroupMemberCapability`؛ Flags: True
 
 literalهای JSON واقعی MVC: `["None", "SendMessages", "SendMedia", "LegacyMemberDefault", "InviteMembers", "All"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-GuardianExamResultDto"></a>
 ### GuardianExamResultDto
@@ -7827,7 +8983,7 @@ CLR واقعی: `MakanApp.Domain.Guardian.GuardianRelationStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Pending", "Active", "Ended", "Revoked"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-GuardianRelationSummaryResult"></a>
 ### GuardianRelationSummaryResult
@@ -7890,7 +9046,46 @@ CLR واقعی: `MakanApp.Domain.Organization.InvitationStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Pending", "Accepted", "Declined", "Expired", "Revoked"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-InviteLinkPageResult"></a>
+### InviteLinkPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [InviteLinkResult](#contract-InviteLinkResult) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-InviteLinkRedemptionResult"></a>
+### InviteLinkRedemptionResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `alreadyMember` | boolean | بله | خیر/تصریح نشده | — |
+| `joinRequest` | [ConversationJoinRequestResult](#contract-ConversationJoinRequestResult) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-InviteLinkResult"></a>
+### InviteLinkResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `createdByUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `maximumUses` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `usedCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `requiresApproval` | boolean | بله | خیر/تصریح نشده | — |
+| `revokedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ManagedConversationResult"></a>
 ### ManagedConversationResult
@@ -8067,6 +9262,31 @@ object
 | `assignmentPendingGradingCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `examPendingGradingCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-MemberRestrictionPageResult"></a>
+### MemberRestrictionPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [MemberRestrictionResult](#contract-MemberRestrictionResult) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-MemberRestrictionResult"></a>
+### MemberRestrictionResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `isBanned` | boolean | بله | خیر/تصریح نشده | — |
+| `deniedCapabilities` | [GroupMemberCapability](#contract-GroupMemberCapability) | بله | خیر/تصریح نشده | — |
+| `untilUtc` | string / date-time | بله | بله | — |
+| `isEffective` | boolean | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | بله | — |
+
 <a id="contract-MembershipStatus"></a>
 ### MembershipStatus
 
@@ -8074,7 +9294,7 @@ CLR واقعی: `MakanApp.Domain.Organization.MembershipStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Suspended", "Ended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-MessageAttachmentResult"></a>
 ### MessageAttachmentResult
@@ -8095,9 +9315,9 @@ object
 
 CLR واقعی: `MakanApp.Domain.Messaging.MessageKind`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Text", "Image", "Video", "Voice", "File", "ContactCard"]`
+literalهای JSON واقعی MVC: `["Text", "Image", "Video", "Voice", "File", "ContactCard", "Poll", "Checklist"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-MessageMutationResult"></a>
 ### MessageMutationResult
@@ -8142,7 +9362,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.MessageReactionType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Like", "Love", "Laugh", "Wow", "Sad"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-MessageReceiptResult"></a>
 ### MessageReceiptResult
@@ -8167,7 +9387,7 @@ CLR واقعی: `MakanApp.Application.Messaging.MessageReceiptStatus`؛ Flags: F
 
 literalهای JSON واقعی MVC: `["Sent"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-MessageReplySummaryResult"></a>
 ### MessageReplySummaryResult
@@ -8216,9 +9436,27 @@ object
 
 CLR واقعی: `MakanApp.Domain.Messaging.MessagingChangeType`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["MessageCreated", "MessageEdited", "MessageDeleted", "ReactionChanged", "PinChanged", "ParticipantChanged", "ConversationChanged", "ReadCursorAdvanced", "DeliveryCursorAdvanced", "MessageHiddenForUser", "ConversationUserStateChanged"]`
+literalهای JSON واقعی MVC: `["MessageCreated", "MessageEdited", "MessageDeleted", "ReactionChanged", "PinChanged", "ParticipantChanged", "ConversationChanged", "ReadCursorAdvanced", "DeliveryCursorAdvanced", "MessageHiddenForUser", "ConversationUserStateChanged", "PeerReadStateChanged", "TopicChanged", "PollChanged", "ChecklistChanged"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-MessagingNextAction"></a>
+### MessagingNextAction
+
+CLR واقعی: `MakanApp.Application.Messaging.MessagingNextAction`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["None", "VerificationRequired", "ProfileCompletionRequired", "VerificationConflictResolutionRequired", "MessagingRestrictionActive", "SelectPersonalWorkspace"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-MessagingPresenceState"></a>
+### MessagingPresenceState
+
+CLR واقعی: `MakanApp.Application.Messaging.MessagingPresenceState`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Online", "Recently", "Offline", "Hidden"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-MessagingPrivacySettingsResult"></a>
 ### MessagingPrivacySettingsResult
@@ -8233,6 +9471,8 @@ object
 | `groupInvitesAudience` | [PrivacyAudience](#contract-PrivacyAudience) | بله | خیر/تصریح نشده | — |
 | `isExplicit` | boolean | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | بله | — |
+| `onlineAudience` | [PrivacyAudience2](#contract-PrivacyAudience2) | خیر | خیر/تصریح نشده | — |
+| `lastSeenAudience` | [PrivacyAudience2](#contract-PrivacyAudience2) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-MessagingPublicProfileResult"></a>
 ### MessagingPublicProfileResult
@@ -8264,6 +9504,19 @@ object
 | `isFavorite` | boolean | بله | خیر/تصریح نشده | — |
 | `canStartDirect` | boolean | بله | خیر/تصریح نشده | — |
 
+<a id="contract-MessagingStatusResult"></a>
+### MessagingStatusResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `verificationStatus` | [CommunicationAgeVerificationStatus](#contract-CommunicationAgeVerificationStatus) | بله | خیر/تصریح نشده | — |
+| `effectiveAgeCategory` | [CommunicationAgeCategory](#contract-CommunicationAgeCategory) | بله | خیر/تصریح نشده | — |
+| `allowedActions` | آرایه از [PersonalMessagingAction](#contract-PersonalMessagingAction) | بله | خیر/تصریح نشده | — |
+| `nextAction` | [MessagingNextAction](#contract-MessagingNextAction) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ModerationActionResult"></a>
 ### ModerationActionResult
 
@@ -8282,7 +9535,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ModerationActionType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Created", "ReviewStarted", "Resolved", "Dismissed", "Escalated", "ContentRemoved", "Warned", "MessagingRestricted"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ModerationCaseDetailResult"></a>
 ### ModerationCaseDetailResult
@@ -8333,7 +9586,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ModerationCaseSource`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["UserReport", "AutomatedSafety"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ModerationCaseStatus"></a>
 ### ModerationCaseStatus
@@ -8342,7 +9595,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ModerationCaseStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Pending", "InReview", "Resolved", "Dismissed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ModerationCaseSummaryResult"></a>
 ### ModerationCaseSummaryResult
@@ -8380,7 +9633,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.ModerationPriority`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Normal", "High", "Critical"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationCategory"></a>
 ### NotificationCategory
@@ -8389,7 +9642,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationCategory`؛ Flags: Fal
 
 literalهای JSON واقعی MVC: `["Educational", "Communication", "AccountSystem"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationDeliveryChannel"></a>
 ### NotificationDeliveryChannel
@@ -8398,7 +9651,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationDeliveryChannel`؛ Fla
 
 literalهای JSON واقعی MVC: `["Push", "Sms"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationDeliveryStatus"></a>
 ### NotificationDeliveryStatus
@@ -8407,7 +9660,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationDeliveryStatus`؛ Flag
 
 literalهای JSON واقعی MVC: `["Pending", "Processing", "Deferred", "Delivered", "Failed", "Suppressed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationItem"></a>
 ### NotificationItem
@@ -8446,7 +9699,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationPreferenceCategory`؛ 
 
 literalهای JSON واقعی MVC: `["Messages", "Assignments", "Results", "Sessions", "Reports", "Invitations", "AccountSecurity"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationPreferenceItem"></a>
 ### NotificationPreferenceItem
@@ -8479,7 +9732,7 @@ CLR واقعی: `MakanApp.Application.Notification.NotificationPreferenceScope`�
 
 literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationResourceType"></a>
 ### NotificationResourceType
@@ -8488,7 +9741,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationResourceType`؛ Flags:
 
 literalهای JSON واقعی MVC: `["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationType"></a>
 ### NotificationType
@@ -8497,7 +9750,7 @@ CLR واقعی: `MakanApp.Domain.Notification.NotificationType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-NotificationUnreadCount"></a>
 ### NotificationUnreadCount
@@ -8508,70 +9761,80 @@ object
 |---|---|---|---|---|
 | `count` | integer / int32 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-NullableOfConversationChecklistMode"></a>
+### NullableOfConversationChecklistMode
+
+string / Personal, Collaborative, None
+
 <a id="contract-NullableOfCurrencyCode"></a>
 ### NullableOfCurrencyCode
 
-integer
+string / Irr, None
 
 <a id="contract-NullableOfEnrollmentStatus"></a>
 ### NullableOfEnrollmentStatus
 
-integer
+string / Active, Completed, Withdrawn, None
 
 <a id="contract-NullableOfEvaluationRevisionStatus"></a>
 ### NullableOfEvaluationRevisionStatus
 
-integer
+string / Draft, Released, Superseded, None
 
 <a id="contract-NullableOfExamAttemptStatus"></a>
 ### NullableOfExamAttemptStatus
 
-integer
+string / InProgress, Expired, Finalized, None
 
 <a id="contract-NullableOfExamGradeRevisionStatus"></a>
 ### NullableOfExamGradeRevisionStatus
 
-integer
+string / Draft, ReadyForRelease, Released, Superseded, None
 
 <a id="contract-NullableOfExamResultReleaseStatus"></a>
 ### NullableOfExamResultReleaseStatus
 
-integer
+string / AwaitingGrading, AwaitingRelease, Released, None
 
 <a id="contract-NullableOfGroupMemberCapability"></a>
 ### NullableOfGroupMemberCapability
 
-integer
+string
 
 <a id="contract-NullableOfMessageKind"></a>
 ### NullableOfMessageKind
 
-integer
+string / Text, Image, Video, Voice, File, ContactCard, Poll, Checklist, None
 
 <a id="contract-NullableOfNotificationDeliveryFailureReason"></a>
 ### NullableOfNotificationDeliveryFailureReason
 
-integer
+string / SuppressedByPreference, NoDevice, NoSmsDestination, OrganizationAccessRevoked, DeviceRevoked, ProviderUnavailable, ProviderRejected, ProviderTimeout, InvalidRegistration, ProviderAuthenticationFailed, ProviderRateLimited, ProviderConfigurationInvalid, ResourceAccessRevoked, None
 
 <a id="contract-NullableOfOrganizationRole"></a>
 ### NullableOfOrganizationRole
 
-integer
+string / Student, Teacher, Parent, Manager, None
 
 <a id="contract-NullableOfPaymentAttemptStatus"></a>
 ### NullableOfPaymentAttemptStatus
 
-integer
+string / Created, Initiating, PendingVerification, Succeeded, Failed, Unknown, None
+
+<a id="contract-NullableOfPrivacyAudience"></a>
+### NullableOfPrivacyAudience
+
+string / Everyone, Contacts, Nobody, None
 
 <a id="contract-NullableOfReportExportAssessmentKind"></a>
 ### NullableOfReportExportAssessmentKind
 
-integer
+string / Assignment, Exam, None
 
 <a id="contract-NullableOfSubmissionAttemptStatus"></a>
 ### NullableOfSubmissionAttemptStatus
 
-integer
+string / Draft, Submitted, None
 
 <a id="contract-OfficialClassConversationResult"></a>
 ### OfficialClassConversationResult
@@ -8620,7 +9883,7 @@ CLR واقعی: `MakanApp.Application.Commerce.OrderFulfillmentState`؛ Flags: F
 
 literalهای JSON واقعی MVC: `["NotStarted", "SubscriptionActivationPending", "SubscriptionActivated", "ProvisioningPending"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-OrderListItemDto"></a>
 ### OrderListItemDto
@@ -8655,7 +9918,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.OrderStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["PendingPayment", "Paid", "Cancelled"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-OrganizationPeoplePage"></a>
 ### OrganizationPeoplePage
@@ -8697,7 +9960,7 @@ CLR واقعی: `MakanApp.Domain.Organization.OrganizationPersonStatus`؛ Flags:
 
 literalهای JSON واقعی MVC: `["Active", "Ended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-OrganizationRole"></a>
 ### OrganizationRole
@@ -8706,7 +9969,7 @@ CLR واقعی: `MakanApp.Domain.Organization.OrganizationRole`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Student", "Teacher", "Parent", "Manager"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-OrganizationStatus"></a>
 ### OrganizationStatus
@@ -8715,7 +9978,7 @@ CLR واقعی: `MakanApp.Domain.Organization.OrganizationStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Suspended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-OverridePlatformSubscriptionCommand"></a>
 ### OverridePlatformSubscriptionCommand
@@ -8752,7 +10015,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.OwnershipTransferStatus`؛ Flags: Fal
 
 literalهای JSON واقعی MVC: `["Pending", "Accepted", "Declined", "Cancelled", "Expired"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ParentAssignmentReportItem"></a>
 ### ParentAssignmentReportItem
@@ -8889,7 +10152,16 @@ CLR واقعی: `MakanApp.Domain.Commerce.PaymentAttemptStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Created", "Initiating", "PendingVerification", "Succeeded", "Failed", "Unknown"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PeerReadVisibility"></a>
+### PeerReadVisibility
+
+CLR واقعی: `MakanApp.Application.Messaging.PeerReadVisibility`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Visible", "Hidden", "NotSupported"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-PeopleResolveResult"></a>
 ### PeopleResolveResult
@@ -8929,6 +10201,15 @@ object
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
+<a id="contract-PersonalMessagingAction"></a>
+### PersonalMessagingAction
+
+CLR واقعی: `MakanApp.Application.Messaging.PersonalMessagingAction`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["ReadExistingConversations", "DiscoverUsers", "CreateDirect", "CreatePersonalGroup", "CreatePersonalChannel", "DiscoverRelatedUsers", "CreateDirectWithAuthorizedRelationship", "CreatePrivatePersonalGroup"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-PlanVersionStatus"></a>
 ### PlanVersionStatus
 
@@ -8936,7 +10217,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.PlanVersionStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Published"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-PlatformAbuseReportEvidence"></a>
 ### PlatformAbuseReportEvidence
@@ -9804,7 +11085,7 @@ CLR واقعی: `MakanApp.Domain.Platform.PlatformProvisioningStatus`؛ Flags: F
 
 literalهای JSON واقعی MVC: `["Requested", "OrganizationCreated", "SubscriptionAssigned", "ManagerInvitationCreated", "Completed", "NeedsAttention"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-PlatformRoleAssignmentItem"></a>
 ### PlatformRoleAssignmentItem
@@ -10100,6 +11381,18 @@ object
 |---|---|---|---|---|
 | `reason` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-PresenceResult"></a>
+### PresenceResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `state` | [MessagingPresenceState](#contract-MessagingPresenceState) | بله | خیر/تصریح نشده | — |
+| `lastSeenAtUtc` | string / date-time | بله | بله | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
 <a id="contract-PrivacyAudience"></a>
 ### PrivacyAudience
 
@@ -10107,7 +11400,12 @@ CLR واقعی: `MakanApp.Domain.Messaging.PrivacyAudience`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Everyone", "Contacts", "Nobody"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PrivacyAudience2"></a>
+### PrivacyAudience2
+
+string / Everyone, Contacts, Nobody
 
 <a id="contract-ProblemDetails"></a>
 ### ProblemDetails
@@ -10177,6 +11475,33 @@ object
 | `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-PushDeviceListItem"></a>
+### PushDeviceListItem
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `platform` | [PushDevicePlatform](#contract-PushDevicePlatform) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `lastSeenAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `revokedAtUtc` | string / date-time | بله | بله | — |
+| `isActive` | boolean | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PushDevicePageResult"></a>
+### PushDevicePageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PushDeviceListItem](#contract-PushDeviceListItem) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
 <a id="contract-PushDevicePlatform"></a>
 ### PushDevicePlatform
 
@@ -10184,7 +11509,7 @@ CLR واقعی: `MakanApp.Domain.Notification.PushDevicePlatform`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Android", "Ios", "Web"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-PushDeviceRegistrationResult"></a>
 ### PushDeviceRegistrationResult
@@ -10197,6 +11522,7 @@ object
 | `platform` | [PushDevicePlatform](#contract-PushDevicePlatform) | بله | خیر/تصریح نشده | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `lastSeenAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | خیر | بله | {"default": null} |
 
 <a id="contract-QuotaKey"></a>
 ### QuotaKey
@@ -10205,7 +11531,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.QuotaKey`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["ActiveLearners", "ActiveClasses", "StorageBytes", "ReportExports"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-QuotaUsageSource"></a>
 ### QuotaUsageSource
@@ -10214,7 +11540,7 @@ CLR واقعی: `MakanApp.Application.Commerce.QuotaUsageSource`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["AuthoritativeModule", "UsageLedger"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-RecentContactPageResult"></a>
 ### RecentContactPageResult
@@ -10257,6 +11583,15 @@ object
 | `enrollmentId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `status` | [AttendanceStatus](#contract-AttendanceStatus) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-RedeemInviteLinkCommand"></a>
+### RedeemInviteLinkCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `token` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-RefreshSessionCommand"></a>
 ### RefreshSessionCommand
 
@@ -10288,6 +11623,21 @@ object
 |---|---|---|---|---|
 | `platform` | [PushDevicePlatform](#contract-PushDevicePlatform) | بله | خیر/تصریح نشده | — |
 | `pushToken` | string | بله | خیر/تصریح نشده | — |
+| `p256dh` | string | خیر | بله | {"default": null} |
+| `auth` | string | خیر | بله | {"default": null} |
+| `expectedVersion` | string | خیر | بله | {"default": null} |
+
+<a id="contract-RegisterWebPushCommand"></a>
+### RegisterWebPushCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `endpoint` | string | بله | خیر/تصریح نشده | — |
+| `p256dh` | string | بله | خیر/تصریح نشده | — |
+| `auth` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | خیر | بله | {"default": null} |
 
 <a id="contract-ReleaseEvaluationCommand"></a>
 ### ReleaseEvaluationCommand
@@ -10307,6 +11657,16 @@ object
 |---|---|---|---|---|
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `expectedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ReplaceSavedLabelsCommand"></a>
+### ReplaceSavedLabelsCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `labels` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | بله | — |
 
 <a id="contract-ReportExportFilters"></a>
 ### ReportExportFilters
@@ -10331,7 +11691,7 @@ CLR واقعی: `MakanApp.Domain.Reports.ReportExportFormat`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Csv"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ReportExportJobResult"></a>
 ### ReportExportJobResult
@@ -10360,7 +11720,7 @@ CLR واقعی: `MakanApp.Domain.Reports.ReportExportJobStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Queued", "Processing", "Completed", "Failed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ReportExportType"></a>
 ### ReportExportType
@@ -10369,7 +11729,7 @@ CLR واقعی: `MakanApp.Domain.Reports.ReportExportType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["StudentAttendance", "StudentAssignments", "StudentExams", "StudentGrades", "ParentChildAttendance", "ParentChildAssignments", "ParentChildExams", "TeacherClassAttendance", "TeacherAssignmentGrading", "TeacherExamGrading", "ManagerEnrollments", "ManagerAttendance", "ManagerAssessments", "ManagerTeacherWorkload"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-ReportMessageCommand"></a>
 ### ReportMessageCommand
@@ -10564,6 +11924,15 @@ object
 | `username` | string | بله | بله | — |
 | `phoneNumber` | string | بله | بله | — |
 
+<a id="contract-RevokeInviteLinkCommand"></a>
+### RevokeInviteLinkCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-RevokePlatformSessionsCommand"></a>
 ### RevokePlatformSessionsCommand
 
@@ -10594,6 +11963,21 @@ object
 | `userId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `username` | string | بله | خیر/تصریح نشده | — |
 | `displayName` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SaveChatFolderCommand"></a>
+### SaveChatFolderCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `name` | string | بله | خیر/تصریح نشده | — |
+| `sortOrder` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `includedTypes` | [FolderConversationTypes](#contract-FolderConversationTypes) | بله | خیر/تصریح نشده | — |
+| `excludedTypes` | [FolderConversationTypes](#contract-FolderConversationTypes) | بله | خیر/تصریح نشده | — |
+| `unreadOnly` | boolean | بله | خیر/تصریح نشده | — |
+| `overrides` | آرایه از [FolderOverrideCommand](#contract-FolderOverrideCommand) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | بله | — |
 
 <a id="contract-SaveEvaluationDraftCommand"></a>
 ### SaveEvaluationDraftCommand
@@ -10654,6 +12038,27 @@ object
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `alreadyExisted` | boolean | بله | خیر/تصریح نشده | — |
 
+<a id="contract-SavedMessageLabelsResult"></a>
+### SavedMessageLabelsResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `messageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `labels` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | بله | — |
+
+<a id="contract-ScheduleMessageCommand"></a>
+### ScheduleMessageCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `scheduledAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `message` | [SendMessageCommand](#contract-SendMessageCommand) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ScheduleRuleResult"></a>
 ### ScheduleRuleResult
 
@@ -10683,7 +12088,62 @@ CLR واقعی: `MakanApp.Domain.Academic.ScheduleRuleStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Ended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ScheduledMessageContent"></a>
+### ScheduledMessageContent
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | [MessageKind](#contract-MessageKind) | بله | خیر/تصریح نشده | — |
+| `text` | string | بله | بله | — |
+| `attachmentIds` | آرایه از string / uuid | بله | خیر/تصریح نشده | — |
+| `replyToMessageId` | string / uuid | بله | بله | — |
+| `mentionedUserIds` | آرایه از string / uuid | بله | خیر/تصریح نشده | — |
+| `contactUserId` | string / uuid | بله | بله | — |
+| `topicId` | string / uuid | بله | بله | — |
+| `isSilent` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ScheduledMessagePageResult"></a>
+### ScheduledMessagePageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ScheduledMessageResult](#contract-ScheduledMessageResult) | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ScheduledMessageResult"></a>
+### ScheduledMessageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `clientMessageId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [ScheduledMessageStatus](#contract-ScheduledMessageStatus) | بله | خیر/تصریح نشده | — |
+| `scheduledAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `completedAtUtc` | string / date-time | بله | بله | — |
+| `dispatchedMessageId` | string / uuid | بله | بله | — |
+| `lastFailureCode` | string | بله | بله | — |
+| `content` | [ScheduledMessageContent](#contract-ScheduledMessageContent) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `alreadyExisted` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
+<a id="contract-ScheduledMessageStatus"></a>
+### ScheduledMessageStatus
+
+CLR واقعی: `MakanApp.Domain.Messaging.ScheduledMessageStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Scheduled", "Dispatched", "Cancelled", "Failed"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-SchoolGuardianRelationDto"></a>
 ### SchoolGuardianRelationDto
@@ -10750,6 +12210,8 @@ object
 | `replyToMessageId` | string / uuid | خیر | بله | — |
 | `mentionedUserIds` | آرایه از string / uuid | خیر | بله | — |
 | `contactUserId` | string / uuid | خیر | بله | — |
+| `topicId` | string / uuid | خیر | بله | — |
+| `isSilent` | boolean | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-SessionAttendanceResult"></a>
 ### SessionAttendanceResult
@@ -10792,7 +12254,7 @@ CLR واقعی: `MakanApp.Domain.Academic.SessionStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Scheduled", "Cancelled", "Completed"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-SessionVersionCommand"></a>
 ### SessionVersionCommand
@@ -10803,6 +12265,17 @@ object
 |---|---|---|---|---|
 | `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-SetChecklistItemCommand"></a>
+### SetChecklistItemCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `isChecked` | boolean | بله | بله | — |
+| `expectedDefinitionVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedStateVersion` | string | خیر | بله | {"default": null} |
+
 <a id="contract-SetConversationMuteCommand"></a>
 ### SetConversationMuteCommand
 
@@ -10812,6 +12285,19 @@ object
 |---|---|---|---|---|
 | `mode` | [ConversationMuteMode](#contract-ConversationMuteMode) | بله | خیر/تصریح نشده | — |
 | `mutedUntilUtc` | string / date-time | بله | بله | — |
+
+<a id="contract-SetMemberRestrictionCommand"></a>
+### SetMemberRestrictionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `isBanned` | boolean | بله | خیر/تصریح نشده | — |
+| `deniedCapabilities` | [GroupMemberCapability](#contract-GroupMemberCapability) | بله | خیر/تصریح نشده | — |
+| `untilUtc` | string / date-time | بله | بله | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | بله | — |
 
 <a id="contract-StartDirectConversationCommand"></a>
 ### StartDirectConversationCommand
@@ -10875,7 +12361,7 @@ CLR واقعی: `MakanApp.Application.Reports.Dashboards.StudentAssignmentAction
 
 literalهای JSON واقعی MVC: `["NotStarted", "Draft", "Submitted", "SubmittedLate", "Graded"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-StudentAssignmentReportItem"></a>
 ### StudentAssignmentReportItem
@@ -11222,7 +12708,7 @@ CLR واقعی: `MakanApp.Domain.Assessment.SubmissionAttemptStatus`؛ Flags: Fa
 
 literalهای JSON واقعی MVC: `["Draft", "Submitted"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-SubmissionForEvaluationResult"></a>
 ### SubmissionForEvaluationResult
@@ -11267,7 +12753,7 @@ CLR واقعی: `MakanApp.Domain.Commerce.SubscriptionStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Pending", "Active", "Expired", "Cancelled"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-SuggestTeacherActivitiesCommand"></a>
 ### SuggestTeacherActivitiesCommand
@@ -11326,7 +12812,7 @@ CLR واقعی: `MakanApp.Domain.Academic.TeacherAssignmentStatus`؛ Flags: Fals
 
 literalهای JSON واقعی MVC: `["Active", "Ended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-TeacherAttendanceReportItem"></a>
 ### TeacherAttendanceReportItem
@@ -11425,6 +12911,29 @@ object
 | `expectedAssignmentRowVersion` | string | بله | خیر/تصریح نشده | — |
 | `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-UpdateConversationChecklistCommand"></a>
+### UpdateConversationChecklistCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `mode` | [NullableOfConversationChecklistMode](#contract-NullableOfConversationChecklistMode) | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [ChecklistItemInput](#contract-ChecklistItemInput) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-UpdateConversationInfoCommand"></a>
+### UpdateConversationInfoCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-UpdateConversationPermissionsCommand"></a>
 ### UpdateConversationPermissionsCommand
 
@@ -11445,6 +12954,17 @@ object
 | `visibility` | [ConversationVisibility](#contract-ConversationVisibility) | بله | خیر/تصریح نشده | — |
 | `groupHistoryPolicy` | [GroupHistoryPolicy](#contract-GroupHistoryPolicy) | بله | خیر/تصریح نشده | — |
 | `memberCapabilities` | [GroupMemberCapability](#contract-GroupMemberCapability) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-UpdateConversationTopicCommand"></a>
+### UpdateConversationTopicCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `status` | [ConversationTopicStatus](#contract-ConversationTopicStatus) | بله | خیر/تصریح نشده | — |
 | `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateExamDraftCommand"></a>
@@ -11491,6 +13011,8 @@ object
 | `phoneNumberDiscoveryAudience` | [PrivacyAudience](#contract-PrivacyAudience) | بله | خیر/تصریح نشده | — |
 | `groupInvitesAudience` | [PrivacyAudience](#contract-PrivacyAudience) | بله | خیر/تصریح نشده | — |
 | `expectedVersion` | string | بله | بله | — |
+| `onlineAudience` | [NullableOfPrivacyAudience](#contract-NullableOfPrivacyAudience) | خیر | خیر/تصریح نشده | — |
+| `lastSeenAudience` | [NullableOfPrivacyAudience](#contract-NullableOfPrivacyAudience) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateNotificationPreferenceCommand"></a>
 ### UpdateNotificationPreferenceCommand
@@ -11571,7 +13093,7 @@ CLR واقعی: `MakanApp.Domain.Identity.UserAccountStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Suspended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-UserBlockResult"></a>
 ### UserBlockResult
@@ -11594,7 +13116,7 @@ CLR واقعی: `MakanApp.Domain.Messaging.UserBlockStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Active", "Ended"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-UserContactPageResult"></a>
 ### UserContactPageResult
@@ -11684,6 +13206,26 @@ object
 |---|---|---|---|---|
 | `code` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-VoteConversationPollCommand"></a>
+### VoteConversationPollCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `optionNumbers` | آرایه از integer / int32 | بله | خیر/تصریح نشده | — |
+| `expectedVoteVersion` | string | خیر | بله | {"default": null} |
+
+<a id="contract-WebPushClientConfiguration"></a>
+### WebPushClientConfiguration
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `isConfigured` | boolean | بله | خیر/تصریح نشده | — |
+| `vapidPublicKey` | string | بله | بله | — |
+
 <a id="contract-WorkspaceResult"></a>
 ### WorkspaceResult
 
@@ -11706,7 +13248,7 @@ CLR واقعی: `MakanApp.Domain.Organization.WorkspaceType`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
-نوع خام OpenAPI: `integer`؛ این دو نمایش در این نسخه لزوماً هم‌خوان نیستند.
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 ## کدهای خطای تعریف‌شده
 
@@ -11766,16 +13308,33 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `CONTACT_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONTACT_SELF_NOT_ALLOWED` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONTACT_TARGET_NOT_AVAILABLE` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_ADVANCED_MANAGEMENT_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_ARCHIVED` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_CHECKLIST_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_CHECKLIST_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_CHECKLIST_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_CHECKLIST_STATE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_CHECKLIST_STRUCTURE_IMMUTABLE` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_CREATION_CONFLICT` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_HISTORY_NOT_VISIBLE` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_INVITE_LINK_UNAVAILABLE` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_MANAGEMENT_NOT_ALLOWED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_MEMBER_RESTRICTED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_NOT_ALLOWED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_NOT_JOINABLE` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_PERMISSION_REQUIRED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_CLOSED` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_VOTE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_POLL_VOTE_IMMUTABLE` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_ROLE_INVALID` | طبق handler/مسیر فراخوانی | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CONVERSATION_STATE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_TOPIC_CLOSED` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_TOPIC_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `CONVERSATION_TOPIC_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `COURSE_INVALID` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `COURSE_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `DELIVERY_CURSOR_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
@@ -11893,7 +13452,11 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `MESSAGE_SAFETY_REVIEW_REQUIRED` | 422 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGE_SAFETY_UNAVAILABLE` | 503 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGE_TOO_LONG` | طبق handler/مسیر فراخوانی | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `MESSAGING_ACTIVITY_RATE_LIMITED` | 429 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGING_DISCOVERY_RATE_LIMITED` | 429 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `MESSAGING_PRESENTATION_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `MESSAGING_PRESENTATION_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `MESSAGING_PRESENTATION_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGING_PRIVACY_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGING_PRIVACY_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MFA_INVALID` | 400 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
@@ -11989,6 +13552,11 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `REPORT_RESOURCE_NOT_FOUND` | 404 | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `REPORT_SORT_INVALID` | طبق handler/مسیر فراخوانی | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `ROLE_NOT_ACTIVE` | 403 | [OrganizationErrorCodes](../MakanApp.Application/Organization/OrganizationErrorCodes.cs) |
+| `SCHEDULED_MESSAGE_CLAIM_LOST` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `SCHEDULED_MESSAGE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `SCHEDULED_MESSAGE_ID_RESERVED` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `SCHEDULED_MESSAGE_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `SCHEDULED_MESSAGE_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `SCHEDULE_RULE_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `SEARCH_CURSOR_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `SEARCH_NOT_ALLOWED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |

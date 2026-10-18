@@ -1,8 +1,6 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به یک توسعه‌دهنده بک‌اند نوشته شده است. بازبینی Messenger P0 در `2026-10-16` از baseline مستقل `ab00901` انجام شد. سه endpoint تأیید اولیه/وضعیت self اضافه شدند؛ snapshot آن مرحله ۲۸۷ عملیات HTTP در ۴۸ Controller، ۴۹۱ schema، ۸۸ جدول و ۳۸ Migration داشت. بستهٔ HTML/PDF و کاتالوگ تولیدشدهٔ `2026-10-15` تاریخچهٔ baseline هستند و در P0 بازتولید نشده‌اند؛ برای افزوده‌ها و رفتار جاری از [Handoff دقیق P0](messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) و OpenAPI runtime استفاده کنید. اعداد validation مرحله‌های قدیمی‌تر، جایگزین نتیجهٔ جاری یا اثبات deployment نیستند.
-
-به‌روزرسانی Messenger P1 در همان تاریخ: اعداد پاراگراف قبلی snapshot تاریخی P0 هستند؛ snapshot محلی جاری **۲۹۱ عملیات، ۲۶۲ مسیر، ۴۸ Controller، ۸۸ جدول و ۴۱ migration** دارد. Peer Read، رجیستری Web/موبایل و transport واقعی Web Push/VAPID و FCM HTTP v1 افزوده شده‌اند؛ دریافت روی دستگاه واقعی هنوز `P1_PUSH_RUNTIME_PENDING` است. [گزارش آموزشی و validation P1](messaging/MESSENGER_P1_DEVELOPER_REPORT.md)، [ممیزی ۳۵ سناریو](messaging/MESSENGER_P1_DELIVERY_AUDIT.md) و [قرارداد مصرف API و تنظیم‌های P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) مرجع افزوده‌های جاری‌اند؛ HTML/PDF قدیمی بازتولید نشده‌اند.
+این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی `2026-10-18` از `main@ef67624`: **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration**. مرجع HTTP، فرهنگ SQL و بستهٔ HTML/PDF با همین snapshot دوباره تولید شده‌اند. گزارش‌های مرحله‌ای داخل سند تاریخچه همان اجرا هستند؛ metadata کد و تست محلی، شاهد deployment یا تحویل واقعی provider نیستند.
 
 ## وضعیت جاری و تغییرات مؤثر بر مطالعه
 
@@ -19,6 +17,46 @@ Messenger P0: تأیید اولیهٔ User شخصی با UsersManage/MFA تاز�
 - انتشار انتخابی فعلی Production/HTTP با دو استثنای مستقل و تأییدشده است، نه Staging. فایل خصوصی Production ignored و نمونهٔ عمومی بدون secret است. [runbook جاری IIS](production/DEPLOYMENT_IIS.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) را پیش از rollout بخوانید.
 
 برای شروع، بخش راه‌اندازی و ورود را بخوانید؛ سپس فضای کاری مناسب را انتخاب کنید و جریان موردنیاز را دنبال کنید. [مرجع کامل Endpointها و قراردادها](backend-api-reference.md) همراه این راهنماست و مسیر، پارامتر، بدنه، نوع پاسخ و فیلدهای تمام APIهای Controllerها را نشان می‌دهد.
+
+## وضعیت جاری Messenger: P0، P1، P2 و مرز P3
+
+این بخش وضعیت کد ثبت‌شده تا `main@ef67624` در `2026-10-18` است. جدول‌های MISSING ابتدای ممیزی P2 و تعویق اولیه Checklist تاریخچهٔ شروع همان مرحله‌اند؛ وضعیت نهایی از [تحویل P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) و [ممیزی نهایی](messaging/MESSENGER_P2_DELIVERY_AUDIT.md) خوانده شود. پذیرش محلی Backend با deployment یا دریافت Push روی دستگاه یکی نیست.
+
+| حوزه | وضعیت جاری و مرجع |
+|---|---|
+| سن و شروع ارتباط | تأیید اولیهٔ رسمی سن، وضعیت امن self و Direct دو حساب Adult طبق GAP-05 در P0 موجودند؛ OTP/DOB خوداظهاری اثبات سن نیست |
+| Peer Read | read-state مجاز Direct در P1؛ Group/Channel رسید per-member ندارند و Hidden علت خصوصی را افشا نمی‌کند |
+| Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ `P1_PUSH_RUNTIME_PENDING` باقی است؛ SMS عمومی اعلان provider واقعی ندارد |
+| Typing / Presence | lease و TTL واقعی با subscription و privacy جاری در P2؛ state گذرا در حافظه و تک‌instance، نه تاریخچه دائمی یا توزیع‌شده |
+| Folder / Saved Labels | سازمان‌دهی خصوصی کاربر و قرارداد نسخه‌دار در P2؛ انتخاب پوشه/برچسب اجازه خواندن تازه نمی‌سازد |
+| Invite / Join / Restriction | لینک دعوت، درخواست عضویت و محدودیت عضو طبق نقش و current policy در P2؛ token دعوت credential محرمانه است |
+| Topics | lifecycle موضوع و topicId پیام در P2؛ موضوع حذف‌شده یا خارج scope انتخاب مجاز نیست |
+| Scheduled / Silent | قصد ارسال پایدار، لغو و worker با بازبینی مجوز و safety هنگام dispatch؛ Scheduled به معنی Message/Sent نیست؛ Silent همان pipeline پیام با سیاست اعلان خودش است |
+| Poll / Quiz | MessageKind.Poll و endpointهای مستقل Messenger؛ anonymous/multiple-choice و quiz یک‌بار پاسخ طبق قرارداد؛ کلید quiz قبل موعد انتشار عمومی افشا نمی‌شود |
+| Checklist | MessageKind.Checklist=8؛ حالت Collaborative و Personal مستقل از Poll و Assessment؛ تعریف مشترک و وضعیت شخصی قرارداد جدا دارند |
+| Search | فیلترهای hasAttachment/hasLinks/topicId و current authorization قبل paging؛ false نیز فیلتر است؛ link search واکشی URL نیست |
+| Voice / Video / Live | policy رسانه مصوب است، ولی `P3_S_INFRA_REQUIRED`؛ LiveKit/TURN واقعی اجرا یا پذیرفته نشده‌اند؛ endpoint یا SDK تماس محصول از این مصوبه نتیجه نمی‌شود |
+
+### جریان‌های گذرا و پیام‌های پایدار
+
+Hub `/hubs/messaging` اکنون شش invoke عمومی دارد: `SubscribeConversation`، `UnsubscribeConversation`، `SetTyping`، `Heartbeat`، `SubscribePresence` و `UnsubscribePresence`. قراردادهای client شامل `ConversationChanged`، `TypingChanged` و `PresenceChanged` است. `ConversationChanged` برای تغییر پایدار به read/Delta هدایت می‌کند؛ دو event دیگر فقط hint دارای expiry هستند. ارتباط Direct مجاز و privacy دوطرفه شرط Presence است؛ `Hidden` با timestamp خالی وضعیت private مقصد را افشا نمی‌کند.
+
+پیش‌فرض‌های فعلی `MessagingEphemeralOptions`: typing TTL شش ثانیه، refresh سه ثانیه، heartbeat ده ثانیه، connection lease چهل‌وپنج ثانیه، Recently پنج دقیقه و نگهداری Last Seen یک روز. budget و سقف اتصال/subscription از همان options اعتبارسنجی می‌شوند. reconnect همهٔ subscriptionهای قبلی را برای اتصال جدید معتبر نمی‌کند؛ ثبت دوباره و بازیابی Delta لازم است. Group عضویت دائمی اجازهٔ send/read نمی‌سازد؛ نقش، account/session، Block، رابطه و visibility دوباره بررسی می‌شوند.
+
+### پیام زمان‌بندی‌شده، Quiz و Checklist
+
+ایجاد scheduled intent از `POST /api/v1/conversations/{id}/scheduled-messages` انجام می‌شود. حالت‌ها `Scheduled/Dispatched/Cancelled/Failed` هستند؛ `Dispatched` بعد از commit پیام واقعی و Outbox حاصل می‌شود. `clientMessageId` و payload/زمان یکسان همان intent را resolve می‌کنند؛ شناسهٔ قبلی با درخواست متفاوت conflict می‌دهد. ارسال فوری، رزرو شناسهٔ intent را دور نمی‌زند. logout به‌تنهایی لغو قصد پایدار نیست؛ مجوز mutation نشست فوراً سلب و مجوز حساب/رابطه در dispatch بازبینی می‌شود.
+
+Poll/Quiz و Checklist APIهای Messenger و داده‌های همان scope هستند؛ از endpointها و tableهای Assessment برای آن‌ها استفاده نشود. history/search نمای خلاصه پیام را می‌دهند؛ جزئیات تعامل از endpoint مجاز خودش می‌آید. `expectedVersion` تعریف یا وضعیت رأی/تکمیل باید از response واقعی گرفته شود؛ retry نسخه قدیمی مجوز overwrite نیست. تغییر رأی/تکمیل کار، ارسال پیام یا unread/Push تازهٔ عمومی محسوب نمی‌شود مگر قرارداد همان event آن را صریح تعیین کند.
+
+### مرز رسانه و زیرساخت
+
+[policy رسانه P3](messaging/MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) و [گزارش نیاز زیرساخت S](messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) مرجع‌اند. وضعیت جاری `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` است. نصب CLI، موفقیت regression یا تأیید محصول، اثبات revocation روی SFU یا عبور TURN نیست. نیاز محیط S شامل Linux lab مجاز غیرProduction، Docker runtime، DNS/TLS، TURN احرازشده، دسترسی شبکه و دو client synthetic است؛ این به‌روزرسانی deployment، بازکردن پورت یا تغییر firewall انجام نمی‌دهد.
+
+### مسیر مطالعه کد جدید
+
+`MessagingEphemeralService → IMessagingEphemeralState/InMemoryMessagingEphemeralState` برای lease و privacy؛ `ScheduledMessageService/Processor → EfMessagingStore.Scheduling/ScheduledDispatch` برای intent و ارسال؛ `ConversationPollService` و `ConversationChecklistService` برای تعامل؛ `NotificationPushDependencyInjection`، `WebPushNotificationProvider` و `FcmPushNotificationProvider` برای transport. نام/فیلد/route دقیق هر HTTP در مرجع تولیدشده و قواعد کامل در Handoffهای [P0](messaging/MESSENGER_P0_FRONTEND_HANDOFF.md)، [P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) آمده است.
+
 
 ## تکمیل عملیاتی GAP-01 — ۲۰۲۶-۱۰-۱۵
 
@@ -963,11 +1001,11 @@ People Search به query حداقل دوکاراکتری و صفحه حداکث�
 
 ### SignalR
 
-Hub مسیر `/hubs/messaging` دارد. متدهای قابل فراخوانی `SubscribeConversation(conversationId)` و `UnsubscribeConversation(conversationId)` هستند. event سمت کلاینت `ConversationChanged` نام دارد و اطلاعات سبک مثل `conversationId`، `type`، `resourceId`، `resourceVersion`، `cursor`، `occurredAtUtc` و `payloadVersion` را حمل می‌کند؛ متن کامل پیام نیست.
+Hub مسیر `/hubs/messaging` دارد. علاوه بر SubscribeConversation/UnsubscribeConversation، متدهای SetTyping، Heartbeat، SubscribePresence و UnsubscribePresence در P2 وجود دارند؛ قرارداد فعلی در بخش وضعیت Messenger همین سند و Handoff P2 آمده است. event سمت کلاینت `ConversationChanged` نام دارد و اطلاعات سبک مثل `conversationId`، `type`، `resourceId`، `resourceVersion`، `cursor`، `occurredAtUtc` و `payloadVersion` را حمل می‌کند؛ متن کامل پیام نیست.
 
 پس از اتصال یا reconnect، دسترسی و subscriptionها را برقرار کنید و تغییرات را از آخرین cursor پردازش‌شده با REST بگیرید. صرف دریافت یک اعلان یا cursor جدید، مجوز ردکردن تغییرات بین cursor قبلی و آن اعلان نیست. بعد از پردازش موفق صفحه Delta، cursor ذخیره‌شده را جلو ببرید. تحویل اعلان می‌تواند تکراری باشد؛ `changeId` را برای تشخیص تغییر تکراری نگه دارید.
 
-**محدودیت فعلی احراز هویت Hub:** `SessionAuthenticationHandler` فقط `Authorization: Bearer ...` را می‌خواند و `access_token` در query را نمی‌خواند. CORS اکنون برای همه origin/header/methodها باز و بدون `AllowCredentials` است؛ این تغییر پشتیبانی query-token WebSocket/SSE مرورگر را اضافه نمی‌کند. REST مرورگر از `credentials: "omit"` و SignalR LongPolling از `accessTokenFactory` و `withCredentials:false` استفاده کند؛ نمونه در قرارداد فرانت‌اند است. transport و reconnect در origin واقعی باید آزمایش شوند. در قطع realtime، REST و Delta مسیر بازیابی‌اند؛ backplane و cookie-based affinity از تنظیم فعلی قابل نتیجه‌گیری نیستند.
+**محدودیت فعلی احراز هویت Hub:** `SessionAuthenticationHandler` فقط `Authorization: Bearer ...` را می‌خواند و `access_token` در query را نمی‌خواند. CORS از allowlist صریح محیط استفاده می‌کند و AllowCredentials ندارد؛ تغییر transport پشتیبانی query-token WebSocket/SSE مرورگر را اضافه نمی‌کند. REST مرورگر از `credentials: "omit"` و SignalR LongPolling از `accessTokenFactory` و `withCredentials:false` استفاده کند؛ نمونه در قرارداد فرانت‌اند است. transport و reconnect در origin واقعی باید آزمایش شوند. در قطع realtime، REST و Delta مسیر بازیابی‌اند؛ backplane و cookie-based affinity از تنظیم فعلی قابل نتیجه‌گیری نیستند.
 
 ### جست‌وجو، مسدودسازی و گزارش
 
@@ -1011,9 +1049,7 @@ suppress می‌کند؛ Notification داخلی، خود پیام، unread، De
 provider خارجی داخل transaction ارسال پیام فراخوانی نمی‌شود و retry همان
 `clientMessageId` اعلان تکراری ایجاد نمی‌کند.
 
-Contact Sync، Avatar/Bio و Presence/LastSeen/Typing در این نسخه endpoint یا schema
-ندارند؛ قرارداد consent/provenance فایل و semantics privacy/multi-instance هنوز
-تصویب نشده است. برای production دارای کودک نیز انتخاب adapter واقعی Child Safety و
+Contact Sync و Avatar/Bio عمومی در این مرحله افزوده نشده‌اند؛ Typing/Presence/LastSeen اکنون در P2 قرارداد واقعی دارای privacy و TTL دارند. مرجع جاری، Handoff P2 است.
 policy دقیق ساخت/عضویت Personal Group/Channel release blocker باقی مانده است.
 
 <a id="errors"></a>
@@ -1151,21 +1187,21 @@ STEP 11B در کنار داشبوردهای خلاصه، APIهای report خوا
 <a id="persistence"></a>
 ## نقشه persistence و مرز تراکنش‌ها
 
-[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) از configurationهای همان assembly استفاده می‌کند. ۸۸ جدول داریم؛ از جمله persistence مربوط به report export، Notification، Commerce و Platform/MFA. برای ۹۰۱ ستون، FK، key، index و CHECKهای واقعی، [فرهنگ جاری دیتابیس](database-current-structure.md) مرجع تکمیلی است.
+[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) و مدل طراحی فعلی 107 جدول و 1055 ستون دارند؛ 48 migration در مخزن است. برای PK/FK، index، CHECK و rowversion به [فرهنگ جاری دیتابیس](database-current-structure.md) رجوع کنید؛ این شمارش تأیید schema یک سرور نیست.
 
 | schema | تعداد جدول | گروه داده |
 |---|---:|---|
-| `identity` | ۷ | User، Person، Credential، OTP، UserSession، RefreshToken و شاهد CommunicationAge |
-| `organization` | ۵ | Organization، OrganizationPerson، Membership، RoleAssignment و Invitation |
-| `guardian` | ۱ | GuardianRelation |
-| `academic` | ۹ | دوره، درس، کلاس، Enrollment، TeacherAssignment، ScheduleRule، Session و تاریخچه حضور |
-| `assessment` | ۱۸ | تکلیف/نسخه/گیرنده، پاسخ و نمره تکلیف؛ تعریف/تلاش/پاسخ/نمره آزمون |
-| `messaging` | ۲۳ | گفتگو/عضو/دعوت/ownership/state، پیام و تعامل، delta/outbox، privacy/contact، Block، moderation و safety |
-| `storage` | ۱ | FileAsset؛ محتوای باینری در storage adapter است |
-| `commerce` | ۱۰ | Plan/version، entitlement/quota، subscription/usage و order/payment |
-| `notification` | ۴ | اعلان، delivery، preference و device |
-| `platform` | ۹ | IAM، audit، provisioning و MFA credential/recovery |
-| `reports` | ۱ | job خروجی خصوصی گزارش |
+| `academic` | 9 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `assessment` | 18 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `commerce` | 10 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `guardian` | 1 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `identity` | 7 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `messaging` | 42 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `notification` | 4 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `organization` | 5 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `platform` | 9 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `reports` | 1 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
+| `storage` | 1 | قراردادهای حوزه؛ جزئیات در فرهنگ دیتابیس |
 
 ### سه لایه تضمین درستی داده
 
@@ -1203,7 +1239,7 @@ rowversion زمان رویداد نیست. پارامتر expected version در 
 
 ### migration و محیط توسعه
 
-۳۷ Migration موجود تا EnforceApprovedMessengerChildSafety مدل فعلی را می‌سازند. runtime هنگام startup Migrate یا EnsureCreated اجرا نمی‌کند. MakanDbContextFactory اتصال design-time را از ConnectionStrings__MakanDatabase می‌گیرد، نه خودکار از User Secrets API. خروجی SQL تحویلی باید با ابزار export-migration-sql.ps1 تولید و با تست مستقل SQL بررسی شود؛ خروجی خام قدیمی در backfill ستون تازه خطای 207 داشت. [دستور جاری](production/DEPLOYMENT_IIS.md).
+48 migration تا `20261017033804_AddConversationChecklists` مدل فعلی را می‌سازند؛ startup Migrate/EnsureCreated اجرا نمی‌کند. MakanDbContextFactory از ConnectionStrings__MakanDatabase می‌خواند. تغییر schema با principal جدا و artifact SQL بررسی‌شده انجام شود؛ tools/production/export-migration-sql.ps1 منطق batch لازم را نگه می‌دارد. این همگام‌سازی migration جدید نمی‌سازد یا روی سرور اجرا نمی‌کند.
 
 برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر **الگوی توسعه** است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:
 
@@ -1413,7 +1449,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 ### مرز قابلیت موجود
 
-یادداشت P0: پاراگراف زیر خلاصهٔ تاریخی نسخهٔ اولیه است و برای تشخیص قابلیت جاری مرجع نیست؛ بخش «وضعیت جاری» ابتدای همین سند و Handoff P0 جای آن را برای تحویل فعلی می‌گیرند. محدودیت‌های واقعی Messenger شامل Peer Read Receipt عمومی، Push واقعی، Typing/Presence/Last Seen و scale-out هستند؛ CORS محیط Production همچنان allowlist است، نه بازِ عمومی.
+مرز نسخه جاری: Peer Read مجاز Direct، Web Push/FCM و Typing/Presence در کد وجود دارند. آزمون واقعی Push، scale-out و رسانه P3 gate مستقل دارند. پاراگراف تاریخی زیر قابلیت جاری را تعیین نمی‌کند؛ کاتالوگ، وضعیت بالای سند و Handoffهای P0/P1/P2 مبنا هستند.
 
 در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider واقعی، backplane چندinstance SignalR، Copilot، AI، Payment/Order و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. Commerce فقط Summary خواندنی مدیر و foundation داخلی Entitlement/Quota دارد؛ مدیریت Plan و Subscription به Backoffice آینده موکول شده است. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
 
@@ -1423,7 +1459,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، `guardian`، `academic`، `assessment`، `storage` و `messaging` سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با `rowversion` و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.
 
-برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی جاری آن ۸۸ جدول و ۳۷ Migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.
+برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی جاری آن 107 جدول و 48 migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.
 
 مسیر مطالعه یک جریان واقعی آزمون:
 
@@ -1447,7 +1483,7 @@ Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، 
 ```powershell
 python -m pip install --target .artifacts/docs-python -r tools/docs/requirements.txt
 dotnet run --project tools/docs/MakanApp.DocumentationSnapshot/MakanApp.DocumentationSnapshot.csproj --configuration Debug -- .artifacts/documentation-snapshot
-python tools/docs/sync_repository_docs.py --snapshot .artifacts/documentation-snapshot --reviewed-date 2026-10-15
+python tools/docs/sync_repository_docs.py --snapshot .artifacts/documentation-snapshot --reviewed-date 2026-10-18
 python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --pdf
 ```
 
@@ -1464,7 +1500,7 @@ python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --
 
 restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.
 
-شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از ۲۸۴ عملیات، ۴۸۸ schema و مدل طراحی ۸۸ جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.
+شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از 325 عملیات، 551 schema و مدل طراحی 107 جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.
 
 این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.
 
@@ -1585,7 +1621,7 @@ Owner مجوز ضمنی review دارد. Admin فقط با flag مستقل `Revi
 Direct دو طرف و در Group/Channel participantهای فعال بررسی می‌شوند. بررسی دوباره پیش
 از commit، تغییر هم‌زمان participantها را پوشش می‌دهد.
 
-Provider واقعی هنوز انتخاب نشده است. `Messaging:ContentSafetyProvider` فقط `DevelopmentAllow` در Development/Testing یا `Unavailable` را می‌پذیرد؛ محیط production به‌صورت پیش‌فرض Unavailable و امن است. MakanApp-AI در این مسیر استفاده نمی‌شود. جزئیات privacy، idempotency، schema و محدودیت‌ها در [سند معماری STEP 14D](architecture/STEP_14D_MODERATION_CHILD_SAFETY.md) آمده است.
+تصمیم جاری GAP-05، Internal Makan Content Safety قاعده‌محور واقعی و محدود متن است؛ DevelopmentAllow فقط در محیط توسعه/تست است. unsupported media به ReviewRequired و unavailable در مسیر محافظت‌شده به fail-closed می‌رود. این provider از AI/RAG جداست و ادعای تحلیل معنایی کامل رسانه ندارد؛ قرارداد مصوب GAP-05 بر گزارش تاریخی STEP 14D مقدم است.
 
 <a id="platform-backoffice"></a>
 ## Backoffice پلتفرم — STEP 15E

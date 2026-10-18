@@ -1,5 +1,9 @@
 # ماتریس آزمون و پذیرش آیندهٔ P3 Media
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 > **به‌روزرسانی مرجع — ۲۰۲۶-۱۰-۱۷:** [P3 Media Policy v1](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md) approved و [P3-S plan](MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md) آمادهٔ اجراست؛ تمام gateهای رسانه همچنان PLANNED_NOT_RUN هستند. جدول‌های P3-0 برای شواهد تاریخی حفظ شده‌اند؛ expected ناسازگار آن‌ها طبق بخش «اصلاح expectedها» در انتهای همین سند و [approval mapping](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md#p3-policy-v1-owner-approval) جایگزین می‌شود. هیچ case جدید رسانه‌ای اجرا یا PASS اعلام نشده است.
 
 تاریخ `2026-10-17`؛ مبنای کد `5e1da895c96065380e12d04341e483d4e78539c4`. این جدول **طرح آزمون آینده** است، نه تست افزوده‌شده یا نتیجهٔ PASS تماس. [معماری](MESSENGER_P3_MEDIA_ARCHITECTURE.md)، [تصمیم‌ها](MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md) و [roadmap](MESSENGER_P3_IMPLEMENTATION_ROADMAP.md) مرجع وابستگی‌اند.

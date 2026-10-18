@@ -1,5 +1,9 @@
 # برنامهٔ اجرایی P3-S — Media Security Spike
 
+<!-- DOC-SYNC:BEGIN -->
+> راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
+<!-- DOC-SYNC:END -->
+
 وضعیت `2026-10-17`: **PLAN_READY / EXECUTION_NOT_STARTED**. ورودی محصول: [Makan Messenger P3 Media Policy v1 — APPROVED_FOR_IMPLEMENTATION](MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md). مبنای کد پیش از ثبت policy: `47e620077c5809b6d8e1b6ad2515f1afec48c247`. این سند قرارداد انجام آزمایش بعدی است؛ tooling پیشنهادی زیر هنوز ایجاد نشده، LiveKit نصب/اجرا نشده و هیچ نتیجهٔ real media از Build/Test فعلی استنتاج نمی‌شود.
 
 ## ۱. سؤال، خروجی و مرز اجرای بعدی

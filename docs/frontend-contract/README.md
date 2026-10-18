@@ -1,16 +1,10 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-## افزودهٔ جاری Messenger P0 — ۲۰۲۶-۱۰-۱۶
+بازبینی `2026-10-18` از `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-[قرارداد دقیق P0](../messaging/MESSENGER_P0_FRONTEND_HANDOFF.md) مرجع افزوده‌های age verification، messaging-status، discovery، retry/realtime و Enum است. OpenAPI runtime همین نسخه، نمایش رشته‌ای/nullable/Flags را اصلاح کرده است؛ HTML/PDF قدیمی زیر دوباره تولید نشده‌اند. هیچ frontend تغییر نکرده و آزمون سرور/استقرار ادعا نمی‌شود.
+پوشش جاری: 325 عملیات HTTP در 290 مسیر، 57 Controller، 551 schema، 107 جدول و 48 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
-## بستهٔ مرجع baseline
-
-بازبینی بستهٔ `2026-10-15` از `main@80d6a14f6592af7de2b1b327b857505d70c4922d`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
-
-پوشش بستهٔ baseline: 284 عملیات HTTP در 256 مسیر، ۴۸ Controller، 488 schema، ۸۸ جدول و ۳۷ Migration. افزودهٔ P0 سه endpoint و migration تأیید اولیه را دارد؛ اطلاعات baseline را وضعیت نهایی P0 فرض نکنید.
-
-- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): کاتالوگ تاریخی baseline.
+- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
 - [UX مرجع اصلی](../project-context/03_Makan_User_Flows_and_Screens_UX_v1.0.pdf) و [نقشه Flow](../project-context/04_Flow.png) نیازمندی‌اند، نه اثبات وجود screen یا frontend در این workspace. اطلاعات snapshot قدیمی ۱۴۱ عملیات/۲۰ Migration وضعیت جاری نیست.
 
@@ -21,7 +15,7 @@
 - role، organization، membership و child جاری را سرور resolve می‌کند؛ selectorهای client مدرک مجوز نیستند. 401 ورود، 403 منع مجوز، 404 پنهان‌سازی/نبود منبع، 409/412 تضاد و 429 محدودیت باید از ProblemDetails/code خوانده شوند.
 - تمام listها یک شکل paging ندارند؛ پارامتر، بدنه، status و schema دقیق هر عملیات در مرجع جاری است. validation کسب‌وکاری فراتر از nullable/required در OpenAPI اجرا می‌شود.
 
-DOC-CONTRACT-01 مربوط به بستهٔ baseline بود؛ در P0 اصلاح کد و تست قرارداد انجام شد. برای code generation از OpenAPI runtime نسخهٔ P0 استفاده کنید؛ Flags رشته‌ایِ قابل ترکیب است و nullable حفظ شده است. ورودی ناشناخته permission ایجاد نمی‌کند.
+DOC-CONTRACT-01 در نسخهٔ مبنا CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ اختلاف integer/String قبلی در snapshot جاری دیده نشد. OpenAPI با serializer رشته‌ای MVC هم‌تراز شده است؛ literalهای زیر از همان CLR/JsonOptions استخراج می‌شوند. این نتیجه شاهد انتشار OpenAPI روی سرور نیست؛ named Flags همهٔ ترکیب‌های مجاز یا ورودی‌های مجاز use case را تعریف نمی‌کند.
 
 ## ورود، نشست و OTP
 
@@ -51,13 +45,13 @@ Policy مصوب GAP-05 حاکم است: UnknownAge مانند Minor محافظت
 
 Internal Makan Content Safety provider واقعی قاعده‌محور محدود متن است، نه AI یا ادعای اسکن معنایی کامل. unavailable در مسیر محافظت‌شده fail-closed و رسانه unsupported ReviewRequired است؛ خطای safety را Sent نمایش ندهید. ارزیابی سنِ خوداظهاری تأیید رسمی نیست و AGE_VERIFICATION_CONFLICT با retry کور overwrite نمی‌شود.
 
-SignalR اعلان تغییر است؛ SQL و delta/read رسمی مرجع‌اند. handler فقط Bearer header می‌خواند؛ مرورگر می‌تواند LongPolling همراه accessTokenFactory و withCredentials:false را در محیط مجاز آزمایش کند. دریافت event یا online بودن، receipt تحویل/خواندن مخاطب را به‌تنهایی ثابت نمی‌کند. scale-out/backplane آماده فرض نشود.
+SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرجع پیام و read-state هستند. TypingChanged و PresenceChanged hint گذرا با TTL و privacy جاری‌اند، نه Message/Delta. handler فقط Bearer header می‌خواند؛ browser از LongPolling و withCredentials:false طبق allowlist میزبان استفاده کند. reconnect نیازمند subscription تازه و بازیابی Delta است؛ backplane و ephemeral state مشترک چند instance فراهم نیست.
 
 ## گزارش، اعلان و تجارت
 
 چهار داشبورد نقش‌محور، گزارش‌های filtered/paginated و export خصوصی CSV با Queued/Processing/Completed/Failed وجود دارند. مجوز ایجاد، worker و download دوباره بررسی می‌شود؛ job pending را فایل آماده نمایش ندهید.
 
-اعلان داخلی، read state، durable outbox، preferences و device lifecycle API دارند. Push و SMS عمومی اعلان provider واقعی ندارند؛ آن‌ها را با OTP ملی‌پیامک اشتباه نگیرید.
+اعلان داخلی، outbox، preferences و device lifecycle موجودند. Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.
 
 Plan/PlanVersion/Subscription/Entitlement/Quota و Order/PaymentAttempt/verification lifecycle موجودند؛ gateway واقعی unavailable است. callback یا UI هرگز پرداخت را بدون تأیید server موفق اعلام نمی‌کند؛ refund/reconcile دستی ساختگی نسازید.
 
@@ -86,3 +80,26 @@ Swagger/OpenAPI در Production پیش‌فرض خاموش و CORS allowlist ب�
 ## مسیر مطالعه
 
 این راهنما -> مرجع جاری endpoint/DTO -> Controller واقعی -> سرویس Application -> Domain و port -> Infrastructure/EF configuration -> Migration -> Unit/Integration/Architecture tests. اسناد مرحله‌ای و PDFهای اصلی برای دلیل تصمیم و UX خوانده شوند؛ اعداد تست تاریخی به‌جای validation امروز استفاده نشوند.
+
+
+## افزوده‌های جاری Messenger
+
+[وضعیت یکپارچه P0/P1/P2 و gate رسانه](../messaging/CURRENT_MESSENGER_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) مکمل کارت‌های کامل HTTP همین خروجی‌اند.
+
+| حوزه | وضعیت جاری و مرجع |
+|---|---|
+| سن و شروع ارتباط | تأیید اولیهٔ رسمی سن، وضعیت امن self و Direct دو حساب Adult طبق GAP-05 در P0 موجودند؛ OTP/DOB خوداظهاری اثبات سن نیست |
+| Peer Read | read-state مجاز Direct در P1؛ Group/Channel رسید per-member ندارند و Hidden علت خصوصی را افشا نمی‌کند |
+| Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ `P1_PUSH_RUNTIME_PENDING` باقی است؛ SMS عمومی اعلان provider واقعی ندارد |
+| Typing / Presence | lease و TTL واقعی با subscription و privacy جاری در P2؛ state گذرا در حافظه و تک‌instance، نه تاریخچه دائمی یا توزیع‌شده |
+| Folder / Saved Labels | سازمان‌دهی خصوصی کاربر و قرارداد نسخه‌دار در P2؛ انتخاب پوشه/برچسب اجازه خواندن تازه نمی‌سازد |
+| Invite / Join / Restriction | لینک دعوت، درخواست عضویت و محدودیت عضو طبق نقش و current policy در P2؛ token دعوت credential محرمانه است |
+| Topics | lifecycle موضوع و topicId پیام در P2؛ موضوع حذف‌شده یا خارج scope انتخاب مجاز نیست |
+| Scheduled / Silent | قصد ارسال پایدار، لغو و worker با بازبینی مجوز و safety هنگام dispatch؛ Scheduled به معنی Message/Sent نیست؛ Silent همان pipeline پیام با سیاست اعلان خودش است |
+| Poll / Quiz | MessageKind.Poll و endpointهای مستقل Messenger؛ anonymous/multiple-choice و quiz یک‌بار پاسخ طبق قرارداد؛ کلید quiz قبل موعد انتشار عمومی افشا نمی‌شود |
+| Checklist | MessageKind.Checklist=8؛ حالت Collaborative و Personal مستقل از Poll و Assessment؛ تعریف مشترک و وضعیت شخصی قرارداد جدا دارند |
+| Search | فیلترهای hasAttachment/hasLinks/topicId و current authorization قبل paging؛ false نیز فیلتر است؛ link search واکشی URL نیست |
+| Voice / Video / Live | policy رسانه مصوب است، ولی `P3_S_INFRA_REQUIRED`؛ LiveKit/TURN واقعی اجرا یا پذیرفته نشده‌اند؛ endpoint یا SDK تماس محصول از این مصوبه نتیجه نمی‌شود |
+
+
+Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.
