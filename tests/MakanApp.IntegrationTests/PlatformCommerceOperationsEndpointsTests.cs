@@ -1,16 +1,28 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Platform;
+using MakanApp.Application.Storage;
 using MakanApp.Domain.Commerce;
+using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Platform;
+using MakanApp.Infrastructure.Ai;
+using MakanApp.Infrastructure.Messaging;
+using MakanApp.Infrastructure.Outbox;
+using MakanApp.Infrastructure.Persistence;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace MakanApp.IntegrationTests;
@@ -255,12 +267,15 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
         Assert.DoesNotContain(titleSecret, notificationJson, StringComparison.Ordinal);
         Assert.DoesNotContain(bodySecret, notificationJson, StringComparison.Ordinal);
         Assert.NotNull(health);
-        Assert.Equal("NotIntegrated/DependencyPending", health.AiIntegrationStatus);
+        Assert.Equal("Disabled", health.AiIntegrationStatus);
         Assert.Contains(health.Dependencies, item => item.Name == "Api" && item.Status == "Healthy");
         Assert.Contains(health.Dependencies, item => item.Name == "SqlServer" && item.Status == "Reachable");
         Assert.Contains(health.Dependencies, item => item.Name == "Storage");
         Assert.Contains(health.Dependencies, item => item.Name == "PaymentProvider");
         Assert.Contains(health.Dependencies, item => item.Name == "SignalR");
+        Assert.Contains(health.Dependencies, item => item.Name == "Ai" && item.Status == "Disabled");
+        Assert.Contains(health.Dependencies, item => item.Name == "Push");
+        Assert.Contains(health.Dependencies, item => item.Name == "FileCleanup" && item.Status == "NotImplemented");
         Assert.NotNull(jobs);
         Assert.Contains(jobs.Counts, item => item.JobType == "IntegrationOutbox");
         Assert.Contains(jobs.Counts, item => item.JobType == "MessagingRealtimeOutbox");
@@ -269,6 +284,171 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
         Assert.Equal(
             NotificationDeliveryStatus.Failed,
             await factory.GetNotificationDeliveryStatusAsync(attemptId));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task JobsSeparatePendingActiveLeaseAndExhaustedOutboxWithoutExposingPayload(bool realtime)
+    {
+        // dispatcher والد روی DB خودش زنده می‌ماند؛ این آزمون DB و worker scope واقعاً مستقل دارد.
+        await using var isolated = await CreateIsolatedOperationsScopeAsync();
+        var host = isolated.Factory;
+        using var client = host.CreateClient();
+        var owner = await CreateAuthenticatedUserAsync(client, host);
+        await host.BootstrapPlatformOwnerAsync(owner.User.Id);
+        UseBearerToken(client, owner.AccessToken);
+        var name = realtime ? "MessagingRealtimeOutbox" : "IntegrationOutbox";
+        var before = await client.GetFromJsonAsync<PlatformJobOperations>("/api/admin/v1/operations/jobs", JsonOptions);
+        var baseline = Assert.Single(before!.Queues, item => item.JobType == name);
+        var now = host.Clock.GetUtcNow().UtcDateTime;
+        var oldest = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var ids = new List<Guid>();
+        var changes = new List<Guid>();
+        await using var scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        var conversation = Conversation.CreateUserManaged(ConversationType.Group, ConversationScope.Personal, null,
+            "صف مصنوعی عملیات", null, owner.User.Id, Guid.NewGuid(), new byte[32], now);
+        if (realtime) db.Conversations.Add(conversation);
+        var cap = realtime ? MessagingRealtimeOutboxProcessor.MaximumAttempts : OutboxProcessor.MaximumAttempts;
+        var cases = new[] { (Attempts: 1, Lease: (DateTime?)now.AddMinutes(-1)), (Attempts: cap, Lease: (DateTime?)now.AddMinutes(1)),
+            (Attempts: cap, Lease: (DateTime?)now.AddMinutes(-1)), (Attempts: cap, Lease: (DateTime?)null) };
+        try
+        {
+            for (var index = 0; index < cases.Length; index++)
+            {
+                object entity;
+                if (realtime)
+                {
+                    var change = MessagingChangeEvent.Create(conversation.Id, conversation.AllocateNextChangeSequence(),
+                        MessagingChangeType.MessageCreated, Guid.NewGuid(), null, oldest.AddDays(-index));
+                    db.MessagingChangeEvents.Add(change);
+                    changes.Add(change.Id);
+                    var message = MessagingRealtimeOutboxMessage.Create(change, change.OccurredAtUtc);
+                    ids.Add(message.Id);
+                    entity = message;
+                }
+                else
+                {
+                    var message = OutboxMessage.Create(Guid.NewGuid(), "synthetic.operations",
+                        "{\"private\":\"queue-payload-secret-marker\"}", oldest.AddDays(-index));
+                    ids.Add(message.Id);
+                    entity = message;
+                }
+                db.Add(entity);
+                db.Entry(entity).Property("AttemptCount").CurrentValue = cases[index].Attempts;
+                db.Entry(entity).Property("ClaimedUntilUtc").CurrentValue = cases[index].Lease;
+                if (index == 0) db.Entry(entity).Property("NextAttemptAtUtc").CurrentValue = now.AddHours(1);
+                if (!realtime && cases[index].Lease.HasValue)
+                    db.Entry(entity).Property("ClaimToken").CurrentValue = Guid.NewGuid();
+            }
+            await db.SaveChangesAsync();
+            using var response = await client.GetAsync("/api/admin/v1/operations/jobs");
+            var json = await response.Content.ReadAsStringAsync();
+            response.EnsureSuccessStatusCode();
+            var result = JsonSerializer.Deserialize<PlatformJobOperations>(json, JsonOptions)!;
+            var queue = Assert.Single(result.Queues, item => item.JobType == name);
+            Assert.Equal(baseline.PendingCount + 1, queue.PendingCount);
+            Assert.Equal(baseline.ProcessingCount + 1, queue.ProcessingCount);
+            Assert.Equal(baseline.FailedCount + 2, queue.FailedCount);
+            Assert.Equal(oldest, queue.OldestPendingAtUtc);
+            Assert.True(queue.OldestPendingAgeSeconds > 0);
+            Assert.DoesNotContain("queue-payload-secret-marker", json, StringComparison.Ordinal);
+            Assert.All(ids, id => Assert.DoesNotContain(id.ToString(), json, StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            db.ChangeTracker.Clear();
+            if (realtime)
+            {
+                await db.MessagingRealtimeOutboxMessages.Where(item => ids.Contains(item.Id)).ExecuteDeleteAsync();
+                await db.MessagingChangeEvents.Where(item => changes.Contains(item.Id)).ExecuteDeleteAsync();
+                await db.Conversations.Where(item => item.Id == conversation.Id).ExecuteDeleteAsync();
+            }
+            else await db.OutboxMessages.Where(item => ids.Contains(item.Id)).ExecuteDeleteAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ScheduledBacklogExcludesFutureIntentAndUsesServerDeadlineForOldestAge()
+    {
+        await factory.ResetPlatformIamAsync();
+        using var original = factory.CreateClient();
+        var owner = await CreateAuthenticatedUserAsync(original);
+        await factory.BootstrapPlatformOwnerAsync(owner.User.Id);
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IHostedService>();
+            services.RemoveAll<IIdentitySecurity>();
+            services.AddSingleton(factory.Services.GetRequiredService<IIdentitySecurity>());
+        }));
+        using var client = host.CreateClient();
+        UseBearerToken(client, owner.AccessToken);
+        var before = await client.GetFromJsonAsync<PlatformJobOperations>("/api/admin/v1/operations/jobs", JsonOptions);
+        var baseline = Assert.Single(before!.Queues, item => item.JobType == "ScheduledMessage");
+        var now = factory.Clock.GetUtcNow().UtcDateTime;
+        var dueAt = now.AddMinutes(-5);
+        var conversation = Conversation.CreateUserManaged(ConversationType.Group, ConversationScope.Personal, null,
+            "قصد مصنوعی زمان‌بندی", null, owner.User.Id, Guid.NewGuid(), new byte[32], now.AddMinutes(-10));
+        var authority = new ScheduledMessageAuthority(WorkspaceType.Personal, null, null, null, null);
+        var content = new ScheduledMessageContent(MessageKind.Text, "private-scheduled-marker", [], null, [], null, null, false);
+        var due = ScheduledMessage.Create(conversation.Id, owner.User.Id, Guid.NewGuid(), authority, content, new byte[32], dueAt, now.AddMinutes(-10));
+        var future = ScheduledMessage.Create(conversation.Id, owner.User.Id, Guid.NewGuid(), authority, content, new byte[32], now.AddDays(1), now.AddMinutes(-10));
+        await using var scope = host.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        try
+        {
+            db.Conversations.Add(conversation);
+            db.ScheduledMessages.AddRange(due, future);
+            await db.SaveChangesAsync();
+            var result = await client.GetFromJsonAsync<PlatformJobOperations>("/api/admin/v1/operations/jobs", JsonOptions);
+            var queue = Assert.Single(result!.Queues, item => item.JobType == "ScheduledMessage");
+            Assert.Equal(baseline.PendingCount + 1, queue.PendingCount);
+            Assert.Equal(new[] { baseline.OldestPendingAtUtc, dueAt }.Min(), queue.OldestPendingAtUtc);
+            Assert.Equal(before.Counts.Where(item => item.JobType == "ScheduledMessage" && item.Status == "Scheduled").Sum(item => item.Count) + 2,
+                result.Counts.Where(item => item.JobType == "ScheduledMessage" && item.Status == "Scheduled").Sum(item => item.Count));
+        }
+        finally
+        {
+            db.ChangeTracker.Clear();
+            await db.ScheduledMessages.Where(item => item.Id == due.Id || item.Id == future.Id).ExecuteDeleteAsync();
+            await db.Conversations.Where(item => item.Id == conversation.Id).ExecuteDeleteAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ProtectedHealthShowsConfiguredOptionalAiAndSanitizesStorageProbeFailure()
+    {
+        await factory.ResetPlatformIamAsync();
+        using var original = factory.CreateClient();
+        var owner = await CreateAuthenticatedUserAsync(original);
+        await factory.BootstrapPlatformOwnerAsync(owner.User.Id);
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IHostedService>();
+            services.RemoveAll<IIdentitySecurity>();
+            services.AddSingleton(factory.Services.GetRequiredService<IIdentitySecurity>());
+            services.RemoveAll<AiServiceOptions>();
+            services.AddSingleton(new AiServiceOptions { Enabled = true, BaseUrl = "http://private-ai-address-marker" });
+            services.RemoveAll<IStorageReadinessProbe>();
+            services.AddSingleton<IStorageReadinessProbe>(new ThrowingOperationsStorageProbe());
+        }));
+        using var client = host.CreateClient();
+        UseBearerToken(client, owner.AccessToken);
+        using var response = await client.GetAsync("/api/admin/v1/operations/health");
+        var json = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+        var result = JsonSerializer.Deserialize<PlatformSystemHealth>(json, JsonOptions)!;
+        Assert.Equal("Configured/RuntimeNotProbed", result.AiIntegrationStatus);
+        Assert.Contains(result.Dependencies, item => item.Name == "Storage" && item.Status == "Unavailable");
+        Assert.DoesNotContain("private-ai-address-marker", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("storage-probe-secret-marker", json, StringComparison.Ordinal);
+    }
+
+    private sealed class ThrowingOperationsStorageProbe : IStorageReadinessProbe
+    {
+        public Task<bool> IsReadyAsync(CancellationToken cancellationToken) =>
+            throw new IOException("storage-probe-secret-marker");
     }
 
     private static async Task<PlatformPlanVersionItem> CreateAndPublishVersionAsync(
@@ -296,7 +476,7 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
         return await ReadAsync<PlatformPlanVersionItem>(publishResponse);
     }
 
-    private async Task<VerifyOtpResult> CreateAuthenticatedUserAsync(HttpClient client)
+    private async Task<VerifyOtpResult> CreateAuthenticatedUserAsync(HttpClient client, MakanAppWebApplicationFactory? testFactory = null)
     {
         var sequence = Interlocked.Increment(ref _phoneSequence);
         var phoneNumber = $"+98918{sequence:D7}";
@@ -311,9 +491,33 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
             new VerifyOtpCommand(
                 challenge.ChallengeId,
                 phoneNumber,
-                factory.GetLatestOtpCode(phoneNumber)),
+                (testFactory ?? factory).GetLatestOtpCode(phoneNumber)),
             JsonOptions);
         return await ReadAsync<VerifyOtpResult>(verifyResponse);
+    }
+
+    private static async Task<OperationsQueueScope> CreateIsolatedOperationsScopeAsync()
+    {
+        var runId = Guid.NewGuid().ToString("N");
+        var isolated = new MakanAppWebApplicationFactory("MakanApp_Recovery_PH2_" + runId,
+            Path.Combine(Path.GetTempPath(), "MakanApp-PH2-Queues", runId),
+            Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
+        try
+        {
+            await ((IAsyncLifetime)isolated).InitializeAsync();
+            return new OperationsQueueScope(isolated);
+        }
+        catch
+        {
+            await ((IAsyncLifetime)isolated).DisposeAsync();
+            throw;
+        }
+    }
+
+    private sealed class OperationsQueueScope(MakanAppWebApplicationFactory isolated) : IAsyncDisposable
+    {
+        public MakanAppWebApplicationFactory Factory => isolated;
+        public async ValueTask DisposeAsync() => await ((IAsyncLifetime)isolated).DisposeAsync();
     }
 
     private static async Task GrantRoleAsync(

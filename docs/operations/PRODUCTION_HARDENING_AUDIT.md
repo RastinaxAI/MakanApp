@@ -138,3 +138,23 @@ Validation واقعی: restore موفق؛ build و final build با ۰ warning/e
 final suite: **606 Unit + 1060 Integration + 14 Architecture = 1680**؛ failed/skipped=0.
 **26** مورد تست Integration به مبنا اضافه شد. migration و endpoint جدید ندارد.
 XML/PFX تستی از secret عملیاتی مستقل‌اند. اجرای IIS/recycle/reboot یا secret provisioning سرور انجام نشده است.
+
+### PH-2 — تکمیل‌شده در کد و تست محلی
+
+مسیرهای health موجود reuse شدند: live و alias قدیمی مستقل از SQL/provider، ready با
+config/ring/SQL/storage و timeout پانزده ثانیه. metadata همان سه route باعث می‌شود Bearer
+ارسالی، احراز نشست وابسته به SQL را فعال نکند؛ permission مسیرهای Backoffice تغییر نکرده است.
+`PlatformJobOperations.Queues` الحاقی، صف/lease/exhausted و oldest را با aggregation SQL نشان می‌دهد؛
+Scheduled آینده backlog نیست و Pending outbox شامل backoff است. AI/Push به‌عنوان تنظیم‌شده یا
+غیرفعال گزارش می‌شوند، نه شبکهٔ سالم اثبات‌شده. cleanup هنوز صریحاً پیاده‌نشده است.
+
+Validation واقعی: restore، build و final build موفق، ۰ warning/error؛ focused نهایی **23** موفق؛
+final suite: **606 Unit + 1071 Integration + 14 Architecture = 1691**؛ failed/skipped=0.
+**11** تست Integration جدید: SQL up/down و Bearer، storage false/exception، فقدان ring،
+config، optional isolation و classifier صف/موعد/رد نشت اطلاعات. تست‌های مجوز قبلی نیز اجرا شدند.
+در اجرای اولیه، وابستگی health به auto-auth و race دادهٔ تست با worker والد آشکار و رفع شدند؛
+assertionها ضعیف نشدند و classifier از factory/DB واقعاً مستقل استفاده می‌کند.
+مسیر مطالعه: `CoreHealthProbeMetadata` → `SessionAuthenticationHandler` →
+`CoreReadinessHealthCheck` → `PlatformSystemOperationsController` →
+`EfPlatformCommerceOperationsStore` → `ProductionReadinessTests` و تست‌های Platform operations.
+Migration و عملیات سرور ندارد؛ snapshot عملیاتی تضمین transactional counter یا تحویل provider نیست.

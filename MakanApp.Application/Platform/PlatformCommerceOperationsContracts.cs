@@ -165,9 +165,20 @@ public sealed record PlatformNotificationOperations(
 
 public sealed record PlatformJobStatusCount(string JobType, string Status, int Count);
 
+public sealed record PlatformJobQueueDetail(
+    string JobType,
+    int PendingCount,
+    int ProcessingCount,
+    int FailedCount,
+    DateTime? OldestPendingAtUtc,
+    double? OldestPendingAgeSeconds);
+
 public sealed record PlatformJobOperations(
     IReadOnlyCollection<PlatformJobStatusCount> Counts,
-    DateTime? OldestPendingAtUtc);
+    DateTime? OldestPendingAtUtc)
+{
+    public IReadOnlyCollection<PlatformJobQueueDetail> Queues { get; init; } = [];
+}
 
 public sealed record PlatformDependencyHealth(string Name, string Status, string Detail);
 

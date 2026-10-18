@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using MakanApp.Api.Hosting;
 using MakanApp.Application.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,11 @@ public sealed class SessionAuthenticationHandler(
 {
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        if (Context.GetEndpoint()?.Metadata.GetMetadata<CoreHealthProbeMetadata>() is not null)
+        {
+            return AuthenticateResult.NoResult();
+        }
+
         var authorization = Request.Headers.Authorization.ToString();
         if (!authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {

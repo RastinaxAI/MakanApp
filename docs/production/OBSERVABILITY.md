@@ -36,10 +36,32 @@ thresholdها باید بعد از baseline staging تعیین شوند و SLA �
 ## Health
 
 - `/health/live`: فقط زنده‌بودن process.
-- `/health/ready`: اتصال SQL Server و قابلیت write/delete probe روی storage.
+- `/health/ready`: اعتبار config لازم Production، ring پایدار همان provider، اتصال SQL Server و قابلیت write/delete فایل مصنوعی روی storage. timeout کل check پانزده ثانیه است؛ cancellation منتقل می‌شود.
 - `/health`: alias کم‌جزئیات liveness برای سازگاری.
 
 خروجی عمومی فقط Healthy/Unhealthy است و connection string، path، payload provider یا stack trace منتشر نمی‌کند. جزئیات عملیات موجود از endpointهای permissionدار Backoffice خوانده می‌شود.
+
+### قرارداد health پس از PH-2
+
+`/health/live` و alias قدیمی `/health` به SQL، دیسک، AI، Push یا payment وابسته نیستند.
+سه route عمومی health نشست نمی‌خوانند؛ حتی Bearer اشتباهیِ فرستاده‌شده به probe،
+احراز هویت وابسته به SQL را فعال نمی‌کند. این استثنا فقط metadata همین routeهاست، نه bypass APIهای محافظت‌شده.
+`/health/ready` برای شکست وابستگی core، HTTP 503 و فقط `Unhealthy` می‌دهد؛ exception فنی
+در `HealthCheckResult` قرار نمی‌گیرد. نبود runtime کلید/پوشه نباید با cache یا ایجاد ring جدید پنهان شود.
+در Development/Testing فقط الزام ring عملیاتی استثنا دارد؛ این محیط‌ها روش استقرار Production نیستند.
+
+`GET /api/admin/v1/operations/health` با session معتبر و permission فعلی `OperationsRead`
+جزئیات امن core و تنظیم providerهای اختیاری را برمی‌گرداند؛ permission تغییر نکرده و endpoint جدید نداریم.
+AI یا Push با وضعیت `Configured`/`Configured/RuntimeNotProbed`، شبکهٔ سالم یا دریافت واقعی دستگاه
+اعلام نمی‌شوند. failure این providerها readiness کل Backend را gate نمی‌کند. `FileCleanup`
+تا ایجاد کنترل محدود در PH-6 صریحاً `NotImplemented` است.
+
+`GET /api/admin/v1/operations/jobs` همان permission را حفظ می‌کند. فیلد افزودهٔ `Queues`
+تعداد pending (شامل انتظار backoff)، lease فعال، exhausted/failed و زمان/سن قدیمی‌ترین pending را
+برای نوع‌های ثابت صف می‌دهد؛ payload، destination، path و credential منتشر نمی‌شوند.
+آیتم outbox در سقف attempt فقط پس از نبود/پایان lease، Failed است؛ آیتم در حال پردازش
+به‌اشتباه poison اعلام نمی‌شود. intent زمان‌بندی‌شدهٔ آینده در statusهای کل دیده می‌شود،
+ولی در backlog due و oldest overdue نمی‌آید. این endpoint ابزار خواندن است، نه retry/purge عمومی.
 
 ## worker و hintهای Messenger
 

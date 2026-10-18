@@ -255,7 +255,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddMetrics();
 builder.Services.AddSingleton<MakanApiMetrics>();
 builder.Services.AddHealthChecks()
-    .AddCheck<CoreReadinessHealthCheck>("core-readiness", tags: ["ready"]);
+    .AddCheck<CoreReadinessHealthCheck>("core-readiness", tags: ["ready"], timeout: TimeSpan.FromSeconds(15));
 builder.Services.AddInfrastructure(
     builder.Configuration,
     builder.Environment.EnvironmentName);
@@ -333,15 +333,15 @@ app.UseAuthorization();
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = registration => registration.Tags.Contains("ready")
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapControllers();
 app.MapHub<MessagingHub>("/hubs/messaging");
 
