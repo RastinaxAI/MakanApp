@@ -28,8 +28,9 @@ public sealed class HttpRequestMetricsMiddleware(
         {
             outcome = context.Response.HasStarted ? "aborted" : "unhandled";
             logger.LogError(new EventId(1002, "RequestPipelineFailure"),
-                "خطای امن {ErrorCode} از مرز HTTP عبور کرد. CorrelationId: {CorrelationId}",
-                "HTTP_PIPELINE_FAILED", context.TraceIdentifier);
+                "خطای امن {ErrorCode} با {StatusCode} از مرز HTTP عبور کرد. CorrelationId: {CorrelationId}; TraceId: {TraceId}",
+                "HTTP_PIPELINE_FAILED", context.Response.StatusCode, context.TraceIdentifier,
+                Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier);
             // خطا بلعیده نمی‌شود و status ارسال‌شده تغییر نمی‌کند؛ host فقط failure امن را می‌بیند.
             throw new SanitizedRequestFailureException();
         }

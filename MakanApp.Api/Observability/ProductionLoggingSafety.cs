@@ -1,3 +1,5 @@
+using MakanApp.Infrastructure.Observability;
+
 namespace MakanApp.Api.Observability;
 
 public static class ProductionLoggingSafety
@@ -9,11 +11,23 @@ public static class ProductionLoggingSafety
         if (!environment.IsProduction() && !environment.IsStaging()) return;
         services.PostConfigure<LoggerFilterOptions>(options =>
         {
-            // با تأیید مالک: فقط همین logger در .NET 9 پیش از handler exception خام می‌نویسد.
-            // رخداد امن UnexpectedError و metricها باقی‌اند؛ SQL/DP/Health و سایر loggerها حذف نمی‌شوند.
+            // فقط مسیرهای خام مشخص با رخداد امن جایگزین می‌شوند؛ خطا و سطح آن حذف نمی‌شوند.
+            // EF از EventData مستقل از این filter استفاده می‌کند؛ سایر categoryها دست‌نخورده‌اند.
+            var categories = EfCoreLoggingSafety.Categories.Prepend(ExceptionLogger).ToArray();
             var providers = options.Rules.Select(rule => rule.ProviderName).Append(null).Distinct().ToArray();
+            // قانون دقیق‌ترِ provider یا زیرشاخه نباید حفاظت همین categoryها را دور بزند.
+            for (var index = options.Rules.Count - 1; index >= 0; index--)
+            {
+                var category = options.Rules[index].CategoryName;
+                if (category is not null && categories.Any(prefix =>
+                    category.Equals(prefix, StringComparison.OrdinalIgnoreCase) ||
+                    category.StartsWith(prefix + ".", StringComparison.OrdinalIgnoreCase)))
+                    options.Rules.RemoveAt(index);
+            }
+
             foreach (var provider in providers)
-                options.Rules.Add(new LoggerFilterRule(provider, ExceptionLogger, LogLevel.None, null));
+                foreach (var category in categories)
+                    options.Rules.Add(new LoggerFilterRule(provider, category, LogLevel.None, null));
         });
     }
 }

@@ -53,8 +53,12 @@ public static class DependencyInjection
                 "ConnectionStrings:MakanDatabase must be configured before the application starts.");
         }
 
-        services.AddDbContext<MakanDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        services.AddSingleton<EfCoreLoggingSafety>();
+        services.AddDbContext<MakanDbContext>((provider, options) =>
+        {
+            options.UseSqlServer(connectionString);
+            provider.GetRequiredService<EfCoreLoggingSafety>().Configure(options, environmentName);
+        });
 
         services.AddMetrics();
         services.AddSingleton<WorkerTelemetry>();

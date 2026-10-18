@@ -20,25 +20,47 @@ middleware اندازه‌گیری بیرون exception handler است تا stat
 ### سیاست محدود exception و مرز مسئولیت آن
 
 در .NET 9، framework پیش از handler برنامه exception اصلی را log می‌کند؛ سطح `Warning` جلوی رخداد `Error` را نمی‌گیرد.
-با تأیید صریح مالک، `ProductionLoggingSafety` فقط خانوادهٔ category با نام
-`Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware` را در Production/Staging محدود می‌کند.
-قاعدهٔ category در framework از نوع prefix است؛ فهرست گستردهٔ EF، Data Protection، Health یا AI HTTP خاموش نشده است.
-override اختصاصی provider نیز این category را دوباره فعال نمی‌کند. Development تغییر نکرده است.
+با تأیید صریح مالک، `ProductionLoggingSafety` خانوادهٔ
+`Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware` و پنج category مشخص EF را در
+Production/Staging از خروجی خام منع می‌کند: `Microsoft.EntityFrameworkCore.Database.Command`،
+`Database.Connection`، `Database.Transaction`، `Query` و `Update` با همان پیشوند EF.
+قاعدهٔ category در framework از نوع prefix است؛ override دقیق‌ترِ provider یا زیرشاخه نیز
+حفاظت همین مسیرها را دور نمی‌زند. تمام namespace EF، Data Protection، Health یا AI HTTP
+خاموش نشده‌اند؛ برای نمونه categoryهای Migrations و Model دست‌نخورده‌اند. Development تغییر نکرده است.
+
+برای EF، صرف `Warning` یا خاموش‌کردن logger کافی نیست: `EfCoreLoggingSafety` از callback مستقل
+`LogTo` با `EventData` استفاده می‌کند، نه formatter یا `ToString` دادهٔ خام. رخدادهای Warning و بالاتر
+در پنج مسیر مشخص، با category محدود، شناسهٔ عددی رخداد EF، کد ثابت، correlation/trace در صورت وجود
+و سطح مناسب بازثبت می‌شوند؛ وجود exception سطح را دست‌کم Error می‌کند. command text، state،
+پارامتر، exception object/message/inner/stack، connection string و مسیر در رخداد جایگزین نیستند.
+`WarningBehavior.Ignore` استفاده نشده است؛ exception اصلی همچنان به caller می‌رسد و semantics
+query/transaction/retry تغییر نمی‌کند. جریان بدون Activity، شناسهٔ HTTP ساختگی تولید نمی‌کند.
 رخداد امن `UnexpectedError` با کد ثابت `UNEXPECTED_ERROR`، status 500، correlation و trace، بدون exception object/message/inner/stack،
 همراه counter خطا باقی می‌ماند. نگاشت status/code خطاهای شناخته‌شده تغییر نکرده است.
+خطای شناخته‌شده نیز رخداد امن دارد: 5xx در سطح Error و رد درخواست 4xx در سطح Warning؛
+همان status و code معتبر ثبت می‌شوند، نه متن exception. catalog امن یک‌بار از ثابت‌های عمومی
+همان ۱۴ کلاس ErrorCodes متعلق به exceptionهای رسیدگی‌شده ساخته می‌شود؛ اسکن assembly یا اعتماد
+به شکل رشته انجام نمی‌شود. کدهای معتبر با mapping پیش‌فرض 400، مثل `OTP_INVALID`، نیز حفظ می‌شوند.
+اگر Code ناشناخته و بالقوه
+حساس باشد، فقط لاگ از `UNRECOGNIZED_ERROR` استفاده می‌کند؛ پاسخ و قرارداد قدیمی آن تغییر نمی‌کند.
 اگر writer به دلیل `Accept` نامنطبق پاسخ ندهد، fallback همچنان ProblemDetails امن با `traceId` قدیمی و `correlationId` یکسان می‌نویسد.
 
 اگر exception از handler بیرون بماند، مثلاً پس از شروع response، مرز بیرونی خطا را نمی‌بلعد و اتصال را خودسرانه abort نمی‌کند.
 رخداد ثابت `RequestPipelineFailure` و metric جدا ثبت می‌شوند و host یک `SanitizedRequestFailureException` جدید با پیام ثابت
-و بدون inner exception می‌گیرد؛ داده و stack اصلی به logger IIS/Kestrel منتقل نمی‌شوند.
+و بدون inner exception می‌گیرد؛ `StackTrace` تهی و `ToString` متن ثابت دارند، پس stack جدید
+این exception نیز مسیر source یا internals middleware را وارد لاگ host نمی‌کند.
+رخداد failure خود status واقعی، correlation و trace دارد؛ خطا به success تبدیل نمی‌شود.
 status قبلاً ارسال‌شده، مثلاً 200، حفظ می‌شود؛ failure آن را نباید به 500 ساختگی تبدیل کرد.
 با cancellation درخواست، حتی اگر provider نوع دیگری از exception بدهد، فقط `OperationCanceledException` تازه با همان token و متن ثابت منتقل می‌شود.
 
-تست‌های واقعی pipeline و مرز مستقیم، exceptionهای مصنوعی دارای دادهٔ محرمانه، override provider، SQL readiness و response شروع‌شده را بررسی می‌کنند؛
+تست‌های واقعی pipeline و مرز مستقیم، خطای شناخته‌شدهٔ 5xx/4xx، Code ناشناخته، exceptionهای مصنوعی
+دارای دادهٔ محرمانه، override provider، Development diagnostics، خطای واقعی EF روی SQL تست ایزوله،
+SQL readiness و response شروع‌شده را بررسی می‌کنند؛
 این پوشش تضمین پاک‌سازی عمومی تمام loggerهای framework یا هر تنظیم collector آینده نیست.
 برای عیب‌یابی هرگز logging خام HTTP/EF را با secret واقعی افزایش ندهید؛ `EnableSensitiveDataLogging` فعال نشود.
 collector آینده نباید raw exception از DiagnosticSource، request/response body، header یا exception خودکار را بدون سیاست جدا جمع‌آوری کند.
 منبع رفتار نسخهٔ ۹: [کد رسمی ExceptionHandlerMiddlewareImpl](https://github.com/dotnet/aspnetcore/blob/v9.0.5/src/Middleware/Diagnostics/src/ExceptionHandler/ExceptionHandlerMiddlewareImpl.cs).
+قرارداد callback دادهٔ ساختاریافتهٔ EF: [LogTo با EventData در EF Core 9](https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.dbcontextoptionsbuilder.logto?view=efcore-9.0).
 
 با فعال شدن Hosting:AllowInsecureHttp یا Database:AllowUntrustedServerCertificate در Production، startup هشدار ثابت و بدون مقدار secret ثبت می‌کند. در انتشار فعلی این دو استثنا تأییدشده‌اند؛ دیدن هشدار به معنی TLS امن یا سلامت SQL نیست. Event Viewer/IIS برای خطای startup بررسی شود؛ چاپ appsettings.Production.json یا URL ملی‌پیامک برای عیب‌یابی مجاز نیست.
 
