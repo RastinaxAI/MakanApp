@@ -143,16 +143,25 @@ leaseهای SQL مجوز Web Garden یا scale-out عمومی نیستند.
 | ANCM | `shutdownTimeLimit="120"` در `web.config` | حفظ این attribute هنگام ترکیب کانفیگ خصوصی؛ عمدتاً مسیر `app_offline.htm` |
 | WAS/App Pool | تنظیم سرور، نه attribute برنامه | بررسی budget مستقل؛ پیشنهاد عملیاتیِ قابل بازبینی ۱۵۰ ثانیه، نه مقدار پیش‌فرض ۹۰ |
 
-این اعداد حداکثر زمان پایان اجباری‌اند، نه تضمین خاتمهٔ I/O معیوب یا SLA. نتیجه‌های کوتاه worker بودجهٔ مستقل ۵s دارند؛
+این‌ها بودجه‌های مستقل‌اند، نه SLA یا تضمین خاتمهٔ I/O معیوب. Host بودجهٔ لغو/انتظار cooperative دارد،
+نه timer کشتن اجباری process؛ termination توسط ANCM/WAS تابع مسیر مستقل خودشان است. نتیجه‌های کوتاه worker بودجهٔ مستقل ۵s دارند؛
 lease منقضی کار نیمه‌تمام را recover می‌کند. SignalR هنگام recycle قطع و reconnect/Delta از SQL لازم می‌شود.
 برای جزئیات و محدودیت at-least-once به [بازیابی Worker](../operations/WORKER_RELIABILITY_AND_RECOVERY.md) رجوع کنید.
 
 ### بررسی و تنظیم محدود App Pool توسط اپراتور
 
-در PowerShell مدیریتیِ خود Windows Server، نام‌های نمونه را با سایت/App Pool تأییدشده عوض کنید.
+نمونهٔ زیر برای **Windows PowerShell 5.1 Desktop، 64-bit و مدیریتی** روی Windows Server است؛
+اجرای مستقیم در `pwsh` با compatibility module، پذیرش provider `IIS:` را ثابت نمی‌کند.
+نام‌های نمونه را با سایت/App Pool تأییدشده عوض کنید؛ Pool نباید میزبان برنامهٔ دیگری باشد و اپراتور
+باید این اختصاصی‌بودن را در inventory/IIS Manager پیش از mutation تأیید کند.
 مرحلهٔ اول فقط بررسی است؛ backup شامل تنظیمات محرمانهٔ IIS است و نباید در Git یا evidence عمومی قرار گیرد.
 
 ```powershell
+if ($PSVersionTable.PSEdition -ne 'Desktop' -or $PSVersionTable.PSVersion -lt [Version]'5.1' -or
+    ![Environment]::Is64BitProcess) {
+    throw 'این نمونه به Windows PowerShell 5.1 Desktop مدیریتی 64-bit نیاز دارد.'
+}
+Import-Module ServerManager
 Import-Module WebAdministration
 Get-WindowsFeature Web-Server, Web-AppInit, Web-WebSockets, Web-Scripting-Tools |
     Select-Object Name, InstallState
@@ -168,6 +177,12 @@ $poolPath = "IIS:\AppPools\$poolName"
 $sitePath = "IIS:\Sites\$siteName"
 if (!(Test-Path -LiteralPath $poolPath) -or !(Test-Path -LiteralPath $sitePath)) {
     throw 'سایت یا App Pool تأییدشده یافت نشد؛ برنامه یا سایت تازه نسازید.'
+}
+$actualPool = (Get-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' `
+    -Filter "system.applicationHost/sites/site[@name='$siteName']/application[@path='/']" `
+    -Name applicationPool).Value
+if ($actualPool -ne $poolName) {
+    throw 'سایت ریشه از App Pool انتخاب‌شده استفاده نمی‌کند؛ پیش از تغییر mapping را بررسی کنید.'
 }
 Get-Item -LiteralPath $poolPath |
     Select-Object Name, managedRuntimeVersion, startMode,
@@ -188,9 +203,13 @@ Set-ItemProperty -LiteralPath $poolPath -Name managedRuntimeVersion -Value ''
 Set-ItemProperty -LiteralPath $poolPath -Name startMode -Value AlwaysRunning
 Set-ItemProperty -LiteralPath $poolPath -Name processModel.maxProcesses -Value 1
 Set-ItemProperty -LiteralPath $poolPath -Name processModel.idleTimeout -Value ([TimeSpan]::Zero)
-Set-ItemProperty -LiteralPath $poolPath -Name processModel.loadUserProfile -Value $true
 Set-ItemProperty -LiteralPath $poolPath -Name processModel.shutdownTimeLimit -Value ([TimeSpan]::FromSeconds(150))
 ```
+
+`LoadUserProfile` در بلوک بالا عمداً تغییر نمی‌کند. برای ring موجودِ DPAPI، همان identity و
+profile مؤثر قبلی حفظ شود؛ true کردن این flag به‌تنهایی روش بازیابی یا ارتقای امن نیست.
+روی App Pool تازه، تنظیم مناسب profile باید همراه protector/ACL/custody و آزمایش decrypt همان
+payload قبلی تعیین شود. تغییر profile موجود فقط پس از recovery rehearsal مستقل و تأیید maintenance مجاز است.
 
 Idle Timeout صفر برای workerهای داخل API است؛ Ping، Rapid-Fail Protection، محدودیت crash و مانیتورینگ را خاموش نکنید.
 recycle برنامه‌ریزی‌شده را با بار و maintenance هماهنگ کنید، نه اینکه recovery را با حذف همهٔ safetyها جایگزین کنید.

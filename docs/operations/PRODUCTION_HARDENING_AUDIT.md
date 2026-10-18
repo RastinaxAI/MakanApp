@@ -271,3 +271,80 @@ final suite برابر **676 Unit + 1203 Integration + 14 Architecture = 1893**�
 **86** مورد جدید: 32 Unit (options/lifecycle/metric) و 54 Integration (46 filesystem و 8 SQL).
 نام و تعداد تمام جدول‌های سند نیز ماشینی با snapshot تطبیق شد: 107 = 86 D + 7 L + 14 P.
 Migration، package، پاک‌سازی دادهٔ واقعی و عملیات سرور ندارد؛ activation همچنان POLICY_PENDING است.
+
+### PH-7 — قرارداد alert و پذیرش نهایی
+
+signalهای vendor-neutral PH-3/PH-6 reuse شدند؛ exporter، endpoint metrics یا سامانهٔ alert موازی
+ساخته نشد. [Observability مرجع](../production/OBSERVABILITY.md) signal/معنا/category آستانه/
+severity/اقدام/runbook را مشخص می‌کند. snapshot stale، Deferred ناشی از Quiet Hours، count
+تاریخی Failed و gauge تکراری هنگام overlap نباید هشدار یا سلامت ساختگی بسازند؛ threshold عددی
+Production بدون baseline و تصمیم monitoring وارد Domain نشده است.
+
+[Release Checklist مرجع](../production/RELEASE_CHECKLIST.md) دستور probe کم‌اطلاعات و سناریوهای
+اپراتوری Start/Stop/Recycle/rapid restart/overlap/reboot را دارد؛ همهٔ اجراهای سرور NOT_RUN هستند.
+نمونه‌های IIS فقط برای Windows PowerShell 5.1 Desktop مدیریتی 64-bit هستند؛ mapping سایت/Pool
+پیش از mutation بررسی می‌شود و profile مؤثر DPAPI موجود خودکار تغییر نمی‌کند. Host timeout
+cooperative است، نه دستور kill؛ ANCM و WAS بودجه/مسیر مستقل دارند.
+
+`PRODUCTION_READINESS.md` و deferred register، کد موجود را از محیط واقعاً پذیرفته‌شده جدا می‌کنند؛
+Swagger خصوصیِ تأییدشده حذف یا فعال‌بودن واقعی آن حدس زده نشده است. حفاظت کلید، core health،
+worker recovery و signalها در کد هستند؛ TLS، دریافت alert، reboot و backup مقصد از آن نتیجه نمی‌شوند.
+ابزار Backup/Restore قبلی reuse می‌شود؛ job، off-server copy، failure alert، drill و RPO/RTO
+هنوز تأیید عملیاتی مستقل می‌خواهند و بازطراحی backup انجام نشده است.
+
+بازبینی امنیتی source: بخش MeliPayamak DI و provider نسبت به SHA شروع عیناً ثابت است و
+`RemoveAllLoggers()` برای URL توکن‌دار باقی مانده؛ body/secret واقعی خوانده یا چاپ نشد.
+نسخه‌ها، packageها، solution و migrationها تغییر ندارند؛ `Migrate/MigrateAsync/EnsureCreated`
+در source اجرایی Api/Infrastructure اضافه نشده‌اند. کانفیگ tracked secret جدید ندارد؛ این شاهد
+جای redaction تمام loggerها/DiagnosticSource یا ممیزی نامحدود تاریخچهٔ خارجی نیست.
+هفت hash فایل محافظت‌شدهٔ workspace اصلی AI برابر baseline و git status آن همان dirty قبلی است؛
+آن workspace stage/revert/stash/clean نشده است.
+
+restore و Release build با ۰ warning/error موفق شدند. EF model check با startup درست
+`MakanApp.Infrastructure` و context موجود، **No changes** داد. تلاش اول با Api startup به علت
+بارگذاری‌نشدن EF Design شکست خورد؛ انتخاب startup مطابق runbook موجود اصلاح شد، نه با افزودن
+package یا تغییر csproj. validation متمرکز Release: **676 Unit + 279 Integration + 14 Architecture**
+passed و failed/skipped=0. final Release build با ۰ warning/error و final suite برابر
+**676 Unit + 1203 Integration + 14 Architecture = 1893**، failed/skipped=0 موفق شدند.
+در مقایسه با baseline PH-0، **239** مورد جدید (70 Unit و 169 Integration) وجود دارد؛
+هیچ تستی حذف/غیرفعال یا skipped نشده است. TRXها در `.artifacts/production-hardening/ph7-final`
+محلی و ignored باقی می‌مانند؛ این شواهد اجرای سرور/دستگاه/provider واقعی نیستند.
+
+حکم code-level: کنترل‌های PH-0 تا PH-7 و regression محلی موفق‌اند؛ cleanup در محیط فعال نشده
+و POLICY_PENDING است. HTTPS، exporter و alert delivery همچنان PENDING_INFRASTRUCTURE هستند.
+حکم server-level این تحویل **PRODUCTION_SERVER_ACCEPTANCE_REQUIRED** است؛ هیچ پذیرش IIS،
+reboot، SMS واقعی، Push دستگاه یا AI واقعی ادعا نشده است. مرحله پس از Git نهایی هم
+Production عمومی امن نامیده نمی‌شود.
+
+#### مرجع canonical سندها
+
+| خروجی درخواستی | مرجع واحد این repository |
+|---|---|
+| Audit | همین سند |
+| Configuration | `docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md` |
+| IIS Production Security | `docs/production/DEPLOYMENT_IIS.md`؛ فایل موازی ساخته نشده |
+| Observability/Alerting | `docs/production/OBSERVABILITY.md`؛ فایل موازی ساخته نشده |
+| Worker Recovery | `docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md` |
+| Retention | `docs/operations/RETENTION_AND_CLEANUP_POLICY.md` |
+| Production Acceptance | `docs/production/RELEASE_CHECKLIST.md`؛ فایل موازی ساخته نشده |
+| Deferred | `docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md` در worktree تمیز همین کار |
+
+#### Ledger ثبت‌شدهٔ مراحل
+
+شروع: `0f5d861f382ac41c81b15406c92db9c181acf88c`؛ branch برابر
+`operations/production-hardening` و upstream برابر `origin/main` در remote `origin` است.
+pushهای زیر normal و بدون force انجام و پس از fetch با HEAD==origin/main تأیید شدند.
+
+| مرحله | Commit | Message |
+|---|---|---|
+| PH-0 | `c7bae4646379f419931ba74f5d010ad9d3d7ad96` | `docs(operations): audit production hardening baseline` |
+| PH-1 | `49cb86ca897301c80c771d170825c1aec4a99226` | `feat(operations): persist production data protection keys` |
+| PH-2 | `5a9fdf6f56d80d67641162496169203ca8516512` | `feat(operations): harden health and readiness checks` |
+| PH-3 | `ac549f0d4a3646b7369277c1de620660e248929a` | `feat(operations): add safe production observability` |
+| PH-4 | `40b7ae4b47cdd3adc2bb0e0f7cd611f9f030ffc7` | `feat(operations): harden background worker recovery` |
+| PH-5 | `e8afce892d8dab393759b7be43d99300ebc1939e` | `feat(operations): harden IIS production runtime` |
+| PH-6 | `d25349d8a67648a06eea012023a57d036e172c1e` | `feat(operations): add safe retention and cleanup controls` |
+
+Commit و remote واقعی PH-7 بعد از validation و اجرای Git در گزارش نهایی اعلام می‌شوند؛
+هش خودارجاع در فایل پیش از commit اختراع نمی‌شود. مرحلهٔ بعد فقط اجرای acceptance اپراتوری
+روی Windows Server مجاز با backup و کانال امن است؛ Payment، AI/RAG و P3 وارد این مرحله نمی‌شوند.

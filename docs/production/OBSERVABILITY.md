@@ -65,6 +65,7 @@ Meter و ActivitySource با نام `MakanApp.Workers` مستقل از vendor ه
 | `makan.worker.items` | تعداد مورد claim/پردازش‌شدهٔ گزارش‌شده توسط worker؛ اثبات تحویل خارجی نیست |
 | `makan.worker.failures` | شکست با `worker` و `stage` محدود |
 | `makan.worker.duration` | مدت batch به `ms` |
+| `makan.file_cleanup.results` | PH-6؛ Examined/Deleted/AlreadyMissing/Skipped/Failed/Other با label محدود outcome؛ حذف SQL row نیست |
 | `makan.queue.items` | تعداد در snapshot با `queue` و `state` محدود |
 | `makan.queue.oldest_age` | سن قدیمی‌ترین pending به ثانیه، نه شناسهٔ مورد |
 | `makan.operational.snapshot.available` | آخرین دریافت snapshot موفق `1` یا ناموفق `0` |
@@ -95,6 +96,54 @@ ALERT_DELIVERY = PENDING_INFRASTRUCTURE
 
 thresholdها باید بعد از baseline staging تعیین شوند و SLA محصول در این سند اختراع نشده است.
 
+### قرارداد Alert در PH-7
+
+جدول زیر قرارداد signal و اقدام است، نه ادعای استقرار alert manager. category آستانه باید با
+baseline، حداقل traffic، window، maintenance و owner escalation در سامانهٔ monitoring مقداردهی شود؛
+این اعداد در Domain یا منطق worker hard-code نمی‌شوند. collector باید meterهای `MakanApp.Api`
+و `MakanApp.Workers` را صریح subscribe کند؛ این نسخه endpoint عمومی `/metrics` یا exporter تازه ندارد.
+
+| Signal واقعی/منبع | معنا | دستهٔ آستانهٔ آغازین | Severity | اقدام اپراتور / Runbook |
+|---|---|---|---|---|
+| `/health/live` از probe مستقل | process قابل دسترسی نیست | استمرار خارج maintenance | CRITICAL | Hosting Bundle، App Pool، binding و Event Viewer؛ [IIS Runtime](DEPLOYMENT_IIS.md#قرارداد-runtime-و-shutdown-در-ph-5) |
+| `/health/ready` برابر 503 | core آماده نیست | استمرار failure core | CRITICAL | config/ring/SQL/storage؛ بخش Health همین سند؛ ring را برای سبزکردن probe بازسازی نکنید |
+| خطای SQL در health محافظت‌شده | اتصال core ناموفق | failure همراه readiness و retry مشاهده‌شده | CRITICAL | شبکه/گواهی/principal/SQL؛ اتصال محرمانه چاپ نشود؛ [Configuration](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) |
+| نسبت `makan.http.server.errors/requests` | wire 5xx واقعی | افزایش نسبت با حداقل traffic/window | CRITICAL | route template و correlation امن؛ [معیار rollback](DEPLOYMENT_IIS.md#gate-شکست-و-rollback) |
+| `makan.http.server.failures`؛ aborted/unhandled | failure عبوری، حتی پس از wire 200 | افزایش غیرمنتظرهٔ پایدار | CRITICAL | failure را از status موفق جدا ببینید؛ cancellation به‌تنهایی failure تجاری نیست؛ بخش Logging |
+| histogram مدت request به ms | latency | p95/p99 نسبت baseline هر route | WARNING | SQL/load/بازهٔ استقرار؛ SLA عددی از این جدول نتیجه نشود |
+| snapshot.available و snapshot.age به s | اعتبار دادهٔ صف | unavailable یا سن بیش از interval+budget+tolerance مصوب | WARNING | publisher/SQL را بررسی کنید؛ صف قدیمی، صفر یا سالم فرض نشود |
+| pending و oldest_age صف Outbox/Realtime/Report | عقب‌افتادگی durable | رشد پایدار نسبت حد هر صف، فقط snapshot تازه | WARNING | jobs محافظت‌شده و backoff؛ [Recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md#عیب‌یابی-و-اقدام-اپراتور) |
+| Failed/exhausted در صف‌ها | کار نهایی ناموفق | افزایش جدید/بدون acknowledgement، نه count تاریخی ثابت | CRITICAL | triage کد ثابت؛ reset attempt/purge/replay خودکار ممنوع؛ بخش Recovery |
+| Pending/Deferred/Failed اعلان | backlog یا شکست delivery | failure جدید و رشد ناموجه با context defer/provider | WARNING | Quiet Hours و زمان آینده را جدا کنید؛ پذیرش provider رسید دستگاه نیست؛ بخش worker همین سند |
+| Scheduled pending و oldest_age | intent موعدگذشته، نه آینده | رشد due backlog نسبت حد مصوب | WARNING | ساعت UTC/مجوز جاری/Safety/lease؛ intent آینده در این شمارش due نیست |
+| `makan.worker.failures` با stage ثابت | شکست اجرای worker | استمرار همراه backlog/core health | WARNING | Loop/Claim/Process/Snapshot را تفکیک کنید؛ اسم/ID پیام label نشود |
+| وضعیت AI/Push در operations و signalهای adapter موجود | configured/degraded، نه probe قطعی شبکه | الگوی failure همان integration، مستقل از readiness core | WARNING | runbook همان provider؛ تست endpoint/device واقعی جدا؛ secret/body استخراج نشود |
+| شکست cleanup، فقط اگر صریحاً Enabled | بازیابی bytes terminal ناموفق | failure تکراری نسبت batch بررسی‌شده | WARNING | [Retention](../operations/RETENTION_AND_CLEANUP_POLICY.md)؛ خاموش‌بودن cleanup failure نیست |
+| restart/rapid-fail و disk pressure از OS/IIS | ظرفیت/چرخهٔ host | حد مصوب زیرساخت | CRITICAL | مانیتور OS/IIS لازم است؛ backend gauge متناظر ندارد؛ [IIS](DEPLOYMENT_IIS.md) |
+| سن backup، شکست job/off-server copy از SQL/OS | نقض برنامهٔ recovery | RPO مصوب/شکست job | CRITICAL | [Backup/Restore](BACKUP_RESTORE.md)؛ VERIFYONLY جای drill نیست |
+| lifecycle اطلاع‌رسانی deploy/rotation مصوب | تغییر کنترل‌شده | event قابل ثبت اپراتور | INFO | ثبت UTC، commit و reference شواهد؛ نه dump secret/config |
+
+`/api/admin/v1/operations/health` و `/jobs` مجوز `OperationsRead` و `/notifications`
+مجوز `NotificationsRead` دارند؛ collector عمومی نباید با حذف Authentication دادهٔ غنی بگیرد.
+وضعیت Configured، اتصال AI، سلامت credential یا تحویل Push را ثابت نمی‌کند. پیشنهاد alert روی
+payment/moderation/Safety نیز instrument اختصاصی تازه ایجادشده نامیده نمی‌شود.
+
+برای availability واقعی AI/Push، PH probe شبکهٔ تازه‌ای نساخته است؛ status تنظیمی یا failure
+محدود integration فقط ورودی triage است. alert قطعی unavailable به probe مجاز/شاهد runtime
+در track همان integration یا زیرساخت نیاز دارد و بدون آن PASS اعلام نمی‌شود؛ readiness core مستقل است.
+
+snapshot notification قدیمی‌ترین Pending **و Deferred** را در نظر می‌گیرد؛ Quiet Hours یا defer
+آینده می‌تواند سن بالا داشته باشد و به‌تنهایی overdue نیست. backoff Outbox در pending حساب می‌شود.
+در recycle دو process ممکن است همان gauge SQL را منتشر کنند؛ gauge صف را بین instanceها `sum`
+نکنید. انتخاب instance یا `max`/dedup با سیاست collector انجام شود؛ counter تلاش‌ها معنای دیگری دارد
+و با restart از نو آغاز می‌شود. واحد duration برابر ms و واحد age برابر s است.
+
+برای acceptance، probe failure و یک signal مصنوعی بی‌خطر را در محیط مجاز تا **دریافت واقعی**
+notification اپراتور دنبال کنید؛ ایجاد dashboard یا log، شاهد دریافت alert نیست.
+بدون این اجرا، `OBSERVABILITY_EXPORTER=PENDING_INFRASTRUCTURE` و
+`ALERT_DELIVERY=PENDING_INFRASTRUCTURE` باقی می‌مانند. هیچ endpoint health تستی برای fail کردن
+Production، قطعی عمدی SQL یا ارسال secret روی HTTP اضافه نشده است.
+
 ## Health
 
 - `/health/live`: فقط زنده‌بودن process.
@@ -102,6 +151,10 @@ thresholdها باید بعد از baseline staging تعیین شوند و SLA �
 - `/health`: alias کم‌جزئیات liveness برای سازگاری.
 
 خروجی عمومی فقط Healthy/Unhealthy است و connection string، path، payload provider یا stack trace منتشر نمی‌کند. جزئیات عملیات موجود از endpointهای permissionدار Backoffice خوانده می‌شود.
+
+بخش SQL این probe، اتصال را می‌سنجد؛ بررسی schema کامل، مجوز تمام queryهای کسب‌وکاری و
+smoke هر ماژول نیست. history/version migration، runtime principal و core smoke مجاز همچنان
+gateهای rollout مستقل‌اند؛ health 200 آن‌ها یا دریافت provider را اثبات نمی‌کند.
 
 ### قرارداد health پس از PH-2
 
@@ -116,7 +169,9 @@ thresholdها باید بعد از baseline staging تعیین شوند و SLA �
 جزئیات امن core و تنظیم providerهای اختیاری را برمی‌گرداند؛ permission تغییر نکرده و endpoint جدید نداریم.
 AI یا Push با وضعیت `Configured`/`Configured/RuntimeNotProbed`، شبکهٔ سالم یا دریافت واقعی دستگاه
 اعلام نمی‌شوند. failure این providerها readiness کل Backend را gate نمی‌کند. `FileCleanup`
-تا ایجاد کنترل محدود در PH-6 صریحاً `NotImplemented` است.
+در PH-6 از NotImplemented به Disabled/Enabled **تنظیمی** تغییر می‌کند؛ پیش‌فرض Disabled است.
+Enabled، query موفق، حذف واقعی یا تصویب دورهٔ حقوقی را اثبات نمی‌کند؛
+[سیاست cleanup](../operations/RETENTION_AND_CLEANUP_POLICY.md) مرجع محدودیت‌هاست.
 
 `GET /api/admin/v1/operations/jobs` همان permission را حفظ می‌کند. فیلد افزودهٔ `Queues`
 تعداد pending (شامل انتظار backoff)، lease فعال، exhausted/failed و زمان/سن قدیمی‌ترین pending را

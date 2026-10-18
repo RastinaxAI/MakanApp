@@ -24,7 +24,7 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Authentication | READY | opaque bearer، access یک‌ساعته، refresh چرخشی ۳۰روزه و revocation سمت سرور |
 | MFA | COMPLETE_IN_CODE / OPS_PENDING | TOTP، recovery، replay guard و step-up session-scoped؛ PH-1 حلقهٔ پایدار را در startup عملیاتی الزام می‌کند؛ custody/ACL و انتقال واقعی محیط همچنان جداست |
 | Authorization | READY | context از session/membership/resource سمت سرور resolve می‌شود |
-| Secrets | CONFIGURED_LOCALLY / OPS_PENDING | فایل واقعی Production محلی و ignored است؛ نمونهٔ عمومی بدون secret؛ aliasهای Data Protection و تعارضشان validate می‌شوند؛ ACL/انتقال امن و حفظ کلیدهای قبلی وظیفهٔ اپراتور است |
+| Secrets | CONTRACT_VALIDATED / OPS_PENDING | فایل واقعی Production ignored است؛ وجود/محتوای secret روی سرور از clean worktree نتیجه نمی‌شود؛ نمونه بدون secret و validation aliasها موجود است؛ provisioning/ACL/custody وظیفهٔ اپراتور است |
 | SQL Server | READY_WITH_LIMITATION | TLS و least privilege مستند/اسکریپت شده؛ ایجاد principal روی سرور باقی است |
 | Storage | READY_WITH_LIMITATION | root مطلق، probe، authorization و امضای حداقلی؛ AV/CDR provider وجود ندارد |
 | CORS | IMPLEMENTED | allowlist صریح؛ HTTP فقط با Hosting:AllowInsecureHttp تأییدشده، بدون wildcard یا credentials |
@@ -34,11 +34,14 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Payment | BLOCKED | provider واقعی وجود ندارد و موفقیت دستی ممنوع است |
 | Child Safety | COMPLETE_IN_CODE / OPS_PENDING | Policy v1 و Unknown=protected، رابطه/رضایت، current-state Send و provider داخلی واقعی؛ بدون ادعای ML یا تحلیل معنایی رسانه |
 | Notifications | CODE_COMPLETE / DEVICE_RUNTIME_PENDING | Web Push/VAPID و FCM HTTP v1 واقعی؛ credential/device واقعی و دریافت روی دستگاه تأیید نشده؛ P1_PUSH_RUNTIME_PENDING |
-| Logging | READY | structured logging، correlation ID و حداقل سطح Information |
-| Metrics | READY_WITH_LIMITATION | `System.Diagnostics.Metrics` vendor-neutral؛ exporter در محیط نصب می‌شود |
-| Tracing | READY_WITH_LIMITATION | ASP.NET/Activity و trace ID موجود؛ collector/exporter عملیات محیط است |
-| Health | READY | `/health/live` و `/health/ready` جدا و بدون جزئیات secret |
-| Workers | READY | batch/lease/cancellation/backoff و سقف retry برای poison item |
+| Logging | CODE_VALIDATED / COLLECTOR_POLICY_PENDING | correlation واحد، metadata محدود، خطای امن و تست نشت؛ پاک‌سازی عمومی همهٔ loggerها/DiagnosticSource ادعا نمی‌شود |
+| Metrics | CODE_VALIDATED / EXPORTER_PENDING | meterهای vendor-neutral درخواست/worker/صف و snapshot stale-aware؛ collector یا endpoint metrics نصب‌شده نداریم |
+| Tracing | CODE_VALIDATED / EXPORTER_PENDING | ActivitySourceهای API/worker؛ collector نباید body/header/exception حساس را خودکار جمع کند |
+| Health | CODE_VALIDATED / SERVER_PENDING | live سبک؛ ready با config/ring/SQL/storage؛ optional provider readiness core را نمی‌بندد |
+| Workers | CODE_VALIDATED / IIS_LIFECYCLE_PENDING | claim/fencing/repair محدود و SQL recovery محلی؛ recycle/reboot و old/new legacy هم‌پوشان آزمایش سرور نیستند؛ تحویل خارجی exactly-once نیست |
+| IIS runtime | CODE_AND_RUNBOOK / SERVER_PENDING | shutdown Host محدود، ANCM 120s و دستور بررسی WAS/idle/preload؛ تنظیم سرور اجرا نشده است |
+| Retention | INVENTORIED / POLICY_PENDING | ۱۰۷ جدول طبقه‌بندی شده؛ فقط مکانیزم خاموشِ bytes terminal بدون reference؛ هیچ SQL history purge ندارد |
+| Alerting | CONTRACT_READY / DELIVERY_PENDING | signal/severity/runbook مشخص؛ exporter و دریافت واقعی alert همچنان زیرساخت لازم دارد |
 | Backup | READY_WITH_LIMITATION | runbook آماده؛ job واقعی SQL/VPS باید ایجاد شود |
 | Restore | READY_WITH_LIMITATION | drill disposable روی LocalDB موفق؛ rehearsal روی topology واقعی staging باقی است |
 | Migration | READY | startup migration ممنوع؛ principal و gate جدا مستند است |
@@ -72,7 +75,7 @@ Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور 
 | قابلیت | Development | Production امنِ پیش‌فرض | انتشار HTTP تأییدشدهٔ فعلی |
 |---|---|---|---|
 | Logging | `Information`، local | `Information` + collector | `Information`، framework/EF در `Warning` |
-| Swagger/OpenAPI | Available | Disabled پیش‌فرض | Disabled |
+| Swagger/OpenAPI | Available | Disabled پیش‌فرض | مالک برای artifact خصوصی قبلی Enabled را تأیید کرده؛ وضعیت واقعی deploy دوباره بررسی نشده؛ config خصوصی تغییر نکرده |
 | CORS | در نبود config باز برای ابزار توسعه | allowlist صریح HTTPS | allowlist صریح؛ HTTP با opt-in |
 | HTTPS/HSTS | redirect قابل استفاده، بدون HSTS | RequireHttps=true، HSTS | RequireHttps=false، AllowInsecureHttp=true |
 | Storage | مسیر `%LOCALAPPDATA%` | persistent absolute path | persistent absolute path و fail-fast |
@@ -90,5 +93,16 @@ Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور 
 - Swagger در Production پیش‌فرض خاموش است و فقط با تصمیم عملیات و کنترل دسترسی باید فعال شود.
 - limiter در حافظه‌ی process است؛ برای IIS تک-instance قابل قبول و برای scale-out ناکافی است.
 - signature validation فقط formatهای allowlist شده را با magic bytes/UTF-8 حداقلی می‌سنجد و جایگزین malware scanning نیست.
-- readiness فقط SQL Server و storage اصلی را gate می‌کند؛ providerهای اختیاری/degraded در ماتریس عملیات دیده می‌شوند.
+- readiness، config لازم Production، key ring پایدار، SQL Server و storage اصلی را gate می‌کند؛ providerهای اختیاری/degraded در ماتریس عملیات دیده می‌شوند.
 - load baseline و restore rehearsal روی topology واقعی staging باید اجرا شوند، نه Production؛ drill پایه‌ی LocalDB انجام شده است.
+
+## نتیجهٔ PH و مرز پذیرش
+
+[ممیزی PH](../operations/PRODUCTION_HARDENING_AUDIT.md) شواهد کد/تست/commit را ثبت می‌کند؛
+[چک‌لیست پذیرش](RELEASE_CHECKLIST.md#پذیرش-ph--تفکیک-کد-از-سرور) gateهای اجرا‌نشدهٔ محیط را دارد.
+هیچ تغییر روی IIS مقصد، reboot، SMS واقعی، credential/device Push، AI واقعی، collector یا alert delivery
+با تحویل محلی PH ادعا نمی‌شود. `BACKEND_HTTPS=PENDING_INFRASTRUCTURE`،
+`OBSERVABILITY_EXPORTER=PENDING_INFRASTRUCTURE` و `ALERT_DELIVERY=PENDING_INFRASTRUCTURE` باقی‌اند.
+backup زمان‌بندی‌شده، off-server copy، failure alert، drill واقعی و RPO/RTO نیز شاهد عملیاتی مستقل می‌خواهند.
+تا ثبت این شواهد، `PRODUCTION_SERVER_ACCEPTANCE_REQUIRED` نتیجهٔ کد است و
+`NOT_READY_FOR_PUBLIC_RELEASE` با استثنای HTTP یا پاس تست‌ها بسته نمی‌شود.
