@@ -91,6 +91,13 @@ SQL، شبکه یا I/O ندارند. شکست refresh، آخرین مقادیر
 و timeout مستقل WAS یکی نیست؛ [runbook IIS](../production/DEPLOYMENT_IIS.md#قرارداد-runtime-و-shutdown-در-ph-5)
 دستور اپراتوری بررسی آن‌ها را دارد. هیچ تغییری در secret یا کانفیگ خصوصی لازم نیست مگر انتخاب صریح این override.
 
+cleanup جدید PH-6 پیش‌فرض خاموش است؛ `Storage:TerminalCleanup:Enabled` را برای «تکمیل deploy»
+خودکار true نکنید. `GracePeriodHours` فقط با تصمیم صریح و مقدار مثبت تعیین می‌شود؛ مقدار پیش‌فرض
+حقوقی وجود ندارد. `BatchSize` و `IntervalSeconds` فقط cadence فنی‌اند. تنظیم نامعتبر با پیام ثابت
+رد می‌شود و health مقدار Disabled/Enabled تنظیمی را نشان می‌دهد، نه موفقیت runtime.
+[سیاست کامل و همهٔ کلیدها](RETENTION_AND_CLEANUP_POLICY.md#قرارداد-تنظیم-و-اجرا) مرجع‌اند؛
+دیگر retentionهای محصول/امنیت و log rotation زیرساخت با این flag فعال نمی‌شوند.
+
 1. commit مورد انتظار و backup سازگار DB/Storage/ring را ثبت کنید؛ محتوا/secret چاپ نشود.
 2. مسیر و محافظ قبلی را از تنظیم مجاز سرور حفظ کنید؛ نمونهٔ جدید را روی فایل خصوصی overwrite نکنید.
 3. external directory/ACL را پیش از start با identity واقعی AppPool آماده کنید.

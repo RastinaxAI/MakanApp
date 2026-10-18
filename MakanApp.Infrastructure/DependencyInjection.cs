@@ -264,6 +264,10 @@ public static class DependencyInjection
         AddContentSafetyProvider(services, configuration, environmentName);
         var storageOptions = CreateStorageOptions(configuration);
         services.AddSingleton(storageOptions);
+        services.AddSingleton(TerminalFileCleanupOptions.FromConfiguration(configuration));
+        services.AddSingleton<TerminalFileCleanupCursor>();
+        services.AddScoped<TerminalFileCleanupProcessor>();
+        services.AddHostedService<TerminalFileCleanupDispatcher>();
         services.AddSingleton(CreateReportExportOptions(configuration));
         services.AddSingleton(CreateNotificationDeliveryOptions(configuration));
         services.AddSingleton(CreatePaymentOptions(configuration));

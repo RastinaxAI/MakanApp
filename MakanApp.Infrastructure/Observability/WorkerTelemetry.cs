@@ -23,6 +23,7 @@ public sealed class WorkerTelemetry : IDisposable
     private readonly Counter<long> _batches;
     private readonly Counter<long> _items;
     private readonly Counter<long> _failures;
+    private readonly Counter<long> _cleanupResults;
     private readonly Histogram<double> _duration;
     private Snapshot _snapshot = new(false, null, []);
 
@@ -33,6 +34,7 @@ public sealed class WorkerTelemetry : IDisposable
         _batches = meter.CreateCounter<long>("makan.worker.batches");
         _items = meter.CreateCounter<long>("makan.worker.items");
         _failures = meter.CreateCounter<long>("makan.worker.failures");
+        _cleanupResults = meter.CreateCounter<long>("makan.file_cleanup.results");
         _duration = meter.CreateHistogram<double>("makan.worker.duration", "ms");
         meter.CreateObservableGauge<long>("makan.queue.items", ObserveQueueItems, "{item}");
         meter.CreateObservableGauge<double>("makan.queue.oldest_age", ObserveQueueAges, "s");
@@ -57,6 +59,13 @@ public sealed class WorkerTelemetry : IDisposable
 
     public void RecordFailure(string worker, string stage) =>
         _failures.Add(1, Tag("worker", NormalizeWorker(worker)), Tag("stage", NormalizeStage(stage)));
+
+    public void RecordCleanup(string outcome, int count)
+    {
+        if (count <= 0) return;
+        var bounded = outcome is "Examined" or "Deleted" or "AlreadyMissing" or "Skipped" or "Failed" ? outcome : Other;
+        _cleanupResults.Add(count, Tag("outcome", bounded));
+    }
 
     public void UpdateSnapshot(PlatformJobOperations jobs, PlatformNotificationOperations notifications)
     {

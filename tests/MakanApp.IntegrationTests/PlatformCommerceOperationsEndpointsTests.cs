@@ -275,7 +275,7 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
         Assert.Contains(health.Dependencies, item => item.Name == "SignalR");
         Assert.Contains(health.Dependencies, item => item.Name == "Ai" && item.Status == "Disabled");
         Assert.Contains(health.Dependencies, item => item.Name == "Push");
-        Assert.Contains(health.Dependencies, item => item.Name == "FileCleanup" && item.Status == "NotImplemented");
+        Assert.Contains(health.Dependencies, item => item.Name == "FileCleanup" && item.Status == "Disabled");
         Assert.NotNull(jobs);
         Assert.Contains(jobs.Counts, item => item.JobType == "IntegrationOutbox");
         Assert.Contains(jobs.Counts, item => item.JobType == "MessagingRealtimeOutbox");

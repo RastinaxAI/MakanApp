@@ -107,6 +107,9 @@ public sealed partial class MakanAppWebApplicationFactory :
             var operationalMetricsPublisher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(OperationalMetricsPublisher));
             if (operationalMetricsPublisher is not null) services.Remove(operationalMetricsPublisher);
+            var terminalCleanupDispatcher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(TerminalFileCleanupDispatcher));
+            if (terminalCleanupDispatcher is not null) services.Remove(terminalCleanupDispatcher);
             services.AddSingleton<MessagingEphemeralTestControl>();
             services.RemoveAll<IMessagingEphemeralNotifier>();
             services.AddScoped<IMessagingEphemeralNotifier>(provider => new RecordingMessagingEphemeralNotifier(

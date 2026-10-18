@@ -12,6 +12,7 @@ using MakanApp.Infrastructure.Ai;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Persistence;
+using MakanApp.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Platform;
@@ -26,6 +27,7 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
     private readonly IStorageReadinessProbe _storageReadinessProbe;
     private readonly AiServiceOptions _aiServiceOptions;
     private readonly TimeProvider _timeProvider;
+    private readonly TerminalFileCleanupOptions _cleanupOptions;
 
     public EfPlatformCommerceOperationsStore(
         MakanDbContext dbContext,
@@ -35,7 +37,8 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
         INotificationSmsProvider smsProvider,
         IStorageReadinessProbe storageReadinessProbe,
         AiServiceOptions aiServiceOptions,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        TerminalFileCleanupOptions cleanupOptions)
     {
         _dbContext = dbContext;
         _commerceStore = commerceStore;
@@ -45,6 +48,7 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
         _storageReadinessProbe = storageReadinessProbe;
         _aiServiceOptions = aiServiceOptions;
         _timeProvider = timeProvider;
+        _cleanupOptions = cleanupOptions;
     }
 
     public async Task<PlatformNotificationOperations> GetNotificationOperationsAsync(
@@ -183,8 +187,8 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
                 "وابستگی اختیاری؛ صرفاً انتخاب تنظیمات، بدون probe شبکه یا انتشار آدرس/credential."),
             new PlatformDependencyHealth("Push", ProviderAvailability(_pushProvider),
                 "وابستگی اختیاری؛ پیکربندی adapter اثبات دریافت اعلان روی دستگاه نیست."),
-            new PlatformDependencyHealth("FileCleanup", "NotImplemented",
-                "worker دوره‌ای cleanup هنوز پیاده‌سازی نشده است.")
+            new PlatformDependencyHealth("FileCleanup", _cleanupOptions.Enabled ? "Enabled" : "Disabled",
+                "وضعیت تنظیم مکانیزم محدود bytes terminal است، نه اثبات حذف موفق یا مجوز purge عمومی.")
         };
         return new PlatformSystemHealth(
             nowUtc,

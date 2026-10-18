@@ -243,3 +243,31 @@ final suite برابر **644 Unit + 1149 Integration + 14 Architecture = 1807**�
 **29 Integration** تازه شامل 28 حالت Host/DI/XML و یک regression فعال‌سازی Swagger اضافه شد.
 بلوک‌های PowerShell راهنمای IIS (6) و acceptance (2) صرفاً parse شدند و خطای syntax نداشتند؛
 parse یا تست XML، اجرای فرمان IIS/پذیرش ANCM روی سرور نیست. Migration و تغییر وابستگی ندارد.
+
+### PH-6 — نگه‌داری و reconciliation محدود
+
+[سیاست retention](RETENTION_AND_CLEANUP_POLICY.md) از snapshot واقعی، تمام 107 جدول را به
+86 مورد DO_NOT_AUTO_DELETE، هفت LEGAL_POLICY_REQUIRED و چهارده PRODUCT_DECISION_REQUIRED
+طبقه‌بندی می‌کند. SQL row purge، مدت حقوقی، پاک‌سازی Ready/Pending یا history جدید نداریم.
+تنها مکانیزم تازه bytes فایل Deleted/Rejected بدون reference است؛ پیش‌فرض خاموش و grace صریح لازم دارد.
+
+چهار کلاس فنی `TerminalFileCleanupOptions/Cursor/Processor/Dispatcher` در Infrastructure هستند؛
+Domain/Application/Controller جدیدی لازم نیست. store عملیات فقط وضعیت تنظیمی Disabled/Enabled را
+اضافه می‌کند. پردازنده keyset محدود و cursorهای singleton نوبتی دارد؛ transaction کوتاه Serializable
+با parent XLOCK و همهٔ referenceها، کنار محافظ local Fixed-drive/reparse/raw Windows aliases، مرز حذف را می‌سازد.
+metadata/status/rowversion SQL اصلاً نوشته نمی‌شوند. cutoff از UTC و ضد underflow است؛
+caller cancellation، حتی با exception غیر-OCE از SQL، false failure ایجاد نمی‌کند.
+
+trade-off: cursor در restart از نو می‌گردد و missingها دوباره بررسی می‌شوند؛ migration/marker جدید
+برای زیبایی monitoring ایجاد نشده است. فقط فایل‌های terminal قطعی‌اند، orphan عمومی export یا
+`.uploading` پاک نمی‌شوند. ACL قابل‌اعتماد و محدودیت syscall غیرهمکار OS صریح‌اند؛ تحقق cleanup
+با غیرفعال بودن پیش‌فرض یا با تنظیم Enabled فرض نشده است.
+مسیر مطالعه: options → dispatcher → processor/cursor → `LocalFileStorage.DeleteTerminalBlobAsync`
+→ EF FileAsset/attachment/report configurations → چهار کلاس تست cleanup → سیاست retention.
+restore موفق؛ خطای CS1061 اولیه به علت نبود DbSet نام‌گذاری‌شدهٔ Scheduled attachment با
+`Set<ScheduledMessageAttachment>()` روی entity موجود رفع شد، نه با تغییر مدل/schema.
+build مجدد و final build با ۰ warning/error موفق؛ **51 Unit + 73 Integration** متمرکز passed.
+final suite برابر **676 Unit + 1203 Integration + 14 Architecture = 1893**، failed/skipped=0 است.
+**86** مورد جدید: 32 Unit (options/lifecycle/metric) و 54 Integration (46 filesystem و 8 SQL).
+نام و تعداد تمام جدول‌های سند نیز ماشینی با snapshot تطبیق شد: 107 = 86 D + 7 L + 14 P.
+Migration، package، پاک‌سازی دادهٔ واقعی و عملیات سرور ندارد؛ activation همچنان POLICY_PENDING است.

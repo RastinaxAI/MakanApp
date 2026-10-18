@@ -24,6 +24,24 @@ SMS این جدول **SMS اعلان** است؛ مسیر ورود/OTP ملی‌�
 options محیط می‌توانند defaultهای Notification/Report را در حدود validation موجود تغییر دهند؛
 configuration تست با مقادیر کوچک، وضعیت واقعی سرور نامیده نمی‌شود.
 
+### افزودهٔ محدود PH-6
+
+`TerminalFileCleanupDispatcher` هشتمین worker است؛ پیش‌فرض `Storage:TerminalCleanup:Enabled=false`
+و در این حالت هیچ cleanup I/O/SQL انجام نمی‌دهد. منبع آن فقط `storage.FileAssets` در وضعیت
+Deleted/Rejected است؛ batch پیش‌فرض 25 با سقف 100، فاصلهٔ پیش‌فرض 60s با حدود 5..3600s و
+grace بدون پیش‌فرض است. هر asset زیر قفل SQL جاری و بودجهٔ لغوشوندهٔ 10s بررسی می‌شود.
+lease/retry durable تازه و SQL write ندارد؛ crash/retry از missing بودن bytes و metadata ثابت
+بازیابی می‌شود. دو cursor نوبتی و process-local بین scopeها باقی می‌مانند؛ restart ممکن است rescan کند.
+
+همهٔ referenceهای Submission/Message/Moderation/Scheduled و ReportExport (از جمله شناسهٔ canonical)
+مانع حذف‌اند. فقط syscall حذف محلیِ کوچک زیر قفل مجاز است؛ syscall معیوب به‌زور متوقف‌شده فرض نشود.
+failure یک candidate، failure counter/warning امن دارد و candidate بعدی را برای همیشه مسدود نمی‌کند.
+`worker.items` این worker فقط تعداد Deleted است؛ شمارش کامل Examined/Missing/Skipped/Failed از
+`makan.file_cleanup.results` با label محدود outcome می‌آید. هیچ SQL row purge از آن استنتاج نشود.
+[سیاست، تنظیم‌ها و محدودیت‌های دقیق](RETENTION_AND_CLEANUP_POLICY.md) و تست‌های
+`TerminalFileCleanupTests`، `TerminalFileCleanupFileSystemTests`، `TerminalFileCleanupOptionsTests`
+و `TerminalFileCleanupDispatcherTests` مرجع این افزوده‌اند؛ activation واقعی همچنان جداست.
+
 ## claim و مرز اثر
 
 - Outbox عمومی و realtime در هر بار فقط یک کار را claim می‌کنند؛ انتظار برای کار اول
@@ -110,7 +128,7 @@ ping، rapid-fail protection یا overlapping recycle را به‌طور عمو�
 ## عیب‌یابی و اقدام اپراتور
 
 1. live و ready را جدا بخوانید؛ ready شرط config/ring/SQL/storage است، نه دریافت Push.
-2. با permission فعلی `OperationsRead`، endpointهای jobs/notifications را بخوانید؛
+2. با permission فعلی `OperationsRead`، health/jobs و با `NotificationsRead`، notifications را بخوانید؛
    payload، credential، token یا connection string را برای شواهد استخراج نکنید.
 3. count، oldest age، snapshot age/availability، failure جدید و کد ثابت worker را مقایسه کنید.
    صف آیندهٔ Scheduled، backlog موعدگذشته نیست؛ backoff Outbox همچنان pending است.
