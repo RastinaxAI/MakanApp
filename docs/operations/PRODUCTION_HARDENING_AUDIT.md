@@ -222,3 +222,24 @@ Notification را آشکار کرد: repair بیرون transaction با isolatio
 تست‌های لغو OCE/غیر-OCE، صفر بودن failure کاذب را می‌سنجند و موفقیت واقعی provider درست پیش از
 لغو caller همچنان با budget مستقل ثبت می‌شود؛ ادعای OCE یکسان از تمام I/Oهای claim مطرح نیست.
 Migration، package، endpoint محصول یا عملیات سرور انجام نشده است.
+
+### PH-5 — مرز Host و IIS
+
+`HostShutdownConfiguration` در Api، shutdown واقعی Host را validate می‌کند؛ مقدار صریح اختیاری
+`Hosting:ShutdownTimeoutSeconds` اولویت دارد، نبود آن override استاندارد یا default ۳۰s را حفظ می‌کند.
+بازهٔ نهایی ۵..۹۰s است و مقدار خام نامعتبر در خطا echo نمی‌شود. Domain/Application/Infrastructure
+و schema برای این تنظیم HTTP-host تغییر ندارند. `web.config` فقط attribute بودجهٔ ANCM 120s را
+می‌افزاید؛ Production، inprocess، stdout=false و مسیر legacy ring عیناً حفظ شده‌اند.
+
+[IIS مرجع](../production/DEPLOYMENT_IIS.md) اکنون دستورات محدود اپراتوری برای inventory/backup،
+App Pool اختصاصی، single process، AlwaysRunning/idle، profile، warm-up مشروط به نصب نقش،
+بودجهٔ مستقل WAS و ACL دارد. Ping/rapid-fail خاموش نمی‌شوند؛ TLS هنوز زیرساخت لازم دارد.
+CORS/headers/HTTP استثنایی قبلی حفظ و Swagger opt-in به‌طور صریح regression-test می‌شود؛
+کانفیگ خصوصی سرور از artifact عمومی یا تست محلی حدس زده نشده است.
+مسیر مطالعه: `Program` → `HostShutdownConfiguration` → `ProductionConfigurationValidator` →
+`web.config` → `ProductionHostShutdownTests` و `ProductionHostingTests` → runbook IIS.
+restore و دو build موفق با ۰ warning/error؛ **126 Integration** متمرکز موفق شدند.
+final suite برابر **644 Unit + 1149 Integration + 14 Architecture = 1807**، failed/skipped=0 است؛
+**29 Integration** تازه شامل 28 حالت Host/DI/XML و یک regression فعال‌سازی Swagger اضافه شد.
+بلوک‌های PowerShell راهنمای IIS (6) و acceptance (2) صرفاً parse شدند و خطای syntax نداشتند؛
+parse یا تست XML، اجرای فرمان IIS/پذیرش ANCM روی سرور نیست. Migration و تغییر وابستگی ندارد.

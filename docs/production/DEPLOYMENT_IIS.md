@@ -123,6 +123,128 @@ Migration تازه‌ای برای این تغییر کانفیگ لازم نی�
 
 برنامه فقط وقتی `ReverseProxy:Enabled=true` است forwarded headers را می‌خواند، `ForwardLimit=1` دارد و فقط IPهای `KnownProxies` را قبول می‌کند. IP proxy واقعی را صریح ثبت کنید؛ subnet عمومی یا اعتماد سراسری ممنوع است.
 
+## قرارداد Runtime و Shutdown در PH-5
+
+این بخش دستور اپراتور است؛ هیچ فرمان IIS، restart یا reboot در تحویل PH روی سرور اجرا نشده است.
+Backend همچنان .NET 9 و `inprocess` است؛ نصب Hosting Bundle متناظر و bitness سازگار باید روی مقصد تأیید شود.
+هر برنامه App Pool اختصاصی داشته باشد. `maxProcesses=1` الزام topology فعلی SignalR، Presence و limiter حافظه‌ای است؛
+leaseهای SQL مجوز Web Garden یا scale-out عمومی نیستند.
+
+`Hosting:ShutdownTimeoutSeconds` اختیاری و بین ۵ تا ۹۰ ثانیه است. نبود آن، مقدار نهایی Generic Host را حفظ می‌کند
+(پیش‌فرض framework برابر ۳۰ ثانیه و override قدیمی `shutdownTimeoutSeconds` همچنان معتبر است).
+مقدار صریح جدید اولویت دارد و مقدار نهایی خارج بازه رد می‌شود؛ مقدار خام نامعتبر وارد پیام خطا نمی‌شود.
+در JSON مشترک default جدیدی اضافه نشده تا override قبلی بی‌خبر پوشانده نشود.
+
+سه budget مستقل را اشتباه نگیرید:
+
+| مرز | قرارداد این نسخه | وظیفهٔ اپراتور |
+|---|---|---|
+| Generic Host | مقدار معتبر ۵ تا ۹۰، پیش‌فرض ۳۰ ثانیه | مشاهدهٔ shutdown واقعی workerهای همین نسخه |
+| ANCM | `shutdownTimeLimit="120"` در `web.config` | حفظ این attribute هنگام ترکیب کانفیگ خصوصی؛ عمدتاً مسیر `app_offline.htm` |
+| WAS/App Pool | تنظیم سرور، نه attribute برنامه | بررسی budget مستقل؛ پیشنهاد عملیاتیِ قابل بازبینی ۱۵۰ ثانیه، نه مقدار پیش‌فرض ۹۰ |
+
+این اعداد حداکثر زمان پایان اجباری‌اند، نه تضمین خاتمهٔ I/O معیوب یا SLA. نتیجه‌های کوتاه worker بودجهٔ مستقل ۵s دارند؛
+lease منقضی کار نیمه‌تمام را recover می‌کند. SignalR هنگام recycle قطع و reconnect/Delta از SQL لازم می‌شود.
+برای جزئیات و محدودیت at-least-once به [بازیابی Worker](../operations/WORKER_RELIABILITY_AND_RECOVERY.md) رجوع کنید.
+
+### بررسی و تنظیم محدود App Pool توسط اپراتور
+
+در PowerShell مدیریتیِ خود Windows Server، نام‌های نمونه را با سایت/App Pool تأییدشده عوض کنید.
+مرحلهٔ اول فقط بررسی است؛ backup شامل تنظیمات محرمانهٔ IIS است و نباید در Git یا evidence عمومی قرار گیرد.
+
+```powershell
+Import-Module WebAdministration
+Get-WindowsFeature Web-Server, Web-AppInit, Web-WebSockets, Web-Scripting-Tools |
+    Select-Object Name, InstallState
+dotnet --list-runtimes
+Get-WebGlobalModule -Name AspNetCoreModuleV2 | Select-Object Name
+
+$siteName = 'MakanApp'
+$poolName = 'MakanApp'
+if ($siteName -notmatch '^[A-Za-z0-9_.-]+$' -or $poolName -notmatch '^[A-Za-z0-9_.-]+$') {
+    throw 'نام نمونه را با نام دقیق و معتبر محیط جایگزین کنید.'
+}
+$poolPath = "IIS:\AppPools\$poolName"
+$sitePath = "IIS:\Sites\$siteName"
+if (!(Test-Path -LiteralPath $poolPath) -or !(Test-Path -LiteralPath $sitePath)) {
+    throw 'سایت یا App Pool تأییدشده یافت نشد؛ برنامه یا سایت تازه نسازید.'
+}
+Get-Item -LiteralPath $poolPath |
+    Select-Object Name, managedRuntimeVersion, startMode,
+        @{Name='MaxProcesses';Expression={$_.processModel.maxProcesses}},
+        @{Name='IdleTimeout';Expression={$_.processModel.idleTimeout}},
+        @{Name='LoadUserProfile';Expression={$_.processModel.loadUserProfile}},
+        @{Name='ShutdownLimit';Expression={$_.processModel.shutdownTimeLimit}},
+        @{Name='PingEnabled';Expression={$_.processModel.pingingEnabled}},
+        @{Name='RapidFailProtection';Expression={$_.failure.rapidFailProtection}}
+Backup-WebConfiguration -Name ('MakanApp-PH-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ'))
+```
+
+پس از بازبینی backup، مالکیت سایت/Pool و maintenance window، تنظیم‌های محدود زیر را اعمال کنید؛
+هویت Windows را تغییر ندهید، چون DPAPI موجود به همان identity/profile وابسته است.
+
+```powershell
+Set-ItemProperty -LiteralPath $poolPath -Name managedRuntimeVersion -Value ''
+Set-ItemProperty -LiteralPath $poolPath -Name startMode -Value AlwaysRunning
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.maxProcesses -Value 1
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.idleTimeout -Value ([TimeSpan]::Zero)
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.loadUserProfile -Value $true
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.shutdownTimeLimit -Value ([TimeSpan]::FromSeconds(150))
+```
+
+Idle Timeout صفر برای workerهای داخل API است؛ Ping، Rapid-Fail Protection، محدودیت crash و مانیتورینگ را خاموش نکنید.
+recycle برنامه‌ریزی‌شده را با بار و maintenance هماهنگ کنید، نه اینکه recovery را با حذف همهٔ safetyها جایگزین کنید.
+overlap موقت دو process در recycle با Web Garden دائمی متفاوت است؛ Redis/backplane در این مرحله ایجاد نشده است.
+
+### Warm-up فقط با نقش نصب‌شده
+
+اگر `Web-AppInit` نصب و سایت ریشهٔ Backend تأیید شده است، اپراتور می‌تواند preload را فعال کند.
+وجود section در `web.config` بدون نصب/آزاد بودن نقش می‌تواند 500.19 بدهد؛ بنابراین این section به artifact اضافه نشده است.
+
+```powershell
+if ((Get-WindowsFeature Web-AppInit).InstallState -ne 'Installed') {
+    throw 'ابتدا نقش Application Initialization باید توسط اپراتور آماده شود.'
+}
+Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' `
+    -Filter "system.applicationHost/sites/site[@name='$siteName']/application[@path='/']" `
+    -Name preloadEnabled -Value $true
+Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+    -Filter 'system.webServer/applicationInitialization' -Name doAppInitAfterRestart -Value $true
+$warmup = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+    -Filter "system.webServer/applicationInitialization/add[@initializationPage='/health/live']"
+if (!$warmup) {
+    Add-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+        -Filter 'system.webServer/applicationInitialization' -Name '.' `
+        -Value @{initializationPage='/health/live'}
+}
+```
+
+warm-up liveness جای readiness، دسترسی SQL یا شروع موفق provider را نمی‌گیرد.
+AlwaysRunning بدون preload/درخواست اولیه لزوماً startup برنامه را ثابت نمی‌کند.
+اگر سایت چند application دارد یا section قفل است، command را کورکورانه ادامه ندهید؛ تنظیم فقط application تأییدشده لازم است.
+
+### ACL، logging و پذیرش Runtime
+
+publish فقط Read/Execute، Storage و key ring مجوز لازمِ محدود، certificate حداقل Read و محل log فقط در صورت استفاده مجوز write بخواهد.
+دسترسی broad مانند Everyone یا تغییر identity موجود مجاز نیست. ACL و custody قبلی پیش از هر تغییر ثبت شوند؛
+فرمان‌های key ring در بخش PH-1 بالا معتبرند. stdout و ANCM debug logging دائمی خاموش بمانند؛
+Event Log و collector چرخش/سقف حجم/دسترسی مصوب می‌خواهند. IIS access log باید query، cookie، Authorization و custom header حساس را ثبت نکند؛
+Failed Request Tracing یا dump خام کانفیگ روش evidence عمومی نیست.
+
+برای اولین rollout اصلاح Report Export، پیش از راه‌اندازی نسخهٔ جدید، نسخهٔ legacy را drain/stop و خروج PIDهای قبلی را تأیید کنید؛
+آزمون worker جدید/جدید، هم‌زمانی نسخهٔ قدیمیِ بدون fence را اثبات نمی‌کند. backup فعلی publish/config/DB/storage/ring حفظ شود.
+Start، Stop/Start، recycle، rapid restart، overlap و reboot فقط با تأیید maintenance و معیار بازیابی در
+[چک‌لیست پذیرش](RELEASE_CHECKLIST.md) اجرا شوند؛ موفقیت تست محلی جای این gateها نیست.
+
+TLS معتبر همچنان `BACKEND_HTTPS=PENDING_INFRASTRUCTURE` است؛ استثنای HTTP قبلی، CORS allowlist و
+Swagger opt-in حفظ شده‌اند. فعال‌بودن Swagger خصوصیِ انتشار قبلی نه حذف و نه از سرور دوباره احراز شده است.
+headerهای API موجود (`nosniff`، `no-referrer` و Permissions-Policy) و استثنای Swagger در CSP حفظ می‌شوند؛
+هیچ cookie احراز هویت یا CSP ویژهٔ frontend اضافه نشده است.
+
+مراجع رسمی تنظیم‌های IIS: [ANCM](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/aspnet-core-module?view=aspnetcore-9.0)،
+[Process Model](https://learn.microsoft.com/en-us/iis/configuration/system.applicationhost/applicationpools/add/processmodel/)،
+[Application Initialization](https://learn.microsoft.com/en-us/iis/configuration/system.webserver/applicationinitialization/).
+
 ## Gate شکست و rollback
 
 استقرار شکست‌خورده است اگر startup fail-fast شود، readiness سبز نشود، migration ناقص باشد، smoke test خطا دهد، 5xx/latency غیرعادی شود یا worker backlog رشد پایدار داشته باشد. در این حالت traffic را متوقف و artifact قبلی را برگردانید. downgrade migration را کورکورانه اجرا نکنید؛ بسته به compatibility از forward-fix یا restore تأییدشده استفاده کنید و trace ID/logهای بازه را نگه دارید.

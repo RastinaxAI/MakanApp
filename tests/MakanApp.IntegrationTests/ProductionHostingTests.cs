@@ -161,9 +161,21 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
         Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
         Assert.Equal("release-smoke-1", Assert.Single(response.Headers.GetValues("X-Correlation-ID")));
+        Assert.Equal("no-referrer", Assert.Single(response.Headers.GetValues("Referrer-Policy")));
+        Assert.Equal("camera=(), microphone=(), geolocation=(), payment=()", Assert.Single(response.Headers.GetValues("Permissions-Policy")));
         Assert.True(response.Headers.Contains("Content-Security-Policy"));
         Assert.DoesNotContain("ConnectionStrings", content, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SwaggerCanBeExplicitlyEnabledWithoutApplyingApiCspToItsHtml()
+    {
+        using var production = CreateProductionFactory(overrides: new Dictionary<string, string?> { ["Swagger:Enabled"] = "true" });
+        using var client = CreateClient(production);
+        using var response = await client.GetAsync("/swagger/index.html");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False(response.Headers.Contains("Content-Security-Policy"));
     }
 
     [Fact]

@@ -33,6 +33,7 @@ ProductionLoggingSafety.Configure(builder.Services, builder.Environment);
 ProductionConfigurationValidator.Validate(
     builder.Configuration,
     builder.Environment.EnvironmentName);
+HostShutdownConfiguration.ConfigureServices(builder.Services, builder.Configuration);
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
