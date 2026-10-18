@@ -8,6 +8,8 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Ai;
+using MakanApp.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -20,6 +22,75 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 9_100_000;
+
+    [Fact]
+    public async Task Chat_SuspendedMembership_IsDeniedBeforeAiCall()
+    {
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organization = await factory.CreateOrganizationAsync(NewName("AI Suspended Membership"));
+        var membership = await factory.CreateMembershipAsync(user.User.Id, organization, OrganizationRole.Manager);
+        UseBearerToken(client, user.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Manager);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            var stored = await database.Memberships.SingleAsync(item => item.Id == membership.MembershipId);
+            stored.Suspend();
+            await database.SaveChangesAsync();
+        }
+        factory.AiService.Reset();
+        using var response = await client.PostAsJsonAsync("/api/v1/ai/chat", new SendAiChatCommand("آزمون", null), JsonOptions);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Null(factory.AiService.LastRequest);
+        Assert.Null(factory.AiService.LastRoleRequest);
+    }
+
+    [Theory]
+    [InlineData(OrganizationRole.Teacher, true)]
+    [InlineData(OrganizationRole.Teacher, false)]
+    [InlineData(OrganizationRole.Manager, true)]
+    [InlineData(OrganizationRole.Manager, false)]
+    public async Task StudentInsight_DeniesForeignClassOrStudentWithoutEnrollmentBeforeAiCall(
+        OrganizationRole role, bool foreignClass)
+    {
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organization = await factory.CreateOrganizationAsync(NewName("AI Scope Allowed"));
+        var otherOrganization = await factory.CreateOrganizationAsync(NewName("AI Scope Foreign"));
+        var membership = await factory.CreateMembershipAsync(user.User.Id, organization, role);
+        var allowedClass = await factory.CreateAcademicClassAsync(organization);
+        var otherClass = await factory.CreateAcademicClassAsync(otherOrganization);
+        var learner = await factory.CreateOrganizationPersonAsync(organization, await factory.CreatePersonWithoutUserAsync());
+        if (role == OrganizationRole.Teacher)
+            await factory.CreateTeacherAssignmentAsync(organization, allowedClass.ClassId, membership.MembershipId);
+        UseBearerToken(client, user.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, role);
+        factory.AiService.Reset();
+        var prefix = role == OrganizationRole.Teacher ? "teachers" : "managers";
+        var selectedClass = foreignClass ? otherClass.ClassId : allowedClass.ClassId;
+        using var response = await client.PostAsync($"/api/v1/ai/{prefix}/classes/{selectedClass}/students/{learner}/insight", null);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Null(factory.AiService.LastRoleRequest);
+    }
+
+    [Theory]
+    [InlineData(OrganizationRole.Student)]
+    [InlineData(OrganizationRole.Parent)]
+    [InlineData(OrganizationRole.Teacher)]
+    public async Task ManagerSummary_DeniesRoleMismatchBeforeAiCall(OrganizationRole role)
+    {
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organization = await factory.CreateOrganizationAsync(NewName("AI Role Mismatch"));
+        var membership = await factory.CreateMembershipAsync(user.User.Id, organization, role);
+        UseBearerToken(client, user.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, role);
+        factory.AiService.Reset();
+        using var response = await client.PostAsync("/api/v1/ai/managers/school-summary", null);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Null(factory.AiService.LastRoleRequest);
+    }
 
     [Fact]
     public async Task Chat_RequiresAuthenticatedSession()
@@ -65,6 +136,12 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
         Assert.Equal(organizationId.ToString("D"), request.Scope.SchoolId);
         Assert.Null(request.Scope.StudentId);
         Assert.Equal("وضعیت چیست؟", request.Message.Text);
+        Assert.Equal("corr-ai-manager", response.Headers.GetValues("X-Correlation-ID").Single());
+        Assert.False(string.IsNullOrWhiteSpace(result.RequestId));
+        var logs = string.Join("\n", factory.SensitiveLogs.Snapshot());
+        Assert.DoesNotContain(request.Message.Text, logs, StringComparison.Ordinal);
+        Assert.DoesNotContain(user.AccessToken, logs, StringComparison.Ordinal);
+        Assert.DoesNotContain(result.Answer.Text, logs, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -422,6 +499,9 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
     }
 
     [Theory]
+    [InlineData(AiServiceErrorCodes.InvalidRequest, HttpStatusCode.BadRequest)]
+    [InlineData(AiServiceErrorCodes.ServiceUnauthorized, HttpStatusCode.ServiceUnavailable)]
+    [InlineData(AiServiceErrorCodes.ServiceForbidden, HttpStatusCode.ServiceUnavailable)]
     [InlineData(AiServiceErrorCodes.FeatureDisabled, HttpStatusCode.ServiceUnavailable)]
     [InlineData(AiServiceErrorCodes.ServiceUnavailable, HttpStatusCode.ServiceUnavailable)]
     [InlineData(AiServiceErrorCodes.ServiceTimeout, HttpStatusCode.GatewayTimeout)]
@@ -450,6 +530,8 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
         Assert.Equal(expectedStatus, response.StatusCode);
         Assert.Equal(code, await ReadProblemCodeAsync(response));
         Assert.DoesNotContain("FastAPI", await response.Content.ReadAsStringAsync());
+        using var profile = await client.GetAsync("/api/v1/me");
+        profile.EnsureSuccessStatusCode();
     }
 
     private async Task<VerifyOtpResult> CreateAuthenticatedUserAsync(HttpClient client)

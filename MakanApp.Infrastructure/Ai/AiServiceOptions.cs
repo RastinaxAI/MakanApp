@@ -5,8 +5,10 @@ public sealed class AiServiceOptions
     public const string SectionName = "AiService";
 
     public bool Enabled { get; init; }
-    public string BaseUrl { get; init; } = "http://localhost:8000";
-    public int TimeoutSeconds { get; init; } = 15;
+    public string BaseUrl { get; init; } = "http://10.77.0.2:8001";
+    // مهلت صف ۶۰ ثانیه و پردازش ۹۰ ثانیه است؛ زمان شبکه نیز در این بودجه قرار دارد.
+    public const int DefaultTimeoutSeconds = 180;
+    public int TimeoutSeconds { get; init; } = DefaultTimeoutSeconds;
     public string ContractVersion { get; init; } = "v1";
     public int CircuitBreakerFailureThreshold { get; init; } = 3;
     public int CircuitBreakerBreakSeconds { get; init; } = 30;

@@ -26,8 +26,9 @@ Backend body خطای AI را به client عبور نمی‌دهد و از HTTP 
 | 401 | `AI_SERVICE_UNAUTHORIZED` | 503 |
 | 403 | `AI_SERVICE_FORBIDDEN` | 503 |
 | 429 | `AI_RATE_LIMITED` | 429 |
+| 502 با `AI_RESPONSE_INVALID` یا `AI_INTERNAL_ERROR` | `AI_RESPONSE_INVALID` | 502 |
 | 504 یا client timeout | `AI_SERVICE_TIMEOUT` | 504 |
-| 404، 409، 500، 502، 503 یا connection failure | `AI_SERVICE_UNAVAILABLE` | 503 |
+| 404، 409، 500، 503 یا connection failure | `AI_SERVICE_UNAVAILABLE` | 503 |
 | malformed JSON، content type نامعتبر، unknown response field، envelope/schema mismatch | `AI_RESPONSE_INVALID` | 502 |
 | integration disabled | `AI_FEATURE_DISABLED` | 503 |
 
@@ -35,8 +36,8 @@ Backend body خطای AI را به client عبور نمی‌دهد و از HTTP 
 
 ## timeout و cancellation
 
-- Backend default timeout: 15 seconds.
-- مقدار معتبر configuration: 1 تا 120 ثانیه.
+- Backend default timeout: 180 seconds؛ شامل ارسال، انتظار header و خواندن/deserialize بدنه.
+- مقدار معتبر configuration: 1 تا 180 ثانیه؛ محیط فعلی با صف ۶۰ و provider timeout برابر ۹۰، مقدار ۱۸۰ را نیاز دارد.
 - caller cancellation بدون تبدیل به timeout حفظ می‌شود.
 - timeout داخلی به `AI_SERVICE_TIMEOUT` تبدیل می‌شود.
 
@@ -65,8 +66,12 @@ Backend موارد زیر را strict بررسی می‌کند:
 - `requestId` و `correlationId` برابر request
 - metadata و `modelAlias` معتبر
 - `processingTimeMs >= 0`
+- `processingTimeMs` باید صریحاً موجود و عدد باشد؛ رشتهٔ عددی پذیرفته نیست.
 - collectionهای الزامی non-null
 - enum/range و fieldهای non-blank اختصاصی هر response
+- هر source/entity reference باید در context همان درخواست وجود داشته باشد؛ `classId` جایگزین `subjectId` و `assessmentId` جایگزین `gradeId` نمی‌شود. `id` صریح نامعتبر با alias ترمیم نمی‌شود.
+
+وضعیت اجرای واقعی STEP10G v2 و تفاوت تست محلی با پذیرش سرور در [گزارش پذیرش](../ai/BACKEND_STEP10G_REAL_AI_FINAL_ACCEPTANCE.md) ثبت می‌شود.
 
 ## tracing و telemetry
 

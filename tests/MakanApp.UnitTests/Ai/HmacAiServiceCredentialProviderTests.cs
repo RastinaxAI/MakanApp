@@ -30,14 +30,47 @@ public sealed class HmacAiServiceCredentialProviderTests
         Assert.Equal(3, parts.Length);
         Assert.Equal(expected, parts[2]);
         Assert.Equal("HS256", header.RootElement.GetProperty("alg").GetString());
+        Assert.Equal("JWT", header.RootElement.GetProperty("typ").GetString());
         Assert.Equal("current", header.RootElement.GetProperty("kid").GetString());
         Assert.Equal("makan-backend", payload.RootElement.GetProperty("iss").GetString());
         Assert.Equal("makan-ai", payload.RootElement.GetProperty("aud").GetString());
+        Assert.Equal("makan-backend", payload.RootElement.GetProperty("sub").GetString());
+        Assert.Equal(Now.ToUnixTimeSeconds(), payload.RootElement.GetProperty("iat").GetInt64());
+        Assert.Equal(Now.ToUnixTimeSeconds(), payload.RootElement.GetProperty("nbf").GetInt64());
+        Assert.Equal(Now.AddSeconds(120).ToUnixTimeSeconds(), payload.RootElement.GetProperty("exp").GetInt64());
+        Assert.False(string.IsNullOrWhiteSpace(payload.RootElement.GetProperty("jti").GetString()));
         Assert.Equal("makan.ai.invoke", payload.RootElement.GetProperty("scope").GetString());
         Assert.Equal(Now.AddSeconds(120).UtcDateTime, credential.ExpiresAtUtc);
         Assert.False(payload.RootElement.TryGetProperty("userId", out _));
         Assert.False(payload.RootElement.TryGetProperty("organizationId", out _));
         Assert.False(payload.RootElement.TryGetProperty("role", out _));
+    }
+
+    [Fact]
+    public async Task GetCredential_EachRequestGetsUniqueTokenAndJti()
+    {
+        var provider = new HmacAiServiceCredentialProvider(CreateOptions(), new FixedTimeProvider(Now));
+        var first = await provider.GetCredentialAsync(CancellationToken.None);
+        var second = await provider.GetCredentialAsync(CancellationToken.None);
+        using var firstPayload = Decode(first.Token.Split('.')[1]);
+        using var secondPayload = Decode(second.Token.Split('.')[1]);
+        Assert.NotEqual(first.Token, second.Token);
+        Assert.NotEqual(firstPayload.RootElement.GetProperty("jti").GetString(),
+            secondPayload.RootElement.GetProperty("jti").GetString());
+    }
+
+    [Theory]
+    [InlineData(29)]
+    [InlineData(301)]
+    public async Task GetCredential_RejectsOutOfBoundsLifetime(int seconds)
+    {
+        var options = new AiServiceAuthenticationOptions
+        {
+            CurrentKeyId = "synthetic-current", CurrentKey = Key, TokenLifetimeSeconds = seconds
+        };
+        var provider = new HmacAiServiceCredentialProvider(options, new FixedTimeProvider(Now));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await provider.GetCredentialAsync(CancellationToken.None));
     }
 
     [Fact]

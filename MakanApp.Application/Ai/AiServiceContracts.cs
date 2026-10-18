@@ -46,7 +46,7 @@ public sealed record AiChatRequest(
     AiMessage Message,
     AiAuthorizedContext Context) : IAiServiceRequest;
 
-[JsonConverter(typeof(JsonStringEnumConverter<AiSeverity>))]
+[JsonConverter(typeof(AiSeverityJsonConverter))]
 public enum AiSeverity
 {
     Info,
@@ -54,6 +54,21 @@ public enum AiSeverity
     Medium,
     High,
     Critical
+}
+
+internal sealed class AiSeverityJsonConverter : JsonConverter<AiSeverity>
+{
+    public override AiSeverity Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.String ||
+            !Enum.TryParse<AiSeverity>(reader.GetString(), out var severity) ||
+            reader.GetString() != severity.ToString() || !Enum.IsDefined(severity))
+            throw new JsonException("مقدار severity با قرارداد متنی AI سازگار نیست.");
+        return severity;
+    }
+
+    public override void Write(Utf8JsonWriter writer, AiSeverity value, JsonSerializerOptions options) =>
+        writer.WriteStringValue(value.ToString());
 }
 
 public sealed record AiInsight(
@@ -67,7 +82,9 @@ public sealed record AiInsight(
 
 public sealed record AiRecommendation(string Title, string? Description);
 public sealed record AiSourceReference(string Type, string Id);
-public sealed record AiResponseMetadata(string ModelAlias, int ProcessingTimeMs);
+public sealed record AiResponseMetadata(
+    [property: JsonRequired] string ModelAlias,
+    [property: JsonRequired] int ProcessingTimeMs);
 
 public sealed record AiChatResponse(
     string RequestId,

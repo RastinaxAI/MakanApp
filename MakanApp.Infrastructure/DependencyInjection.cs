@@ -238,8 +238,8 @@ public static class DependencyInjection
         services.AddSingleton(CreateAiServiceOptions(configuration));
         services.AddSingleton<AiServiceCircuitBreaker>();
         services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
-        services.AddHttpClient<IAiServiceClient, AiServiceClient>(client =>
-            client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddHttpClient<IAiServiceClient, AiServiceClient>((provider, client) =>
+            client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds));
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
         services.AddScoped<IAiChatService, AiChatService>();
         services.AddScoped<IStudentContextBuilder, StudentContextBuilder>();
@@ -786,11 +786,11 @@ public static class DependencyInjection
     {
         Enabled = bool.TryParse(configuration[$"{AiServiceOptions.SectionName}:Enabled"], out var enabled) && enabled,
         BaseUrl = configuration[$"{AiServiceOptions.SectionName}:BaseUrl"]?.Trim()
-            ?? "http://localhost:8000",
+            ?? new AiServiceOptions().BaseUrl,
         TimeoutSeconds = ReadPositiveInt(
             configuration,
             $"{AiServiceOptions.SectionName}:TimeoutSeconds",
-            15),
+            AiServiceOptions.DefaultTimeoutSeconds),
         ContractVersion = configuration[$"{AiServiceOptions.SectionName}:ContractVersion"]?.Trim()
             ?? "v1",
         CircuitBreakerFailureThreshold = ReadPositiveInt(
