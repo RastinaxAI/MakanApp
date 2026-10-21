@@ -27,6 +27,7 @@ namespace MakanApp.IntegrationTests;
 [Collection(SqlServerCollection.Name)]
 public sealed class DevelopmentTestUsersTests : IAsyncLifetime
 {
+    private const string PhoneUpdateScript = "update-development-test-user-phones-to-iranian.sql";
     private readonly MakanAppWebApplicationFactory _factory = new("MakanApp_DevelopmentTestUsers_" + Guid.NewGuid().ToString("N"));
     private readonly string _code = RandomNumberGenerator.GetInt32(1_000_000).ToString("D6");
     private WebApplicationFactory<Program> _bypass = null!;
@@ -35,7 +36,7 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
         Converters = { new JsonStringEnumConverter() }
     };
     private static Guid UserId(int number) => Guid.Parse($"d3700000-0000-0000-0000-{number:D12}");
-    private static string Phone(int number) => "+1202555" + (100 + number).ToString("D4");
+    private static string Phone(int number) => "+989120000" + (100 + number).ToString("D3");
 
     public async Task InitializeAsync()
     {
@@ -164,6 +165,41 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
         Assert.Single(await db.GuardianRelations.ToListAsync());
         Assert.Single(await db.Enrollments.ToListAsync());
         Assert.Single(await db.TeacherAssignments.ToListAsync());
+        for (var number = 1; number <= 11; number++)
+        {
+            var credential = await db.UserCredentials.SingleAsync(item => item.UserId == UserId(number));
+            Assert.Equal(Phone(number), credential.NormalizedIdentifier);
+        }
+    }
+
+    [Theory]
+    [InlineData("09120000101")]
+    [InlineData("+989120000101")]
+    [InlineData("۰۹۱۲۰۰۰۰۱۰۱")]
+    public async Task IranianSeedPhone_InMockMode_ResolvesExistingAccountWithoutSms(string phone)
+    {
+        using var app = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<OtpOptions>();
+                services.AddSingleton(new OtpOptions { Enabled = false });
+                services.RemoveAll<IOtpDeliveryProvider>();
+                services.AddSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>();
+            }));
+        using var client = app.CreateClient();
+        using var response = await client.PostAsJsonAsync("/api/v1/auth/otp/verify",
+            new VerifyOtpCommand(Guid.Empty, phone, "not-a-real-otp"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<VerifyOtpResult>();
+        Assert.NotNull(result);
+        Assert.Equal(UserId(1), result.User.Id);
+        Assert.NotEmpty(result.AccessToken);
+        await using var scope = app.Services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        Assert.Equal(11, await database.Users.CountAsync());
+        Assert.Empty(await database.OtpChallenges.ToListAsync());
+        Assert.Equal(0, _factory.OtpProvider.InvocationCount);
     }
 
     [Fact]
@@ -374,7 +410,149 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
         Assert.Equal(12, await database.Users.CountAsync());
     }
 
-    private async Task ExecuteScriptAsync(string fileName, bool approved = true)
+    [Fact]
+    public async Task IranianPhoneUpdate_PreservesOtherAccountsRolesAndCredentialMetadata_AndIsIdempotent()
+    {
+        await UsePreviousFixturePhonesAsync();
+        var ordinary = User.Create(DateTime.UtcNow);
+        var ordinaryCredential = UserCredential.CreateMobile(ordinary.Id, Phone(99), DateTime.UtcNow);
+        string metadata;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            db.Users.Add(ordinary);
+            db.UserCredentials.Add(ordinaryCredential);
+            await db.SaveChangesAsync();
+            metadata = await CredentialMetadataAsync(db);
+        }
+        var protectedRows = await ProtectedRowsAsync();
+        var ordinaryVersion = ordinaryCredential.RowVersion.ToArray();
+
+        await ExecuteScriptAsync(PhoneUpdateScript);
+
+        Assert.Equal(protectedRows, await ProtectedRowsAsync());
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            Assert.Equal(metadata, await CredentialMetadataAsync(db));
+            Assert.Equal(12, await db.Users.CountAsync());
+            for (var number = 1; number <= 11; number++)
+            {
+                var credential = await db.UserCredentials.SingleAsync(item => item.UserId == UserId(number));
+                Assert.Equal(Phone(number), credential.NormalizedIdentifier);
+            }
+            var untouched = await db.UserCredentials.SingleAsync(item => item.Id == ordinaryCredential.Id);
+            Assert.Equal(Phone(99), untouched.NormalizedIdentifier);
+            Assert.Equal(ordinaryVersion, untouched.RowVersion);
+        }
+        var afterFirstUpdate = await CredentialVersionsAsync();
+        await ExecuteScriptAsync(PhoneUpdateScript);
+        Assert.Equal(afterFirstUpdate, await CredentialVersionsAsync());
+    }
+
+    [Theory]
+    [InlineData(false, true, true, 51201)]
+    [InlineData(true, false, true, 51202)]
+    [InlineData(true, true, false, 51203)]
+    public async Task IranianPhoneUpdate_RequiresEveryExplicitConnectionApproval(
+        bool approved, bool databaseApproved, bool phoneUpdateApproved, int expectedCode)
+    {
+        await UsePreviousFixturePhonesAsync();
+        var before = await CredentialVersionsAsync();
+        var failure = await Assert.ThrowsAsync<SqlException>(() => ExecuteScriptAsync(
+            PhoneUpdateScript, approved, databaseApproved, phoneUpdateApproved));
+        Assert.Equal(expectedCode, failure.Number);
+        Assert.Equal(before, await CredentialVersionsAsync());
+    }
+
+    [Fact]
+    public async Task IranianPhoneUpdate_CollisionAbortsAllChangesWithoutMerging()
+    {
+        await UsePreviousFixturePhonesAsync();
+        var ordinary = User.Create(DateTime.UtcNow);
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            db.Users.Add(ordinary);
+            db.UserCredentials.Add(UserCredential.CreateMobile(ordinary.Id, Phone(11), DateTime.UtcNow));
+            await db.SaveChangesAsync();
+        }
+        var before = await CredentialVersionsAsync();
+        var failure = await Assert.ThrowsAsync<SqlException>(() => ExecuteScriptAsync(PhoneUpdateScript));
+        Assert.Equal(51206, failure.Number);
+        Assert.Equal(before, await CredentialVersionsAsync());
+    }
+
+    [Fact]
+    public async Task IranianPhoneUpdate_RejectsAnUnexpectedExistingPhoneWithoutOverwritingIt()
+    {
+        await UsePreviousFixturePhonesAsync();
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE [identity].UserCredentials SET NormalizedIdentifier={Phone(99)} WHERE UserId={UserId(1)}");
+        }
+        var before = await CredentialVersionsAsync();
+        var failure = await Assert.ThrowsAsync<SqlException>(() => ExecuteScriptAsync(PhoneUpdateScript));
+        Assert.Equal(51205, failure.Number);
+        Assert.Equal(before, await CredentialVersionsAsync());
+    }
+
+    [Fact]
+    public async Task IranianPhoneUpdate_ConcurrentExecutionsRemainIdempotent()
+    {
+        await UsePreviousFixturePhonesAsync();
+        await Task.WhenAll(ExecuteScriptAsync(PhoneUpdateScript), ExecuteScriptAsync(PhoneUpdateScript));
+        var beforeRetry = await CredentialVersionsAsync();
+        await ExecuteScriptAsync(PhoneUpdateScript);
+        Assert.Equal(beforeRetry, await CredentialVersionsAsync());
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        Assert.Equal(11, await db.Users.CountAsync());
+        Assert.Equal(11, await db.UserCredentials.CountAsync(item => item.NormalizedIdentifier.StartsWith("+9891200001")));
+    }
+
+    private async Task UsePreviousFixturePhonesAsync()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        for (var number = 1; number <= 11; number++)
+        {
+            var phone = "+1202555" + (100 + number).ToString("D4");
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE [identity].UserCredentials SET NormalizedIdentifier={phone} WHERE UserId={UserId(number)}");
+        }
+    }
+
+    private static async Task<string> CredentialMetadataAsync(MakanDbContext db) => JsonSerializer.Serialize(
+        await db.UserCredentials.AsNoTracking().OrderBy(item => item.Id)
+            .Select(item => new { item.Id, item.UserId, item.Kind, item.CreatedAtUtc, item.VerifiedAtUtc }).ToArrayAsync());
+
+    private async Task<string> CredentialVersionsAsync()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return JsonSerializer.Serialize(await db.UserCredentials.AsNoTracking().OrderBy(item => item.Id)
+            .Select(item => new { item.Id, item.RowVersion }).ToArrayAsync());
+    }
+
+    private async Task<string> ProtectedRowsAsync()
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        return JsonSerializer.Serialize(new
+        {
+            Users = await db.Users.AsNoTracking().OrderBy(item => item.Id).Select(item => new { item.Id, item.RowVersion }).ToArrayAsync(),
+            Persons = await db.Persons.AsNoTracking().OrderBy(item => item.Id).Select(item => new { item.Id, item.RowVersion }).ToArrayAsync(),
+            Memberships = await db.Memberships.AsNoTracking().OrderBy(item => item.Id).Select(item => new { item.Id, item.RowVersion }).ToArrayAsync(),
+            Roles = await db.RoleAssignments.AsNoTracking().OrderBy(item => item.Id).Select(item => new { item.Id, item.RowVersion }).ToArrayAsync(),
+            PlatformRoles = await db.PlatformRoleAssignments.AsNoTracking().OrderBy(item => item.Id).Select(item => new { item.Id, item.RowVersion }).ToArrayAsync()
+        });
+    }
+
+    private async Task ExecuteScriptAsync(string fileName, bool approved = true,
+        bool databaseApproved = true, bool phoneUpdateApproved = true)
     {
         await using var scope = _factory.Services.CreateAsyncScope();
         var connectionString = scope.ServiceProvider.GetRequiredService<MakanDbContext>().Database.GetConnectionString();
@@ -385,6 +563,17 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
             ? "EXEC sys.sp_set_session_context @key=N'MakanApp.DevelopmentSeedApproved', @value=N'DevelopmentOnly';"
             : "EXEC sys.sp_set_session_context @key=N'MakanApp.DevelopmentSeedApproved', @value=NULL;";
         await command.ExecuteNonQueryAsync();
+        if (fileName == PhoneUpdateScript)
+        {
+            command.CommandText = "EXEC sys.sp_set_session_context @key=N'MakanApp.DevelopmentSeedDatabase', @value=@ApprovedDatabase; " +
+                "EXEC sys.sp_set_session_context @key=N'MakanApp.DevelopmentSeedPhoneUpdateApproved', @value=@PhoneApproval;";
+            command.Parameters.Add("@ApprovedDatabase", System.Data.SqlDbType.NVarChar, 128).Value =
+                databaseApproved ? connection.Database : DBNull.Value;
+            command.Parameters.Add("@PhoneApproval", System.Data.SqlDbType.NVarChar, 50).Value =
+                phoneUpdateApproved ? "IranianFixturePhones" : DBNull.Value;
+            await command.ExecuteNonQueryAsync();
+            command.Parameters.Clear();
+        }
         command.CommandText = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "DevelopmentSeed", fileName));
         await command.ExecuteNonQueryAsync();
     }

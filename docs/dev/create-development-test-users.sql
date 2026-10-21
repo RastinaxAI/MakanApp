@@ -22,12 +22,12 @@ BEGIN TRY
         UserId uniqueidentifier, PersonId uniqueidentifier, CredentialId uniqueidentifier,
         MembershipId uniqueidentifier, OrganizationPersonId uniqueidentifier, AssignmentId uniqueidentifier);
     INSERT @Seed(Number,RoleKey,Phone) VALUES
-        (1,N'Student',N'+12025550101'),(2,N'Teacher',N'+12025550102'),
-        (3,N'Parent',N'+12025550103'),(4,N'Manager',N'+12025550104'),
-        (5,N'PlatformOwner',N'+12025550105'),(6,N'Operations',N'+12025550106'),
-        (7,N'Support',N'+12025550107'),(8,N'Finance',N'+12025550108'),
-        (9,N'Content',N'+12025550109'),(10,N'SecurityAudit',N'+12025550110'),
-        (11,N'AbuseReviewer',N'+12025550111');
+        (1,N'Student',N'+989120000101'),(2,N'Teacher',N'+989120000102'),
+        (3,N'Parent',N'+989120000103'),(4,N'Manager',N'+989120000104'),
+        (5,N'PlatformOwner',N'+989120000105'),(6,N'Operations',N'+989120000106'),
+        (7,N'Support',N'+989120000107'),(8,N'Finance',N'+989120000108'),
+        (9,N'Content',N'+989120000109'),(10,N'SecurityAudit',N'+989120000110'),
+        (11,N'AbuseReviewer',N'+989120000111');
     UPDATE @Seed SET
         UserId=CONVERT(uniqueidentifier,'d3700000-0000-0000-0000-'+RIGHT('000000000000'+CONVERT(varchar(12),Number),12)),
         PersonId=CONVERT(uniqueidentifier,'d3710000-0000-0000-0000-'+RIGHT('000000000000'+CONVERT(varchar(12),Number),12)),

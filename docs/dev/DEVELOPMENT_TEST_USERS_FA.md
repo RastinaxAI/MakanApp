@@ -4,6 +4,8 @@
 > DevelopmentCode/TestUsers دیگر روش فعال‌سازی Authentication نیستند. دیتابیس دائمی LocalDB این مرحله نیز
 > با تأیید مالک حذف شده است؛ برای Login دستی فقط MakanApp روی سرور محلی `.` مبناست. این سند مجوز ساخت DB تازه نیست.
 
+گزارش تغییر شماره‌ها، تست‌ها و محدودیت حساب‌های موجود در [گزارش شماره‌های ایرانی](IRANIAN_SEED_PHONES_REPORT_FA.md) آمده است.
+
 تاریخ: ۲۰۲۶-۱۰-۲۱. این قابلیت فقط برای محیط مستقل توسعه است؛ نه Login عمومی با هر کد.
 نسخهٔ مبنا `211cd24` است. تغییرات در Worktree جداگانهٔ `.artifacts/development-test-users-20261021`
 انجام شده‌اند؛ workspace اصلی دارای تغییرات AI است و بازنویسی/پاک‌سازی نشده است.
@@ -47,22 +49,25 @@ Personal workspace نیز Role جدید نیست. در مدل فعلی School ج
 
 محیط دستی ایجادشده: سرور `(localdb)\MSSQLLocalDB`، دیتابیس `MakanApp_DevelopmentTestUsers`.
 این دیتابیس مستقل از `Server=.;Database=MakanApp` و Production است؛ برنامه خودکار migration/seed اجرا نمی‌کند.
-شماره‌ها از بازهٔ غیرقابل‌سرویس‌دهی 555-0100..0199 انتخاب شده‌اند، نه از شمارهٔ کاربر واقعی؛
-[مرجع NANPA](https://nanpa.com/numbering/555-line-numbers). ارسال SMS برای آن‌ها هدف این قابلیت نیست.
+شماره‌های fixture با درخواست مالک به قالب ایران تغییر کرده‌اند: ورودی محلی `09120000101` تا
+`09120000111` و مقدار canonical ذخیره‌شده `+989120000101` تا `+989120000111`.
+این شماره‌ها صرفاً نمونه‌اند و بدون مالک بودن آن‌ها تضمین نشده است؛ فقط با Mock OTP تأییدشدهٔ
+Development/Test و بدون SMS استفاده شوند. تنظیم جاری در [راهنمای OTP](CONFIGURABLE_OTP_FA.md) است.
+تغییر فایل SQL، کاربران دیتابیس موجود را تغییر نمی‌دهد؛ اجرای Seed و اصلاحات ناتمام سازگاری مقصد، کار جدا هستند.
 
 | Role | Phone | UserId | Relationships | Test OTP |
 |---|---|---|---|---|
-| Student | +12025550101 | d3700000-0000-0000-0000-000000000001 | Org / Class / Enrollment | از User Secrets؛ در سند نیست |
-| Teacher | +12025550102 | d3700000-0000-0000-0000-000000000002 | Org / Class / TeacherAssignment | همان تنظیم محلی |
-| Parent | +12025550103 | d3700000-0000-0000-0000-000000000003 | Org / GuardianRelation به Student بالا | همان تنظیم محلی |
-| Manager | +12025550104 | d3700000-0000-0000-0000-000000000004 | Org / Membership Manager | همان تنظیم محلی |
-| PlatformOwner | +12025550105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Operations | +12025550106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Support | +12025550107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Finance | +12025550108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Content | +12025550109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| SecurityAudit | +12025550110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| AbuseReviewer | +12025550111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Student | +989120000101 | d3700000-0000-0000-0000-000000000001 | Org / Class / Enrollment | از User Secrets؛ در سند نیست |
+| Teacher | +989120000102 | d3700000-0000-0000-0000-000000000002 | Org / Class / TeacherAssignment | همان تنظیم محلی |
+| Parent | +989120000103 | d3700000-0000-0000-0000-000000000003 | Org / GuardianRelation به Student بالا | همان تنظیم محلی |
+| Manager | +989120000104 | d3700000-0000-0000-0000-000000000004 | Org / Membership Manager | همان تنظیم محلی |
+| PlatformOwner | +989120000105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Operations | +989120000106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Support | +989120000107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Finance | +989120000108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Content | +989120000109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| SecurityAudit | +989120000110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| AbuseReviewer | +989120000111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
 
 شناسه‌های مشترک:
 
@@ -121,6 +126,30 @@ Suspension یا پایان انتساب نقش با اجرای دوباره خو
 
 ## Queryهای بررسی کاربران، نقش‌ها و رابطه‌ها
 
+### تغییر شمارهٔ ۱۱ حساب تست موجود به قالب ایران
+
+برای حساب‌هایی که قبلاً با شماره‌های نمونهٔ قبلی ساخته شده‌اند، Seed را دوباره اجرا نکنید.
+پس از Backup، فقط روی دیتابیس توسعهٔ محلی و در همان پنجرهٔ SSMS، این تأییدها را تنظیم کنید:
+
+```sql
+USE [MakanApp];
+EXEC sys.sp_set_session_context
+    @key=N'MakanApp.DevelopmentSeedApproved', @value=N'DevelopmentOnly';
+EXEC sys.sp_set_session_context
+    @key=N'MakanApp.DevelopmentSeedDatabase', @value=N'MakanApp';
+EXEC sys.sp_set_session_context
+    @key=N'MakanApp.DevelopmentSeedPhoneUpdateApproved', @value=N'IranianFixturePhones';
+```
+
+سپس [update-development-test-user-phones-to-iranian.sql](update-development-test-user-phones-to-iranian.sql)
+را در همان اتصال اجرا کنید. اسکریپت مالکیت دقیق User/Person/Credential و انتساب نقش‌ها را بررسی می‌کند؛
+فقط شمارهٔ قبلیِ شناخته‌شده را تغییر می‌دهد و با شمارهٔ نامنتظر یا برخورد با حساب دیگر، کامل Rollback می‌شود.
+اجرای مجدد صفر تغییر دارد. UserId، شخص اصلی، نقش‌ها، زمان‌های Verified/Created و sessionها تغییر نمی‌کنند؛
+فقط rowversion همان Credentialهای واقعاً به‌روزشده به‌صورت خودکار تغییر می‌کند.
+این اسکریپت راه تغییر شمارهٔ کاربران واقعی یا مجوز استفاده در Production نیست؛ SMS واقعی ارسال نکنید.
+
+### بررسی حساب‌ها و رابطه‌ها
+
 ```sql
 SELECT u.Id,u.Username,u.AccountStatus,c.NormalizedIdentifier,p.FirstName,p.LastName
 FROM [identity].Users u
@@ -177,7 +206,7 @@ dotnet run --project MakanApp.Api --no-launch-profile --urls http://127.0.0.1:52
       "Mode": "DevelopmentBypass",
       "DevelopmentCode": "",
       "TestUsers": [
-        { "PhoneNumber": "+12025550101", "UserId": "d3700000-0000-0000-0000-000000000001" }
+        { "PhoneNumber": "+989120000101", "UserId": "d3700000-0000-0000-0000-000000000001" }
       ]
     }
   }
@@ -191,7 +220,7 @@ Mode نامعتبر، Code خالی/نامعتبر، allowlist خالی/تکرا
 
 برای Login:
 
-1. `POST /api/v1/auth/otp/challenges` با `{"phoneNumber":"+12025550101"}`؛ پاسخ 202 شامل ChallengeId و انقضاست، نه Code.
+1. `POST /api/v1/auth/otp/challenges` با `{"phoneNumber":"+989120000101"}`؛ پاسخ 202 شامل ChallengeId و انقضاست، نه Code.
 2. `POST /api/v1/auth/otp/verify` با ChallengeId قبلی، همان PhoneNumber و کد تنظیم‌شدهٔ محلی؛ پاسخ 200 توکن session/refresh عادی است.
 3. توکن را فقط در حافظهٔ کلاینت مجاز نگه دارید؛ آن را در query string، فایل نمونه، log یا گزارش نگذارید.
 4. `GET /api/v1/workspaces/me` و سپس `POST /api/v1/workspaces/select` با WorkspaceType=Organization، MembershipId و Role صحیح.
