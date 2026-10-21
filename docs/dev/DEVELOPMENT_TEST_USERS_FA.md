@@ -1,5 +1,9 @@
 # کاربران Development/Test و OTP قابل تنظیم
 
+> بخش OTP این راهنمای قبلی با قرارداد [Configurable OTP](CONFIGURABLE_OTP_FA.md) جایگزین شده است.
+> DevelopmentCode/TestUsers دیگر روش فعال‌سازی Authentication نیستند. دیتابیس دائمی LocalDB این مرحله نیز
+> با تأیید مالک حذف شده است؛ برای Login دستی فقط MakanApp روی سرور محلی `.` مبناست. این سند مجوز ساخت DB تازه نیست.
+
 تاریخ: ۲۰۲۶-۱۰-۲۱. این قابلیت فقط برای محیط مستقل توسعه است؛ نه Login عمومی با هر کد.
 نسخهٔ مبنا `211cd24` است. تغییرات در Worktree جداگانهٔ `.artifacts/development-test-users-20261021`
 انجام شده‌اند؛ workspace اصلی دارای تغییرات AI است و بازنویسی/پاک‌سازی نشده است.

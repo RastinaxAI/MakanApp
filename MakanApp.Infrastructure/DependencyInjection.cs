@@ -36,6 +36,7 @@ using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace MakanApp.Infrastructure;
 
@@ -260,9 +261,20 @@ public static class DependencyInjection
         services.AddScoped<IManagerClassContextBuilder, ManagerClassContextBuilder>();
         services.AddScoped<IManagerStudentContextBuilder, ManagerStudentContextBuilder>();
         services.AddScoped<IAiRoleContextService, AiRoleContextService>();
+        var authentication = OtpAuthenticationOptions.Load(configuration, environmentName);
+        services.AddOptions<OtpAuthenticationOptions>()
+            .Configure(options =>
+            {
+                options.Enabled = authentication.Enabled;
+                options.AllowMockAuthentication = authentication.AllowMockAuthentication;
+            })
+            .Validate(options => OtpAuthenticationOptions.IsSafe(options, environmentName),
+                "Mock Authentication به محیط تست و مجوز صریح مستقل نیاز دارد.")
+            .ValidateOnStart();
         var otpBypass = DevelopmentOtpBypassOptions.Load(configuration, environmentName);
         services.AddSingleton(otpBypass);
-        services.AddSingleton(CreateOtpOptions(configuration, environmentName, otpBypass));
+        services.AddSingleton(provider => CreateOtpOptions(configuration, environmentName, otpBypass,
+            provider.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
         services.AddSingleton<ICommunicationEligibilityPolicy, CommunicationEligibilityPolicy>();
@@ -283,7 +295,7 @@ public static class DependencyInjection
                 configuration,
                 environmentName,
                 UsesManagedOtpProvider(configuration))));
-        AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass);
+        AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass, authentication);
         AddNotificationDeliveryProviders(services, configuration, environmentName);
         AddPaymentGateway(services, configuration);
 
@@ -416,8 +428,15 @@ public static class DependencyInjection
         IServiceCollection services,
         IConfiguration configuration,
         string environmentName,
-        DevelopmentOtpBypassOptions otpBypass)
+        DevelopmentOtpBypassOptions otpBypass,
+        OtpAuthenticationOptions authentication)
     {
+        if (!authentication.Enabled)
+        {
+            // مسیر Mock اصلاً delivery را فراخوانی نمی‌کند؛ ثبت adapter ناموجود دفاع در عمق است.
+            services.AddSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>();
+            return;
+        }
         if (otpBypass.Mode == OtpMode.DevelopmentBypass)
         {
             services.AddSingleton<IOtpDeliveryProvider, DevelopmentBypassOtpProvider>();
@@ -493,7 +512,8 @@ public static class DependencyInjection
     private static OtpOptions CreateOtpOptions(
         IConfiguration configuration,
         string environmentName,
-        DevelopmentOtpBypassOptions otpBypass)
+        DevelopmentOtpBypassOptions otpBypass,
+        OtpAuthenticationOptions authentication)
     {
         var minimumCodeLength = ReadPositiveInt(
             configuration,
@@ -511,6 +531,7 @@ public static class DependencyInjection
 
         return new OtpOptions
         {
+            Enabled = authentication.Enabled,
             Mode = otpBypass.Mode,
             DevelopmentTestUsers = otpBypass.TestUsers,
             Lifetime = TimeSpan.FromSeconds(ReadPositiveInt(

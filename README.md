@@ -151,11 +151,12 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 ### کاربران تست و OTP توسعه
 
-`Identity:Otp:Mode` به‌صورت پیش‌فرض `Real` است و مسیر provider قبلی را حفظ می‌کند. حالت صریح
-`DevelopmentBypass` فقط در Development/Test/Testing، با کد محلی و binding شماره/UserId حساب تستِ موجود
-مجاز است؛ SMS ارسال نمی‌کند و session، workspace، permission و MFA را دور نمی‌زند. در Production/Staging
-startup آن رد می‌شود. [راهنمای کاربران، SQL seed/cleanup و SSMS](docs/dev/DEVELOPMENT_TEST_USERS_FA.md)
-و [گزارش آموزشی](docs/dev/DEVELOPMENT_TEST_USERS_REPORT_FA.md). هیچ کد ورود واقعی در Git قرار ندارد.
+`Otp:Enabled` تنها کلید انتخاب OTP واقعی/Mock است. مقدار اولیهٔ فایل‌های base، Development و Production
+`false` است؛ Mock علاوه بر آن به `Otp:AllowMockAuthentication=true` و محیط Development/Test/Testing نیاز دارد.
+در Mock کد یا challenge واقعی ساخته نمی‌شود و Verify با هر کد واردشده از مسیر session/refresh معمول عبور می‌کند.
+Production/Staging با OTP خاموش یا مجوز Mock، در startup رد می‌شوند؛ برای انتشار `Enabled=true` و
+`AllowMockAuthentication=false` لازم است. `Identity:Otp:Mode=DevelopmentBypass` و فلگ‌های قدیمی فعال رد می‌شوند.
+[تنظیمات، قرارداد، تست‌ها و گزارش آموزشی](docs/dev/CONFIGURABLE_OTP_FA.md).
 
 ### سرویس OTP مدیریت‌شده MeliPayamak
 

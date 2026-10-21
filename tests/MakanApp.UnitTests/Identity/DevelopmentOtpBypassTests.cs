@@ -93,21 +93,14 @@ public sealed class DevelopmentOtpBypassTests
     }
 
     [Fact]
-    public async Task BypassComposition_DoesNotRegisterOrCallMeliPayamak()
+    public void LegacyBypassComposition_IsRejectedInsteadOfCompetingWithOtpEnabled()
     {
         var configuration = Configuration();
         configuration["Sms:Provider"] = "MeliPayamakOtp";
         var services = new ServiceCollection().AddLogging();
-        services.AddInfrastructure(configuration, "Development");
+        var failure = Assert.Throws<InvalidOperationException>(() => services.AddInfrastructure(configuration, "Development"));
+        Assert.Contains("Otp:Enabled", failure.Message);
         Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(MeliPayamakOtpOptions));
-        using var provider = services.BuildServiceProvider();
-        var delivery = Assert.IsType<DevelopmentBypassOtpProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
-        var result = await delivery.RequestOtpAsync("+12025550101", CancellationToken.None);
-        Assert.Equal(configuration["Identity:Otp:DevelopmentCode"], result.VerificationCode);
-        await Assert.ThrowsAsync<IdentityException>(() => delivery.RequestOtpAsync("+12025550199", CancellationToken.None));
-        using var cancellation = new CancellationTokenSource();
-        cancellation.Cancel();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => delivery.RequestOtpAsync("+12025550101", cancellation.Token));
     }
 
     private static ConfigurationManager Configuration()

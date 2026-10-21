@@ -8,6 +8,7 @@ public enum OtpMode
 
 public sealed class OtpOptions
 {
+    public bool Enabled { get; init; } = true;
     public OtpMode Mode { get; init; } = OtpMode.Real;
     public IReadOnlyDictionary<string, Guid> DevelopmentTestUsers { get; init; } =
         new Dictionary<string, Guid>();

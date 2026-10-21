@@ -20,6 +20,22 @@ namespace MakanApp.IntegrationTests;
 public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory)
 {
     [Theory]
+    [InlineData("Production", false)]
+    [InlineData("Production", true)]
+    [InlineData("Staging", false)]
+    [InlineData("Staging", true)]
+    public void UnsafeMockConfiguration_StopsTheActualApiHost(string environmentName, bool allowMock)
+    {
+        using var production = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Otp:Enabled"] = "false",
+            ["Otp:AllowMockAuthentication"] = allowMock.ToString()
+        });
+        var failure = Assert.Throws<InvalidOperationException>(() => production.CreateClient());
+        Assert.Contains("Mock Authentication", failure.Message);
+    }
+
+    [Theory]
     [InlineData("Production")]
     [InlineData("Staging")]
     public async Task SwaggerAndOpenApiAreDisabledByDefaultInProductionLikeHost(string environmentName)
@@ -278,6 +294,8 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
             // کانفیگ خصوصی انتشار نباید دیتابیس یا سرویس پیامک واقعی را وارد تست کند.
             var values = new Dictionary<string, string?>
             {
+                ["Otp:Enabled"] = "true",
+                ["Otp:AllowMockAuthentication"] = "false",
                 ["ConnectionStrings:MakanDatabase"] =
                     "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False",
                 ["Identity:SecurityKey"] = new string('P', 32),

@@ -44,6 +44,7 @@ public sealed partial class MakanAppWebApplicationFactory :
 
     private readonly string? _originalConnectionString =
         Environment.GetEnvironmentVariable(ConnectionStringEnvironmentVariable);
+    private readonly string? _originalOtpEnabled = Environment.GetEnvironmentVariable("Otp__Enabled");
 
     public string StorageRootPath { get; } = Path.Combine(
         Path.GetTempPath(),
@@ -68,6 +69,8 @@ public sealed partial class MakanAppWebApplicationFactory :
 
     public MakanAppWebApplicationFactory()
     {
+        // suite موجود رفتار واقعی OTP را می‌سنجد؛ Mock فقط در میزبان اختصاصی تست فعال می‌شود.
+        Environment.SetEnvironmentVariable("Otp__Enabled", "true");
         Environment.SetEnvironmentVariable(
             ConnectionStringEnvironmentVariable,
             TestConnectionString);
@@ -294,6 +297,7 @@ public sealed partial class MakanAppWebApplicationFactory :
                 Environment.SetEnvironmentVariable(
                     ConnectionStringEnvironmentVariable,
                     _originalConnectionString);
+                Environment.SetEnvironmentVariable("Otp__Enabled", _originalOtpEnabled);
             }
         }
     }

@@ -1,4 +1,8 @@
 {
+  "Otp": {
+    "Enabled": false,
+    "AllowMockAuthentication": false
+  },
   "ConnectionStrings": {
     "MakanDatabase": ""
   },
