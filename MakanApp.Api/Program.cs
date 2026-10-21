@@ -19,6 +19,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Platform;
 using MakanApp.Infrastructure;
+using MakanApp.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -26,6 +27,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 ProductionLoggingSafety.Configure(builder.Services, builder.Environment);
@@ -274,6 +276,20 @@ builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOption
 });
 
 var app = builder.Build();
+
+var otpAuthentication = app.Services.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value;
+if (!otpAuthentication.Enabled)
+{
+    app.Logger.LogWarning(new EventId(1010, "MockOtpAuthenticationEnabled"),
+        "احراز هویت آزمایشی فعال است؛ فقط حساب و دادهٔ تست مجاز است. Environment={Environment}; OtpEnabled={OtpEnabled}; AllowMockAuthentication={AllowMockAuthentication}",
+        app.Environment.EnvironmentName, otpAuthentication.Enabled, otpAuthentication.AllowMockAuthentication);
+}
+else
+{
+    app.Logger.LogInformation(new EventId(1011, "RealOtpAuthenticationEnabled"),
+        "احراز هویت OTP واقعی فعال است. Environment={Environment}; OtpEnabled={OtpEnabled}; AllowMockAuthentication={AllowMockAuthentication}",
+        app.Environment.EnvironmentName, otpAuthentication.Enabled, otpAuthentication.AllowMockAuthentication);
+}
 
 if (app.Environment.IsProduction())
 {

@@ -29,7 +29,7 @@ public sealed class OtpAuthenticationOptions
 
     internal static bool IsSafe(OtpAuthenticationOptions options, string environmentName) =>
         IsMockEnvironment(environmentName)
-            ? options.Enabled || options.AllowMockAuthentication
+            ? options.Enabled != options.AllowMockAuthentication
             : options.Enabled && !options.AllowMockAuthentication;
 
     private static bool IsMockEnvironment(string environmentName) =>

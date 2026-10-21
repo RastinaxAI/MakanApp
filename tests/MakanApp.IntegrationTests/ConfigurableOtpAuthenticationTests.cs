@@ -53,9 +53,9 @@ public sealed class ConfigurableOtpAuthenticationTests(MakanAppWebApplicationFac
     }
 
     [Theory]
-    [InlineData("x")]
+    [InlineData("1111")]
     [InlineData("definitely-not-an-otp")]
-    [InlineData("۱۲")]
+    [InlineData("۱۲۳۴")]
     public async Task MockVerify_RequiresNeitherChallengeNorMatchingCode_AndUsesNormalTokens(string code)
     {
         using var app = MockApplication();

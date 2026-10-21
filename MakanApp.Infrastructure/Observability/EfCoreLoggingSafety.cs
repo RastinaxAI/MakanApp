@@ -19,7 +19,8 @@ public sealed class EfCoreLoggingSafety(ILogger<EfCoreLoggingSafety> logger)
     public void Configure(DbContextOptionsBuilder options, string environmentName)
     {
         if (!environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) &&
-            !environmentName.Equals("Staging", StringComparison.OrdinalIgnoreCase)) return;
+            !environmentName.Equals("Staging", StringComparison.OrdinalIgnoreCase) &&
+            !environmentName.Equals("Test", StringComparison.OrdinalIgnoreCase)) return;
 
         // مسیر EventData از فیلتر ILogger مستقل است؛ ConfigureWarnings.Ignore جایگزین این مسیر نیست.
         options.LogTo((eventId, level) => level >= LogLevel.Warning && CategoryFor(eventId) is not null, WriteSafeEvent);

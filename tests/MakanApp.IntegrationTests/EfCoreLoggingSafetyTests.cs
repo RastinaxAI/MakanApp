@@ -28,6 +28,7 @@ public sealed class EfCoreLoggingSafetyTests
     [Theory]
     [InlineData("Production", false)]
     [InlineData("Staging", false)]
+    [InlineData("Test", false)]
     [InlineData("Development", true)]
     public async Task RealSqlFailuresUseSafeReplacementWithoutLosingErrorSeverityOrDevelopmentDiagnostics(string environment, bool rawExpected)
     {

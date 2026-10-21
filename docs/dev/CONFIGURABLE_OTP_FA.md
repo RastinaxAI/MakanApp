@@ -28,11 +28,13 @@ Api فقط appsettings را مالک است. Application وابستگی Configur
 
 | فایل | Enabled | AllowMockAuthentication |
 |---|---|---|
-| appsettings.json | false | false |
+| appsettings.json | false | true |
 | appsettings.Development.json | false | true |
+| appsettings.Test.json | false | true |
 | appsettings.Production.json | false | false |
 
-در Development، محافظ دوم صریحاً فعال است. در Test/Testing باید آن را در config همان محیط صریحاً فعال کنید.
+در Development و فایل اختصاصی Test، محافظ دوم صریحاً فعال است. در Testing باید آن را صریحاً تنظیم کنید.
+انتشار سرور آزمایشی با پروفایل `TestIis` و محدودیت‌های آن در [راهنمای سرور تست](SERVER_MOCK_OTP_FA.md) آمده است.
 در نبود section جدید، fallback کد Enabled=true و AllowMockAuthentication=false است.
 فایل واقعی Production خصوصی/ignored باقی می‌ماند؛ نمونهٔ غیرمحرمانهٔ آن نسخه‌بندی می‌شود.
 
@@ -60,6 +62,12 @@ fragment بالا فقط برای Development/Test/Testing است. برای Prod
 قبل از publish/deploy باید Enabled را true کنید. این توقف failure واقعی configuration است، نه موفقیت یا warning بی‌اثر.
 Environment Variableهای `Otp__Enabled` و `Otp__AllowMockAuthentication` می‌توانند JSON را override کنند.
 Options snapshot شروع برنامه است؛ بعد از تغییر config برنامه را restart کنید، hot-reload احراز هویت نداریم.
+
+اصلاح `2026-10-22`: ترکیب true/true در تمام محیط‌ها متناقض و غیرمجاز است؛ false/false نیز fail-closed است.
+در Mock مقدار کد بررسی نمی‌شود، ولی فرمت موجود آن حفظ می‌شود: پس از trim و تبدیل ارقام فارسی/عربی،
+طول پیش‌فرض ۴ تا ۶۴ کاراکتر و بدون control character؛ قرارداد فعلی الزام «دقیقاً شش رقم» ندارد.
+کدهای نمونهٔ شش‌رقمی از جمله مقدارهای صفر معتبرند؛ OTP یک‌رقمی دیگر مجاز نیست.
+تعداد رقم و مقدار OTP واقعی را provider تعیین می‌کند؛ این اصلاح adapter ملی‌پیامک را تغییر نمی‌دهد.
 
 ## ۵. جریان واقعی اجرا
 
@@ -186,5 +194,5 @@ AuthController → IdentityOptions → IdentityService.RequestOtpAsync/VerifyOtp
 ## ۱۶. مرحلهٔ بعد
 
 برای اجرای محلی محیط Development را انتخاب کنید؛ false/true در Otp بخش Development، Mock را فعال می‌کند.
-برای آزمایش SMS واقعی فقط Enabled را true کنید و provider/secretهای قبلی را حفظ کنید.
+برای آزمایش SMS واقعی Enabled را true و AllowMockAuthentication را false کنید و provider/secretهای قبلی را حفظ کنید؛ روشن‌کردن Enabled به‌تنهایی روی کانفیگ Mock، ترکیب متناقض true/true می‌سازد.
 برای انتشار Production، Enabled=true و AllowMockAuthentication=false الزامی است؛ به محیط تست عمومی یا OTP bypass Production گسترش ندهید.

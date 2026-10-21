@@ -87,8 +87,9 @@ public sealed partial class IdentityService(
         CancellationToken cancellationToken)
     {
         var phoneNumber = NormalizePhoneNumber(command.PhoneNumber);
-        var code = otpOptions.Enabled ? NormalizeOtpCode(command.Code) : null;
-        if (otpOptions.Enabled && code is null)
+        // در Mock فقط شکل ورودی بررسی می‌شود؛ مقدار کد با هیچ OTP واقعی مقایسه نمی‌شود.
+        var code = NormalizeOtpCode(command.Code);
+        if (code is null)
         {
             throw OtpException(OtpVerificationResult.Invalid);
         }

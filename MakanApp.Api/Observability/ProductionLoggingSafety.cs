@@ -8,7 +8,7 @@ public static class ProductionLoggingSafety
 
     public static void Configure(IServiceCollection services, IHostEnvironment environment)
     {
-        if (!environment.IsProduction() && !environment.IsStaging()) return;
+        if (!environment.IsProduction() && !environment.IsStaging() && !environment.IsEnvironment("Test")) return;
         services.PostConfigure<LoggerFilterOptions>(options =>
         {
             // فقط مسیرهای خام مشخص با رخداد امن جایگزین می‌شوند؛ خطا و سطح آن حذف نمی‌شوند.

@@ -13,7 +13,9 @@
 
 ## تنظیمات محیط
 
-انتشار فعلی فقط `ASPNETCORE_ENVIRONMENT=Production` دارد؛ فایل `appsettings.Staging.json` به درخواست مالک حذف شده است. نسخهٔ قابل‌اشتراک کانفیگ در `MakanApp.Api/appsettings.Production.json.example` است. فایل واقعی `MakanApp.Api/appsettings.Production.json` محلی و در `.gitignore` است؛ حذف آن از index گیت به معنی حذف فایل فیزیکی یا داده‌های سرور نیست. روی clone جدید، نمونه را کپی و مقادیر محرمانه را فقط روی محیط مجاز وارد کنید. فایل نمونه به‌تنهایی آمادهٔ اجرا نیست.
+برای سرور صرفاً آزمایشی، پروفایل مستقل `TestIis` با محیط `Test` و [راهنمای Mock OTP](../dev/SERVER_MOCK_OTP_FA.md) اضافه شده است؛ این پروفایل جایگزین انتشار Production در ادامهٔ این سند نیست.
+
+انتشار عادی در این سند `ASPNETCORE_ENVIRONMENT=Production` دارد؛ فایل `appsettings.Staging.json` به درخواست مالک حذف شده است. نسخهٔ قابل‌اشتراک کانفیگ در `MakanApp.Api/appsettings.Production.json.example` است. فایل واقعی `MakanApp.Api/appsettings.Production.json` محلی و در `.gitignore` است؛ حذف آن از index گیت به معنی حذف فایل فیزیکی یا داده‌های سرور نیست. روی clone جدید، نمونه را کپی و مقادیر محرمانه را فقط روی محیط مجاز وارد کنید. فایل نمونه به‌تنهایی آمادهٔ اجرا نیست.
 
 مقادیر می‌توانند در فایل خصوصی بالا یا از IIS Configuration Editor، environmentVariables یا secret store تأمین شوند. environment متغیرهای هم‌نام بر JSON اولویت دارند؛ مقادیر قدیمی IIS ممکن است کانفیگ فایل جدید را override کنند. هیچ رمز، token یا connection string واقعی در Git یا مستند مشترک ثبت نشود.
 
