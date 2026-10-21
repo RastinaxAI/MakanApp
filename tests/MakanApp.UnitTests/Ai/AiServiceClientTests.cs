@@ -74,7 +74,7 @@ public sealed class AiServiceClientTests
     public async Task DefaultTimeout_AllowsCurrentQueueAndInferenceBudget()
     {
         Assert.Equal(180, new AiServiceOptions().TimeoutSeconds);
-        var options = new AiServiceOptions { Enabled = true };
+        var options = new AiServiceOptions { Enabled = true, BaseUrl = "https://ai.example.test" };
         var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, ValidResponse())));
         var client = new AiServiceClient(new HttpClient(handler), new StubCredentialProvider(), options,
             new AiServiceCircuitBreaker(options, TimeProvider.System));

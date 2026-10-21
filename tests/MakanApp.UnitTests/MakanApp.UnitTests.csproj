@@ -24,4 +24,9 @@
     <ProjectReference Include="..\..\MakanApp.Infrastructure\MakanApp.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\tools\ai\MakanApp.AiIntegrationProbe\LiveAiTargetPolicy.cs" Link="Ai\LiveAiTargetPolicy.cs" />
+    <Compile Include="..\..\tools\ai\MakanApp.AiIntegrationProbe\LiveAiErrorContract.cs" Link="Ai\LiveAiErrorContract.cs" />
+  </ItemGroup>
+
 </Project>

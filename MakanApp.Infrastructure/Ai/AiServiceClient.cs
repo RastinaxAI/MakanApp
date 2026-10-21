@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MakanApp.Application.Ai;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Ai;
 
@@ -12,7 +13,8 @@ public sealed class AiServiceClient(
     HttpClient httpClient,
     IAiServiceCredentialProvider credentialProvider,
     AiServiceOptions options,
-    AiServiceCircuitBreaker circuitBreaker) : IAiServiceClient
+    AiServiceCircuitBreaker circuitBreaker,
+    ILogger<AiServiceClient>? logger = null) : IAiServiceClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -115,12 +117,20 @@ public sealed class AiServiceClient(
         var started = Stopwatch.GetTimestamp();
         ValidateOptions();
         ValidateRequest(request, requiredRole);
+        using var activity = AiServiceTelemetry.Start(operation, request.RequestId, request.CorrelationId);
+        using var logScope = logger?.BeginScope(new Dictionary<string, object?>
+        {
+            ["AiOperation"] = operation,
+            ["RequestId"] = request.RequestId,
+            ["CorrelationId"] = request.CorrelationId
+        });
         try
         {
             circuitBreaker.ThrowIfOpen();
         }
         catch (AiServiceException exception)
         {
+            AiServiceTelemetry.RecordCircuitRejection(operation);
             RecordFailure(operation, exception.Code, started);
             throw;
         }
@@ -184,6 +194,7 @@ public sealed class AiServiceClient(
 
         using (response)
         {
+            AiServiceTelemetry.SetHttpStatus((int)response.StatusCode);
             if (!response.IsSuccessStatusCode)
             {
                 ThrowMappedFailure(operation, response, started);
@@ -212,6 +223,8 @@ public sealed class AiServiceClient(
                     "success",
                     "none",
                     Stopwatch.GetElapsedTime(started));
+                logger?.LogInformation("AI invocation completed: {Operation} {StatusCode} {DurationMs}.",
+                    operation, (int)response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
                 return result!;
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -480,6 +493,12 @@ public sealed class AiServiceClient(
         values.All(item =>
             item is not null && !string.IsNullOrWhiteSpace(item.Type) && !string.IsNullOrWhiteSpace(item.Id));
 
-    private static void RecordFailure(string operation, string code, long started) =>
-        AiServiceTelemetry.Record(operation, "failure", code, Stopwatch.GetElapsedTime(started));
+    private void RecordFailure(string operation, string code, long started)
+    {
+        var elapsed = Stopwatch.GetElapsedTime(started);
+        AiServiceTelemetry.Record(operation, "failure", code, elapsed);
+        // Exception، header، URL و payload عمداً به logger داده نمی‌شوند.
+        logger?.LogError("AI invocation failed: {Operation} {ErrorCode} {DurationMs}.",
+            operation, code, elapsed.TotalMilliseconds);
+    }
 }
