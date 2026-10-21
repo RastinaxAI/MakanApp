@@ -3,6 +3,7 @@
     "MakanDatabase": ""
   },
   "Identity": {
+    "Otp": { "Mode": "Real" },
     "SecurityKey": ""
   },
   "Security": {

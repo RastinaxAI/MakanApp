@@ -149,6 +149,14 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 انتخاب provider با کلید `Sms:Provider` انجام می‌شود. مقدار `Development` فقط در محیط‌های `Development` و `Testing` مجاز است؛ `DevelopmentOtpProvider` یک کد شش‌رقمی محلی می‌سازد، آن را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای توسعه و تست خودکار است. مقدار `Unavailable` درخواست را با خطای کنترل‌شده رد می‌کند. تست‌های خودکار هیچ پیامک پولی ارسال نمی‌کنند.
 
+### کاربران تست و OTP توسعه
+
+`Identity:Otp:Mode` به‌صورت پیش‌فرض `Real` است و مسیر provider قبلی را حفظ می‌کند. حالت صریح
+`DevelopmentBypass` فقط در Development/Test/Testing، با کد محلی و binding شماره/UserId حساب تستِ موجود
+مجاز است؛ SMS ارسال نمی‌کند و session، workspace، permission و MFA را دور نمی‌زند. در Production/Staging
+startup آن رد می‌شود. [راهنمای کاربران، SQL seed/cleanup و SSMS](docs/dev/DEVELOPMENT_TEST_USERS_FA.md)
+و [گزارش آموزشی](docs/dev/DEVELOPMENT_TEST_USERS_REPORT_FA.md). هیچ کد ورود واقعی در Git قرار ندارد.
+
 ### سرویس OTP مدیریت‌شده MeliPayamak
 
 `MeliPayamakOtpProvider` قرارداد OTP مدیریت‌شده را فراخوانی می‌کند:

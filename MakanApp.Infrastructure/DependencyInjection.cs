@@ -260,7 +260,9 @@ public static class DependencyInjection
         services.AddScoped<IManagerClassContextBuilder, ManagerClassContextBuilder>();
         services.AddScoped<IManagerStudentContextBuilder, ManagerStudentContextBuilder>();
         services.AddScoped<IAiRoleContextService, AiRoleContextService>();
-        services.AddSingleton(CreateOtpOptions(configuration, environmentName));
+        var otpBypass = DevelopmentOtpBypassOptions.Load(configuration, environmentName);
+        services.AddSingleton(otpBypass);
+        services.AddSingleton(CreateOtpOptions(configuration, environmentName, otpBypass));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
         services.AddSingleton<ICommunicationEligibilityPolicy, CommunicationEligibilityPolicy>();
@@ -281,7 +283,7 @@ public static class DependencyInjection
                 configuration,
                 environmentName,
                 UsesManagedOtpProvider(configuration))));
-        AddOtpDeliveryProvider(services, configuration, environmentName);
+        AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass);
         AddNotificationDeliveryProviders(services, configuration, environmentName);
         AddPaymentGateway(services, configuration);
 
@@ -413,8 +415,14 @@ public static class DependencyInjection
     private static void AddOtpDeliveryProvider(
         IServiceCollection services,
         IConfiguration configuration,
-        string environmentName)
+        string environmentName,
+        DevelopmentOtpBypassOptions otpBypass)
     {
+        if (otpBypass.Mode == OtpMode.DevelopmentBypass)
+        {
+            services.AddSingleton<IOtpDeliveryProvider, DevelopmentBypassOtpProvider>();
+            return;
+        }
         const string developmentProvider = "Development";
         const string unavailableProvider = "Unavailable";
         const string meliPayamakOtpProvider = "MeliPayamakOtp";
@@ -484,7 +492,8 @@ public static class DependencyInjection
 
     private static OtpOptions CreateOtpOptions(
         IConfiguration configuration,
-        string environmentName)
+        string environmentName,
+        DevelopmentOtpBypassOptions otpBypass)
     {
         var minimumCodeLength = ReadPositiveInt(
             configuration,
@@ -502,6 +511,8 @@ public static class DependencyInjection
 
         return new OtpOptions
         {
+            Mode = otpBypass.Mode,
+            DevelopmentTestUsers = otpBypass.TestUsers,
             Lifetime = TimeSpan.FromSeconds(ReadPositiveInt(
                 configuration,
                 "Identity:Otp:LifetimeSeconds",
