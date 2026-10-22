@@ -359,7 +359,8 @@ public sealed partial class EfMessagingStore
         Guid blockedUserId,
         CancellationToken cancellationToken) =>
         dbContext.UserBlocks
-            .FromSqlInterpolated($"SELECT * FROM [messaging].[UserBlocks] WITH (UPDLOCK, HOLDLOCK) WHERE [BlockerUserId] = {blockerUserId} AND [BlockedUserId] = {blockedUserId} AND [EndedAtUtc] IS NULL")
+            // قفل باید روی بازهٔ همان زوج در index فعال گرفته شود؛ scan کلید اصلی می‌تواند میان retryهای هم‌زمان deadlock بسازد.
+            .FromSqlInterpolated($"SELECT * FROM [messaging].[UserBlocks] WITH (UPDLOCK, HOLDLOCK, INDEX(UX_UserBlocks_Active_DirectionalPair), FORCESEEK) WHERE [BlockerUserId] = {blockerUserId} AND [BlockedUserId] = {blockedUserId} AND [EndedAtUtc] IS NULL")
             .SingleOrDefaultAsync(cancellationToken);
 
     private Task<bool> HasEffectiveUserBlockAsync(

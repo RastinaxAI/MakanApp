@@ -290,8 +290,11 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(1, groupMessage.Sequence);
     }
 
-    [Fact]
-    public async Task ConcurrentBlockAndReportRetriesRemainIdempotent()
+    [Theory]
+    [InlineData(4)]
+    [InlineData(8)]
+    [InlineData(12)]
+    public async Task ConcurrentBlockAndReportRetriesRemainIdempotent(int concurrentRequests)
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
@@ -312,7 +315,7 @@ public sealed partial class MessagingEndpointsTests
             AbuseReportReason.Spam,
             null);
 
-        var reportClients = Enumerable.Range(0, 4).Select(_ => factory.CreateClient()).ToArray();
+        var reportClients = Enumerable.Range(0, concurrentRequests).Select(_ => factory.CreateClient()).ToArray();
         foreach (var client in reportClients)
         {
             UseBearerToken(client, second.AccessToken);
@@ -347,7 +350,7 @@ public sealed partial class MessagingEndpointsTests
             }
         }
 
-        var blockClients = Enumerable.Range(0, 4).Select(_ => factory.CreateClient()).ToArray();
+        var blockClients = Enumerable.Range(0, concurrentRequests).Select(_ => factory.CreateClient()).ToArray();
         foreach (var client in blockClients)
         {
             UseBearerToken(client, second.AccessToken);
