@@ -31,7 +31,7 @@ Api فقط appsettings را مالک است. Application وابستگی Configur
 | appsettings.json | false | true |
 | appsettings.Development.json | false | true |
 | appsettings.Test.json | false | true |
-| appsettings.Production.json | false | false |
+| appsettings.Production.json | false | true |
 
 در Development و فایل اختصاصی Test، محافظ دوم صریحاً فعال است. در Testing باید آن را صریحاً تنظیم کنید.
 انتشار سرور آزمایشی با پروفایل `TestIis` و محدودیت‌های آن در [راهنمای سرور تست](SERVER_MOCK_OTP_FA.md) آمده است.
@@ -58,8 +58,8 @@ fragment بالا فقط برای Development/Test/Testing است. برای Prod
 }
 ```
 
-مقدار اولیهٔ فایل Production طبق درخواست false است و عمداً startup را متوقف می‌کند؛
-قبل از publish/deploy باید Enabled را true کنید. این توقف failure واقعی configuration است، نه موفقیت یا warning بی‌اثر.
+مقدار اولیهٔ فایل Production طبق تأیید صریح مالک false/true است و عمداً startup را متوقف می‌کند؛
+برای اجرای واقعی Production باید Enabled=true و AllowMockAuthentication=false شوند. یکسان‌بودن JSON به معنی مجوز یکسان محیط‌ها نیست؛ Mock فقط در محیط تست مجاز است. این توقف failure واقعی configuration است، نه موفقیت یا warning بی‌اثر.
 Environment Variableهای `Otp__Enabled` و `Otp__AllowMockAuthentication` می‌توانند JSON را override کنند.
 Options snapshot شروع برنامه است؛ بعد از تغییر config برنامه را restart کنید، hot-reload احراز هویت نداریم.
 

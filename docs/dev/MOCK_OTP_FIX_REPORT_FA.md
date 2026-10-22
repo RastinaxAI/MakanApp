@@ -12,7 +12,7 @@
 
 ## ۳. تنظیمات و تعارض Production
 
-در base، Development و Test مقدار false/true وجود دارد. فایل Production و نمونهٔ آن کلیدهای صریح و همان binding را دارند، اما مقدار قبلیِ امن آن‌ها حفظ شد؛ درخواست تغییر Production توسط کنترل ایمنی اجرا رد شد و گزارش آن به مالک داده شد. هر مقدار false/true در Production/Staging حتی اگر دستی نوشته شود، با محافظ کد fail-closed است. تنظیم مجاز واقعی true/false است. هیچ secret یا config خصوصی سرور تغییر نکرد.
+در commit اولیهٔ این گزارش (`afd27b7`)، base، Development و Test روی false/true بودند و Production پس از رد اولیهٔ کنترل ایمنی دست‌نخورده ماند. سپس مالک صریحاً یکسان‌بودن false/true در هر سه فایل را با حفظ رد Startup در Production تأیید کرد؛ مقدار Production خصوصیِ محلی و نمونهٔ غیرمحرمانه نیز فقط در همین دو فلگ همسان شدند. false/true در Production/Staging با همان محافظ کد fail-closed است؛ تنظیم مجاز اجرای واقعی true/false باقی می‌ماند. هیچ secret یا config خصوصی سرور تغییر نکرد.
 
 ## ۴. تفاوت محیط‌ها
 
@@ -120,3 +120,37 @@ Branch کاری `identity/configurable-otp-20261021` با upstream موجود `o
 ## ۲۵. قدم بعد
 
 پس از موفقیت واقعی Commit/Push، صاحب سرور بستهٔ Test را روی محیط آزمایشی محدود مستقر و health، حالت مؤثر و ورود حساب تست را بررسی کند. تبدیل آن به سرویس واقعی باید مرحله‌ای جدا با OTP واقعی، session revocation برنامه‌ریزی‌شده و کانفیگ امن Production باشد.
+
+## ضمیمهٔ تأیید نهایی: یکسان‌سازی سه فایل، بدون حذف guard
+
+۱. خلاصه: پیش‌تر مقدار اولیهٔ Production با base/Development متفاوت بود؛ پس از تأیید صریح مالک، هر سه false/true هستند. این تغییر مجوز اجرای Mock در Production نیست.
+
+۲. معماری: فقط تنظیمات Api، تست و سند تغییر کردند؛ Domain/Application/Infrastructure و جهت وابستگی Onion دست‌نخورده‌اند.
+
+۳. فایل جدید: ندارد؛ برای یکسان‌سازی دو boolean، کلاس یا abstraction تازه لازم نیست.
+
+۴. فایل‌های تغییرکرده: `MakanApp.Api/appsettings.Production.json.example` مقدار پیش‌فرض guard را همسان می‌کند؛ نسخهٔ خصوصی محلی `appsettings.Production.json` نیز همان یک تغییر را دارد و وارد Git نمی‌شود. base/Development از قبل false/true بودند. دو فایل تست و سه راهنمای OTP برای تصمیم نهایی به‌روز شدند.
+
+۵. جریان اجرا: `Program` → `ProductionConfigurationValidator` → `AddInfrastructure` → `OtpAuthenticationOptions.Load`؛ در Production/Staging تنظیم false/true پیش از پذیرش درخواست رد می‌شود. در Test همان مسیر Mock موجودِ `AuthController` → `IdentityService` بدون تغییر کار می‌کند.
+
+۶. دیتابیس: هیچ table/column/index/constraint/rowversion یا Migration تغییر نکرد و روی دیتابیس عادی/سرور عملیاتی اجرا نشد.
+
+۷. Endpoint: هیچ Route/DTO/Status/error code تازه‌ای اضافه نشد؛ خطای Startup جای پاسخ موفق ساختگی را نمی‌گیرد.
+
+۸. مفهوم فنی: دادهٔ فایل Configuration و اعتبارسنجی Options دو مفهوم جدا هستند؛ قرارداشتن فلگ در فایل، مجوز اجرای آن در همهٔ محیط‌ها نیست.
+
+۹. تصمیم و Trade-off: مقدار فایل‌ها یکسان، ولی guard محیطی محدودکننده باقی ماند. هزینهٔ آگاهانه این است که Production تا override امن true/false انجام نشود، بالا نمی‌آید.
+
+۱۰. تست: `ServerMockOtpConfigurationTests` اکنون مقدار دقیق false/true را در سه فایل نسخه‌بندی‌شده assert می‌کند. `OtpConfigurationPrecedenceTests` از JSON واقعی Production نمونه برای Production و Staging رد تنظیم را اثبات می‌کند؛ تست HTTP واقعی Startup نیز دوباره اجرا می‌شود. هیچ تستی disable نشد.
+
+۱۱. Validation این ضمیمه: restore، build و final build موفق با صفر warning/error؛ ۳۵ Unit و ۲۸ Integration متمرکز موفق. اجرای full final suite همین ضمیمه: ۸۲۷ Unit، ۱۳۲۳ Integration و ۱۴ Architecture؛ مجموع ۲۱۶۴ اجرا و موفق، صفر failed/skipped. بخش Integration در ۱۳ دقیقه و ۳۲ ثانیه تمام شد؛ نتایج اجرای قبلی را به اجرای جدید نسبت نمی‌دهیم.
+
+۱۲. Git: commit message این ضمیمه `chore(identity): align OTP defaults without weakening startup guard` است. فقط فایل‌های همین همسان‌سازی stage می‌شوند؛ فایل خصوصی Production و dirtyهای AI خارج از commit می‌مانند. hash و نتیجهٔ push پس از اجرای واقعی در پاسخ نهایی می‌آیند.
+
+۱۳. محدودیت: این فایل نمونه برای اجرای Production آماده نیست؛ Mock فقط برای محیط جدا و محدودشدهٔ Test است. هیچ تغییری روی IIS سرور انجام نشده است.
+
+۱۴. نکات آموزشی: ۱) برابری JSONها به معنی برابری مجوز محیط‌ها نیست؛ ۲) guard امنیتی را جدا از defaults تست کنید؛ ۳) config خصوصی را برای یک تغییر غیرمحرمانه وارد Git نکنید.
+
+۱۵. ترتیب مطالعه: `appsettings.Production.json.example` → `OtpAuthenticationOptions` → `ServerMockOtpConfigurationTests` → `OtpConfigurationPrecedenceTests` → `ProductionHostingTests`.
+
+۱۶. قدم بعد: انتشار همان محیط Test با حفظ تنظیمات خصوصی مقصد؛ اجرای Production باید با تصمیم جدا و جفت امن true/false باشد، نه حذف guard.

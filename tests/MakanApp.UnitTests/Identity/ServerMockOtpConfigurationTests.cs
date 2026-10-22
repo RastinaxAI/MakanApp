@@ -23,7 +23,7 @@ public sealed class ServerMockOtpConfigurationTests
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(ApiDirectory(), fileName)));
         var otp = document.RootElement.GetProperty("Otp");
         Assert.Equal(JsonValueKind.False, otp.GetProperty("Enabled").ValueKind);
-        Assert.Contains(otp.GetProperty("AllowMockAuthentication").ValueKind, new[] { JsonValueKind.True, JsonValueKind.False });
+        Assert.Equal(JsonValueKind.True, otp.GetProperty("AllowMockAuthentication").ValueKind);
     }
 
     [Theory]
