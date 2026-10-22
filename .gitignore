@@ -215,6 +215,7 @@ publish/
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
+!MakanApp.Api/Properties/PublishProfiles/TestIis.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
@@ -267,6 +268,9 @@ ClientBin/
 *.dbproj.schemaview
 *.jfm
 *.pfx
+*.p12
+*.key
+key-*.xml
 *.publishsettings
 orleans.codegen.cs
 

@@ -5,8 +5,10 @@ using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
+using MakanApp.Infrastructure.Observability;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Messaging;
 
@@ -17,7 +19,9 @@ public sealed partial class EfMessagingStore(
     IConversationManagementPolicy managementPolicy,
     IOutbox outbox,
     MessagingOutboxWakeSignal outboxWakeSignal,
-    TimeProvider timeProvider) :
+    TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
+    ILogger<EfMessagingStore> logger) :
     IMessagingStore,
     IConversationManagementStore,
     IMessagingSafetyStore,

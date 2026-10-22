@@ -91,6 +91,16 @@ public sealed class OutboxMessage
         LastErrorCode = ValidateText(errorCode, MaximumErrorCodeLength, nameof(errorCode));
     }
 
+    public void MarkFailed(Guid claimToken, string errorCode)
+    {
+        EnsureClaimOwner(claimToken);
+        var normalizedErrorCode = ValidateText(errorCode, MaximumErrorCodeLength, nameof(errorCode));
+        ClaimToken = null;
+        ClaimedUntilUtc = null;
+        NextAttemptAtUtc = null;
+        LastErrorCode = normalizedErrorCode;
+    }
+
     private void EnsureClaimOwner(Guid claimToken)
     {
         if (claimToken == Guid.Empty || ClaimToken != claimToken || ProcessedAtUtc.HasValue)

@@ -149,6 +149,16 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 انتخاب provider با کلید `Sms:Provider` انجام می‌شود. مقدار `Development` فقط در محیط‌های `Development` و `Testing` مجاز است؛ `DevelopmentOtpProvider` یک کد شش‌رقمی محلی می‌سازد، آن را در response یا log منتشر نمی‌کند و نگهداری موقت in-memory آن صرفاً برای توسعه و تست خودکار است. مقدار `Unavailable` درخواست را با خطای کنترل‌شده رد می‌کند. تست‌های خودکار هیچ پیامک پولی ارسال نمی‌کنند.
 
+### کاربران تست و OTP توسعه
+
+`Otp:Enabled` تنها کلید انتخاب OTP واقعی/Mock است. مقدار اولیهٔ فایل‌های base، Development و Production
+`false` است؛ Mock علاوه بر آن به `Otp:AllowMockAuthentication=true` و محیط Development/Test/Testing نیاز دارد.
+در Mock کد یا challenge واقعی ساخته نمی‌شود و Verify با هر مقدار کدِ دارای فرمت معتبر از مسیر session/refresh معمول عبور می‌کند؛ طول پیش‌فرض ۴ تا ۶۴ کاراکتر و بدون control character است. ترکیب `true/true` در تمام محیط‌ها رد می‌شود.
+Production/Staging با OTP خاموش یا مجوز Mock، در startup رد می‌شوند؛ برای انتشار `Enabled=true` و
+`AllowMockAuthentication=false` لازم است. `Identity:Otp:Mode=DevelopmentBypass` و فلگ‌های قدیمی فعال رد می‌شوند.
+[تنظیمات، قرارداد، تست‌ها و گزارش آموزشی](docs/dev/CONFIGURABLE_OTP_FA.md).
+برای سرور صرفاً آزمایشی از پروفایل `TestIis` و محیط `Test` طبق [راهنمای انتشار Mock OTP](docs/dev/SERVER_MOCK_OTP_FA.md) استفاده کنید؛ فایل Production در این محیط بارگذاری نمی‌شود و کانفیگ خصوصی اتصال/کلیدها باید در محیط مقصد تأمین شود.
+
 ### سرویس OTP مدیریت‌شده MeliPayamak
 
 `MeliPayamakOtpProvider` قرارداد OTP مدیریت‌شده را فراخوانی می‌کند:

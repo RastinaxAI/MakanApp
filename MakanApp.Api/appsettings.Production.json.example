@@ -1,9 +1,22 @@
 {
+  "Otp": {
+    "Enabled": false,
+    "AllowMockAuthentication": true
+  },
   "ConnectionStrings": {
     "MakanDatabase": ""
   },
   "Identity": {
+    "Otp": { "Mode": "Real" },
     "SecurityKey": ""
+  },
+  "Security": {
+    "DataProtection": {
+      "ApplicationName": "MakanApp.BackofficeMfa.v1",
+      "KeyRingPath": "",
+      "CertificatePath": "",
+      "CertificatePassword": ""
+    }
   },
   "Cors": {
     "AllowedOrigins": ["https://app.example.test"]

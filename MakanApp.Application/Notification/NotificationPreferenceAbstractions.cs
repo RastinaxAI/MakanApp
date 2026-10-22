@@ -93,7 +93,7 @@ public interface IPushDeviceStore
 
 public interface INotificationDeliveryStore
 {
-    Task<IReadOnlyCollection<Guid>> GetActivePushDeviceIdsAsync(
+    IAsyncEnumerable<IReadOnlyList<Guid>> GetActivePushDeviceIdBatchesAsync(
         Guid userId,
         DateTime nowUtc,
         CancellationToken cancellationToken);
@@ -103,6 +103,9 @@ public interface INotificationDeliveryStore
         CancellationToken cancellationToken);
 
     void AddRange(IEnumerable<NotificationDeliveryAttempt> attempts);
+
+    // هر batch در transaction موجود Outbox ذخیره می‌شود؛ commit مالک همان transaction است.
+    Task AddBatchAsync(IReadOnlyCollection<NotificationDeliveryAttempt> attempts, CancellationToken cancellationToken);
 }
 
 public interface IPushNotificationProvider

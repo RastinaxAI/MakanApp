@@ -1,4 +1,5 @@
 using MakanApp.Application.Messaging;
+using System.Data;
 using MakanApp.Application.Notification;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
@@ -77,11 +78,18 @@ public sealed partial class NotificationDeliveryProcessor
     private async Task DeferBeforeDeliveryAsync(Guid attemptId, Guid claimToken, DateTime deliverAtUtc, CancellationToken ct)
     {
         dbContext.ChangeTracker.Clear();
-        var attempt = await dbContext.NotificationDeliveryAttempts.SingleOrDefaultAsync(a => a.Id == attemptId &&
-            a.ClaimToken == claimToken && a.Status == NotificationDeliveryStatus.Processing, ct);
-        if (attempt is null) return;
-        attempt.DeferBeforeDelivery(claimToken, deliverAtUtc);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        var attempt = await LockAttemptAsync(attemptId, ct);
+        if (!IsLiveOwner(attempt, claimToken, timeProvider.GetUtcNow().UtcDateTime))
+        {
+            await transaction.CommitAsync(ct);
+            telemetry.RecordOutcome(MakanApp.Infrastructure.Observability.WorkerTelemetry.NotificationDelivery, "LeaseLost");
+            return;
+        }
+        attempt!.DeferBeforeDelivery(claimToken, deliverAtUtc);
         await dbContext.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        telemetry.RecordOutcome(MakanApp.Infrastructure.Observability.WorkerTelemetry.NotificationDelivery, "Deferred");
     }
 
     private static DeliveryWork Suppress(NotificationDeliveryFailureReason reason) => new(null, null, reason);

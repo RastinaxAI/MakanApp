@@ -25,6 +25,7 @@ using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Outbox;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Organization;
 using MakanApp.Infrastructure.Platform;
 using MakanApp.Infrastructure.Reports.Dashboards;
@@ -35,6 +36,7 @@ using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace MakanApp.Infrastructure;
 
@@ -52,8 +54,17 @@ public static class DependencyInjection
                 "ConnectionStrings:MakanDatabase must be configured before the application starts.");
         }
 
-        services.AddDbContext<MakanDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        services.AddSingleton<EfCoreLoggingSafety>();
+        services.AddDbContext<MakanDbContext>((provider, options) =>
+        {
+            options.UseSqlServer(connectionString);
+            provider.GetRequiredService<EfCoreLoggingSafety>().Configure(options, environmentName);
+        });
+
+        services.AddMetrics();
+        services.AddSingleton<WorkerTelemetry>();
+        services.AddSingleton(OperationalMetricsOptions.FromConfiguration(configuration));
+        services.AddHostedService<OperationalMetricsPublisher>();
 
         services.AddScoped<IIdentityStore, EfIdentityStore>();
         services.AddScoped<IIdentityService, IdentityService>();
@@ -238,8 +249,8 @@ public static class DependencyInjection
         services.AddSingleton(CreateAiServiceOptions(configuration));
         services.AddSingleton<AiServiceCircuitBreaker>();
         services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
-        services.AddHttpClient<IAiServiceClient, AiServiceClient>(client =>
-            client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddHttpClient<IAiServiceClient, AiServiceClient>((provider, client) =>
+            client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds));
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
         services.AddScoped<IAiChatService, AiChatService>();
         services.AddScoped<IStudentContextBuilder, StudentContextBuilder>();
@@ -250,7 +261,20 @@ public static class DependencyInjection
         services.AddScoped<IManagerClassContextBuilder, ManagerClassContextBuilder>();
         services.AddScoped<IManagerStudentContextBuilder, ManagerStudentContextBuilder>();
         services.AddScoped<IAiRoleContextService, AiRoleContextService>();
-        services.AddSingleton(CreateOtpOptions(configuration, environmentName));
+        var authentication = OtpAuthenticationOptions.Load(configuration, environmentName);
+        services.AddOptions<OtpAuthenticationOptions>()
+            .Configure(options =>
+            {
+                options.Enabled = authentication.Enabled;
+                options.AllowMockAuthentication = authentication.AllowMockAuthentication;
+            })
+            .Validate(options => OtpAuthenticationOptions.IsSafe(options, environmentName),
+                "Mock Authentication به محیط تست و مجوز صریح مستقل نیاز دارد.")
+            .ValidateOnStart();
+        var otpBypass = DevelopmentOtpBypassOptions.Load(configuration, environmentName);
+        services.AddSingleton(otpBypass);
+        services.AddSingleton(provider => CreateOtpOptions(configuration, environmentName, otpBypass,
+            provider.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value));
         services.AddSingleton(CreateSessionOptions(configuration));
         services.AddSingleton(CreateMessagingOptions(configuration));
         services.AddSingleton<ICommunicationEligibilityPolicy, CommunicationEligibilityPolicy>();
@@ -258,6 +282,10 @@ public static class DependencyInjection
         AddContentSafetyProvider(services, configuration, environmentName);
         var storageOptions = CreateStorageOptions(configuration);
         services.AddSingleton(storageOptions);
+        services.AddSingleton(TerminalFileCleanupOptions.FromConfiguration(configuration));
+        services.AddSingleton<TerminalFileCleanupCursor>();
+        services.AddScoped<TerminalFileCleanupProcessor>();
+        services.AddHostedService<TerminalFileCleanupDispatcher>();
         services.AddSingleton(CreateReportExportOptions(configuration));
         services.AddSingleton(CreateNotificationDeliveryOptions(configuration));
         services.AddSingleton(CreatePaymentOptions(configuration));
@@ -267,7 +295,7 @@ public static class DependencyInjection
                 configuration,
                 environmentName,
                 UsesManagedOtpProvider(configuration))));
-        AddOtpDeliveryProvider(services, configuration, environmentName);
+        AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass, authentication);
         AddNotificationDeliveryProviders(services, configuration, environmentName);
         AddPaymentGateway(services, configuration);
 
@@ -399,8 +427,21 @@ public static class DependencyInjection
     private static void AddOtpDeliveryProvider(
         IServiceCollection services,
         IConfiguration configuration,
-        string environmentName)
+        string environmentName,
+        DevelopmentOtpBypassOptions otpBypass,
+        OtpAuthenticationOptions authentication)
     {
+        if (!authentication.Enabled)
+        {
+            // مسیر Mock اصلاً delivery را فراخوانی نمی‌کند؛ ثبت adapter ناموجود دفاع در عمق است.
+            services.AddSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>();
+            return;
+        }
+        if (otpBypass.Mode == OtpMode.DevelopmentBypass)
+        {
+            services.AddSingleton<IOtpDeliveryProvider, DevelopmentBypassOtpProvider>();
+            return;
+        }
         const string developmentProvider = "Development";
         const string unavailableProvider = "Unavailable";
         const string meliPayamakOtpProvider = "MeliPayamakOtp";
@@ -470,7 +511,9 @@ public static class DependencyInjection
 
     private static OtpOptions CreateOtpOptions(
         IConfiguration configuration,
-        string environmentName)
+        string environmentName,
+        DevelopmentOtpBypassOptions otpBypass,
+        OtpAuthenticationOptions authentication)
     {
         var minimumCodeLength = ReadPositiveInt(
             configuration,
@@ -488,6 +531,9 @@ public static class DependencyInjection
 
         return new OtpOptions
         {
+            Enabled = authentication.Enabled,
+            Mode = otpBypass.Mode,
+            DevelopmentTestUsers = otpBypass.TestUsers,
             Lifetime = TimeSpan.FromSeconds(ReadPositiveInt(
                 configuration,
                 "Identity:Otp:LifetimeSeconds",
@@ -786,11 +832,11 @@ public static class DependencyInjection
     {
         Enabled = bool.TryParse(configuration[$"{AiServiceOptions.SectionName}:Enabled"], out var enabled) && enabled,
         BaseUrl = configuration[$"{AiServiceOptions.SectionName}:BaseUrl"]?.Trim()
-            ?? "http://localhost:8000",
+            ?? new AiServiceOptions().BaseUrl,
         TimeoutSeconds = ReadPositiveInt(
             configuration,
             $"{AiServiceOptions.SectionName}:TimeoutSeconds",
-            15),
+            AiServiceOptions.DefaultTimeoutSeconds),
         ContractVersion = configuration[$"{AiServiceOptions.SectionName}:ContractVersion"]?.Trim()
             ?? "v1",
         CircuitBreakerFailureThreshold = ReadPositiveInt(

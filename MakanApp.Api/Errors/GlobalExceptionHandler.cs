@@ -13,6 +13,9 @@ using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Frozen;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace MakanApp.Api.Errors;
 
@@ -20,12 +23,26 @@ public sealed class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IProblemDetailsService problemDetailsService) : IExceptionHandler
 {
+    // فقط ثابت‌های catalogهای مورد اعتماد خوانده می‌شوند؛ metadata یا Code ورودی مجوز لاگ خام نیست.
+    private static readonly FrozenSet<string> SafeErrorCodes = new[]
+    {
+        typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(CommerceErrorCodes),
+        typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(MessagingErrorCodes),
+        typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
+        typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
+        typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes)
+    }.SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+        .Where(field => field.IsLiteral && field.FieldType == typeof(string))
+        .Select(field => field.GetRawConstantValue())
+        .OfType<string>()
+        .ToFrozenSet(StringComparer.Ordinal);
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var problemDetails = exception switch
+        ProblemDetails? problemDetails = exception switch
         {
             AssessmentException assessmentException => CreateKnownProblem(
                 assessmentException.Code,
@@ -69,22 +86,37 @@ public sealed class GlobalExceptionHandler(
             ReportExportException reportExportException => CreateKnownProblem(
                 reportExportException.Code,
                 reportExportException.Message),
-            _ => CreateUnexpectedProblem(exception, httpContext.TraceIdentifier)
+            _ => null
         };
+
+        if (problemDetails is null)
+        {
+            problemDetails = CreateUnexpectedProblem(httpContext.TraceIdentifier);
+        }
+        else
+        {
+            LogKnownFailure(httpContext, problemDetails);
+        }
 
         httpContext.Response.StatusCode = problemDetails.Status
             ?? StatusCodes.Status500InternalServerError;
 
-        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        if (await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             ProblemDetails = problemDetails
-        });
+        })) return true;
+
+        // Accept نامنطبق نباید باعث خروج exception اصلی از handler شود.
+        problemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? httpContext.TraceIdentifier);
+        problemDetails.Extensions.TryAdd("correlationId", httpContext.TraceIdentifier);
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, options: (System.Text.Json.JsonSerializerOptions?)null,
+            contentType: "application/problem+json", cancellationToken: cancellationToken);
+        return true;
     }
 
-    private static ProblemDetails CreateKnownProblem(string code, string message)
-    {
-        var status = code switch
+    private static int? GetKnownStatusCode(string code) =>
+        code switch
         {
             IdentityErrorCodes.AuthRequired => StatusCodes.Status401Unauthorized,
             AiServiceErrorCodes.InvalidRequest => StatusCodes.Status400BadRequest,
@@ -398,12 +430,14 @@ public sealed class GlobalExceptionHandler(
             ReportExportErrorCodes.NotReady => StatusCodes.Status409Conflict,
             ReportExportErrorCodes.RowLimitExceeded => StatusCodes.Status422UnprocessableEntity,
             ReportExportErrorCodes.UnsupportedFormat => StatusCodes.Status400BadRequest,
-            _ => StatusCodes.Status400BadRequest
+            _ => null
         };
 
+    private static ProblemDetails CreateKnownProblem(string code, string message)
+    {
         return new ProblemDetails
         {
-            Status = status,
+            Status = GetKnownStatusCode(code) ?? StatusCodes.Status400BadRequest,
             Title = "Request failed",
             Detail = message,
             Type = $"urn:makan:problem:{code.ToLowerInvariant().Replace('_', '-')}",
@@ -414,12 +448,26 @@ public sealed class GlobalExceptionHandler(
         };
     }
 
-    private ProblemDetails CreateUnexpectedProblem(Exception exception, string traceId)
+    private void LogKnownFailure(HttpContext context, ProblemDetails problem)
     {
-        logger.LogError(
-            exception,
-            "An unhandled error occurred while processing the request. TraceId: {TraceId}",
-            traceId);
+        var status = problem.Status ?? StatusCodes.Status500InternalServerError;
+        var contractCode = problem.Extensions["code"] as string;
+        var safeCode = contractCode is not null &&
+            (SafeErrorCodes.Contains(contractCode) || GetKnownStatusCode(contractCode).HasValue)
+            ? contractCode
+            : "UNRECOGNIZED_ERROR";
+        logger.Log(status >= 500 ? LogLevel.Error : LogLevel.Warning,
+            new EventId(1003, "KnownRequestFailure"),
+            "خطای امن {ErrorCode} با {StatusCode} رخ داد. CorrelationId: {CorrelationId}; TraceId: {TraceId}",
+            safeCode, status, context.TraceIdentifier, Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier);
+    }
+
+    private ProblemDetails CreateUnexpectedProblem(string correlationId)
+    {
+        logger.LogError(new EventId(1001, "UnexpectedError"),
+            "خطای امن {ErrorCode} با {StatusCode} رخ داد. CorrelationId: {CorrelationId}; TraceId: {TraceId}",
+            "UNEXPECTED_ERROR", StatusCodes.Status500InternalServerError, correlationId,
+            Activity.Current?.TraceId.ToString() ?? correlationId);
 
         return new ProblemDetails
         {

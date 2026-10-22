@@ -350,7 +350,7 @@ public interface IMessagingRealtimeNotifier
 
 public interface IMessagingRealtimeAudienceResolver
 {
-    Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsAsync(
+    IAsyncEnumerable<Guid> GetActiveSessionIdsAsync(
         MessagingRealtimeNotification notification,
         Guid? audienceUserId,
         DateTime nowUtc,

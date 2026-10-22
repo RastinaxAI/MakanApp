@@ -130,11 +130,13 @@ index polling روی `(Status, NextAttemptAtUtc, RequestedAtUtc)` و index ما�
 
 ## claim، recovery و retry
 
-`EfReportExportJobStore` job بعدی را در transaction کوتاه با `UPDLOCK, READPAST, ROWLOCK` claim می‌کند. بنابراین دو processor در مدت lease یک job را هم‌زمان دریافت نمی‌کنند. SQL Server منبع حقیقت است و wake signal حافظه‌ای فقط latency را کم می‌کند؛ restart باعث حذف `Queued` نمی‌شود.
+`EfReportExportJobStore` job بعدی را در transaction کوتاه claim می‌کند؛ hint جاری پس از PH-4، `UPDLOCK, READPAST, READCOMMITTEDLOCK` برای سازگاری صریح با RCSI است. دو processor در مدت lease یک job را هم‌زمان دریافت نمی‌کنند؛ پس از پایان lease، fencing نسل claim در publication/completion لازم است. SQL Server منبع حقیقت است و wake signal حافظه‌ای فقط latency را کم می‌کند؛ restart باعث حذف `Queued` نمی‌شود.
 
 `Processing` با lease منقضی دوباره claim می‌شود. retry حداکثر سه attempt دارد؛ job منقضی با attempt کامل به `REPORT_GENERATION_FAILED` می‌رود. خطای authorization دائمی retry نمی‌شود و `REPORT_DATA_NO_LONGER_AUTHORIZED` ثبت می‌کند. خطای storage/غیرمنتظره تا سقف محدود retry می‌شود.
 
-سیستم ادعای exactly-once ندارد. شناسه FileAsset برابر شناسه job و کلید storage ثبت‌شده پایدار است. اگر process بعد از ذخیره فایل و پیش از Completed از بین برود، retry فایل `Ready` موجود را reuse می‌کند؛ برای `Pending` همان رکورد/کلید repair می‌شود. به این ترتیب برای هر job خروجی‌های orphan نامحدود ساخته نمی‌شود.
+سیستم ادعای exactly-once ندارد. پس از hardening در PH-4، شناسه FileAsset همچنان برابر شناسه job است، اما هر تلاش پیش از انتشار metadata با key تصادفی مستقل می‌نویسد؛ key خروجی Ready هرگز برای retry بازنویسی یا حذف نمی‌شود. انتشار metadata و completion با rowversion نسل claim و lease جاری زیر قفل SQL کنترل می‌شوند. برای `Pending` قدیمی فقط همان رکورد، با guard مالکیت و key تلاش تازه repair می‌شود. I/O طولانی داخل transaction SQL نیست.
+
+اگر process پس از Ready و پیش از Completed متوقف شود، تلاش بعدی Ready را reuse می‌کند. exception در Commit، rollback قطعی را ثابت نمی‌کند؛ candidate بالقوه canonical در catch عمومی حذف نمی‌شود. crash پیش از انتشار می‌تواند candidate یتیمِ محدود به تعداد تلاش‌ها باقی بگذارد؛ برای مجموعهٔ jobهای رو به رشد، cleanup خودکار یا فضای نامحدودِ ایمن ادعا نشده است. [قرارداد بازیابی PH-4](../operations/WORKER_RELIABILITY_AND_RECOVERY.md) مرجع race و اولین rollout است؛ باینری legacy باید پیش از شروع worker hardened کاملاً drain/stop شود. شمارش تست‌های تاریخی STEP 11C پایین، شاهد PH-4 یا recycle واقعی نیست.
 
 ## محدودیت منابع و retention
 

@@ -20,6 +20,22 @@ namespace MakanApp.IntegrationTests;
 public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory)
 {
     [Theory]
+    [InlineData("Production", false)]
+    [InlineData("Production", true)]
+    [InlineData("Staging", false)]
+    [InlineData("Staging", true)]
+    public void UnsafeMockConfiguration_StopsTheActualApiHost(string environmentName, bool allowMock)
+    {
+        using var production = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Otp:Enabled"] = "false",
+            ["Otp:AllowMockAuthentication"] = allowMock.ToString()
+        });
+        var failure = Assert.Throws<InvalidOperationException>(() => production.CreateClient());
+        Assert.Contains("Mock Authentication", failure.Message);
+    }
+
+    [Theory]
     [InlineData("Production")]
     [InlineData("Staging")]
     public async Task SwaggerAndOpenApiAreDisabledByDefaultInProductionLikeHost(string environmentName)
@@ -161,9 +177,21 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
         Assert.Equal("DENY", Assert.Single(response.Headers.GetValues("X-Frame-Options")));
         Assert.Equal("release-smoke-1", Assert.Single(response.Headers.GetValues("X-Correlation-ID")));
+        Assert.Equal("no-referrer", Assert.Single(response.Headers.GetValues("Referrer-Policy")));
+        Assert.Equal("camera=(), microphone=(), geolocation=(), payment=()", Assert.Single(response.Headers.GetValues("Permissions-Policy")));
         Assert.True(response.Headers.Contains("Content-Security-Policy"));
         Assert.DoesNotContain("ConnectionStrings", content, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain(factory.StorageRootPath, content, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SwaggerCanBeExplicitlyEnabledWithoutApplyingApiCspToItsHtml()
+    {
+        using var production = CreateProductionFactory(overrides: new Dictionary<string, string?> { ["Swagger:Enabled"] = "true" });
+        using var client = CreateClient(production);
+        using var response = await client.GetAsync("/swagger/index.html");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.False(response.Headers.Contains("Content-Security-Policy"));
     }
 
     [Fact]
@@ -266,9 +294,12 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
             // کانفیگ خصوصی انتشار نباید دیتابیس یا سرویس پیامک واقعی را وارد تست کند.
             var values = new Dictionary<string, string?>
             {
+                ["Otp:Enabled"] = "true",
+                ["Otp:AllowMockAuthentication"] = "false",
                 ["ConnectionStrings:MakanDatabase"] =
                     "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False",
                 ["Identity:SecurityKey"] = new string('P', 32),
+                ["BackofficeSecurity:KeyRingPath"] = Path.Combine(Path.GetTempPath(), "MakanApp-ProductionHostingKeys", Guid.NewGuid().ToString("N")),
                 ["Sms:Provider"] = "Unavailable",
                 ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
                 ["Storage:RootPath"] = rootPath ?? factory.StorageRootPath,

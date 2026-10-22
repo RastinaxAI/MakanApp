@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MakanApp.Application.Ai;
 
@@ -280,7 +281,7 @@ public sealed record AiStudentAnalysisResponse(
 public sealed record AiPlanItem(
     string Title,
     string Reason,
-    AiSeverity Priority,
+    [property: JsonRequired] AiSeverity Priority,
     int? EstimatedMinutes);
 
 public sealed record AiStudyPlanResponse(

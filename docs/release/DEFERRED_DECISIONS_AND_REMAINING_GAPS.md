@@ -170,3 +170,31 @@ Validation نهایی کد P2 انجام شد: دو suite کامل اصلاح‌
 موارد لازم برای ادامه: host غیرProduction با Docker قابل‌دسترسی، دسترسی مجاز، endpoint عمومی و TLS، طرح محدود پورت‌ها، authenticated TURN UDP+TCP/TLS، دو client synthetic و شرایط fault شبکه، authority/callback آزمایشی و secret/evidence custody. صرف نصب CLI یا رفع WSL این gate کامل را پاس نمی‌کند. version/image/digest هنوز انتخاب/مستقر نشده‌اند؛ هیچ پورت/سرور/firewall تغییر نکرد و ابزار/SDK/Call endpoint/migration محصول ساخته نشد. policy و شواهد P3-0 حفظ شدند؛ AI dirty workspace، MeliPayamak و frontend خارج تغییرند.
 
 مجوز محصول همچنان APPROVED_FOR_IMPLEMENTATION است ولی `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و Production media approval=NOT_GRANTED؛ P3-A/B/D/E پیش از PASS واقعی S آغاز نشوند. `P1_PUSH_RUNTIME_PENDING` و PENDING_SCALE_INFRA بدون تغییرند. گام بعد فقط تأمین زیرساخت و تکرار S1 است؛ window واقعی، FAIL امنیتی یا fallback اجراشده از مستندات vendor استنتاج نمی‌شود.
+
+## PH — سخت‌سازی عملیاتی و gateهای مستقل محیط، ۲۰۲۶-۱۰-۱۸
+
+مرجع پیاده‌سازی و نتایج واقعی هر مرحله [ممیزی PH](../operations/PRODUCTION_HARDENING_AUDIT.md)
+است؛ وضعیت‌های تاریخی بالا حذف یا با ادعای deployment جایگزین نشده‌اند. worktree اختصاصی
+`MakanApp-Backend-Production-Hardening` از origin/main فعلی شروع شد؛ workspace dirty قدیمی AI
+داخل این کار stage، revert، stash یا clean نشد. PH منطق MeliPayamak، AI/RAG، P3، frontend،
+نسخهٔ .NET 9، packageها یا قراردادهای محصول آن trackها را تغییر نمی‌دهد.
+
+| موضوع | وضعیت/مالک باقی‌مانده |
+|---|---|
+| کلیدهای MFA/Data Protection | persistence و validation کد؛ custody/ACL/profile و decrypt/restore واقعی با همان محافظ/AppName/purpose روی مقصد هنوز شاهد اپراتور لازم دارد |
+| IIS lifecycle | Host/ANCM و runbook سازگار؛ Start/Stop/Recycle/overlap/rapid restart/reboot واقعی اجرا نشده؛ اولین rollout باید worker legacy را drain کند |
+| HTTP/TLS | استثنای قبلی محفوظ، نه امنیت transport؛ `BACKEND_HTTPS=PENDING_INFRASTRUCTURE`؛ auth/OTP/token از HTTP تست امن نمی‌شود |
+| observability | meter/activity، خطای امن و قرارداد alert موجود؛ هیچ exporter/collector یا `/metrics` عمومی نصب نشده؛ `OBSERVABILITY_EXPORTER=PENDING_INFRASTRUCTURE` |
+| alert delivery | صرف signal/runbook دریافت اپراتور نیست؛ `ALERT_DELIVERY=PENDING_INFRASTRUCTURE` تا canary واقعی مجاز |
+| worker/external delivery | claim/fencing/idempotent SQL و recovery محلی؛ Push/SMS/SignalR خارجی exactly-once نیست و شکست acknowledgement ممکن است retry همان delivery را بسازد |
+| cleanup محدود | پیش‌فرض خاموش؛ فقط bytes Deleted/Rejected بدون همهٔ referenceها، grace صریح، local Fixed-drive و guard مسیر؛ activation/پذیرش محیط `POLICY_PENDING` |
+| retention محصول/حقوقی | ۱۰۷ جدول inventory شده‌اند؛ SQL purge عمومی، حذف مالی/آموزشی/Messenger/audit/moderation/refresh-chain تصویب یا پیاده نشده؛ [سیاست retention](../operations/RETENTION_AND_CLEANUP_POLICY.md) |
+| orphan و log/backup retention | export candidate بدون metadata و `.uploading` sweep نمی‌شوند؛ log rotation را IIS/Event/collector و backup را DBA با سیاست مصوب اداره می‌کند |
+| backup/recovery | ابزار قبلی reuse می‌شود؛ schedule، off-server copy، failure alert، restore drill مقصد و RPO/RTO همچنان اثبات جدا می‌خواهند |
+| Push/AI/media/scale | `P1_PUSH_RUNTIME_PENDING`، real AI track، `P3_S_INFRA_REQUIRED` و `PENDING_SCALE_INFRA` با PH بسته نمی‌شوند |
+
+مقادیر واقعی secret در Git یا گزارش چاپ نشده‌اند؛ صحت تست‌های log به مسیرهای تست‌شده مربوط است،
+نه redaction عمومی هر DiagnosticSource/collector آینده. activation کانفیگ، دریافت دستگاه یا
+تغییر profile/key ring را از نمونهٔ public یا سبزشدن build نتیجه نگیرید.
+حکم نهایی code/server و Git واقعی تنها پس از validation در ممیزی ثبت می‌شود؛ در نبود اجرای
+مجاز سرور، وضعیت پایان `PRODUCTION_SERVER_ACCEPTANCE_REQUIRED` است، نه Production کامل.

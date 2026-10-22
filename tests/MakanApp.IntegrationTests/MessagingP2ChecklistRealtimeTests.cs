@@ -37,8 +37,8 @@ public sealed partial class MessagingEndpointsTests
         Assert.True((await ReadP2ChecklistAsync(device, setup.ConversationId, receipt.MessageId)).Items.First().IsChecked);
         Assert.All((await ReadP2ChecklistAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId)).Items, i => Assert.False(i.IsChecked));
         await using var scope = factory.Services.CreateAsyncScope(); var resolver = scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>();
-        var sessions = await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default);
-        Assert.Equal(2, sessions.Count); Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
+        var sessions = await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync();
+        Assert.Equal(2, sessions.Count); Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
         Assert.Empty(peer);
         var wire = JsonSerializer.Serialize(notification, JsonOptions);
         Assert.DoesNotContain("isChecked", wire, StringComparison.OrdinalIgnoreCase); Assert.DoesNotContain(checklist.Title, wire);
@@ -57,12 +57,12 @@ public sealed partial class MessagingEndpointsTests
         await SetP2ChecklistAsync(setup.OwnerClient, checklist, checklist.Items.First().ItemId, true);
         var notification = await arrived.Task.WaitAsync(TimeSpan.FromSeconds(10));
         await using var scope = factory.Services.CreateAsyncScope(); var resolver = scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>();
-        Assert.Single(await resolver.GetActiveSessionIdsAsync(notification, setup.Target.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
+        Assert.Single(await resolver.GetActiveSessionIdsAsync(notification, setup.Target.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
         (await setup.OwnerClient.DeleteAsync($"/api/v1/conversations/{id}/members/{setup.Target.UserId}")).EnsureSuccessStatusCode();
-        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Target.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
-        Assert.NotEmpty(await resolver.GetActiveSessionIdsAsync(notification, setup.Owner.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
+        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Target.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
+        Assert.NotEmpty(await resolver.GetActiveSessionIdsAsync(notification, setup.Owner.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
         await factory.RevokeSessionByTokenAsync(setup.Owner.AccessToken);
-        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default));
+        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
         Assert.Equal(HttpStatusCode.Unauthorized, (await setup.OwnerClient.GetAsync(P2ChecklistRoute(id, receipt.MessageId))).StatusCode);
     }
 
@@ -77,10 +77,10 @@ public sealed partial class MessagingEndpointsTests
         var changed = Assert.Single((await GetChangesAsync(setup.SecondClient, setup.ConversationId, baseline.NextCursor)).Changes, c => c.Type == MessagingChangeType.ChecklistChanged);
         var notification = P2ChecklistNotification(setup.ConversationId, changed);
         await using var scope = factory.Services.CreateAsyncScope(); var resolver = scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>();
-        Assert.Equal(2, (await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default)).Count);
+        Assert.Equal(2, (await resolver.GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync()).Count);
         Assert.DoesNotContain("isChecked", JsonSerializer.Serialize(changed, JsonOptions), StringComparison.OrdinalIgnoreCase);
         var peer = await ReadP2ChecklistAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId); Assert.All(peer.Items, i => Assert.Null(i.StateVersion));
         (await setup.SecondClient.DeleteAsync($"/api/v1/conversations/{setup.ConversationId}/messages/{receipt.MessageId}/for-me")).EnsureSuccessStatusCode();
-        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
+        Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, setup.Second.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
     }
 }

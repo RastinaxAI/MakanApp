@@ -57,7 +57,7 @@ public sealed class CsvReportExporter(
                     if (columns is null)
                     {
                         columns = page.Columns;
-                        await writer.WriteLineAsync(string.Join(',', columns.Select(CsvCellEncoder.EncodeHeader)));
+                        await writer.WriteLineAsync(string.Join(',', columns.Select(CsvCellEncoder.EncodeHeader)).AsMemory(), cancellationToken);
                     }
                     else if (!columns.SequenceEqual(page.Columns, StringComparer.Ordinal))
                     {
@@ -75,7 +75,7 @@ public sealed class CsvReportExporter(
                                 "تعداد ستون‌های گزارش معتبر نیست.");
                         }
 
-                        await writer.WriteLineAsync(string.Join(',', row.Select(CsvCellEncoder.Encode)));
+                        await writer.WriteLineAsync(string.Join(',', row.Select(CsvCellEncoder.Encode)).AsMemory(), cancellationToken);
                     }
 
                     writtenRows += page.Rows.Count;

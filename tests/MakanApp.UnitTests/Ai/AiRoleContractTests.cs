@@ -36,6 +36,16 @@ public sealed class AiRoleContractTests
         Assert.True(root.TryGetProperty("actor", out _));
         Assert.True(root.TryGetProperty("scope", out var scope));
         Assert.True(root.TryGetProperty(operationField, out _));
+        var expectedFields = new[] { "requestId", "correlationId", "actor", "scope", "language" }
+            .Concat(request switch
+            {
+                AiStudyPlanRequest => ["studentData", "goals", "preferences"],
+                AiHomeworkExplanationRequest => ["homework", "question", "context"],
+                AiExamPreparationRequest => ["exam", "studentData", "context"],
+                AiTeacherActivitySuggestionsRequest => ["classData", "objective", "constraints"],
+                _ => new[] { operationField }
+            });
+        Assert.Equal(expectedFields.Order(), root.EnumerateObject().Select(field => field.Name).Order());
         Assert.False(root.TryGetProperty("RequestId", out _));
         Assert.DoesNotContain("phone", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("token", json, StringComparison.OrdinalIgnoreCase);

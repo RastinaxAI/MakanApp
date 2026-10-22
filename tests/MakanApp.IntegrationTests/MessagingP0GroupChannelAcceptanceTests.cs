@@ -55,7 +55,7 @@ public sealed partial class MessagingEndpointsTests
         await using var scope = factory.Services.CreateAsyncScope();
         var notification = await ReadP0ConversationNotificationAsync(ownerClient, id);
         Assert.Empty(await scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>()
-            .GetActiveSessionIdsAsync(notification, member.UserId, factory.Clock.GetUtcNow().UtcDateTime, default));
+            .GetActiveSessionIdsAsync(notification, member.UserId, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync());
         var future = await SendMessageAndReadAsync(ownerClient, id, Guid.NewGuid(), "ارسال مالک پس از حذف عضو");
         Assert.Equal(message.Sequence + 1, future.Sequence);
         Assert.Equal(HttpStatusCode.OK, (await ownerClient.GetAsync($"/api/v1/files/{file.Id}/content")).StatusCode);
@@ -156,7 +156,7 @@ public sealed partial class MessagingEndpointsTests
         var notification = new MessagingRealtimeNotification(conversationId, change.Type, change.ResourceId,
             change.ResourceVersion, change.Cursor, change.OccurredAtUtc, change.PayloadVersion);
         var recipients = await scope.ServiceProvider.GetRequiredService<IMessagingRealtimeAudienceResolver>()
-            .GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default);
+            .GetActiveSessionIdsAsync(notification, null, factory.Clock.GetUtcNow().UtcDateTime, default).ToTestArrayAsync();
         await scope.ServiceProvider.GetRequiredService<IMessagingRealtimeNotifier>().NotifyConversationChangedAsync(
             notification, null, default);
         return recipients;

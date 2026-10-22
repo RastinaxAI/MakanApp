@@ -13,6 +13,8 @@ public sealed class ScheduledMessageProcessor(IScheduledMessageStore schedules, 
         {
             // هر بار فقط یک lease؛ انتظار provider برای کار قبلی، lease بیست کار بعدی را منقضی نمی‌کند.
             var claim = await schedules.ClaimNextScheduledMessageAsync(ct); if (claim is null) break;
+            // پایان‌دادن کار رهاشده هم یک سهم از batch است، نه علامت خالی‌بودن صف.
+            if (claim.IsTerminal) continue;
             try
             {
                 var work = await schedules.GetScheduledMessageWorkAsync(claim, ct); if (work is null) continue;
@@ -27,7 +29,7 @@ public sealed class ScheduledMessageProcessor(IScheduledMessageStore schedules, 
                 await messages.SendMessageAsync(work.UserId, work.ConversationId, context, command, evaluated.Evaluated,
                     options.MaximumTextLength, clock.GetUtcNow().UtcDateTime, ct);
             }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+            catch (Exception) when (ct.IsCancellationRequested) { ct.ThrowIfCancellationRequested(); throw; }
             catch (MessagingException ex)
             {
                 await schedules.FailScheduledMessageAsync(claim, ex.Code, ex.Code == MessagingErrorCodes.MessageSafetyUnavailable, ct);

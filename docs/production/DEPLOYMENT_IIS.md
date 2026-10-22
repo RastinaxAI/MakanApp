@@ -13,7 +13,9 @@
 
 ## تنظیمات محیط
 
-انتشار فعلی فقط `ASPNETCORE_ENVIRONMENT=Production` دارد؛ فایل `appsettings.Staging.json` به درخواست مالک حذف شده است. نسخهٔ قابل‌اشتراک کانفیگ در `MakanApp.Api/appsettings.Production.json.example` است. فایل واقعی `MakanApp.Api/appsettings.Production.json` محلی و در `.gitignore` است؛ حذف آن از index گیت به معنی حذف فایل فیزیکی یا داده‌های سرور نیست. روی clone جدید، نمونه را کپی و مقادیر محرمانه را فقط روی محیط مجاز وارد کنید. فایل نمونه به‌تنهایی آمادهٔ اجرا نیست.
+برای سرور صرفاً آزمایشی، پروفایل مستقل `TestIis` با محیط `Test` و [راهنمای Mock OTP](../dev/SERVER_MOCK_OTP_FA.md) اضافه شده است؛ این پروفایل جایگزین انتشار Production در ادامهٔ این سند نیست.
+
+انتشار عادی در این سند `ASPNETCORE_ENVIRONMENT=Production` دارد؛ فایل `appsettings.Staging.json` به درخواست مالک حذف شده است. نسخهٔ قابل‌اشتراک کانفیگ در `MakanApp.Api/appsettings.Production.json.example` است. فایل واقعی `MakanApp.Api/appsettings.Production.json` محلی و در `.gitignore` است؛ حذف آن از index گیت به معنی حذف فایل فیزیکی یا داده‌های سرور نیست. روی clone جدید، نمونه را کپی و مقادیر محرمانه را فقط روی محیط مجاز وارد کنید. فایل نمونه به‌تنهایی آمادهٔ اجرا نیست.
 
 مقادیر می‌توانند در فایل خصوصی بالا یا از IIS Configuration Editor، environmentVariables یا secret store تأمین شوند. environment متغیرهای هم‌نام بر JSON اولویت دارند؛ مقادیر قدیمی IIS ممکن است کانفیگ فایل جدید را override کنند. هیچ رمز، token یا connection string واقعی در Git یا مستند مشترک ثبت نشود.
 
@@ -63,6 +65,28 @@ Web SDK فایل خصوصی `appsettings.Production.json` موجود را همر
 
 پیش از استفاده از MFA، پوشهٔ KeyRing را بیرون Publish و Storage بسازید و فقط به هویت App Pool و اپراتور مجاز دسترسی لازم بدهید. بدون certificate، محافظ Windows از DPAPI استفاده می‌کند؛ هویت App Pool باید ثابت و `Load User Profile` مناسب باشد. اگر MFA قبلاً فعال بوده، همان مسیر و کلیدهای قبلی را در `web.config` نگه دارید؛ تعویض مسیر، حذف پوشه یا کپی XML به ماشین دیگر بازیابی secretهای TOTP را تضمین نمی‌کند. این فایل پوشه/ACL یا تنظیمات App Pool سرور را خودکار ایجاد نمی‌کند. جزئیات در [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) است.
 
+### الزام Data Protection در PH-1
+
+در PH-1 همان provider سراسری قبلی reuse شده است، نه سیستم MFA موازی. مقدار پیش‌فرض `ApplicationName` دقیقاً `MakanApp.BackofficeMfa.v1` و purposeهای MFA بدون تغییرند. aliasهای جدید `Security:DataProtection:KeyRingPath`، `CertificatePath` و `CertificatePassword` با `BackofficeSecurity:*` سازگارند؛ اگر هر دو namespace مقدار غیرخالی متفاوت بدهند، startup متوقف می‌شود. وجود مقدار خالی در فایل نمونه، مسیر واقعی legacy در `web.config` را پاک نمی‌کند. راهنمای مرجع تنظیمات در [Production Configuration](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) است.
+
+تغییر عمدی نسبت به GAP-04: host عملیاتی بدون key ring پایدار دیگر شروع نمی‌شود؛ فقط resolve مستقیم سرویس MFA همچنان `MFA_UNAVAILABLE` می‌دهد. مسیر موجود `web.config` تغییر نکرده است. پیش از deploy، همان مسیر و محافظ قبلی را برای instance دارای MFA حفظ کنید؛ تنظیم یک مسیر تازه یا تغییر `ApplicationName` روش migration کلیدها نیست.
+
+`DataProtectionKeyRingStartupValidator` پیش از شروع workerها مسیر صریح، امکان write/read و protect/unprotect را بررسی می‌کند. probe runtime از همان تنظیمات استفاده می‌کند و پوشه یا کلیدهای گم‌شده را دوباره نمی‌سازد؛ نبود هر کلید غیرلغوشدهٔ مشاهده‌شده در startup یا checkهای موفق بعدی باعث عدم آمادگی می‌شود، حتی اگر provider کلید را cache کرده باشد. تعداد descriptorهای خوانده‌شده نیز با فایل‌های استاندارد `key-*.xml` تطبیق می‌یابد تا descriptor خراب بی‌صدا کنار گذاشته و حلقه از نو ساخته نشود؛ نام فایل‌های کلید را دستی تغییر ندهید. revocation XMLها فایل کلید محسوب نمی‌شوند. این کنترل جای custody و restore تمام کلیدهای تاریخی را نمی‌گیرد. Development/Testing بدون مسیر عملیاتی قابل اجرا باقی می‌مانند.
+
+نمونهٔ زیر فقط فرمان اپراتور است و در این تحویل روی سرور اجرا نشده؛ نام App Pool نمونه را با نام تأییدشدهٔ خودتان عوض کنید و مسیر **موجود** را حفظ کنید:
+
+```powershell
+$keyRingPath = 'C:\ProgramData\MakanApp\BackofficeMfaKeys'
+New-Item -ItemType Directory -Path $keyRingPath -Force | Out-Null
+icacls $keyRingPath /grant:r 'IIS AppPool\MakanApp:(OI)(CI)M' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F'
+icacls $keyRingPath /inheritance:r
+icacls $keyRingPath
+```
+
+دستور ACL در PowerShell مدیریتی و پس از ثبت ACL قبلی اجرا شود؛ custodianهای مجاز دیگر را بدون بررسی حذف نکنید. App Pool روی publish به‌طور عادی Read/Execute، روی key ring و Storage مجوز لازم، و روی private certificate حداقل Read می‌خواهد. key ring، PFX و JSON خصوصی نباید زیر publish، storage عمومی، Git یا ZIP قابل‌اشتراک باشند. symlink/junction و دسترسی physical path نیز باید توسط اپراتور بررسی شود.
+
+DPAPI موجود **current-user** است، نه `LocalMachine`؛ تغییر Windows identity/profile یا انتقال صرف XML به ماشین جدید قابل بازیابی فرض نشود. برای قابلیت انتقال، گزینهٔ certificate/PFX موجود کافی است و نیاز به certificate store دوم ندارد: `CertificatePath` مطلق و `CertificatePassword` فقط از secret store محیط تأمین شوند، PFX/private key و رمز تحت custody امن و جدا از backup عادی باشند. اضافه‌کردن store/thumbprint در این مرحله ارزش ضروری نسبت به مسیر PFX موجود ندارد و انجام نشده است. تعویض محافظ به certificate، کلیدهای DPAPI قدیمی را خودکار قابل انتقال نمی‌کند؛ migration و drill جدا لازم است. جزئیات [Backup/Restore](BACKUP_RESTORE.md) همچنان معتبر است.
+
 ## فایل SQL مایگریشن‌ها
 
 Migration تازه‌ای برای این تغییر کانفیگ لازم نیست. دو Migration موجود مرتبط با MFA و Child Safety عبارت‌اند از `20261015073418_AddPlatformTotpMfa` و `20261015091336_EnforceApprovedMessengerChildSafety`. اگر پایگاه هدف قدیمی‌تر از GAP-01 است، اسکریپت محدود این دو مرحله کافی نیست. خروجی کامل idempotent را بدون اتصال به دیتابیس می‌توان تولید کرد:
@@ -100,6 +124,147 @@ Migration تازه‌ای برای این تغییر کانفیگ لازم نی�
 ## Forwarded headers
 
 برنامه فقط وقتی `ReverseProxy:Enabled=true` است forwarded headers را می‌خواند، `ForwardLimit=1` دارد و فقط IPهای `KnownProxies` را قبول می‌کند. IP proxy واقعی را صریح ثبت کنید؛ subnet عمومی یا اعتماد سراسری ممنوع است.
+
+## قرارداد Runtime و Shutdown در PH-5
+
+این بخش دستور اپراتور است؛ هیچ فرمان IIS، restart یا reboot در تحویل PH روی سرور اجرا نشده است.
+Backend همچنان .NET 9 و `inprocess` است؛ نصب Hosting Bundle متناظر و bitness سازگار باید روی مقصد تأیید شود.
+هر برنامه App Pool اختصاصی داشته باشد. `maxProcesses=1` الزام topology فعلی SignalR، Presence و limiter حافظه‌ای است؛
+leaseهای SQL مجوز Web Garden یا scale-out عمومی نیستند.
+
+`Hosting:ShutdownTimeoutSeconds` اختیاری و بین ۵ تا ۹۰ ثانیه است. نبود آن، مقدار نهایی Generic Host را حفظ می‌کند
+(پیش‌فرض framework برابر ۳۰ ثانیه و override قدیمی `shutdownTimeoutSeconds` همچنان معتبر است).
+مقدار صریح جدید اولویت دارد و مقدار نهایی خارج بازه رد می‌شود؛ مقدار خام نامعتبر وارد پیام خطا نمی‌شود.
+در JSON مشترک default جدیدی اضافه نشده تا override قبلی بی‌خبر پوشانده نشود.
+
+سه budget مستقل را اشتباه نگیرید:
+
+| مرز | قرارداد این نسخه | وظیفهٔ اپراتور |
+|---|---|---|
+| Generic Host | مقدار معتبر ۵ تا ۹۰، پیش‌فرض ۳۰ ثانیه | مشاهدهٔ shutdown واقعی workerهای همین نسخه |
+| ANCM | `shutdownTimeLimit="120"` در `web.config` | حفظ این attribute هنگام ترکیب کانفیگ خصوصی؛ عمدتاً مسیر `app_offline.htm` |
+| WAS/App Pool | تنظیم سرور، نه attribute برنامه | بررسی budget مستقل؛ پیشنهاد عملیاتیِ قابل بازبینی ۱۵۰ ثانیه، نه مقدار پیش‌فرض ۹۰ |
+
+این‌ها بودجه‌های مستقل‌اند، نه SLA یا تضمین خاتمهٔ I/O معیوب. Host بودجهٔ لغو/انتظار cooperative دارد،
+نه timer کشتن اجباری process؛ termination توسط ANCM/WAS تابع مسیر مستقل خودشان است. نتیجه‌های کوتاه worker بودجهٔ مستقل ۵s دارند؛
+lease منقضی کار نیمه‌تمام را recover می‌کند. SignalR هنگام recycle قطع و reconnect/Delta از SQL لازم می‌شود.
+برای جزئیات و محدودیت at-least-once به [بازیابی Worker](../operations/WORKER_RELIABILITY_AND_RECOVERY.md) رجوع کنید.
+
+### بررسی و تنظیم محدود App Pool توسط اپراتور
+
+نمونهٔ زیر برای **Windows PowerShell 5.1 Desktop، 64-bit و مدیریتی** روی Windows Server است؛
+اجرای مستقیم در `pwsh` با compatibility module، پذیرش provider `IIS:` را ثابت نمی‌کند.
+نام‌های نمونه را با سایت/App Pool تأییدشده عوض کنید؛ Pool نباید میزبان برنامهٔ دیگری باشد و اپراتور
+باید این اختصاصی‌بودن را در inventory/IIS Manager پیش از mutation تأیید کند.
+مرحلهٔ اول فقط بررسی است؛ backup شامل تنظیمات محرمانهٔ IIS است و نباید در Git یا evidence عمومی قرار گیرد.
+
+```powershell
+if ($PSVersionTable.PSEdition -ne 'Desktop' -or $PSVersionTable.PSVersion -lt [Version]'5.1' -or
+    ![Environment]::Is64BitProcess) {
+    throw 'این نمونه به Windows PowerShell 5.1 Desktop مدیریتی 64-bit نیاز دارد.'
+}
+Import-Module ServerManager
+Import-Module WebAdministration
+Get-WindowsFeature Web-Server, Web-AppInit, Web-WebSockets, Web-Scripting-Tools |
+    Select-Object Name, InstallState
+dotnet --list-runtimes
+Get-WebGlobalModule -Name AspNetCoreModuleV2 | Select-Object Name
+
+$siteName = 'MakanApp'
+$poolName = 'MakanApp'
+if ($siteName -notmatch '^[A-Za-z0-9_.-]+$' -or $poolName -notmatch '^[A-Za-z0-9_.-]+$') {
+    throw 'نام نمونه را با نام دقیق و معتبر محیط جایگزین کنید.'
+}
+$poolPath = "IIS:\AppPools\$poolName"
+$sitePath = "IIS:\Sites\$siteName"
+if (!(Test-Path -LiteralPath $poolPath) -or !(Test-Path -LiteralPath $sitePath)) {
+    throw 'سایت یا App Pool تأییدشده یافت نشد؛ برنامه یا سایت تازه نسازید.'
+}
+$actualPool = (Get-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' `
+    -Filter "system.applicationHost/sites/site[@name='$siteName']/application[@path='/']" `
+    -Name applicationPool).Value
+if ($actualPool -ne $poolName) {
+    throw 'سایت ریشه از App Pool انتخاب‌شده استفاده نمی‌کند؛ پیش از تغییر mapping را بررسی کنید.'
+}
+Get-Item -LiteralPath $poolPath |
+    Select-Object Name, managedRuntimeVersion, startMode,
+        @{Name='MaxProcesses';Expression={$_.processModel.maxProcesses}},
+        @{Name='IdleTimeout';Expression={$_.processModel.idleTimeout}},
+        @{Name='LoadUserProfile';Expression={$_.processModel.loadUserProfile}},
+        @{Name='ShutdownLimit';Expression={$_.processModel.shutdownTimeLimit}},
+        @{Name='PingEnabled';Expression={$_.processModel.pingingEnabled}},
+        @{Name='RapidFailProtection';Expression={$_.failure.rapidFailProtection}}
+Backup-WebConfiguration -Name ('MakanApp-PH-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ'))
+```
+
+پس از بازبینی backup، مالکیت سایت/Pool و maintenance window، تنظیم‌های محدود زیر را اعمال کنید؛
+هویت Windows را تغییر ندهید، چون DPAPI موجود به همان identity/profile وابسته است.
+
+```powershell
+Set-ItemProperty -LiteralPath $poolPath -Name managedRuntimeVersion -Value ''
+Set-ItemProperty -LiteralPath $poolPath -Name startMode -Value AlwaysRunning
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.maxProcesses -Value 1
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.idleTimeout -Value ([TimeSpan]::Zero)
+Set-ItemProperty -LiteralPath $poolPath -Name processModel.shutdownTimeLimit -Value ([TimeSpan]::FromSeconds(150))
+```
+
+`LoadUserProfile` در بلوک بالا عمداً تغییر نمی‌کند. برای ring موجودِ DPAPI، همان identity و
+profile مؤثر قبلی حفظ شود؛ true کردن این flag به‌تنهایی روش بازیابی یا ارتقای امن نیست.
+روی App Pool تازه، تنظیم مناسب profile باید همراه protector/ACL/custody و آزمایش decrypt همان
+payload قبلی تعیین شود. تغییر profile موجود فقط پس از recovery rehearsal مستقل و تأیید maintenance مجاز است.
+
+Idle Timeout صفر برای workerهای داخل API است؛ Ping، Rapid-Fail Protection، محدودیت crash و مانیتورینگ را خاموش نکنید.
+recycle برنامه‌ریزی‌شده را با بار و maintenance هماهنگ کنید، نه اینکه recovery را با حذف همهٔ safetyها جایگزین کنید.
+overlap موقت دو process در recycle با Web Garden دائمی متفاوت است؛ Redis/backplane در این مرحله ایجاد نشده است.
+
+### Warm-up فقط با نقش نصب‌شده
+
+اگر `Web-AppInit` نصب و سایت ریشهٔ Backend تأیید شده است، اپراتور می‌تواند preload را فعال کند.
+وجود section در `web.config` بدون نصب/آزاد بودن نقش می‌تواند 500.19 بدهد؛ بنابراین این section به artifact اضافه نشده است.
+
+```powershell
+if ((Get-WindowsFeature Web-AppInit).InstallState -ne 'Installed') {
+    throw 'ابتدا نقش Application Initialization باید توسط اپراتور آماده شود.'
+}
+Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' `
+    -Filter "system.applicationHost/sites/site[@name='$siteName']/application[@path='/']" `
+    -Name preloadEnabled -Value $true
+Set-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+    -Filter 'system.webServer/applicationInitialization' -Name doAppInitAfterRestart -Value $true
+$warmup = Get-WebConfiguration -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+    -Filter "system.webServer/applicationInitialization/add[@initializationPage='/health/live']"
+if (!$warmup) {
+    Add-WebConfigurationProperty -PSPath 'MACHINE/WEBROOT/APPHOST' -Location $siteName `
+        -Filter 'system.webServer/applicationInitialization' -Name '.' `
+        -Value @{initializationPage='/health/live'}
+}
+```
+
+warm-up liveness جای readiness، دسترسی SQL یا شروع موفق provider را نمی‌گیرد.
+AlwaysRunning بدون preload/درخواست اولیه لزوماً startup برنامه را ثابت نمی‌کند.
+اگر سایت چند application دارد یا section قفل است، command را کورکورانه ادامه ندهید؛ تنظیم فقط application تأییدشده لازم است.
+
+### ACL، logging و پذیرش Runtime
+
+publish فقط Read/Execute، Storage و key ring مجوز لازمِ محدود، certificate حداقل Read و محل log فقط در صورت استفاده مجوز write بخواهد.
+دسترسی broad مانند Everyone یا تغییر identity موجود مجاز نیست. ACL و custody قبلی پیش از هر تغییر ثبت شوند؛
+فرمان‌های key ring در بخش PH-1 بالا معتبرند. stdout و ANCM debug logging دائمی خاموش بمانند؛
+Event Log و collector چرخش/سقف حجم/دسترسی مصوب می‌خواهند. IIS access log باید query، cookie، Authorization و custom header حساس را ثبت نکند؛
+Failed Request Tracing یا dump خام کانفیگ روش evidence عمومی نیست.
+
+برای اولین rollout اصلاح Report Export، پیش از راه‌اندازی نسخهٔ جدید، نسخهٔ legacy را drain/stop و خروج PIDهای قبلی را تأیید کنید؛
+آزمون worker جدید/جدید، هم‌زمانی نسخهٔ قدیمیِ بدون fence را اثبات نمی‌کند. backup فعلی publish/config/DB/storage/ring حفظ شود.
+Start، Stop/Start، recycle، rapid restart، overlap و reboot فقط با تأیید maintenance و معیار بازیابی در
+[چک‌لیست پذیرش](RELEASE_CHECKLIST.md) اجرا شوند؛ موفقیت تست محلی جای این gateها نیست.
+
+TLS معتبر همچنان `BACKEND_HTTPS=PENDING_INFRASTRUCTURE` است؛ استثنای HTTP قبلی، CORS allowlist و
+Swagger opt-in حفظ شده‌اند. فعال‌بودن Swagger خصوصیِ انتشار قبلی نه حذف و نه از سرور دوباره احراز شده است.
+headerهای API موجود (`nosniff`، `no-referrer` و Permissions-Policy) و استثنای Swagger در CSP حفظ می‌شوند؛
+هیچ cookie احراز هویت یا CSP ویژهٔ frontend اضافه نشده است.
+
+مراجع رسمی تنظیم‌های IIS: [ANCM](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/aspnet-core-module?view=aspnetcore-9.0)،
+[Process Model](https://learn.microsoft.com/en-us/iis/configuration/system.applicationhost/applicationpools/add/processmodel/)،
+[Application Initialization](https://learn.microsoft.com/en-us/iis/configuration/system.webserver/applicationinitialization/).
 
 ## Gate شکست و rollback
 

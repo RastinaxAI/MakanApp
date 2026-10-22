@@ -8,17 +8,20 @@ using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.CompilerServices;
 
 namespace MakanApp.Infrastructure.Messaging;
 
 public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, IServiceScopeFactory scopeFactory)
     : IMessagingRealtimeAudienceResolver
 {
-    public async Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsAsync(
+    public const int CandidatePageSize = 128;
+
+    public async IAsyncEnumerable<Guid> GetActiveSessionIdsAsync(
         MessagingRealtimeNotification notification,
         Guid? audienceUserId,
         DateTime nowUtc,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var conversationId = notification.ConversationId;
         if (!MessagingChangeCursor.TryDecode(notification.Cursor, conversationId, out var changeSequence) || changeSequence < 1)
@@ -29,7 +32,7 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
             .SingleOrDefaultAsync(item => item.Id == conversationId, cancellationToken);
         if (conversation is null)
         {
-            return [];
+            yield break;
         }
 
         var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
@@ -61,30 +64,39 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
                        membership.EndedAtUtc == null))
             select new { session.Id, session.UserId };
 
-        var candidates = await query.Distinct().ToArrayAsync(cancellationToken);
-        if (candidates.Length == 0) return [];
-
-        // هر رویداد scope تازه می‌خواهد تا tracking نشست از رویداد قبلی، مجوز منقضی را زنده نگه ندارد.
-        await using var authorizationScope = scopeFactory.CreateAsyncScope();
-        var messagingService = authorizationScope.ServiceProvider.GetRequiredService<IMessagingService>();
-        var authorized = new List<Guid>(candidates.Length);
-        foreach (var session in candidates)
+        Guid? afterSessionId = null;
+        while (true)
         {
-            try
+            cancellationToken.ThrowIfCancellationRequested();
+            var pageQuery = query.Distinct();
+            if (afterSessionId is Guid cursor)
+                pageQuery = pageQuery.Where(session => session.Id.CompareTo(cursor) > 0);
+            var candidates = await pageQuery.OrderBy(session => session.Id).Take(CandidatePageSize)
+                .ToArrayAsync(cancellationToken);
+            if (candidates.Length == 0) yield break;
+            afterSessionId = candidates[^1].Id;
+
+            // reader صفحه بسته است؛ scope تازه اجازه نمی‌دهد tracking صفحهٔ قبلی مجوز را زنده نگه دارد.
+            await using var authorizationScope = scopeFactory.CreateAsyncScope();
+            var messagingService = authorizationScope.ServiceProvider.GetRequiredService<IMessagingService>();
+            foreach (var session in candidates)
             {
-                // همان Delta، مرز FromJoin/Clear/DeleteForMe و audience خصوصی خود رویداد را نیز می‌سنجد.
-                var visible = await messagingService.GetConversationChangesAsync(
-                    session.UserId, session.Id, conversationId,
-                    new GetConversationChangesQuery(precedingCursor, 1), cancellationToken);
-                if (visible.Changes.Any(change => change.Cursor == notification.Cursor &&
-                    change.Type == notification.Type && change.ResourceId == notification.ResourceId))
-                    authorized.Add(session.Id);
-            }
-            catch (Exception exception) when (exception is IdentityException or OrganizationException or GuardianException or MessagingException)
-            {
-                // رد مجوز یک نشست نباید مانع تحویل به بقیه شود؛ خطای فنی و cancellation بلعیده نمی‌شوند.
+                var authorized = false;
+                try
+                {
+                    // همان Delta، مرز FromJoin/Clear/DeleteForMe و audience خصوصی خود رویداد را نیز می‌سنجد.
+                    var visible = await messagingService.GetConversationChangesAsync(
+                        session.UserId, session.Id, conversationId,
+                        new GetConversationChangesQuery(precedingCursor, 1), cancellationToken);
+                    authorized = visible.Changes.Any(change => change.Cursor == notification.Cursor &&
+                        change.Type == notification.Type && change.ResourceId == notification.ResourceId);
+                }
+                catch (Exception exception) when (exception is IdentityException or OrganizationException or GuardianException or MessagingException)
+                {
+                    // رد مجوز یک نشست نباید مانع بقیه شود؛ خطای فنی و cancellation بلعیده نمی‌شوند.
+                }
+                if (authorized) yield return session.Id;
             }
         }
-        return authorized;
     }
 }

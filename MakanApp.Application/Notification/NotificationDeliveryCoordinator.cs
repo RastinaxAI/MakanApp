@@ -85,9 +85,21 @@ public sealed class NotificationDeliveryCoordinator(
             return;
         }
 
-        var deviceIds = await store.GetActivePushDeviceIdsAsync(
-            notification.RecipientUserId, nowUtc, cancellationToken);
-        if (deviceIds.Count == 0)
+        var hasDevice = false;
+        await foreach (var deviceIds in store.GetActivePushDeviceIdBatchesAsync(
+            notification.RecipientUserId, nowUtc, cancellationToken))
+        {
+            hasDevice = true;
+            var batch = deviceIds.Select(deviceId => NotificationDeliveryAttempt.Schedule(
+                notification.Id,
+                NotificationDeliveryChannel.Push,
+                deviceId.ToString("N"),
+                nowUtc,
+                deliverAtUtc)).ToArray();
+            await store.AddBatchAsync(batch, cancellationToken);
+        }
+
+        if (!hasDevice)
         {
             attempts.Add(NotificationDeliveryAttempt.Suppress(
                 notification.Id,
@@ -96,16 +108,6 @@ public sealed class NotificationDeliveryCoordinator(
                 NotificationDeliveryFailureReason.NoDevice,
                 nowUtc));
             return;
-        }
-
-        foreach (var deviceId in deviceIds)
-        {
-            attempts.Add(NotificationDeliveryAttempt.Schedule(
-                notification.Id,
-                NotificationDeliveryChannel.Push,
-                deviceId.ToString("N"),
-                nowUtc,
-                deliverAtUtc));
         }
     }
 

@@ -1,9 +1,12 @@
+using System.Diagnostics;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
+using MakanApp.Infrastructure.Observability;
+using MakanApp.Infrastructure.Hosting;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +18,7 @@ public sealed class ReportExportDispatcher(
     IServiceScopeFactory scopeFactory,
     IReportExportQueueSignal queueSignal,
     ReportExportOptions options,
+    WorkerTelemetry telemetry,
     ILogger<ReportExportDispatcher> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -22,24 +26,34 @@ public sealed class ReportExportDispatcher(
         while (!stoppingToken.IsCancellationRequested)
         {
             var processed = false;
-            try
+            var started = Stopwatch.GetTimestamp();
+            using (telemetry.BeginBatch(WorkerTelemetry.ReportExport))
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                processed = await scope.ServiceProvider
-                    .GetRequiredService<ReportExportProcessor>()
-                    .ProcessNextAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-            catch (SqlException exception) when (exception.Number == 208)
-            {
-                logger.LogDebug("جدول job خروجی گزارش هنوز آماده نیست.");
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(exception, "حلقه پردازش خروجی گزارش ناموفق بود.");
+                try
+                {
+                    await using var scope = scopeFactory.CreateAsyncScope();
+                    processed = await scope.ServiceProvider
+                        .GetRequiredService<ReportExportProcessor>()
+                        .ProcessNextAsync(stoppingToken);
+                }
+                catch (Exception) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (SqlException exception) when (exception.Number == 208)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Loop");
+                    logger.LogDebug("جدول job خروجی گزارش هنوز آماده نیست.");
+                }
+                catch (Exception)
+                {
+                    telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Loop");
+                    logger.LogError("حلقه پردازش خروجی گزارش ناموفق بود. Code={FailureCode}", "REPORT_EXPORT_LOOP_FAILED");
+                }
+                finally
+                {
+                    telemetry.RecordBatch(WorkerTelemetry.ReportExport, processed ? 1 : 0, started);
+                }
             }
 
             if (!processed)
@@ -57,6 +71,7 @@ public sealed class ReportExportProcessor(
     IReportExportOutputStore outputStore,
     ReportExportOptions options,
     TimeProvider timeProvider,
+    WorkerTelemetry telemetry,
     ILogger<ReportExportProcessor> logger)
 {
     public async Task<bool> ProcessNextAsync(CancellationToken cancellationToken)
@@ -72,6 +87,9 @@ public sealed class ReportExportProcessor(
             return false;
         }
 
+        var claimRowVersion = job.RowVersion.ToArray();
+        Guid? outputFileId = null;
+        var outputReady = false;
         try
         {
             await dataSource.EnsureCurrentAccessAsync(
@@ -79,39 +97,48 @@ public sealed class ReportExportProcessor(
                 job.RequestedBySessionId,
                 job,
                 cancellationToken);
-            var outputFileId = await outputStore.FindReusableOutputAsync(job, cancellationToken);
+            outputFileId = await outputStore.FindReusableOutputAsync(job, cancellationToken);
             if (!outputFileId.HasValue)
             {
                 await using var generated = await exporter.GenerateAsync(job, cancellationToken);
                 outputFileId = await outputStore.SaveAsync(
                     job,
+                    claimRowVersion,
                     generated,
                     options.MaximumFileSizeBytes,
                     cancellationToken);
             }
 
-            job.Complete(outputFileId.Value, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(cancellationToken);
+            if (!outputFileId.HasValue)
+            {
+                // خروجی null یعنی guard مالکیت در transaction انتشار، تلاش قدیمی را رد کرده است.
+                telemetry.RecordOutcome(WorkerTelemetry.ReportExport, "LeaseLost");
+                return true;
+            }
+
+            outputReady = true;
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             throw;
         }
         catch (Exception exception) when (IsAuthorizationFailure(exception))
         {
+            telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Process");
             job.Fail(ReportExportErrorCodes.DataNoLongerAuthorized, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(CancellationToken.None);
             logger.LogWarning("دسترسی job خروجی گزارش {JobId} پیش از تولید معتبر نبود.", job.Id);
         }
         catch (ReportExportException exception) when (
             exception.Code is ReportExportErrorCodes.RowLimitExceeded or ReportExportErrorCodes.GenerationFailed)
         {
+            telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Process");
             job.Fail(exception.Code, timeProvider.GetUtcNow().UtcDateTime);
-            await jobStore.SaveChangesAsync(CancellationToken.None);
             logger.LogWarning("تولید job خروجی گزارش {JobId} با کد {FailureCode} متوقف شد.", job.Id, exception.Code);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
+            telemetry.RecordFailure(WorkerTelemetry.ReportExport, "Process");
             if (job.AttemptCount < options.MaximumAttempts)
             {
                 job.ScheduleRetry(timeProvider.GetUtcNow().UtcDateTime.Add(options.RetryDelay));
@@ -121,10 +148,17 @@ public sealed class ReportExportProcessor(
                 job.Fail(ReportExportErrorCodes.GenerationFailed, timeProvider.GetUtcNow().UtcDateTime);
             }
 
-            await jobStore.SaveChangesAsync(CancellationToken.None);
-            logger.LogError(exception, "تولید job خروجی گزارش {JobId} ناموفق بود.", job.Id);
+            logger.LogError("تولید job خروجی گزارش {JobId} ناموفق بود. Code={FailureCode}", job.Id, ReportExportErrorCodes.GenerationFailed);
         }
 
+        if (outputReady && outputFileId is Guid readyFileId)
+        {
+            job.Complete(readyFileId, timeProvider.GetUtcNow().UtcDateTime);
+        }
+
+        // خطای ذخیره Completed نباید دوباره به ScheduleRetry روی همان شیء Completed تبدیل شود.
+        using var completion = WorkerCompletionBudget.Create();
+        await jobStore.TrySaveClaimChangesAsync(job, claimRowVersion, completion.Token);
         return true;
     }
 

@@ -1,0 +1,350 @@
+# ممیزی سخت‌سازی Production — PH-0
+
+تاریخ: 2026-10-18. مبنا: کد واقعی `origin/main` در commit
+`0f5d861f382ac41c81b15406c92db9c181acf88c`؛ این سند شاهد اجرای سرور نیست.
+Worktree مستقل: `MakanApp-Backend-Production-Hardening`، branch:
+`operations/production-hardening` با upstream برابر `origin/main`.
+workspace قدیمی و dirty مربوط به AI و worktree پیام‌رسان تغییر نکرده‌اند.
+
+## روش و معنای وضعیت‌ها
+
+کد، migration و تست‌های موجود مبنای پیاده‌سازی‌اند؛ ادعای اسناد تاریخی به‌تنهایی کافی نیست.
+`IMPLEMENTED`: رفتار در کد/تست موجود است؛ `PARTIAL`: بخش مهمی هنوز ناقص است؛
+`MISSING`: در کد وجود ندارد؛ `OPERATIONAL_ONLY`: اثبات نیازمند اقدام اپراتور است؛
+`BLOCKED_BY_INFRA`: زیرساخت فعلی برای اثبات فراهم نیست؛
+`DEFERRED_BY_POLICY`: تصمیم محصول/حقوقی لازم است. وضعیت‌ها مربوط به **مبنای PH-0** هستند؛
+نتیجهٔ اصلاحات بعدی در بخش پیگیری ثبت می‌شود و مبنای تاریخی بازنویسی نمی‌شود.
+
+## Validation مبنا
+
+- `dotnet restore MakanApp.sln`: موفق؛ هر ۷ پروژه.
+- `dotnet build MakanApp.sln --configuration Debug --nologo`: موفق؛ ۰ warning، ۰ error.
+- `dotnet test MakanApp.sln --configuration Debug --no-build --nologo`: موفق؛
+  Unit: **606**، Integration: **1034**، Architecture: **14**، مجموع: **1654**؛
+  Failed: **0**، Skipped: **0**. فایل‌های TRX در مسیر ignored
+  `.artifacts/production-hardening/ph0-baseline` نگهداری شده‌اند.
+- تست Integration از SQL Server آزمایشی ایزوله استفاده می‌کند؛ دیتابیس عادی توسعه/Production هدف نیست.
+
+## ماتریس ۴۵ حوزه
+
+| # | حوزه | وضعیت مبنا | شاهد و فاصلهٔ واقعی |
+|---|---|---|---|
+| 1 | Data Protection | PARTIAL | `Api/Configuration/BackofficeMfaConfiguration.cs` یک registration سراسری دارد؛ نام ثابت `MakanApp.BackofficeMfa.v1` و purpose فعلی MFA باید حفظ شوند. |
+| 2 | ماندگاری کلید | PARTIAL | مسیر خارجی، PFX یا DPAPI کاربر جاری پشتیبانی می‌شود؛ probe زمان startup و ApplicationName قابل‌پیکربندی وجود ندارد. بدون ring در Production، MFA fail-closed است. |
+| 3 | secretهای Production | IMPLEMENTED | secret از configuration دریافت می‌شود؛ Production واقعی ignored و نمونهٔ اشتراکی خالی است. این بررسی، اثبات پاک‌بودن تمام تاریخچهٔ قدیمی یا تنظیم صحیح سرور نیست. |
+| 4 | appsettings Production | IMPLEMENTED | `ProductionConfigurationValidator` و نمونهٔ Production؛ کنترل SQL/TLS، Storage، Identity، Hosts، CORS و opt-in استثناهای مصوب وجود دارد. |
+| 5 | Connection String | IMPLEMENTED | SQL Server و کنترل TLS؛ exception اعتماد به certificate فقط با opt-in Production. مقدار واقعی در این ممیزی خوانده/منتشر نشده است. |
+| 6 | MeliPayamak/OTP | IMPLEMENTED | provider و config فعلی حفظ می‌شوند؛ secret نمونه خالی است. هیچ تست ارسال واقعی یا تغییر provider در PH انجام نمی‌شود. |
+| 7 | AI secrets/config | IMPLEMENTED | configuration موجود reuse می‌شود؛ AI اختیاری است. audit این فاز مجوز تغییر قرارداد، RAG یا اجرای واقعی AI نیست. |
+| 8 | Push secrets/config | IMPLEMENTED | Web Push/FCM اختیاری و credentialها بیرون از source؛ دریافت واقعی دستگاه و credential عملیاتی اثبات نشده است. |
+| 9 | logging configuration | PARTIAL | categoryهای پایه موجودند؛ request completion ساختاریافته و سیاست یکپارچهٔ خطا/worker ناقص است. |
+| 10 | correlation | PARTIAL | `CorrelationIdMiddleware` ورودی امن ۶۴ کاراکتری و response header دارد؛ logging scope و Activity tag ندارد. |
+| 11 | trace identifier | PARTIAL | Activity trace و correlation موجود دو مفهوم متفاوت‌اند؛ ProblemDetails باید هر دو را صریح و سازگار بیان کند. |
+| 12 | GlobalExceptionHandler | PARTIAL | mapping و error code پایدار دارد؛ unexpected exception خام به logger داده می‌شود. |
+| 13 | ProblemDetails | IMPLEMENTED | پاسخ عمومی generic برای unexpected و mappingهای فعلی وجود دارد؛ قراردادها حفظ می‌شوند. |
+| 14 | نشت خطای Production | PARTIAL | بدنهٔ پاسخ sanitized است، اما logger handler و framework ممکن است message/inner exception محرمانه را ثبت کنند. |
+| 15 | Health endpoints | IMPLEMENTED | `/health` و `/health/live` فقط process؛ `/health/ready` برای dependencyهای core. |
+| 16 | Readiness | PARTIAL | SQL و storage بررسی می‌شوند؛ دسترسی جاری به ring و اعتبار config لازم باید افزوده شوند. |
+| 17 | SQL health | IMPLEMENTED | `CoreReadinessHealthCheck` از `CanConnectAsync` استفاده می‌کند؛ public response حداقلی است. تست outage صریح لازم است. |
+| 18 | Storage health | PARTIAL | `LocalFileStorage` probe نوشتن/حذف دارد؛ شکست حذف نیز باید پاسخ امن ایجاد کند. |
+| 19 | dependency اختیاری | PARTIAL | AI/Push/payment readiness را gate نمی‌کنند؛ diagnostics محافظت‌شده باید «پیکربندی‌شده» را از «شبکهٔ سالم اثبات‌شده» جدا کند. |
+| 20 | Outbox | PARTIAL | `OutboxDispatcher`: SQL claim و token، batch50/lease30s؛ preclaim کل batch و crash در آخرین attempt نیازمند اصلاح است. |
+| 21 | Notification/Push worker | PARTIAL | claim تک‌به‌تک، token، timeout، retry و recovery وجود دارند؛ completion مستقل باید زمان محدود داشته باشد. external delivery فقط at-least-once است. |
+| 22 | Scheduled Message worker | IMPLEMENTED | claim تک‌به‌تک، token/expiry، بازبینی permission/safety، message+receipt+outbox اتمیک و تست race/recovery موجود است. |
+| 23 | cleanup worker | MISSING | worker cleanup ثبت نشده؛ expiry فایل صرفاً metadata است. generic business purge مجاز نیست. |
+| 24 | retry/backoff | PARTIAL | همهٔ workerهای durable retry محدود دارند؛ بهبود repair نهایی و visibility لازم است. |
+| 25 | lease | PARTIAL | notification/scheduled fencing مناسب دارند؛ realtime بدون token و report بدون renewal/timeout کافی است. |
+| 26 | poison/failure | PARTIAL | terminal delivery/scheduled/report وجود دارد؛ outbox exhausted ممکن است به‌اشتباه Pending شمرده شود و claim باقی بماند. |
+| 27 | crash recovery | PARTIAL | expiry/reclaim موجود؛ report output پیش از ذخیرهٔ terminal DB می‌تواند توسط worker قدیمی دست‌کاری شود. |
+| 28 | graceful shutdown | PARTIAL | cancellation در ۶ loop وجود دارد؛ برخی saveها `CancellationToken.None` و timeout صریح host/ANCM ندارند. |
+| 29 | IIS recycle | OPERATIONAL_ONLY | دستورالعمل پایه موجود؛ اثبات recycle واقعی انجام نشده است. |
+| 30 | overlapped recycle | PARTIAL | SQL durable leases مبنا هستند؛ stale worker report/realtime و preclaim باید تست/اصلاح شوند. |
+| 31 | SignalR single-node | IMPLEMENTED | ephemeral state و rate limiter در حافظه؛ بدون backplane. AppPool باید یک worker داشته باشد؛ restart حضور گذرا را از دست می‌دهد نه SQL truth را. |
+| 32 | rate limiting | IMPLEMENTED | limiterهای فعلی در host؛ in-process و single-node، نه تضمین distributed quota. |
+| 33 | CORS | IMPLEMENTED | allowlist مبتنی بر config؛ wildcard/credential ناامن در Production پذیرفته نمی‌شود؛ localhost فقط محیط مجاز. |
+| 34 | Security headers | IMPLEMENTED | nosniff/referrer/frame/permissions و استثنای Swagger/OpenAPI برای CSP موجود است. |
+| 35 | HTTPS/HSTS readiness | IMPLEMENTED | HSTS/redirect/forwarded headers کنترل‌شده موجود؛ exception مصوب HTTP نباید بی‌اجازه حذف شود. |
+| 36 | HTTP عمومی | BLOCKED_BY_INFRA | محیط معرفی‌شده HTTP است؛ TLS/domain معتبر اثبات نشده. `BACKEND_HTTPS = PENDING_INFRASTRUCTURE`. |
+| 37 | diagnostics داخلی | PARTIAL | `/api/admin/v1/operations/health` و jobs/notifications با permission موجود؛ scheduled/cleanup و شکست نهایی outbox کافی نیستند. |
+| 38 | metrics | PARTIAL | Meter مربوط به HTTP موجود؛ ترتیب middleware خطای mapped را ممکن است 2xx بشمارد؛ method نامحدود و worker/backlog signals ناقص است. |
+| 39 | disk/log retention | OPERATIONAL_ONLY | stdout خاموش؛ rotation/فضای دیسک وابسته به IIS/collector/host است، نه حذف سفارشی فایل‌های نامرتبط توسط برنامه. |
+| 40 | DB retention/cleanup | DEFERRED_BY_POLICY | مدت مجاز عمومی تصویب نشده؛ مالی، audit، moderation، academic و history از generic cleanup خارج‌اند. |
+| 41 | startup migrations | IMPLEMENTED | بررسی source واقعی Api/Infrastructure: هیچ `Migrate`/`MigrateAsync` در startup وجود ندارد. rollout schema فقط اپراتوری/versioned است. |
+| 42 | EnsureCreated | IMPLEMENTED | در کد Production وجود ندارد؛ جایگزین migration نشده است. |
+| 43 | backup/restore | OPERATIONAL_ONLY | framework/runbook بازیابی موجود؛ schedule، off-server copy، failure alert، restore drill و RPO/RTO عملیاتی اثبات نشده‌اند. |
+| 44 | deployment/runbook | PARTIAL | اسناد canonical در `docs/production` موجودند؛ دستورهای دقیق AppPool/ACL، ring recovery، observability و acceptance باید تکمیل شوند. |
+| 45 | restart/reboot سرور | OPERATIONAL_ONLY | این رایانه سرور IIS مجاز نیست؛ local test جای اثبات reboot/start/stop واقعی را نمی‌گیرد. |
+
+پیشوند مسیرهای کوتاه جدول، پروژه‌های واقعی `MakanApp.Api`، `MakanApp.Infrastructure` و غیره است.
+
+## Workerهای واقعی و شواهد کلیدی
+
+دقیقاً ۶ `BackgroundService` فعلی: `ReportExportDispatcher`،
+`ScheduledMessageDispatcher`، `MessagingEphemeralDispatcher`،
+`MessagingRealtimeOutboxDispatcher`، `OutboxDispatcher`، `NotificationDeliveryDispatcher`.
+`DependencyInjection.cs` ثبت آن‌ها را انجام می‌دهد. worker ساختگی یا محصول آینده در inventory نیست.
+Notification، scheduled و report دارای terminal state هستند؛ outboxها با AttemptCount نهایی
+قابل تشخیص‌اند و نباید pending قابل‌اجرا گزارش شوند. ephemeral عمداً nondurable و bounded است.
+
+تست‌های مبنا شامل `PlatformMfaProtectionConfigurationTests`، `HealthEndpointTests`،
+`ProductionHostingTests`، `NotificationEndpointsTests`،
+`MessagingP1NotificationDeliveryTests`، `MessagingP2ScheduledRecoveryTests`،
+`MessagingP2ScheduledEndpointsTests` و `ReportExportEndpointsTests` هستند.
+بیشتر factoryها hosted worker را غیرفعال و processor را صریح اجرا می‌کنند؛ پس
+این تست‌ها شاهد recycle واقعی IIS نیستند.
+
+## ترتیب اصلاحات و مرزها
+
+1. PH-1: تکمیل همان Data Protection سراسری؛ حفظ discriminator/purpose/ring قبلی،
+   اعتبارسنجی startup و runbook حفاظت و بازیابی secret/کلید.
+2. PH-2: readiness core و diagnostics امن؛ هیچ provider اختیاری شرط آماده‌بودن کل API نیست.
+3. PH-3: correlation یکپارچه، خطای امن در تمام pipeline، request/worker metrics کم‌کاردینالیتی.
+4. PH-4: claim/fencing/retry/repair و shutdown bounded؛ SQL مرجع durable باقی می‌ماند.
+5. PH-5: timeout سازگار، runbook دقیق IIS/ACL و پذیرش TLS مستقل از exception فعلی.
+6. PH-6: فقط transient reconciliation مفید، bounded و پیش‌فرض خاموش؛ بدون مدت retention اختراعی.
+7. PH-7: alert contract، regression Release و checklist اپراتوری؛ collector/alert/reboot بدون اجرا PASS نمی‌شوند.
+
+اسناد canonical موجود (`docs/production/DEPLOYMENT_IIS.md`، `OBSERVABILITY.md`،
+`RELEASE_CHECKLIST.md`، `BACKUP_RESTORE.md`) به‌جای ایجاد نسخه‌های موازی به‌روز می‌شوند.
+هیچ تغییری در MeliPayamak، AI/RAG، P3 media، frontend یا secret واقعی مجاز این فاز نیست.
+هیچ migration خودکاری، schema mutation دستی و عملیات سرور اجرا نمی‌شود.
+
+## نکات آموزشی PH-0
+
+- نوشتن runbook به معنی اجرای آن نیست؛ code-level و server-level evidence دو gate مستقل‌اند.
+- rowversion جلوی filesystem side effect پیش از commit را نمی‌گیرد؛ مالکیت باید در مرز اثر نیز کنترل شود.
+- پاسخ HTTP امن کافی نیست اگر framework همان exception را در log منتشر کند.
+- DPAPI کاربر جاری به identity/machine وابسته است؛ backup XML به‌تنهایی recovery بین سرورها نیست.
+- expiry metadata مجوز حذف همهٔ فایل‌های ظاهراً unattached نیست؛ هر binding و evidence باید بررسی شود.
+
+این مرحله فقط سند اضافه می‌کند؛ Domain/Application/Infrastructure/Api، endpoint و schema تغییر ندارند.
+مسیر مطالعه: `Program.cs` → `BackofficeMfaConfiguration` → `CoreReadinessHealthCheck`
+→ middlewareهای Observability → dispatcherها → تست‌های نام‌برده → runbookهای canonical.
+
+## پیگیری مراحل بعد
+
+وضعیت نهایی هر PH و نتایج دقیق validation/commit در ادامهٔ اجرای همین برنامه ثبت خواهد شد؛
+این جدول مبنا به‌تنهایی ادعای بسته‌شدن فاصله‌ها نیست.
+
+### PH-1 — تکمیل‌شده در کد و تست محلی
+
+همان provider سراسری با نام/purpose و مسیر legacy حفظ شد؛ aliasهای canonical، رد تعارض،
+startup lifecycle validation و probe جاری بدون reseed اضافه شدند. host عملیاتی بدون ring پایدار
+دیگر شروع نمی‌شود. DPAPI current-user و PFX موجود حفظ شده‌اند؛ custody/ACL/انتقال واقعی gate اپراتوری‌اند.
+مسیر مطالعه: `BackofficeMfaConfiguration` → `DataProtectionKeyRingSettings` →
+`DataProtectionKeyRingStartupValidator` → `DataProtectionKeyRingProbe` → `ProductionDataProtectionTests`.
+
+Validation واقعی: restore موفق؛ build و final build با ۰ warning/error؛ **49** تست متمرکز موفق؛
+final suite: **606 Unit + 1060 Integration + 14 Architecture = 1680**؛ failed/skipped=0.
+**26** مورد تست Integration به مبنا اضافه شد. migration و endpoint جدید ندارد.
+XML/PFX تستی از secret عملیاتی مستقل‌اند. اجرای IIS/recycle/reboot یا secret provisioning سرور انجام نشده است.
+
+### PH-2 — تکمیل‌شده در کد و تست محلی
+
+مسیرهای health موجود reuse شدند: live و alias قدیمی مستقل از SQL/provider، ready با
+config/ring/SQL/storage و timeout پانزده ثانیه. metadata همان سه route باعث می‌شود Bearer
+ارسالی، احراز نشست وابسته به SQL را فعال نکند؛ permission مسیرهای Backoffice تغییر نکرده است.
+`PlatformJobOperations.Queues` الحاقی، صف/lease/exhausted و oldest را با aggregation SQL نشان می‌دهد؛
+Scheduled آینده backlog نیست و Pending outbox شامل backoff است. AI/Push به‌عنوان تنظیم‌شده یا
+غیرفعال گزارش می‌شوند، نه شبکهٔ سالم اثبات‌شده. cleanup هنوز صریحاً پیاده‌نشده است.
+
+Validation واقعی: restore، build و final build موفق، ۰ warning/error؛ focused نهایی **23** موفق؛
+final suite: **606 Unit + 1071 Integration + 14 Architecture = 1691**؛ failed/skipped=0.
+**11** تست Integration جدید: SQL up/down و Bearer، storage false/exception، فقدان ring،
+config، optional isolation و classifier صف/موعد/رد نشت اطلاعات. تست‌های مجوز قبلی نیز اجرا شدند.
+در اجرای اولیه، وابستگی health به auto-auth و race دادهٔ تست با worker والد آشکار و رفع شدند؛
+assertionها ضعیف نشدند و classifier از factory/DB واقعاً مستقل استفاده می‌کند.
+مسیر مطالعه: `CoreHealthProbeMetadata` → `SessionAuthenticationHandler` →
+`CoreReadinessHealthCheck` → `PlatformSystemOperationsController` →
+`EfPlatformCommerceOperationsStore` → `ProductionReadinessTests` و تست‌های Platform operations.
+Migration و عملیات سرور ندارد؛ snapshot عملیاتی تضمین transactional counter یا تحویل provider نیست.
+
+### PH-3 — پیگیری پیاده‌سازی و مرز مشاهده‌پذیری
+
+Correlation موجود یکپارچه شد؛ ورودی تک‌مقداری، کوتاه و ASCII پذیرفته می‌شود و همان شناسه در
+header، scope و ProblemDetails قرار می‌گیرد. TraceId واقعی Activity مستقل و قابل ارتباط است،
+نه شناسهٔ رقابتی جدید. metric درخواست بیرون از handler قرار گرفت تا status نهایی mapped را ببیند؛
+route فقط template و method فقط مجموعهٔ محدود است. خطای پس از شروع پاسخ با outcome مجزا شمرده
+می‌شود؛ status ارسال‌شده بازنویسی نمی‌شود و failure به host منتقل می‌شود.
+
+با تأیید صریح مالک، فقط logger مشخص ExceptionHandlerMiddleware در Production/Staging از ثبت
+exception خام منع شد؛ رخداد امن جایگزین شامل code/status/correlation است. فیلتر عمومی EF،
+Data Protection، Health یا HTTP provider اعمال نشده است. این تغییر جای audit تنظیمات collector،
+DiagnosticSource یا logger سفارشی آینده را نمی‌گیرد. بدنه، query، token و متن exception وارد
+رخدادهای جدید برنامه و labelهای metric نمی‌شوند.
+
+شش worker قبلی telemetry با worker/stage ثابت دارند؛ `OperationalMetricsPublisher` هفتمین
+worker واقعی است و aggregateهای موجود را با budget و cancellation می‌خواند. gauge callback
+فقط snapshot حافظه را می‌بیند؛ failure دادهٔ قبلی را صفر نمی‌کند و stale بودن نمایان می‌ماند.
+پیاده‌سازی در Api و Infrastructure است؛ Domain/Application و schema تغییر ندارند.
+مسیر مطالعه: `CorrelationIdMiddleware` → `HttpRequestMetricsMiddleware` →
+`GlobalExceptionHandler` → `ProductionLoggingSafety` → `WorkerTelemetry` →
+`OperationalMetricsPublisher` → تست‌های Production observability و worker telemetry.
+
+Validation متمرکز: **25 Unit + 52 Integration** موفق؛ build با ۰ warning/error.
+تست cancellation ابتدا وابستگی نادرست به data lock داشت؛ با اثبات `READ_COMMITTED_SNAPSHOT=True`
+و مشاهدهٔ انتظار واقعی `LCK_M_SCH_S` در DB مصنوعی، barrier قطعی و rollback تست اضافه شد.
+همچنین cancellation با exception غیر از OCE دیگر در catch عمومی به failure عادی تبدیل نمی‌شود.
+restore و final build موفق با ۰ warning/error؛ final suite برابر
+**631 Unit + 1093 Integration + 14 Architecture = 1738**، failed/skipped=0 است.
+**47** مورد جدید (25 Unit و 22 Integration) به PH-2 افزوده شد؛ assertion یا تستی حذف/غیرفعال نشد.
+Migration، package و endpoint محصول جدید ندارد؛ exporter/collector/alert بیرونی نصب نشده‌اند.
+
+### PH-4 — بازیابی و مرز اثر Workerها
+
+موجودی واقعی هفت worker و محدودیت هرکدام در
+[قرارداد بازیابی](WORKER_RELIABILITY_AND_RECOVERY.md) آمده است. Outboxها تک‌کار claim می‌کنند؛
+repair نهایی bounded و غیرتکراری است. SQL-only effect عمومی با token/قفل و realtime با
+نسل rowversion/lease محافظت می‌شوند. notifier ناتمام پس از timeout باعث query هم‌زمان در همان
+scope نمی‌شود؛ claim برای recovery باقی می‌ماند. نتیجه‌های مستقل budget مشترک 5s دارند.
+
+برای export، فایل هر تلاش مستقل است و فقط publication کوتاه SQL اجازهٔ اتصال آن به شناسهٔ
+canonical job را می‌دهد؛ Ready تاریخی mutate نمی‌شود. گم‌شدن acknowledgement مجوز حذف فایل
+نیست؛ FileAsset متعلق به publication ناموفق از tracker جدا می‌شود تا ذخیرهٔ retryِ job آن را
+ناخواسته دوباره منتشر نکند. completion خارج catch تولید است و انتقال نامعتبر Completed→Retry
+نمی‌سازد. متد Domain فقط تعویض keyِ Pending را مجاز می‌کند؛ portهای داخلی Application نسل claim
+را منتقل می‌کنند؛ پیاده‌سازی قفل/I/O در Infrastructure است و API محصول تغییر ندارد.
+
+مرزهای صریح: duplicate hint یا ارسال دوبارهٔ provider پس از شکاف acknowledgement ممکن است؛
+اثر durable و شناسهٔ منطقی یکتا با تحویل خارجی exactly-once یکی نیستند. orphan محدود به تلاش
+هر job همچنان reconciliation مستقل می‌خواهد. اولین rollout باید legacy worker را کاملاً drain
+کند؛ concurrency جدید/جدید به معنی ایمنی باینری قدیمی/جدید نیست.
+
+مسیر مطالعه: `OutboxProcessor` و `MessagingRealtimeOutboxProcessor` →
+`WorkerCompletionBudget` → `ReportExportProcessor` → `EfReportExportJobStore`/claim lock →
+`ReportExportOutputStore` → `FileAsset.ReplacePendingStorageKey` → تست‌های recovery نام‌برده در runbook.
+restore و final Debug build موفق با ۰ warning/error؛ validation متمرکز نهایی **13 Unit + 86 Integration**
+و final suite برابر **644 Unit + 1120 Integration + 14 Architecture = 1778**، failed/skipped=0 است.
+**40** مورد جدید (13 Unit و 27 Integration) افزوده شد. اجرای اولیهٔ گسترده چهار regression قدیمی
+Notification را آشکار کرد: repair بیرون transaction با isolation باقی‌ماندهٔ connection pooled
+ناسازگار بود. transaction کوتاه صریح ReadCommitted و دو regression همان connection علت را رفع کردند؛
+بعد از اصلاح، تست‌های قبلی و جدید اجرا و موفق شدند، نه اینکه کنار گذاشته شوند.
+تست‌های لغو OCE/غیر-OCE، صفر بودن failure کاذب را می‌سنجند و موفقیت واقعی provider درست پیش از
+لغو caller همچنان با budget مستقل ثبت می‌شود؛ ادعای OCE یکسان از تمام I/Oهای claim مطرح نیست.
+Migration، package، endpoint محصول یا عملیات سرور انجام نشده است.
+
+### PH-5 — مرز Host و IIS
+
+`HostShutdownConfiguration` در Api، shutdown واقعی Host را validate می‌کند؛ مقدار صریح اختیاری
+`Hosting:ShutdownTimeoutSeconds` اولویت دارد، نبود آن override استاندارد یا default ۳۰s را حفظ می‌کند.
+بازهٔ نهایی ۵..۹۰s است و مقدار خام نامعتبر در خطا echo نمی‌شود. Domain/Application/Infrastructure
+و schema برای این تنظیم HTTP-host تغییر ندارند. `web.config` فقط attribute بودجهٔ ANCM 120s را
+می‌افزاید؛ Production، inprocess، stdout=false و مسیر legacy ring عیناً حفظ شده‌اند.
+
+[IIS مرجع](../production/DEPLOYMENT_IIS.md) اکنون دستورات محدود اپراتوری برای inventory/backup،
+App Pool اختصاصی، single process، AlwaysRunning/idle، profile، warm-up مشروط به نصب نقش،
+بودجهٔ مستقل WAS و ACL دارد. Ping/rapid-fail خاموش نمی‌شوند؛ TLS هنوز زیرساخت لازم دارد.
+CORS/headers/HTTP استثنایی قبلی حفظ و Swagger opt-in به‌طور صریح regression-test می‌شود؛
+کانفیگ خصوصی سرور از artifact عمومی یا تست محلی حدس زده نشده است.
+مسیر مطالعه: `Program` → `HostShutdownConfiguration` → `ProductionConfigurationValidator` →
+`web.config` → `ProductionHostShutdownTests` و `ProductionHostingTests` → runbook IIS.
+restore و دو build موفق با ۰ warning/error؛ **126 Integration** متمرکز موفق شدند.
+final suite برابر **644 Unit + 1149 Integration + 14 Architecture = 1807**، failed/skipped=0 است؛
+**29 Integration** تازه شامل 28 حالت Host/DI/XML و یک regression فعال‌سازی Swagger اضافه شد.
+بلوک‌های PowerShell راهنمای IIS (6) و acceptance (2) صرفاً parse شدند و خطای syntax نداشتند؛
+parse یا تست XML، اجرای فرمان IIS/پذیرش ANCM روی سرور نیست. Migration و تغییر وابستگی ندارد.
+
+### PH-6 — نگه‌داری و reconciliation محدود
+
+[سیاست retention](RETENTION_AND_CLEANUP_POLICY.md) از snapshot واقعی، تمام 107 جدول را به
+86 مورد DO_NOT_AUTO_DELETE، هفت LEGAL_POLICY_REQUIRED و چهارده PRODUCT_DECISION_REQUIRED
+طبقه‌بندی می‌کند. SQL row purge، مدت حقوقی، پاک‌سازی Ready/Pending یا history جدید نداریم.
+تنها مکانیزم تازه bytes فایل Deleted/Rejected بدون reference است؛ پیش‌فرض خاموش و grace صریح لازم دارد.
+
+چهار کلاس فنی `TerminalFileCleanupOptions/Cursor/Processor/Dispatcher` در Infrastructure هستند؛
+Domain/Application/Controller جدیدی لازم نیست. store عملیات فقط وضعیت تنظیمی Disabled/Enabled را
+اضافه می‌کند. پردازنده keyset محدود و cursorهای singleton نوبتی دارد؛ transaction کوتاه Serializable
+با parent XLOCK و همهٔ referenceها، کنار محافظ local Fixed-drive/reparse/raw Windows aliases، مرز حذف را می‌سازد.
+metadata/status/rowversion SQL اصلاً نوشته نمی‌شوند. cutoff از UTC و ضد underflow است؛
+caller cancellation، حتی با exception غیر-OCE از SQL، false failure ایجاد نمی‌کند.
+
+trade-off: cursor در restart از نو می‌گردد و missingها دوباره بررسی می‌شوند؛ migration/marker جدید
+برای زیبایی monitoring ایجاد نشده است. فقط فایل‌های terminal قطعی‌اند، orphan عمومی export یا
+`.uploading` پاک نمی‌شوند. ACL قابل‌اعتماد و محدودیت syscall غیرهمکار OS صریح‌اند؛ تحقق cleanup
+با غیرفعال بودن پیش‌فرض یا با تنظیم Enabled فرض نشده است.
+مسیر مطالعه: options → dispatcher → processor/cursor → `LocalFileStorage.DeleteTerminalBlobAsync`
+→ EF FileAsset/attachment/report configurations → چهار کلاس تست cleanup → سیاست retention.
+restore موفق؛ خطای CS1061 اولیه به علت نبود DbSet نام‌گذاری‌شدهٔ Scheduled attachment با
+`Set<ScheduledMessageAttachment>()` روی entity موجود رفع شد، نه با تغییر مدل/schema.
+build مجدد و final build با ۰ warning/error موفق؛ **51 Unit + 73 Integration** متمرکز passed.
+final suite برابر **676 Unit + 1203 Integration + 14 Architecture = 1893**، failed/skipped=0 است.
+**86** مورد جدید: 32 Unit (options/lifecycle/metric) و 54 Integration (46 filesystem و 8 SQL).
+نام و تعداد تمام جدول‌های سند نیز ماشینی با snapshot تطبیق شد: 107 = 86 D + 7 L + 14 P.
+Migration، package، پاک‌سازی دادهٔ واقعی و عملیات سرور ندارد؛ activation همچنان POLICY_PENDING است.
+
+### PH-7 — قرارداد alert و پذیرش نهایی
+
+signalهای vendor-neutral PH-3/PH-6 reuse شدند؛ exporter، endpoint metrics یا سامانهٔ alert موازی
+ساخته نشد. [Observability مرجع](../production/OBSERVABILITY.md) signal/معنا/category آستانه/
+severity/اقدام/runbook را مشخص می‌کند. snapshot stale، Deferred ناشی از Quiet Hours، count
+تاریخی Failed و gauge تکراری هنگام overlap نباید هشدار یا سلامت ساختگی بسازند؛ threshold عددی
+Production بدون baseline و تصمیم monitoring وارد Domain نشده است.
+
+[Release Checklist مرجع](../production/RELEASE_CHECKLIST.md) دستور probe کم‌اطلاعات و سناریوهای
+اپراتوری Start/Stop/Recycle/rapid restart/overlap/reboot را دارد؛ همهٔ اجراهای سرور NOT_RUN هستند.
+نمونه‌های IIS فقط برای Windows PowerShell 5.1 Desktop مدیریتی 64-bit هستند؛ mapping سایت/Pool
+پیش از mutation بررسی می‌شود و profile مؤثر DPAPI موجود خودکار تغییر نمی‌کند. Host timeout
+cooperative است، نه دستور kill؛ ANCM و WAS بودجه/مسیر مستقل دارند.
+
+`PRODUCTION_READINESS.md` و deferred register، کد موجود را از محیط واقعاً پذیرفته‌شده جدا می‌کنند؛
+Swagger خصوصیِ تأییدشده حذف یا فعال‌بودن واقعی آن حدس زده نشده است. حفاظت کلید، core health،
+worker recovery و signalها در کد هستند؛ TLS، دریافت alert، reboot و backup مقصد از آن نتیجه نمی‌شوند.
+ابزار Backup/Restore قبلی reuse می‌شود؛ job، off-server copy، failure alert، drill و RPO/RTO
+هنوز تأیید عملیاتی مستقل می‌خواهند و بازطراحی backup انجام نشده است.
+
+بازبینی امنیتی source: بخش MeliPayamak DI و provider نسبت به SHA شروع عیناً ثابت است و
+`RemoveAllLoggers()` برای URL توکن‌دار باقی مانده؛ body/secret واقعی خوانده یا چاپ نشد.
+نسخه‌ها، packageها، solution و migrationها تغییر ندارند؛ `Migrate/MigrateAsync/EnsureCreated`
+در source اجرایی Api/Infrastructure اضافه نشده‌اند. کانفیگ tracked secret جدید ندارد؛ این شاهد
+جای redaction تمام loggerها/DiagnosticSource یا ممیزی نامحدود تاریخچهٔ خارجی نیست.
+هفت hash فایل محافظت‌شدهٔ workspace اصلی AI برابر baseline و git status آن همان dirty قبلی است؛
+آن workspace stage/revert/stash/clean نشده است.
+
+restore و Release build با ۰ warning/error موفق شدند. EF model check با startup درست
+`MakanApp.Infrastructure` و context موجود، **No changes** داد. تلاش اول با Api startup به علت
+بارگذاری‌نشدن EF Design شکست خورد؛ انتخاب startup مطابق runbook موجود اصلاح شد، نه با افزودن
+package یا تغییر csproj. validation متمرکز Release: **676 Unit + 279 Integration + 14 Architecture**
+passed و failed/skipped=0. final Release build با ۰ warning/error و final suite برابر
+**676 Unit + 1203 Integration + 14 Architecture = 1893**، failed/skipped=0 موفق شدند.
+در مقایسه با baseline PH-0، **239** مورد جدید (70 Unit و 169 Integration) وجود دارد؛
+هیچ تستی حذف/غیرفعال یا skipped نشده است. TRXها در `.artifacts/production-hardening/ph7-final`
+محلی و ignored باقی می‌مانند؛ این شواهد اجرای سرور/دستگاه/provider واقعی نیستند.
+
+حکم code-level: کنترل‌های PH-0 تا PH-7 و regression محلی موفق‌اند؛ cleanup در محیط فعال نشده
+و POLICY_PENDING است. HTTPS، exporter و alert delivery همچنان PENDING_INFRASTRUCTURE هستند.
+حکم server-level این تحویل **PRODUCTION_SERVER_ACCEPTANCE_REQUIRED** است؛ هیچ پذیرش IIS،
+reboot، SMS واقعی، Push دستگاه یا AI واقعی ادعا نشده است. مرحله پس از Git نهایی هم
+Production عمومی امن نامیده نمی‌شود.
+
+#### مرجع canonical سندها
+
+| خروجی درخواستی | مرجع واحد این repository |
+|---|---|
+| Audit | همین سند |
+| Configuration | `docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md` |
+| IIS Production Security | `docs/production/DEPLOYMENT_IIS.md`؛ فایل موازی ساخته نشده |
+| Observability/Alerting | `docs/production/OBSERVABILITY.md`؛ فایل موازی ساخته نشده |
+| Worker Recovery | `docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md` |
+| Retention | `docs/operations/RETENTION_AND_CLEANUP_POLICY.md` |
+| Production Acceptance | `docs/production/RELEASE_CHECKLIST.md`؛ فایل موازی ساخته نشده |
+| Deferred | `docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md` در worktree تمیز همین کار |
+
+#### Ledger ثبت‌شدهٔ مراحل
+
+شروع: `0f5d861f382ac41c81b15406c92db9c181acf88c`؛ branch برابر
+`operations/production-hardening` و upstream برابر `origin/main` در remote `origin` است.
+pushهای زیر normal و بدون force انجام و پس از fetch با HEAD==origin/main تأیید شدند.
+
+| مرحله | Commit | Message |
+|---|---|---|
+| PH-0 | `c7bae4646379f419931ba74f5d010ad9d3d7ad96` | `docs(operations): audit production hardening baseline` |
+| PH-1 | `49cb86ca897301c80c771d170825c1aec4a99226` | `feat(operations): persist production data protection keys` |
+| PH-2 | `5a9fdf6f56d80d67641162496169203ca8516512` | `feat(operations): harden health and readiness checks` |
+| PH-3 | `ac549f0d4a3646b7369277c1de620660e248929a` | `feat(operations): add safe production observability` |
+| PH-4 | `40b7ae4b47cdd3adc2bb0e0f7cd611f9f030ffc7` | `feat(operations): harden background worker recovery` |
+| PH-5 | `e8afce892d8dab393759b7be43d99300ebc1939e` | `feat(operations): harden IIS production runtime` |
+| PH-6 | `d25349d8a67648a06eea012023a57d036e172c1e` | `feat(operations): add safe retention and cleanup controls` |
+
+Commit و remote واقعی PH-7 بعد از validation و اجرای Git در گزارش نهایی اعلام می‌شوند؛
+هش خودارجاع در فایل پیش از commit اختراع نمی‌شود. مرحلهٔ بعد فقط اجرای acceptance اپراتوری
+روی Windows Server مجاز با backup و کانال امن است؛ Payment، AI/RAG و P3 وارد این مرحله نمی‌شوند.

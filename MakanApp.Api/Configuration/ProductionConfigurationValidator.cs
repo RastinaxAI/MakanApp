@@ -15,6 +15,7 @@ public static class ProductionConfigurationValidator
             return;
         }
 
+        HostShutdownConfiguration.ValidateConfiguration(configuration);
         var connectionString = Require(configuration, "ConnectionStrings:MakanDatabase");
         SqlConnectionStringBuilder sql;
         try

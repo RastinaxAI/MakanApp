@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MakanApp.Application.Ai;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Ai;
 
@@ -12,11 +13,14 @@ public sealed class AiServiceClient(
     HttpClient httpClient,
     IAiServiceCredentialProvider credentialProvider,
     AiServiceOptions options,
-    AiServiceCircuitBreaker circuitBreaker) : IAiServiceClient
+    AiServiceCircuitBreaker circuitBreaker,
+    ILogger<AiServiceClient>? logger = null) : IAiServiceClient
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        NumberHandling = JsonNumberHandling.Strict,
+        PropertyNameCaseInsensitive = false
     };
 
     public Task<AiChatResponse> ChatAsync(
@@ -113,12 +117,20 @@ public sealed class AiServiceClient(
         var started = Stopwatch.GetTimestamp();
         ValidateOptions();
         ValidateRequest(request, requiredRole);
+        using var activity = AiServiceTelemetry.Start(operation, request.RequestId, request.CorrelationId);
+        using var logScope = logger?.BeginScope(new Dictionary<string, object?>
+        {
+            ["AiOperation"] = operation,
+            ["RequestId"] = request.RequestId,
+            ["CorrelationId"] = request.CorrelationId
+        });
         try
         {
             circuitBreaker.ThrowIfOpen();
         }
         catch (AiServiceException exception)
         {
+            AiServiceTelemetry.RecordCircuitRejection(operation);
             RecordFailure(operation, exception.Code, started);
             throw;
         }
@@ -132,13 +144,12 @@ public sealed class AiServiceClient(
         {
             throw;
         }
-        catch (Exception exception)
+        catch (Exception)
         {
             RecordFailure(operation, AiServiceErrorCodes.ServiceUnavailable, started);
             throw new AiServiceException(
                 AiServiceErrorCodes.ServiceUnavailable,
-                "اعتبارنامه سرویس هوش مصنوعی در دسترس نیست.",
-                innerException: exception);
+                "اعتبارنامه سرویس هوش مصنوعی در دسترس نیست.");
         }
 
         using var message = new HttpRequestMessage(
@@ -164,27 +175,26 @@ public sealed class AiServiceClient(
                 HttpCompletionOption.ResponseHeadersRead,
                 timeoutSource.Token);
         }
-        catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             circuitBreaker.RecordTransientFailure();
             RecordFailure(operation, AiServiceErrorCodes.ServiceTimeout, started);
             throw new AiServiceException(
                 AiServiceErrorCodes.ServiceTimeout,
-                "مهلت پاسخ‌گویی سرویس هوش مصنوعی تمام شد.",
-                innerException: exception);
+                "مهلت پاسخ‌گویی سرویس هوش مصنوعی تمام شد.");
         }
-        catch (HttpRequestException exception)
+        catch (HttpRequestException)
         {
             circuitBreaker.RecordTransientFailure();
             RecordFailure(operation, AiServiceErrorCodes.ServiceUnavailable, started);
             throw new AiServiceException(
                 AiServiceErrorCodes.ServiceUnavailable,
-                "سرویس هوش مصنوعی در دسترس نیست.",
-                innerException: exception);
+                "سرویس هوش مصنوعی در دسترس نیست.");
         }
 
         using (response)
         {
+            AiServiceTelemetry.SetHttpStatus((int)response.StatusCode);
             if (!response.IsSuccessStatusCode)
             {
                 ThrowMappedFailure(operation, response, started);
@@ -200,19 +210,38 @@ public sealed class AiServiceClient(
                     throw InvalidResponse();
                 }
 
-                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using var stream = await response.Content.ReadAsStreamAsync(timeoutSource.Token);
                 var result = await JsonSerializer.DeserializeAsync<TResponse>(
                     stream,
                     JsonOptions,
-                    cancellationToken);
+                    timeoutSource.Token);
                 validateResponse(request, result);
+                AiResponseGrounding.Validate(request, result!, JsonOptions);
                 circuitBreaker.RecordSuccess();
                 AiServiceTelemetry.Record(
                     operation,
                     "success",
                     "none",
                     Stopwatch.GetElapsedTime(started));
+                logger?.LogInformation("AI invocation completed: {Operation} {StatusCode} {DurationMs}.",
+                    operation, (int)response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
                 return result!;
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                circuitBreaker.RecordTransientFailure();
+                RecordFailure(operation, AiServiceErrorCodes.ServiceTimeout, started);
+                throw new AiServiceException(
+                    AiServiceErrorCodes.ServiceTimeout,
+                    "مهلت پاسخ‌گویی سرویس هوش مصنوعی تمام شد.");
+            }
+            catch (Exception exception) when (exception is HttpRequestException or IOException)
+            {
+                circuitBreaker.RecordTransientFailure();
+                RecordFailure(operation, AiServiceErrorCodes.ServiceUnavailable, started);
+                throw new AiServiceException(
+                    AiServiceErrorCodes.ServiceUnavailable,
+                    "سرویس هوش مصنوعی در دسترس نیست.");
             }
             catch (AiServiceException)
             {
@@ -220,11 +249,11 @@ public sealed class AiServiceClient(
                 RecordFailure(operation, AiServiceErrorCodes.ResponseInvalid, started);
                 throw;
             }
-            catch (JsonException exception)
+            catch (JsonException)
             {
                 circuitBreaker.RecordTransientFailure();
                 RecordFailure(operation, AiServiceErrorCodes.ResponseInvalid, started);
-                throw InvalidResponse(exception);
+                throw InvalidResponse();
             }
         }
     }
@@ -240,8 +269,8 @@ public sealed class AiServiceClient(
 
         if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var uri) ||
             uri.Scheme is not ("http" or "https") ||
-            options.TimeoutSeconds is < 1 or > 120 ||
-            string.IsNullOrWhiteSpace(options.ContractVersion) ||
+            options.TimeoutSeconds is < 1 or > AiServiceOptions.DefaultTimeoutSeconds ||
+            options.ContractVersion != "v1" ||
             options.CircuitBreakerFailureThreshold is < 1 or > 20 ||
             options.CircuitBreakerBreakSeconds is < 1 or > 300)
         {
@@ -272,6 +301,7 @@ public sealed class AiServiceClient(
             HttpStatusCode.Unauthorized => AiServiceErrorCodes.ServiceUnauthorized,
             HttpStatusCode.Forbidden => AiServiceErrorCodes.ServiceForbidden,
             HttpStatusCode.TooManyRequests => AiServiceErrorCodes.RateLimited,
+            HttpStatusCode.BadGateway => AiServiceErrorCodes.ResponseInvalid,
             HttpStatusCode.GatewayTimeout => AiServiceErrorCodes.ServiceTimeout,
             _ => AiServiceErrorCodes.ServiceUnavailable
         };
@@ -330,7 +360,7 @@ public sealed class AiServiceClient(
             response.Recommendations is null || response.Sources is null ||
             response.Priorities.Any(string.IsNullOrWhiteSpace) ||
             response.PlanItems.Any(item =>
-                string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.Reason) ||
+                item is null || string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.Reason) ||
                 item.EstimatedMinutes is <= 0) ||
             !ValidRecommendations(response.Recommendations) || !ValidSources(response.Sources))
         {
@@ -381,9 +411,9 @@ public sealed class AiServiceClient(
             response.Risks is null || response.Recommendations is null || response.Sources is null ||
             response.Progress.Trend is not ("Improving" or "Stable" or "Declining" or "Unknown") ||
             response.AttentionAreas.Any(item =>
-                string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.Description)) ||
+                item is null || string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.Description)) ||
             response.UpcomingItems.Any(item =>
-                item.Type is not ("Homework" or "Exam") ||
+                item is null || item.Type is not ("Homework" or "Exam") ||
                 string.IsNullOrWhiteSpace(item.Id) || string.IsNullOrWhiteSpace(item.Title)) ||
             !ValidInsights(response.Risks) ||
             !ValidRecommendations(response.Recommendations) || !ValidSources(response.Sources))
@@ -416,7 +446,7 @@ public sealed class AiServiceClient(
         if (response is null || string.IsNullOrWhiteSpace(response.Summary) ||
             response.Activities is null || response.Recommendations is null || response.Sources is null ||
             response.Activities.Any(item =>
-                string.IsNullOrWhiteSpace(item.Title) ||
+                item is null || string.IsNullOrWhiteSpace(item.Title) ||
                 string.IsNullOrWhiteSpace(item.Objective) ||
                 string.IsNullOrWhiteSpace(item.Reason) ||
                 item.Steps is null || item.Steps.Any(string.IsNullOrWhiteSpace) ||
@@ -442,10 +472,10 @@ public sealed class AiServiceClient(
         }
     }
 
-    private static AiServiceException InvalidResponse(Exception? innerException = null) => new(
+    // exception خام وابستگی ضمیمه نمی‌شود؛ logger میزبان ممکن است ToString را ثبت کند.
+    private static AiServiceException InvalidResponse() => new(
         AiServiceErrorCodes.ResponseInvalid,
-        "پاسخ سرویس هوش مصنوعی معتبر نیست.",
-        innerException: innerException);
+        "پاسخ سرویس هوش مصنوعی معتبر نیست.");
 
     private static AiServiceException InvalidRequest() => new(
         AiServiceErrorCodes.InvalidRequest,
@@ -453,16 +483,22 @@ public sealed class AiServiceClient(
 
     private static bool ValidInsights(IEnumerable<AiInsight> values) =>
         values.All(item =>
-            !string.IsNullOrWhiteSpace(item.Type) &&
+            item is not null && !string.IsNullOrWhiteSpace(item.Type) &&
             item.Confidence is not (< 0 or > 1));
 
     private static bool ValidRecommendations(IEnumerable<AiRecommendation> values) =>
-        values.All(item => !string.IsNullOrWhiteSpace(item.Title));
+        values.All(item => item is not null && !string.IsNullOrWhiteSpace(item.Title));
 
     private static bool ValidSources(IEnumerable<AiSourceReference> values) =>
         values.All(item =>
-            !string.IsNullOrWhiteSpace(item.Type) && !string.IsNullOrWhiteSpace(item.Id));
+            item is not null && !string.IsNullOrWhiteSpace(item.Type) && !string.IsNullOrWhiteSpace(item.Id));
 
-    private static void RecordFailure(string operation, string code, long started) =>
-        AiServiceTelemetry.Record(operation, "failure", code, Stopwatch.GetElapsedTime(started));
+    private void RecordFailure(string operation, string code, long started)
+    {
+        var elapsed = Stopwatch.GetElapsedTime(started);
+        AiServiceTelemetry.Record(operation, "failure", code, elapsed);
+        // Exception، header، URL و payload عمداً به logger داده نمی‌شوند.
+        logger?.LogError("AI invocation failed: {Operation} {ErrorCode} {DurationMs}.",
+            operation, code, elapsed.TotalMilliseconds);
+    }
 }

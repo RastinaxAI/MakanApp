@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
+using MakanApp.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Messaging;
 
@@ -25,16 +27,24 @@ public sealed partial class EfMessagingStore
         { await transaction.CommitAsync(ct); return null; }
         if (row.AttemptCount >= ScheduledMessage.MaximumAttempts)
         {
-            row.FailExhausted(now); await SaveScheduledAsync(ct); await transaction.CommitAsync(ct); dbContext.ChangeTracker.Clear(); return null;
+            row.FailExhausted(now); await SaveScheduledAsync(ct); await transaction.CommitAsync(ct); dbContext.ChangeTracker.Clear();
+            telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "Failed");
+            telemetry.RecordFailure(WorkerTelemetry.ScheduledMessage, "Process");
+            logger.LogError("پیام زمان‌بندی‌شدهٔ رهاشده به سقف تلاش رسید. Code={FailureCode}", "SCHEDULED_MESSAGE_ATTEMPTS_EXHAUSTED");
+            return new(row.Id, Guid.Empty, true);
         }
+        var recovered = row.ClaimToken.HasValue;
         var token = Guid.NewGuid(); row.Claim(token, now, now.AddSeconds(30));
-        await SaveScheduledAsync(ct); await transaction.CommitAsync(ct); dbContext.ChangeTracker.Clear(); return new(row.Id, token);
+        await SaveScheduledAsync(ct); await transaction.CommitAsync(ct); dbContext.ChangeTracker.Clear();
+        telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "Claimed");
+        if (recovered) telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "LeaseRecovered");
+        return new(row.Id, token);
     }
 
     public async Task<ScheduledMessageWork?> GetScheduledMessageWorkAsync(ScheduledMessageClaim claim, CancellationToken ct)
     {
-        var now = timeProvider.GetUtcNow().UtcDateTime;
         var row = await ScheduledRows(false).SingleOrDefaultAsync(s => s.Id == claim.Id, ct);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
         if (row is null || !row.HasClaim(claim.Token, now)) return null;
         return new(row.Id, row.ConversationId, row.UserId,
             new(row.WorkspaceType, row.OrganizationId, row.MembershipId, row.Role, row.SubjectOrganizationPersonId),
@@ -53,8 +63,16 @@ public sealed partial class EfMessagingStore
         var row = await dbContext.ScheduledMessages.FromSqlInterpolated($"SELECT * FROM [messaging].[ScheduledMessages] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={claim.Id}")
             .SingleOrDefaultAsync(ct);
         var now = timeProvider.GetUtcNow().UtcDateTime;
-        if (row is null || !row.HasClaim(claim.Token, now)) { await transaction.CommitAsync(ct); return; }
+        if (row is null || !row.HasClaim(claim.Token, now))
+        {
+            await transaction.CommitAsync(ct);
+            telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, "LeaseLost");
+            return;
+        }
         row.Fail(claim.Token, code, retryable, now); await SaveScheduledAsync(ct); await transaction.CommitAsync(ct); dbContext.ChangeTracker.Clear();
+        telemetry.RecordOutcome(WorkerTelemetry.ScheduledMessage, row.Status == ScheduledMessageStatus.Failed ? "Failed" : "RetryScheduled");
+        telemetry.RecordFailure(WorkerTelemetry.ScheduledMessage, "Process");
+        logger.LogError("ارسال پیام زمان‌بندی‌شده انجام نشد؛ نتیجهٔ پایدار ثبت شد. Code={FailureCode}", "SCHEDULED_MESSAGE_DISPATCH_FAILED");
     }
 
     private async Task<ScheduledMessage?> ValidateScheduledSendAsync(Guid userId, Guid conversationId, SendMessageStoreCommand command, bool locked, CancellationToken ct, AccessContext? context = null)

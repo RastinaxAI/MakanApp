@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\MakanApp.Api\MakanApp.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\docs\dev\*.sql" Link="DevelopmentSeed\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

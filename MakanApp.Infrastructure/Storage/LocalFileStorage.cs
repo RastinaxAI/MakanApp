@@ -16,7 +16,7 @@ public sealed class LocalFileStorage : IFileStorage, IStorageReadinessProbe
                 "مقدار Storage:RootPath باید یک مسیر مطلق در تنظیمات محیط اجرا باشد.");
         }
 
-        _rootPath = Path.GetFullPath(expanded).TrimEnd(Path.DirectorySeparatorChar);
+        _rootPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(expanded));
         Directory.CreateDirectory(_rootPath);
     }
 
@@ -115,6 +115,57 @@ public sealed class LocalFileStorage : IFileStorage, IStorageReadinessProbe
         cancellationToken.ThrowIfCancellationRequested();
         DeleteIfPresent(ResolvePath(storageKey));
         return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteTerminalBlobAsync(string storageKey, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var volumeRoot = Path.GetPathRoot(_rootPath);
+        if (_rootPath.StartsWith("\\\\", StringComparison.Ordinal) || string.IsNullOrEmpty(volumeRoot) ||
+            string.Equals(Path.TrimEndingDirectorySeparator(_rootPath), Path.TrimEndingDirectorySeparator(volumeRoot), StringComparison.OrdinalIgnoreCase) ||
+            new DriveInfo(volumeRoot).DriveType != DriveType.Fixed || string.IsNullOrEmpty(storageKey) ||
+            storageKey.StartsWith('/') || storageKey.StartsWith('\\') ||
+            storageKey.Split('/').Any(segment => string.IsNullOrEmpty(segment) || IsUnsafeTerminalSegment(segment)))
+            throw InvalidKey();
+
+        var path = ResolvePath(storageKey);
+        FileAttributes rootAttributes;
+        try { rootAttributes = File.GetAttributes(volumeRoot); }
+        catch (FileNotFoundException) { return Task.FromResult(false); }
+        catch (DirectoryNotFoundException) { return Task.FromResult(false); }
+        if ((rootAttributes & FileAttributes.ReparsePoint) != 0 || (rootAttributes & FileAttributes.Directory) == 0)
+            throw InvalidKey();
+        var current = volumeRoot;
+        var relative = Path.GetRelativePath(volumeRoot, path);
+        var segments = relative.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(IsUnsafeTerminalSegment)) throw InvalidKey();
+        for (var index = 0; index < segments.Length; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            current = Path.Combine(current, segments[index]);
+            FileAttributes attributes;
+            try { attributes = File.GetAttributes(current); }
+            catch (FileNotFoundException) { return Task.FromResult(false); }
+            catch (DirectoryNotFoundException) { return Task.FromResult(false); }
+            if ((attributes & FileAttributes.ReparsePoint) != 0 ||
+                index < segments.Length - 1 && (attributes & FileAttributes.Directory) == 0 ||
+                index == segments.Length - 1 && (attributes & FileAttributes.Directory) != 0)
+                throw InvalidKey();
+        }
+
+        // ACL قابل‌اعتماد لازم است؛ precheck در برابر تعویض خصمانهٔ مسیر در سطح OS تضمین TOCTOU نیست.
+        cancellationToken.ThrowIfCancellationRequested();
+        File.Delete(path);
+        return Task.FromResult(true);
+    }
+
+    private static bool IsUnsafeTerminalSegment(string segment)
+    {
+        if (segment.EndsWith('.') || segment.EndsWith(' ')) return true;
+        var name = segment.Split('.')[0].ToUpperInvariant();
+        return name is "CON" or "PRN" or "AUX" or "NUL" or "CONIN$" or "CONOUT$" ||
+            name.Length == 4 && (name.StartsWith("COM", StringComparison.Ordinal) || name.StartsWith("LPT", StringComparison.Ordinal)) &&
+            (name[3] is >= '1' and <= '9' or '¹' or '²' or '³');
     }
 
     public Task<bool> ExistsAsync(string storageKey, CancellationToken cancellationToken)

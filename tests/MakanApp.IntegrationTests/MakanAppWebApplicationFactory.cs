@@ -13,6 +13,7 @@ using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Reports.Exports;
 using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Notification;
+using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -43,6 +44,8 @@ public sealed partial class MakanAppWebApplicationFactory :
 
     private readonly string? _originalConnectionString =
         Environment.GetEnvironmentVariable(ConnectionStringEnvironmentVariable);
+    private readonly string? _originalOtpEnabled = Environment.GetEnvironmentVariable("Otp__Enabled");
+    private readonly string? _originalAllowMock = Environment.GetEnvironmentVariable("Otp__AllowMockAuthentication");
 
     public string StorageRootPath { get; } = Path.Combine(
         Path.GetTempPath(),
@@ -67,6 +70,9 @@ public sealed partial class MakanAppWebApplicationFactory :
 
     public MakanAppWebApplicationFactory()
     {
+        // suite موجود رفتار واقعی OTP را می‌سنجد؛ Mock فقط در میزبان اختصاصی تست فعال می‌شود.
+        Environment.SetEnvironmentVariable("Otp__Enabled", "true");
+        Environment.SetEnvironmentVariable("Otp__AllowMockAuthentication", "false");
         Environment.SetEnvironmentVariable(
             ConnectionStringEnvironmentVariable,
             TestConnectionString);
@@ -103,6 +109,12 @@ public sealed partial class MakanAppWebApplicationFactory :
         });
         builder.ConfigureTestServices(services =>
         {
+            var operationalMetricsPublisher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(OperationalMetricsPublisher));
+            if (operationalMetricsPublisher is not null) services.Remove(operationalMetricsPublisher);
+            var terminalCleanupDispatcher = services.FirstOrDefault(descriptor =>
+                descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(TerminalFileCleanupDispatcher));
+            if (terminalCleanupDispatcher is not null) services.Remove(terminalCleanupDispatcher);
             services.AddSingleton<MessagingEphemeralTestControl>();
             services.RemoveAll<IMessagingEphemeralNotifier>();
             services.AddScoped<IMessagingEphemeralNotifier>(provider => new RecordingMessagingEphemeralNotifier(
@@ -287,6 +299,8 @@ public sealed partial class MakanAppWebApplicationFactory :
                 Environment.SetEnvironmentVariable(
                     ConnectionStringEnvironmentVariable,
                     _originalConnectionString);
+                Environment.SetEnvironmentVariable("Otp__Enabled", _originalOtpEnabled);
+                Environment.SetEnvironmentVariable("Otp__AllowMockAuthentication", _originalAllowMock);
             }
         }
     }

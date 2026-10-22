@@ -17,6 +17,14 @@ public sealed partial class IdentityService(
         CancellationToken cancellationToken)
     {
         var phoneNumber = NormalizePhoneNumber(command.PhoneNumber);
+        if (!otpOptions.Enabled)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var now = timeProvider.GetUtcNow().UtcDateTime;
+            // شناسه و زمان فقط شکل پاسخ قبلی را حفظ می‌کنند؛ challenge یا کد واقعی ساخته/ذخیره نمی‌شود.
+            return new RequestOtpResult(Guid.NewGuid(), now + otpOptions.Lifetime, now);
+        }
+        await ValidateDevelopmentTestUserAsync(phoneNumber, cancellationToken);
         var requestedAtUtc = timeProvider.GetUtcNow().UtcDateTime;
         var latestChallenge = await store.GetLatestOtpChallengeAsync(
             phoneNumber,
@@ -59,7 +67,7 @@ public sealed partial class IdentityService(
         var expiresAtUtc = deliveredAtUtc + otpOptions.Lifetime;
         var challenge = OtpChallenge.Create(
             phoneNumber,
-            security.HashOtp(code, salt),
+            HashOtpForCurrentMode(code, salt),
             salt,
             deliveredAtUtc,
             expiresAtUtc,
@@ -79,6 +87,7 @@ public sealed partial class IdentityService(
         CancellationToken cancellationToken)
     {
         var phoneNumber = NormalizePhoneNumber(command.PhoneNumber);
+        // در Mock فقط شکل ورودی بررسی می‌شود؛ مقدار کد با هیچ OTP واقعی مقایسه نمی‌شود.
         var code = NormalizeOtpCode(command.Code);
         if (code is null)
         {
@@ -87,25 +96,18 @@ public sealed partial class IdentityService(
 
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
-        var challenge = await store.GetOtpChallengeAsync(
-            command.ChallengeId,
-            phoneNumber,
-            cancellationToken);
-
-        if (challenge is null)
+        if (otpOptions.Enabled)
         {
-            throw OtpException(OtpVerificationResult.Invalid);
-        }
-
-        var verificationResult = challenge.Verify(
-            security.HashOtp(code, challenge.Salt),
-            nowUtc);
-
-        if (verificationResult != OtpVerificationResult.Valid)
-        {
-            await store.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-            throw OtpException(verificationResult);
+            await ValidateDevelopmentTestUserAsync(phoneNumber, cancellationToken);
+            var challenge = await store.GetOtpChallengeAsync(command.ChallengeId, phoneNumber, cancellationToken);
+            if (challenge is null) throw OtpException(OtpVerificationResult.Invalid);
+            var verificationResult = challenge.Verify(HashOtpForCurrentMode(code!, challenge.Salt), nowUtc);
+            if (verificationResult != OtpVerificationResult.Valid)
+            {
+                await store.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                throw OtpException(verificationResult);
+            }
         }
 
         var credential = await store.GetMobileCredentialAsync(phoneNumber, cancellationToken);
@@ -432,6 +434,26 @@ public sealed partial class IdentityService(
             person?.LastName,
             person?.DisplayName,
             user.Username);
+    }
+
+    private byte[] HashOtpForCurrentMode(string code, byte[] salt) =>
+        // جداکردن دامنهٔ hash مانع مصرف challenge تست در Mode=Real، حتی روی DB مشترک، می‌شود.
+        // پیشوند control-character از ورودی Verify قابل عبور نیست.
+        security.HashOtp(otpOptions.Mode == OtpMode.DevelopmentBypass
+            ? "\u001fMakanApp.DevelopmentOtpBypass\u001f" + code : code, salt);
+
+    private async Task ValidateDevelopmentTestUserAsync(string phoneNumber, CancellationToken cancellationToken)
+    {
+        if (otpOptions.Mode != OtpMode.DevelopmentBypass) return;
+        if (!otpOptions.DevelopmentTestUsers.TryGetValue(phoneNumber, out var expectedUserId))
+            throw OtpException(OtpVerificationResult.Invalid);
+        var credential = await store.GetMobileCredentialAsync(phoneNumber, cancellationToken);
+        if (credential is null || credential.UserId != expectedUserId)
+            throw OtpException(OtpVerificationResult.Invalid);
+        var user = await store.GetUserAsync(expectedUserId, cancellationToken);
+        if (user is null) throw OtpException(OtpVerificationResult.Invalid);
+        if (user.AccountStatus != UserAccountStatus.Active)
+            throw new IdentityException(IdentityErrorCodes.AccountSuspended, "حساب کاربری معلق است.");
     }
 
     private static string NormalizePhoneNumber(string phoneNumber)

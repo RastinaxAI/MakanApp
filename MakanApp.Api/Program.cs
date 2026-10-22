@@ -19,6 +19,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Platform;
 using MakanApp.Infrastructure;
+using MakanApp.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -26,12 +27,15 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+ProductionLoggingSafety.Configure(builder.Services, builder.Environment);
 
 ProductionConfigurationValidator.Validate(
     builder.Configuration,
     builder.Environment.EnvironmentName);
+HostShutdownConfiguration.ConfigureServices(builder.Services, builder.Configuration);
 builder.WebHost.ConfigureKestrel(options => options.AddServerHeader = false);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -249,13 +253,14 @@ builder.Services.AddProblemDetails(options =>
         context.ProblemDetails.Extensions.TryAdd(
             "traceId",
             Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+        context.ProblemDetails.Extensions.TryAdd("correlationId", context.HttpContext.TraceIdentifier);
     };
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddMetrics();
 builder.Services.AddSingleton<MakanApiMetrics>();
 builder.Services.AddHealthChecks()
-    .AddCheck<CoreReadinessHealthCheck>("core-readiness", tags: ["ready"]);
+    .AddCheck<CoreReadinessHealthCheck>("core-readiness", tags: ["ready"], timeout: TimeSpan.FromSeconds(15));
 builder.Services.AddInfrastructure(
     builder.Configuration,
     builder.Environment.EnvironmentName);
@@ -271,6 +276,20 @@ builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOption
 });
 
 var app = builder.Build();
+
+var otpAuthentication = app.Services.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value;
+if (!otpAuthentication.Enabled)
+{
+    app.Logger.LogWarning(new EventId(1010, "MockOtpAuthenticationEnabled"),
+        "احراز هویت آزمایشی فعال است؛ فقط حساب و دادهٔ تست مجاز است. Environment={Environment}; OtpEnabled={OtpEnabled}; AllowMockAuthentication={AllowMockAuthentication}",
+        app.Environment.EnvironmentName, otpAuthentication.Enabled, otpAuthentication.AllowMockAuthentication);
+}
+else
+{
+    app.Logger.LogInformation(new EventId(1011, "RealOtpAuthenticationEnabled"),
+        "احراز هویت OTP واقعی فعال است. Environment={Environment}; OtpEnabled={OtpEnabled}; AllowMockAuthentication={AllowMockAuthentication}",
+        app.Environment.EnvironmentName, otpAuthentication.Enabled, otpAuthentication.AllowMockAuthentication);
+}
 
 if (app.Environment.IsProduction())
 {
@@ -298,9 +317,9 @@ if (builder.Configuration.GetValue("ReverseProxy:Enabled", false))
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<HttpRequestMetricsMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseMiddleware<HttpRequestMetricsMiddleware>();
 
 var exposeOpenApi = !(app.Environment.IsProduction() || app.Environment.IsStaging()) ||
                     builder.Configuration.GetValue("Swagger:Enabled", false);
@@ -333,15 +352,15 @@ app.UseAuthorization();
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = registration => registration.Tags.Contains("ready")
-});
+}).AllowAnonymous().WithMetadata(new CoreHealthProbeMetadata());
 app.MapControllers();
 app.MapHub<MessagingHub>("/hubs/messaging");
 

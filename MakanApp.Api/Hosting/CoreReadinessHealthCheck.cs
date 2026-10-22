@@ -1,3 +1,4 @@
+using MakanApp.Api.Configuration;
 using MakanApp.Application.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -6,22 +7,43 @@ namespace MakanApp.Api.Hosting;
 
 public sealed class CoreReadinessHealthCheck(
     MakanDbContext dbContext,
-    IStorageReadinessProbe storageReadinessProbe) : IHealthCheck
+    IStorageReadinessProbe storageReadinessProbe,
+    DataProtectionKeyRingProbe keyRingProbe,
+    IConfiguration configuration,
+    IHostEnvironment environment) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!await dbContext.Database.CanConnectAsync(cancellationToken))
+        try
         {
-            return HealthCheckResult.Unhealthy("SQL Server در دسترس نیست.");
-        }
+            ProductionConfigurationValidator.Validate(configuration, environment.EnvironmentName);
+            if (!await keyRingProbe.IsReadyAsync(cancellationToken))
+            {
+                return HealthCheckResult.Unhealthy("key ring پایدار در دسترس نیست.");
+            }
 
-        if (!await storageReadinessProbe.IsReadyAsync(cancellationToken))
+            if (!await dbContext.Database.CanConnectAsync(cancellationToken))
+            {
+                return HealthCheckResult.Unhealthy("SQL Server در دسترس نیست.");
+            }
+
+            if (!await storageReadinessProbe.IsReadyAsync(cancellationToken))
+            {
+                return HealthCheckResult.Unhealthy("Storage پایدار در دسترس نیست.");
+            }
+
+            return HealthCheckResult.Healthy();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return HealthCheckResult.Unhealthy("Storage پایدار در دسترس نیست.");
+            throw;
         }
-
-        return HealthCheckResult.Healthy();
+        catch (Exception)
+        {
+            // exception فنی وارد HealthCheckResult و logger داخلی framework نمی‌شود.
+            return HealthCheckResult.Unhealthy("یکی از وابستگی‌های اصلی در دسترس نیست.");
+        }
     }
 }
