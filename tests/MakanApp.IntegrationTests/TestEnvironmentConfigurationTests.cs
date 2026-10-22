@@ -12,6 +12,7 @@ using MakanApp.Infrastructure.Ai;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
 using MakanApp.Infrastructure.Observability;
+using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.AspNetCore.Builder;
@@ -118,22 +119,28 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         Assert.Equal(777, configuration.GetValue<int>("Identity:Session:AccessLifetimeSeconds"));
     }
 
-    [Fact]
-    public void FullTestSettings_BindThroughActualInfrastructureFactoriesWithoutUsingProductionSecrets()
+    [Theory]
+    [InlineData("Test", false)]
+    [InlineData("Production", true)]
+    public void FullSettings_BindThroughActualInfrastructureFactoriesWithoutUsingProductionSecrets(string environment, bool realOtp)
     {
         using var variables = new EnvironmentScope();
         var builder = Builder();
         using var configuration = builder.Configuration;
+        builder.Environment.EnvironmentName = environment;
+        if (realOtp) configuration.AddJsonFile("appsettings.Production.json.example");
         configuration.AddInMemoryCollection(RuntimeValues());
+        configuration["Sms:MeliPayamakOtp:ServiceToken"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
+        ProductionConfigurationValidator.Validate(configuration, environment);
         HostShutdownConfiguration.ConfigureServices(builder.Services, configuration);
         builder.Services.AddInfrastructure(configuration, builder.Environment.EnvironmentName);
         builder.Services.AddBackofficeMfa(configuration, builder.Environment);
         using var provider = builder.Services.BuildServiceProvider();
 
         var authentication = provider.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value;
-        Assert.False(authentication.Enabled);
-        Assert.True(authentication.AllowMockAuthentication);
-        Assert.False(provider.GetRequiredService<OtpOptions>().Enabled);
+        Assert.Equal(realOtp, authentication.Enabled);
+        Assert.Equal(!realOtp, authentication.AllowMockAuthentication);
+        Assert.Equal(realOtp, provider.GetRequiredService<OtpOptions>().Enabled);
         Assert.Equal(4, provider.GetRequiredService<OtpOptions>().MinimumCodeLength);
         Assert.Equal(64, provider.GetRequiredService<OtpOptions>().MaximumCodeLength);
         Assert.Equal(TimeSpan.FromHours(1), provider.GetRequiredService<SessionOptions>().AccessLifetime);
@@ -145,14 +152,22 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         Assert.NotNull(provider.GetRequiredService<ReportExportOptions>());
         Assert.NotNull(provider.GetRequiredService<NotificationDeliveryOptions>());
         Assert.NotNull(provider.GetRequiredService<OperationalMetricsOptions>());
+        // provider غیرفعال نباید transport خارجی را ثبت کند؛ نبود ثبت اینجا رفتار درست DI است.
+        Assert.Null(provider.GetService<WebPushTransportOptions>());
+        Assert.Null(provider.GetService<FcmTransportOptions>());
         Assert.False(provider.GetRequiredService<TerminalFileCleanupOptions>().Enabled);
         Assert.False(provider.GetRequiredService<AiServiceOptions>().Enabled);
         Assert.Equal("makan.ai.invoke", provider.GetRequiredService<AiServiceAuthenticationOptions>().Scope);
         Assert.Equal(configuration["Storage:RootPath"], provider.GetRequiredService<StorageOptions>().RootPath);
         Assert.True(provider.GetRequiredService<DataProtectionKeyRingSettings>().PersistenceRequired);
         Assert.Equal(TimeSpan.FromSeconds(30), provider.GetRequiredService<IOptions<HostOptions>>().Value.ShutdownTimeout);
-        Assert.IsType<UnavailableOtpDeliveryProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
-        Assert.DoesNotContain(builder.Services, item => item.ServiceType == typeof(MeliPayamakOtpOptions));
+        if (realOtp)
+            Assert.IsType<MeliPayamakOtpProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
+        else
+        {
+            Assert.IsType<UnavailableOtpDeliveryProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
+            Assert.DoesNotContain(builder.Services, item => item.ServiceType == typeof(MeliPayamakOtpOptions));
+        }
         Assert.NotNull(configuration.GetSection(MeliPayamakOtpOptions.SectionName).Get<MeliPayamakOtpOptions>());
         using var scope = provider.CreateScope();
         Assert.True(scope.ServiceProvider.GetRequiredService<MakanDbContext>().Database.IsSqlServer());
@@ -181,10 +196,6 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
             .AddJsonFile("appsettings.json").AddJsonFile("appsettings.Production.json.example");
         configuration.AddInMemoryCollection(RuntimeValues());
         ProductionConfigurationValidator.Validate(configuration, environment);
-        Assert.Throws<InvalidOperationException>(() => OtpAuthenticationOptions.Load(configuration, environment));
-
-        configuration["Otp:Enabled"] = "true";
-        configuration["Otp:AllowMockAuthentication"] = "false";
         Assert.True(OtpAuthenticationOptions.Load(configuration, environment).Enabled);
 
         configuration["Sms:MeliPayamakOtp:ServiceToken"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
@@ -193,6 +204,9 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         using var provider = services.BuildServiceProvider();
         Assert.True(provider.GetRequiredService<OtpOptions>().Enabled);
         Assert.IsType<MeliPayamakOtpProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
+
+        configuration["Otp:AllowMockAuthentication"] = "true";
+        Assert.Throws<InvalidOperationException>(() => OtpAuthenticationOptions.Load(configuration, environment));
     }
 
     private static Dictionary<string, string?> RuntimeValues() => new()

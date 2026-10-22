@@ -154,13 +154,17 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 ### کاربران تست و OTP توسعه
 
-`Otp:Enabled` تنها کلید انتخاب OTP واقعی/Mock است. مقدار اولیهٔ فایل‌های base، Development و Production
-`false` است؛ Mock علاوه بر آن به `Otp:AllowMockAuthentication=true` و محیط Development/Test/Testing نیاز دارد.
+`Otp:Enabled` تنها کلید انتخاب OTP واقعی/Mock است. مقدار فایل‌های base، Development و Test
+`false` است؛ Production و الگوی آن مقدار `true/false` دارند. Mock علاوه بر خاموش‌بودن Enabled به `Otp:AllowMockAuthentication=true` و محیط Development/Test/Testing نیاز دارد.
 در Mock کد یا challenge واقعی ساخته نمی‌شود و Verify با هر مقدار کدِ دارای فرمت معتبر از مسیر session/refresh معمول عبور می‌کند؛ طول پیش‌فرض ۴ تا ۶۴ کاراکتر و بدون control character است. ترکیب `true/true` در تمام محیط‌ها رد می‌شود.
 Production/Staging با OTP خاموش یا مجوز Mock، در startup رد می‌شوند؛ برای انتشار `Enabled=true` و
 `AllowMockAuthentication=false` لازم است. `Identity:Otp:Mode=DevelopmentBypass` و فلگ‌های قدیمی فعال رد می‌شوند.
 [تنظیمات، قرارداد، تست‌ها و گزارش آموزشی](docs/dev/CONFIGURABLE_OTP_FA.md).
 برای سرور صرفاً آزمایشی از پروفایل `TestIis` و محیط `Test` طبق [راهنمای انتشار Mock OTP](docs/dev/SERVER_MOCK_OTP_FA.md) استفاده کنید؛ فایل Production در این محیط بارگذاری نمی‌شود و کانفیگ خصوصی اتصال/کلیدها باید در محیط مقصد تأمین شود.
+
+برای Production از پروفایل `ProductionIis` استفاده کنید تا کانفیگ Mock وارد بسته نشود.
+ساختار فایل‌های Test و Production باید دوطرفه برابر بماند؛ مقادیر محیطی، خصوصاً OTP، یکسان نیستند.
+[گزارش و راهنمای اعتبارسنجی انتشار دو محیط](docs/production/BACKEND_RELEASE_READINESS_FA.md).
 
 ### سرویس OTP مدیریت‌شده MeliPayamak
 

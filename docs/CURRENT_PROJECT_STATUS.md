@@ -1,5 +1,8 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
+> اعتبارسنجی انتشار دو محیط در `2026-10-22`: [schema/OTP/Publish محلی](production/BACKEND_RELEASE_READINESS_FA.md).
+> Production مقدار OTP واقعی `true/false` و Test مقدار Mock مجاز `false/true` دارد؛ schema دوطرفه آزموده می‌شود.
+
 > بازبینی تکمیلی ۲۰۲۶-۱۰-۲۲: [Consolidation نهایی Backend](release/BACKEND_FINAL_CONSOLIDATION_FA.md)
 > مرجع نتیجهٔ جدید implementation/validation و Git است. Service Auth واقعی قبلاً PASS شده؛
 > Parent Child Summary همچنان مانع خارجی Provider دارد و Full-12 واقعی Deferred است.

@@ -43,8 +43,10 @@ public sealed class OtpConfigurationPrecedenceTests
         var configuration = new ConfigurationBuilder().SetBasePath(ApiDirectory())
             .AddJsonFile("appsettings.json")
             .AddJsonFile("appsettings.Production.json.example").Build();
-        Assert.False(configuration.GetValue<bool>("Otp:Enabled"));
-        Assert.True(configuration.GetValue<bool>("Otp:AllowMockAuthentication"));
+        Assert.True(configuration.GetValue<bool>("Otp:Enabled"));
+        Assert.False(configuration.GetValue<bool>("Otp:AllowMockAuthentication"));
+        Assert.True(OtpAuthenticationOptions.Load(configuration, environment).Enabled);
+        configuration["Otp:AllowMockAuthentication"] = "true";
         Assert.Throws<InvalidOperationException>(() => OtpAuthenticationOptions.Load(configuration, environment));
     }
 

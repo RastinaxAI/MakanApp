@@ -15,15 +15,16 @@ namespace MakanApp.UnitTests.Identity;
 public sealed class ServerMockOtpConfigurationTests
 {
     [Theory]
-    [InlineData("appsettings.json")]
-    [InlineData("appsettings.Development.json")]
-    [InlineData("appsettings.Production.json.example")]
-    public void VersionedSettings_ContainExplicitBooleanOtpKeys(string fileName)
+    [InlineData("appsettings.json", false)]
+    [InlineData("appsettings.Development.json", false)]
+    [InlineData("appsettings.Test.json.example", false)]
+    [InlineData("appsettings.Production.json.example", true)]
+    public void VersionedSettings_ContainEnvironmentSpecificBooleanOtpKeys(string fileName, bool realOtp)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(ApiDirectory(), fileName)));
         var otp = document.RootElement.GetProperty("Otp");
-        Assert.Equal(JsonValueKind.False, otp.GetProperty("Enabled").ValueKind);
-        Assert.Equal(JsonValueKind.True, otp.GetProperty("AllowMockAuthentication").ValueKind);
+        Assert.Equal(realOtp, otp.GetProperty("Enabled").GetBoolean());
+        Assert.Equal(!realOtp, otp.GetProperty("AllowMockAuthentication").GetBoolean());
     }
 
     [Theory]
@@ -89,6 +90,16 @@ public sealed class ServerMockOtpConfigurationTests
         var exclusion = Assert.Single(profile.Descendants("Content"));
         Assert.Equal("Never", exclusion.Attribute("CopyToPublishDirectory")?.Value);
         Assert.Equal("appsettings.Production.json;appsettings.Development.json", exclusion.Attribute("Update")?.Value);
+    }
+
+    [Fact]
+    public void ProductionPublishProfile_SelectsProductionAndExcludesMockTestSettings()
+    {
+        var profile = XDocument.Load(Path.Combine(ApiDirectory(), "Properties", "PublishProfiles", "ProductionIis.pubxml"));
+        Assert.Equal("Production", Assert.Single(profile.Descendants("EnvironmentName")).Value);
+        var exclusion = Assert.Single(profile.Descendants("Content"));
+        Assert.Equal("Never", exclusion.Attribute("CopyToPublishDirectory")?.Value);
+        Assert.Equal("appsettings.Test.json;appsettings.Development.json", exclusion.Attribute("Update")?.Value);
     }
 
     private static IConfigurationRoot Configuration()

@@ -31,7 +31,9 @@ DOTNET_ENVIRONMENT=Test
 
 هر دو مقدار OTP برای Mock لازم‌اند. همان تنظیم در Production یا Staging همچنان Startup را متوقف می‌کند. محیط `Test` برخلاف `Testing` نرخ درخواست واقعی و الزام key ring پایدار MFA را نگه می‌دارد؛ providerهای توسعهٔ SMS/Notification/Content Safety مجاز نمی‌شوند. لاگ خام framework و EF نیز مانند Production با رخداد امن جایگزین می‌شود.
 
-طبق تأیید تکمیلی مالک، base، Development و فایل Production محلی/نمونه همگی مقدار اولیهٔ false/true دارند. این یکسان‌سازی فایل‌ها، Production را به محیط تست تبدیل نمی‌کند؛ برای اجرای Production باید جفت true/false صریحاً اعمال شود. کد محافظ Startup تغییر نکرده است.
+تصمیم جدید آمادگی انتشار `2026-10-22` جایگزین مقدار قبلی Production شد: base، Development و Test
+همچنان `false/true` هستند، ولی فایل Production محلی/نمونه اکنون `true/false` دارد.
+کد محافظ Startup تغییر نکرده است. برای Production پروفایل جداگانهٔ `ProductionIis`، بدون فایل Test، استفاده شود.
 
 ## انتشار محلی
 

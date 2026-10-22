@@ -13,7 +13,20 @@ public sealed class TestConfigurationSchemaTests
 
         Assert.Equal(Shape(production.RootElement), Shape(test.RootElement));
 
-        // فایل خصوصی محیط می‌تواند فقط overrideها را داشته باشد؛ قرارداد کامل در الگو آزموده می‌شود.
+        // الگوها در CI نیز بدون دسترسی به فایل‌های خصوصی آزموده می‌شوند.
+    }
+
+    [Fact]
+    public void AvailableRuntimeSettings_MatchBidirectionallyAndKeepEnvironmentSpecificOtp()
+    {
+        using var production = ReadSettings(File.Exists(SettingsPath("appsettings.Production.json"))
+            ? "appsettings.Production.json" : "appsettings.Production.json.example");
+        using var test = ReadSettings(File.Exists(SettingsPath("appsettings.Test.json"))
+            ? "appsettings.Test.json" : "appsettings.Test.json.example");
+        // فقط ساختار و فلگ‌ها بررسی می‌شوند؛ مقدار خصوصی در assertion قرار نمی‌گیرد.
+        Assert.Equal(Shape(production.RootElement), Shape(test.RootElement));
+        AssertOtp(production.RootElement, realOtp: true);
+        AssertOtp(test.RootElement, realOtp: false);
     }
 
     [Theory]
@@ -36,6 +49,8 @@ public sealed class TestConfigurationSchemaTests
     [InlineData("{\"A\":[{}]}", "{\"A\":[]}")]
     [InlineData("{\"A\":{\"B\":1}}", "{\"A\":{\"C\":1}}")]
     [InlineData("{\"A\":null}", "{\"A\":\"\"}")]
+    [InlineData("{\"A\":[[{\"B\":true}]]}", "{\"A\":[[{\"B\":\"true\"}]]}")]
+    [InlineData("{\"A\":[{\"B\":1},{\"B\":2}]}", "{\"A\":[{\"B\":1},{\"C\":2}]}")]
     public void RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues(string left, string right)
     {
         using var first = JsonDocument.Parse(left);
@@ -49,6 +64,33 @@ public sealed class TestConfigurationSchemaTests
         using var production = JsonDocument.Parse("{\"Enabled\":true,\"Values\":[1,2]}");
         using var test = JsonDocument.Parse("{\"Values\":[3,4],\"Enabled\":false}");
         Assert.Equal(Shape(production.RootElement), Shape(test.RootElement));
+    }
+
+    [Theory]
+    [InlineData("{\"Otp\":{},\"Otp\":{}}")]
+    [InlineData("{\"Otp\":{\"Enabled\":true,\"enabled\":false}}")]
+    [InlineData("{\"A\":[[{\"B\":1,\"B\":2}]]}")]
+    public void RecursiveComparison_RejectsDuplicateKeysIncludingConfigurationCasing(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => Shape(document.RootElement));
+    }
+
+    [Theory]
+    [InlineData("{\"A\":null}", "{\"A\":null}")]
+    [InlineData("{\"A\":[[{\"B\":true}]]}", "{\"A\":[[{\"B\":false}]]}")]
+    public void RecursiveComparison_AcceptsMatchingNullAndNestedArraySchemas(string left, string right)
+    {
+        using var first = JsonDocument.Parse(left);
+        using var second = JsonDocument.Parse(right);
+        Assert.Equal(Shape(first.RootElement), Shape(second.RootElement));
+    }
+
+    private static void AssertOtp(JsonElement root, bool realOtp)
+    {
+        var otp = root.GetProperty("Otp");
+        Assert.Equal(realOtp, otp.GetProperty("Enabled").GetBoolean());
+        Assert.Equal(!realOtp, otp.GetProperty("AllowMockAuthentication").GetBoolean());
     }
 
     [Theory]
@@ -77,7 +119,7 @@ public sealed class TestConfigurationSchemaTests
 
     private static string[] Shape(JsonElement root)
     {
-        var paths = new SortedDictionary<string, JsonValueKind>(StringComparer.Ordinal);
+        var paths = new SortedDictionary<string, JsonValueKind>(StringComparer.OrdinalIgnoreCase);
         Visit(root, "$", paths);
         return paths.Select(item => $"{item.Key}: {item.Value}").ToArray();
     }
