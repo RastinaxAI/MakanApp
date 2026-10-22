@@ -1,5 +1,12 @@
 # کاربران Development/Test و OTP قابل تنظیم
 
+> به‌روزرسانی Consolidation: پیش از Seed، اسکریپت فقط‌خواندنی
+> `check-development-test-users-database.sql` مقصد، ستون‌ها و تاریخچهٔ EF را بررسی می‌کند.
+> Seed موجود در این checkout همچنان فقط دیتابیس ایزوله با پیشوند
+> `MakanApp_DevelopmentTestUsers` و تأیید connection را می‌پذیرد؛ اجازهٔ اجرا روی دیتابیس
+> عادی گسترش نیافته است. نبود ستون‌های امنیتی، خطای صریح 51016 می‌دهد؛ بدنه پس از guard
+> compile می‌شود تا خطای 207 پیام Migration را پنهان نکند. هیچ Schema به‌صورت دستی اصلاح نمی‌شود.
+
 > بخش OTP این راهنمای قبلی با قرارداد [Configurable OTP](CONFIGURABLE_OTP_FA.md) جایگزین شده است.
 > DevelopmentCode/TestUsers دیگر روش فعال‌سازی Authentication نیستند. دیتابیس دائمی LocalDB این مرحله نیز
 > با تأیید مالک حذف شده است؛ برای Login دستی فقط MakanApp روی سرور محلی `.` مبناست. این سند مجوز ساخت DB تازه نیست.

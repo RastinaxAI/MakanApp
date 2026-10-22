@@ -1,5 +1,10 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
+> بازبینی تکمیلی ۲۰۲۶-۱۰-۲۲: [Consolidation نهایی Backend](release/BACKEND_FINAL_CONSOLIDATION_FA.md)
+> مرجع نتیجهٔ جدید implementation/validation و Git است. Service Auth واقعی قبلاً PASS شده؛
+> Parent Child Summary همچنان مانع خارجی Provider دارد و Full-12 واقعی Deferred است.
+> شواهد قبلی پایین، پذیرش تازهٔ Production محسوب نمی‌شوند.
+
 بازبینی `2026-10-18` از `main@ef67624`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration**. این صفحه شاخص جاری است؛ گزارش‌های مرحله‌ای و PDFهای اصلی محصول تاریخچه و تصمیم‌های scope خودشان را حفظ می‌کنند.
 
 ## قابلیت‌های ثبت‌شده

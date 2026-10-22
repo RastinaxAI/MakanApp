@@ -19,14 +19,21 @@ internal static class LiveAiProgram
     public static async Task<int> Main(string[] args)
     {
         EvidenceOutput = Console.Out;
+        if (args.SequenceEqual(["--verify-failure-sanitization"]))
+        {
+            FailureEvidenceCapture.VerifySanitization();
+            Console.WriteLine("{\"stage\":\"failure_sanitization_self_check\",\"passed\":true}");
+            return 0;
+        }
         var allowRemoteHttps = args.Count(value => value == "--allow-remote-https") == 1;
         var selectedArgs = args.Where(value => value != "--allow-remote-https").ToArray();
+        var evidenceOnly = selectedArgs.SequenceEqual(["--run-live", "--collect-failure-evidence"]);
         var authorizationOnly = selectedArgs.SequenceEqual(["--run-live", "--authorization-only"]);
         var serviceAuthOnly = selectedArgs.SequenceEqual(["--run-live", "--service-auth-only"]);
         var operation = selectedArgs.Length == 3 && selectedArgs[0] == "--run-live" &&
             selectedArgs[1] == "--operation" ? selectedArgs[2] : null;
         if (args.Count(value => value == "--allow-remote-https") > 1 ||
-            (!selectedArgs.SequenceEqual(["--run-live"]) && !authorizationOnly && !serviceAuthOnly &&
+            (!selectedArgs.SequenceEqual(["--run-live"]) && !authorizationOnly && !serviceAuthOnly && !evidenceOnly &&
              operation is not ("focused_three" or "parent_child_summary" or "remaining_roles" or
                  "remaining_managers" or "manager_student_insight")))
         {
@@ -58,7 +65,7 @@ internal static class LiveAiProgram
                 BaseUrl = target.AbsoluteUri,
                 TimeoutSeconds = configuration.GetValue("AiService:TimeoutSeconds", AiServiceOptions.DefaultTimeoutSeconds)
             };
-            if (options.TimeoutSeconds is < 1 or > AiServiceOptions.DefaultTimeoutSeconds)
+            if (options.TimeoutSeconds is < 1 or > AiServiceOptions.MaximumTimeoutSeconds)
                 throw new InvalidOperationException("LIVE_AI_TIMEOUT_INVALID");
             EvidenceOutput.WriteLine(JsonSerializer.Serialize(new
             {
@@ -76,6 +83,8 @@ internal static class LiveAiProgram
             using var factory = new MakanAppWebApplicationFactory();
             using var observation = new LiveAiObservation();
             observation.Forbid(authentication.CurrentKey);
+            var evidence = evidenceOnly ? new FailureEvidenceCapture(observation.IsSafe) : null;
+            if (evidenceOnly) FailureEvidenceCapture.VerifySanitization();
             using var application = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IAiServiceClient>();
@@ -86,6 +95,7 @@ internal static class LiveAiProgram
                 services.AddSingleton<IAiServiceCredentialProvider>(credentials);
                 services.AddSingleton<AiServiceCircuitBreaker>();
                 services.AddSingleton(observation);
+                if (evidence is not null) services.AddSingleton(evidence);
                 services.AddTransient<LiveAiObservationHandler>();
                 services.AddHttpClient<IAiServiceClient, AiServiceClient>(client =>
                         client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds))
@@ -93,6 +103,11 @@ internal static class LiveAiProgram
                     .AddHttpMessageHandler<LiveAiObservationHandler>();
                 services.RemoveAll<ILoggerProvider>();
                 services.AddSingleton<ILoggerProvider, RecordingTestLoggerProvider>();
+                if (evidence is not null)
+                {
+                    services.RemoveAll<ILoggerProvider>();
+                    services.AddSingleton<ILoggerProvider, FailureEvidenceLoggerProvider>();
+                }
             }));
             stage = "isolated_database";
             await ((IAsyncLifetime)factory).InitializeAsync();
@@ -103,13 +118,14 @@ internal static class LiveAiProgram
                 {
                     Converters = { new JsonStringEnumConverter() }
                 };
-                await new LiveAiScenario(factory, application, observation, jsonOptions, options.TimeoutSeconds)
-                    .RunAsync(operation, authorizationOnly);
+                await new LiveAiScenario(factory, application, observation, jsonOptions, options.TimeoutSeconds, evidence)
+                    .RunAsync(evidenceOnly ? "failure_evidence" : operation, authorizationOnly);
             }
             finally
             {
                 await ((IAsyncLifetime)factory).DisposeAsync();
             }
+            if (evidence is not null) originalOutput.WriteLine(evidence.Export());
             return 0;
         }
         catch (Exception exception)

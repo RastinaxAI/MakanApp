@@ -111,13 +111,19 @@ internal sealed class LiveAiObservation : IDisposable
     public void Dispose() => _listener.Dispose();
 }
 
-internal sealed class LiveAiObservationHandler(LiveAiObservation observation) : DelegatingHandler
+internal sealed class LiveAiObservationHandler(LiveAiObservation observation, FailureEvidenceCapture? evidence = null) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         await observation.InspectAsync(request, cancellationToken);
+        if (evidence is not null) await evidence.RequestAsync(request, cancellationToken);
         var response = await base.SendAsync(request, cancellationToken);
         observation.AiHttpStatus = (int)response.StatusCode;
+        if (evidence is not null)
+        {
+            await evidence.ResponseAsync(response, cancellationToken);
+            return response;
+        }
         if (!response.IsSuccessStatusCode)
         {
             // فقط envelope امن قرارداد ثبت می‌شود؛ بدنه یا پیام provider چاپ نمی‌شود.

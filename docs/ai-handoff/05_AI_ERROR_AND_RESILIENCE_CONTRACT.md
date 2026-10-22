@@ -36,8 +36,9 @@ Backend body خطای AI را به client عبور نمی‌دهد و از HTTP 
 
 ## timeout و cancellation
 
-- Backend default timeout: 180 seconds؛ شامل ارسال، انتظار header و خواندن/deserialize بدنه.
-- مقدار معتبر configuration: 1 تا 180 ثانیه؛ محیط فعلی با صف ۶۰ و provider timeout برابر ۹۰، مقدار ۱۸۰ را نیاز دارد.
+- Backend default timeout: 35 seconds؛ بودجهٔ محلیِ موجود حفظ شده است. توضیح مهلت ۳۰ ثانیه‌ای متعلق به runtime تاریخی ۲۰۲۶-۱۰-۱۶ است، نه ادعای deadline سرویس Production فعلی.
+- مقدار معتبر configuration: 1 تا 180 ثانیه.
+- سقف تنظیم ۱۸۰ ثانیه از پیش‌فرض ۳۵ ثانیه جداست؛ Consolidation هیچ Timeout محیط یا Retry را برای عبور از خطای Provider تغییر نمی‌دهد و پذیرش واقعی AI را ادعا نمی‌کند.
 - caller cancellation بدون تبدیل به timeout حفظ می‌شود.
 - timeout داخلی به `AI_SERVICE_TIMEOUT` تبدیل می‌شود.
 

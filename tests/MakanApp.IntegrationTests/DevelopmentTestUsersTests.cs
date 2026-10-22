@@ -366,6 +366,31 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
         await ExecuteSeedAsync();
     }
 
+    [Theory]
+    [InlineData("AccountStatus")]
+    [InlineData("CommunicationAgeCategory")]
+    [InlineData("CommunicationAgeVerificationStatus")]
+    public async Task MissingSecurityColumn_ReportsSchemaPrerequisiteInsteadOfCompileError(string columnName)
+    {
+        await using var scope = _factory.Services.CreateAsyncScope();
+        await using var connection = new SqlConnection(
+            scope.ServiceProvider.GetRequiredService<MakanDbContext>().Database.GetConnectionString());
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "EXEC sys.sp_set_session_context @key=N'MakanApp.DevelopmentSeedApproved', @value=N'DevelopmentOnly';";
+        await command.ExecuteNonQueryAsync();
+        var script = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,
+            "DevelopmentSeed", "create-development-test-users.sql"));
+        // خطای ستون ناموجود به متن همان اسکریپت تزریق می‌شود؛ Schema و constraintها تغییر نمی‌کنند.
+        // در صورت compile زودهنگام بدنه، این تست به‌جای پیام guard خطای واقعی 207 می‌گیرد.
+        command.CommandText = script.Replace(columnName, "SeedGuardMissingColumn", StringComparison.Ordinal);
+
+        var failure = await Assert.ThrowsAsync<SqlException>(() => command.ExecuteNonQueryAsync());
+
+        Assert.Equal(51016, failure.Number);
+        Assert.Contains("migration", failure.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private Task ExecuteSeedAsync() => ExecuteScriptAsync("create-development-test-users.sql");
 
     [Fact]

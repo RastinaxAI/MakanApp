@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using MakanApp.Application.Ai;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
+using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Ai;
 using MakanApp.Infrastructure.Persistence;
@@ -22,6 +23,107 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 9_100_000;
+
+    [Fact]
+    public async Task ParentSummary_MultipleChildren_OnlySelectedChildEducationalDataIsProjected()
+    {
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organizationId = await factory.CreateOrganizationAsync(NewName("AI Two Children"));
+        var membership = await factory.CreateMembershipAsync(user.User.Id, organizationId, OrganizationRole.Parent);
+        var childA = await factory.CreateOrganizationPersonAsync(organizationId, await factory.CreatePersonWithoutUserAsync());
+        var childB = await factory.CreateOrganizationPersonAsync(organizationId, await factory.CreatePersonWithoutUserAsync());
+        await factory.CreateGuardianRelationAsync(user.User.Id, organizationId, childA);
+        await factory.CreateGuardianRelationAsync(user.User.Id, organizationId, childB);
+        var classA = await factory.CreateAcademicClassAsync(organizationId);
+        var classB = await factory.CreateAcademicClassAsync(organizationId);
+        var enrollmentA = await factory.CreateEnrollmentAsync(organizationId, classA.ClassId, childA);
+        var enrollmentB = await factory.CreateEnrollmentAsync(organizationId, classB.ClassId, childB);
+        using var teacherClient = factory.CreateClient();
+        var teacher = await CreateAuthenticatedUserAsync(teacherClient);
+        var teacherMembership = await factory.CreateMembershipAsync(teacher.User.Id, organizationId, OrganizationRole.Teacher);
+        await factory.CreateTeacherAssignmentAsync(organizationId, classA.ClassId, teacherMembership.MembershipId);
+        await factory.CreateTeacherAssignmentAsync(organizationId, classB.ClassId, teacherMembership.MembershipId);
+        var homeworkA = await SeedHomeworkAsync(classA.ClassId, enrollmentA, "AI_CHILD_A_ONLY", 10m);
+        var homeworkB = await SeedHomeworkAsync(classB.ClassId, enrollmentB, "AI_CHILD_B_ONLY", 30m);
+        UseBearerToken(client, user.AccessToken);
+        await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Parent);
+
+        foreach (var child in new[] { childA, childB, childA })
+        {
+            using var selected = await client.PostAsync($"/api/v1/guardian/children/{child}/select", null);
+            selected.EnsureSuccessStatusCode();
+            using var response = await client.PostAsync("/api/v1/ai/parents/child-summary", null);
+            response.EnsureSuccessStatusCode();
+            var request = Assert.IsType<AiParentChildSummaryRequest>(factory.AiService.LastRoleRequest);
+            Assert.Equal(child.ToString("D"), request.Scope.StudentId);
+            Assert.Equal(organizationId.ToString("D"), request.Scope.OrganizationId);
+            var homework = Assert.Single(request.ChildData.Homeworks);
+            Assert.Equal((child == childA ? homeworkA : homeworkB).ToString("D"), homework["assignmentId"].GetString());
+            Assert.Equal(child == childA ? 10m : 30m, homework["maxScore"].GetDecimal());
+            var serialized = JsonSerializer.Serialize(request, JsonOptions);
+            Assert.DoesNotContain((child == childA ? childB : childA).ToString("D"), serialized);
+            Assert.DoesNotContain(child == childA ? "AI_CHILD_B_ONLY" : "AI_CHILD_A_ONLY", serialized);
+            Assert.DoesNotContain((child == childA ? homeworkB : homeworkA).ToString("D"), serialized);
+            Assert.DoesNotContain("conversation", serialized, StringComparison.OrdinalIgnoreCase);
+        }
+
+        async Task<Guid> SeedHomeworkAsync(Guid classId, Guid enrollment, string title, decimal maximumScore)
+        {
+            await using var scope = factory.Services.CreateAsyncScope();
+            var database = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+            var now = DateTime.UtcNow;
+            var assignment = Assignment.CreateDraft(organizationId, classId, teacherMembership.MembershipId, now);
+            var version = AssignmentVersion.CreateDraft(organizationId, classId, assignment.Id, 1,
+                title, "Synthetic educational fixture", now.AddDays(1), false, 1, maximumScore,
+                teacherMembership.MembershipId, now);
+            version.Publish(now);
+            assignment.Publish(now);
+            database.Assignments.Add(assignment);
+            database.AssignmentVersions.Add(version);
+            database.AssignmentRecipients.Add(AssignmentRecipient.Create(organizationId, classId,
+                assignment.Id, version.Id, enrollment, now));
+            await database.SaveChangesAsync();
+            return assignment.Id;
+        }
+    }
+
+    [Fact]
+    public async Task TeacherSummary_MultipleSchools_ReResolvesWorkspaceAndClassOnEveryRequest()
+    {
+        using var client = factory.CreateClient();
+        var user = await CreateAuthenticatedUserAsync(client);
+        var organizationA = await factory.CreateOrganizationAsync(NewName("AI Teacher A"));
+        var organizationB = await factory.CreateOrganizationAsync(NewName("AI Teacher B"));
+        var membershipA = await factory.CreateMembershipAsync(user.User.Id, organizationA, OrganizationRole.Teacher);
+        var membershipB = await factory.CreateMembershipAsync(user.User.Id, organizationB, OrganizationRole.Teacher);
+        var classA = await factory.CreateAcademicClassAsync(organizationA);
+        var classB = await factory.CreateAcademicClassAsync(organizationB);
+        await factory.CreateTeacherAssignmentAsync(organizationA, classA.ClassId, membershipA.MembershipId);
+        await factory.CreateTeacherAssignmentAsync(organizationB, classB.ClassId, membershipB.MembershipId);
+        UseBearerToken(client, user.AccessToken);
+
+        foreach (var item in new[]
+        {
+            (Organization: organizationA, Membership: membershipA.MembershipId, Class: classA.ClassId, ForeignClass: classB.ClassId),
+            (Organization: organizationB, Membership: membershipB.MembershipId, Class: classB.ClassId, ForeignClass: classA.ClassId),
+            (Organization: organizationA, Membership: membershipA.MembershipId, Class: classA.ClassId, ForeignClass: classB.ClassId)
+        })
+        {
+            await SelectWorkspaceAsync(client, item.Membership, OrganizationRole.Teacher);
+            using var response = await client.PostAsync($"/api/v1/ai/teachers/classes/{item.Class}/summary", null);
+            response.EnsureSuccessStatusCode();
+            var request = Assert.IsType<AiTeacherClassSummaryRequest>(factory.AiService.LastRoleRequest);
+            Assert.Equal(item.Organization.ToString("D"), request.Scope.OrganizationId);
+            Assert.Equal(item.Organization.ToString("D"), request.Scope.SchoolId);
+            Assert.Equal(item.Class.ToString("D"), request.Scope.ClassId);
+            Assert.DoesNotContain(item.ForeignClass.ToString("D"), JsonSerializer.Serialize(request, JsonOptions));
+            factory.AiService.Reset();
+            using var denied = await client.PostAsync($"/api/v1/ai/teachers/classes/{item.ForeignClass}/summary", null);
+            Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+            Assert.Null(factory.AiService.LastRoleRequest);
+        }
+    }
 
     [Fact]
     public async Task Chat_SuspendedMembership_IsDeniedBeforeAiCall()

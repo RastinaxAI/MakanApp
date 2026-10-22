@@ -6,8 +6,9 @@ public sealed class AiServiceOptions
 
     public bool Enabled { get; init; }
     public string BaseUrl { get; init; } = string.Empty;
-    // مهلت صف ۶۰ ثانیه و پردازش ۹۰ ثانیه است؛ زمان شبکه نیز در این بودجه قرار دارد.
-    public const int DefaultTimeoutSeconds = 180;
+    // بودجهٔ محلی ۳۵ ثانیه‌ای حفظ می‌شود؛ تنظیم محیط می‌تواند آن را صریحاً تغییر دهد.
+    public const int DefaultTimeoutSeconds = 35;
+    public const int MaximumTimeoutSeconds = 180;
     public int TimeoutSeconds { get; init; } = DefaultTimeoutSeconds;
     public string ContractVersion { get; init; } = "v1";
     public int CircuitBreakerFailureThreshold { get; init; } = 3;

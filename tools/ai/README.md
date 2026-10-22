@@ -83,3 +83,36 @@ Parent فرزند نامرتبط/سازمان دیگر؛ Teacher کلاس/دان
 Production همچنان وابستگی خصوصی `http://10.77.0.2:8001` از WireGuard دارد؛ تنظیمات بالا فقط process ابزارند.
 فایل appsettings و Secret سرور از این دستورها ساخته یا جایگزین نمی‌شوند. Public/Production RAG همچنان DEFERRED است.
 نتیجهٔ واقعی و مرز آزمون‌ها در `docs/ai-handoff/STEP10G_REAL_AI_E2E_REPORT.md` ثبت می‌شود.
+
+
+## Consolidation و وضعیت جاری
+
+کد C# مربوط به Evidence در تحویل نهایی Backend بازبینی و پوشش Unit آن وارد Solution شد؛
+این کار اجرای تازهٔ AI یا تغییر Service Auth نیست. بودجهٔ محلی موجود ۳۵ ثانیه و سقف تنظیم
+۱۸۰ ثانیه حفظ شده‌اند؛ برای عبور از خطای Provider نه Timeout افزایش یافت و نه Retry اضافه شد.
+مقصد همیشه صریح است؛ برخلاف یادداشت تاریخی، runner هیچ fallback خودکار به localhost ندارد.
+
+آزمون آفلاین sanitizer بدون Secret، Configuration، SQL یا شبکه:
+
+```powershell
+dotnet run --project tools/ai/MakanApp.AiIntegrationProbe/MakanApp.AiIntegrationProbe.csproj --configuration Debug --no-build -- --verify-failure-sanitization
+```
+
+حالت `--run-live --collect-failure-evidence` فقط opt-in تشخیصی با fixture ساختگی و
+پالایش صریح JSON است؛ برای retest معمول از آن استفاده نکنید. خروجی عادی همچنان به metadata
+امن محدود است. self-check و Unitها، اجرای واقعی Provider یا پذیرش Production را اثبات نمی‌کنند.
+
+سه فایل Python محلیِ `run_exact_ai.py`، `provider_diagnostic.py` و تست مربوط به آن‌ها
+در این تحویل نسخه‌بندی یا اجرا نمی‌شوند؛ متعلق به تشخیص Snapshot/Provider در scope دیگری‌اند.
+هیچ فرمانی برای خواندن Secret یا اجرای مخزن AI جزو راهنمای جاری Backend نیست.
+
+وضعیت آخرین retest واقعیِ قبلی، نه اجرای این Consolidation:
+
+- Parent Child Summary: `REPRODUCIBLE_PROVIDER_TIMEOUT`؛ 504 / `AI_PROVIDER_TIMEOUT`.
+- Teacher Activity Suggestions: `TRANSIENT_RECOVERY`؛ 200.
+- Manager Class Insight: `CONSISTENT_PASS`؛ 200.
+- `FULL_12_REAL_E2E = DEFERRED`؛ هیچ Full-12 تازه‌ای در این تحویل لازم/اجرا نیست.
+
+[گزارش نهایی Consolidation](../../docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md)
+implementation، تست محلی و پذیرش واقعی را جدا می‌کند. گزارش‌های قدیمی STEP10G سابقه‌اند،
+نه حکم وضعیت جدید Service Auth یا Production.

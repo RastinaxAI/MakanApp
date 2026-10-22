@@ -446,10 +446,16 @@ __pycache__/
 
 # تنظیمات شخصی و فایل‌های محیط محلی
 .vscode/
+.env
 .env.*
 !.env.example
 !.env.sample
 appsettings.*.local.json
+
+# کلید خصوصی age و خروجی صریح رمزگشایی هرگز منبع اشتراکی نیستند.
+*.agekey
+*.decrypted
+*.decrypted.json
 
 # کانفیگ واقعی Production محرمانه است؛ نمونهٔ غیرمحرمانه نسخه‌بندی می‌شود.
 /MakanApp.Api/appsettings.Production.json

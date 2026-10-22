@@ -14,7 +14,7 @@ internal static class ServiceAuthProbe
         AiServiceAuthenticationOptions options)
     {
         using var handler = new HttpClientHandler { AllowAutoRedirect = false };
-        using var client = new HttpClient(handler) { BaseAddress = target, Timeout = TimeSpan.FromSeconds(15) };
+        using var client = new HttpClient(handler) { BaseAddress = target, Timeout = TimeSpan.FromSeconds(35) };
         var valid = await credentials.GetCredentialAsync(CancellationToken.None);
         var parts = valid.Token.Split('.');
         var header = Decode(parts[0]);
@@ -86,10 +86,11 @@ internal static class ServiceAuthProbe
             if (version is not null) request.Headers.Add("X-AI-Contract-Version", version);
             if (correlation is not null) request.Headers.Add("X-Correlation-ID", correlation);
             using var response = await client.SendAsync(request);
-            var (code, messagePresent) = LiveAiErrorContract.Read(await response.Content.ReadAsStringAsync(),
+            var bodyText = await response.Content.ReadAsStringAsync();
+            var (code, messagePresent) = LiveAiErrorContract.Read(bodyText,
                 response.Content.Headers.ContentType?.MediaType);
             var success = (int)response.StatusCode == expectedStatus && code == expectedCode &&
-                messagePresent;
+                messagePresent && MatchesExpectedAuthMessage(bodyText, expectedStatus);
             LiveAiProgram.EvidenceOutput.WriteLine(JsonSerializer.Serialize(new
             {
                 stage = "service_auth_" + name, httpStatus = (int)response.StatusCode,
@@ -98,6 +99,19 @@ internal static class ServiceAuthProbe
             }));
             return success;
         }
+    }
+
+    private static bool MatchesExpectedAuthMessage(string body, int status)
+    {
+        if (status is not (401 or 403)) return true;
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            return document.RootElement.TryGetProperty("error", out var error) &&
+                error.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String &&
+                message.GetString() == (status == 401 ? "Invalid service credential." : "Insufficient service permission.");
+        }
+        catch (JsonException) { return false; }
     }
 
     private static Dictionary<string, JsonElement> Decode(string segment)

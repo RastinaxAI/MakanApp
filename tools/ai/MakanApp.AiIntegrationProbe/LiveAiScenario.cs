@@ -22,7 +22,8 @@ internal sealed class LiveAiScenario(
     WebApplicationFactory<Program> application,
     LiveAiObservation observation,
     JsonSerializerOptions jsonOptions,
-    int timeoutSeconds = AiServiceOptions.DefaultTimeoutSeconds)
+    int timeoutSeconds = AiServiceOptions.DefaultTimeoutSeconds,
+    FailureEvidenceCapture? evidence = null)
 {
     private int _phoneSequence = 9_900_010;
     private Guid _organizationId;
@@ -95,7 +96,7 @@ internal sealed class LiveAiScenario(
             Require(application.Services.GetRequiredService<SensitiveLogTestControl>().Snapshot().All(observation.IsSafe)
                 && observation.PayloadsSafe, "payload_and_backend_log_privacy");
             Require(observation.Measurements >= 2 && observation.MetricsSafe, "live_metrics_privacy");
-            LiveAiProgram.EvidenceOutput.WriteLine(JsonSerializer.Serialize(new { stage = "diagnostic_completed",
+            LiveAiProgram.EvidenceOutput.WriteLine(JsonSerializer.Serialize(new { stage = evidence is null ? "diagnostic_completed" : "evidence_collection_completed",
                 realAiCalls = observation.OutgoingCalls, passed = true }));
             return;
         }
@@ -145,6 +146,7 @@ internal sealed class LiveAiScenario(
     {
         var selected = _onlyOperation switch
         {
+            "failure_evidence" => name is "parent_child_summary" or "teacher_activity_suggestions" or "manager_class_insight",
             "focused_three" => name is "parent_child_summary" or "teacher_activity_suggestions" or "manager_class_insight",
             "remaining_roles" => name.StartsWith("teacher_", StringComparison.Ordinal) || name.StartsWith("manager_", StringComparison.Ordinal),
             "remaining_managers" => name.StartsWith("manager_", StringComparison.Ordinal),
@@ -158,9 +160,15 @@ internal sealed class LiveAiScenario(
         actor.Client.DefaultRequestHeaders.Remove("X-Correlation-ID");
         actor.Client.DefaultRequestHeaders.Add("X-Correlation-ID", correlation);
         var before = observation.OutgoingCalls;
+        evidence?.Begin(name, route);
         var started = Stopwatch.GetTimestamp();
         using var response = await PostAsync(actor.Client, route, body);
         var responseJson = await response.Content.ReadAsStringAsync();
+        if (evidence is not null)
+        {
+            evidence.Backend((int)response.StatusCode, responseJson, started);
+            return;
+        }
         using var document = JsonDocument.Parse(responseJson);
         var root = document.RootElement;
         var passed = response.IsSuccessStatusCode && observation.OutgoingCalls == before + 1 &&

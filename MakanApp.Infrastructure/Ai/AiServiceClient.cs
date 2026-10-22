@@ -269,7 +269,7 @@ public sealed class AiServiceClient(
 
         if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var uri) ||
             uri.Scheme is not ("http" or "https") ||
-            options.TimeoutSeconds is < 1 or > AiServiceOptions.DefaultTimeoutSeconds ||
+            options.TimeoutSeconds is < 1 or > AiServiceOptions.MaximumTimeoutSeconds ||
             options.ContractVersion != "v1" ||
             options.CircuitBreakerFailureThreshold is < 1 or > 20 ||
             options.CircuitBreakerBreakSeconds is < 1 or > 300)

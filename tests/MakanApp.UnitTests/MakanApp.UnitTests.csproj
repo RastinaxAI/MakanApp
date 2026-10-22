@@ -27,6 +27,7 @@
   <ItemGroup>
     <Compile Include="..\..\tools\ai\MakanApp.AiIntegrationProbe\LiveAiTargetPolicy.cs" Link="Ai\LiveAiTargetPolicy.cs" />
     <Compile Include="..\..\tools\ai\MakanApp.AiIntegrationProbe\LiveAiErrorContract.cs" Link="Ai\LiveAiErrorContract.cs" />
+    <Compile Include="..\..\tools\ai\MakanApp.AiIntegrationProbe\FailureEvidenceCapture.cs" Link="Ai\FailureEvidenceCapture.cs" />
   </ItemGroup>
 
 </Project>

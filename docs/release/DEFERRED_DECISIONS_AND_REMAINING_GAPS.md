@@ -1,5 +1,24 @@
 # تصمیم‌های مصوب و موارد باز برای بازبینی نهایی
 
+## Consolidation نهایی Backend — ۲۰۲۶-۱۰-۲۲
+
+[گزارش جاری](BACKEND_FINAL_CONSOLIDATION_FA.md) implementation و Regression محلی را از
+پذیرش واقعی Provider جدا می‌کند. Service Auth واقعی قبلاً PASS شده و در این مرحله تغییر
+یا دوباره اجرا نمی‌شود. Parent Child Summary در دو اجرای مستقل 504 / `AI_PROVIDER_TIMEOUT`
+داشته؛ Teacher Activity به 200 برگشته و Manager Class دو بار 200 بوده است.
+`Real AI Production Acceptance = DEFERRED / EXTERNAL UPSTREAM BLOCKER` و
+`FULL_12_REAL_E2E = DEFERRED`؛ این مانع به‌تنهایی Commit/Push Backend سالم را مسدود نمی‌کند.
+افزایش Timeout، Retry، Auth bypass، تغییر Contract یا اصلاح AI repository مجاز/انجام نیست.
+نتایج قدیمی زیر تاریخچه‌اند؛ علت 403 تاریخی یا اجرای قدیمی loopback، جای وضعیت جدید را نمی‌گیرد.
+
+## AI v1 — retest واقعی ۲۰۲۶-۱۰-۱۶
+
+Core AI v1 integration همچنان باز است: نسخهٔ دقیق b346df8 روی loopback اجرا شد؛ سه عملیات تاریخی اکنون با AI_MODEL_UNAVAILABLE و دستهٔ امن configuration از provider شکست می‌خورند. ماتریس کامل ۱۲ عملیات عمداً تا موفقیت سه gate اول اجرا نشده است. health/ready موفق یا ۳۰ regression مصنوعی AI جای real-provider PASS را نمی‌گیرد. [شواهد و محدودیت‌های دقیق](../ai-handoff/12_STEP10G_FINAL_REAL_E2E_REPORT.md).
+
+Production RAG lifecycle = DEFERRED / RAG_BACKEND_SOURCE_LIFECYCLE_DEFERRED؛ هیچ route، ingestion، index یا SQL access جدیدی برای AI تصویب/ایجاد نشده است. gateهای Windows/IIS/HTTPS/firewall/recovery محیط هدف = PENDING_OPERATIONAL_DEPLOYMENT، نه شرط ساختگی برای سبز اعلام کردن Core و نه ادعای آمادگی کل Makan.
+
+اختلاف قابل بررسی مالک AI: در source نسخهٔ b346df8، هنگام حضور هم‌زمان generic id و assignmentId/examId، generic id اولویت دارد؛ متن درخواست این مرحله اولویت type-specific را می‌خواهد. Backend فعلی در این رکوردها generic id نمی‌سازد؛ این تفاوت علت خطای فعلی provider اثبات نشده و کد AI/قرارداد برای پنهان‌کردن آن تغییر نکرده است.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

@@ -4,6 +4,9 @@
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
 
+آخرین بازبینی Consolidation در ۲۰۲۶-۱۰-۲۲: [گزارش نهایی Backend](docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md).
+نتیجهٔ Build/Regression محلی از پذیرش واقعی AI جداست؛ Parent Provider Timeout و Full-12 واقعی فعلاً Deferred هستند.
+
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.

@@ -71,14 +71,35 @@ public sealed class AiServiceClientTests
     }
 
     [Fact]
-    public async Task DefaultTimeout_AllowsCurrentQueueAndInferenceBudget()
+    public async Task ConfiguredTimeout_AllowsCurrentQueueAndInferenceBudget()
     {
-        Assert.Equal(180, new AiServiceOptions().TimeoutSeconds);
-        var options = new AiServiceOptions { Enabled = true, BaseUrl = "https://ai.example.test" };
+        var options = new AiServiceOptions { Enabled = true, BaseUrl = "https://ai.example.test", TimeoutSeconds = 180 };
         var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, ValidResponse())));
         var client = new AiServiceClient(new HttpClient(handler), new StubCredentialProvider(), options,
             new AiServiceCircuitBreaker(options, TimeProvider.System));
         await client.ChatAsync(Request(), CancellationToken.None);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public void DefaultTimeout_PreservesExistingLocalBudget()
+    {
+        Assert.Equal(35, new AiServiceOptions().TimeoutSeconds);
+    }
+
+    [Fact]
+    public async Task ChatAsync_RejectsUnexpectedContentTypeWithoutRetry()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(ValidResponse(), Encoding.UTF8, "text/html")
+        }));
+        var client = CreateClient(handler);
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() =>
+            client.ChatAsync(Request(), CancellationToken.None));
+
+        Assert.Equal(AiServiceErrorCodes.ResponseInvalid, error.Code);
         Assert.Equal(1, handler.CallCount);
     }
 
@@ -145,6 +166,8 @@ public sealed class AiServiceClientTests
         { HttpStatusCode.Forbidden, AiServiceErrorCodes.ServiceForbidden },
         { HttpStatusCode.UnprocessableEntity, AiServiceErrorCodes.InvalidRequest },
         { HttpStatusCode.TooManyRequests, AiServiceErrorCodes.RateLimited },
+        { HttpStatusCode.NotFound, AiServiceErrorCodes.ServiceUnavailable },
+        { HttpStatusCode.Conflict, AiServiceErrorCodes.ServiceUnavailable },
         { HttpStatusCode.BadGateway, AiServiceErrorCodes.ResponseInvalid },
         { HttpStatusCode.InternalServerError, AiServiceErrorCodes.ServiceUnavailable },
         { HttpStatusCode.ServiceUnavailable, AiServiceErrorCodes.ServiceUnavailable },
@@ -225,6 +248,75 @@ public sealed class AiServiceClientTests
 
         Assert.Equal(AiServiceErrorCodes.ServiceTimeout, error.Code);
         Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ChatAsync_TimeoutIncludesResponseBodyAfterHeaders()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(StreamResponse(
+            new DelayedResponseStream(ValidResponse(), TimeSpan.FromMilliseconds(1500)))));
+        var client = CreateClient(handler, timeoutSeconds: 1);
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() =>
+            client.ChatAsync(Request(), CancellationToken.None));
+
+        Assert.Equal(AiServiceErrorCodes.ServiceTimeout, error.Code);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ChatAsync_ResponseBodyConnectionFailureIsSanitizedWithoutRetry()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(StreamResponse(
+            new DelayedResponseStream(ValidResponse(), TimeSpan.Zero, fail: true))));
+        var client = CreateClient(handler);
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() =>
+            client.ChatAsync(Request(), CancellationToken.None));
+
+        Assert.Equal(AiServiceErrorCodes.ServiceUnavailable, error.Code);
+        Assert.DoesNotContain("raw-transport-detail", error.Message);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ChatAsync_PreservesCallerCancellationDuringResponseBodyRead()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(StreamResponse(
+            new DelayedResponseStream(ValidResponse(), TimeSpan.FromSeconds(5)))));
+        var client = CreateClient(handler);
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            client.ChatAsync(Request(), cancellation.Token));
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ChatAsync_ConnectionFailureIsSanitizedWithoutRetry()
+    {
+        var handler = new StubHandler((_, _) => throw new HttpRequestException("raw-transport-detail"));
+        var client = CreateClient(handler);
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() =>
+            client.ChatAsync(Request(), CancellationToken.None));
+
+        Assert.Equal(AiServiceErrorCodes.ServiceUnavailable, error.Code);
+        Assert.DoesNotContain("raw-transport-detail", error.Message);
+        Assert.Equal(1, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task ChatAsync_RejectsMismatchedCorrelationEvenWhenRequestIdMatches()
+    {
+        var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(
+            HttpStatusCode.OK, ValidResponse().Replace("corr-1", "different-correlation", StringComparison.Ordinal))));
+        var client = CreateClient(handler);
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() =>
+            client.ChatAsync(Request(), CancellationToken.None));
+
+        Assert.Equal(AiServiceErrorCodes.ResponseInvalid, error.Code);
     }
 
     [Fact]
@@ -437,6 +529,31 @@ public sealed class AiServiceClientTests
     }
 
     [Fact]
+    public async Task ChatAsync_RecoversCircuitAndResetsFailuresAfterBreak()
+    {
+        var clock = new AdjustableClock();
+        var healthy = false;
+        var handler = new StubHandler((_, _) => Task.FromResult(healthy
+            ? JsonResponse(HttpStatusCode.OK, ValidResponse())
+            : new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)));
+        var client = CreateClient(handler, timeProvider: clock);
+        for (var index = 0; index < 3; index++)
+            await Assert.ThrowsAsync<AiServiceException>(() => client.ChatAsync(Request(), CancellationToken.None));
+        await Assert.ThrowsAsync<AiServiceException>(() => client.ChatAsync(Request(), CancellationToken.None));
+        Assert.Equal(3, handler.CallCount);
+
+        clock.Advance(TimeSpan.FromSeconds(31));
+        healthy = true;
+        await client.ChatAsync(Request(), CancellationToken.None);
+        healthy = false;
+        for (var index = 0; index < 2; index++)
+            await Assert.ThrowsAsync<AiServiceException>(() => client.ChatAsync(Request(), CancellationToken.None));
+        healthy = true;
+        await client.ChatAsync(Request(), CancellationToken.None);
+        Assert.Equal(7, handler.CallCount);
+    }
+
+    [Fact]
     public async Task ChatAsync_Disabled_DoesNotResolveCredentialOrCallNetwork()
     {
         var handler = new StubHandler((_, _) => throw new InvalidOperationException());
@@ -518,13 +635,14 @@ public sealed class AiServiceClientTests
         return response;
     }
 
-    private sealed class DelayedStream(bool fail = false) : MemoryStream
+    private sealed class DelayedResponseStream(string body, TimeSpan delay, bool fail = false)
+        : MemoryStream(Encoding.UTF8.GetBytes(body))
     {
         public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            if (fail) throw new IOException("private-transport-detail");
-            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
-            return 0;
+            if (fail) throw new IOException("raw-transport-detail");
+            await Task.Delay(delay, cancellationToken);
+            return await base.ReadAsync(buffer, cancellationToken);
         }
     }
 
@@ -533,6 +651,16 @@ public sealed class AiServiceClientTests
         private DateTimeOffset _now = DateTimeOffset.UtcNow;
         public override DateTimeOffset GetUtcNow() => _now;
         public void Advance(TimeSpan duration) => _now += duration;
+    }
+
+    private sealed class DelayedStream(bool fail = false) : MemoryStream
+    {
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (fail) throw new IOException("private-transport-detail");
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return 0;
+        }
     }
 
     private sealed class StubCredentialProvider : IAiServiceCredentialProvider

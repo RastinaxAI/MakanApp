@@ -14,8 +14,12 @@ public sealed class AiRoleContextBuilderTests
 {
     private static readonly DateTime NowUtc = new(2026, 10, 13, 10, 0, 0, DateTimeKind.Utc);
 
-    [Fact]
-    public async Task StudentContext_UsesOrganizationPersonAndReleasedScoreWithVersionMaxScore()
+    [Theory]
+    [InlineData(8.5, 10)]
+    [InlineData(17.25, 20)]
+    [InlineData(17.25, 30)]
+    public async Task StudentContext_UsesOrganizationPersonAndReleasedScoreWithVersionMaxScore(
+        decimal score, decimal maximumScore)
     {
         var learnerId = Guid.NewGuid();
         var classId = Guid.NewGuid();
@@ -25,10 +29,10 @@ public sealed class AiRoleContextBuilderTests
         {
             StudentAssignments = Page(new StudentAssignmentReportItem(
                 assessmentId, Guid.NewGuid(), classId, "ریاضی", "تمرین", AssignmentStatus.Published,
-                NowUtc.AddDays(2), 20m, null, null, null, null, null, null)),
+                NowUtc.AddDays(2), maximumScore, null, null, null, null, null, null)),
             StudentGrades = Page(new StudentReleasedGradeReportItem(
                 DetailedReportGradeKind.Assignment, assessmentId, classId, "ریاضی", "تمرین",
-                17.25m, 20m, 86.25m, NowUtc.AddDays(-1)))
+                score, maximumScore, score * 100m / maximumScore, NowUtc.AddDays(-1)))
         };
         var builder = new StudentContextBuilder(
             new FakeResolver(context),
@@ -45,8 +49,18 @@ public sealed class AiRoleContextBuilderTests
 
         Assert.Equal(learnerId.ToString("D"), result.Scope.StudentId);
         var grade = Assert.Single(result.Data.Grades);
-        Assert.Equal(17.25m, grade["score"].GetDecimal());
-        Assert.Equal(20m, grade["maxScore"].GetDecimal());
+        Assert.Equal(score, grade["score"].GetDecimal());
+        Assert.Equal(maximumScore, grade["maxScore"].GetDecimal());
+        Assert.Equal(assessmentId.ToString("D"), grade["assessmentId"].GetString());
+        Assert.False(grade.ContainsKey("gradeId"));
+        Assert.False(grade.ContainsKey("id"));
+        var homework = Assert.Single(result.Data.Homeworks);
+        Assert.Equal(assessmentId.ToString("D"), homework["assignmentId"].GetString());
+        Assert.False(homework.ContainsKey("id"));
+        var subject = Assert.Single(result.Data.Subjects);
+        Assert.Equal(classId.ToString("D"), subject["classId"].GetString());
+        Assert.False(subject.ContainsKey("subjectId"));
+        Assert.False(subject.ContainsKey("id"));
         var json = JsonSerializer.Serialize(result);
         Assert.DoesNotContain("phone", json, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("token", json, StringComparison.OrdinalIgnoreCase);

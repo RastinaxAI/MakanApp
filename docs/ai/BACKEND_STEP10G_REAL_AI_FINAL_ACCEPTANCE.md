@@ -1,5 +1,9 @@
 # STEP10G v2 — پذیرش Backend و مرز اجرای واقعی AI
 
+> شاهد تاریخیِ اجرای همان تاریخ است، نه وضعیت جاری. برای تفکیک implementation تکمیل‌شده،
+> Service Auth تأییدشدهٔ قبلی و پذیرش واقعی Deferred به علت Provider Timeout،
+> [گزارش Consolidation نهایی](../release/BACKEND_FINAL_CONSOLIDATION_FA.md) را بخوانید. هیچ PASS واقعی تازه‌ای از این بازبینی نتیجه نمی‌شود.
+
 تاریخ بررسی: `2026-10-18` (Asia/Tehran).
 
 **وضعیت این اجرا: `AI_BACKEND_SERVER_EXECUTION_REQUIRED`.** تکمیل بخش محلی، معادل تکمیل AI Core نیست. هیچ درخواست این اجرا از Windows Backend Server به Ollama واقعی نرسیده است.
