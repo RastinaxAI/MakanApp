@@ -450,6 +450,9 @@ appsettings.*.local.json
 # کانفیگ واقعی Production محرمانه است؛ نمونهٔ غیرمحرمانه نسخه‌بندی می‌شود.
 /MakanApp.Api/appsettings.Production.json
 
+# نسخهٔ همسان Test در صورت داشتن تنظیمات خصوصی نباید وارد Git شود.
+/MakanApp.Api/appsettings.Test.json
+
 # خروجی‌های قابل تولید از مستند ساختار دیتابیس
 /docs/database-current-structure.html
 /docs/database-current-structure.pdf
