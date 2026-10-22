@@ -13,7 +13,7 @@ DOTNET_ENVIRONMENT=Test
 
 مقادیر هم‌نام قدیمی در IIS و محیط سیستم نباید با فایل جدید تعارض داشته باشند. به‌ویژه `DOTNET_ENVIRONMENT=Production` را روی این سایت باقی نگذارید.
 
-`appsettings.Test.json` نسخه‌بندی‌شده بدون secret است:
+`appsettings.Test.json` نسخه‌بندی‌شده بدون secret و از نظر مسیر کلیدها، ساختار تو در تو و نوع JSON هم‌شکل الگوی `appsettings.Production.json.example` است. بخش OTP و Swagger آن:
 
 ```json
 {
@@ -26,6 +26,8 @@ DOTNET_ENVIRONMENT=Test
   }
 }
 ```
+
+نمونهٔ بالا فقط بخشی از فایل است، نه جایگزین کامل آن. فایل Test اکنون بخش‌های ConnectionStrings، Identity، Security/DataProtection، Cors، Hosting، Database، ReverseProxy، Sms، Payments، Messaging، Notifications، Storage، Logging و AllowedHosts را هم دارد. جای connection string، Identity key، MeliPayamak token و certificate password خالی است؛ این مقادیر را فقط از تنظیمات خصوصی همان سرور تست تأمین کنید. آدرس‌های `example.test` نمونه‌اند و باید با host/origin واقعیِ مجاز محیط تست جایگزین شوند. مسیر پیش‌فرض Storage در Test برابر `C:\MakanAppData\Test\Storage` است؛ مسیر دادهٔ موجود را بی‌دلیل تغییر ندهید.
 
 هر دو مقدار OTP برای Mock لازم‌اند. همان تنظیم در Production یا Staging همچنان Startup را متوقف می‌کند. محیط `Test` برخلاف `Testing` نرخ درخواست واقعی و الزام key ring پایدار MFA را نگه می‌دارد؛ providerهای توسعهٔ SMS/Notification/Content Safety مجاز نمی‌شوند. لاگ خام framework و EF نیز مانند Production با رخداد امن جایگزین می‌شود.
 
@@ -45,7 +47,7 @@ dotnet publish MakanApp.Api/MakanApp.Api.csproj --configuration Release --no-res
 
 ۱. قبل از جایگزینی فایل‌های IIS، از کانفیگ خصوصی فعلی، دیتابیس و key ring نسخهٔ پشتیبان بگیرید. این مرحله Migration جدید ندارد؛ Seed که مالک اجرا کرده دوباره لازم نیست.
 
-۲. در محیط Test، `appsettings.Production.json` خودکار خوانده نمی‌شود. روی خودِ سرور، مقادیر خصوصیِ فعلی و مربوط به همان دیتابیس آزمایشی را با `appsettings.Test.json` ادغام کنید یا از متغیرهای محیطی IIS بدهید؛ فایل نمونهٔ کوچک بالا به‌تنهایی تنظیم کامل اتصال نیست. هیچ مقدار واقعی وارد Git نشود.
+۲. در محیط Test، `appsettings.Production.json` خودکار خوانده نمی‌شود. روی خودِ سرور، مقادیر خصوصیِ فعلی و مربوط به همان دیتابیس آزمایشی را با `appsettings.Test.json` ادغام کنید یا از متغیرهای محیطی IIS بدهید؛ فایل کامل نسخه‌بندی‌شده هم عمداً secret ندارد و بدون تنظیمات ضروری آمادهٔ اتصال نیست. خالی‌بودن جایگاه‌ها مجوز استفاده از دیتابیس Production نیست. هیچ مقدار واقعی وارد Git نشود.
 
 ۳. این تنظیمات قبلی باید حفظ شوند:
 
@@ -60,6 +62,8 @@ ReverseProxy__Enabled
 ReverseProxy__KnownProxies__0
 Hosting__RequireHttps
 ```
+
+نام canonical مربوط به key ring، `Security__DataProtection__KeyRingPath` است؛ alias قدیمی `BackofficeSecurity__KeyRingPath` همچنان توسط کد موجود پشتیبانی می‌شود. مقدار خالی در JSON مانع alias نمی‌شود. اگر هر دو را تنظیم می‌کنید باید یک مسیر باشند؛ مقدارهای متعارض Startup را متوقف می‌کنند. نام ثابت ApplicationName را نیز برای key ring موجود حفظ کنید.
 
 کلید Identity، مسیر storage و key ring قبلی را بی‌دلیل عوض نکنید. App Pool باید روی storage و key ring مجوز لازم و برای DPAPI تنظیم هویت/پروفایل سازگار داشته باشد. در Linux علاوه بر key ring پایدار، گواهی محافظ آن لازم است؛ از پیکربندی موقت Development برای دورزدن این الزام استفاده نکنید.
 
