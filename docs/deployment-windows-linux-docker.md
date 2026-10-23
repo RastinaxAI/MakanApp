@@ -2,11 +2,28 @@
 
 این سند روش استقرار backend فعلی MakanApp و تأمین امن تنظیمات محرمانه را توضیح می‌دهد. مثال‌ها برای `.NET 9`، `SQL Server` و provider واقعی `MeliPayamakOtp` نوشته شده‌اند.
 
-مبنای جاری `ef67624` در `2026-10-18`؛ 325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration. این سند runbook است و اجرای استقرار یا تغییر سرور را ادعا نمی‌کند. [وضعیت فعلی پروژه](CURRENT_PROJECT_STATUS.md)، [قرارداد فرانت](frontend-contract/README.md) و [ماتریس آمادگی](production/PRODUCTION_READINESS.md) مکمل آن‌اند.
+مبنای جاری `main@5885d11` در `2026-10-23`؛ 325 عملیات HTTP، 107 جدول و 48 migration؛ آخرین migration `20261017033804_AddConversationChecklists`. این سند مثال استقرار است؛ اجرای واقعی سرور را اثبات نمی‌کند. [راهنمای بسته‌های IIS](production/PUBLISH_GUIDE_FA.md) و [وضعیت جاری](CURRENT_PROJECT_STATUS.md).
 
 انتشار انتخابی فعلی مالک Production روی HTTP است؛ appsettings.Staging.json حذف شده. فایل واقعی Production محلی و ignored است و نمونهٔ عمومی .json.example بدون secret نسخه‌بندی می‌شود. دو استثنای Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate فقط با تأیید صریح مالک در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض امن تغییر نکرده است. HTTP، OTP و توکن را رمزگذاری نمی‌کند. این تصمیم gate امن [GAP-02](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) را نمی‌بندد و ابزارهای HTTPS-only را دور نمی‌زند. [مراحل جاری IIS](production/DEPLOYMENT_IIS.md) مبنای Windows است؛ نمونه‌های Linux/Docker حالت امن و مقادیر مختص محیط می‌خواهند.
 
 > هیچ ServiceToken، connection string، password یا Identity:SecurityKey واقعی نباید وارد Git، image، Dockerfile، Compose file یا artifact مشترک شود. فایل خصوصی ignored محلی مجاز، ولی خروجی حاوی آن محرمانه و فقط برای انتقال امن اپراتور است.
+
+## تغییرات جاری که قبل از deploy باید خوانده شوند
+
+| محیط | OTP | بسته و حدود |
+|---|---|---|
+| Development/Test/Testing | Mock فقط false/true؛ Real برابر true/false | Mock مالکیت شماره را اثبات نمی‌کند؛ داده و secret Production مجاز نیست |
+| Production/Staging | فقط true/false | unsafe OTP در startup رد می‌شود؛ تغییر نام محیط درمان خطای Production نیست |
+
+IIS دو profile مستقل `TestIis` و `ProductionIis` دارد. فرمان‌های عمومی Linux/Docker این سند Production واقعی فرض می‌کنند؛ `Otp__Enabled=true` و `Otp__AllowMockAuthentication=false` را در تنظیمات امن همان محیط تأمین کنید. JSON مشترک فعلی false/true است و به‌تنهایی برای Production کافی نیست. templateهای Test/Production هم‌شکل‌اند، نه هم‌مقدار؛ فقط در نبود فایل خصوصی از example استفاده کنید.
+
+`/health/ready` config، key ring، SQL و Storage را بررسی می‌کند. key ring خارجی با ApplicationName ثابت `MakanApp.BackofficeMfa.v1` و محافظ قبلی حفظ شود؛ probe startup و readiness برای آن فعال است. DPAPI کاربر جاری به identity/profile وابسته است؛ PFX/ring/password بازیابی مستقل می‌خواهند. [پیکربندی canonical](operations/PRODUCTION_CONFIGURATION_RUNBOOK.md).
+
+بودجه Host با override اختیاری `Hosting:ShutdownTimeoutSeconds` در بازه ۵..۹۰s و ANCM با `shutdownTimeLimit=120` مستقل‌اند؛ WAS/idle/preload هم روی سرور بررسی می‌شوند. worker داخل host با توقف آن می‌ایستد. نخستین rollout report-export fencing جدید، legacy process را drain/stop می‌خواهد؛ scale-out realtime/Presence تأیید نشده است. [worker recovery](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
+
+`Storage:TerminalCleanup:Enabled=false` را صرفاً برای کامل‌شدن deploy روشن نکنید. grace حقوقی/محصولی پیش‌فرض ندارد؛ فقط bytes محلی Deleted/Rejected بدون reference مشمول‌اند، نه Ready/Pending یا SQL history. [retention](operations/RETENTION_AND_CLEANUP_POLICY.md). metric/trace محلی جای exporter، alert، reboot، load یا restore محیط هدف نیست.
+
+AI اختیاری با بودجهٔ پیش‌فرض ۳۵s و بدون retry خودکار POST است؛ Service Auth واقعی قبلی PASS، Parent Provider Timeout و Full-12 Deferred هستند. base/private URL، کلید و JWT به frontend ندهید؛ [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md).
 
 ## 1. تنظیمات الزامی Production
 
@@ -25,8 +42,8 @@
 | `ReverseProxy:Enabled` / `KnownProxies` | فعال و IP واقعی proxy مورد اعتماد | خیر |
 | `Hosting:RequireHttps` / `AllowInsecureHttp` | پیش‌فرض true / false؛ استثنای HTTP فقط Production | خیر |
 | `Database:AllowUntrustedServerCertificate` | پیش‌فرض false؛ Encrypt=False همیشه رد است | خیر |
-| `BackofficeSecurity:KeyRingPath` | مسیر پایدار خارج Publish و StorageRoot | مسیر عملیاتی |
-| `BackofficeSecurity:CertificatePath` / `CertificatePassword` | محافظ PFX برای Linux/container؛ Windows می‌تواند DPAPI داشته باشد | password محرمانه |
+| `Security:DataProtection:KeyRingPath` | مسیر مطلق پایدار خارج Publish/Storage؛ alias قبلی BackofficeSecurity معتبر و تعارض رد می‌شود | مسیر عملیاتی |
+| `Security:DataProtection:CertificatePath/CertificatePassword` | محافظ PFX؛ Windows بدون PFX از DPAPI کاربر جاری، Linux نیازمند محافظ قابل‌بازیابی؛ aliasهای قبلی معتبرند | password محرمانه |
 
 در Environment Variable، جداکننده `:` با `__` جایگزین می‌شود:
 
@@ -53,14 +70,14 @@ CORS امن Production و Staging فقط origin صریح HTTPS می‌پذیرد
 | مورد | رفتار فعلی |
 |---|---|
 | `Sms:Provider` در appsettings پایه | `Unavailable`؛ صرف Production بودن پیامک واقعی را فعال نمی‌کند |
-| `Sms:Provider` در Development | `Development`؛ ارسال SMS واقعی ندارد و endpoint دریافت کد وجود ندارد |
+| `Sms:Provider` در Development | فقط با OTP واقعی انتخاب می‌شود؛ Mock با false/true provider ارسال OTP را ثبت/فراخوانی نمی‌کند |
 | `MeliPayamakOtp` | `ServiceToken` و `Identity:SecurityKey` پایدار حتی در Development الزامی‌اند |
 | `Sms:MeliPayamakOtp:TimeoutSeconds` | پیش‌فرض10؛ فقط1 تا60؛ مقدار نامعتبر startup را رد می‌کند |
 | `Sms:MeliPayamakOtp:BaseUrl` | HTTPS origin بدون credential، path، query یا fragment |
 | `Identity:Otp:MinimumCodeLength` / `MaximumCodeLength` | پیش‌فرض4 / 64؛ بازه معتبر حداکثر256؛ UI نباید کد شش‌رقمی ثابت فرض کند |
 | `Storage:RootPath` خالی در Production/Staging | startup fail-fast می‌شود؛ مسیر مطلق و پایدار لازم است |
 | `Storage:RootPath` غیرخالی | `LocalFileStorage`؛ مسیر باید مطلق و قابل نوشتن باشد؛ خطا ممکن است هنگام resolve سرویس رخ دهد |
-| Storage defaults | سقف فایل10MiB؛ PDF/PNG/JPEG/plain text؛ فایل بدون اتصال24ساعت metadata انقضا دارد، worker پاک‌سازی ندارد |
+| Storage defaults | سقف فایل10MiB؛ PDF/PNG/JPEG/plain text؛ metadata انقضای Unattached برابر24ساعت است، purge عمومی نیست. cleanup محدود terminal فقط با opt-in و grace صریح |
 | `/health` | فقط liveness؛ SQL، SMS، permission دیسک و outbox را probe نمی‌کند |
 | Swagger/OpenAPI | در Production/Staging پیش‌فرض خاموش؛ فعال‌سازی صریح لازم است |
 | CORS | allowlist صریح؛ HTTPS امن پیش‌فرض و HTTP فقط با استثنای مستقل Production؛ بدون AllowCredentials |
@@ -77,6 +94,7 @@ CORS امن Production و Staging فقط origin صریح HTTPS می‌پذیرد
   "ConnectionStrings": {
     "MakanDatabase": "<PRODUCTION_SQL_SERVER_CONNECTION_STRING>"
   },
+  "Otp": { "Enabled": true, "AllowMockAuthentication": false },
   "Identity": {
     "SecurityKey": "<AT_LEAST_32_UTF8_BYTES_RANDOM_SECRET>"
   },
@@ -258,6 +276,8 @@ sudo chown -R makanapp:makanapp /opt/makanapp /var/lib/makanapp
 ASPNETCORE_ENVIRONMENT=Production
 ASPNETCORE_URLS=http://127.0.0.1:5080
 ConnectionStrings__MakanDatabase="<PRODUCTION_SQL_SERVER_CONNECTION_STRING>"
+Otp__Enabled=true
+Otp__AllowMockAuthentication=false
 Identity__SecurityKey="<AT_LEAST_32_UTF8_BYTES_RANDOM_SECRET>"
 Sms__Provider=MeliPayamakOtp
 Sms__MeliPayamakOtp__BaseUrl=https://console.melipayamak.com
@@ -287,7 +307,7 @@ sudo chmod 600 /etc/makanapp/makanapp.env
 
 فایل environment را داخل repository یا artifact قرار ندهید.
 
-دامنه، origin، اتصال SQL و IP proxy مثال‌اند و باید با محیط واقعی عوض شوند. key ring جداگانه ساخته و writable برای user سرویس باشد؛ PFX دارای private key و password معتبر را user سرویس فقط بخواند. در Linux/container بدون محافظ معتبر و key ring پایدار، MFA با MFA_UNAVAILABLE بسته می‌ماند؛ DPAPI Windows به Linux منتقل نمی‌شود. سایر APIهای آموزشی جایگزین مجوز MFA نیستند.
+دامنه، origin، اتصال SQL و IP proxy مثال‌اند و باید با محیط واقعی عوض شوند. key ring جداگانه ساخته و writable برای user سرویس باشد؛ PFX دارای private key و password معتبر را user سرویس فقط بخواند. در host عملیاتی Linux/container، نبود ring پایدار یا محافظ قابل‌استفاده startup را رد می‌کند؛ خرابی بعد از شروع نیز readiness را unhealthy می‌کند. DPAPI Windows به Linux منتقل نمی‌شود. سایر APIهای آموزشی جایگزین مجوز MFA نیستند.
 
 ### 4.3 واحد systemd
 
@@ -482,6 +502,8 @@ services:
       Database__AllowUntrustedServerCertificate: "false"
       Swagger__Enabled: "false"
       Messaging__ContentSafetyProvider: Internal
+      Otp__Enabled: "true"
+      Otp__AllowMockAuthentication: "false"
       BackofficeSecurity__KeyRingPath: /data/mfa-keys
       BackofficeSecurity__CertificatePath: /run/secrets/makan-mfa.pfx
     secrets:
@@ -605,13 +627,13 @@ sudo test -s /etc/makanapp/makanapp.env \
 
 ### health و smoke test
 
-1. `GET /health` را بررسی کنید.
-2. log startup را از نظر خطای connection string، `Identity:SecurityKey` یا `ServiceToken` بررسی کنید.
-3. migration مقصد را تأیید کنید؛ health فعلی تضمین‌کننده سلامت SQL Server نیست.
-4. یک درخواست OTP فقط با شماره آزمایشی مجاز ارسال کنید.
-5. پاسخ باید `202 Accepted` و شامل `challengeId`، `expiresAtUtc` و `resendAvailableAtUtc` باشد.
-6. پاسخ نباید OTP، `ServiceToken` یا URL provider را نمایش دهد.
-7. کد پیامک‌شده را از endpoint verify بررسی کنید و بعد از تست آن را منتشر یا log نکنید.
+1. محیط انتخاب‌شده و OTP جفت صحیح را بدون چاپ secret بررسی کنید؛ Test و Production را روی داده مشترک اجرا نکنید.
+2. GET /health/live برای process و GET /health/ready برای config/ring/SQL/storage باید 200 شوند؛ readiness provider خارجی یا کامل‌بودن schema را اثبات نمی‌کند.
+3. applied migrationهای مقصد را با handoff نسخه تطبیق دهید؛ هیچ migration خودکار startup وجود ندارد.
+4. در Production/Real فقط با شمارهٔ مجاز و تأیید صریح هزینه، OTP واقعی بخواهید؛ در Test/Mock SMS نباید فراخوانی شود.
+5. پاسخ challenge برابر202 و بدون کد/credential است؛ سپس verify، me و دسترسی مجاز را بررسی کنید. HTTP401 بدون نشست برای مسیر حفاظت‌شده انتظار می‌رود.
+6. با permissionهای مجاز، عملیات health/jobs/notifications، سن صف و snapshot stale را بررسی کنید؛ 200 مدیریتی به‌تنهایی healthy همه dependencyها نیست.
+7. receiver واقعی Push/AI، recycle/reboot، backup/restore و alert تحویل‌شده gateهای جدا با شاهد محیط هدف هستند؛ از این smoke نتیجه نمی‌شوند.
 
 ### قرارداد فرانت‌اند و تست‌های عملیاتی پس از انتشار
 
@@ -704,9 +726,9 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 - [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/)
 
 
-## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-18
+## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-23
 
-مبنای این بخش `main@ef67624` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
+مبنای این بخش `main@5885d11` در `2026-10-23` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۲ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
 
 ### انتخاب transport اعلان
 

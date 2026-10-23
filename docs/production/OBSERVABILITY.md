@@ -1,8 +1,12 @@
 # Observability و عملیات
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
+
+## AI و محیط Test در مبنای جاری
+
+Test هم مانند محیط عملیاتی از log امن framework/EF استفاده می‌کند؛ فقط Testing fixture محلی استثنا دارد. `AiServiceTelemetry` فعالیت MakanApp.AiService و metricهای makan.ai.client.requests/duration/circuit.rejections را با operation/outcome/error.code محدود منتشر می‌کند. prompt/body/PII/JWT/key label نیستند؛ requestId/correlationId جای trace/log scope مناسب دارند. شکست Provider در Parent و Deferred بودن Full-12 نتیجهٔ مستقل است؛ instrumentation محلی پذیرش runtime نیست. [خطاهای AI](../ai-handoff/05_AI_ERROR_AND_RESILIENCE_CONTRACT.md).
 
 ## Logging و correlation
 

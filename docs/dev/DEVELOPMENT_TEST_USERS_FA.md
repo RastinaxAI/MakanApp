@@ -1,5 +1,7 @@
 # کاربران Development/Test و OTP قابل تنظیم
 
+بازبینی جاری `2026-10-23` از `main@5885d11`؛ بخش ورود این فایل با قرارداد فعلی Otp همگام شده است. شناسه‌ها، SQL و اعداد validation مرحلهٔ اولیه تاریخچهٔ fixture هستند، نه دادهٔ تضمین‌شدهٔ محیط امروز.
+
 > به‌روزرسانی Consolidation: پیش از Seed، اسکریپت فقط‌خواندنی
 > `check-development-test-users-database.sql` مقصد، ستون‌ها و تاریخچهٔ EF را بررسی می‌کند.
 > Seed موجود در این checkout همچنان فقط دیتابیس ایزوله با پیشوند
@@ -40,21 +42,16 @@ Personal workspace نیز Role جدید نیست. در مدل فعلی School ج
 
 ## Authentication فعلی و مرز تغییر
 
-- `POST /api/v1/auth/otp/challenges` → `IdentityService.RequestOtpAsync` → `IOtpDeliveryProvider`.
-- `POST /api/v1/auth/otp/verify` → همان use case و `OtpChallenge.Verify` → session و refresh عادی.
-- OTP فقط به‌صورت hash و salt در `[identity].[OtpChallenges]` ذخیره می‌شود؛ پاسخ HTTP کد را نشان نمی‌دهد.
-- پیش‌فرض عمر ۳۰۰ ثانیه، فاصلهٔ درخواست ۳۰ ثانیه، حداکثر ۵ درخواست در ساعت و ۵ تلاش ناموفق است.
-  در Testing، فاصله طبق رفتار قبلی صفر است؛ rate limiting و تلاش‌های ناموفق حذف نشده‌اند.
-- `PhoneNumberNormalizer` قالب E.164 با ۸ تا ۱۵ رقم را می‌پذیرد و ارقام فارسی/عربی را normalize می‌کند.
-- access token کاربر **opaque session token است، نه JWT نقش‌دار**. refresh از `/api/v1/auth/refresh` انجام می‌شود.
-  JWT سرویس AI موضوع جداگانه‌ای است و تغییر نکرده است.
-- Role از عضویت/انتساب معتبر و workspace جاری resolve می‌شود؛ claim جعلی Role ایجاد نمی‌شود.
-- `Mode=Real` یعنی bypass خاموش؛ انتخاب SMS همچنان مطابق `Sms:Provider` قبلی است. در Development، provider
-  موجود Development کد تصادفی تستی می‌سازد؛ در Production، MeliPayamakOtp همان adapter/config قبلی است.
+- انتخاب فقط با `Otp:Enabled` و `Otp:AllowMockAuthentication` است: Real برابر true/false؛ Mock مجاز برابر false/true، فقط در Development/Test/Testing. Production/Staging هر ترکیب ناامن را در startup رد می‌کنند.
+- در Real، `IdentityService.RequestOtpAsync → IOtpDeliveryProvider` و `VerifyOtpAsync → OtpChallenge.Verify` اجرا می‌شوند. کد فقط HMAC/salt در SQL دارد؛ عمر پایه۳۰۰s، resend۳۰s، سقف۵ درخواست در ساعت و۵ تلاش ناموفق است.
+- در Mock، challenge واقعی در SQL و فراخوانی SMS نداریم؛ verify فقط فرمت شماره/کد را می‌سنجد. کد ثابت در User Secrets و allowlist قدیمی DevelopmentCode/TestUsers روش فعال‌سازی نیستند. `Identity:Otp:Mode=DevelopmentBypass` و فلگ‌های قدیمی bypass همچنان رد می‌شوند.
+- `PhoneNumberNormalizer` قالب E.164 با۸..۱۵ رقم و normalize ارقام فارسی/عربی را می‌پذیرد. طول کد فعلی۴..۶۴ و بدون control character است؛ شماره و مقدار کد مجاز در Mock، مالکیت تلفن را ثابت نمی‌کند.
+- `VerifyOtpAsync` در هر دو حالت حساب معلق را رد و session/refresh عادی صادر می‌کند. شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد؛ نقش، Membership، Enrollment یا MFA خودکار ساخته نمی‌شود. Mock محدود به۱۱ fixture یا allowlist شماره نیست.
+- access token کاربر opaque است، نه JWT نقش‌دار؛ refresh از `/api/v1/auth/refresh` و workspace/permission از رابطه جاری resolve می‌شود. JWT سرویس AI موضوع جداست. تغییر flag نشست‌های قبلی را revoke نمی‌کند.
 
-## دیتابیس و دادهٔ ثابت seed
+## دیتابیس و دادهٔ ثابت seed تاریخی
 
-محیط دستی ایجادشده: سرور `(localdb)\MSSQLLocalDB`، دیتابیس `MakanApp_DevelopmentTestUsers`.
+محیط تاریخی این fixture، `(localdb)\MSSQLLocalDB` و دیتابیس `MakanApp_DevelopmentTestUsers` بود؛ طبق گزارش مالک آن پایگاه دائمی حذف شده است. این نام اثبات وجود پایگاه امروز نیست و سند مجوز ساخت/Seed تازه نمی‌دهد.
 این دیتابیس مستقل از `Server=.;Database=MakanApp` و Production است؛ برنامه خودکار migration/seed اجرا نمی‌کند.
 شماره‌های fixture با درخواست مالک به قالب ایران تغییر کرده‌اند: ورودی محلی `09120000101` تا
 `09120000111` و مقدار canonical ذخیره‌شده `+989120000101` تا `+989120000111`.
@@ -62,19 +59,19 @@ Personal workspace نیز Role جدید نیست. در مدل فعلی School ج
 Development/Test و بدون SMS استفاده شوند. تنظیم جاری در [راهنمای OTP](CONFIGURABLE_OTP_FA.md) است.
 تغییر فایل SQL، کاربران دیتابیس موجود را تغییر نمی‌دهد؛ اجرای Seed و اصلاحات ناتمام سازگاری مقصد، کار جدا هستند.
 
-| Role | Phone | UserId | Relationships | Test OTP |
+| Role | Phone | UserId | Relationships | ورود فعلی |
 |---|---|---|---|---|
-| Student | +989120000101 | d3700000-0000-0000-0000-000000000001 | Org / Class / Enrollment | از User Secrets؛ در سند نیست |
-| Teacher | +989120000102 | d3700000-0000-0000-0000-000000000002 | Org / Class / TeacherAssignment | همان تنظیم محلی |
-| Parent | +989120000103 | d3700000-0000-0000-0000-000000000003 | Org / GuardianRelation به Student بالا | همان تنظیم محلی |
-| Manager | +989120000104 | d3700000-0000-0000-0000-000000000004 | Org / Membership Manager | همان تنظیم محلی |
-| PlatformOwner | +989120000105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Operations | +989120000106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Support | +989120000107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Finance | +989120000108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| Content | +989120000109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| SecurityAudit | +989120000110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
-| AbuseReviewer | +989120000111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | همان تنظیم؛ MFA جدا |
+| Student | +989120000101 | d3700000-0000-0000-0000-000000000001 | Org / Class / Enrollment | Mock مجاز؛ بدون کد ثابت |
+| Teacher | +989120000102 | d3700000-0000-0000-0000-000000000002 | Org / Class / TeacherAssignment | Mock مجاز |
+| Parent | +989120000103 | d3700000-0000-0000-0000-000000000003 | Org / GuardianRelation به Student بالا | Mock مجاز |
+| Manager | +989120000104 | d3700000-0000-0000-0000-000000000004 | Org / Membership Manager | Mock مجاز |
+| PlatformOwner | +989120000105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| Operations | +989120000106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| Support | +989120000107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| Finance | +989120000108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| Content | +989120000109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| SecurityAudit | +989120000110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| AbuseReviewer | +989120000111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
 
 شناسه‌های مشترک:
 
@@ -186,66 +183,38 @@ Role سازمانی ۱=Student، ۲=Teacher، ۳=Parent، ۴=Manager است. ا�
 
 ## Configuration و Login دستی
 
-پیش‌فرض base و Development و نمونهٔ Production عمداً `Identity:Otp:Mode=Real` است.
-`appsettings.Development.json` فقط allowlist دقیق ۱۱ شماره/UserId را دارد و DevelopmentCode خالی است.
-برای فعال‌سازی، در **نسخهٔ همین تغییر** از root Worktree اجرا کنید؛ Secret واقعی/کد ورود را در chat یا Git قرار ندهید:
+base، Development و Test فعلی OTP=false/true و الگوی Production=true/false دارند. انتخاب Production به‌تنهایی config پایهٔ Mock را امن نمی‌کند؛ override صریح Production لازم است. برای آزمایش دستی فقط پایگاه و دادهٔ توسعهٔ مجاز خود را انتخاب کنید؛ SQL fixture بالا را برای جبران نبود داده روی دیتابیس عادی اجرا نکنید.
+
+در process محلی Development، پس از تأمین ConnectionStrings:MakanDatabase و Identity key/Storage مناسب همان محیط از تنظیمات امن، می‌توان حالت را صریح انتخاب کرد:
 
 ```powershell
-dotnet user-secrets set "Identity:Otp:DevelopmentCode" "<YOUR_LOCAL_TEST_CODE>" --project MakanApp.Api
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:DOTNET_ENVIRONMENT = 'Development'
-$env:Identity__Otp__Mode = 'DevelopmentBypass'
-$env:ConnectionStrings__MakanDatabase = 'Server=(localdb)\MSSQLLocalDB;Database=MakanApp_DevelopmentTestUsers;Integrated Security=True;TrustServerCertificate=True'
+$env:Otp__Enabled = 'false'
+$env:Otp__AllowMockAuthentication = 'true'
 dotnet run --project MakanApp.Api --no-launch-profile --urls http://127.0.0.1:5217
 ```
 
-فرمان set بالا **الگو با placeholder** است؛ برای مقدار واقعی از Manage User Secrets یا ورودی امن استفاده کنید
-تا کد در shell history ثبت نشود. User Secrets این Api بین Worktreeهای دارای همان UserSecretsId مشترک است.
-این تغییر Mode/ConnectionString فقط process ترمینال است؛ روی سرور یا کانفیگ دائمی Production اعمال نمی‌شود.
-برای یک محیط Testing/Test، TestUsers و DevelopmentCode را صریحاً در config همان محیط بدهید؛ فایل Development خودکار در آن محیط بارگذاری نمی‌شود.
+فرمان بالا مقدار یا مقصد اتصال نمی‌سازد و روی loopback است؛ آن را به سرور عمومی یا داده/کلید Production متصل نکنید. User Secrets این Api میان worktreeهای با همان UserSecretsId مشترک است؛ تغییر تنظیم محلی باید آگاهانه باشد. override فعال قدیمی DevelopmentBypass را از تنظیم مجاز همان process رفع کنید؛ مقدار secret را برای عیب‌یابی چاپ نکنید.
 
-قرارداد تنظیم:
+۱. `POST /api/v1/auth/otp/challenges` با شمارهٔ حساب آزمایشی مجاز؛ پاسخ202 شکل ChallengeId/expiry دارد، بدون OTP و بدون challenge SQL در Mock.
 
-```json
-{
-  "Identity": {
-    "Otp": {
-      "Mode": "DevelopmentBypass",
-      "DevelopmentCode": "",
-      "TestUsers": [
-        { "PhoneNumber": "+989120000101", "UserId": "d3700000-0000-0000-0000-000000000001" }
-      ]
-    }
-  }
-}
-```
+۲. `POST /api/v1/auth/otp/verify` با همان شکل قرارداد و code دارای فرمت مجاز؛ در Mock مقدار کد/شناسه اثبات OTP نیست. حساب موجود reuse می‌شود و حساب معلق403 می‌گیرد. در Mock تکرار verify می‌تواند session جدید صادر کند؛ آن را retry idempotent فرض نکنید.
 
-این fragment ساختار را نشان می‌دهد؛ allowlist کامل در فایل Development است و Code فقط از تنظیم محلی می‌آید.
-کد باید رقم ASCII در بازهٔ طول OTP موجود باشد؛ شش رقم انتخاب مناسبی برای تست است.
-Mode نامعتبر، Code خالی/نامعتبر، allowlist خالی/تکراری و محیط غیرمجاز در startup رد می‌شوند.
-در Production و Staging حتی با Code/allowlist معتبر، DevelopmentBypass مجاز نیست.
+۳. `GET /api/v1/workspaces/me` و انتخاب workspace سازمانی با MembershipId/Role واقعی. Parent فرزند مجاز را از guardian children انتخاب می‌کند؛ Backoffice MFA/step-up موجود را لازم دارد.
 
-برای Login:
+۴. token را در URL، log، screenshot یا فایل مشترک نگذارید. cache نقش و workspace مدرک مجوز نیست؛ سرور رابطه جاری را دوباره بررسی می‌کند.
 
-1. `POST /api/v1/auth/otp/challenges` با `{"phoneNumber":"+989120000101"}`؛ پاسخ 202 شامل ChallengeId و انقضاست، نه Code.
-2. `POST /api/v1/auth/otp/verify` با ChallengeId قبلی، همان PhoneNumber و کد تنظیم‌شدهٔ محلی؛ پاسخ 200 توکن session/refresh عادی است.
-3. توکن را فقط در حافظهٔ کلاینت مجاز نگه دارید؛ آن را در query string، فایل نمونه، log یا گزارش نگذارید.
-4. `GET /api/v1/workspaces/me` و سپس `POST /api/v1/workspaces/select` با WorkspaceType=Organization، MembershipId و Role صحیح.
-5. Parent از `GET /api/v1/guardian/children` و `POST /api/v1/guardian/children/{id}/select` فرزند مجاز را انتخاب می‌کند.
-6. Backoffice از MFA/step-up موجود استفاده می‌کند؛ OTP تست، session را MultiFactor نمی‌کند. `/api/admin/v1/me` بدون MFA همچنان 403 می‌دهد.
+کد/شماره با فرمت نامعتبر400 است. challenge ناموجود/منقضی/مصرف‌شده، تلاش غلط و محدودیت شماره از قواعد **Real** هستند؛ Mock challenge واقعی و شمارندهٔ OTP آن مسیر را نمی‌سازد، ولی rate limit میزبان و session/resource authorization باقی‌اند.
 
-خطاها: Code اشتباه یا binding نامعتبر 400، حساب Suspended برابر 403، challenge مصرف‌شده 409،
-منقضی 410 و سقف تلاش/درخواست 429 است. کد دلخواه، شمارهٔ غیرallowlist، حساب seedنشده یا Credential حذف‌شده موفق نمی‌شود.
-همهٔ permission/tenant/resource/Guardian/TeacherAssignment و Child Safety فعلی حفظ شده‌اند.
-
-برای خاموش‌کردن، process را متوقف و Mode را Real کنید؛ سپس برنامه را دوباره اجرا کنید:
+برای برگشت به Real هر دو flag را تغییر دهید و برنامه را دوباره اجرا کنید:
 
 ```powershell
-$env:Identity__Otp__Mode = 'Real'
+$env:Otp__Enabled = 'true'
+$env:Otp__AllowMockAuthentication = 'false'
 ```
 
-challenge تست به‌دلیل domain separation در hash، در Mode=Real قابل مصرف نیست؛ حتی اگر اشتباهاً DB و SecurityKey مشترک باشند.
-تغییر Deployment environment به Production به معنی مهاجرت fixture به Production نیست؛ DB/secretهای محیط‌ها باید مستقل بمانند.
+Real در Development با Sms:Provider=Development کد تصادفی حافظه‌ای دارد و endpoint عمومی دریافت کد ندارد؛ Production از MeliPayamakOtp با config/secret موجود استفاده می‌کند. برای شماره‌های fixture بالا SMS واقعی ارسال نکنید. تغییر flag نشست‌های Mock را لغو نمی‌کند؛ پیش از انتقال محیط، نشست‌های آزمایشی با workflow موجود revoke شوند و DB/secret/ring محیط‌ها مستقل بمانند. [قرارداد کامل OTP](CONFIGURABLE_OTP_FA.md) و [سرور Test محدود](SERVER_MOCK_OTP_FA.md).
 
 ## Cleanup
 

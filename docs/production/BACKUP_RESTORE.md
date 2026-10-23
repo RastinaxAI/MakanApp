@@ -1,8 +1,12 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
+
+## مرزبندی جدید Test و Production
+
+backup هر محیط باید DB، Storage، Identity key و Data Protection ring/محافظ همان محیط را کنار هم پوشش دهد؛ metadata schema همسان مجوز مخلوط‌کردن داده یا secretها نیست. restore روی Test با Mock نباید به نسخهٔ واقعی حساب/نشست/کلید Production متصل شود. XML قدیمی ring و محافظ DPAPI کاربر جاری یا private key/PFX لازم‌اند؛ ساخت ring تازه بازیابی MFA نیست. cleanup terminal bytes پیش‌فرض خاموش، جای backup یا purge مصوب نیست. [پیکربندی](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) و [retention](../operations/RETENTION_AND_CLEANUP_POLICY.md).
 
 ## روش فعلی پس از GAP-03
 

@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-10-18` از `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-10-23` از `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **325 عملیات HTTP، 290 مسیر متمایز، 57 Controller و 551 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **325 عملیات HTTP، 290 مسیر متمایز، 57 Controller و 552 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -17,6 +17,14 @@
 - زمان سرور و UTC معتبر است؛ concurrency token دودویی در JSON به شکل Base64 است. enum رشته‌ای است و باید unknown آینده تحمل شود.
 
 [راهنمای جریان‌ها](backend-api-guide.md)، [قرارداد Backoffice](platform/BACKOFFICE_FRONTEND_HANDOFF.md)، [سیاست Child Safety](architecture/GAP_05_MESSENGER_CHILD_SAFETY.md)، [استقرار](production/DEPLOYMENT_IIS.md).
+
+## رفتار جاری فراتر از schema
+
+قرارداد OTP یکسان است ولی رفتار از Otp:Enabled/Otp:AllowMockAuthentication می‌آید: Production/Staging فقط true/false و Mock فقط در Development/Test/Testing با false/true. در Mock challenge واقعی ساخته نمی‌شود و مالکیت شماره ثابت نمی‌شود؛ نشست و مجوز منابع همچنان واقعی‌اند. راهنمای OTP و نمونه ورود را در [راهنمای بک‌اند](backend-api-guide.md#identity) بخوانید.
+
+عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. DataProtection در health برخط probe می‌شود و FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.
+
+AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.
 
 ## فهرست Controllerها
 
@@ -5049,7 +5057,7 @@ policy: `platform.provisioning.manage`
 
 policy: `platform.operations.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
 
 بدنه درخواست: ندارد.
 
@@ -5065,7 +5073,7 @@ policy: `platform.operations.read`
 
 policy: `platform.operations.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
 
 بدنه درخواست: ندارد.
 
@@ -5081,7 +5089,7 @@ policy: `platform.operations.read`
 
 policy: `platform.notifications.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
 
 بدنه درخواست: ندارد.
 
@@ -10530,6 +10538,21 @@ object
 |---|---|---|---|---|
 | `counts` | آرایه از [PlatformJobStatusCount](#contract-PlatformJobStatusCount) | بله | خیر/تصریح نشده | — |
 | `oldestPendingAtUtc` | string / date-time | بله | بله | — |
+| `queues` | آرایه از [PlatformJobQueueDetail](#contract-PlatformJobQueueDetail) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-PlatformJobQueueDetail"></a>
+### PlatformJobQueueDetail
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `jobType` | string | بله | خیر/تصریح نشده | — |
+| `pendingCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `processingCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `failedCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `oldestPendingAtUtc` | string / date-time | بله | بله | — |
+| `oldestPendingAgeSeconds` | number / double | بله | بله | — |
 
 <a id="contract-PlatformJobStatusCount"></a>
 ### PlatformJobStatusCount

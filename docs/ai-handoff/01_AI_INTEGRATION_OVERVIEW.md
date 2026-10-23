@@ -1,5 +1,9 @@
 # نمای کلی تحویل Backend به تیم AI
 
+## وضعیت جاری در 2026-10-23
+
+این handoff اولیهٔ ۲۰۲۶-۱۰-۱۳ از نظر قرارداد v1 و مالکیت معتبر است؛ لیست نیازهای تیم AI در پایین، backlog تاریخی همان ممیزی است و وضعیت امروز آن از [Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md) و [شاخص AI](08_AI_BACKEND_IMPLEMENTATION_STATUS.md) خوانده می‌شود. در `main@5885d11`، client سخت‌گیرانه، grounding، telemetry امن و probe رسمی opt-in وجود دارند. Service Auth واقعی قبلاً PASS شده؛ Parent Provider Timeout و Full-12 واقعی Deferred است. RAG source lifecycle بسته نشده و هیچ شبکه/Provider واقعی در همگام‌سازی اسناد اجرا نمی‌شود.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

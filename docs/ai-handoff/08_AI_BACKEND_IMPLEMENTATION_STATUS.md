@@ -1,5 +1,21 @@
 # وضعیت نهایی پیاده‌سازی Backend برای AI
 
+## وضعیت جاری در 2026-10-23 از main@5885d11
+
+| حوزه | نتیجه و معنای دقیق |
+|---|---|
+| ۱۲ API عمومی و قرارداد v1 | در Backend موجود؛ public session و context مجاز پیش از network |
+| Service JWT | HS256/kid/claims و TTL محدود؛ Service Auth واقعی در شاهد پیشین PASS |
+| DTO/grounding | requestId/correlationId دقیق، field ناشناخته و source/entity خارج context رد می‌شوند |
+| resilience و telemetry | budget پیش‌فرض۳۵s، بدون retry خودکار POST، circuit process-local، log/metric بدون payload/credential |
+| Parent Child Summary واقعی | مانع خارجی Provider Timeout؛ با تغییر contract یا پاسخ ساختگی رفع نشده |
+| Full-12 واقعی | Deferred؛ نتایج Fake-AI یا health آن را PASS نمی‌کنند |
+| RAG source lifecycle | Deferred؛ مجوز ingestion/retrieval Production ایجاد نشده |
+
+`AiService:Enabled=false` پیش‌فرض است. runtime opt-in فقط از ابزار رسمی `tools/ai/MakanApp.AiIntegrationProbe` و با target/secret مجاز اجرا شود؛ سند به‌تنهایی مجوز اجرای تماس واقعی نیست. [گزارش Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md)، [پذیرش STEP10G](../ai/BACKEND_STEP10G_REAL_AI_FINAL_ACCEPTANCE.md)، [قرارداد خطا](05_AI_ERROR_AND_RESILIENCE_CONTRACT.md).
+
+جدول مراحل، عدد ۹۵۱ تست و WaitingForAiServiceUpdate پایین **تاریخچهٔ handoff اولیه** هستند؛ وضعیت امروز جایگزین آن‌ها در جدول بالا و نتیجهٔ validation جاری در [شاخص پروژه](../CURRENT_PROJECT_STATUS.md) ثبت می‌شود.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->
@@ -17,7 +33,7 @@
 | AI Handoff | COMPLETE | commit حاوی این فایل |
 | 10G Real E2E | WAITING_FOR_AI | — |
 
-## Backend acceptance
+## شاهد تاریخی Backend acceptance در handoff اولیه
 
 - Restore: PASS
 - Build: PASS، 0 warning، 0 error
@@ -34,6 +50,6 @@ WaitingForAiServiceUpdate = YES
 RealAiEndToEndValidated = NO
 ```
 
-## dependency باقی‌مانده
+## dependency تاریخی در زمان handoff اولیه
 
 تیم AI باید handoff را روی current AI `main` اعمال/تأیید کند، full AI tests و OpenAPI audit را اجرا کند، commit را push کند و hash نهایی به همراه `GO_FOR_BACKEND_STEP_10G` تحویل دهد. فقط بعد از آن Backend STEP 10G real E2E اجرا می‌شود.

@@ -96,6 +96,14 @@ def write_reference(api, inventory, baseline, date):
         '- statusهای جدول فقط پاسخ‌های منتشرشده در OpenAPI هستند؛ خطای domain و gateهای pipeline می‌توانند پاسخ‌های بیشتری داشته باشند.',
         '- زمان سرور و UTC معتبر است؛ concurrency token دودویی در JSON به شکل Base64 است. enum رشته‌ای است و باید unknown آینده تحمل شود.', '',
         '[راهنمای جریان‌ها](backend-api-guide.md)، [قرارداد Backoffice](platform/BACKOFFICE_FRONTEND_HANDOFF.md)، [سیاست Child Safety](architecture/GAP_05_MESSENGER_CHILD_SAFETY.md)، [استقرار](production/DEPLOYMENT_IIS.md).', '',
+        '## رفتار جاری فراتر از schema',
+        '',
+        'قرارداد OTP یکسان است ولی رفتار از Otp:Enabled/Otp:AllowMockAuthentication می‌آید: Production/Staging فقط true/false و Mock فقط در Development/Test/Testing با false/true. در Mock challenge واقعی ساخته نمی‌شود و مالکیت شماره ثابت نمی‌شود؛ نشست و مجوز منابع همچنان واقعی‌اند. راهنمای OTP و نمونه ورود را در [راهنمای بک‌اند](backend-api-guide.md#identity) بخوانید.',
+        '',
+        'عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. DataProtection در health برخط probe می‌شود و FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.',
+        '',
+        'AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.',
+        '',
         '## فهرست Controllerها', ''
     ]
     counts = Counter(item['Controller'] for item in metadata.values())
@@ -164,6 +172,7 @@ def write_database(inventory, baseline, date):
     lines = ['# ساختار فعلی دیتابیس MakanApp', '', f'مدل طراحی EF Core در `main@{baseline}`؛ بازبینی `{date}`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.', '',
              f'**{len(tables)} جدول، {counts["Columns"]} ستون، {counts["ForeignKeys"]} FK، {counts["Indexes"]} index مستقل از key و {counts["Checks"]} CHECK؛ {len(inventory["Migrations"])} Migration.**', '',
              '## مفاهیم و مرزها', '',
+             'تغییرات عملیاتی PH و OTP/AI، schema یا migration جدیدی نساخته‌اند. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).', '',
              '- SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.',
              '- PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.',
              '- rowversion توکن هم‌زمانی SQL است، نه تاریخ؛ nullable، PK/FK، unique/filtered index و CHECK از خود مدل طراحی خوانده شده‌اند.',
@@ -203,7 +212,12 @@ def write_frontend(inventory, api, baseline, date):
              '- تمام listها یک شکل paging ندارند؛ پارامتر، بدنه، status و schema دقیق هر عملیات در مرجع جاری است. validation کسب‌وکاری فراتر از nullable/required در OpenAPI اجرا می‌شود.', '',
              enum_contract_notice(api, inventory), '',
              '## ورود، نشست و OTP', '',
-             'POST /api/v1/auth/otp/challenges -> challengeId/expiresAtUtc/resendAvailableAtUtc؛ سپس verify با همان challengeId/phoneNumber و code رشته‌ای. کد در پاسخ/log نیست و UI نباید طول ثابت شش‌رقمی فرض کند. lifetime پایه ۳۰۰ ثانیه و فاصله resend سی ثانیه است. ارقام فارسی/عربی normalize می‌شوند. challenge جدید قبلی را supersede می‌کند و OTP مصرف‌شده دوباره معتبر نیست.', '',
+             'Real OTP: با Otp:Enabled=true و Otp:AllowMockAuthentication=false، POST /api/v1/auth/otp/challenges پاسخ challengeId/expiresAtUtc/resendAvailableAtUtc می‌دهد؛ verify همان شناسه، شماره و کد رشته‌ای را می‌گیرد. کد در پاسخ/log نیست و طول شش‌رقمی ثابت فرض نشود. lifetime پایه ۳۰۰ ثانیه و resend سی ثانیه است؛ ارقام فارسی/عربی normalize، challenge قبلی supersede و مصرف مجدد رد می‌شود.',
+             '',
+             'Mock: فقط در Development/Test/Testing با جفت false/true مجاز است؛ Production/Staging در startup آن را رد می‌کنند. شکل request/response ثابت است ولی challenge واقعی در SQL ساخته نمی‌شود و verify پس از اعتبارسنجی فرمت شماره/کد، مقدار OTP یا challenge را اثبات نمی‌کند. کد فعلی ۴ تا ۶۴ کاراکتر بدون control character می‌پذیرد. این رفتار مالکیت شماره را اثبات نمی‌کند؛ UI حق تشخیص Mock از شکل پاسخ یا ساخت bypass عمومی ندارد.',
+             '',
+             'در Mock نیز حساب معلق رد می‌شود و نشست، workspace، عضویت، role و MFA عادی‌اند؛ شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد، اما نقش آموزشی یا Platform ساخته نمی‌شود. ورود دوباره session جدید می‌سازد؛ verify در Mock را idempotent فرض نکنید. تغییر flag نشست‌های قبلی را revoke نمی‌کند. انتخاب محیط و سیاست داده وظیفه deployment است؛ [راهنمای OTP](../dev/CONFIGURABLE_OTP_FA.md) و [Test محدود](../dev/SERVER_MOCK_OTP_FA.md).',
+             '',
              'VerifyOtpResult شامل accessToken، tokenType، expiresAtUtc، refreshToken، refreshExpiresAtUtc و user است. access پایه یک ساعت و refresh چرخشی با عمر مطلق ۳۰ روز است؛ refresh token و OTP دادهٔ محرمانه‌اند. POST /api/v1/auth/refresh و APIهای sessions/logout برای lifecycle موجودند. storage امن سمت client تصمیم اجرایی جدا می‌خواهد؛ credential در URL، screenshot یا telemetry قرار نگیرد.', '',
              '## سازمان، پرونده و فرزند', '',
              'Manager مدرسه می‌تواند از /api/v1/organization/people پرونده بسازد/بخواند/جست‌وجو یا تغییر مجاز نام دهد؛ نام Person حساب‌دار یا مشترک از این API تغییر نمی‌کند. دعوت اتصال حساب نیازمند User موجود و پذیرش صریح authenticated است؛ merge خودکار بر اساس نام/تلفن نداریم. پرونده، User، Membership، RoleAssignment و Enrollment مفاهیم جدا هستند.', '',
@@ -226,9 +240,17 @@ def write_frontend(inventory, api, baseline, date):
              'TOTP/recovery/step-up واقعی از GAP-04 موجود است. /api/admin/v1/mfa شامل status، enrollment/confirm، verify، recovery/verify، recovery-codes/regenerate و reset مجاز است. SetupUri و recovery code فقط در پاسخ‌های اختصاصی یک‌بار دیده می‌شوند؛ secret در UI/log پایدار نماند. MFA_REQUIRED و PLATFORM_STEP_UP_REQUIRED را با جریان موجود حل کنید، نه bypass یا سیستم موازی.', '',
              'Moderation case-scoped است؛ permission/claim/escalation/fresh MFA و reason قواعد خود را دارند. دسترسی عمومی به Direct، Contacts، evidence خارج case، impersonation یا payment-success دستی وجود ندارد. [تحویل تخصصی Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).', '',
              '## AI و قابلیت‌های وابسته', '',
-             '۱۲ API Backend AI و قرارداد v1 وجود دارند، ولی AiService:Enabled پیش‌فرض false است. اعتبار provider، real Backend↔AI E2E و RAG source lifecycle بسته‌شده فرض نشوند. core آموزشی به AI وابسته نیست. فایل‌های dirty قبلی AI خارج از تحویل مستندات‌اند؛ این سند هیچ prompt/provider/security contract جدیدی ایجاد نمی‌کند.', '',
+             '۱۲ API عمومی AI از Backend و Bearer نشست موجود مصرف می‌شوند؛ AiService:Enabled پیش‌فرض false است. URL خصوصی AI، JWT سرویس و کلید Provider به client داده نمی‌شوند. سرور پیش از network، context مجاز نقش/سازمان/فرزند/کلاس را می‌سازد و پاسخ v1 را از نظر requestId/correlationId، فیلد ناشناخته و شناسه‌های مستند در همان context بررسی می‌کند.',
+             '',
+             'بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.',
+             '',
+             'Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. نتیجه Fake-AI یا health این gate را نمی‌بندد. RAG source lifecycle نیز deferred و core آموزشی مستقل از AI است. [وضعیت جاری AI](../ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) و [شواهد Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md).',
+             '',
              '## میزبانی و smoke', '',
-             'Swagger/OpenAPI در Production پیش‌فرض خاموش و CORS allowlist بدون credentials است. /health و /health/live فقط process و /health/ready، SQL + Storage را probe می‌کند؛ سلامت آن تحویل SMS/پرداخت/AI را ثابت نمی‌کند.', '',
+             'Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و فقط با Swagger:Enabled=true فعال است؛ Test طبق Program فعلی آن‌ها را منتشر می‌کند. CORS allowlist بدون credentials است. /health و /health/live فقط liveness و /health/ready، config معتبر، key ring، SQL و Storage را بررسی می‌کند؛ دریافت SMS/Push، پرداخت یا AI را اثبات نمی‌کند.',
+             '',
+             'Job operations اکنون Queues تفکیک‌شده، تعدادها و سن قدیمی‌ترین کار را می‌دهد؛ notification operations شمارش pending/processing/deferred/failed و سن oldest و failureهای اخیر را دارد. health مدیریتی وضعیت DataProtection و FileCleanup را بدون path/key نشان می‌دهد. FileCleanup=Enabled فقط تنظیم است. export فقط پس از Completed و دانلود مجاز آماده است؛ Lost ACK یا retry worker موفقیت نمایشی جدید ایجاد نمی‌کند. [قرارداد Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).',
+             '',
              'انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. Origin مجاز باید دقیقاً Origin کلاینت باشد؛ موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. MFA key ring/Identity key/Storage در redeploy حفظ شوند. [runbook](../production/DEPLOYMENT_IIS.md).', '',
              '## روش نگه‌داری و شواهد', '',
              'ابزار DocumentationSnapshot فقط TestServer بدون worker و مدل طراحی EF را می‌خواند؛ SMS/AI/SQL واقعی فراخوانی نمی‌شود. sync_repository_docs.py همهٔ method/routeها و ارجاع schemaها را تطبیق می‌دهد و build_backend_docs.py خروجی‌های HTML/PDF را می‌سازد. نام/فیلد/enum از metadata است؛ موفقیت سناریوی محصول یا محیط هدف از آن استنتاج نمی‌شود. [فهرست نگه‌داری اسناد](../documentation-inventory.csv).', '',
@@ -245,12 +267,13 @@ def write_frontend(inventory, api, baseline, date):
     (ROOT / 'docs/frontend-contract/README.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
-def document_inventory(baseline, date, preserve_paths=()):
-    paths = [path for path in subprocess.check_output(['git', 'ls-files', 'docs'], cwd=ROOT, text=True).splitlines()
-             if path != 'docs/documentation-inventory.csv']
+def document_inventory(baseline, date, preserve_paths=(), refresh_historical_notices=False):
+    paths = sorted({path for path in subprocess.check_output(
+        ['git', 'ls-files', '--cached', '--others', '--exclude-standard', 'docs'], cwd=ROOT, text=True).splitlines()
+        if path != 'docs/documentation-inventory.csv'})
     live = {'backend-api-guide.md', 'backend-api-reference.md', 'database-current-structure.md',
             'deployment-windows-linux-docker.md', 'frontend-contract/README.md',
-            'CURRENT_PROJECT_STATUS.md', 'messaging/CURRENT_MESSENGER_STATUS.md'}
+            'CURRENT_PROJECT_STATUS.md', 'DOCUMENTATION_UPDATE_REPORT.md', 'messaging/CURRENT_MESSENGER_STATUS.md'}
     rows = []
     for relative in paths:
         path = ROOT / relative
@@ -260,7 +283,9 @@ def document_inventory(baseline, date, preserve_paths=()):
             kind, handling = 'مرجع اصلی/تاریخی محصول', 'حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر'
         elif generated:
             kind, handling = 'خروجی فنی جاری', 'بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است'
-        elif inner in live or inner.startswith('production/') or inner.startswith('platform/'):
+        elif inner == 'operations/PRODUCTION_HARDENING_AUDIT.md':
+            kind, handling = 'ممیزی تاریخی عملیات', 'وضعیت شروع PH؛ قرارداد جاری از runbookهای operations و ماتریس Production خوانده شود'
+        elif inner in live or inner.startswith(('production/', 'platform/', 'operations/')) or inner in {'dev/CONFIGURABLE_OTP_FA.md', 'dev/SERVER_MOCK_OTP_FA.md', 'dev/DEVELOPMENT_TEST_USERS_FA.md'}:
             kind, handling = 'راهنمای جاری', 'همگام‌سازی با کد؛ بدون ادعای deployment'
         elif inner.startswith('ai-handoff/') or inner.startswith('contracts/') or '/AI_' in inner:
             kind, handling = 'قرارداد/شاهد موضوعی AI', 'حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود'
@@ -270,7 +295,7 @@ def document_inventory(baseline, date, preserve_paths=()):
             kind, handling = 'سند موضوعی', 'حفظ محتوا و تفکیک تاریخچه از وضعیت جاری'
         if relative in preserve_paths:
             handling = 'کار قبلی کاربر؛ بدون بازنویسی و خارج تغییرات این همگام‌سازی'
-        if relative not in preserve_paths and path.suffix == '.md' and inner not in live and not inner.startswith('production/') and not inner.startswith('platform/'):
+        if refresh_historical_notices and relative not in preserve_paths and path.suffix == '.md' and inner not in live and not inner.startswith(('production/', 'platform/', 'operations/', 'dev/')):
             source = path.read_text(encoding='utf-8-sig')
             root_link = os.path.relpath(ROOT / 'README.md', path.parent).replace('\\', '/')
             readiness = os.path.relpath(ROOT / 'docs/production/PRODUCTION_READINESS.md', path.parent).replace('\\', '/')
@@ -299,6 +324,7 @@ def main():
     parser.add_argument('--snapshot', type=Path, required=True)
     parser.add_argument('--reviewed-date', required=True)
     parser.add_argument('--preserve-path', action='append', default=[], help='سند دارای تغییر قبلی؛ بازنویسی نشود')
+    parser.add_argument('--refresh-historical-notices', action='store_true', help='بازنویسی صریح برچسب تاریخی؛ پیش‌فرض فقط فهرست‌سازی است')
     args = parser.parse_args()
     inventory = json.loads((args.snapshot / 'repository-inventory.json').read_text(encoding='utf-8-sig'))
     baseline = inventory['SourceCommit']
@@ -315,7 +341,7 @@ def main():
     write_reference(api, inventory, baseline, args.reviewed_date)
     write_database(inventory, baseline, args.reviewed_date)
     write_frontend(inventory, api, baseline, args.reviewed_date)
-    documents = document_inventory(baseline, args.reviewed_date, args.preserve_path)
+    documents = document_inventory(baseline, args.reviewed_date, args.preserve_path, args.refresh_historical_notices)
     print(json.dumps({'baseline': baseline, 'documents': documents, 'operations': len(inventory['Operations']), 'schemas': len(schemas), 'tables': len(inventory['Tables']), 'migrations': len(inventory['Migrations']), 'databaseConnected': False}))
 
 

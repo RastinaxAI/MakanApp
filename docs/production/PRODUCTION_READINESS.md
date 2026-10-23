@@ -1,6 +1,14 @@
 # آمادگی جاری Production و حدود انتشار
 
-بازبینی `2026-10-18`، مبنا `main@ef67624`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
+بازبینی `2026-10-23`، مبنا `main@5885d11`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
+
+## تغییرات جدید مبنای آمادگی
+
+PH-1..6 در کد شامل ring پایدار/probe، readiness، log/metrics امن، worker recovery، shutdown و cleanup محدود opt-in است؛ این‌ها نیاز عملیات target را حذف نمی‌کنند. [مراجع PH](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md). schema همچنان ۱۰۷ جدول/۴۸ migration است.
+
+TestIis و ProductionIis در انتشار محلی جدا و با OTP false/true و true/false آزموده شده‌اند؛ templateهای Test/Production هم‌شکل‌اند. گزارش قبلی [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) با ۲۲۳۹ تست، شاهد همان مرحله است؛ نتیجهٔ بازبینی فعلی در [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) درج می‌شود. [راهنمای دو بسته](PUBLISH_GUIDE_FA.md) کانفیگ خصوصی بسته را عمومی نمی‌کند.
+
+Service Auth واقعی AI قبلاً PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. [Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md). از موفقیت Publish یا Fake-AI، دریافت Push، عبور LiveKit rejoin، TLS، restore/load یا AI کامل استنتاج نمی‌شود.
 
 ## تغییرات Messenger در این بازبینی
 

@@ -1,8 +1,8 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-بازبینی `2026-10-18` از `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-10-23` از `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-پوشش جاری: 325 عملیات HTTP در 290 مسیر، 57 Controller، 551 schema، 107 جدول و 48 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 325 عملیات HTTP در 290 مسیر، 57 Controller، 552 schema، 107 جدول و 48 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
@@ -19,7 +19,11 @@ DOC-CONTRACT-01 در نسخهٔ مبنا CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS
 
 ## ورود، نشست و OTP
 
-POST /api/v1/auth/otp/challenges -> challengeId/expiresAtUtc/resendAvailableAtUtc؛ سپس verify با همان challengeId/phoneNumber و code رشته‌ای. کد در پاسخ/log نیست و UI نباید طول ثابت شش‌رقمی فرض کند. lifetime پایه ۳۰۰ ثانیه و فاصله resend سی ثانیه است. ارقام فارسی/عربی normalize می‌شوند. challenge جدید قبلی را supersede می‌کند و OTP مصرف‌شده دوباره معتبر نیست.
+Real OTP: با Otp:Enabled=true و Otp:AllowMockAuthentication=false، POST /api/v1/auth/otp/challenges پاسخ challengeId/expiresAtUtc/resendAvailableAtUtc می‌دهد؛ verify همان شناسه، شماره و کد رشته‌ای را می‌گیرد. کد در پاسخ/log نیست و طول شش‌رقمی ثابت فرض نشود. lifetime پایه ۳۰۰ ثانیه و resend سی ثانیه است؛ ارقام فارسی/عربی normalize، challenge قبلی supersede و مصرف مجدد رد می‌شود.
+
+Mock: فقط در Development/Test/Testing با جفت false/true مجاز است؛ Production/Staging در startup آن را رد می‌کنند. شکل request/response ثابت است ولی challenge واقعی در SQL ساخته نمی‌شود و verify پس از اعتبارسنجی فرمت شماره/کد، مقدار OTP یا challenge را اثبات نمی‌کند. کد فعلی ۴ تا ۶۴ کاراکتر بدون control character می‌پذیرد. این رفتار مالکیت شماره را اثبات نمی‌کند؛ UI حق تشخیص Mock از شکل پاسخ یا ساخت bypass عمومی ندارد.
+
+در Mock نیز حساب معلق رد می‌شود و نشست، workspace، عضویت، role و MFA عادی‌اند؛ شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد، اما نقش آموزشی یا Platform ساخته نمی‌شود. ورود دوباره session جدید می‌سازد؛ verify در Mock را idempotent فرض نکنید. تغییر flag نشست‌های قبلی را revoke نمی‌کند. انتخاب محیط و سیاست داده وظیفه deployment است؛ [راهنمای OTP](../dev/CONFIGURABLE_OTP_FA.md) و [Test محدود](../dev/SERVER_MOCK_OTP_FA.md).
 
 VerifyOtpResult شامل accessToken، tokenType، expiresAtUtc، refreshToken، refreshExpiresAtUtc و user است. access پایه یک ساعت و refresh چرخشی با عمر مطلق ۳۰ روز است؛ refresh token و OTP دادهٔ محرمانه‌اند. POST /api/v1/auth/refresh و APIهای sessions/logout برای lifecycle موجودند. storage امن سمت client تصمیم اجرایی جدا می‌خواهد؛ credential در URL، screenshot یا telemetry قرار نگیرد.
 
@@ -65,11 +69,17 @@ Moderation case-scoped است؛ permission/claim/escalation/fresh MFA و reason 
 
 ## AI و قابلیت‌های وابسته
 
-۱۲ API Backend AI و قرارداد v1 وجود دارند، ولی AiService:Enabled پیش‌فرض false است. اعتبار provider، real Backend↔AI E2E و RAG source lifecycle بسته‌شده فرض نشوند. core آموزشی به AI وابسته نیست. فایل‌های dirty قبلی AI خارج از تحویل مستندات‌اند؛ این سند هیچ prompt/provider/security contract جدیدی ایجاد نمی‌کند.
+۱۲ API عمومی AI از Backend و Bearer نشست موجود مصرف می‌شوند؛ AiService:Enabled پیش‌فرض false است. URL خصوصی AI، JWT سرویس و کلید Provider به client داده نمی‌شوند. سرور پیش از network، context مجاز نقش/سازمان/فرزند/کلاس را می‌سازد و پاسخ v1 را از نظر requestId/correlationId، فیلد ناشناخته و شناسه‌های مستند در همان context بررسی می‌کند.
+
+بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.
+
+Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. نتیجه Fake-AI یا health این gate را نمی‌بندد. RAG source lifecycle نیز deferred و core آموزشی مستقل از AI است. [وضعیت جاری AI](../ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) و [شواهد Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md).
 
 ## میزبانی و smoke
 
-Swagger/OpenAPI در Production پیش‌فرض خاموش و CORS allowlist بدون credentials است. /health و /health/live فقط process و /health/ready، SQL + Storage را probe می‌کند؛ سلامت آن تحویل SMS/پرداخت/AI را ثابت نمی‌کند.
+Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و فقط با Swagger:Enabled=true فعال است؛ Test طبق Program فعلی آن‌ها را منتشر می‌کند. CORS allowlist بدون credentials است. /health و /health/live فقط liveness و /health/ready، config معتبر، key ring، SQL و Storage را بررسی می‌کند؛ دریافت SMS/Push، پرداخت یا AI را اثبات نمی‌کند.
+
+Job operations اکنون Queues تفکیک‌شده، تعدادها و سن قدیمی‌ترین کار را می‌دهد؛ notification operations شمارش pending/processing/deferred/failed و سن oldest و failureهای اخیر را دارد. health مدیریتی وضعیت DataProtection و FileCleanup را بدون path/key نشان می‌دهد. FileCleanup=Enabled فقط تنظیم است. export فقط پس از Completed و دانلود مجاز آماده است؛ Lost ACK یا retry worker موفقیت نمایشی جدید ایجاد نمی‌کند. [قرارداد Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).
 
 انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. Origin مجاز باید دقیقاً Origin کلاینت باشد؛ موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. MFA key ring/Identity key/Storage در redeploy حفظ شوند. [runbook](../production/DEPLOYMENT_IIS.md).
 

@@ -1,6 +1,18 @@
 # قرارداد تحویل Backoffice به Frontend
 
-بازبینی جاری ۲۰۲۶-۱۰-۱۸ از main@ef67624، شامل Backoffice نهایی، TOTP واقعی GAP-04 و Child Safety مصوب GAP-05 است. گزارش‌های STEP 15E تاریخچهٔ همان مرحله‌اند. این سند فقط قرارداد مصرف API است و مجوز ساخت یا تغییر frontend نیست؛ [مرجع جاری HTTP/DTO](../backend-api-reference.md) همهٔ endpointهای این حوزه را دارد.
+## افزودهٔ عملیات PH و ورود دو محیط
+
+ورود همچنان همان Bearer session است؛ Test/Mock مجوز Platform یا MFA نمی‌سازد. پس از login، me و MFA/step-up و permission جاری باید resolve شوند. مسیر Production از OTP واقعی استفاده می‌کند؛ UI از شکل challenge نباید محیط یا موفقیت OTP واقعی را حدس بزند.
+
+| GET /api/admin/v1/operations/... | permission | رفتار مصرف |
+|---|---|---|
+| `health` | OperationsRead | SQL/Storage و ring به‌صورت runtime؛ providerها و AI عمدتاً وضعیت تنظیم؛ DataProtection=Available/Unavailable/DevelopmentOnly بدون path/key؛ HTTP200 به‌تنهایی سبزبودن همه موارد نیست |
+| `jobs` | OperationsRead | Counts و OldestPendingAtUtc قبلی + Queues تفکیک‌شده با PendingCount/ProcessingCount/FailedCount و سن oldest؛ Scheduled آینده backlog overdue نیست |
+| `notifications` | NotificationsRead | PendingCount/ProcessingCount/DeferredCount/FailedCount، OldestQueuedAgeSeconds، availability providerها و RecentFailures؛ پذیرش provider معادل دریافت دستگاه نیست |
+
+FileCleanup=Enabled/Disabled فقط تنظیم را نشان می‌دهد و نه حذف موفق یا مجوز روشن‌کردن آن. مقدار ناشناختهٔ آینده را امن نمایش دهید. reset attempt، purge history یا موفق‌کردن دستی payment/job از این APIها نتیجه نمی‌شود. [worker recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md)، [metrics و stale snapshot](../production/OBSERVABILITY.md)، [retention](../operations/RETENTION_AND_CLEANUP_POLICY.md).
+
+بازبینی `2026-10-23` از `main@5885d11`؛ شامل Backoffice، TOTP واقعی، Child Safety و قرارداد عملیات PH است. گزارش‌های STEP15E تاریخچه‌اند؛ این سند فقط مصرف API را توضیح می‌دهد. [مرجع کامل HTTP/DTO](../backend-api-reference.md).
 
 ## مرز محصول
 

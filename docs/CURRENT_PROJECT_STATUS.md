@@ -1,53 +1,56 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
-> اعتبارسنجی انتشار دو محیط در `2026-10-22`: [schema/OTP/Publish محلی](production/BACKEND_RELEASE_READINESS_FA.md).
-> Production مقدار OTP واقعی `true/false` و Test مقدار Mock مجاز `false/true` دارد؛ schema دوطرفه آزموده می‌شود.
+بازبینی `2026-10-23` از `main@5885d11`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 552 schema، 107 جدول و 48 migration**. آخرین migration `20261017033804_AddConversationChecklists` است؛ از بازبینی ۲۰۲۶-۱۰-۱۸ جدول، migration یا route تازه‌ای اضافه نشده؛ تعداد schemaها با PlatformJobQueueDetail از ۵۵۱ به ۵۵۲ رسیده و رفتار و عملیات تغییر کرده است.
 
-> بازبینی تکمیلی ۲۰۲۶-۱۰-۲۲: [Consolidation نهایی Backend](release/BACKEND_FINAL_CONSOLIDATION_FA.md)
-> مرجع نتیجهٔ جدید implementation/validation و Git است. Service Auth واقعی قبلاً PASS شده؛
-> Parent Child Summary همچنان مانع خارجی Provider دارد و Full-12 واقعی Deferred است.
-> شواهد قبلی پایین، پذیرش تازهٔ Production محسوب نمی‌شوند.
+## تغییرات کد و بیزینس نسبت به بازبینی قبلی
 
-بازبینی `2026-10-18` از `main@ef67624`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration**. این صفحه شاخص جاری است؛ گزارش‌های مرحله‌ای و PDFهای اصلی محصول تاریخچه و تصمیم‌های scope خودشان را حفظ می‌کنند.
+| حوزه | تغییر مؤثر و مرجع |
+|---|---|
+| OTP و ورود | Real=true/false؛ Mock فقط Development/Test/Testing=false/true، بدون اثبات مالکیت شماره؛ Production/Staging fail-closed؛ [قرارداد](dev/CONFIGURABLE_OTP_FA.md) |
+| Test/Production | profileهای جدا، JSON هم‌ساختار با مقادیر مستقل و حفظ secretها؛ [Publish Guide](production/PUBLISH_GUIDE_FA.md) و [شاهد انتشار](production/BACKEND_RELEASE_READINESS_FA.md) |
+| Data Protection / readiness | ring پایدار با نام قبلی، aliasهای سازگار و رد تعارض؛ config/ring/SQL/storage در ready؛ [قرارداد PH](operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) |
+| workerها | claim/lease/fencing، repair محدود، completion budget، انتشار امن export؛ [بازیابی](operations/WORKER_RELIABILITY_AND_RECOVERY.md) |
+| observability / IIS | log و exception امن، snapshot stale-aware، shutdown Host/ANCM/WAS مستقل؛ [Observability](production/OBSERVABILITY.md) و [IIS](production/DEPLOYMENT_IIS.md) |
+| retention | مکانیزم پیش‌فرض خاموش برای bytes terminal بدون reference؛ بدون purge SQL؛ [سیاست](operations/RETENTION_AND_CLEANUP_POLICY.md) |
+| Messenger Block | seek زوج فعال روی index موجود برای retry موازی، بدون تغییر policy/DTO/schema؛ [شاهد مرحله](production/BACKEND_RELEASE_READINESS_FA.md) |
+| AI v1 | grounding/response سخت‌گیرانه، telemetry و probe امن؛ Service Auth قبلی PASS، Parent Provider Timeout و Full-12 Deferred؛ [وضعیت](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) |
 
-## قابلیت‌های ثبت‌شده
+Identity/session، onboarding Organization/Guardian، Academic/Assessment، report/export، Notification، Commerce و Backoffice/MFA موجودند. Messenger P0/P1/P2 تا Checklist و transport Web Push/FCM در کد هستند؛ وضعیت media P3 و delivery واقعی از وجود کد نتیجه نمی‌شوند.
 
-Identity/refresh/session، Organization/Guardian onboarding، Academic/Assessment، report/export، Notification، Commerce lifecycle و Backoffice/MFA موجودند. Messenger P0/P1/P2 تا Checklist و transport Web Push/FCM اضافه شده‌اند. schema با آخرین migration `20261017033804_AddConversationChecklists` پوشش داده می‌شود. هیچ migration یا provider واقعی در این به‌روزرسانی اجرا نشده است.
-
-## gateهایی که بسته اعلام نمی‌شوند
+## gateهای باز
 
 | gate | وضعیت |
 |---|---|
 | Web Push/FCM روی دستگاه واقعی | P1_PUSH_RUNTIME_PENDING |
 | backplane و state مشترک چند instance | PENDING_SCALE_INFRA |
-| رسانه P3 و آزمایش LiveKit/TURN | P3_S_INFRA_REQUIRED؛ rejoin security NOT_TESTED و Production approval NOT_GRANTED |
-| AI v1 واقعی | پذیرش E2E کامل از شواهد commit‌شده احراز نشده؛ خطای provider با موفقیت mock/health رفع‌شده فرض نشود |
-| RAG source lifecycle | DEFERRED؛ مجوز ingestion/index/source جدید ایجاد نشده |
-| پرداخت واقعی | gateway unavailable |
-| SMS عمومی اعلان | provider unavailable؛ مستقل از OTP ملی‌پیامک |
-| عملیات TLS/backup/restore/load/secret custody | فقط با شاهد محیط هدف؛ regression کد کافی نیست |
+| LiveKit/TURN و رسانه P3 | P3_S_INFRA_REQUIRED؛ rejoin NOT_TESTED و Production approval NOT_GRANTED |
+| AI واقعی | Service Auth قبلی PASS؛ Parent Provider Timeout، Full-12 Deferred |
+| RAG source lifecycle | Deferred |
+| پرداخت واقعی / SMS عمومی اعلان | provider unavailable؛ SMS اعلان مستقل از OTP ملی‌پیامک است |
+| TLS، recycle/reboot، backup/restore/load، secret custody و alert | پذیرش محیط هدف لازم است؛ regression/Publish محلی کافی نیست |
+
+انتخاب قبلی Production/HTTP و اعتماد استثنایی certificate SQL، closure انتشار عمومی امن نیست. وضعیت دقیق در [ماتریس Production](production/PRODUCTION_READINESS.md) و شواهد پیشین در [Consolidation](release/BACKEND_FINAL_CONSOLIDATION_FA.md) حفظ شده است.
 
 ## مسیر مطالعه
 
-۱. [راهنمای بک‌اند](backend-api-guide.md) برای مدل و جریان اجرا.
+۱. [راهنمای بک‌اند](backend-api-guide.md): مدل، معماری، ورود و عملیات.
 
-۲. [مرجع API](backend-api-reference.md) برای تمام routeها، request/response و schema.
+۲. [مرجع API](backend-api-reference.md): تمام method/route، request/response و schema.
 
-۳. [قرارداد فرانت](frontend-contract/README.md) و [وضعیت Messenger](messaging/CURRENT_MESSENGER_STATUS.md) برای مصرف و privacy.
+۳. [قرارداد فرانت](frontend-contract/README.md)، [Backoffice](platform/BACKOFFICE_FRONTEND_HANDOFF.md) و [Messenger](messaging/CURRENT_MESSENGER_STATUS.md).
 
-۴. [فرهنگ دیتابیس](database-current-structure.md)، [استقرار](deployment-windows-linux-docker.md) و [آمادگی Production](production/PRODUCTION_READINESS.md).
+۴. [فرهنگ دیتابیس](database-current-structure.md)، [استقرار](deployment-windows-linux-docker.md)، پیکربندی PH، worker و retention.
 
-۵. [فهرست نگه‌داری همه اسناد](documentation-inventory.csv) برای تشخیص مرجع جاری، شاهد مرحله‌ای و فایل اصلی محصول.
+۵. [فهرست تمام اسناد](documentation-inventory.csv): مرجع جاری، قرارداد موضوعی، شاهد تاریخی و خروجی محلی را مشخص می‌کند. فایل‌های اصلی محصول و نتایج تاریخی بازنویسی نشده‌اند.
 
 ## حدود بازبینی
 
-کاتالوگ از TestServer بدون worker و مدل طراحی EF استخراج شده؛ SQL/SMS/AI/provider واقعی تماس نداشته‌اند. اختلاف تاریخی DOC-CONTRACT-01 در snapshot فعلی دیده نمی‌شود و وضعیت آن CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ انتشار OpenAPI روی سرور جدا احراز می‌شود. شواهد و تغییرات ثبت‌نشده AI در workspace، بخشی از commit این به‌روزرسانی نیستند؛ endpoint یا deadline پیش‌نویس از آن‌ها منتشر نشده است.
+metadata از TestServer بدون hosted worker، SQL، SMS یا AI واقعی و مدل طراحی EF استخراج شده است. DOC-CONTRACT-01 در snapshot فعلی mismatch ندارد و CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ سند روی سرور جدا بررسی می‌شود. سه فایل Python محلی ابزار AI خارج تغییرات و commit این مرحله باقی می‌مانند. این کار deployment، migration سرور، provider پولی، فعال‌سازی cleanup یا پذیرش عملیاتی انجام نمی‌دهد.
 
+## نتیجهٔ validation این بازبینی
 
-## نتیجه اعتبارسنجی بازبینی 2026-10-18
+restore موفق بود. build اولیه و نهایی هر دو صفر warning/error داشتند. در هر دو دور suite، **۲۲۳۹ تست** موفق شدند: ۸۷۳ Unit، ۱۳۵۲ Integration و ۱۴ Architecture؛ failed/skipped صفر. دوازده تست ابزار Python هم موفق‌اند. suite روی checkout ایزوله و LocalDB تست با نام یکتا اجرا شد؛ تغییر موقت نام fixture پس از تست به bytes اصلی بازگردانده شد و وارد commit نیست.
 
-restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۱۵۹۵ تست موفق شدند: ۵۵۸ Unit، ۱۰۲۳ Integration و ۱۴ Architecture؛ failed و skipped صفر. ده تست خالص ابزار مستندسازی هم موفق بودند. این نتایج روی checkout تمیز نسخه مبنا و دیتابیس fixture با نام یکتا به دست آمدند؛ پیش‌نویس‌های ثبت‌نشده AI وارد آن نشده‌اند.
+مدل EF pending change ندارد؛ هیچ migration روی سرور اعمال نشد. کاتالوگ ۳۲۵ عملیات/۵۵۲ schema/۱۰۷ جدول/۴۸ migration و ۱۳۸ ورودی inventory کنترل شد؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب ۷۱/۴۰۷/۴۱۲/۱۵۷ صفحه دارند؛ bookmark، hash HTML متناظر، صفحه خالی و متن خارج صفحه کنترل و صفحات نماینده بصری بررسی شدند.
 
-کاتالوگ ۳۲۵ عملیات، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration و فهرست ۱۱۱ ورودی اسناد کنترل شدند؛ لینک شکسته و اختلاف Enum/OpenAPI در snapshot صفر بود. HTML/PDF چهار کتاب بازتولید و هش هر PDF با HTML متناظر کنترل شد؛ صفحه خالی یا متن خارج صفحه دیده نشد و صفحات نماینده بصری بررسی شدند. دو فایل HTML/PDF دیتابیس طبق سیاست موجود ignored باقی‌اند؛ فایل‌های اصلی PDF محصول و شواهد مرحله‌ای حفظ شده‌اند.
-
-این کار deployment، مهاجرت سرور، تماس پولی SMS/Push/AI، تأیید دستگاه واقعی، load test یا gate رسانه P3 را اجرا نمی‌کند. ۲۲ فایل کار قبلی workspace حفظ و از commit این تحویل کنار گذاشته شده‌اند. وضعیت pending عملیاتی جدول‌های بالا با نتیجه regression بسته اعلام نشده است.
+**فهرست دقیق فایل‌های اصلاح‌شده، علت هر تغییر و گزارش آموزشی در [گزارش تحویل](DOCUMENTATION_UPDATE_REPORT.md) است.** ۲۵ فایل قبلی مستندات/خروجی، دو ابزار و یک گزارش جدید در scope Git قرار دارند؛ دو خروجی دیتابیس محلی/ignored هستند. سه فایل Python قبلی AI با hash کنترل و حفظ شدند. این نتایج پذیرش Production، تماس واقعی provider یا closure gateهای باز نیستند.

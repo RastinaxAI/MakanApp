@@ -74,11 +74,15 @@ Backend موارد زیر را strict بررسی می‌کند:
 
 وضعیت اجرای واقعی STEP10G v2 و تفاوت تست محلی با پذیرش سرور در [گزارش پذیرش](../ai/BACKEND_STEP10G_REAL_AI_FINAL_ACCEPTANCE.md) ثبت می‌شود.
 
+## مبنای جاری و پذیرش واقعی
+
+بازبینی `2026-10-23` / `main@5885d11`: timeout ۳۵s شامل خواندن body است؛ Provider Timeout در Parent و Full-12 Deferred در [Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md) ثبت شده‌اند. Service Auth واقعی قبلاً PASS شده است. خطای مدل upstream مانند AI_MODEL_UNAVAILABLE با503 به AI_SERVICE_UNAVAILABLE عمومی نگاشت می‌شود؛ بدنهٔ خام، پیام Provider و credential عبور نمی‌کنند. ابزار opt-in رسمی failure evidence را sanitize می‌کند؛ این بازبینی آن را روی شبکه اجرا نمی‌کند.
+
 ## tracing و telemetry
 
 - header `X-Correlation-ID` و field `correlationId` ارسال می‌شوند.
 - AI باید همان fieldها را بدون تغییر echo کند.
-- Backend metricها: `makan.ai.client.requests` و `makan.ai.client.duration`.
+- Backend metricها: `makan.ai.client.requests`، `makan.ai.client.duration` و `makan.ai.client.circuit.rejections`؛ ActivitySource برابر `MakanApp.AiService` است.
 - labelها فقط operation، outcome و stable error code هستند.
 - token، payload، prompt، PII و provider body در metric ثبت نمی‌شوند.
 - `Retry-After` upstream در exception داخلی خوانده می‌شود، ولی public ProblemDetails فعلی header جدیدی تولید نمی‌کند؛ client نباید وجود آن را فرض کند.

@@ -1,6 +1,8 @@
 # استقرار MakanApp روی IIS
 
-بازبینی `2026-10-18` از `main@ef67624`؛ شمارش و gateهای جاری در [وضعیت پروژه](../CURRENT_PROJECT_STATUS.md) است. این متن اثبات استقرار روی سرور نیست.
+> مبنای بازبینی جاری `2026-10-23` / `main@5885d11` است. برای انتخاب و حفظ کانفیگ دو بسته از [Publish Guide](PUBLISH_GUIDE_FA.md) و برای نتیجهٔ محلی از [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) استفاده کنید. Production OTP=true/false و Test=false/true؛ schema یکسان به معنی secret/مقدار یکسان نیست. health و worker و ring این runbook به [شاخص وضعیت جاری](../CURRENT_PROJECT_STATUS.md) ارجاع دارند.
+
+بازبینی `2026-10-23` از `main@5885d11`؛ شمارش و gateهای جاری در [وضعیت پروژه](../CURRENT_PROJECT_STATUS.md) است. این متن اثبات استقرار روی سرور نیست.
 
 ## پیش‌نیاز
 
@@ -279,7 +281,7 @@ publish بررسی‌شده Web SDK، `web.config` را با `AspNetCoreModuleV2
 
 ## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-18
 
-مبنای این بخش `main@ef67624` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](../CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
+مبنای این بخش `main@5885d11` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](../CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
 
 ### انتخاب transport اعلان
 

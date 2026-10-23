@@ -1,10 +1,18 @@
 # Release Checklist
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-18` از `main@ef67624`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
+
+## کنترل نسخهٔ جاری
+
+- [ ] بستهٔ TestIis/ProductionIis، محیط و OTP متناظر را طبق [Publish Guide](PUBLISH_GUIDE_FA.md) انتخاب و hash بسته را کنترل کنید؛ source/config خصوصی محیط مقابل وارد بسته نشود.
+- [ ] Production true/false و Test false/true است؛ overrideهای IIS/environment با JSON تعارض ندارند؛ Mock به داده و key/ring Production وصل نیست.
+- [ ] نخستین rollout report-export fencing جدید با drain/stop تأییدشدهٔ process legacy انجام شود؛ [مرجع worker](../operations/WORKER_RELIABILITY_AND_RECOVERY.md).
+- [ ] cleanup پیش‌فرض خاموش باقی بماند، مگر grace صریح و [سیاست مصوب](../operations/RETENTION_AND_CLEANUP_POLICY.md) وجود داشته باشد؛ Enabled شاهد اجرا نیست.
+- [ ] Service Auth قبلی AI، Parent Provider Timeout و Full-12 Deferred جدا ثبت شوند؛ موفقیت regression جای E2E واقعی نیست.
 
 ## پیش از انتشار
 

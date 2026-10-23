@@ -10,12 +10,12 @@
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۲۵ عملیات در ۵۷ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۵۱ schema استخراج‌شده از OpenAPI.
+- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۲۵ عملیات در ۵۷ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۵۲ schema استخراج‌شده از OpenAPI.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
-بازبینی `2026-10-18` از `main@ef67624`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 551 schema، 107 جدول و 48 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. اعداد از TestServer بدون worker و مدل طراحی EF آمده‌اند؛ هیچ provider/دیتابیس واقعی فراخوانی نشده است. [شاخص وضعیت پروژه و gateها](docs/CURRENT_PROJECT_STATUS.md).
+بازبینی `2026-10-23` از `main@5885d11`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 552 schema، 107 جدول و 48 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. metadata بدون SQL/provider/worker استخراج شده؛ [وضعیت پروژه و نتیجهٔ validation](docs/CURRENT_PROJECT_STATUS.md).
 
 Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
 
@@ -23,18 +23,22 @@ Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HT
 
 | حوزه | وضعیت کد و مرز عملیاتی |
 |---|---|
-| Identity / OTP | نشست access/refresh و مدیریت نشست؛ adapter واقعی OTP ملی‌پیامک؛ تست خودکار SMS واقعی نمی‌فرستد |
+| Identity / OTP | Real با true/false و Mock مجاز فقط در Development/Test/Testing با false/true؛ Production/Staging fail-closed؛ نشست access/refresh و MFA مستقل‌اند |
 | Organization / Guardian | onboarding پرونده، دعوت اتصال حساب با رضایت، lifecycle سرپرستی؛ بدون merge یا ساخت ضمنی حساب |
 | Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
 | Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
 | Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
 | Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ MFA/step-up واقعی TOTP موجود است |
-| AI | ۱۲ API سمت Backend؛ پیش‌فرض غیرفعال، source lifecycle RAG deferred و real Backend↔AI E2E از شواهد commit‌شده بسته نشده است |
+| AI | ۱۲ API v1، grounding/telemetry و probe رسمی؛ Service Auth واقعی قبلاً PASS، Parent Provider Timeout و Full-12 Deferred؛ RAG lifecycle deferred |
 | Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
 
-انتشار فعلی مالک **Production روی HTTP** است؛ فایل Staging حذف شده. `appsettings.Production.json` واقعی محلی/ignored و نمونهٔ بدون secret آن `appsettings.Production.json.example` است. دو استثنای تأییدشدهٔ `Hosting:AllowInsecureHttp` و `Database:AllowUntrustedServerCertificate` فقط در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض پایه امن است. HTTP رمزگذاری ندارد و این استثناها gate امن GAP-02 را نمی‌بندند. [مراحل دقیق سرور IIS](docs/production/DEPLOYMENT_IIS.md) شامل حفظ Storage، کلید Identity و key ring پایدار MFA است؛ هیچ اتصال/تغییر سرور با این اسناد ادعا نمی‌شود.
+انتشار IIS دو profile مستقل TestIis و ProductionIis دارد؛ [راهنمای دو بسته](docs/production/PUBLISH_GUIDE_FA.md) و [نتیجهٔ محلی انتشار](docs/production/BACKEND_RELEASE_READINESS_FA.md). Test فقط داده/secret/Storage/ring آزمایشی و Mock false/true، Production OTP واقعی true/false دارد. انتخاب پیشین Production/HTTP با دو استثنای مستقل Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate، تأیید TLS یا انتشار عمومی نیست. فایل‌های خصوصی ignored و نمونه‌ها بدون secret هستند؛ [IIS](docs/production/DEPLOYMENT_IIS.md) مرجع حفظ Identity key، Storage و ring است.
 
 بخش‌های معرفی مراحل توسعه در ادامه سابقهٔ تکمیل همان مرحله‌اند؛ برای قرارداد جاری از مرجع API، مدل دیتابیس و اسناد عملیاتی بالا استفاده کنید. PDFهای اصلی محصول در project-context دست‌نخورده و فقط مرجع نیازمندی‌اند؛ MySQL قدیمی همچنان منسوخ است.
+
+## عملیات و نگه‌داری جاری
+
+PH شامل key ring پایدار و readiness، logging امن، snapshot متریک صف، fencing/repair worker، shutdown محدود IIS و مکانیزم opt-in پاک‌سازی bytes terminal است. schema عوض نشده؛ cleanup پیش‌فرض خاموش و purge تاریخچه SQL وجود ندارد. [پیکربندی](docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md)، [worker recovery](docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md)، [retention](docs/operations/RETENTION_AND_CLEANUP_POLICY.md) و [Observability](docs/production/OBSERVABILITY.md) مسیر مطالعه‌اند.
 
 ## تغییرات جاری Messenger
 
@@ -122,7 +126,7 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 ## API Foundation
 
 - ASP.NET Core Controllers
-- OpenAPI و Swagger UI در Development/Testing؛ در Production/Staging پیش‌فرض خاموش
+- OpenAPI و Swagger UI در Development/Test/Testing؛ در Production/Staging پیش‌فرض خاموش
 - CORS allowlist صریح خارج توسعه؛ بدون cookie credentials؛ احراز هویت با Bearer token
 - ProblemDetails و exception handling متمرکز
 - HTTPS redirection مطابق `Hosting:RequireHttps`؛ غیرفعال‌سازی در Production فقط با استثنای صریح تأییدشده
@@ -132,9 +136,9 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 | مسیر | محیط | کاربرد |
 |---|---|---|
 | `GET /health` و `/health/live` | همه محیط‌ها | فقط liveness |
-| `GET /health/ready` | همه محیط‌ها | اتصال SQL و write/delete probe در Storage |
-| `GET /openapi/v1.json` | Development/Testing یا فعال‌سازی صریح | سند OpenAPI |
-| `/swagger` | Development/Testing یا فعال‌سازی صریح | Swagger UI؛ 404 در Production پیش‌فرض طبیعی است |
+| `GET /health/ready` | همه محیط‌ها | config معتبر، Data Protection key ring، SQL و write/delete probe در Storage |
+| `GET /openapi/v1.json` | Development/Test/Testing یا فعال‌سازی صریح Production/Staging | سند OpenAPI |
+| `/swagger` | Development/Test/Testing یا فعال‌سازی صریح Production/Staging | Swagger UI؛ 404 در Production پیش‌فرض طبیعی است |
 
 ## Identity، OTP و پروفایل
 
@@ -408,4 +412,4 @@ Search، Block و Report پس از STEP 7D اضافه شده‌اند و در ر
 
 ## محدودیت‌ها
 
-محدودیت‌های جاری: gateway مالی واقعی، Push و SMS عمومی اعلان، AV/CDR و اسکن معنایی کامل رسانه، limiter توزیع‌شده و backplane چند-instance آماده نیستند. adapter OTP ملی‌پیامک، onboarding مدیر، Guardian lifecycle، گزارش/export، اعلان داخلی/outbox، Commerce/Backoffice و APIهای Backend AI اکنون وجود دارند؛ وجود کد به معنی smoke سرور یا real AI E2E نیست. Rubric ساختاریافته و auto-finalize آزمون جزو قابلیت‌های بسته‌شدهٔ این تحویل نیستند. [ممیزی gapها](docs/release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) و [register تصمیم‌ها](docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md) مرجع محدودیت‌های باقی‌مانده‌اند.
+محدودیت‌های جاری: gateway مالی واقعی، دریافت Push دستگاه واقعی، SMS عمومی اعلان، AV/CDR، limiter/backplane چند instance، P3 media و پذیرش عملیاتی TLS/restore/load بازند. Web Push/VAPID و FCM در کد موجودند؛ P1_PUSH_RUNTIME_PENDING تحویل واقعی را تفکیک می‌کند. Service Auth واقعی AI قبلاً PASS، Parent Provider Timeout و Full-12 Deferred است. auto-finalize آزمون و Rubric ساختاریافته بسته نشده‌اند؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md).

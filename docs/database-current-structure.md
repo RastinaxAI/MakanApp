@@ -1,10 +1,12 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core در `main@ef6762462bda4415a3d052454fcf53af7fa6b999`؛ بازبینی `2026-10-18`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core در `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ بازبینی `2026-10-23`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
 **107 جدول، 1055 ستون، 239 FK، 295 index مستقل از key و 279 CHECK؛ 48 Migration.**
 
 ## مفاهیم و مرزها
+
+تغییرات عملیاتی PH و OTP/AI، schema یا migration جدیدی نساخته‌اند. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 
 - SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.
 - PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.
