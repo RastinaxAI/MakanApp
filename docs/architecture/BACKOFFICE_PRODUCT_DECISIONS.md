@@ -115,21 +115,17 @@
 - bootstrap فقط وقتی مجاز است که هیچ assignment فعال `PlatformOwner` وجود نداشته باشد.
 - bootstrap در startup اجرا نمی‌شود، secret ندارد، idempotent و concurrency-safe است و audit ثبت می‌کند.
 - پس از ایجاد اولین Owner، مسیر bootstrap برای grant دوم بسته است.
-- grant/revoke Ownerهای بعدی فقط با `platform.roles.manage`، reason معتبر، step-up موفق و audit انجام می‌شود.
+- grant/revoke Ownerهای بعدی فقط با `platform.roles.manage`، نشست معتبر، reason و audit انجام می‌شود.
 - حذف یا suspend آخرین Owner فعال ممنوع و race-safe است.
 - global بودن Owner به معنی خواندن unrestricted محتوای خصوصی نیست.
 
-## 7. Step-up و MFA
+## 7. تصمیم جدید مالک: حذف عامل دوم — ۲۰۲۶-۱۰-۲۴
 
-- عملیات حساس نیازمند `IPlatformStepUpAuthorization` هستند.
-- تصمیم مصوب release در GAP-04: TOTP Authenticator عامل اصلی MFA است؛ provider بیرونی، SMS MFA، email OTP و passkey در این مرحله وجود ندارند. این انتخاب محدودیت دائمی معماری نیست.
-- تمام سطح محافظت‌شده Backoffice علاوه بر session و permission جاری، MFA همان نشست را می‌خواهد؛ endpointهای محدود enrollment/status/verify برای رفع همین gate از MFA قبلی معاف‌اند ولی Platform access جاری لازم دارند.
-- نشست عادی با TOTP معتبر یا recovery code مصرف‌نشده به MFA-assured تبدیل می‌شود؛ عملیات حساس علاوه بر این به step-up تازه، پیش‌فرض قابل تنظیم ۱۰ دقیقه، نیاز دارند.
-- secret TOTP فقط با Data Protection محافظت‌شده ذخیره می‌شود؛ key ring پایدار و محافظت‌شده محیط عملیاتی الزامی است. نبود محافظ معتبر، ثبت/تأیید TOTP را fail-closed می‌کند.
-- reset فقط برای Owner مجاز با step-up تازه، Reason و audit، روی کاربر پلتفرمی دیگر انجام می‌شود؛ همه assuranceها و recovery codeهای target نامعتبر می‌شوند، بدون تغییر role assignment یا قواعد آخرین Owner.
-- fake implementation فقط در محیط `Testing` برای تست قابل استفاده است.
-- صرف داشتن OTP login، session تازه، role یا token claim معادل step-up نیست.
-- عملیات حساس حداقل شامل role grant/revoke، suspend/reactivate سازمان یا کاربر، enforcement، subscription mutation و عملیات مالی mutation است.
+- MFA نیاز بیزینسی نیست؛ Authenticator/TOTP، enrollment/verify/reset، Recovery Code و Step-Up از کد فعال حذف شده‌اند، نه bypass.
+- همهٔ عملیات Platform همچنان OTP/Session معتبر و Platform permission جاری لازم دارند؛ نقش مدرسه یا UserId مجوز نیست.
+- Reason، Audit، state/organization/case boundaries و محافظ‌های آخرین Owner/Manager پابرجا هستند.
+- key ring صرفاً MFA دیگر gate Startup نیست؛ هیچ فایل کلید سرور در این مرحله حذف نمی‌شود.
+- تصمیم‌های قدیمی GAP-04 دربارهٔ الزام عامل دوم دیگر قرارداد جاری نیستند؛ [شرح تغییر و Migration](../platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) مرجع است.
 
 ## 8. Admin Audit
 
@@ -170,8 +166,8 @@
 - Manager و Support بر اساس عنوان نقش به evidence دسترسی ندارند.
 - هر enforcement نیازمند reason، permission، resource check و AdminAuditLog است.
 - تصمیم تاریخی STEP 15 برای Child Safety با GAP-05 جایگزین شده است: Internal Makan قاعده‌محور و سیاست سنی/رضایت گروه مصوب‌اند؛ جزئیات در `GAP_05_MESSENGER_CHILD_SAFETY.md` است. دقت معنایی AI یا اسکن رسانه ادعا نمی‌شود.
-- پنجره عادی شاهد، reported item و حداکثر ۲ پیام قبل/۲ پیام بعد همان پرونده است؛ read و download حساس audit می‌شوند. گسترش محدود نیازمند escalation، بازبین assigned، ModerationEnforce، reason و Step-up تازه GAP-04 است.
-- Warn و RestrictMessaging زمان‌دار در scope پرونده بازبین مجازند؛ حذف محتوا مجوز قوی‌تر/MFA تازه می‌خواهد. SuspendAccount از workflow موجود UsersManage و محافظ آخرین Owner/Manager استفاده می‌کند؛ AbuseReviewer این اختیار را ندارد.
+- پنجره عادی شاهد، reported item و حداکثر ۲ پیام قبل/۲ پیام بعد همان پرونده است؛ read و download حساس audit می‌شوند. گسترش محدود نیازمند escalation، بازبین assigned، ModerationEnforce، reason و نشست معتبر است.
+- Warn و RestrictMessaging زمان‌دار در scope پرونده بازبین مجازند؛ حذف محتوا مجوز قوی‌تر و نشست معتبر می‌خواهد. SuspendAccount از workflow موجود UsersManage و محافظ آخرین Owner/Manager استفاده می‌کند؛ AbuseReviewer این اختیار را ندارد.
 
 ## 12. Commerce و Finance
 
@@ -202,7 +198,7 @@
 
 موارد زیر freeze نشده‌اند و هر پیاده‌سازی وابسته باید متوقف/محدود شود:
 
-1. روش offline بازیابی آخرین Owner در فقدان TOTP و همه recovery codeها: `DEFERRED_OPERATIONAL_DECISION`؛ backdoor API ممنوع است. TOTP اصلی مصوب است؛ روش‌های MFA آینده در register مربوط به GAP-04 ثبت می‌شوند.
+1. تصمیم معوق بازیابی TOTP/Recovery با حذف عامل دوم موضوعیت ندارد؛ بازیابی OTP/حساب تابع workflow مالک Identity است و backdoor API همچنان ممنوع است.
 2. payment provider، reconciliation callback و refund lifecycle.
 3. تصمیم قبلی Child Safety در GAP-05 حل شد: Internal Makan provider قاعده‌محور، با محدودیت‌های صریح و گزینه ارتقای آینده.
 4. تصمیم قبلی minor در GAP-05 حل شد: گروه خصوصی مجاز، ساخت عمومی/کانال ممنوع، رابطه جاری و پذیرش صریح عضویت محافظت‌شده لازم.

@@ -4,7 +4,6 @@ namespace MakanApp.Application.Platform;
 
 public sealed class PlatformCommerceOperationsService(
     IPlatformCommerceOperationsStore store,
-    IPlatformStepUpAuthorization stepUpAuthorization,
     TimeProvider timeProvider) : IPlatformCommerceOperationsService
 {
     public Task<PlatformPlanPage> GetPlansAsync(
@@ -92,7 +91,6 @@ public sealed class PlatformCommerceOperationsService(
     {
         ValidateReason(command.Reason);
         var version = DecodeVersion(command.ExpectedVersion);
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.PublishPlanVersionAsync(
             Actor(actorUserId, actorSessionId, correlationId),
             RequireId(planVersionId),
@@ -131,7 +129,6 @@ public sealed class PlatformCommerceOperationsService(
             throw InvalidQuery();
         }
 
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.OverrideSubscriptionAsync(
             Actor(actorUserId, actorSessionId, correlationId),
             RequireId(organizationId),
@@ -166,17 +163,6 @@ public sealed class PlatformCommerceOperationsService(
 
     public Task<PlatformSystemHealth> GetSystemHealthAsync(CancellationToken cancellationToken) =>
         store.GetSystemHealthAsync(UtcNow(), cancellationToken);
-
-    private async Task EnsureStepUpAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        if (!await stepUpAuthorization.IsSatisfiedAsync(userId, sessionId, cancellationToken))
-        {
-            throw Error(PlatformErrorCodes.StepUpRequired, "برای این عملیات احراز هویت تقویت‌شده لازم است.");
-        }
-    }
 
     private PlatformActorContext Actor(Guid userId, Guid sessionId, string correlationId)
     {

@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-10-23` از `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-10-24` با مبنای Git `main@e525c78a7a318ea3dc3c697ea6473d308dc5fae1` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **325 عملیات HTTP، 290 مسیر متمایز، 57 Controller و 552 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **318 عملیات HTTP، 283 مسیر متمایز، 56 Controller و 547 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -11,7 +11,7 @@
 - ورود از Bearer session موجود است، نه JWT فرضی یا Role فرستاده‌شده توسط client. وضعیت anonymous هر عملیات از metadata خودش استخراج شده است.
 - policy درج‌شده، gate حمل‌ونقل است؛ OrganizationId، ChildId، UserId و resource ID فقط selector هستند. Application رابطه، نقش فعال و context جاری را دوباره resolve می‌کند.
 - GuardianRelation مجوز خواندن Direct خصوصی کودک نیست؛ School Manager نیز private chat browsing ندارد. Minor و Unknown در عملیات حساس Messenger محافظت می‌شوند؛ UserId به‌تنهایی مجوز ارتباط نیست.
-- مسیرهای `/api/admin/v1` از نقش Manager مدرسه جدا هستند؛ Backoffice MFA و step-up واقعی از GAP-04 reuse می‌شوند.
+- مسیرهای `/api/admin/v1` از نقش Manager مدرسه جدا هستند؛ Platform OTP/Session و permission جاری دارد؛ عامل دوم حذف شده است.
 - POST را کور retry نکنید؛ شناسهٔ idempotency، payload و rowversion همان use case باید رعایت شوند. هدر عمومی Idempotency-Key وجود ندارد.
 - statusهای جدول فقط پاسخ‌های منتشرشده در OpenAPI هستند؛ خطای domain و gateهای pipeline می‌توانند پاسخ‌های بیشتری داشته باشند.
 - زمان سرور و UTC معتبر است؛ concurrency token دودویی در JSON به شکل Base64 است. enum رشته‌ای است و باید unknown آینده تحمل شود.
@@ -22,7 +22,7 @@
 
 قرارداد OTP یکسان است ولی رفتار از Otp:Enabled/Otp:AllowMockAuthentication می‌آید: Production/Staging فقط true/false و Mock فقط در Development/Test/Testing با false/true. در Mock challenge واقعی ساخته نمی‌شود و مالکیت شماره ثابت نمی‌شود؛ نشست و مجوز منابع همچنان واقعی‌اند. راهنمای OTP و نمونه ورود را در [راهنمای بک‌اند](backend-api-guide.md#identity) بخوانید.
 
-عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. DataProtection در health برخط probe می‌شود و FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.
+عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.
 
 AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.
 
@@ -72,7 +72,6 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 | PlatformFinance | 2 | [PlatformFinanceController](../MakanApp.Api/Controllers/PlatformFinanceController.cs) |
 | PlatformIam | 5 | [PlatformIamController](../MakanApp.Api/Controllers/PlatformIamController.cs) |
 | PlatformMessagingMetadata | 1 | [PlatformMessagingMetadataController](../MakanApp.Api/Controllers/PlatformMessagingMetadataController.cs) |
-| PlatformMfa | 7 | [PlatformMfaController](../MakanApp.Api/Controllers/PlatformMfaController.cs) |
 | PlatformModeration | 9 | [PlatformModerationController](../MakanApp.Api/Controllers/PlatformModerationController.cs) |
 | PlatformOrganizations | 10 | [PlatformOrganizationsController](../MakanApp.Api/Controllers/PlatformOrganizationsController.cs) |
 | PlatformProvisioning | 2 | [PlatformProvisioningController](../MakanApp.Api/Controllers/PlatformProvisioningController.cs) |
@@ -4470,146 +4469,6 @@ policy: `platform.messaging.read_metadata`
 | 200 | OK | `text/plain`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage)<br>`application/json`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage)<br>`text/json`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage) |
 
 
-## PlatformMfa
-
-### GET /api/admin/v1/mfa
-
-کد واقعی: [PlatformMfaController.Status](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: ندارد.
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/enrollment
-
-کد واقعی: [PlatformMfaController.StartEnrollment](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: ندارد.
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/enrollment/confirm
-
-کد واقعی: [PlatformMfaController.Confirm](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: `application/json`: [ConfirmPlatformMfaCommand](#contract-ConfirmPlatformMfaCommand)<br>`text/json`: [ConfirmPlatformMfaCommand](#contract-ConfirmPlatformMfaCommand)<br>`application/*+json`: [ConfirmPlatformMfaCommand](#contract-ConfirmPlatformMfaCommand)؛ required
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/recovery-codes/regenerate
-
-کد واقعی: [PlatformMfaController.Regenerate](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: ندارد.
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/recovery/verify
-
-کد واقعی: [PlatformMfaController.VerifyRecovery](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: `application/json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)<br>`text/json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)<br>`application/*+json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)؛ required
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/users/{userId}/reset
-
-کد واقعی: [PlatformMfaController.Reset](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-| پارامتر | محل | الزام در schema | نوع |
-|---|---|---|---|
-| `userId` | path | بله | string / uuid |
-
-بدنه درخواست: `application/json`: [ResetPlatformMfaCommand](#contract-ResetPlatformMfaCommand)<br>`text/json`: [ResetPlatformMfaCommand](#contract-ResetPlatformMfaCommand)<br>`application/*+json`: [ResetPlatformMfaCommand](#contract-ResetPlatformMfaCommand)؛ required
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-### POST /api/admin/v1/mfa/verify
-
-کد واقعی: [PlatformMfaController.Verify](../MakanApp.Api/Controllers/PlatformMfaController.cs).
-
-احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
-
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.PlatformMfaService`
-
-بدنه درخواست: `application/json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)<br>`text/json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)<br>`application/*+json`: [VerifyPlatformMfaCommand](#contract-VerifyPlatformMfaCommand)؛ required
-
-| HTTP status | معنا | بدنه |
-|---|---|---|
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 200 | OK | `text/plain`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`application/json`: [PlatformMfaResult](#contract-PlatformMfaResult)<br>`text/json`: [PlatformMfaResult](#contract-PlatformMfaResult) |
-
-
 ## PlatformModeration
 
 ### GET /api/admin/v1/moderation/cases
@@ -5057,7 +4916,7 @@ policy: `platform.provisioning.manage`
 
 policy: `platform.operations.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
 
 بدنه درخواست: ندارد.
 
@@ -5073,7 +4932,7 @@ policy: `platform.operations.read`
 
 policy: `platform.operations.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
 
 بدنه درخواست: ندارد.
 
@@ -5089,7 +4948,7 @@ policy: `platform.operations.read`
 
 policy: `platform.notifications.read`
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`، `MakanApp.Api.Hosting.DataProtectionKeyRingProbe`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Platform.IPlatformCommerceOperationsService`
 
 بدنه درخواست: ندارد.
 
@@ -7121,16 +6980,6 @@ object
 | `lastName` | string | بله | خیر/تصریح نشده | — |
 | `displayName` | string | بله | بله | — |
 | `username` | string | بله | خیر/تصریح نشده | — |
-
-<a id="contract-ConfirmPlatformMfaCommand"></a>
-### ConfirmPlatformMfaCommand
-
-object
-
-| فیلد | نوع | required | nullable | قید منتشرشده |
-|---|---|---|---|---|
-| `enrollmentId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `code` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ContactCardResult"></a>
 ### ContactCardResult
@@ -10626,31 +10475,6 @@ object
 | `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 
-<a id="contract-PlatformMfaEnrollment"></a>
-### PlatformMfaEnrollment
-
-object
-
-| فیلد | نوع | required | nullable | قید منتشرشده |
-|---|---|---|---|---|
-| `enrollmentId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `setupUri` | string | بله | خیر/تصریح نشده | — |
-| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-
-<a id="contract-PlatformMfaResult"></a>
-### PlatformMfaResult
-
-object
-
-| فیلد | نوع | required | nullable | قید منتشرشده |
-|---|---|---|---|---|
-| `enrolled` | boolean | بله | خیر/تصریح نشده | — |
-| `sessionMfaVerified` | boolean | بله | خیر/تصریح نشده | — |
-| `stepUpValidUntilUtc` | string / date-time | بله | بله | — |
-| `enrollment` | [PlatformMfaEnrollment](#contract-PlatformMfaEnrollment) | خیر | خیر/تصریح نشده | — |
-| `recoveryCodes` | آرایه از string | خیر | بله | {"default": null} |
-| `enrollmentPending` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
-
 <a id="contract-PlatformModerationActionCommand"></a>
 ### PlatformModerationActionCommand
 
@@ -11927,15 +11751,6 @@ object
 | `challengeId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `resendAvailableAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-
-<a id="contract-ResetPlatformMfaCommand"></a>
-### ResetPlatformMfaCommand
-
-object
-
-| فیلد | نوع | required | nullable | قید منتشرشده |
-|---|---|---|---|---|
-| `reason` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ResolvePersonCommand"></a>
 ### ResolvePersonCommand
@@ -13220,15 +13035,6 @@ object
 | `refreshExpiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `user` | [CurrentUserResult](#contract-CurrentUserResult) | بله | خیر/تصریح نشده | — |
 
-<a id="contract-VerifyPlatformMfaCommand"></a>
-### VerifyPlatformMfaCommand
-
-object
-
-| فیلد | نوع | required | nullable | قید منتشرشده |
-|---|---|---|---|---|
-| `code` | string | بله | خیر/تصریح نشده | — |
-
 <a id="contract-VoteConversationPollCommand"></a>
 ### VoteConversationPollCommand
 
@@ -13482,10 +13288,6 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `MESSAGING_PRESENTATION_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGING_PRIVACY_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MESSAGING_PRIVACY_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
-| `MFA_INVALID` | 400 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
-| `MFA_RATE_LIMITED` | 429 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
-| `MFA_REQUIRED` | 403 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
-| `MFA_UNAVAILABLE` | 503 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `MODERATION_CASE_NOT_FOUND` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MODERATION_PERMISSION_REQUIRED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `MODERATION_STATE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
@@ -13548,7 +13350,6 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `PLATFORM_REASON_REQUIRED` | 400 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_ROLE_NOT_FOUND` | 404 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_SESSION_NOT_FOUND` | 404 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
-| `PLATFORM_STEP_UP_REQUIRED` | 403 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_SUBSCRIPTION_CONFLICT` | 409 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_USER_NOT_FOUND` | 404 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PROFILE_VALIDATION_FAILED` | طبق handler/مسیر فراخوانی | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |

@@ -12,7 +12,7 @@
 - `MESSENGER_V2_PRODUCT_DECISIONS.md` و اسناد `STEP_14A` تا `STEP_14E` در همین پوشه؛
 - `BACKOFFICE_PRODUCT_DECISIONS.md` برای Permission، reviewer و مرز مدیریت پلتفرم؛
 - `GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md` برای رابطه والد و اتصال حساب؛
-- `../release/GAP_04_BACKOFFICE_TOTP_MFA.md` برای MFA و freshness؛
+- تصمیم جدید مالک در ۲۰۲۶-۱۰-۲۴ برای حذف عامل دوم؛ قواعد غیر-MFA و مرزهای Child Safety پابرجا هستند؛
 - متن کامل درخواست «GAP-05 — FINAL APPROVED IMPLEMENTATION» و تأیید صریح بعدی مالک پروژه، منبع معادل سیاست فارسی نسخه ۲ هستند. PDF با نام `Makan_GAP05_Child_Safety_Developer_Policy_FA_v2.pdf` در مخزن موجود نبود؛ منبع یا محتوای آن اختراع نشده است.
 
 وضعیت تاریخی `BLOCKED_BY_PRODUCT_POLICY` با این تصمیم محصول رفع شده است. اسناد تاریخی 14A/14E، شواهد زمان خود را حفظ می‌کنند؛ addendum سند تصمیم محصول، قرارداد جاری را مشخص می‌کند.
@@ -27,7 +27,7 @@
 
 تاریخ تولد در جدول شاهد محدود ذخیره می‌شود، ولی در Discovery، DTO عمومی، audit عمومی یا پاسخ تأیید بازگردانده نمی‌شود. هر شاهد شامل طبقه قبلی/پیشنهادی، منبع، وضعیت، actor، سازمان، UTC و دلیل است و append-only است. `AdminAuditLog` فقط خلاصه امن تغییر طبقه و وضعیت را می‌گیرد؛ نه تاریخ تولد یا تلفن. اپراتور نباید PII را در reason بنویسد.
 
-اختلاف تاریخ تولد با آخرین شاهد معتبر، شاهد قبلی را overwrite نمی‌کند: شاهد Conflict ثبت، طبقه مؤثر Unknown و پاسخ 409 می‌شود. این تغییر محافظتی در همان تراکنش commit می‌شود؛ خطای HTTP نباید شاهد تعارض را rollback کند. فقط PlatformOwner با `platform.users.manage`، نشست MFA و Step-up تازه، reason و نسخه جاری می‌تواند تعارض را حل کند. تاریخچه شاهدها باقی می‌ماند. Self-assertion پروفایل، سن تأییدشده نمی‌سازد.
+اختلاف تاریخ تولد با آخرین شاهد معتبر، شاهد قبلی را overwrite نمی‌کند: شاهد Conflict ثبت، طبقه مؤثر Unknown و پاسخ 409 می‌شود. این تغییر محافظتی در همان تراکنش commit می‌شود؛ خطای HTTP نباید شاهد تعارض را rollback کند. فقط PlatformOwner با `platform.users.manage`، نشست معتبر، reason و نسخه جاری می‌تواند تعارض را حل کند. تاریخچه شاهدها باقی می‌ماند. Self-assertion پروفایل، سن تأییدشده نمی‌سازد.
 
 ## ۳. ماتریس ارتباط و Discovery
 
@@ -97,15 +97,15 @@ Block ارسال Direct جدید را در هر دو جهت مؤثر متوقف 
 
 Blocked/ReviewRequired، `SafetyIncident` و پرونده Critical در PlatformSafety می‌سازند و 422 امن برمی‌گردانند؛ این وضعیت Sent نیست و به Notification/Delivery معمولی راه پیدا نمی‌کند. ReviewRequired هرگز خودکار متن قبلی را منتشر نمی‌کند. Unavailable، Message یا موفقیت جعلی نمی‌سازد. retry incident از کلید/اثر انگشت قبلی استفاده می‌کند. Edit نیز پیش از تغییر متن، با شناسه قطعی همان پیام/نسخه/محتوا بررسی می‌شود؛ revision منتشرشده قبلی در شکست حفظ می‌شود.
 
-متن خصوصی، bytes فایل، DOB، تلفن کودک، OTP/MFA یا token وارد log عمومی نمی‌شوند. audit فقط شناسه، نسخه سیاست، category/outcome یا شمار context امن دارد. snapshot پرونده در Persistence خصوصی مجاز است و Log عمومی نیست. هیچ محتوای Messenger به AI/RAG یا vendor خارجی ارسال نمی‌شود.
+متن خصوصی، bytes فایل، DOB، تلفن کودک، OTP یا token وارد log عمومی نمی‌شوند. audit فقط شناسه، نسخه سیاست، category/outcome یا شمار context امن دارد. snapshot پرونده در Persistence خصوصی مجاز است و Log عمومی نیست. هیچ محتوای Messenger به AI/RAG یا vendor خارجی ارسال نمی‌شود.
 
-## ۸. Moderation و MFA
+## ۸. Moderation و مجوز جاری
 
 بازبین پلتفرم از `AbuseReviewer` و `platform.moderation.review` موجود استفاده می‌کند. خواندن شاهد case-scoped و audited است؛ مسیر مرور unrestricted private chat وجود ندارد و School Manager هیچ permission جدیدی نمی‌گیرد. reviewer پرونده مربوط به خودش را بررسی نمی‌کند.
 
 GET عادی، reported item و حداکثر ۲ پیام قبل/۲ پیام بعد همان Conversation را می‌دهد؛ snapshot گزارش بعد از حذف/ویرایش منبع حفظ می‌شود، ولی revision تاریخی همسایه از API استخراج نمی‌شود. فایل فقط از همان پرونده و با مجوز جاری قابل دریافت است.
 
-گسترش context یک POST صریح، فقط پس از Escalate، claim بازبین قوی‌تر، `platform.moderation.enforce`، reason، نسخه جاری و Step-up تازه است. از GAP-04 و `IPlatformStepUpAuthorization` واقعی استفاده می‌شود. سقف فنی گسترش ۲۰ پیام هر طرف همان reported item است؛ مجوز مرور کل Conversation نیست. هر read/action حساس AdminAudit دارد و محتوا در summary کپی نمی‌شود.
+گسترش context یک POST صریح، فقط پس از Escalate، claim بازبین قوی‌تر، `platform.moderation.enforce`، reason، نسخه جاری و نشست معتبر است. حذف عامل دوم هیچ‌یک از این محدودیت‌های case-scoped را حذف نمی‌کند. سقف فنی گسترش ۲۰ پیام هر طرف همان reported item است؛ مجوز مرور کل Conversation نیست. هر read/action حساس AdminAudit دارد و محتوا در summary کپی نمی‌شود.
 
 اقدامات:
 
@@ -113,8 +113,8 @@ GET عادی، reported item و حداکثر ۲ پیام قبل/۲ پیام بع
 - Warned به‌صورت ثبت اخطار در پرونده و Audit؛ تحویل پیامک/Push اخطار ادعا نمی‌شود؛
 - MessagingRestricted با پایان UTC صریح؛ Send/Forward/Edit بعدی منع می‌شود، ولی حساب، نمرات، عضویت و خواندن مجاز حذف نمی‌شوند؛
 - Escalated، پرونده را Critical/Pending می‌کند تا بازبین مجاز مجدداً claim کند؛
-- RemoveContent از endpoint enforce موجود با permission قوی‌تر، reason و Step-up تازه؛
-- SuspendAccount از workflow موجود `/api/admin/v1/users/{userId}/suspend`، با `platform.users.manage`، Step-up تازه، Audit و محافظ آخرین Owner/Manager؛ AbuseReviewer این اختیار را ندارد. سیستم suspension موازی ساخته نشده است.
+- RemoveContent از endpoint enforce موجود با permission قوی‌تر، reason و نشست معتبر؛
+- SuspendAccount از workflow موجود `/api/admin/v1/users/{userId}/suspend`، با `platform.users.manage`، نشست معتبر، Audit و محافظ آخرین Owner/Manager؛ AbuseReviewer این اختیار را ندارد. سیستم suspension موازی ساخته نشده است.
 
 ## ۹. API و اثر قرارداد
 
@@ -124,16 +124,16 @@ GET عادی، reported item و حداکثر ۲ پیام قبل/۲ پیام بع
 |---|---|---|
 | GET `/api/v1/organization/people/{id}/communication-age` | وضعیت طبقه مؤثر، VerificationStatus و Version | Manager جاری همان سازمان؛ منبع غیرمجاز 404 |
 | POST همان مسیر + `/verify` | VerifiedBirthDate, ExpectedVersion, Reason → وضعیت | نقش/نشست جاری، شاهد/تاریخ معتبر؛ 400/403/404/409/412 |
-| POST `/api/admin/v1/users/{id}/communication-age/resolve` | همان command → وضعیت | Owner، UsersManage، MFA تازه، تعارض موجود |
+| POST `/api/admin/v1/users/{id}/communication-age/resolve` | همان command → وضعیت | Owner، UsersManage، نشست معتبر، تعارض موجود |
 | POST `/api/v1/conversations/{id}/invitations` | TargetUserId, ExpiresAtUtc → دعوت Pending | Permission دعوت، رابطه، Privacy و audience جاری |
 | GET `/api/v1/messaging/invitations` | فهرست محدود دعوت‌های خود | فقط target؛ بدون متن private chat |
 | POST `/api/v1/messaging/invitations/{id}/accept|decline|revoke` | بدون body → وضعیت | target یا inviter مجاز؛ 404 عمومی؛ retry امن |
 | POST `/api/v1/organization/classes/{id}/conversation` | بدون body → ConversationId/OrganizationId/ClassId/ActiveMemberCount | منبع آموزشی یا Manager جاری برای provision؛ 404 غیرمجاز |
-| GET `/api/admin/v1/moderation/cases/{id}` | detail قبلی + ContextMessages محدود | MFA و ModerationReview؛ audited |
-| POST همان مسیر + `/expanded-context` | ExpectedVersion, Reason → detail محدود گسترش‌یافته | ارجاع/claim، ModerationEnforce و MFA تازه |
+| GET `/api/admin/v1/moderation/cases/{id}` | detail قبلی + ContextMessages محدود | نشست معتبر و ModerationReview؛ audited |
+| POST همان مسیر + `/expanded-context` | ExpectedVersion, Reason → detail محدود گسترش‌یافته | ارجاع/claim، ModerationEnforce و نشست معتبر |
 | POST همان مسیر + `/actions` | ExpectedVersion, Reason, Action, RestrictedUntilUtc اختیاری → detail | بازبین assigned؛ Warned/MessagingRestricted/Escalated |
 
-کدهای افزوده: `AGE_VERIFICATION_INVALID`=400، `AGE_SUBJECT_NOT_FOUND`=404، `AGE_VERIFICATION_CONFLICT`=409 و `CONVERSATION_INVITATION_REQUIRED`=409. کدهای موجود `DIRECT_RECIPIENT_NOT_AVAILABLE`، `MESSAGE_NOT_ALLOWED`، `MESSAGE_SAFETY_BLOCKED/REVIEW_REQUIRED/UNAVAILABLE`، `MFA_REQUIRED` و `PLATFORM_STEP_UP_REQUIRED` حفظ شده‌اند. UserId/ConversationId/MessageId selector هستند. قراردادهای Controller/DTO از OpenAPI تولید می‌شوند؛ frontend تغییر نکرده است.
+کدهای افزوده: `AGE_VERIFICATION_INVALID`=400، `AGE_SUBJECT_NOT_FOUND`=404، `AGE_VERIFICATION_CONFLICT`=409 و `CONVERSATION_INVITATION_REQUIRED`=409. کدهای موجود `DIRECT_RECIPIENT_NOT_AVAILABLE`، `MESSAGE_NOT_ALLOWED`، `MESSAGE_SAFETY_BLOCKED/REVIEW_REQUIRED/UNAVAILABLE` حفظ شده‌اند؛ کدهای خطای عامل دوم حذف شده‌اند. UserId/ConversationId/MessageId selector هستند. قراردادهای Controller/DTO از OpenAPI تولید می‌شوند؛ frontend تغییر نکرده است.
 
 ## ۱۰. Persistence، تراکنش و Race
 
@@ -151,7 +151,7 @@ Migration: `20261015091336_EnforceApprovedMessengerChildSafety`، شماره ۳�
 
 ## ۱۱. تست و Validation
 
-تست‌های جدید در `ApprovedChildSafetyPolicyTests`، پنج فایل `MessagingChildSafety*`/`MessagingInternalContentSafetyEndpointsTests` و `PlatformMfaChildSafetyEndpointsTests` قرار دارند. fixture جدید فقط آماده‌سازی/خواندن داده تست را انجام می‌دهد؛ workflowهای جدید سن، دعوت، کلاس و moderation از API اجرا می‌شوند. تست MFA از پیاده‌سازی واقعی TOTP/session assurance استفاده می‌کند؛ fake فقط برای جداکردن تست policyهای دیگر است.
+تست‌های سیاست در `ApprovedChildSafetyPolicyTests`، فایل‌های `MessagingChildSafety*`/`MessagingInternalContentSafetyEndpointsTests` و `PlatformAuthorizationRegressionTests` حفظ شده‌اند. نام فایل مشترک Child Safety اکنون `PlatformAuthorizationChildSafetyTests.cs` است؛ OTP/Session واقعی تست و کنترل مجوز جاری جای gate عامل دوم را گرفته‌اند.
 
 پوشش: سه طبقه، آستانه تولد و شاهد/تعارض/نسخه، منع self/cross-org، Discovery امن، رابطه و لغو، private/public/channel، رضایت و پذیرش هم‌زمان، Guardian و دو فرزند، دو مدرسه، کلاس رسمی، Block حین Safety، چهار outcome، رسانه پشتیبانی‌نشده با provider واقعی داخلی، Edit، پنجره reviewer، escalation/Reason/freshness، اخطار/محدودیت و منع suspension برای reviewer. regressionهای 14B–14E با قرارداد جدید تطبیق داده شده‌اند؛ تستی غیرفعال نشده است.
 
@@ -165,7 +165,7 @@ Domain قواعد سن، دعوت و انتقال پرونده را نگه می�
 
 `ConversationsController → MessagingService → IContentSafetyProvider → InternalMakanContentSafetyProvider → EfMessagingStore final authorization → SQL/Outbox → receipt`
 
-`PlatformModerationController → PlatformEducationSafetyService → EfPlatformEducationSafetyStore → Permission/MFA/Case → SQL/Audit → context محدود`
+`PlatformModerationController → PlatformEducationSafetyService → EfPlatformEducationSafetyStore → Permission/Session/Case → SQL/Audit → context محدود`
 
 ترتیب مطالعه پیشنهادی: Controller مربوط → Application service/contracts → Domain entity → `MessengerRelationshipQuery` → store مربوط → EF configuration → migration → تست‌های نام‌برده. نکات آموزشی: نقش معادل سن نیست؛ رابطه معادل Read نیست؛ مجوز قبلی دائمی نیست؛ approval و atomicity جداگانه لازم‌اند؛ provider نتیجه می‌دهد، authorization نمی‌دهد؛ حفظ تاریخچه با حفظ اختیار ارسال متفاوت است.
 

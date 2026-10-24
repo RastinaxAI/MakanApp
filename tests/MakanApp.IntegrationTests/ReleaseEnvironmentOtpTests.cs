@@ -22,10 +22,8 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class ReleaseEnvironmentOtpTests(MakanAppWebApplicationFactory factory) : IDisposable
+public sealed class ReleaseEnvironmentOtpTests(MakanAppWebApplicationFactory factory)
 {
-    private readonly string _keys = Path.Combine(Path.GetTempPath(), "MakanApp-ReleaseOtpKeys", Guid.NewGuid().ToString("N"));
-
     [Theory]
     [InlineData("Test", false)]
     [InlineData("Production", true)]
@@ -164,8 +162,6 @@ public sealed class ReleaseEnvironmentOtpTests(MakanAppWebApplicationFactory fac
         values["Database:AllowUntrustedServerCertificate"] = "true";
         values["Identity:SecurityKey"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         values["Storage:RootPath"] = factory.StorageRootPath;
-        values["Security:DataProtection:KeyRingPath"] = _keys;
-        values["BackofficeSecurity:KeyRingPath"] = _keys;
         values["Sms:MeliPayamakOtp:ServiceToken"] = Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
         values["AllowedHosts"] = "localhost";
         if (overrides is not null)
@@ -214,11 +210,6 @@ public sealed class ReleaseEnvironmentOtpTests(MakanAppWebApplicationFactory fac
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "MakanApp.sln")))
             directory = directory.Parent;
         return Path.Combine(directory?.FullName ?? throw new InvalidOperationException("ریشهٔ پروژه پیدا نشد."), "MakanApp.Api");
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_keys)) Directory.Delete(_keys, recursive: true);
     }
 
     private sealed class ControlledDelivery(bool real) : IOtpDeliveryProvider

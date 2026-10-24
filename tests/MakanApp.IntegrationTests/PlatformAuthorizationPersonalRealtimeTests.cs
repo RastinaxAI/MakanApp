@@ -8,7 +8,6 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Platform;
 using MakanApp.Domain.Messaging;
 using MakanApp.Infrastructure.Persistence;
-using MakanApp.Infrastructure.Platform;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.RateLimiting;
@@ -23,26 +22,21 @@ using Xunit;
 
 namespace MakanApp.IntegrationTests;
 
-public sealed partial class PlatformMfaEndpointsTests
+public sealed partial class PlatformAuthorizationRegressionTests
 {
     [Fact]
     public async Task PersonalAdultsReceiveFirstConversationReplyAndReconnectAfterLostSuccessfulPost()
     {
-        // فقط یک dispatcher و Hub محلی فعال است؛ میزبان MFA همان کلید تست را مصرف می‌کند.
+        // فقط یک dispatcher و Hub محلی فعال است؛ هر دو میزبان هویت تست یکسان دارند.
         _host.Dispose();
         _host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
-            services.RemoveAll<IPlatformMfaAssurance>();
-            services.RemoveAll<IPlatformStepUpAuthorization>();
-            services.AddScoped<IPlatformMfaAssurance>(sp => sp.GetRequiredService<EfPlatformMfaAssurance>());
-            services.AddScoped<IPlatformStepUpAuthorization>(sp => sp.GetRequiredService<EfPlatformMfaAssurance>());
             services.RemoveAll<IIdentitySecurity>();
             services.AddSingleton(factory.Services.GetRequiredService<IIdentitySecurity>());
             services.RemoveAll<IHostedService>();
         }));
         using var owner = _host.CreateClient();
         _ = await OwnerAsync(owner);
-        await ConfirmAsync(owner, await StartAsync(owner));
         using var first = _host.CreateClient();
         using var second = _host.CreateClient();
         var a = await CreateP0PersonalAccountAsync(first, owner);
@@ -55,25 +49,25 @@ public sealed partial class PlatformMfaEndpointsTests
         });
         await receiver.StartAsync();
         // گیرنده پیش از وجود گفتگو وصل شده است و هنوز SubscribeConversation نکرده است.
-        using var create = await first.PostAsJsonAsync("/api/v1/conversations/direct", new StartDirectConversationCommand(b.UserId, ConversationScope.Personal), PolicyMfaJson);
+        using var create = await first.PostAsJsonAsync("/api/v1/conversations/direct", new StartDirectConversationCommand(b.UserId, ConversationScope.Personal), PolicyJson);
         create.EnsureSuccessStatusCode();
-        var direct = (await create.Content.ReadFromJsonAsync<DirectConversationResult>(PolicyMfaJson))!;
+        var direct = (await create.Content.ReadFromJsonAsync<DirectConversationResult>(PolicyJson))!;
         var route = $"/api/v1/conversations/{direct.ConversationId}/messages";
         var command = new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Text = "پیام ثبت‌شده با پاسخ گم‌شده" };
         using (var uncertain = new HttpClient(new LoseSuccessfulMessageResponseHandler(_host.Server.CreateHandler())) { BaseAddress = _host.Server.BaseAddress })
         {
             uncertain.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", a.Authentication.AccessToken);
-            await Assert.ThrowsAsync<HttpRequestException>(() => uncertain.PostAsJsonAsync(route, command, PolicyMfaJson));
+            await Assert.ThrowsAsync<HttpRequestException>(() => uncertain.PostAsJsonAsync(route, command, PolicyJson));
         }
         var notification = await firstReceived.Task.WaitAsync(TimeSpan.FromSeconds(15));
         var sent = await SendP0MessageAsync(first, route, command);
         Assert.Equal(sent.MessageId, notification.ResourceId);
         Assert.Equal(direct.ConversationId, notification.ConversationId);
-        Assert.Contains((await second.GetFromJsonAsync<ConversationSummaryResult[]>("/api/v1/conversations", PolicyMfaJson))!, c => c.ConversationId == direct.ConversationId);
+        Assert.Contains((await second.GetFromJsonAsync<ConversationSummaryResult[]>("/api/v1/conversations", PolicyJson))!, c => c.ConversationId == direct.ConversationId);
         var retries = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => SendP0MessageAsync(first, route, command)));
         Assert.All(retries, retry => Assert.Equal(sent, retry));
         using var conflictingRetry = await first.PostAsJsonAsync(route,
-            new SendMessageCommand { ClientMessageId = command.ClientMessageId, Text = "محتوای متفاوت" }, PolicyMfaJson);
+            new SendMessageCommand { ClientMessageId = command.ClientMessageId, Text = "محتوای متفاوت" }, PolicyJson);
         Assert.Equal(HttpStatusCode.Conflict, conflictingRetry.StatusCode);
         Assert.Single(await factory.GetMessagesAsync(direct.ConversationId));
         Assert.Single((await GetP0ChangesAsync(second, direct.ConversationId)).Changes, c => c.Type == MessagingChangeType.MessageCreated);
@@ -104,7 +98,7 @@ public sealed partial class PlatformMfaEndpointsTests
         Assert.Equal(missed.MessageId, Assert.Single(recovered.Changes).ResourceId);
         var replay = await GetP0ChangesAsync(second, direct.ConversationId, processed.NextCursor);
         Assert.Equal(Assert.Single(recovered.Changes).ChangeId, Assert.Single(replay.Changes).ChangeId);
-        var history = (await second.GetFromJsonAsync<ConversationMessagePageResult>(route, PolicyMfaJson))!;
+        var history = (await second.GetFromJsonAsync<ConversationMessagePageResult>(route, PolicyJson))!;
         Assert.Equal(new[] { sent.MessageId, reply.MessageId, missed.MessageId }, history.Messages.Select(m => m.MessageId));
         Assert.Equal(3, history.Messages.Select(m => m.ClientMessageId).Distinct().Count());
         using var logout = await second.PostAsync("/api/v1/auth/logout", null);
@@ -152,14 +146,14 @@ public sealed partial class PlatformMfaEndpointsTests
 
     private static async Task<MessageReceiptResult> SendP0MessageAsync(HttpClient client, string route, SendMessageCommand command)
     {
-        using var response = await client.PostAsJsonAsync(route, command, PolicyMfaJson);
+        using var response = await client.PostAsJsonAsync(route, command, PolicyJson);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<MessageReceiptResult>(PolicyMfaJson))!;
+        return (await response.Content.ReadFromJsonAsync<MessageReceiptResult>(PolicyJson))!;
     }
 
     private static async Task<ConversationChangePageResult> GetP0ChangesAsync(HttpClient client, Guid conversationId, string? cursor = null)
         => (await client.GetFromJsonAsync<ConversationChangePageResult>($"/api/v1/conversations/{conversationId}/changes" +
-            (cursor is null ? string.Empty : $"?afterCursor={Uri.EscapeDataString(cursor)}"), PolicyMfaJson))!;
+            (cursor is null ? string.Empty : $"?afterCursor={Uri.EscapeDataString(cursor)}"), PolicyJson))!;
 
     private sealed class LoseSuccessfulMessageResponseHandler(HttpMessageHandler inner) : DelegatingHandler(inner)
     {

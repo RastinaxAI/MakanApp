@@ -4,7 +4,7 @@
 
 ## تغییرات جدید مبنای آمادگی
 
-PH-1..6 در کد شامل ring پایدار/probe، readiness، log/metrics امن، worker recovery، shutdown و cleanup محدود opt-in است؛ این‌ها نیاز عملیات target را حذف نمی‌کنند. [مراجع PH](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md). schema همچنان ۱۰۷ جدول/۴۸ migration است.
+PH-1..6 در کد شامل readiness، log/metrics امن، worker recovery، shutdown و cleanup محدود opt-in است؛ این‌ها نیاز عملیات target را حذف نمی‌کنند. [مراجع PH](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md). مدل جاری ۱۰۵ جدول و ۴۹ Migration دارد؛ حذف MFA فقط در مدل و تست ایزوله اعمال شده است.
 
 TestIis و ProductionIis در انتشار محلی جدا و با OTP false/true و true/false آزموده شده‌اند؛ templateهای Test/Production هم‌شکل‌اند. گزارش قبلی [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) با ۲۲۳۹ تست، شاهد همان مرحله است؛ نتیجهٔ بازبینی فعلی در [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) درج می‌شود. [راهنمای دو بسته](PUBLISH_GUIDE_FA.md) کانفیگ خصوصی بسته را عمومی نمی‌کند.
 
@@ -18,7 +18,6 @@ P0/P1/P2 تا Checklist در کد و تست‌های محلی موجودند؛ E
 
 | کد | وضعیت | شرط رفع |
 |---|---|---|
-| `MFA_KEY_CUSTODY` | OPERATIONAL_VALIDATION_PENDING | TOTP/recovery/step-up واقعی موجود است؛ مسیر پایدار، ACL، هویت IIS، زمان صحیح و custody/recovery کلیدهای محیط باید تأیید شوند |
 | `PAYMENT_PROVIDER_REQUIRED` | BLOCKED | قرارداد تأییدشده‌ی create/verify/reconcile و adapter واقعی |
 | `CHILD_SAFETY_OPERATIONAL_VALIDATION` | IMPLEMENTED_WITH_LIMITATIONS | سیاست v1 و Internal Makan مصوب و پیاده‌سازی شده‌اند؛ رسانه unsupported منتشر نمی‌شود، ReviewRequired است؛ ظرفیت بازبینی و محدودیت موتور قواعد باید عملیاتی بررسی شوند |
 | `TARGET_TLS_AND_CORE_SMOKE` | OPEN | هدف فعلی HTTP است؛ تأیید استثنا، TLS یا smoke امن GAP-02 را ثابت نمی‌کند |
@@ -30,9 +29,9 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | حوزه | وضعیت | شاهد یا محدودیت |
 |---|---|---|
 | Authentication | READY | opaque bearer، access یک‌ساعته، refresh چرخشی ۳۰روزه و revocation سمت سرور |
-| MFA | COMPLETE_IN_CODE / OPS_PENDING | TOTP، recovery، replay guard و step-up session-scoped؛ PH-1 حلقهٔ پایدار را در startup عملیاتی الزام می‌کند؛ custody/ACL و انتقال واقعی محیط همچنان جداست |
+| Platform Authentication | REMOVED_SECONDARY_FACTOR | OTP و Session معتبر به‌همراه نقش و permission؛ عامل دوم و وابستگی key ring حذف شده‌اند |
 | Authorization | READY | context از session/membership/resource سمت سرور resolve می‌شود |
-| Secrets | CONTRACT_VALIDATED / OPS_PENDING | فایل واقعی Production ignored است؛ وجود/محتوای secret روی سرور از clean worktree نتیجه نمی‌شود؛ نمونه بدون secret و validation aliasها موجود است؛ provisioning/ACL/custody وظیفهٔ اپراتور است |
+| Secrets | CONTRACT_VALIDATED / OPS_PENDING | فایل واقعی Production ignored است؛ وجود/محتوای secret روی سرور از clean worktree نتیجه نمی‌شود؛ نمونه بدون secret و اعتبارسنجی تنظیمات فعال موجود است؛ provisioning/ACL/custody وظیفهٔ اپراتور است |
 | SQL Server | READY_WITH_LIMITATION | TLS و least privilege مستند/اسکریپت شده؛ ایجاد principal روی سرور باقی است |
 | Storage | READY_WITH_LIMITATION | root مطلق، probe، authorization و امضای حداقلی؛ AV/CDR provider وجود ندارد |
 | CORS | IMPLEMENTED | allowlist صریح؛ HTTP فقط با Hosting:AllowInsecureHttp تأییدشده، بدون wildcard یا credentials |
@@ -60,11 +59,11 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 
 ## قرارداد providerها
 
-### MFA / Step-up
+### ورود Platform
 
-پیاده‌سازی جاری GAP-04 نتیجهٔ TOTP/recovery را سمت سرور بررسی و assurance/freshness همان Session را ثبت می‌کند؛ counter، replay، محدودیت تلاش و audit دارد. OTP ورود عامل دوم نامیده نمی‌شود. برای عامل آینده سیستم موازی نسازید؛ port و قواعد موجود reuse شوند. [قرارداد جاری](../release/GAP_04_BACKOFFICE_TOTP_MFA.md).
-
-PH-1 همان Data Protection را با discriminator و purpose قبلی حفظ می‌کند؛ host عملیاتی بدون حلقهٔ پایدار شروع نمی‌شود و مسیر صریح نامعتبر یا محافظ خراب خطای ثابت و امن دارد. keyهای `BackofficeSecurity:*` همچنان معتبرند؛ `Security:DataProtection:*` aliasهای جدید با رد تعارض‌اند. probe runtime حلقهٔ گم‌شده را reseed نمی‌کند. تست recreation/isolation جای custody DPAPI/PFX یا پذیرش recycle/reboot سرور نیست؛ [runbook IIS](DEPLOYMENT_IIS.md) و [پیکربندی](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) مرجع اجرا هستند.
+طبق تصمیم مالک در ۲۰۲۶-۱۰-۲۴، MFA، TOTP، Recovery و Step-Up حذف شده‌اند؛ key ring فقط مرتبط با آن‌ها نیز دیگر gate Startup/ready نیست.
+OTP و Session معتبر، Platform role/permission، Reason، Audit و محافظ‌های آخرین Owner/Manager حفظ شده‌اند. School Manager به‌تنهایی Platform Admin نیست.
+Migration `RemovePlatformMfa` مخرب است و اجرای عملیاتی آن مرحله‌ای مستقل با Backup و تأیید مالک است؛ فایل‌های قدیمی key ring سرور فعلاً حفظ شوند.
 
 ### Payment
 
@@ -91,7 +90,7 @@ Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور 
 | Payment | Unavailable/Test adapter فقط در test host | Unavailable | `Unavailable` / FailClosed تا provider واقعی |
 | Content Safety | DevelopmentAllow فقط توسعه | Internal / FailClosed برای failure | Internal / ReviewRequired برای رسانه unsupported |
 | AI | adapter تست یا سرویس مصوب | پیش‌فرض غیرفعال؛ مستقل از core | پیش‌فرض غیرفعال؛ real E2E تأیید نشده |
-| Platform step-up | test double فقط test host | TOTP/recovery واقعی و key ring پایدار | همان پیاده‌سازی، نه bypass با HTTP |
+| Platform Authentication | OTP/Session و permission جاری | همان قواعد، بدون عامل دوم | همان قواعد؛ HTTP مجوز bypass ایجاد نمی‌کند |
 | Push notification | Development | Unavailable مگر adapter تأییدشده | Unavailable مگر adapter تأییدشده |
 | SMS notification | Development | Unavailable مگر adapter تأییدشده | Unavailable مگر adapter تأییدشده |
 | Login SMS OTP | Development یا MeliPayamak با secret | configured provider | configured provider با secret store |
@@ -101,7 +100,7 @@ Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور 
 - Swagger در Production پیش‌فرض خاموش است و فقط با تصمیم عملیات و کنترل دسترسی باید فعال شود.
 - limiter در حافظه‌ی process است؛ برای IIS تک-instance قابل قبول و برای scale-out ناکافی است.
 - signature validation فقط formatهای allowlist شده را با magic bytes/UTF-8 حداقلی می‌سنجد و جایگزین malware scanning نیست.
-- readiness، config لازم Production، key ring پایدار، SQL Server و storage اصلی را gate می‌کند؛ providerهای اختیاری/degraded در ماتریس عملیات دیده می‌شوند.
+- readiness، config لازم Production، SQL Server و storage اصلی را gate می‌کند؛ providerهای اختیاری/degraded در ماتریس عملیات دیده می‌شوند.
 - load baseline و restore rehearsal روی topology واقعی staging باید اجرا شوند، نه Production؛ drill پایه‌ی LocalDB انجام شده است.
 
 ## نتیجهٔ PH و مرز پذیرش

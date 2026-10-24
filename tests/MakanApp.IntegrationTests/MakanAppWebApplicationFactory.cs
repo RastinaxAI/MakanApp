@@ -63,8 +63,6 @@ public sealed partial class MakanAppWebApplicationFactory :
         Services.GetRequiredService<SensitiveLogTestControl>();
     public ContentSafetyProviderTestControl ContentSafetyProvider =>
         Services.GetRequiredService<ContentSafetyProviderTestControl>();
-    public PlatformStepUpTestControl PlatformStepUp =>
-        Services.GetRequiredService<PlatformStepUpTestControl>();
     public AiServiceTestControl AiService =>
         Services.GetRequiredService<AiServiceTestControl>();
 
@@ -180,7 +178,6 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<PaymentGatewayTestControl>();
             services.AddSingleton<SensitiveLogTestControl>();
             services.AddSingleton<ContentSafetyProviderTestControl>();
-            services.AddSingleton<PlatformStepUpTestControl>();
             services.AddSingleton<AiServiceTestControl>();
             services.AddSingleton<Microsoft.Extensions.Logging.ILoggerProvider, RecordingTestLoggerProvider>();
             services.RemoveAll<DevelopmentOtpStore>();
@@ -197,10 +194,6 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<IPaymentGateway, RecordingPaymentGateway>();
             services.RemoveAll<IContentSafetyProvider>();
             services.AddSingleton<IContentSafetyProvider, RecordingContentSafetyProvider>();
-            services.RemoveAll<IPlatformStepUpAuthorization>();
-            services.AddSingleton<IPlatformStepUpAuthorization, TestPlatformStepUpAuthorization>();
-            services.RemoveAll<IPlatformMfaAssurance>();
-            services.AddSingleton<IPlatformMfaAssurance, TestPlatformStepUpAuthorization>();
             services.RemoveAll<IAiServiceClient>();
             services.AddSingleton<IAiServiceClient, RecordingAiServiceClient>();
             services.RemoveAll<NotificationDeliveryOptions>();

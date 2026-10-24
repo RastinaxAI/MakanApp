@@ -22,7 +22,6 @@ public sealed class UserSession
         ExpiresAtUtc = expiresAtUtc;
         AbsoluteExpiresAtUtc = absoluteExpiresAtUtc;
         DeviceName = deviceName;
-        AssuranceLevel = AuthenticationAssuranceLevel.Primary;
     }
 
     public Guid Id { get; private set; }
@@ -33,8 +32,6 @@ public sealed class UserSession
     public DateTime AbsoluteExpiresAtUtc { get; private set; }
     public DateTime? RevokedAtUtc { get; private set; }
     public string? DeviceName { get; private set; }
-    public AuthenticationAssuranceLevel AssuranceLevel { get; private set; }
-    public DateTime? StepUpAtUtc { get; private set; }
     public Guid? SelectedMembershipId { get; private set; }
     public string? SelectedRole { get; private set; }
     public Guid? SelectedSubjectOrganizationPersonId { get; private set; }
@@ -93,28 +90,10 @@ public sealed class UserSession
         ExpiresAtUtc = expiresAtUtc;
     }
 
-    public void RecordStepUp(AuthenticationAssuranceLevel assuranceLevel, DateTime stepUpAtUtc)
-    {
-        EnsureUtc(stepUpAtUtc, nameof(stepUpAtUtc));
-        if (assuranceLevel < AuthenticationAssuranceLevel.MultiFactor)
-        {
-            throw new ArgumentOutOfRangeException(nameof(assuranceLevel));
-        }
-
-        AssuranceLevel = assuranceLevel;
-        StepUpAtUtc = stepUpAtUtc;
-    }
-
     public void Revoke(DateTime revokedAtUtc)
     {
         EnsureUtc(revokedAtUtc, nameof(revokedAtUtc));
         RevokedAtUtc ??= revokedAtUtc;
-    }
-
-    public void ClearMfaAssurance()
-    {
-        AssuranceLevel = AuthenticationAssuranceLevel.Primary;
-        StepUpAtUtc = null;
     }
 
     public void SelectPersonalWorkspace()

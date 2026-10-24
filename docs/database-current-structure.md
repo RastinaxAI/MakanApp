@@ -1,12 +1,12 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core در `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ بازبینی `2026-10-23`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `main@e525c78a7a318ea3dc3c697ea6473d308dc5fae1`؛ بازبینی `2026-10-24`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**107 جدول، 1055 ستون، 239 FK، 295 index مستقل از key و 279 CHECK؛ 48 Migration.**
+**105 جدول، 1036 ستون، 236 FK، 293 index مستقل از key و 275 CHECK؛ 49 Migration.**
 
 ## مفاهیم و مرزها
 
-تغییرات عملیاتی PH و OTP/AI، schema یا migration جدیدی نساخته‌اند. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
+حذف عامل دوم، Migration جدید RemovePlatformMfa را برای دو جدول و دو ستون Session ایجاد کرده است؛ اعمال آن روی دیتابیس اصلی یا سرور مرحله جداگانه‌ای است. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 
 - SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.
 - PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.
@@ -29,7 +29,7 @@
 | messaging | 42 |
 | notification | 4 |
 | organization | 5 |
-| platform | 9 |
+| platform | 7 |
 | reports | 1 |
 | storage | 1 |
 
@@ -85,6 +85,7 @@
 | 46 | 20261016190927_AddScheduledAndSilentMessages | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016190927_AddScheduledAndSilentMessages.cs) |
 | 47 | 20261016211112_AddConversationPollsAndQuiz | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016211112_AddConversationPollsAndQuiz.cs) |
 | 48 | 20261017033804_AddConversationChecklists | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261017033804_AddConversationChecklists.cs) |
+| 49 | 20261024184613_RemovePlatformMfa | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261024184613_RemovePlatformMfa.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -2032,7 +2033,6 @@ Entity: `MakanApp.Domain.Identity.UserSession`؛ مالک نگاشت: [EF Config
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AbsoluteExpiresAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| AssuranceLevel | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | DeviceName | `nvarchar(100)` | بله | خیر | Never |
 | ExpiresAtUtc | `datetime2(7)` | خیر | خیر | Never |
@@ -2042,7 +2042,6 @@ Entity: `MakanApp.Domain.Identity.UserSession`؛ مالک نگاشت: [EF Config
 | SelectedMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | SelectedRole | `nvarchar(16)` | بله | خیر | Never |
 | SelectedSubjectOrganizationPersonId | `uniqueidentifier` | بله | خیر | Never |
-| StepUpAtUtc | `datetime2(7)` | بله | خیر | Never |
 | TokenHash | `varbinary(32)` | خیر | خیر | Never |
 | UserId | `uniqueidentifier` | خیر | خیر | Never |
 
@@ -2065,12 +2064,6 @@ Indexها:
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | UserId | identity.Users | Id | Cascade |
-
-CHECKها:
-
-| نام | SQL |
-|---|---|
-| CK_UserSessions_AssuranceLevel | `[AssuranceLevel] IN (1, 2)` |
 
 ### messaging.AbuseReports
 
@@ -4433,82 +4426,6 @@ CHECKها:
 |---|---|
 | CK_Outbox_AttemptCount | `[AttemptCount] >= 0` |
 | CK_Outbox_Lifecycle | `[ProcessedAtUtc] IS NULL OR ([ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL AND [NextAttemptAtUtc] IS NULL)` |
-
-### platform.PlatformMfaCredentials
-
-Entity: `MakanApp.Domain.Platform.PlatformMfaCredential`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
-
-| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
-|---|---|---|---|---|
-| ActivatedAtUtc | `datetime2` | بله | خیر | Never |
-| EnrollmentExpiresAtUtc | `datetime2` | بله | خیر | Never |
-| EnrollmentId | `uniqueidentifier` | بله | خیر | Never |
-| EnrollmentSessionId | `uniqueidentifier` | بله | خیر | Never |
-| FailedAttempts | `int` | خیر | خیر | Never |
-| LastAcceptedTimeStep | `bigint` | بله | خیر | Never |
-| LockedUntilUtc | `datetime2` | بله | خیر | Never |
-| PendingProtectedSecret | `nvarchar(2048)` | بله | خیر | Never |
-| ProtectedSecret | `nvarchar(2048)` | بله | خیر | Never |
-| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
-| UserId | `uniqueidentifier` | خیر | خیر | Never |
-
-کلیدها:
-
-| نام | نوع | ستون‌ها |
-|---|---|---|
-| PK_PlatformMfaCredentials | PK | UserId |
-
-Indexها:
-
-| نام | ستون‌ها | Unique | Filter |
-|---|---|---|---|
-| IX_PlatformMfaCredentials_EnrollmentSessionId_UserId | EnrollmentSessionId, UserId | False | — |
-
-روابط:
-
-| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
-|---|---|---|---|
-| UserId | identity.Users | Id | Restrict |
-| EnrollmentSessionId, UserId | identity.UserSessions | Id, UserId | Restrict |
-
-CHECKها:
-
-| نام | SQL |
-|---|---|
-| CK_PlatformMfa_Active | `([ProtectedSecret] IS NULL AND [ActivatedAtUtc] IS NULL) OR ([ProtectedSecret] IS NOT NULL AND [ActivatedAtUtc] IS NOT NULL)` |
-| CK_PlatformMfa_Attempts | `[FailedAttempts] >= 0 AND ([LastAcceptedTimeStep] IS NULL OR [LastAcceptedTimeStep] >= 0)` |
-| CK_PlatformMfa_Pending | `([PendingProtectedSecret] IS NULL AND [EnrollmentId] IS NULL AND [EnrollmentSessionId] IS NULL AND [EnrollmentExpiresAtUtc] IS NULL) OR ([PendingProtectedSecret] IS NOT NULL AND [EnrollmentId] IS NOT NULL AND [EnrollmentSessionId] IS NOT NULL AND [EnrollmentExpiresAtUtc] IS NOT NULL)` |
-
-### platform.PlatformMfaRecoveryCodes
-
-Entity: `MakanApp.Domain.Platform.PlatformMfaRecoveryCode`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
-
-| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
-|---|---|---|---|---|
-| CodeHash | `varchar(64)` | خیر | خیر | Never |
-| ConsumedAtUtc | `datetime2` | بله | خیر | Never |
-| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
-| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
-| UserId | `uniqueidentifier` | خیر | خیر | Never |
-
-کلیدها:
-
-| نام | نوع | ستون‌ها |
-|---|---|---|
-| PK_PlatformMfaRecoveryCodes | PK | Id |
-
-Indexها:
-
-| نام | ستون‌ها | Unique | Filter |
-|---|---|---|---|
-| IX_PlatformMfaRecoveryCodes_UserId_CodeHash | UserId, CodeHash | True | — |
-
-روابط:
-
-| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
-|---|---|---|---|
-| UserId | platform.PlatformMfaCredentials | UserId | Cascade |
 
 ### platform.PlatformPermissions
 

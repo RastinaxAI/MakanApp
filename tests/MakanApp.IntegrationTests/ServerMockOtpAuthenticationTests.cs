@@ -21,9 +21,8 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFactory factory) : IDisposable
+public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFactory factory)
 {
-    private readonly string _keyRingPath = Path.Combine(Path.GetTempPath(), "MakanApp-ServerMockOtpKeys", Guid.NewGuid().ToString("N"));
 
     [Theory]
     [InlineData("09123456789", "123456")]
@@ -154,7 +153,7 @@ public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFacto
     }
 
     [Fact]
-    public async Task ConfiguredTestHost_ExistingPlatformOwnerStillRequiresMfa()
+    public async Task ConfiguredTestHost_ExistingPlatformOwnerUsesAssignedPermission()
     {
         using var app = Application();
         using var client = Client(app);
@@ -177,8 +176,7 @@ public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFacto
             Assert.Equal(user.Id, result.User.Id);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             using var admin = await client.GetAsync("/api/admin/v1/me");
-            Assert.Equal(HttpStatusCode.Forbidden, admin.StatusCode);
-            Assert.Contains(PlatformErrorCodes.MfaRequired, await admin.Content.ReadAsStringAsync());
+            Assert.Equal(HttpStatusCode.OK, admin.StatusCode);
         }
         finally
         {
@@ -207,7 +205,6 @@ public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFacto
             ["Otp:AllowMockAuthentication"] = allowMock.ToString(),
             ["ConnectionStrings:MakanDatabase"] = connectionString,
             ["Identity:SecurityKey"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
-            ["BackofficeSecurity:KeyRingPath"] = _keyRingPath,
             ["Storage:RootPath"] = factory.StorageRootPath,
             ["Sms:Provider"] = enabled ? "Unavailable" : "MeliPayamakOtp",
             ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
@@ -251,10 +248,4 @@ public sealed class ServerMockOtpAuthenticationTests(MakanAppWebApplicationFacto
         return await scope.ServiceProvider.GetRequiredService<MakanDbContext>().OtpChallenges.CountAsync();
     }
 
-    public void Dispose()
-    {
-        var expectedParent = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "MakanApp-ServerMockOtpKeys")) + Path.DirectorySeparatorChar;
-        if (Path.GetFullPath(_keyRingPath).StartsWith(expectedParent, StringComparison.OrdinalIgnoreCase) && Directory.Exists(_keyRingPath))
-            Directory.Delete(_keyRingPath, recursive: true);
-    }
 }

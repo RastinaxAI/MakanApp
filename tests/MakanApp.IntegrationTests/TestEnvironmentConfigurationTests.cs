@@ -134,7 +134,6 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         ProductionConfigurationValidator.Validate(configuration, environment);
         HostShutdownConfiguration.ConfigureServices(builder.Services, configuration);
         builder.Services.AddInfrastructure(configuration, builder.Environment.EnvironmentName);
-        builder.Services.AddBackofficeMfa(configuration, builder.Environment);
         using var provider = builder.Services.BuildServiceProvider();
 
         var authentication = provider.GetRequiredService<IOptions<OtpAuthenticationOptions>>().Value;
@@ -147,7 +146,6 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         Assert.NotNull(provider.GetRequiredService<MessagingOptions>());
         Assert.NotNull(provider.GetRequiredService<MessagingEphemeralOptions>());
         Assert.NotNull(provider.GetRequiredService<PushDeviceOptions>());
-        Assert.NotNull(provider.GetRequiredService<BackofficeSecurityOptions>());
         Assert.NotNull(provider.GetRequiredService<PaymentOptions>());
         Assert.NotNull(provider.GetRequiredService<ReportExportOptions>());
         Assert.NotNull(provider.GetRequiredService<NotificationDeliveryOptions>());
@@ -159,7 +157,6 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         Assert.False(provider.GetRequiredService<AiServiceOptions>().Enabled);
         Assert.Equal("makan.ai.invoke", provider.GetRequiredService<AiServiceAuthenticationOptions>().Scope);
         Assert.Equal(configuration["Storage:RootPath"], provider.GetRequiredService<StorageOptions>().RootPath);
-        Assert.True(provider.GetRequiredService<DataProtectionKeyRingSettings>().PersistenceRequired);
         Assert.Equal(TimeSpan.FromSeconds(30), provider.GetRequiredService<IOptions<HostOptions>>().Value.ShutdownTimeout);
         if (realOtp)
             Assert.IsType<MeliPayamakOtpProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());

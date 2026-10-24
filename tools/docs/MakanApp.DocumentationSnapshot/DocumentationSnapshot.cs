@@ -82,7 +82,7 @@ internal static class DocumentationSnapshot
         }).OrderBy(item => item.Controller).ThenBy(item => item.Path).ThenBy(item => item.Method).ToArray();
         if (!operations.Single(item => item.Controller == "Auth" && item.Action == "RequestOtp").Anonymous ||
             operations.Single(item => item.Controller == "Auth" && item.Action == "GetSessions").Anonymous ||
-            operations.Any(item => item.Controller == "PlatformMfa" && item.Anonymous))
+            operations.Any(item => item.Path.TrimStart('/').StartsWith("api/admin/v1/", StringComparison.OrdinalIgnoreCase) && item.Anonymous))
             throw new InvalidOperationException("ماتریس احراز هویت استخراج‌شده با guardهای شناخته‌شده سازگار نیست.");
 
         // خواندن مدل طراحی EF هیچ اتصال SQL یا اجرای Migration ایجاد نمی‌کند.

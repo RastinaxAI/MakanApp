@@ -72,8 +72,10 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
             200,
             "انتشار نسخه دوم");
 
-        factory.PlatformStepUp.SetSatisfied(false);
-        using var denied = await ownerClient.PostAsJsonAsync(
+        using var deniedClient = factory.CreateClient();
+        var deniedActor = await CreateAuthenticatedUserAsync(deniedClient);
+        UseBearerToken(deniedClient, deniedActor.AccessToken);
+        using var denied = await deniedClient.PostAsJsonAsync(
             $"/api/admin/v1/commerce/organizations/{organizationId}/subscription-override",
             new OverridePlatformSubscriptionCommand(
                 secondVersion.PlanVersionId,
@@ -82,7 +84,6 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
             JsonOptions);
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
 
-        factory.PlatformStepUp.SetSatisfied(true);
         using var overrideResponse = await ownerClient.PostAsJsonAsync(
             $"/api/admin/v1/commerce/organizations/{organizationId}/subscription-override",
             new OverridePlatformSubscriptionCommand(

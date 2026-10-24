@@ -134,9 +134,9 @@ public sealed class ProductionHostShutdownTests
         Assert.Equal(".\\MakanApp.Api.dll", aspNetCore.Attribute("arguments")!.Value);
         var environment = aspNetCore.Element("environmentVariables")!.Elements("environmentVariable")
             .ToDictionary(item => item.Attribute("name")!.Value, item => item.Attribute("value")!.Value);
-        Assert.Equal(2, environment.Count);
+        Assert.Single(environment);
         Assert.Equal("Production", environment["ASPNETCORE_ENVIRONMENT"]);
-        Assert.Equal("C:\\ProgramData\\MakanApp\\BackofficeMfaKeys", environment["BackofficeSecurity__KeyRingPath"]);
+        Assert.DoesNotContain("BackofficeSecurity__KeyRingPath", environment.Keys);
         Assert.Null(server.Element("applicationInitialization"));
     }
 

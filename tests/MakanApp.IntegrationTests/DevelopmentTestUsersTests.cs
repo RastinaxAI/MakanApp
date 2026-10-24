@@ -95,10 +95,6 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
                 });
                 services.RemoveAll<IOtpDeliveryProvider>();
                 services.AddSingleton<IOtpDeliveryProvider, DevelopmentBypassOtpProvider>();
-                services.RemoveAll<IPlatformMfaAssurance>();
-                services.AddScoped<IPlatformMfaAssurance>(provider => provider.GetRequiredService<EfPlatformMfaAssurance>());
-                services.RemoveAll<IPlatformStepUpAuthorization>();
-                services.AddScoped<IPlatformStepUpAuthorization>(provider => provider.GetRequiredService<EfPlatformMfaAssurance>());
             });
         });
 
@@ -118,9 +114,7 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
         await using var scope = _bypass.Services.CreateAsyncScope();
         var database = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
-        Assert.True(await database.UserSessions.AnyAsync(session => session.UserId == UserId(number) &&
-            session.AssuranceLevel == AuthenticationAssuranceLevel.Primary));
-        Assert.False(await database.PlatformMfaCredentials.AnyAsync(factor => factor.UserId == UserId(number)));
+        Assert.True(await database.UserSessions.AnyAsync(session => session.UserId == UserId(number)));
         if (number <= 4)
         {
             var membership = await database.Memberships.SingleAsync(item => item.UserId == UserId(number));
@@ -140,10 +134,10 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
             Assert.True(assigned.IsActive);
             var role = await database.PlatformRoles.SingleAsync(item => item.Id == assigned.RoleId);
             Assert.Equal(PlatformRoleKeys.All.ElementAt(number - 5), role.Key);
-            using var requiresMfa = await client.GetAsync("/api/admin/v1/me");
-            Assert.Equal(HttpStatusCode.Forbidden, requiresMfa.StatusCode);
-            using var problem = JsonDocument.Parse(await requiresMfa.Content.ReadAsStringAsync());
-            Assert.Equal(PlatformErrorCodes.MfaRequired, problem.RootElement.GetProperty("code").GetString());
+            using var allowed = await client.GetAsync("/api/admin/v1/me");
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+            var platform = (await allowed.Content.ReadFromJsonAsync<PlatformMeResult>())!;
+            Assert.Contains(role.Key, platform.Roles);
         }
         using var refreshed = await client.PostAsJsonAsync("/api/v1/auth/refresh", new RefreshSessionCommand(result.RefreshToken));
         Assert.Equal(HttpStatusCode.OK, refreshed.StatusCode);

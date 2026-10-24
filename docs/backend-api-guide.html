@@ -59,7 +59,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </li>
 <li><a href="#heading-28">تنظیمات</a></li>
 <li><a href="#heading-29">قرارداد عملیاتی جاری: PH و انتشار دو محیط</a><ul>
-<li><a href="#heading-30">تنظیم OTP و key ring</a></li>
+<li><a href="#heading-30">تنظیم OTP و Host</a></li>
 <li><a href="#heading-31">worker، تراکنش و بازیابی</a></li>
 <li><a href="#heading-32">retention و observability</a></li>
 </ul>
@@ -182,7 +182,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>راهنمای جامع پروژه و بک‌اند ماکان</h1><p class="subtitle">شناخت محصول، معماری، جریان اجرا و توسعه</p><p class="edition">نسخه بررسی: <code>main @ 5885d11</code><br>تاریخ بازبینی: <code>2026-10-23</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>راهنمای جامع پروژه و بک‌اند ماکان</h1><p class="subtitle">شناخت محصول، معماری، جریان اجرا و توسعه</p><p class="edition">نسخه بررسی: <code>main @ e525c78</code><br>تاریخ بازبینی: <code>2026-10-24</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
 <li><a href="#heading-1">وضعیت جاری و تغییرات مؤثر بر مطالعه</a></li>
 <li><a href="#heading-2">وضعیت جاری Messenger: P0، P1، P2 و مرز P3</a><ul>
@@ -225,7 +225,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </li>
 <li><a href="#heading-28">تنظیمات</a></li>
 <li><a href="#heading-29">قرارداد عملیاتی جاری: PH و انتشار دو محیط</a><ul>
-<li><a href="#heading-30">تنظیم OTP و key ring</a></li>
+<li><a href="#heading-30">تنظیم OTP و Host</a></li>
 <li><a href="#heading-31">worker، تراکنش و بازیابی</a></li>
 <li><a href="#heading-32">retention و observability</a></li>
 </ul>
@@ -349,15 +349,15 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </ul>
 </div>
 </section><h1 id="api">راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان</h1>
-<p>این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی <code>2026-10-23</code> از <code>main@5885d11</code>: <strong>325 عملیات HTTP در 57 Controller و 290 مسیر؛ 552 schema، 107 جدول و 48 migration</strong>. مرجع HTTP، فرهنگ SQL و HTML/PDF از همین کد بازتولید می‌شوند. اعداد تست گزارش‌های مرحله‌ای تاریخچهٔ همان اجرا هستند؛ نتیجهٔ جدید در <a href="CURRENT_PROJECT_STATUS.md">وضعیت جاری</a> ثبت می‌شود.</p>
+<p>این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی <code>2026-10-24</code> با مبنای <code>main@e525c78</code> به‌همراه تغییرات حذف عامل دوم: <strong>318 عملیات HTTP در 56 Controller و 283 مسیر؛ 547 schema، 105 جدول و 49 migration</strong>. مرجع HTTP، فرهنگ SQL و HTML/PDF از همین کد بازتولید می‌شوند. اعداد تست گزارش‌های مرحله‌ای تاریخچهٔ همان اجرا هستند؛ نتیجهٔ جدید در <a href="CURRENT_PROJECT_STATUS.md">وضعیت جاری</a> ثبت می‌شود.</p>
 <h2 id="heading-1">وضعیت جاری و تغییرات مؤثر بر مطالعه</h2>
 <p>DOC-CONTRACT-01 / B08 در کد P0 اصلاح شد: گزینه‌های HTTP JSON با MVC هماهنگ و <code>StringEnumSchemaTransformer</code>، type حذف‌شدهٔ Enum در نسخهٔ جاری .NET 9 را تکمیل می‌کند. literal، nullable و Flags واقعی حفظ می‌شوند؛ JSON صحیح Controller/SignalR به عدد تبدیل نشده است. تست قرارداد، serializer واقعی MVC/Hub، OpenAPI، nullable، ترکیب Flags و رد نام/bit ناشناخته را بررسی می‌کند. <a href="release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md">ثبت نتیجه</a>.</p>
-<p>Messenger P0: تأیید اولیهٔ User شخصی با UsersManage/MFA تازه و شاهد append-only، self messaging-status، discovery دو Adult بدون شرط مدرسه، عدم خروج شماره در Username discovery و بررسی محدودیت actor در ساخت Direct افزوده/اصلاح شدند. Realtime علاوه بر نشست/حساب/بافت جاری، visibility دقیق event را از Delta می‌گیرد؛ FromJoin و state خصوصی قابل bypass با audience hint نیستند. پذیرش دوحسابی شامل پاسخ POST گم‌شده پس از commit، retry هم‌زمان، reply و reconnect فقط محلی اجرا می‌شود؛ REAL SERVER PASS ادعا نمی‌شود. <a href="messaging/MESSENGER_P0_DELIVERY_AUDIT.md">ممیزی و تست‌ها</a>.</p>
+<p>Messenger P0: تأیید اولیهٔ User شخصی با UsersManage و نشست معتبر و شاهد append-only، self messaging-status، discovery دو Adult بدون شرط مدرسه، عدم خروج شماره در Username discovery و بررسی محدودیت actor در ساخت Direct افزوده/اصلاح شدند. Realtime علاوه بر نشست/حساب/بافت جاری، visibility دقیق event را از Delta می‌گیرد؛ FromJoin و state خصوصی قابل bypass با audience hint نیستند. پذیرش دوحسابی شامل پاسخ POST گم‌شده پس از commit، retry هم‌زمان، reply و reconnect فقط محلی اجرا می‌شود؛ REAL SERVER PASS ادعا نمی‌شود. <a href="messaging/MESSENGER_P0_DELIVERY_AUDIT.md">ممیزی و تست‌ها</a>.</p>
 <ul>
 <li>Identity شامل access یک‌ساعته، refresh چرخشی با عمر مطلق ۳۰روزه و مدیریت نشست است. OTP ملی‌پیامک provider واقعی دارد، اما موفقیت تست خودکار تحویل SMS سرور را اثبات نمی‌کند.</li>
 <li>onboarding مدرسه و Guardian در GAP-01 API عملیاتی دارند؛ دعوت اتصال حساب نیازمند پذیرش احرازشدهٔ صاحب حساب است و merge خودکار Person/User نداریم.</li>
 <li>Reports/export، اعلان داخلی/outbox/preferences، Commerce/order/payment lifecycle و Backoffice/IAM API دارند. Web Push و FCM در P1 پیاده شده‌اند و به config/credential خارجی نیاز دارند؛ پذیرش دستگاه واقعی pending است. SMS عمومی اعلان و gateway پرداخت واقعی همچنان unavailable هستند؛ OTP ورود با SMS اعلان یکی نیست.</li>
-<li>TOTP/recovery/step-up واقعی Backoffice در GAP-04 پیاده‌سازی شده؛ فایل‌ها، هویت App Pool و key ring پایدار باید حفظ شوند. <a href="release/GAP_04_BACKOFFICE_TOTP_MFA.md">قرارداد MFA</a>.</li>
+<li>تصمیم ۲۰۲۶-۱۰-۲۴ مالک، MFA/Step-Up و key ring صرفاً مرتبط را از کد فعال حذف کرده است؛ <a href="platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md">قرارداد جاری Platform</a>.</li>
 <li>سیاست مصوب GAP-05 جای پیش‌فرض‌های قدیمی Messenger را می‌گیرد: Unknown مانند Minor محافظت می‌شود؛ غریبه حق Direct ندارد؛ هر Send رابطه/Block/membership جاری و Content Safety را دوباره می‌سنجد. Internal Makan موتور قاعده‌محور واقعی ولی محدود است؛ رسانه unsupported به ReviewRequired می‌رود. Guardian و School Manager مجوز مرور Direct خصوصی ندارند. <a href="architecture/GAP_05_MESSENGER_CHILD_SAFETY.md">قرارداد کامل</a>.</li>
 <li>۱۲ API Backend AI با قرارداد v1، Service JWT، context مجاز و response grounding وجود دارند؛ پیش‌فرض غیرفعال است. Service Auth واقعی قبلاً PASS شده، Parent Child Summary مانع Provider Timeout دارد و Full-12 واقعی Deferred است؛ RAG source lifecycle نیز deferred باقی مانده. <a href="ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md">وضعیت AI</a>.</li>
 <li>انتشار IIS اکنون دو profile مستقل TestIis و ProductionIis دارد: Test با Mock مجاز false/true و Production با OTP واقعی true/false. انتخاب قبلی Production/HTTP با استثنا، پذیرش TLS نیست. فایل‌های خصوصی ignored و نمونه‌ها بدون secret هستند؛ <a href="production/PUBLISH_GUIDE_FA.md">راهنمای انتشار دو بسته</a>، <a href="production/DEPLOYMENT_IIS.md">IIS</a> و <a href="production/PRODUCTION_READINESS.md">آمادگی</a>.</li>
@@ -526,7 +526,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tr>
 <tr>
 <td>Platform</td>
-<td>IAM، provisioning، metadata operations و moderation محدود به case؛ TOTP/recovery/step-up واقعی</td>
+<td>IAM، provisioning، metadata operations و moderation محدود به case؛ OTP، نشست معتبر و مجوز جاری Platform</td>
 </tr>
 <tr>
 <td>AI Backend</td>
@@ -1170,10 +1170,10 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 </tbody>
 </table></div>
 <p>مقادیر انتهای جدول که در JSON نوشته نشده‌اند، fallback کد DI هستند. محدودیت IP درخواست OTP هم در <code>Program.cs</code> برابر ۱۰ درخواست در دقیقه است؛ این محدودیت درون‌حافظه‌ای و برای یک instance است.</p>
-<p>کلید امنیت یا ServiceToken را در Git یا سند مشترک ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart معتبر نیست. انتخاب MeliPayamakOtp بدون کلید پایدار در startup رد می‌شود. پایه Sms:Provider=Unavailable دارد؛ فایل خصوصی Production این انتشار provider واقعی را تنظیم می‌کند. RootPath در Production باید مطلق و پایدار باشد؛ خالی بودن آن fail-fast می‌شود. فایل واقعی Production ignored و نمونهٔ عمومی بدون secret است؛ مسیر و کلیدهای قبلی MFA را هنگام Publish حفظ کنید.</p>
+<p>کلید امنیت یا ServiceToken را در Git یا سند مشترک ذخیره نکنید. اگر provider محلی توسعه بدون کلید ثابت اجرا شود، توکن نشست و challenge OTP قبلی بعد از restart معتبر نیست. انتخاب MeliPayamakOtp بدون کلید پایدار در startup رد می‌شود. پایه Sms:Provider=Unavailable دارد؛ فایل خصوصی Production این انتشار provider واقعی را تنظیم می‌کند. RootPath در Production باید مطلق و پایدار باشد؛ خالی بودن آن fail-fast می‌شود. فایل واقعی Production ignored و نمونهٔ عمومی بدون secret است؛ Host دیگر به key ring MFA نیاز ندارد؛ فایل‌های قدیمی سرور تا cleanup مستقل حفظ شوند.</p>
 <p><a id="operations-current"></a></p>
 <h2 id="heading-29">قرارداد عملیاتی جاری: PH و انتشار دو محیط</h2>
-<h3 id="heading-30">تنظیم OTP و key ring</h3>
+<h3 id="heading-30">تنظیم OTP و Host</h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -1185,18 +1185,6 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 <tr>
 <td><code>Otp:Enabled</code> / <code>AllowMockAuthentication</code></td>
 <td>base/Development/Test فعلی false/true؛ Production نمونه true/false؛ Production/Staging هر ترکیب ناامن را رد می‌کنند</td>
-</tr>
-<tr>
-<td><code>Security:DataProtection:ApplicationName</code></td>
-<td>دقیقاً <code>MakanApp.BackofficeMfa.v1</code>؛ تغییر نام با deploy معمولی مجاز نیست</td>
-</tr>
-<tr>
-<td><code>Security:DataProtection:KeyRingPath</code></td>
-<td>مسیر مطلق persistent، جدا از Publish و Storage؛ برای host عملیاتی لازم</td>
-</tr>
-<tr>
-<td><code>Security:DataProtection:CertificatePath/CertificatePassword</code></td>
-<td>محافظ PFX؛ password از secret store. Windows بدون PFX از DPAPI کاربر جاری استفاده می‌کند</td>
 </tr>
 <tr>
 <td><code>Observability:OperationalMetrics:SnapshotIntervalSeconds</code></td>
@@ -1212,7 +1200,7 @@ dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --la
 </tr>
 </tbody>
 </table></div>
-<p>alias قدیمی <code>BackofficeSecurity:*</code> برای path/PFX/password معتبر است؛ دو خانوادهٔ هم‌زمان باید هم‌ارز باشند، تعارض startup را رد می‌کند. <code>DataProtectionKeyRingStartupValidator → DataProtectionKeyRingProbe</code> protect/unprotect همان provider میزبان را پیش از workerها بررسی می‌کنند. <code>/health/ready</code> نیز config/ring/SQL/storage را می‌سنجد. ring حذف‌شده از cache سالم فرض یا reseed نمی‌شود؛ XMLهای قدیمی و محافظشان برای بازیابی MFA لازم‌اند. <a href="operations/PRODUCTION_CONFIGURATION_RUNBOOK.md">قرارداد تنظیم کامل</a>.</p>
+<p>بخش‌های صرفاً MFA یعنی <code>BackofficeSecurity</code> و <code>Security:DataProtection</code> حذف شده‌اند؛ <code>/health/ready</code> تنظیمات معتبر، SQL و Storage را می‌سنجد. کلیدهای قدیمی سرور در این مرحله حذف نمی‌شوند. <a href="operations/PRODUCTION_CONFIGURATION_RUNBOOK.md">قرارداد تنظیم جاری</a>.</p>
 <h3 id="heading-31">worker، تراکنش و بازیابی</h3>
 <p>dispatcherهای Outbox، MessagingRealtime، Scheduled، NotificationDelivery و ReportExport از claim/lease و بازبینی مالکیت جاری استفاده می‌کنند. Outbox عمومی اثر durable و processed را در تراکنش کوتاه واحد ثبت می‌کند؛ realtime پیش از notifier نسل claim/rowversion و lease را می‌سنجد. <code>WorkerCompletionBudget</code> برای ثبت محدود نتیجه حداکثر ۵s است؛ cancellation، failure تجاری ساختگی نمی‌سازد. retry پس از انقضای lease مجوز overwrite نتیجهٔ owner جدید نیست.</p>
 <p><code>ReportExportOutputStore</code> bytes هر تلاش را بیرون تراکنش با key مستقل می‌نویسد؛ سپس job/claim را قفل و metadata canonical را منتشر می‌کند. Ready immutable و <code>FileAsset.Id == ReportExportJob.Id</code> ثابت است؛ بعد از crash می‌توان Ready را reuse کرد. قطع ACK به معنی rollback قطعی نیست و catch عمومی حق حذف فایل احتمالاً منتشرشده را ندارد. orphan candidateها به reconciliation مستقل نیاز دارند؛ root sweep وجود ندارد.</p>
@@ -1287,7 +1275,7 @@ $accessToken = $login.accessToken
 $otpCode = $null
 $me = Invoke-MakanApi -Method GET -Path '/me' -Token $accessToken
 </code></pre>
-<p>پاسخ 200 شامل accessToken/tokenType/expiresAtUtc/refreshToken/refreshExpiresAtUtc/user است. الزام تطبیق challenge، انقضا، supersede و OTP_ALREADY_USED مربوط به Real است. در هر دو حالت حساب معلق رد می‌شود، حساب جدید مطابق مسیر موجود می‌تواند ساخته شود و session/refresh/مجوزها عادی‌اند. کد ۴..۶۴ کاراکتر و بدون control character است و ارقام normalize می‌شوند. در Mock تکرار verify می‌تواند session جدید بسازد؛ تغییر flag نشست قبلی را revoke نمی‌کند. هیچ Role/Membership/MFA از Mock به‌دست نمی‌آید.</p>
+<p>پاسخ 200 شامل accessToken/tokenType/expiresAtUtc/refreshToken/refreshExpiresAtUtc/user است. الزام تطبیق challenge، انقضا، supersede و OTP_ALREADY_USED مربوط به Real است. در هر دو حالت حساب معلق رد می‌شود، حساب جدید مطابق مسیر موجود می‌تواند ساخته شود و session/refresh/مجوزها عادی‌اند. کد ۴..۶۴ کاراکتر و بدون control character است و ارقام normalize می‌شوند. در Mock تکرار verify می‌تواند session جدید بسازد؛ تغییر flag نشست قبلی را revoke نمی‌کند. هیچ Role/Membership از Mock به‌دست نمی‌آید.</p>
 <h3 id="heading-37">تکمیل پروفایل و خروج</h3>
 <pre><code class="language-powershell">$me = Invoke-MakanApi -Method PATCH -Path '/me/profile' -Token $accessToken -Body @{
     firstName = 'کاربر'
@@ -1670,8 +1658,8 @@ curl.exe --request POST &quot;$apiBase/files&quot; --header &quot;Authorization:
 </blockquote>
 <h3 id="heading-57">آغاز گفت‌وگو و مجوز ارتباط</h3>
 <p>تکمیل P0 حساب شخصی: OTP فقط مالکیت شماره را ثابت می‌کند و تکمیل Profile، تأیید سن نیست. <code>GET /api/v1/me/messaging-status</code> فقط وضعیت خود caller را با <code>verificationStatus</code>، <code>effectiveAgeCategory</code>، <code>allowedActions</code>، <code>nextAction</code> و <code>version</code> برمی‌گرداند. سن/Block/علت محدودیت شخص دیگر از این مسیر قابل دریافت نیست. فهرست action راهنمای وضعیت جاری است، نه مجوز مقصد؛ انتخاب workspace و سیاست جاری هر عملیات همچنان بررسی می‌شوند.</p>
-<p>برای تأیید اولیه حساب شخصیِ بدون مدرسه، اپراتور Platform دارای <code>platform.users.manage</code> و MFA/Step-up تازه از <code>GET /api/admin/v1/users/{userId}/communication-age</code> نسخه جاری را می‌گیرد و سپس <code>POST</code> همان مسیر با پسوند <code>/verifications</code> می‌زند. بدنه: <code>verifiedBirthDate</code> با تاریخ معتبر، <code>expectedVersion</code> برابر نسخه دریافتی و <code>reason</code> به‌عنوان مرجع شاهد مجاز، بدون درج PII. پاسخ <code>CommunicationAgeResult</code> تاریخ تولد ندارد. شاهد append-only، classification و Audit در transaction واحد ثبت می‌شوند؛ هیچ OrganizationPerson، Membership، Enrollment، Credential یا حساب دوم ساخته نمی‌شود.</p>
-<p>مسیر initial فقط <code>Unverified</code> را می‌پذیرد؛ <code>Verified/Conflict</code> با <code>409 AGE_VERIFICATION_CONFLICT</code> و نسخه کهنه با <code>412 CONCURRENCY_CONFLICT</code> رد می‌شوند. حل Conflict همچنان فقط مسیر مصوب <code>/communication-age/resolve</code> با Owner و MFA تازه است. عدم MFA با <code>MFA_REQUIRED</code> و step-up منقضی با <code>PLATFORM_STEP_UP_REQUIRED</code> رد می‌شود؛ denial معمول permission ممکن است فقط HTTP403 بدون body کاربردی داشته باشد. Migration لازم برای source اولیه پلتفرمی: <code>20261016050425_AddPersonalCommunicationAgeVerification</code>؛ اجرای آن روی Production در startup یا این مرحله انجام نمی‌شود.</p>
+<p>برای تأیید اولیه حساب شخصیِ بدون مدرسه، اپراتور Platform دارای <code>platform.users.manage</code> و نشست معتبر از <code>GET /api/admin/v1/users/{userId}/communication-age</code> نسخه جاری را می‌گیرد و سپس <code>POST</code> همان مسیر با پسوند <code>/verifications</code> می‌زند. بدنه: <code>verifiedBirthDate</code> با تاریخ معتبر، <code>expectedVersion</code> برابر نسخه دریافتی و <code>reason</code> به‌عنوان مرجع شاهد مجاز، بدون درج PII. پاسخ <code>CommunicationAgeResult</code> تاریخ تولد ندارد. شاهد append-only، classification و Audit در transaction واحد ثبت می‌شوند؛ هیچ OrganizationPerson، Membership، Enrollment، Credential یا حساب دوم ساخته نمی‌شود.</p>
+<p>مسیر initial فقط <code>Unverified</code> را می‌پذیرد؛ <code>Verified/Conflict</code> با <code>409 AGE_VERIFICATION_CONFLICT</code> و نسخه کهنه با <code>412 CONCURRENCY_CONFLICT</code> رد می‌شوند. حل Conflict همچنان فقط <code>/communication-age/resolve</code> با Owner، UsersManage، نشست معتبر، Reason و نسخه جاری است؛ عامل دوم حذف شده، نه permission یا حریم خصوصی. denial معمول permission ممکن است فقط HTTP403 بدون body کاربردی داشته باشد. Migration منبع اولیه <code>20261016050425_AddPersonalCommunicationAgeVerification</code> حفظ شده است.</p>
 <p>Adult فقط با <code>Verified</code>، Adult مؤثر است. Minor کمتر از ۱۸ و Unknown طبق GAP-05 محافظت می‌شوند. برای حساب محافظت‌شده، actionهای محدود به رابطه (<code>DiscoverRelatedUsers</code>، <code>CreateDirectWithAuthorizedRelationship</code>) با کشف عمومی/تماس غریبه یکسان نیستند؛ گروه خصوصی مجاز به معنی مجوز گروه عمومی یا کانال شخصی نیست. <code>version</code> نسخه وضعیت User است، نه permission token؛ تغییر هدف/نشست/زمان می‌تواند مجوز عملیاتی را مستقل تغییر دهد.</p>
 <p><code>POST /conversations/direct</code>:</p>
 <pre><code class="language-json">{
@@ -2207,7 +2195,7 @@ policy دقیق ساخت/عضویت Personal Group/Channel release blocker با�
 <p>Service Auth واقعی در شواهد پیشین PASS شده، ولی Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. Fake-AI/negative authorization/grounding محلی، این مانع را رفع‌شده اعلام نمی‌کند؛ <a href="ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md">وضعیت جاری</a> و <a href="release/BACKEND_FINAL_CONSOLIDATION_FA.md">Consolidation</a> مرجع تفکیک شواهد هستند.</p>
 <p><a id="persistence"></a></p>
 <h2 id="heading-70">نقشه persistence و مرز تراکنش‌ها</h2>
-<p><a href="../MakanApp.Infrastructure/Persistence/MakanDbContext.cs">MakanDbContext</a> و مدل طراحی فعلی 107 جدول و 1055 ستون دارند؛ 48 migration در مخزن است. برای PK/FK، index، CHECK و rowversion به <a href="database-current-structure.html">فرهنگ جاری دیتابیس</a> رجوع کنید؛ این شمارش تأیید schema یک سرور نیست.</p>
+<p><a href="../MakanApp.Infrastructure/Persistence/MakanDbContext.cs">MakanDbContext</a> و مدل طراحی فعلی 105 جدول دارند؛ 49 migration در مخزن است. برای PK/FK، index، CHECK و rowversion به <a href="database-current-structure.html">فرهنگ جاری دیتابیس</a> رجوع کنید؛ این شمارش تأیید schema یک سرور نیست.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -2364,7 +2352,7 @@ policy دقیق ساخت/عضویت Personal Group/Channel release blocker با�
 </table></div>
 <p>ارسال SMS در <code>RequestOtpAsync</code> قبل از ذخیره challenge است و در transaction طولانی SQL انجام نمی‌شود. اگر provider موفق شود ولی ذخیره SQL شکست بخورد، SMS رسیده الزاماً challenge قابل تأیید در backend ندارد. retry کور ارسال پیامک را پیشنهاد نکنید. storage فایل هم transaction مشترک اتمیک با SQL Server ندارد؛ مسیرهای جبران و وضعیت FileAsset در <code>StorageService</code> بررسی شوند.</p>
 <h3 id="heading-74">migration و محیط توسعه</h3>
-<p>48 migration تا <code>20261017033804_AddConversationChecklists</code> مدل فعلی را می‌سازند؛ startup Migrate/EnsureCreated اجرا نمی‌کند. MakanDbContextFactory از ConnectionStrings__MakanDatabase می‌خواند. تغییر schema با principal جدا و artifact SQL بررسی‌شده انجام شود؛ tools/production/export-migration-sql.ps1 منطق batch لازم را نگه می‌دارد. این همگام‌سازی migration جدید نمی‌سازد یا روی سرور اجرا نمی‌کند.</p>
+<p>49 migration تا <code>20261024184613_RemovePlatformMfa</code> مدل فعلی را می‌سازند؛ startup Migrate/EnsureCreated اجرا نمی‌کند. MakanDbContextFactory از ConnectionStrings__MakanDatabase می‌خواند. تغییر schema با principal جدا و artifact SQL بررسی‌شده انجام شود؛ tools/production/export-migration-sql.ps1 منطق batch لازم را نگه می‌دارد. Migration حذف عامل دوم تولید شده است؛ اجرای آن روی دیتابیس اصلی یا سرور مجوز جدا می‌خواهد و در این مرحله انجام نشده است.</p>
 <p>برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر <strong>الگوی توسعه</strong> است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:</p>
 <pre><code class="language-powershell">dotnet tool restore
 dotnet tool run dotnet-ef migrations add DescribeActualSchemaChange --project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj --startup-project MakanApp.Infrastructure/MakanApp.Infrastructure.csproj
@@ -2558,7 +2546,7 @@ dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj -
 <p>برای خطای ناشناخته، traceId پاسخ را با log متناظر دنبال کنید. connection string، token، OTP و URL حاوی ServiceToken را در گزارش مشترک قرار ندهید. در EF store مربوط query scope، SQL exception و تغییرات tracked را بررسی کنید؛ نسخه و شناسه مصنوعی مثال‌های این کتاب، داده واقعی پایگاه شما نیستند.</p>
 <h3 id="heading-86">مرز میزبانی و موارد لازم برای تحویل عملیاتی</h3>
 <p>میزبان migrations را اجرا نمی‌کند؛ /health و /health/live فقط liveness و /health/ready شامل probe SQL و Storage است. Swagger/OpenAPI در Production پیش‌فرض خاموش‌اند. Storage پایدار خارج Publish و CORS allowlist بدون credentials لازم‌اند. handler فقط Bearer header را می‌خواند؛ query-token مرورگر برای SignalR پشتیبانی نمی‌شود. LongPolling با header و withCredentials:false را مطابق <a href="frontend-contract/README.md">قرارداد مصرف API</a> بررسی کنید.</p>
-<p>UseForwardedHeaders با KnownProxies صریح و ForwardLimit=1 وجود دارد؛ اعتماد عمومی به proxy مجاز نیست. runtime principal SQL و migration principal جدا باشند. Backup دیتابیس بدون Storage و custody کلیدهای Identity/MFA کافی نیست. هیچ موفقیت تست یا دستور این کتاب اثبات IIS واقعی، تحویل SMS، recovery محیط هدف یا آماده‌بودن چند instance نیست. HTTP این انتشار استثنای صریح مالک است و رمزگذاری ندارد.</p>
+<p>UseForwardedHeaders با KnownProxies صریح و ForwardLimit=1 وجود دارد؛ اعتماد عمومی به proxy مجاز نیست. runtime principal SQL و migration principal جدا باشند. Backup دیتابیس بدون Storage و custody کلید Identity و Secretهای فعال کافی نیست. هیچ موفقیت تست یا دستور این کتاب اثبات IIS واقعی، تحویل SMS، recovery محیط هدف یا آماده‌بودن چند instance نیست. HTTP این انتشار استثنای صریح مالک است و رمزگذاری ندارد.</p>
 <p><a id="testing"></a></p>
 <h2 id="heading-87">تست و عیب‌یابی</h2>
 <h3 id="heading-88">اجرای validation</h3>
@@ -2648,7 +2636,7 @@ dotnet test tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj --c
 <p>تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.</p>
 <h3 id="heading-92">دیتابیس و منابع کد</h3>
 <p>Persistence با <code>MakanDbContext</code> و schemaهای <code>identity</code>، <code>organization</code>، <code>guardian</code>، <code>academic</code>، <code>assessment</code>، <code>storage</code> و <code>messaging</code> سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با <code>rowversion</code> و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.</p>
-<p>برای جزئیات مدل، <a href="database-current-structure.html">راهنمای ساختار دیتابیس</a> را کنار migrationها بخوانید؛ بازبینی جاری آن 107 جدول و 48 migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.</p>
+<p>برای جزئیات مدل، <a href="database-current-structure.html">راهنمای ساختار دیتابیس</a> را کنار migrationها بخوانید؛ بازبینی جاری آن 105 جدول و 49 migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.</p>
 <p>مسیر مطالعه یک جریان واقعی آزمون:</p>
 <ol>
 <li><a href="../MakanApp.Api/Controllers/ExamsController.cs">ExamsController</a> و <a href="../MakanApp.Api/Controllers/ExamGradingsController.cs">ExamGradingsController</a> برای قرارداد HTTP.</li>
@@ -2676,7 +2664,7 @@ python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --
 <h2 id="heading-94">شناسنامه تاریخی تحویل ۲۰۲۶-۱۰-۱۲ و نتیجه همان اجرا</h2>
 <p>این تحویل در <code>2026-10-12</code> بر مبنای سورس <code>main@f0ff3be</code> انجام شده است. تغییرات این مرحله مستندات و ابزار ساخت خروجی‌اند؛ کد محصول، frontend و schema تغییر نکرده‌اند. هیچ migration تازه ساخته یا روی دیتابیس عادی/Production اعمال نشده است.</p>
 <p>restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.</p>
-<p>شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از 325 عملیات، 552 schema و مدل طراحی 107 جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.</p>
+<p>شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از 318 عملیات، 547 schema و مدل طراحی 105 جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.</p>
 <p>این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.</p>
 <p><a id="asynchronous-report-exports"></a></p>
 <h2 id="heading-95">خروجی غیرهم‌زمان گزارش‌ها — STEP 11C</h2>
@@ -3251,12 +3239,12 @@ Direct دو طرف و در Group/Channel participantهای فعال بررسی �
 </tr>
 </tbody>
 </table></div>
-<p>انتشار PlanVersion و override اشتراک به step-up و Reason نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API پرداخت موفق دستی، refund یا reconciliation ساختگی وجود ندارد. عملیات مدیریتی notification/job نیز read-only و بدون token، شماره کامل یا متن اعلان‌اند. دوازده API مستقل Backend AI وجود دارند، اما منوی مدیریتی/محتوای AI عمومی از نقش Platform نتیجه نمی‌شود؛ Service Auth قبلی PASS و Parent Provider Timeout، Full-12 و RAG lifecycle deferred هستند.</p>
+<p>انتشار PlanVersion و override اشتراک به permission مخصوص و Reason نیاز دارند. نسخه منتشرشده immutable است و override تاریخچه را بازنویسی یا داده آموزشی را حذف نمی‌کند. Finance فقط read است؛ API پرداخت موفق دستی، refund یا reconciliation ساختگی وجود ندارد. عملیات مدیریتی notification/job نیز read-only و بدون token، شماره کامل یا متن اعلان‌اند. دوازده API مستقل Backend AI وجود دارند، اما منوی مدیریتی/محتوای AI عمومی از نقش Platform نتیجه نمی‌شود؛ Service Auth قبلی PASS و Parent Provider Timeout، Full-12 و RAG lifecycle deferred هستند.</p>
 <h3 id="heading-106">صفحه‌بندی، خطا و رفتار حساس</h3>
 <ul>
 <li>listها server-side هستند؛ مقدار پیش‌فرض اغلب <code>page=1&amp;pageSize=30</code> است، membership/audit پیش‌فرض ۵۰ دارند و سقف معتبر در Application enforce می‌شود. sort فقط در مسیرهایی که صریحاً ارائه شده و فقط از allowlist پذیرفته می‌شود.</li>
-<li>پاسخ خطا <code>ProblemDetails</code> با کد پایدار دارد. <code>401</code> یعنی Bearer session نامعتبر/منقضی، <code>403</code> یعنی permission یا step-up ناکافی، <code>404</code> برای resource غیرقابل مشاهده/ناموجود، <code>409</code> برای conflict یا last-owner/last-manager، <code>412</code> برای concurrency/version mismatch، <code>422</code> برای validation، <code>429</code> برای rate limit و <code>503</code> برای dependency fail-closed است.</li>
-<li>در runtime جاری EfPlatformMfaAssurance و جریان واقعی TOTP/recovery/step-up از GAP-04 فعال‌اند؛ نبود عامل، freshness یا محافظ معتبر همچنان fail-closed است. <a href="release/GAP_04_BACKOFFICE_TOTP_MFA.md">قرارداد کامل</a>؛ TOTP ورود مدرسه یا SMS MFA موازی ساخته نشده است.</li>
+<li>پاسخ خطا <code>ProblemDetails</code> با کد پایدار دارد. <code>401</code> یعنی Bearer session نامعتبر/منقضی، <code>403</code> یعنی permission ناکافی، <code>404</code> برای resource غیرقابل مشاهده/ناموجود، <code>409</code> برای conflict یا last-owner/last-manager، <code>412</code> برای concurrency/version mismatch، <code>422</code> برای validation، <code>429</code> برای rate limit و <code>503</code> برای dependency fail-closed است.</li>
+<li>در runtime جاری عامل دوم وجود ندارد؛ ورود OTP، نشست معتبر، Platform permission و بازبینی جاری User/Session در عملیات حساس برقرارند. هیچ bypass یا مجوز جدیدی برای نقش مدرسه ساخته نشده است.</li>
 <li>تمام شناسه‌های client فقط selector هستند. permission، scope، membership، اتصال evidence و state جاری از SQL Server resolve می‌شوند.</li>
 <li>OpenAPI جاری در <code>/openapi/v1.json</code> قرارداد transport را منتشر می‌کند؛ نام DTOهای جدول بالا مرجع schemaهای دقیق است.</li>
 </ul>
@@ -3304,7 +3292,7 @@ Direct دو طرف و در Group/Channel participantهای فعال بررسی �
 </tr>
 </tbody>
 </table></div>
-<p><code>VerifyOtpCommand</code> فیلد اختیاری <code>DeviceName</code> دارد. access پیش‌فرض ۳۶۰۰ ثانیه و absolute/refresh پیش‌فرض ۲۵۹۲۰۰۰ ثانیه است و از configuration خوانده می‌شود. OTP ورود assurance اولیه است و به‌تنهایی MFA محسوب نمی‌شود.</p>
+<p><code>VerifyOtpCommand</code> فیلد اختیاری <code>DeviceName</code> دارد. access پیش‌فرض ۳۶۰۰ ثانیه و absolute/refresh پیش‌فرض ۲۵۹۲۰۰۰ ثانیه است و از configuration خوانده می‌شود. OTP ورود نشست اولیه را می‌سازد؛ MFA و Step-Up در کد فعال وجود ندارند.</p>
 <h3 id="heading-110">Health و رفتار میزبانی</h3>
 <div class="table-wrap"><table>
 <thead>
@@ -3328,7 +3316,7 @@ Direct دو طرف و در Group/Channel participantهای فعال بررسی �
 <tr>
 <td><code>GET /health/ready</code></td>
 <td>آمادگی دریافت traffic</td>
-<td>config، key ring پایدار، SQL Server و persistent storage</td>
+<td>config معتبر، SQL Server و persistent storage</td>
 </tr>
 </tbody>
 </table></div>

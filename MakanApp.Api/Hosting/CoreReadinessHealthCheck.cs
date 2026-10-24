@@ -8,7 +8,6 @@ namespace MakanApp.Api.Hosting;
 public sealed class CoreReadinessHealthCheck(
     MakanDbContext dbContext,
     IStorageReadinessProbe storageReadinessProbe,
-    DataProtectionKeyRingProbe keyRingProbe,
     IConfiguration configuration,
     IHostEnvironment environment) : IHealthCheck
 {
@@ -19,11 +18,6 @@ public sealed class CoreReadinessHealthCheck(
         try
         {
             ProductionConfigurationValidator.Validate(configuration, environment.EnvironmentName);
-            if (!await keyRingProbe.IsReadyAsync(cancellationToken))
-            {
-                return HealthCheckResult.Unhealthy("key ring پایدار در دسترس نیست.");
-            }
-
             if (!await dbContext.Database.CanConnectAsync(cancellationToken))
             {
                 return HealthCheckResult.Unhealthy("SQL Server در دسترس نیست.");

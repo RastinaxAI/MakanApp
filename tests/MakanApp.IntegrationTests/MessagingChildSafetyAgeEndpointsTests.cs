@@ -61,11 +61,6 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(HttpStatusCode.Forbidden, schoolResolve.StatusCode);
         using var ownerClient = factory.CreateClient(); var owner = await CreateMessagingUserAsync(ownerClient);
         await factory.BootstrapPlatformOwnerAsync(owner.UserId);
-        factory.PlatformStepUp.SetSatisfied(false);
-        using var noStepUp = await ownerClient.PostAsJsonAsync($"/api/admin/v1/users/{child.UserId}/communication-age/resolve",
-            new VerifyCommunicationAgeCommand(new DateOnly(2015, 1, 1), state.Version, "حل با مدرک معتبر"), JsonOptions);
-        Assert.Equal(HttpStatusCode.Forbidden, noStepUp.StatusCode);
-        factory.PlatformStepUp.SetSatisfied(true);
         using var resolved = await ownerClient.PostAsJsonAsync($"/api/admin/v1/users/{child.UserId}/communication-age/resolve",
             new VerifyCommunicationAgeCommand(new DateOnly(2015, 1, 1), state.Version, "حل با مدرک معتبر"), JsonOptions);
         resolved.EnsureSuccessStatusCode();

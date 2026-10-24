@@ -80,7 +80,7 @@ Mock Verify: همان Controller → IdentityService → normalize شماره �
 → resolve/create عادی User و MobileCredential → کنترل suspension → session/refresh عادی → HTTP.
 
 توکن کاربر opaque session token است، نه JWT نقش‌دار. Mock نقش یا Membership/Enrollment/GuardianRelation
-ایجاد نمی‌کند و session را MultiFactor نمی‌کند. permission، workspace، tenant و MFA موجود همچنان بررسی می‌شوند.
+ایجاد نمی‌کند و مجوز Platform خودکار ایجاد نمی‌کند. permission، workspace و tenant موجود همچنان بررسی می‌شوند.
 
 ## ۶. دیتابیس
 
@@ -135,7 +135,7 @@ adapter دفاعی Unavailable ثبت می‌شود؛ اگر مسیر Mock اش�
 
 Unit: محیط Production/Staging/ناشناخته، نبود مجوز مستقل، تنظیم نامعتبر، default امن، Options و adapter بدون SMS،
 و رد فعال‌سازی legacy. Integration: شمارهٔ غیرواقعی و normalize ارقام فارسی، کدهای مختلف بدون challenge،
-resolve حساب بدون duplicate، refresh واقعی، suspension و MFA، نبود OTP row، privacy log،
+resolve حساب بدون duplicate، refresh واقعی، suspension و permission جاری، نبود OTP row، privacy log،
 نادیده‌گرفتن challenge منقضی در Mock و رد شناسهٔ Mock در Real.
 تست قدیمی composition کد ثابت به تست رد آن تنظیم منسوخ تبدیل شد؛ حفاظت SMS با تست‌های جدید جایگزین شد.
 suite قبلی Authentication با Otp:Enabled=true اجرا می‌شود تا Mock اشکال آن را پنهان نکند.
@@ -181,7 +181,7 @@ Mock روی Production/Staging حتی با AllowMockAuthentication=true اجرا
 ## ۱۴. نکات آموزشی
 
 1. شکل DTO را می‌توان بدون ایجاد دادهٔ امنیتی ساختگی حفظ کرد؛ شکل challenge، اثبات challenge نیست.
-2. غیرفعال‌کردن عامل احراز هویت، مجوز tenant یا MFA را غیرفعال نمی‌کند.
+2. غیرفعال‌کردن عامل احراز هویت، مجوز tenant یا Platform را غیرفعال نمی‌کند.
 3. flag منفی به محافظ مستقل deployment نیاز دارد؛ پیش‌فرض false در Production باید fail-closed باشد.
 4. تست مسیر Real را صریحاً Real اجرا کنید؛ Mock نباید تست امنیتی را به‌طور اتفاقی سبز کند.
 5. تنظیم متناقض قدیمی را رد کنید؛ ترتیب config نباید روش احراز هویت را مبهم کند.

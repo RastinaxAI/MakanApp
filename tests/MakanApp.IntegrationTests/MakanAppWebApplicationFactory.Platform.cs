@@ -11,7 +11,6 @@ public sealed partial class MakanAppWebApplicationFactory
 {
     public async Task ResetPlatformIamAsync()
     {
-        PlatformStepUp.SetSatisfied(true);
         await using var scope = Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
         await dbContext.AdminAuditLogs.ExecuteDeleteAsync();
@@ -118,26 +117,4 @@ public sealed partial class MakanAppWebApplicationFactory
             .Select(message => message.DeletedAtUtc != null)
             .SingleAsync();
     }
-}
-
-public sealed class PlatformStepUpTestControl
-{
-    private int _satisfied = 1;
-
-    public bool IsSatisfied => Volatile.Read(ref _satisfied) == 1;
-
-    public void SetSatisfied(bool satisfied) =>
-        Interlocked.Exchange(ref _satisfied, satisfied ? 1 : 0);
-}
-
-public sealed class TestPlatformStepUpAuthorization(PlatformStepUpTestControl control)
-    : IPlatformStepUpAuthorization, IPlatformMfaAssurance
-{
-    // تست‌های legacy IAM عامل امنیتی را شبیه‌سازی می‌کنند؛ suite جدید MFA هر دو port را واقعی جایگزین می‌کند.
-    Task<bool> IPlatformMfaAssurance.IsSatisfiedAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken) => Task.FromResult(true);
-    public Task<bool> IsSatisfiedAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken) =>
-        Task.FromResult(control.IsSatisfied);
 }

@@ -416,7 +416,6 @@ public sealed class ProductionObservabilityTests
                 ["ConnectionStrings:MakanDatabase"] = connectionString ?? "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_PH3_OnlyTestHost;Integrated Security=True;Encrypt=True;TrustServerCertificate=False",
                 ["Identity:SecurityKey"] = new string('P', 32),
                 ["Storage:RootPath"] = Path.Combine(testRoot, "storage"),
-                ["Security:DataProtection:KeyRingPath"] = Path.Combine(testRoot, "keys"),
                 ["Sms:Provider"] = "Unavailable",
                 ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
                 ["AllowedHosts"] = "localhost",

@@ -96,7 +96,6 @@ public sealed class TestConfigurationSchemaTests
     [Theory]
     [InlineData("ConnectionStrings", "MakanDatabase")]
     [InlineData("Identity", "SecurityKey")]
-    [InlineData("Security", "DataProtection", "CertificatePassword")]
     [InlineData("Sms", "MeliPayamakOtp", "ServiceToken")]
     public void TestSecretSlots_RemainEmptyRatherThanCopyingProductionCredentials(params string[] path)
     {

@@ -5,7 +5,6 @@ namespace MakanApp.Application.Platform;
 
 public sealed class PlatformOperationsService(
     IPlatformOperationsStore store,
-    IPlatformStepUpAuthorization stepUpAuthorization,
     TimeProvider timeProvider) : IPlatformOperationsService
 {
     public Task<PlatformOrganizationPage> GetOrganizationsAsync(
@@ -63,7 +62,6 @@ public sealed class PlatformOperationsService(
                 null,
                 command.Reason),
             correlationId,
-            requireStepUp: false,
             cancellationToken);
 
     public Task<PlatformProvisioningResult> ProvisionAsync(
@@ -77,7 +75,6 @@ public sealed class PlatformOperationsService(
             actorSessionId,
             command,
             correlationId,
-            requireStepUp: command.PlanVersionId.HasValue,
             cancellationToken);
 
     public Task<PlatformOrganizationMutationResult> SuspendOrganizationAsync(
@@ -235,7 +232,6 @@ public sealed class PlatformOperationsService(
         Guid actorSessionId,
         ProvisionOrganizationCommand command,
         string correlationId,
-        bool requireStepUp,
         CancellationToken cancellationToken)
     {
         ValidateReason(command.Reason);
@@ -252,11 +248,6 @@ public sealed class PlatformOperationsService(
             command.InitialManagerUserId.HasValue && !command.InvitationExpiresAtUtc.HasValue)
         {
             throw Error(PlatformErrorCodes.QueryInvalid, "درخواست provisioning معتبر نیست.");
-        }
-
-        if (requireStepUp)
-        {
-            await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         }
 
         return await store.ProvisionAsync(
@@ -280,7 +271,6 @@ public sealed class PlatformOperationsService(
         CancellationToken cancellationToken)
     {
         ValidateReason(reason);
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.SetOrganizationActiveAsync(
             Actor(actorUserId, actorSessionId, correlationId),
             RequireId(organizationId),
@@ -299,21 +289,12 @@ public sealed class PlatformOperationsService(
         CancellationToken cancellationToken)
     {
         ValidateReason(reason);
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.SetUserActiveAsync(
             Actor(actorUserId, actorSessionId, correlationId),
             RequireId(userId),
             active,
             reason.Trim(),
             cancellationToken);
-    }
-
-    private async Task EnsureStepUpAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken)
-    {
-        if (!await stepUpAuthorization.IsSatisfiedAsync(userId, sessionId, cancellationToken))
-        {
-            throw Error(PlatformErrorCodes.StepUpRequired, "برای این عملیات احراز هویت تقویت‌شده لازم است.");
-        }
     }
 
     private PlatformActorContext Actor(Guid userId, Guid sessionId, string correlationId)

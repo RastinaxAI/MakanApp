@@ -2,17 +2,17 @@
 
 ## افزودهٔ عملیات PH و ورود دو محیط
 
-ورود همچنان همان Bearer session است؛ Test/Mock مجوز Platform یا MFA نمی‌سازد. پس از login، me و MFA/step-up و permission جاری باید resolve شوند. مسیر Production از OTP واقعی استفاده می‌کند؛ UI از شکل challenge نباید محیط یا موفقیت OTP واقعی را حدس بزند.
+ورود همچنان همان Bearer session است؛ Test/Mock مجوز Platform نمی‌سازد. پس از login، me و permission جاری resolve می‌شوند؛ عامل دوم و Step-Up حذف شده‌اند. مسیر Production از OTP واقعی استفاده می‌کند؛ UI از شکل challenge نباید محیط یا موفقیت OTP واقعی را حدس بزند.
 
 | GET /api/admin/v1/operations/... | permission | رفتار مصرف |
 |---|---|---|
-| `health` | OperationsRead | SQL/Storage و ring به‌صورت runtime؛ providerها و AI عمدتاً وضعیت تنظیم؛ DataProtection=Available/Unavailable/DevelopmentOnly بدون path/key؛ HTTP200 به‌تنهایی سبزبودن همه موارد نیست |
+| `health` | OperationsRead | SQL/Storage به‌صورت runtime؛ providerها و AI عمدتاً وضعیت تنظیم؛ HTTP200 به‌تنهایی سبزبودن همه موارد نیست |
 | `jobs` | OperationsRead | Counts و OldestPendingAtUtc قبلی + Queues تفکیک‌شده با PendingCount/ProcessingCount/FailedCount و سن oldest؛ Scheduled آینده backlog overdue نیست |
 | `notifications` | NotificationsRead | PendingCount/ProcessingCount/DeferredCount/FailedCount، OldestQueuedAgeSeconds، availability providerها و RecentFailures؛ پذیرش provider معادل دریافت دستگاه نیست |
 
 FileCleanup=Enabled/Disabled فقط تنظیم را نشان می‌دهد و نه حذف موفق یا مجوز روشن‌کردن آن. مقدار ناشناختهٔ آینده را امن نمایش دهید. reset attempt، purge history یا موفق‌کردن دستی payment/job از این APIها نتیجه نمی‌شود. [worker recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md)، [metrics و stale snapshot](../production/OBSERVABILITY.md)، [retention](../operations/RETENTION_AND_CLEANUP_POLICY.md).
 
-بازبینی `2026-10-23` از `main@5885d11`؛ شامل Backoffice، TOTP واقعی، Child Safety و قرارداد عملیات PH است. گزارش‌های STEP15E تاریخچه‌اند؛ این سند فقط مصرف API را توضیح می‌دهد. [مرجع کامل HTTP/DTO](../backend-api-reference.md).
+بازبینی `2026-10-24` از `main@e525c78` به‌همراه حذف عامل دوم؛ شامل Backoffice، Child Safety و قرارداد عملیات PH است. گزارش‌های STEP15E و GAP-04 تاریخچه‌اند؛ قرارداد جاری ورود فقط OTP/Session/Platform permission است. [مرجع کامل HTTP/DTO](../backend-api-reference.md).
 
 ## مرز محصول
 
@@ -29,7 +29,7 @@ Backoffice از همان Bearer session احرازشده‌ی Identity استف�
 
 1. `GET /api/admin/v1/me` را فراخوانی کنید.
 2. در `401` کاربر را به ورود برگردانید.
-3. در `403` کد خطا را بررسی کنید: `MFA_REQUIRED` به جریان MFA می‌رود؛ نبود permission همان «دسترسی Backoffice ندارید» است. نقش سازمانی fallback نیست.
+3. در `403` دسترسی Platform وجود ندارد؛ نقش سازمانی fallback نیست و جریان Authenticator اجرا نمی‌شود.
 4. navigation را از `permissions` پاسخ بسازید.
 
 bootstrap اولین Owner یک فرمان عمومی HTTP نیست. اجرای آن out-of-band و از command-line host انجام می‌شود و پس از ایجاد اولین Owner بسته می‌ماند.
@@ -54,13 +54,12 @@ bootstrap اولین Owner یک فرمان عمومی HTTP نیست. اجرای 
 
 برای AI منوی مدیریتی، prompt viewer یا دسترسی تازه نسازید. Backend در حوزهٔ مستقل AI دوازده API دارد، اما API مدیریتی Backoffice AI و مجوز عمومی محتوا از این نقش‌ها ایجاد نشده است. real E2E و RAG lifecycle بسته‌شده فرض نشوند؛ اظهارات legacy در STEP 15E متعلق به همان زمان‌اند.
 
-## جریان واقعی MFA و Step-up پس از GAP-04
+## ورود Platform بدون عامل دوم — ۲۰۲۶-۱۰-۲۴
 
-روش جاری TOTP Authenticator و recovery است؛ SMS ورود MFA نیست. در MFA_REQUIRED وضعیت GET /api/admin/v1/mfa خوانده شود؛ enrollment و enrollment/confirm عامل را فعال می‌کنند. برای عامل موجود verify و برای recovery مسیر recovery/verify اختصاصی وجود دارد. recovery-codes/regenerate و users/{userId}/reset فقط با قواعد سروری مجازند. مسیرها زیر /api/admin/v1/mfa و schema دقیق در مرجع جاری است.
-
-SetupUri و recovery code فقط در پاسخ اختصاصی یک‌بار نمایش داده می‌شوند؛ در telemetry، URL، storage ناامن یا screenshot مشترک نمانند. assurance و freshness به همان Session تعلق دارند؛ refresh یا نشست دیگر step-up تازه نمی‌سازد. PLATFORM_STEP_UP_REQUIRED به verify تازه و سپس retry همان عملیات با قرارداد idempotency مربوط نیاز دارد. counter/replay/lockout در SQL اعمال می‌شود؛ کد مصرف‌شده را کور retry نکنید.
-
-MFA_UNAVAILABLE نشانهٔ نبود محافظ/key ring قابل استفاده است، نه مجوز عبور. مسیر، identity و DPAPI/certificate را اپراتور حفظ کند. [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) و [استقرار](../production/DEPLOYMENT_IIS.md).
+طبق تصمیم مالک، Authenticator/TOTP، enrollment، Recovery Code، reset و Step-Up از کد فعال حذف شده‌اند؛ bypass جدیدی ساخته نشده است.
+جریان مصرف: OTP موجود → Session → `GET /api/admin/v1/me` → در 200 نقش‌ها/مجوزها و پنل؛ در 401 ورود مجدد؛ در 403 عدم دسترسی.
+Frontend نباید صفحه یا فراخوانی `/api/admin/v1/mfa/*` و handling عامل دوم داشته باشد. School Manager بدون Platform permission همچنان 403 می‌گیرد.
+گزارش GAP-04 سابقهٔ تاریخی است؛ [تصمیم جاری و اثر Migration](PLATFORM_AUTHENTICATION_CHANGE_FA.md) مرجع جدید است.
 
 ## الگوی list/detail
 
@@ -73,24 +72,21 @@ MFA_UNAVAILABLE نشانهٔ نبود محافظ/key ring قابل استفاد�
 
 ## APIهای نوشتن و confirmation
 
-عملیات زیر به permission مدیریت، `Reason` معتبر و در موارد حساس به step-up نیاز دارند:
+همهٔ مجوزهای مدیریت، `Reason`، هم‌زمانی، Audit و محافظ آخرین Owner/Manager حفظ شده‌اند؛ Step-Up وجود ندارد.
 
-| عملیات | Permission | Reason | Step-up |
-|---|---|---:|---:|
-| grant/revoke نقش پلتفرم | `platform.roles.manage` | بله | بله |
-| suspend/reactivate سازمان | `platform.organizations.manage` | بله | بله |
-| ساخت سازمان | `platform.organizations.manage` | بله | فقط هنگام اتصال PlanVersion |
-| provisioning با Subscription | `platform.provisioning.manage` | بله | بله |
-| تغییر/پایان عضویت و دعوت | `platform.organizations.manage` | بله | بر حسب عملیات؛ قواعد server مرجع‌اند |
-| suspend/reactivate کاربر | `platform.users.manage` | بله | بله |
-| revoke نشست | `platform.sessions.manage` | بله | خیر |
-| ساخت Plan/PlanVersion | `platform.commerce.manage` | بله | خیر |
-| publish PlanVersion | `platform.commerce.manage` | بله | بله |
-| override اشتراک | `platform.commerce.manage` | بله | بله |
-| review/resolve/dismiss پرونده | `platform.moderation.review` | بله | خیر |
-| حذف محتوای case-scoped | review + `platform.moderation.enforce` | بله | خیر |
+| عملیات | Permission | Reason |
+|---|---|---:|
+| grant/revoke نقش پلتفرم | `platform.roles.manage` | بله |
+| suspend/reactivate یا ساخت سازمان | `platform.organizations.manage` | بله |
+| provisioning با Subscription | `platform.provisioning.manage` | بله |
+| تغییر/پایان عضویت و دعوت | `platform.organizations.manage` | بله |
+| suspend/reactivate کاربر | `platform.users.manage` | بله |
+| revoke نشست | `platform.sessions.manage` | بله |
+| ساخت/انتشار PlanVersion و override اشتراک | `platform.commerce.manage` | بله |
+| review/resolve/dismiss پرونده | `platform.moderation.review` | بله |
+| حذف محتوای case-scoped | review + `platform.moderation.enforce` | بله |
 
-UI باید پیش از mutation حساس خلاصه‌ی اثر، target صریح و Reason را نشان دهد. از GAP-04، در `PLATFORM_STEP_UP_REQUIRED` verify واقعی TOTP/recovery انجام و سپس همان عملیات با context جاری retry می‌شود. در `MFA_REQUIRED` ابتدا status/enrollment را بررسی کنید؛ نبود key ring با `MFA_UNAVAILABLE` باید به اپراتور ارجاع شود، نه bypass. [قرارداد کامل](../release/GAP_04_BACKOFFICE_TOTP_MFA.md).
+UI همچنان خلاصهٔ اثر، target صریح و Reason را نشان می‌دهد؛ شکست permission مجوز retry خودکار یا fallback به نقش مدرسه نیست.
 
 ## stateهای HTTP
 
@@ -99,7 +95,7 @@ UI باید پیش از mutation حساس خلاصه‌ی اثر، target صری
 | Status | رفتار UI |
 |---:|---|
 | `401` | session نامعتبر/منقضی؛ ورود مجدد |
-| `403` | permission یا step-up کافی نیست؛ پیام مجوز و عدم retry خودکار |
+| `403` | permission کافی نیست؛ پیام مجوز و عدم retry خودکار |
 | `404` | منبع وجود ندارد یا باید از actor پنهان بماند؛ detail را ببندید |
 | `409` | state/idempotency/last-owner/last-manager conflict؛ داده را refresh کنید |
 | `412` | precondition/rowversion conflict در قراردادهای مشترک؛ نسخه‌ی جدید را بگیرید. endpointهای Backoffice فعلی عمدتاً conflict را با `409` می‌دهند |
@@ -182,7 +178,7 @@ Health یک مشاهده‌ی امن از وضعیت adapter و queue است، �
 
 ### افزوده قرارداد GAP-05
 
-جزئیات در [قرارداد ایمنی کودک](../architecture/GAP_05_MESSENGER_CHILD_SAFETY.md) است. detail پرونده `contextMessages` محدود به ۲ قبل/۲ بعد دارد؛ برای مرور عمومی چت استفاده نشود. درخواست `expanded-context` فقط پس از escalation/claim، با permission قوی‌تر، reason، نسخه و Step-up تازه ممکن است. `actions` فقط Warned/MessagingRestricted/Escalated را می‌پذیرد؛ برای محدودیت، پایان UTC لازم است. 422 ایمنی یعنی پیام معمولی منتشر نشده؛ ReviewRequired را Sent نمایش ندهید. `AGE_VERIFICATION_CONFLICT` نیازمند حل Owner است؛ فرم مدرسه نباید retry کور برای overwrite انجام دهد. Frontend یا نقش Manager هیچ راه میان‌بری برای مشاهده private Direct ندارد.
+جزئیات در [قرارداد ایمنی کودک](../architecture/GAP_05_MESSENGER_CHILD_SAFETY.md) است. detail پرونده `contextMessages` محدود به ۲ قبل/۲ بعد دارد؛ برای مرور عمومی چت استفاده نشود. درخواست `expanded-context` فقط پس از escalation/claim، با permission قوی‌تر، reason، نسخه و نشست معتبر ممکن است. `actions` فقط Warned/MessagingRestricted/Escalated را می‌پذیرد؛ برای محدودیت، پایان UTC لازم است. 422 ایمنی یعنی پیام معمولی منتشر نشده؛ ReviewRequired را Sent نمایش ندهید. `AGE_VERIFICATION_CONFLICT` نیازمند حل Owner است؛ فرم مدرسه نباید retry کور برای overwrite انجام دهد. Frontend یا نقش Manager هیچ راه میان‌بری برای مشاهده private Direct ندارد.
 
 - [تصمیم‌های محصول Backoffice](../architecture/BACKOFFICE_PRODUCT_DECISIONS.md)
 - [IAM و Owner](../architecture/STEP_15A_PLATFORM_IAM_OWNER_FOUNDATION.md)
@@ -193,4 +189,4 @@ Health یک مشاهده‌ی امن از وضعیت adapter و queue است، �
 
 ## افزوده‌های Messenger پس از تحویل اولیه
 
-تأیید رسمی اولیه سن و وضعیت self طبق Handoff P0 وجود دارند؛ policy جاری GAP-05 و مجوز UsersManage/MFA مربوط ملاک‌اند. availability امن Push می‌تواند Configured/PartiallyConfigured/Unavailable باشد؛ این metadata تحویل واقعی دستگاه نیست. نقش Platform، Guardian یا Manager مجوز مرور Direct خصوصی، presence مخفی یا افشای کلید Quiz نمی‌سازد. [مرزهای جاری Messenger](../messaging/CURRENT_MESSENGER_STATUS.md) و [آمادگی محیط](../production/PRODUCTION_READINESS.md) را کنار کاتالوگ HTTP بخوانید.
+تأیید رسمی اولیه سن و وضعیت self طبق Handoff P0 وجود دارند؛ policy جاری GAP-05، مجوز UsersManage و نشست معتبر ملاک‌اند. availability امن Push می‌تواند Configured/PartiallyConfigured/Unavailable باشد؛ این metadata تحویل واقعی دستگاه نیست. نقش Platform، Guardian یا Manager مجوز مرور Direct خصوصی، presence مخفی یا افشای کلید Quiz نمی‌سازد. [مرزهای جاری Messenger](../messaging/CURRENT_MESSENGER_STATUS.md) و [آمادگی محیط](../production/PRODUCTION_READINESS.md) را کنار کاتالوگ HTTP بخوانید.

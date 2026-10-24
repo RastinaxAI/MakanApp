@@ -30,10 +30,6 @@ public sealed class ConfigurableOtpAuthenticationTests(MakanAppWebApplicationFac
             services.AddSingleton(Options.Create(new OtpAuthenticationOptions { Enabled = false, AllowMockAuthentication = true }));
             services.RemoveAll<IOtpDeliveryProvider>();
             services.AddSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>();
-            services.RemoveAll<IPlatformMfaAssurance>();
-            services.AddScoped<IPlatformMfaAssurance>(provider => provider.GetRequiredService<EfPlatformMfaAssurance>());
-            services.RemoveAll<IPlatformStepUpAuthorization>();
-            services.AddScoped<IPlatformStepUpAuthorization>(provider => provider.GetRequiredService<EfPlatformMfaAssurance>());
         }));
 
     [Theory]
@@ -138,7 +134,7 @@ public sealed class ConfigurableOtpAuthenticationTests(MakanAppWebApplicationFac
     }
 
     [Fact]
-    public async Task MockSession_DoesNotGrantPlatformRoleOrMfaAssurance()
+    public async Task MockSession_DoesNotGrantPlatformRoleAndRespectsExplicitAssignment()
     {
         using var app = MockApplication();
         using var client = app.CreateClient();
@@ -152,14 +148,11 @@ public sealed class ConfigurableOtpAuthenticationTests(MakanAppWebApplicationFac
             db.PlatformRoleAssignments.Add(PlatformRoleAssignment.CreateActive(
                 result.User.Id, PlatformCatalogIds.PlatformOwnerRole, null, DateTime.UtcNow));
             await db.SaveChangesAsync();
-            var session = await db.UserSessions.SingleAsync(item => item.UserId == result.User.Id);
-            Assert.Equal(AuthenticationAssuranceLevel.Primary, session.AssuranceLevel);
         }
         try
         {
-            using var requiresMfa = await client.GetAsync("/api/admin/v1/me");
-            Assert.Equal(HttpStatusCode.Forbidden, requiresMfa.StatusCode);
-            Assert.Contains(PlatformErrorCodes.MfaRequired, await requiresMfa.Content.ReadAsStringAsync());
+            using var allowed = await client.GetAsync("/api/admin/v1/me");
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
         }
         finally
         {

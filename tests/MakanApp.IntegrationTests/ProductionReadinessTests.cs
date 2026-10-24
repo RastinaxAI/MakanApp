@@ -87,7 +87,7 @@ public sealed class ProductionReadinessTests(MakanAppWebApplicationFactory facto
     }
 
     [Fact]
-    public async Task LostKeyRingMakesOnlyReadinessUnhealthyWithoutRecreatingDirectory()
+    public async Task ReadinessDoesNotDependOnTheRemovedKeyRing()
     {
         var ringPath = Path.Combine(Path.GetTempPath(), "MakanApp-PH2-Keys-" + Guid.NewGuid().ToString("N"));
         using var persistent = factory.WithWebHostBuilder(builder =>
@@ -99,10 +99,10 @@ public sealed class ProductionReadinessTests(MakanAppWebApplicationFactory facto
         using var client = persistent.CreateClient();
         using var before = await client.GetAsync("/health/ready");
         Assert.Equal(HttpStatusCode.OK, before.StatusCode);
-        Directory.Move(ringPath, ringPath + "-retained");
+        Assert.False(Directory.Exists(ringPath));
         using var after = await client.GetAsync("/health/ready");
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, after.StatusCode);
-        Assert.Equal("Unhealthy", await after.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.OK, after.StatusCode);
+        Assert.Equal("Healthy", await after.Content.ReadAsStringAsync());
         Assert.False(Directory.Exists(ringPath));
         using var live = await client.GetAsync("/health/live");
         Assert.Equal(HttpStatusCode.OK, live.StatusCode);
@@ -115,7 +115,6 @@ public sealed class ProductionReadinessTests(MakanAppWebApplicationFactory facto
         var check = new CoreReadinessHealthCheck(
             scope.ServiceProvider.GetRequiredService<MakanDbContext>(),
             scope.ServiceProvider.GetRequiredService<IStorageReadinessProbe>(),
-            scope.ServiceProvider.GetRequiredService<DataProtectionKeyRingProbe>(),
             new ConfigurationBuilder().Build(), new ProductionEnvironment());
         var result = await check.CheckHealthAsync(new HealthCheckContext());
         Assert.Equal(HealthStatus.Unhealthy, result.Status);

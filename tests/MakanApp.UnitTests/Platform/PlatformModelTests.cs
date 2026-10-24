@@ -1,5 +1,4 @@
 using MakanApp.Domain.Platform;
-using MakanApp.Infrastructure.Platform;
 using Xunit;
 
 namespace MakanApp.UnitTests.Platform;
@@ -68,16 +67,4 @@ public sealed class PlatformModelTests
             StringComparer.Ordinal);
     }
 
-    [Fact]
-    public async Task ProductionStepUpDefaultFailsClosed()
-    {
-        var authorization = new UnavailablePlatformStepUpAuthorization();
-
-        var result = await authorization.IsSatisfiedAsync(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            CancellationToken.None);
-
-        Assert.False(result);
-    }
 }

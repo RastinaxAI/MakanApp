@@ -1,4 +1,3 @@
-using MakanApp.Api.Hosting;
 using MakanApp.Application.Platform;
 using MakanApp.Domain.Platform;
 using Microsoft.AspNetCore.Authorization;
@@ -10,8 +9,7 @@ namespace MakanApp.Api.Controllers;
 [Authorize]
 [Route("api/admin/v1/operations")]
 public sealed class PlatformSystemOperationsController(
-    IPlatformCommerceOperationsService service,
-    DataProtectionKeyRingProbe keyRingProbe) : ControllerBase
+    IPlatformCommerceOperationsService service) : ControllerBase
 {
     [HttpGet("notifications")]
     [Authorize(Policy = PlatformPermissionKeys.NotificationsRead)]
@@ -30,14 +28,6 @@ public sealed class PlatformSystemOperationsController(
     public async Task<ActionResult<PlatformSystemHealth>> GetHealth(
         CancellationToken cancellationToken)
     {
-        var health = await service.GetSystemHealthAsync(cancellationToken);
-        var ringStatus = keyRingProbe.IsConfigured
-            ? await keyRingProbe.IsReadyAsync(cancellationToken) ? "Available" : "Unavailable"
-            : keyRingProbe.PersistenceRequired ? "Unavailable" : "DevelopmentOnly";
-        return Ok(health with
-        {
-            Dependencies = health.Dependencies.Append(new PlatformDependencyHealth(
-                "DataProtection", ringStatus, "دسترسی جاری به حلقهٔ همان provider میزبان؛ بدون نمایش مسیر یا کلید.")).ToArray()
-        });
+        return Ok(await service.GetSystemHealthAsync(cancellationToken));
     }
 }

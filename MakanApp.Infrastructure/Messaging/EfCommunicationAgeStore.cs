@@ -13,7 +13,7 @@ using Microsoft.Data.SqlClient;
 namespace MakanApp.Infrastructure.Messaging;
 
 public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore iam,
-    IPlatformStepUpAuthorization stepUp, TimeProvider clock) : ICommunicationAgeStore
+    TimeProvider clock) : ICommunicationAgeStore
 {
     public async Task<CommunicationAgeResult> GetPlatformAsync(Guid actorId, Guid sessionId, Guid userId, string correlationId, CancellationToken ct)
     {
@@ -120,8 +120,10 @@ public sealed class EfCommunicationAgeStore(MakanDbContext db, IPlatformIamStore
         if (actor is null || !actor.Permissions.Contains(PlatformPermissionKeys.UsersManage) ||
             requireOwner && !actor.Roles.Contains(PlatformRoleKeys.PlatformOwner))
             throw new PlatformException(PlatformErrorCodes.AccessDenied, "عملیات مجاز نیست.");
-        if (!await stepUp.IsSatisfiedAsync(actorId, sessionId, ct))
-            throw new PlatformException(PlatformErrorCodes.StepUpRequired, "تأیید تازه MFA لازم است.");
+        var now = clock.GetUtcNow().UtcDateTime;
+        if (!await db.UserSessions.AnyAsync(session => session.Id == sessionId && session.UserId == actorId &&
+                session.RevokedAtUtc == null && session.ExpiresAtUtc > now && session.AbsoluteExpiresAtUtc > now, ct))
+            throw new PlatformException(PlatformErrorCodes.AccessDenied, "نشست جاری معتبر لازم است.");
     }
 
     private async Task CheckSchoolAsync(Guid actorId, Guid sessionId, AccessContext access, CancellationToken ct)

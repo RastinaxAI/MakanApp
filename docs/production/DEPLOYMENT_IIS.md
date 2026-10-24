@@ -65,33 +65,15 @@ Web SDK فایل خصوصی `appsettings.Production.json` موجود را همر
 
 `MakanApp.Api/web.config` تنظیم Production و مسیر پیش‌فرض بالا را همراه Publish مخصوص IIS منتقل می‌کند؛ Linux/Docker این فایل IIS را مصرف نمی‌کنند و همچنان مسیر volume و محافظ معتبر خود را از environment می‌گیرند. `Messaging:ContentSafetyProvider=Internal` در فایل خصوصی و نمونه موجود است و کلید provider خارجی لازم ندارد. مقادیر SMS، اتصال SQL و Secretهای فعلی سرور را هنگام کپی فایل‌ها حفظ کنید؛ فایل نمونه جایگزین کامل کانفیگ اختصاصی سرور نیست. کد adapter ملی‌پیامک و منطق OTP در این تغییر دست نخورده‌اند.
 
-پیش از استفاده از MFA، پوشهٔ KeyRing را بیرون Publish و Storage بسازید و فقط به هویت App Pool و اپراتور مجاز دسترسی لازم بدهید. بدون certificate، محافظ Windows از DPAPI استفاده می‌کند؛ هویت App Pool باید ثابت و `Load User Profile` مناسب باشد. اگر MFA قبلاً فعال بوده، همان مسیر و کلیدهای قبلی را در `web.config` نگه دارید؛ تعویض مسیر، حذف پوشه یا کپی XML به ماشین دیگر بازیابی secretهای TOTP را تضمین نمی‌کند. این فایل پوشه/ACL یا تنظیمات App Pool سرور را خودکار ایجاد نمی‌کند. جزئیات در [قرارداد GAP-04](../release/GAP_04_BACKOFFICE_TOTP_MFA.md) است.
+### حذف وابستگی MFA از Host — ۲۰۲۶-۱۰-۲۴
 
-### الزام Data Protection در PH-1
-
-در PH-1 همان provider سراسری قبلی reuse شده است، نه سیستم MFA موازی. مقدار پیش‌فرض `ApplicationName` دقیقاً `MakanApp.BackofficeMfa.v1` و purposeهای MFA بدون تغییرند. aliasهای جدید `Security:DataProtection:KeyRingPath`، `CertificatePath` و `CertificatePassword` با `BackofficeSecurity:*` سازگارند؛ اگر هر دو namespace مقدار غیرخالی متفاوت بدهند، startup متوقف می‌شود. وجود مقدار خالی در فایل نمونه، مسیر واقعی legacy در `web.config` را پاک نمی‌کند. راهنمای مرجع تنظیمات در [Production Configuration](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) است.
-
-تغییر عمدی نسبت به GAP-04: host عملیاتی بدون key ring پایدار دیگر شروع نمی‌شود؛ فقط resolve مستقیم سرویس MFA همچنان `MFA_UNAVAILABLE` می‌دهد. مسیر موجود `web.config` تغییر نکرده است. پیش از deploy، همان مسیر و محافظ قبلی را برای instance دارای MFA حفظ کنید؛ تنظیم یک مسیر تازه یا تغییر `ApplicationName` روش migration کلیدها نیست.
-
-`DataProtectionKeyRingStartupValidator` پیش از شروع workerها مسیر صریح، امکان write/read و protect/unprotect را بررسی می‌کند. probe runtime از همان تنظیمات استفاده می‌کند و پوشه یا کلیدهای گم‌شده را دوباره نمی‌سازد؛ نبود هر کلید غیرلغوشدهٔ مشاهده‌شده در startup یا checkهای موفق بعدی باعث عدم آمادگی می‌شود، حتی اگر provider کلید را cache کرده باشد. تعداد descriptorهای خوانده‌شده نیز با فایل‌های استاندارد `key-*.xml` تطبیق می‌یابد تا descriptor خراب بی‌صدا کنار گذاشته و حلقه از نو ساخته نشود؛ نام فایل‌های کلید را دستی تغییر ندهید. revocation XMLها فایل کلید محسوب نمی‌شوند. این کنترل جای custody و restore تمام کلیدهای تاریخی را نمی‌گیرد. Development/Testing بدون مسیر عملیاتی قابل اجرا باقی می‌مانند.
-
-نمونهٔ زیر فقط فرمان اپراتور است و در این تحویل روی سرور اجرا نشده؛ نام App Pool نمونه را با نام تأییدشدهٔ خودتان عوض کنید و مسیر **موجود** را حفظ کنید:
-
-```powershell
-$keyRingPath = 'C:\ProgramData\MakanApp\BackofficeMfaKeys'
-New-Item -ItemType Directory -Path $keyRingPath -Force | Out-Null
-icacls $keyRingPath /grant:r 'IIS AppPool\MakanApp:(OI)(CI)M' '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F'
-icacls $keyRingPath /inheritance:r
-icacls $keyRingPath
-```
-
-دستور ACL در PowerShell مدیریتی و پس از ثبت ACL قبلی اجرا شود؛ custodianهای مجاز دیگر را بدون بررسی حذف نکنید. App Pool روی publish به‌طور عادی Read/Execute، روی key ring و Storage مجوز لازم، و روی private certificate حداقل Read می‌خواهد. key ring، PFX و JSON خصوصی نباید زیر publish، storage عمومی، Git یا ZIP قابل‌اشتراک باشند. symlink/junction و دسترسی physical path نیز باید توسط اپراتور بررسی شود.
-
-DPAPI موجود **current-user** است، نه `LocalMachine`؛ تغییر Windows identity/profile یا انتقال صرف XML به ماشین جدید قابل بازیابی فرض نشود. برای قابلیت انتقال، گزینهٔ certificate/PFX موجود کافی است و نیاز به certificate store دوم ندارد: `CertificatePath` مطلق و `CertificatePassword` فقط از secret store محیط تأمین شوند، PFX/private key و رمز تحت custody امن و جدا از backup عادی باشند. اضافه‌کردن store/thumbprint در این مرحله ارزش ضروری نسبت به مسیر PFX موجود ندارد و انجام نشده است. تعویض محافظ به certificate، کلیدهای DPAPI قدیمی را خودکار قابل انتقال نمی‌کند؛ migration و drill جدا لازم است. جزئیات [Backup/Restore](BACKUP_RESTORE.md) همچنان معتبر است.
+کد فعال دیگر Authenticator/TOTP، Recovery و Step-Up ندارد. متغیر `BackofficeSecurity__KeyRingPath` از `web.config` حذف شده و Startup/ready نیازمند key ring قدیمی نیستند.
+پوشه و کلیدهای قدیمی سرور فعلاً حفظ شوند؛ این تحویل هیچ cleanup یا Deploy سروری انجام نمی‌دهد. OTP/Session و مجوزهای واقعی Platform بدون تغییر باقی‌اند.
+ورود Owner: OTP → Session → `GET /api/admin/v1/me`؛ پاسخ 200 فقط با Platform permission معتبر است. چهار نقش مدرسه به‌تنهایی 403 می‌گیرند.
 
 ## فایل SQL مایگریشن‌ها
 
-Migration تازه‌ای برای این تغییر کانفیگ لازم نیست. دو Migration موجود مرتبط با MFA و Child Safety عبارت‌اند از `20261015073418_AddPlatformTotpMfa` و `20261015091336_EnforceApprovedMessengerChildSafety`. اگر پایگاه هدف قدیمی‌تر از GAP-01 است، اسکریپت محدود این دو مرحله کافی نیست. خروجی کامل idempotent را بدون اتصال به دیتابیس می‌توان تولید کرد:
+Migration جدید `20261024184613_RemovePlatformMfa` برای حذف دو جدول MFA و دو ستون Session تولید شده است. اجرای آن روی سرور یا دیتابیس اصلی مجاز/انجام‌شده نیست؛ فقط تست خودکار ایزوله با تأیید مالک آن را اعمال می‌کند. Migrationهای قبلی از جمله `20261015073418_AddPlatformTotpMfa` حفظ شده‌اند. خروجی کامل برای بازبینی:
 
 ```powershell
 & ./tools/production/export-migration-sql.ps1 -OutputPath .artifacts/deployment/migrations-idempotent-safe.sql
@@ -248,9 +230,9 @@ AlwaysRunning بدون preload/درخواست اولیه لزوماً startup ب
 
 ### ACL، logging و پذیرش Runtime
 
-publish فقط Read/Execute، Storage و key ring مجوز لازمِ محدود، certificate حداقل Read و محل log فقط در صورت استفاده مجوز write بخواهد.
+publish فقط Read/Execute، Storage مجوز لازمِ محدود و محل log فقط در صورت استفاده مجوز write بخواهد؛ Secretهای فعال نیز فقط برای identity مجاز قابل خواندن باشند.
 دسترسی broad مانند Everyone یا تغییر identity موجود مجاز نیست. ACL و custody قبلی پیش از هر تغییر ثبت شوند؛
-فرمان‌های key ring در بخش PH-1 بالا معتبرند. stdout و ANCM debug logging دائمی خاموش بمانند؛
+key ring قدیمی MFA دیگر پیش‌نیاز Host نیست و در این مرحله حذف نمی‌شود. stdout و ANCM debug logging دائمی خاموش بمانند؛
 Event Log و collector چرخش/سقف حجم/دسترسی مصوب می‌خواهند. IIS access log باید query، cookie، Authorization و custom header حساس را ثبت نکند؛
 Failed Request Tracing یا dump خام کانفیگ روش evidence عمومی نیست.
 
@@ -314,4 +296,4 @@ typing/presence در `InMemoryMessagingEphemeralState` تک‌instance‌اند.
 
 `P3_S_INFRA_REQUIRED`، `LIVEKIT_REJOIN_SECURITY_GATE=NOT_TESTED` و `P3_PRODUCTION_MEDIA_APPROVAL=NOT_GRANTED` وضعیت فعلی‌اند. رسانهٔ صوتی/تصویری/Live محصول هنوز deployment پذیرفته‌شده ندارد. spec مصوب LiveKit/SFU/TURN را با runtime نصب‌شده اشتباه نگیرید؛ جزئیات Linux lab، DNS/TLS، TURN و دو client در [گزارش S](../messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md) است.
 
-بعد از انتشار Backend، روی حساب/سازمان آزمایشی از پیش مجاز، علاوه بر core قبلی این موارد را بررسی کنید: تأیید self/سن طبق policy، Direct و Peer Read مجاز/Hidden، expiry و reconnect Typing/Presence، registration/revoke Push، تأخیر و cancel/dispatch intent، topic و محدودیت عضو، Poll/Quiz و دو حالت Checklist. این‌ها دستور smoke هستند؛ در این مرحله روی سرور واقعی اجرا نشده‌اند. فایل خصوصی Production، کلیدهای OTP/MFA و موارد استثنای HTTP/SQL قبلی بدون تصمیم تازه تغییر نکنند.
+بعد از انتشار Backend، روی حساب/سازمان آزمایشی از پیش مجاز، علاوه بر core قبلی این موارد را بررسی کنید: تأیید self/سن طبق policy، Direct و Peer Read مجاز/Hidden، expiry و reconnect Typing/Presence، registration/revoke Push، تأخیر و cancel/dispatch intent، topic و محدودیت عضو، Poll/Quiz و دو حالت Checklist. این‌ها دستور smoke هستند؛ در این مرحله روی سرور واقعی اجرا نشده‌اند. فایل خصوصی Production، کلیدهای OTP و تنظیمات خصوصی و موارد استثنای HTTP/SQL قبلی بدون تصمیم تازه تغییر نکنند.

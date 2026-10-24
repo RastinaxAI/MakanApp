@@ -25,7 +25,7 @@ public sealed partial class MakanAppWebApplicationFactory
         return await scope.ServiceProvider.GetRequiredService<MakanDbContext>().SafetyIncidents
             .Where(i => i.Id == incidentId).Select(i => i.PolicyCodes).SingleAsync();
     }
-    public async Task MarkLegacyAgeConflictForMfaTestAsync(Guid userId)
+    public async Task MarkAgeConflictAsync(Guid userId)
     {
         await using var scope = Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();

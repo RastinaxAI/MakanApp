@@ -10,12 +10,12 @@
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۲۵ عملیات در ۵۷ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۵۲ schema استخراج‌شده از OpenAPI.
+- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۱۸ عملیات در ۵۶ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۴۷ schema استخراج‌شده از OpenAPI.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
-بازبینی `2026-10-23` از `main@5885d11`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 552 schema، 107 جدول و 48 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. metadata بدون SQL/provider/worker استخراج شده؛ [وضعیت پروژه و نتیجهٔ validation](docs/CURRENT_PROJECT_STATUS.md).
+بازبینی `2026-10-24` با مبنای `main@e525c78` و تغییرات حذف عامل دوم؛ **318 عملیات HTTP در 56 Controller و 283 مسیر؛ 547 schema، 105 جدول و 49 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. metadata بدون SQL/provider/worker استخراج شده؛ [وضعیت پروژه و نتیجهٔ validation](docs/CURRENT_PROJECT_STATUS.md).
 
 Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
 
@@ -23,12 +23,12 @@ Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HT
 
 | حوزه | وضعیت کد و مرز عملیاتی |
 |---|---|
-| Identity / OTP | Real با true/false و Mock مجاز فقط در Development/Test/Testing با false/true؛ Production/Staging fail-closed؛ نشست access/refresh و MFA مستقل‌اند |
+| Identity / OTP | Real با true/false و Mock مجاز فقط در Development/Test/Testing با false/true؛ Production/Staging fail-closed؛ نشست access/refresh و مجوز Platform مستقل از Mock هستند؛ MFA حذف شده است |
 | Organization / Guardian | onboarding پرونده، دعوت اتصال حساب با رضایت، lifecycle سرپرستی؛ بدون merge یا ساخت ضمنی حساب |
 | Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
 | Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
 | Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
-| Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ MFA/step-up واقعی TOTP موجود است |
+| Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
 | AI | ۱۲ API v1، grounding/telemetry و probe رسمی؛ Service Auth واقعی قبلاً PASS، Parent Provider Timeout و Full-12 Deferred؛ RAG lifecycle deferred |
 | Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
 

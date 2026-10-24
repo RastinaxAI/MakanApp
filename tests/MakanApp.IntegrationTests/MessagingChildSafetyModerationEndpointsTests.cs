@@ -47,7 +47,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task ExpandedEvidenceRequiresEscalationStrongerPermissionReasonAndFreshStepUp()
+    public async Task ExpandedEvidenceRequiresEscalationStrongerPermissionAndReason()
     {
         await factory.ResetPlatformIamAsync();
         using var ownerClient = factory.CreateClient(); using var reviewerClient = factory.CreateClient();
@@ -67,12 +67,6 @@ public sealed partial class MessagingEndpointsTests
         using var ownerClaim = await ownerClient.PostAsJsonAsync($"/api/admin/v1/moderation/cases/{caseId}/start-review",
             new PlatformModerationVersionCommand(detail.Case.Version, "پذیرش ارجاع"), JsonOptions);
         ownerClaim.EnsureSuccessStatusCode(); detail = (await ownerClaim.Content.ReadFromJsonAsync<PlatformModerationCaseDetail>(JsonOptions))!;
-        factory.PlatformStepUp.SetSatisfied(false);
-        using var stale = await ownerClient.PostAsJsonAsync($"/api/admin/v1/moderation/cases/{caseId}/expanded-context",
-            new PlatformModerationVersionCommand(detail.Case.Version, "بررسی شاهد محدودتر"), JsonOptions);
-        Assert.Equal(HttpStatusCode.Forbidden, stale.StatusCode);
-        Assert.Equal(PlatformErrorCodes.StepUpRequired, await ReadProblemCodeAsync(stale));
-        factory.PlatformStepUp.SetSatisfied(true);
         using var missingReason = await ownerClient.PostAsJsonAsync($"/api/admin/v1/moderation/cases/{caseId}/expanded-context",
             new PlatformModerationVersionCommand(detail.Case.Version, ""), JsonOptions);
         Assert.Equal(HttpStatusCode.BadRequest, missingReason.StatusCode);

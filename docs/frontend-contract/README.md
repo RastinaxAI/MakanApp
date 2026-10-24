@@ -1,8 +1,8 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-بازبینی `2026-10-23` از `main@5885d119f6f5b3477d9d4da2738316db623a3d1f`؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-10-24` با مبنای Git `main@e525c78a7a318ea3dc3c697ea6473d308dc5fae1` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-پوشش جاری: 325 عملیات HTTP در 290 مسیر، 57 Controller، 552 schema، 107 جدول و 48 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 318 عملیات HTTP در 283 مسیر، 56 Controller، 547 schema، 105 جدول و 49 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
@@ -23,7 +23,7 @@ Real OTP: با Otp:Enabled=true و Otp:AllowMockAuthentication=false، POST /api
 
 Mock: فقط در Development/Test/Testing با جفت false/true مجاز است؛ Production/Staging در startup آن را رد می‌کنند. شکل request/response ثابت است ولی challenge واقعی در SQL ساخته نمی‌شود و verify پس از اعتبارسنجی فرمت شماره/کد، مقدار OTP یا challenge را اثبات نمی‌کند. کد فعلی ۴ تا ۶۴ کاراکتر بدون control character می‌پذیرد. این رفتار مالکیت شماره را اثبات نمی‌کند؛ UI حق تشخیص Mock از شکل پاسخ یا ساخت bypass عمومی ندارد.
 
-در Mock نیز حساب معلق رد می‌شود و نشست، workspace، عضویت، role و MFA عادی‌اند؛ شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد، اما نقش آموزشی یا Platform ساخته نمی‌شود. ورود دوباره session جدید می‌سازد؛ verify در Mock را idempotent فرض نکنید. تغییر flag نشست‌های قبلی را revoke نمی‌کند. انتخاب محیط و سیاست داده وظیفه deployment است؛ [راهنمای OTP](../dev/CONFIGURABLE_OTP_FA.md) و [Test محدود](../dev/SERVER_MOCK_OTP_FA.md).
+در Mock نیز حساب معلق رد می‌شود و نشست، workspace، عضویت و role عادی‌اند؛ شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد، اما نقش آموزشی یا Platform ساخته نمی‌شود. ورود دوباره session جدید می‌سازد؛ verify در Mock را idempotent فرض نکنید. تغییر flag نشست‌های قبلی را revoke نمی‌کند. انتخاب محیط و سیاست داده وظیفه deployment است؛ [راهنمای OTP](../dev/CONFIGURABLE_OTP_FA.md) و [Test محدود](../dev/SERVER_MOCK_OTP_FA.md).
 
 VerifyOtpResult شامل accessToken، tokenType، expiresAtUtc، refreshToken، refreshExpiresAtUtc و user است. access پایه یک ساعت و refresh چرخشی با عمر مطلق ۳۰ روز است؛ refresh token و OTP دادهٔ محرمانه‌اند. POST /api/v1/auth/refresh و APIهای sessions/logout برای lifecycle موجودند. storage امن سمت client تصمیم اجرایی جدا می‌خواهد؛ credential در URL، screenshot یا telemetry قرار نگیرد.
 
@@ -59,13 +59,13 @@ SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرج
 
 Plan/PlanVersion/Subscription/Entitlement/Quota و Order/PaymentAttempt/verification lifecycle موجودند؛ gateway واقعی unavailable است. callback یا UI هرگز پرداخت را بدون تأیید server موفق اعلام نمی‌کند؛ refund/reconcile دستی ساختگی نسازید.
 
-## Backoffice و MFA
+## Backoffice و مجوز Platform
 
 Platform IAM/permission، organization/user/provisioning، education read model، moderation، commerce/finance و operations API دارند؛ Manager مدرسه Platform Admin نیست. GET /api/admin/v1/me منبع capability است، نه مجوز client-side.
 
-TOTP/recovery/step-up واقعی از GAP-04 موجود است. /api/admin/v1/mfa شامل status، enrollment/confirm، verify، recovery/verify، recovery-codes/regenerate و reset مجاز است. SetupUri و recovery code فقط در پاسخ‌های اختصاصی یک‌بار دیده می‌شوند؛ secret در UI/log پایدار نماند. MFA_REQUIRED و PLATFORM_STEP_UP_REQUIRED را با جریان موجود حل کنید، نه bypass یا سیستم موازی.
+طبق تصمیم مالک در ۲۰۲۶-۱۰-۲۴، Authenticator/TOTP، Recovery و Step-Up از کد فعال حذف شده‌اند؛ صفحه و فراخوانی MFA نباید وجود داشته باشد. OTP → Session → GET /api/admin/v1/me؛ در 200 پنل و در 403 عدم دسترسی Platform. گزارش‌های GAP-04 تاریخی‌اند.
 
-Moderation case-scoped است؛ permission/claim/escalation/fresh MFA و reason قواعد خود را دارند. دسترسی عمومی به Direct، Contacts، evidence خارج case، impersonation یا payment-success دستی وجود ندارد. [تحویل تخصصی Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).
+Moderation case-scoped است؛ permission/claim/escalation/session و reason قواعد خود را دارند. دسترسی عمومی به Direct، Contacts، evidence خارج case، impersonation یا payment-success دستی وجود ندارد. [تحویل تخصصی Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).
 
 ## AI و قابلیت‌های وابسته
 
@@ -77,11 +77,11 @@ Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Su
 
 ## میزبانی و smoke
 
-Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و فقط با Swagger:Enabled=true فعال است؛ Test طبق Program فعلی آن‌ها را منتشر می‌کند. CORS allowlist بدون credentials است. /health و /health/live فقط liveness و /health/ready، config معتبر، key ring، SQL و Storage را بررسی می‌کند؛ دریافت SMS/Push، پرداخت یا AI را اثبات نمی‌کند.
+Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و فقط با Swagger:Enabled=true فعال است؛ Test طبق Program فعلی آن‌ها را منتشر می‌کند. CORS allowlist بدون credentials است. /health و /health/live فقط liveness و /health/ready، config معتبر، SQL و Storage را بررسی می‌کند؛ دریافت SMS/Push، پرداخت یا AI را اثبات نمی‌کند.
 
-Job operations اکنون Queues تفکیک‌شده، تعدادها و سن قدیمی‌ترین کار را می‌دهد؛ notification operations شمارش pending/processing/deferred/failed و سن oldest و failureهای اخیر را دارد. health مدیریتی وضعیت DataProtection و FileCleanup را بدون path/key نشان می‌دهد. FileCleanup=Enabled فقط تنظیم است. export فقط پس از Completed و دانلود مجاز آماده است؛ Lost ACK یا retry worker موفقیت نمایشی جدید ایجاد نمی‌کند. [قرارداد Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).
+Job operations اکنون Queues تفکیک‌شده، تعدادها و سن قدیمی‌ترین کار را می‌دهد؛ notification operations شمارش pending/processing/deferred/failed و سن oldest و failureهای اخیر را دارد. health مدیریتی وضعیت dependencyهای جاری و FileCleanup را بدون path/key نشان می‌دهد. FileCleanup=Enabled فقط تنظیم است. export فقط پس از Completed و دانلود مجاز آماده است؛ Lost ACK یا retry worker موفقیت نمایشی جدید ایجاد نمی‌کند. [قرارداد Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).
 
-انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. Origin مجاز باید دقیقاً Origin کلاینت باشد؛ موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. MFA key ring/Identity key/Storage در redeploy حفظ شوند. [runbook](../production/DEPLOYMENT_IIS.md).
+انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. Origin مجاز باید دقیقاً Origin کلاینت باشد؛ موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. Identity key/Storage در redeploy حفظ شوند؛ فایل‌های قدیمی key ring سرور تا cleanup مستقل حذف نشوند. [runbook](../production/DEPLOYMENT_IIS.md).
 
 ## روش نگه‌داری و شواهد
 

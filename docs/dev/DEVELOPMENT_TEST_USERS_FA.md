@@ -27,11 +27,11 @@
 | Teacher | همان enum | Role=2 | User، Membership و TeacherAssignment فعال روی Class | OTP عادی؛ نقش به‌تنهایی مجوز هر کلاس نیست |
 | Parent | همان enum | Role=3 | User، Membership، GuardianRelation فعال به OrganizationPerson کودک | OTP عادی؛ انتخاب فرزند الزامی است |
 | Manager | همان enum | Role=4 | Membership و RoleAssignment فعال در سازمان | School Manager ادمین پلتفرم نیست |
-| PlatformOwner | Domain/Platform/PlatformCatalog.cs | platform.PlatformRoles.Key و PlatformRoleAssignments | User و انتساب فعال؛ MFA برای Backoffice | OTP اولیه؛ سپس MFA موجود |
+| PlatformOwner | Domain/Platform/PlatformCatalog.cs | platform.PlatformRoles.Key و PlatformRoleAssignments | User و انتساب فعال؛ permission برای Backoffice | OTP و نشست معتبر و permission |
 | Operations | همان catalog | همان مدل | همان؛ permission از catalog موجود | هیچ مجوز جدیدی ساخته نمی‌شود |
 | Support | همان catalog | همان مدل | همان | دسترسی محدود طبق permission موجود |
 | Finance | همان catalog | همان مدل | همان | نه نقش سازمانی و نه دسترسی آموزشی خودکار |
-| Content | همان catalog | همان مدل | همان | MFA حفظ می‌شود |
+| Content | همان catalog | همان مدل | همان | permission حفظ می‌شود |
 | SecurityAudit | همان catalog | همان مدل | همان | مجوزها از RolePermission موجود می‌آیند |
 | AbuseReviewer | همان catalog | همان مدل | همان؛ محدودیت‌های Moderation/Child Safety | به معنی private browsing آزاد نیست |
 
@@ -46,7 +46,7 @@ Personal workspace نیز Role جدید نیست. در مدل فعلی School ج
 - در Real، `IdentityService.RequestOtpAsync → IOtpDeliveryProvider` و `VerifyOtpAsync → OtpChallenge.Verify` اجرا می‌شوند. کد فقط HMAC/salt در SQL دارد؛ عمر پایه۳۰۰s، resend۳۰s، سقف۵ درخواست در ساعت و۵ تلاش ناموفق است.
 - در Mock، challenge واقعی در SQL و فراخوانی SMS نداریم؛ verify فقط فرمت شماره/کد را می‌سنجد. کد ثابت در User Secrets و allowlist قدیمی DevelopmentCode/TestUsers روش فعال‌سازی نیستند. `Identity:Otp:Mode=DevelopmentBypass` و فلگ‌های قدیمی bypass همچنان رد می‌شوند.
 - `PhoneNumberNormalizer` قالب E.164 با۸..۱۵ رقم و normalize ارقام فارسی/عربی را می‌پذیرد. طول کد فعلی۴..۶۴ و بدون control character است؛ شماره و مقدار کد مجاز در Mock، مالکیت تلفن را ثابت نمی‌کند.
-- `VerifyOtpAsync` در هر دو حالت حساب معلق را رد و session/refresh عادی صادر می‌کند. شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد؛ نقش، Membership، Enrollment یا MFA خودکار ساخته نمی‌شود. Mock محدود به۱۱ fixture یا allowlist شماره نیست.
+- `VerifyOtpAsync` در هر دو حالت حساب معلق را رد و session/refresh عادی صادر می‌کند. شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد؛ نقش، Membership، Enrollment یا Platform permission خودکار ساخته نمی‌شود. Mock محدود به۱۱ fixture یا allowlist شماره نیست.
 - access token کاربر opaque است، نه JWT نقش‌دار؛ refresh از `/api/v1/auth/refresh` و workspace/permission از رابطه جاری resolve می‌شود. JWT سرویس AI موضوع جداست. تغییر flag نشست‌های قبلی را revoke نمی‌کند.
 
 ## دیتابیس و دادهٔ ثابت seed تاریخی
@@ -65,13 +65,13 @@ Development/Test و بدون SMS استفاده شوند. تنظیم جاری د
 | Teacher | +989120000102 | d3700000-0000-0000-0000-000000000002 | Org / Class / TeacherAssignment | Mock مجاز |
 | Parent | +989120000103 | d3700000-0000-0000-0000-000000000003 | Org / GuardianRelation به Student بالا | Mock مجاز |
 | Manager | +989120000104 | d3700000-0000-0000-0000-000000000004 | Org / Membership Manager | Mock مجاز |
-| PlatformOwner | +989120000105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| Operations | +989120000106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| Support | +989120000107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| Finance | +989120000108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| Content | +989120000109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| SecurityAudit | +989120000110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
-| AbuseReviewer | +989120000111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | Mock مجاز؛ MFA جدا |
+| PlatformOwner | +989120000105 | d3700000-0000-0000-0000-000000000005 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| Operations | +989120000106 | d3700000-0000-0000-0000-000000000006 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| Support | +989120000107 | d3700000-0000-0000-0000-000000000007 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| Finance | +989120000108 | d3700000-0000-0000-0000-000000000008 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| Content | +989120000109 | d3700000-0000-0000-0000-000000000009 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| SecurityAudit | +989120000110 | d3700000-0000-0000-0000-000000000010 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
+| AbuseReviewer | +989120000111 | d3700000-0000-0000-0000-000000000011 | PlatformRoleAssignment | Mock مجاز؛ permission واقعی لازم |
 
 شناسه‌های مشترک:
 

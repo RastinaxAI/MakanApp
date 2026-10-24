@@ -8,14 +8,6 @@ public interface IPlatformPermissionResolver
         CancellationToken cancellationToken);
 }
 
-public interface IPlatformStepUpAuthorization
-{
-    Task<bool> IsSatisfiedAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken);
-}
-
 public interface IPlatformIamStore
 {
     Task<PlatformAuthorizationSnapshot?> GetAuthorizationSnapshotAsync(

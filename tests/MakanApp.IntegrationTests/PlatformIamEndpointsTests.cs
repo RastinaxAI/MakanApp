@@ -141,7 +141,7 @@ public sealed class PlatformIamEndpointsTests(MakanAppWebApplicationFactory fact
     }
 
     [Fact]
-    public async Task SensitiveRoleMutationFailsClosedWithoutStepUpAndRequiresReason()
+    public async Task SensitiveRoleMutationRequiresPermissionAndReason()
     {
         await factory.ResetPlatformIamAsync();
         using var ownerClient = factory.CreateClient();
@@ -151,15 +151,13 @@ public sealed class PlatformIamEndpointsTests(MakanAppWebApplicationFactory fact
         await factory.BootstrapPlatformOwnerAsync(owner.User.Id);
         UseBearerToken(ownerClient, owner.AccessToken);
 
-        factory.PlatformStepUp.SetSatisfied(false);
-        using var denied = await ownerClient.PostAsJsonAsync(
+        UseBearerToken(targetClient, target.AccessToken);
+        using var denied = await targetClient.PostAsJsonAsync(
             "/api/admin/v1/role-assignments",
             new GrantPlatformRoleCommand(target.User.Id, PlatformRoleKeys.Support, "نیاز عملیاتی"),
             JsonOptions);
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
-        Assert.Equal(PlatformErrorCodes.StepUpRequired, await ReadProblemCodeAsync(denied));
 
-        factory.PlatformStepUp.SetSatisfied(true);
         using var missingReason = await ownerClient.PostAsJsonAsync(
             "/api/admin/v1/role-assignments",
             new GrantPlatformRoleCommand(target.User.Id, PlatformRoleKeys.Support, " "),

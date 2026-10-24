@@ -41,7 +41,7 @@ public sealed class MockOtpIdentityServiceTests
         Assert.Equal("+989999999999", result.User.PhoneNumber);
         Assert.Equal(Assert.Single(context.Store.Users).Id, result.User.Id);
         Assert.False(result.User.IsProfileComplete);
-        Assert.Equal(AuthenticationAssuranceLevel.Primary, Assert.Single(context.Store.Sessions).AssuranceLevel);
+        Assert.Equal(result.User.Id, Assert.Single(context.Store.Sessions).UserId);
         Assert.Single(context.Store.Credentials);
         Assert.Single(context.Store.RefreshTokens);
         Assert.NotEmpty(result.AccessToken);

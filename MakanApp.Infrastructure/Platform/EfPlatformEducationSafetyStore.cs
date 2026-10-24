@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Platform;
 
 public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbContext,
-    IPlatformIamStore iamStore, IPlatformMfaAssurance mfaAssurance, IPlatformStepUpAuthorization stepUp)
+    IPlatformIamStore iamStore, TimeProvider clock)
     : IPlatformEducationSafetyStore
 {
     private const int MaximumClassDetailPeople = 200;

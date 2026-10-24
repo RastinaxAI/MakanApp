@@ -29,7 +29,7 @@ DOTNET_ENVIRONMENT=Test
 
 نمونهٔ بالا فقط بخشی از فایل است، نه جایگزین کامل آن. فایل Test اکنون بخش‌های ConnectionStrings، Identity، Security/DataProtection، Cors، Hosting، Database، ReverseProxy، Sms، Payments، Messaging، Notifications، Storage، Logging و AllowedHosts را هم دارد. جای connection string، Identity key، MeliPayamak token و certificate password خالی است؛ این مقادیر را فقط از تنظیمات خصوصی همان سرور تست تأمین کنید. آدرس‌های `example.test` نمونه‌اند و باید با host/origin واقعیِ مجاز محیط تست جایگزین شوند. مسیر پیش‌فرض Storage در Test برابر `C:\MakanAppData\Test\Storage` است؛ مسیر دادهٔ موجود را بی‌دلیل تغییر ندهید.
 
-هر دو مقدار OTP برای Mock لازم‌اند. همان تنظیم در Production یا Staging همچنان Startup را متوقف می‌کند. محیط `Test` برخلاف `Testing` نرخ درخواست واقعی و الزام key ring پایدار MFA را نگه می‌دارد؛ providerهای توسعهٔ SMS/Notification/Content Safety مجاز نمی‌شوند. لاگ خام framework و EF نیز مانند Production با رخداد امن جایگزین می‌شود.
+هر دو مقدار OTP برای Mock لازم‌اند. همان تنظیم در Production یا Staging همچنان Startup را متوقف می‌کند. محیط `Test` برخلاف `Testing` نرخ درخواست واقعی و محافظ‌های جاری مجوزها را نگه می‌دارد؛ providerهای توسعهٔ SMS/Notification/Content Safety مجاز نمی‌شوند. لاگ خام framework و EF نیز مانند Production با رخداد امن جایگزین می‌شود.
 
 تصمیم جدید آمادگی انتشار `2026-10-22` جایگزین مقدار قبلی Production شد: base، Development و Test
 همچنان `false/true` هستند، ولی فایل Production محلی/نمونه اکنون `true/false` دارد.
@@ -81,7 +81,7 @@ Hosting__RequireHttps
 - `POST /api/v1/auth/otp/verify` با `challengeId` تصادفی یا خالی، همان شماره و یک کد دلخواه با فرمت معتبر → `200` برای حساب فعال؛ نیازی به Request قبلی نیست. طول پیش‌فرض پس از trim برابر ۴ تا ۶۴ کاراکتر و بدون control character است؛ کدهای شش‌رقمی دلخواه از جمله `000000` مجازند.
 - شمارهٔ نامعتبر → `400`؛ حساب معلق → `403`؛ محدودیت نرخ → `429`.
 - `GET /api/v1/me` با access token صادرشده → `200`؛ بدون token → `401`.
-- نقش سازمانی، دسترسی منبع و MFA همچنان مستقل‌اند؛ Mock مجوز ادمین نمی‌سازد و MFA را حذف نمی‌کند.
+- نقش سازمانی و دسترسی منبع همچنان مستقل‌اند؛ Mock مجوز ادمین نمی‌سازد. عامل دوم با تصمیم جداگانهٔ مالک حذف شده است.
 
 کد، token یا پاسخ ورود را در log، screenshot یا گزارش عمومی قرار ندهید.
 

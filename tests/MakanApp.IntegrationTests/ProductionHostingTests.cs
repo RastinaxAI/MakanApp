@@ -299,7 +299,6 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
                 ["ConnectionStrings:MakanDatabase"] =
                     "Server=(localdb)\\MSSQLLocalDB;Database=MakanApp_ProductionHostingTests;Trusted_Connection=True;Encrypt=True;TrustServerCertificate=False",
                 ["Identity:SecurityKey"] = new string('P', 32),
-                ["BackofficeSecurity:KeyRingPath"] = Path.Combine(Path.GetTempPath(), "MakanApp-ProductionHostingKeys", Guid.NewGuid().ToString("N")),
                 ["Sms:Provider"] = "Unavailable",
                 ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
                 ["Storage:RootPath"] = rootPath ?? factory.StorageRootPath,

@@ -4,7 +4,6 @@ namespace MakanApp.Application.Platform;
 
 public sealed class PlatformIamService(
     IPlatformIamStore store,
-    IPlatformStepUpAuthorization stepUpAuthorization,
     TimeProvider timeProvider) : IPlatformIamService, IPlatformPermissionResolver
 {
     public async Task<bool> HasPermissionAsync(
@@ -100,7 +99,6 @@ public sealed class PlatformIamService(
             throw Error(PlatformErrorCodes.RoleNotFound, "نقش پلتفرم یافت نشد.");
         }
 
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.GrantRoleAsync(
             actorUserId,
             actorSessionId,
@@ -121,7 +119,6 @@ public sealed class PlatformIamService(
         CancellationToken cancellationToken)
     {
         ValidateMutation(actorUserId, actorSessionId, assignmentId, command.Reason, correlationId);
-        await EnsureStepUpAsync(actorUserId, actorSessionId, cancellationToken);
         return await store.EndRoleAssignmentAsync(
             actorUserId,
             actorSessionId,
@@ -130,22 +127,6 @@ public sealed class PlatformIamService(
             UtcNow(),
             correlationId.Trim(),
             cancellationToken);
-    }
-
-    private async Task EnsureStepUpAsync(
-        Guid actorUserId,
-        Guid actorSessionId,
-        CancellationToken cancellationToken)
-    {
-        if (!await stepUpAuthorization.IsSatisfiedAsync(
-                actorUserId,
-                actorSessionId,
-                cancellationToken))
-        {
-            throw Error(
-                PlatformErrorCodes.StepUpRequired,
-                "تأیید امنیتی مجدد برای این عملیات الزامی است.");
-        }
     }
 
     private static void ValidateMutation(

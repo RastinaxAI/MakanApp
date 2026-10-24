@@ -82,9 +82,10 @@ public sealed partial class EfPlatformEducationSafetyStore
         if (snapshot is null || !snapshot.Permissions.Contains(PlatformPermissionKeys.ModerationReview) ||
             stronger && !snapshot.Permissions.Contains(PlatformPermissionKeys.ModerationEnforce))
             throw new PlatformException(PlatformErrorCodes.AccessDenied, "دسترسی پرونده مجاز نیست.");
-        if (!await mfaAssurance.IsSatisfiedAsync(actor.UserId, actor.SessionId, ct))
-            throw new PlatformException(PlatformErrorCodes.MfaRequired, "تأیید MFA لازم است.");
-        if (stronger && !await stepUp.IsSatisfiedAsync(actor.UserId, actor.SessionId, ct))
-            throw new PlatformException(PlatformErrorCodes.StepUpRequired, "تأیید تازه MFA لازم است.");
+        var now = clock.GetUtcNow().UtcDateTime;
+        if (!await dbContext.UserSessions.AnyAsync(session => session.Id == actor.SessionId &&
+                session.UserId == actor.UserId && session.RevokedAtUtc == null &&
+                session.ExpiresAtUtc > now && session.AbsoluteExpiresAtUtc > now, ct))
+            throw new PlatformException(PlatformErrorCodes.AccessDenied, "نشست جاری معتبر لازم است.");
     }
 }

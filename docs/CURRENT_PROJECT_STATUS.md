@@ -1,6 +1,6 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
-بازبینی `2026-10-23` از `main@5885d11`؛ **325 عملیات HTTP در 57 Controller و 290 مسیر؛ 552 schema، 107 جدول و 48 migration**. آخرین migration `20261017033804_AddConversationChecklists` است؛ از بازبینی ۲۰۲۶-۱۰-۱۸ جدول، migration یا route تازه‌ای اضافه نشده؛ تعداد schemaها با PlatformJobQueueDetail از ۵۵۱ به ۵۵۲ رسیده و رفتار و عملیات تغییر کرده است.
+بازبینی `2026-10-24` از `main@e525c78` به‌همراه تغییرات حذف عامل دوم؛ **318 عملیات HTTP در 56 Controller، 105 جدول و 49 Migration**. مدل و OpenAPI از working tree استخراج شده‌اند؛ آخرین Migration `20261024184613_RemovePlatformMfa` هنوز روی دیتابیس اصلی یا سرور اعمال نشده است. [اثر تغییر](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md).
 
 ## تغییرات کد و بیزینس نسبت به بازبینی قبلی
 
@@ -8,14 +8,14 @@
 |---|---|
 | OTP و ورود | Real=true/false؛ Mock فقط Development/Test/Testing=false/true، بدون اثبات مالکیت شماره؛ Production/Staging fail-closed؛ [قرارداد](dev/CONFIGURABLE_OTP_FA.md) |
 | Test/Production | profileهای جدا، JSON هم‌ساختار با مقادیر مستقل و حفظ secretها؛ [Publish Guide](production/PUBLISH_GUIDE_FA.md) و [شاهد انتشار](production/BACKEND_RELEASE_READINESS_FA.md) |
-| Data Protection / readiness | ring پایدار با نام قبلی، aliasهای سازگار و رد تعارض؛ config/ring/SQL/storage در ready؛ [قرارداد PH](operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) |
+| Platform / readiness | MFA و key ring صرفاً مرتبط حذف شده‌اند؛ OTP/Session/permission و config/SQL/Storage در ready حفظ شده‌اند؛ [تصمیم جاری](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) |
 | workerها | claim/lease/fencing، repair محدود، completion budget، انتشار امن export؛ [بازیابی](operations/WORKER_RELIABILITY_AND_RECOVERY.md) |
 | observability / IIS | log و exception امن، snapshot stale-aware، shutdown Host/ANCM/WAS مستقل؛ [Observability](production/OBSERVABILITY.md) و [IIS](production/DEPLOYMENT_IIS.md) |
 | retention | مکانیزم پیش‌فرض خاموش برای bytes terminal بدون reference؛ بدون purge SQL؛ [سیاست](operations/RETENTION_AND_CLEANUP_POLICY.md) |
 | Messenger Block | seek زوج فعال روی index موجود برای retry موازی، بدون تغییر policy/DTO/schema؛ [شاهد مرحله](production/BACKEND_RELEASE_READINESS_FA.md) |
 | AI v1 | grounding/response سخت‌گیرانه، telemetry و probe امن؛ Service Auth قبلی PASS، Parent Provider Timeout و Full-12 Deferred؛ [وضعیت](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) |
 
-Identity/session، onboarding Organization/Guardian، Academic/Assessment، report/export، Notification، Commerce و Backoffice/MFA موجودند. Messenger P0/P1/P2 تا Checklist و transport Web Push/FCM در کد هستند؛ وضعیت media P3 و delivery واقعی از وجود کد نتیجه نمی‌شوند.
+Identity/session، onboarding Organization/Guardian، Academic/Assessment، report/export، Notification، Commerce و Backoffice موجودند؛ عامل دوم حذف شده است. Messenger P0/P1/P2 تا Checklist و transport Web Push/FCM در کد هستند؛ وضعیت media P3 و delivery واقعی از وجود کد نتیجه نمی‌شوند.
 
 ## gateهای باز
 
@@ -49,8 +49,8 @@ metadata از TestServer بدون hosted worker، SQL، SMS یا AI واقعی �
 
 ## نتیجهٔ validation این بازبینی
 
-restore موفق بود. build اولیه و نهایی هر دو صفر warning/error داشتند. در هر دو دور suite، **۲۲۳۹ تست** موفق شدند: ۸۷۳ Unit، ۱۳۵۲ Integration و ۱۴ Architecture؛ failed/skipped صفر. دوازده تست ابزار Python هم موفق‌اند. suite روی checkout ایزوله و LocalDB تست با نام یکتا اجرا شد؛ تغییر موقت نام fixture پس از تست به bytes اصلی بازگردانده شد و وارد commit نیست.
+Restore موفق بود؛ Buildهای Debug و Release صفر Warning/Error داشتند. در هر دو اجرای کامل، ۲۱۹۹ تست پاس شدند: ۸۶۶ Unit، ۱۳۱۹ Integration و ۱۴ Architecture؛ failed/skipped صفر. دوازده تست ابزار مستندسازی نیز موفق‌اند. Suite در مخزن اصلی و فقط روی LocalDB خودکار و ایزوله اجرا شد؛ Migration فقط در همین fixture با اجازهٔ صریح مالک اعمال شد.
 
-مدل EF pending change ندارد؛ هیچ migration روی سرور اعمال نشد. کاتالوگ ۳۲۵ عملیات/۵۵۲ schema/۱۰۷ جدول/۴۸ migration و ۱۳۸ ورودی inventory کنترل شد؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب ۷۱/۴۰۷/۴۱۲/۱۵۷ صفحه دارند؛ bookmark، hash HTML متناظر، صفحه خالی و متن خارج صفحه کنترل و صفحات نماینده بصری بررسی شدند.
+مدل EF pending change ندارد؛ Migration روی دیتابیس اصلی یا سرور اعمال نشده است. کاتالوگ ۳۱۸ عملیات/۵۴۷ schema/۱۰۵ جدول/۴۹ Migration و ۱۳۹ ورودی inventory کنترل شد؛ لینک شکسته و اختلاف Enum/OpenAPI صفر است. PDFهای Guide/Reference/Frontend/Database به‌ترتیب ۷۱/۴۰۰/۴۰۵/۱۵۵ صفحه دارند؛ bookmark، hash HTML، صفحهٔ خالی و متن خارج صفحه با ابزار بررسی شدند.
 
-**فهرست دقیق فایل‌های اصلاح‌شده، علت هر تغییر و گزارش آموزشی در [گزارش تحویل](DOCUMENTATION_UPDATE_REPORT.md) است.** ۲۵ فایل قبلی مستندات/خروجی، دو ابزار و یک گزارش جدید در scope Git قرار دارند؛ دو خروجی دیتابیس محلی/ignored هستند. سه فایل Python قبلی AI با hash کنترل و حفظ شدند. این نتایج پذیرش Production، تماس واقعی provider یا closure gateهای باز نیستند.
+**تصمیم، فایل‌های حذف/تغییرکرده، اثر مخرب Migration و گزارش آموزشی این مرحله در [حذف عامل دوم Platform](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) ثبت شده‌اند.** سه فایل Python قبلی AI و دو JSON خصوصی با hash اولیه برابرند؛ Push و استقرار سرور در این مرحله انجام نمی‌شوند. نتایج جاری جای پذیرش Production، provider واقعی یا closure gateهای باز نیستند.
