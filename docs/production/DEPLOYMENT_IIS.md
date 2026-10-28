@@ -26,6 +26,7 @@ ConnectionStrings__MakanDatabase
 Identity__SecurityKey
 Storage__RootPath
 AllowedHosts
+Cors__AllowAnyOrigin
 Cors__AllowedOrigins__0
 ReverseProxy__Enabled=true
 ReverseProxy__KnownProxies__0=127.0.0.1
@@ -57,7 +58,7 @@ Notifications__SmsProvider=Unavailable
 
 `Hosting:AllowInsecureHttp` اجازه می‌دهد redirect غیرفعال و origin صریح HTTP استفاده شود. روی HTTP، OTP، پیام‌ها و توکن‌های ورود در شبکه رمزگذاری نمی‌شوند؛ این یک استثنای پذیرفته‌شده است، نه محیط امن یا اثبات Release Readiness. `Database:AllowUntrustedServerCertificate` فقط پذیرش `TrustServerCertificate=True` را مجاز می‌کند؛ `Encrypt=False` همچنان رد می‌شود و هویت گواهی SQL تأیید نخواهد شد. دو flag مستقل‌اند، در Staging اثر ندارند و با حذف/false شدن به کنترل سخت‌گیرانه بازمی‌گردند. startup فقط هشدارهای ثابت و بدون secret ثبت می‌کند.
 
-AllowedHosts، CORS، proxy، مسیر مطلق storage، طول کلید Identity، Authentication و Authorization همچنان اعتبارسنجی می‌شوند. اعتماد سراسری به proxy یا CORS wildcard اضافه نشده است. فایل خصوصی از آخرین آدرس اعلام‌شدهٔ مالک (`http://94.184.32.84`) استفاده می‌کند؛ این آدرس با اتصال به سرور دوباره بررسی نشده است. فقط همان origin در CORS آمده؛ اگر وب‌کلاینت روی origin دیگری است، آدرس دقیق آن باید به allowlist اضافه شود. CORS روی اپ native/Postman محدودیت مرورگر ایجاد نمی‌کند و مجوز کسب‌وکاری نیست.
+طبق تصمیم صریح مالک در ۲۰۲۶-۱۰-۲۷، فایل‌های Test و Production با `Cors:AllowAnyOrigin=true`، `Cors:AllowedOrigins=[]` و `AllowedHosts="*"` تنظیم می‌شوند. تصمیم CORS به نام Environment وابسته نیست؛ برای محدودسازی، فلگ را false و Originهای دقیق را وارد کنید. CORS باز، header و method دلخواه را مجاز می‌کند ولی cookie credentials فعال نمی‌شود. کنترل‌های proxy، SQL، storage، Identity، Authentication و Authorization حفظ می‌شوند؛ اعتماد عمومی به proxy اضافه نشده است. متغیرهای محیطی و IIS همچنان می‌توانند JSON را override کنند و وضعیت واقعی سرور در این تغییر بررسی نشده است. [راهنمای CORS و تقدم تنظیمات](CORS_CONFIGURATION_FA.md) را بخوانید.
 
 پس از آماده شدن HTTPS، `RequireHttps=true` و `AllowInsecureHttp=false` و originهای HTTPS تنظیم شوند. پس از نصب گواهی معتبر SQL نیز `TrustServerCertificate=False` و `AllowUntrustedServerCertificate=false` شوند. استفاده از حساب SQL پرقدرت موجود صرفاً بازیابی کانفیگ درخواست‌شده است؛ جایگزینی آن با runtime principal کم‌اختیار هنوز وظیفهٔ اپراتور است، نه کاری که این تغییر روی سرور انجام دهد.
 

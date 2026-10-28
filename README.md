@@ -127,7 +127,7 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 - ASP.NET Core Controllers
 - OpenAPI و Swagger UI در Development/Test/Testing؛ در Production/Staging پیش‌فرض خاموش
-- CORS allowlist صریح خارج توسعه؛ بدون cookie credentials؛ احراز هویت با Bearer token
+- CORS فقط با `Cors:AllowAnyOrigin` بین حالت باز و allowlist جابه‌جا می‌شود؛ بدون cookie credentials و با همان Bearer authentication؛ [راهنمای تنظیم](docs/production/CORS_CONFIGURATION_FA.md)
 - ProblemDetails و exception handling متمرکز
 - HTTPS redirection مطابق `Hosting:RequireHttps`؛ غیرفعال‌سازی در Production فقط با استثنای صریح تأییدشده
 - health checks

@@ -62,16 +62,27 @@ builder.Services.AddAuthorization(options =>
     }
 });
 builder.Services.AddScoped<IAuthorizationHandler, PlatformPermissionAuthorizationHandler>();
+var corsSection = builder.Configuration.GetSection("Cors");
+var allowAnyOrigin = corsSection.GetValue("AllowAnyOrigin", false);
+var allowedOrigins = corsSection.GetSection("AllowedOrigins").Get<string[]>() ?? [];
+if (!allowAnyOrigin && allowedOrigins.Length == 0)
+{
+    throw new InvalidOperationException(
+        "وقتی Cors:AllowAnyOrigin=false است، Cors:AllowedOrigins باید حداقل یک Origin داشته باشد.");
+}
+if (!allowAnyOrigin && allowedOrigins.Any(origin =>
+        string.IsNullOrWhiteSpace(origin) || origin.Contains('*', StringComparison.Ordinal)))
+{
+    throw new InvalidOperationException(
+        "در حالت محدود، Cors:AllowedOrigins نمی‌تواند خالی یا شامل wildcard باشد.");
+}
 builder.Services.AddCors(options =>
 {
-    var allowedOrigins = builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>() ?? [];
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithExposedHeaders("Retry-After", CorrelationIdMiddleware.HeaderName);
-        if (allowedOrigins.Length == 0 &&
-            (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")))
+        policy.WithExposedHeaders("Retry-After", CorrelationIdMiddleware.HeaderName)
+            .SetPreflightMaxAge(TimeSpan.FromHours(1));
+        if (allowAnyOrigin)
         {
             policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
             return;
@@ -79,8 +90,7 @@ builder.Services.AddCors(options =>
 
         policy.WithOrigins(allowedOrigins)
             .WithHeaders("authorization", "content-type", "x-client-version", CorrelationIdMiddleware.HeaderName)
-            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            .SetPreflightMaxAge(TimeSpan.FromHours(1));
+            .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
     });
 });
 builder.Services.AddSignalR().AddJsonProtocol(options =>

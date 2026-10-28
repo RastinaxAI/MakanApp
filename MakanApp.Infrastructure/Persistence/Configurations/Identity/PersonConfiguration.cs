@@ -13,6 +13,7 @@ public sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(person => person.FirstName).HasMaxLength(100).IsRequired();
         builder.Property(person => person.LastName).HasMaxLength(100).IsRequired();
         builder.Property(person => person.DisplayName).HasMaxLength(200);
+        builder.Property(person => person.DateOfBirth).HasColumnType("date");
         builder.Property(person => person.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(person => person.UpdatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(person => person.RowVersion).IsRowVersion();

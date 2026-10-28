@@ -110,6 +110,137 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
         Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
     }
 
+    [Theory]
+    [InlineData("Test", false)]
+    [InlineData("Test", true)]
+    [InlineData("Production", false)]
+    [InlineData("Production", true)]
+    public async Task OpenCorsAllowsAnyOriginHeaderAndMethodRegardlessOfAllowlist(string environmentName, bool hasAllowlist)
+    {
+        using var application = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "true",
+            ["Cors:AllowedOrigins:0"] = hasAllowlist ? "https://listed.example.test" : null,
+            ["AllowedHosts"] = "*"
+        });
+        using var client = CreateClient(application);
+        var origins = application.Services.GetRequiredService<IConfiguration>()
+            .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        Assert.Equal(hasAllowlist ? 1 : 0, origins.Length);
+
+        foreach (var origin in new[] { "https://arbitrary.example", "http://localhost:54321", "null" })
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/files");
+            request.Headers.Add("Origin", origin);
+            request.Headers.Add("Access-Control-Request-Method", "TRACE");
+            request.Headers.Add("Access-Control-Request-Headers", "x-custom-client");
+            using var response = await client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            Assert.Equal("*", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+            Assert.Equal("TRACE", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Methods")));
+            Assert.Equal("x-custom-client", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Headers")));
+            Assert.Equal("3600", Assert.Single(response.Headers.GetValues("Access-Control-Max-Age")));
+            Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
+        }
+    }
+
+    [Theory]
+    [InlineData("Test")]
+    [InlineData("Production")]
+    public async Task OpenCorsAndWildcardHostsStillRequireAuthenticationAndExposeExistingHeaders(string environmentName)
+    {
+        using var application = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "true",
+            ["Cors:AllowedOrigins:0"] = null,
+            ["AllowedHosts"] = "*"
+        });
+        using var client = CreateClient(application);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://unlisted.example.test/api/v1/files");
+        request.Headers.Add("Origin", "https://arbitrary.example");
+        request.Headers.Add("X-Correlation-ID", "cors-open-authentication-check");
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("*", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+        var exposed = string.Join(",", response.Headers.GetValues("Access-Control-Expose-Headers"));
+        Assert.Contains("Retry-After", exposed, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("X-Correlation-ID", exposed, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("cors-open-authentication-check", Assert.Single(response.Headers.GetValues("X-Correlation-ID")));
+        Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
+    }
+
+    [Theory]
+    [InlineData("Test", true)]
+    [InlineData("Test", false)]
+    [InlineData("Production", true)]
+    [InlineData("Production", false)]
+    public async Task RestrictedCorsUsesExplicitOriginsAndPreservesExistingMethodsAndHeaders(string environmentName, bool listed)
+    {
+        using var application = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "false",
+            ["Cors:AllowedOrigins:0"] = "https://makanapp.ir"
+        });
+        using var client = CreateClient(application);
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/files");
+        request.Headers.Add("Origin", listed ? "https://makanapp.ir" : "https://unlisted.example.test");
+        request.Headers.Add("Access-Control-Request-Method", "PATCH");
+        request.Headers.Add("Access-Control-Request-Headers", "authorization,content-type,x-client-version,x-correlation-id");
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(listed, response.Headers.Contains("Access-Control-Allow-Origin"));
+        Assert.False(response.Headers.Contains("Access-Control-Allow-Credentials"));
+        if (listed)
+        {
+            Assert.Equal("https://makanapp.ir", Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+            Assert.Equal(new[] { "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT" },
+                string.Join(",", response.Headers.GetValues("Access-Control-Allow-Methods"))
+                    .Split(',', StringSplitOptions.TrimEntries).OrderBy(value => value, StringComparer.Ordinal));
+            Assert.Equal(new[] { "authorization", "content-type", "x-client-version", "x-correlation-id" },
+                string.Join(",", response.Headers.GetValues("Access-Control-Allow-Headers"))
+                    .ToLowerInvariant().Split(',', StringSplitOptions.TrimEntries).OrderBy(value => value, StringComparer.Ordinal));
+            Assert.Equal("3600", Assert.Single(response.Headers.GetValues("Access-Control-Max-Age")));
+        }
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Testing")]
+    [InlineData("Test")]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    public void EmptyRestrictedCorsStopsStartupRegardlessOfEnvironment(string environmentName)
+    {
+        using var application = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "false",
+            ["Cors:AllowedOrigins:0"] = null
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => application.CreateClient());
+        Assert.Contains("Cors:AllowedOrigins", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Test")]
+    [InlineData("Production")]
+    public void RestrictedCorsCannotUseWildcardOriginsToOpenThePolicy(string environmentName)
+    {
+        using var application = CreateProductionFactory(environmentName: environmentName, overrides: new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "false",
+            ["Cors:AllowedOrigins:0"] = "*"
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => application.CreateClient());
+        Assert.Contains("Cors:AllowedOrigins", exception.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public async Task ConfiguredProductionStoragePersistsAcrossHostRestart()
     {
@@ -303,6 +434,7 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
                 ["Sms:MeliPayamakOtp:ServiceToken"] = string.Empty,
                 ["Storage:RootPath"] = rootPath ?? factory.StorageRootPath,
                 ["AllowedHosts"] = "localhost",
+                ["Cors:AllowAnyOrigin"] = "false",
                 ["Cors:AllowedOrigins:0"] = "https://app.example.test",
                 ["Hosting:RequireHttps"] = "true",
                 ["Hosting:AllowInsecureHttp"] = "false",

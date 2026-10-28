@@ -11,7 +11,8 @@
     "SecurityKey": ""
   },
   "Cors": {
-    "AllowedOrigins": ["https://app.example.test"]
+    "AllowAnyOrigin": true,
+    "AllowedOrigins": []
   },
   "Hosting": {
     "RequireHttps": true,
@@ -56,5 +57,5 @@
       "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
     }
   },
-  "AllowedHosts": "api.example.test"
+  "AllowedHosts": "*"
 }

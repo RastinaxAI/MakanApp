@@ -34,7 +34,7 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Secrets | CONTRACT_VALIDATED / OPS_PENDING | فایل واقعی Production ignored است؛ وجود/محتوای secret روی سرور از clean worktree نتیجه نمی‌شود؛ نمونه بدون secret و اعتبارسنجی تنظیمات فعال موجود است؛ provisioning/ACL/custody وظیفهٔ اپراتور است |
 | SQL Server | READY_WITH_LIMITATION | TLS و least privilege مستند/اسکریپت شده؛ ایجاد principal روی سرور باقی است |
 | Storage | READY_WITH_LIMITATION | root مطلق، probe، authorization و امضای حداقلی؛ AV/CDR provider وجود ندارد |
-| CORS | IMPLEMENTED | allowlist صریح؛ HTTP فقط با Hosting:AllowInsecureHttp تأییدشده، بدون wildcard یا credentials |
+| CORS | CONFIGURABLE | طبق تصمیم مالک: `AllowAnyOrigin=true` و `AllowedHosts=*` در Test/Production؛ با false، allowlist اجباری است؛ cookie credentials فعال نیست؛ [قرارداد](CORS_CONFIGURATION_FA.md) |
 | TLS | OWNER_EXCEPTION / NOT_SECURE | هدف فعلی HTTP؛ default امن باقی است ولی فعال بودن استثنا شبکه را رمزگذاری نمی‌کند |
 | Security headers | READY | nosniff، referrer، frame/CSP و permissions policy |
 | Rate limiting | READY_WITH_LIMITATION | policyهای local-process؛ چند instance به limiter مشترک نیاز دارد |
@@ -83,7 +83,7 @@ Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور 
 |---|---|---|---|
 | Logging | `Information`، local | `Information` + collector | `Information`، framework/EF در `Warning` |
 | Swagger/OpenAPI | Available | Disabled پیش‌فرض | مالک برای artifact خصوصی قبلی Enabled را تأیید کرده؛ وضعیت واقعی deploy دوباره بررسی نشده؛ config خصوصی تغییر نکرده |
-| CORS | در نبود config باز برای ابزار توسعه | allowlist صریح HTTPS | allowlist صریح؛ HTTP با opt-in |
+| CORS | فقط فلگ Configuration، بدون fallback محیط | با false: allowlist صریح HTTPS | طبق تصمیم مالک فلگ true؛ با false: allowlist و استثنای مستقل HTTP |
 | HTTPS/HSTS | redirect قابل استفاده، بدون HSTS | RequireHttps=true، HSTS | RequireHttps=false، AllowInsecureHttp=true |
 | Storage | مسیر `%LOCALAPPDATA%` | persistent absolute path | persistent absolute path و fail-fast |
 | SQL | مقصد توسعهٔ مجاز | Encrypt=True و بررسی معتبر گواهی | Encrypt=True؛ استثنای مستقل پذیرش گواهی تأییدنشده |

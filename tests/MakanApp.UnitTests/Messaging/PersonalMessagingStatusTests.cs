@@ -44,12 +44,35 @@ public sealed class PersonalMessagingStatusTests
     }
 
     [Fact]
-    public void ProfileCompletionIsNotAgeVerificationAndIncompleteProfileHasNoCapabilities()
+    public void ProfileCompletionIsNotAgeVerificationAndIncompleteProfileKeepsReadOnlyAccess()
     {
         var result = MessagingStatusPolicy.Evaluate(Adult with { ProfileComplete = false, VerificationStatus = CommunicationAgeVerificationStatus.Unverified }, Now);
-        Assert.Empty(result.AllowedActions);
+        Assert.Equal(PersonalMessagingAction.ReadExistingConversations, Assert.Single(result.AllowedActions));
         Assert.Equal(MessagingNextAction.ProfileCompletionRequired, result.NextAction);
         Assert.Equal(CommunicationAgeCategory.Unknown, result.EffectiveAgeCategory);
+    }
+
+    [Theory]
+    [InlineData(CommunicationAgeVerificationStatus.Unverified, CommunicationAgeCategory.Adult, true)]
+    [InlineData(CommunicationAgeVerificationStatus.Conflict, CommunicationAgeCategory.Adult, false)]
+    [InlineData(CommunicationAgeVerificationStatus.Verified, CommunicationAgeCategory.Minor, true)]
+    [InlineData(CommunicationAgeVerificationStatus.Verified, CommunicationAgeCategory.Adult, false)]
+    public void IncompleteProfileNeverGrantsCreationDiscoveryOrAgeVerification(
+        CommunicationAgeVerificationStatus status, CommunicationAgeCategory age, bool personalWorkspace)
+    {
+        var result = MessagingStatusPolicy.Evaluate(Adult with
+        {
+            ProfileComplete = false,
+            VerificationStatus = status,
+            AgeCategory = age,
+            PersonalWorkspaceSelected = personalWorkspace,
+            MessagingRestrictedUntilUtc = Now.AddHours(1)
+        }, Now);
+        Assert.Equal(PersonalMessagingAction.ReadExistingConversations, Assert.Single(result.AllowedActions));
+        Assert.Equal(MessagingNextAction.ProfileCompletionRequired, result.NextAction);
+        Assert.Equal(status, result.VerificationStatus);
+        Assert.Equal(status == CommunicationAgeVerificationStatus.Verified ? age : CommunicationAgeCategory.Unknown,
+            result.EffectiveAgeCategory);
     }
 
     [Fact]

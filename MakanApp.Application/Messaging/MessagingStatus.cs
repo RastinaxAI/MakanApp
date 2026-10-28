@@ -46,7 +46,11 @@ public static class MessagingStatusPolicy
         var verified = state.VerificationStatus == CommunicationAgeVerificationStatus.Verified;
         var effectiveAge = verified && Enum.IsDefined(state.AgeCategory) ? state.AgeCategory : CommunicationAgeCategory.Unknown;
         var adult = effectiveAge == CommunicationAgeCategory.Adult;
-        var actions = new List<PersonalMessagingAction>();
+        // پروفایل ناقص مجوز تازه‌ای نمی‌سازد؛ دسترسی خواندن همچنان برای هر گفتگو بررسی می‌شود.
+        var actions = new List<PersonalMessagingAction>
+        {
+            PersonalMessagingAction.ReadExistingConversations
+        };
         var nextAction = state.VerificationStatus == CommunicationAgeVerificationStatus.Conflict
             ? MessagingNextAction.VerificationConflictResolutionRequired
             : !verified ? MessagingNextAction.VerificationRequired
@@ -55,7 +59,6 @@ public static class MessagingStatusPolicy
             return new(state.VerificationStatus, effectiveAge, actions, MessagingNextAction.ProfileCompletionRequired, state.Version);
 
         // این فهرست راهنمای self است؛ مجوز مقصد/منبع در هر عملیات دوباره محاسبه می‌شود.
-        actions.Add(PersonalMessagingAction.ReadExistingConversations);
         actions.Add(adult ? PersonalMessagingAction.DiscoverUsers : PersonalMessagingAction.DiscoverRelatedUsers);
         if (state.PersonalWorkspaceSelected)
         {

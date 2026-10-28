@@ -47,15 +47,12 @@ public static class ProductionConfigurationValidator
             throw Invalid("Storage:RootPath در Production/Staging باید مسیر مطلق و پایدار باشد.");
         }
 
-        var allowedHosts = Require(configuration, "AllowedHosts");
-        if (allowedHosts.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Any(host => host == "*"))
-        {
-            throw Invalid("AllowedHosts در Production/Staging نمی‌تواند شامل '*' باشد.");
-        }
+        // wildcard صریح طبق تصمیم مالک مجاز است؛ نبود مقدار همچنان خطای پیکربندی است.
+        _ = Require(configuration, "AllowedHosts");
 
         var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-        if (origins.Length == 0 || origins.Any(origin =>
+        if (!configuration.GetValue("Cors:AllowAnyOrigin", false) &&
+            (origins.Length == 0 || origins.Any(origin =>
                 !Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
                 (uri.Scheme != Uri.UriSchemeHttps &&
                  !(allowInsecureHttp && uri.Scheme == Uri.UriSchemeHttp)) ||
@@ -63,7 +60,7 @@ public static class ProductionConfigurationValidator
                 !string.IsNullOrEmpty(uri.Query) ||
                 !string.IsNullOrEmpty(uri.Fragment) ||
                 !string.IsNullOrEmpty(uri.UserInfo) ||
-                origin.Contains('*', StringComparison.Ordinal)))
+                origin.Contains('*', StringComparison.Ordinal))))
         {
             throw Invalid("Cors:AllowedOrigins باید originهای صریح HTTPS داشته باشد؛ HTTP فقط با استثنای Hosting:AllowInsecureHttp در Production مجاز است.");
         }

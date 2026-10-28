@@ -315,6 +315,11 @@ public sealed partial class IdentityService(
 
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         Person person;
+        if (command.DateOfBirth > DateOnly.FromDateTime(nowUtc))
+        {
+            throw ProfileValidationException();
+        }
+
         if (user.PersonId.HasValue)
         {
             person = await store.GetPersonAsync(user.PersonId.Value, cancellationToken)
@@ -325,6 +330,12 @@ public sealed partial class IdentityService(
         {
             person = Person.Create(firstName, lastName, displayName, nowUtc);
             store.Add(person);
+        }
+
+        // نبودن تاریخ یا null در درخواستِ کلاینت قدیمی، مقدار ثبت‌شدهٔ قبلی را پاک نمی‌کند.
+        if (command.DateOfBirth.HasValue)
+        {
+            person.SetDateOfBirth(command.DateOfBirth.Value, nowUtc);
         }
 
         user.SetProfile(person.Id, username, normalizedUsername, nowUtc);
@@ -433,7 +444,8 @@ public sealed partial class IdentityService(
             person?.FirstName,
             person?.LastName,
             person?.DisplayName,
-            user.Username);
+            user.Username,
+            person?.DateOfBirth);
     }
 
     private byte[] HashOtpForCurrentMode(string code, byte[] salt) =>

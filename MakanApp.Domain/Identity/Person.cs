@@ -24,6 +24,7 @@ public sealed class Person
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
     public string? DisplayName { get; private set; }
+    public DateOnly? DateOfBirth { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
@@ -44,6 +45,17 @@ public sealed class Person
         FirstName = firstName;
         LastName = lastName;
         DisplayName = displayName;
+        UpdatedAtUtc = updatedAtUtc;
+    }
+
+    public void SetDateOfBirth(DateOnly dateOfBirth, DateTime updatedAtUtc)
+    {
+        if (dateOfBirth > DateOnly.FromDateTime(updatedAtUtc))
+        {
+            throw new ArgumentOutOfRangeException(nameof(dateOfBirth), "تاریخ تولد نمی‌تواند در آینده باشد.");
+        }
+
+        DateOfBirth = dateOfBirth;
         UpdatedAtUtc = updatedAtUtc;
     }
 }

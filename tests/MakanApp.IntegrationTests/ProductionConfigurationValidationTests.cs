@@ -20,7 +20,7 @@ public sealed class ProductionConfigurationValidationTests
     [Theory]
     [InlineData("Cors:AllowedOrigins:0", "*")]
     [InlineData("Cors:AllowedOrigins:0", "http://app.example.test")]
-    [InlineData("AllowedHosts", "*")]
+    [InlineData("AllowedHosts", "")]
     [InlineData("ReverseProxy:KnownProxies:0", "any-proxy")]
     [InlineData("Storage:RootPath", "relative/path")]
     public void UnsafeProductionConfigurationIsRejected(string key, string value)
@@ -53,7 +53,7 @@ public sealed class ProductionConfigurationValidationTests
     [InlineData("ConnectionStrings:MakanDatabase", "Server=sql.internal;Database=Staging;Integrated Security=True;Encrypt=True;TrustServerCertificate=True")]
     [InlineData("Identity:SecurityKey", "secret-marker")]
     [InlineData("Storage:RootPath", "relative/storage")]
-    [InlineData("AllowedHosts", "*")]
+    [InlineData("AllowedHosts", "")]
     [InlineData("Cors:AllowedOrigins:0", "http://app.example.test")]
     [InlineData("ReverseProxy:Enabled", "false")]
     [InlineData("ReverseProxy:KnownProxies:0", "untrusted")]
@@ -102,7 +102,7 @@ public sealed class ProductionConfigurationValidationTests
     }
 
     [Theory]
-    [InlineData("AllowedHosts", "*")]
+    [InlineData("AllowedHosts", "")]
     [InlineData("Cors:AllowedOrigins:0", "http://*.example.test")]
     [InlineData("Cors:AllowedOrigins:0", "ftp://app.example.test")]
     [InlineData("Cors:AllowedOrigins:0", "http://app.example.test/path")]
@@ -138,6 +138,63 @@ public sealed class ProductionConfigurationValidationTests
             ProductionConfigurationValidator.Validate(configuration, "Production"));
     }
 
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    public void ExplicitWildcardHostsAreAcceptedWithoutOpeningRestrictedCors(string environmentName)
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?> { ["AllowedHosts"] = "*" });
+
+        ProductionConfigurationValidator.Validate(configuration, environmentName);
+    }
+
+    [Theory]
+    [InlineData("Production")]
+    [InlineData("Staging")]
+    public void ExplicitOpenCorsAcceptsEmptyOriginsAndWildcardHosts(string environmentName)
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "true",
+            ["Cors:AllowedOrigins:0"] = null,
+            ["AllowedHosts"] = "*"
+        });
+
+        ProductionConfigurationValidator.Validate(configuration, environmentName);
+    }
+
+    [Fact]
+    public void OpenCorsDoesNotValidateUnusedOriginValues()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "true",
+            ["Cors:AllowedOrigins:0"] = "unused-origin-value"
+        });
+
+        ProductionConfigurationValidator.Validate(configuration, "Production");
+    }
+
+    [Theory]
+    [InlineData("Hosting:RequireHttps", "false")]
+    [InlineData("ReverseProxy:Enabled", "false")]
+    [InlineData("Identity:SecurityKey", "secret-marker")]
+    [InlineData("ConnectionStrings:MakanDatabase", "Server=sql.internal;Database=Tests;Integrated Security=True;Encrypt=False")]
+    public void OpenCorsDoesNotBypassOtherProductionGuards(string key, string value)
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["Cors:AllowAnyOrigin"] = "true",
+            ["Cors:AllowedOrigins:0"] = null,
+            ["AllowedHosts"] = "*",
+            [key] = value
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ProductionConfigurationValidator.Validate(configuration, "Production"));
+        Assert.DoesNotContain("secret-marker", exception.Message, StringComparison.Ordinal);
+    }
+
     private static Dictionary<string, string?> ApprovedExceptions() => new()
     {
         ["Hosting:RequireHttps"] = "false",
@@ -158,6 +215,7 @@ public sealed class ProductionConfigurationValidationTests
             ["Identity:SecurityKey"] = new string('S', 32),
             ["Storage:RootPath"] = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "makan-production-storage")),
             ["AllowedHosts"] = "api.example.test",
+            ["Cors:AllowAnyOrigin"] = "false",
             ["Cors:AllowedOrigins:0"] = "https://app.example.test",
             ["Hosting:RequireHttps"] = "true",
             ["ReverseProxy:Enabled"] = "true",
