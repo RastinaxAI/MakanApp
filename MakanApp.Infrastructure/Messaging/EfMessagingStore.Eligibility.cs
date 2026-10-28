@@ -172,7 +172,7 @@ public sealed partial class EfMessagingStore
             throw RecipientNotAvailable();
         }
 
-        return new SafeMessagingIdentityRecord(user.UserId, user.Username, user.DisplayName);
+        return new SafeMessagingIdentityRecord(user.UserId, user.Username, user.DisplayName, user.ProfilePhoto);
     }
 
     private async Task<IReadOnlyDictionary<Guid, SafeMessagingIdentityRecord>> LoadSafeIdentitiesAsync(
@@ -187,12 +187,17 @@ public sealed partial class EfMessagingStore
 
         return await (from user in dbContext.Users.AsNoTracking()
                       join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
+                      join file in MakanApp.Infrastructure.Identity.ProfilePhotoQuery.ReadyImages(dbContext)
+                          on user.ProfilePhotoFileAssetId equals file.Id into photos
+                      from file in photos.DefaultIfEmpty()
                       where userIds.Contains(user.Id) && (!requireActive || user.AccountStatus == UserAccountStatus.Active) && user.PersonId != null &&
                             user.Username != null && user.ProfileCompletedAtUtc != null
                       select new SafeMessagingIdentityRecord(
                           user.Id,
                           user.Username!,
-                          person.DisplayName ?? person.FirstName + " " + person.LastName))
+                          person.DisplayName ?? person.FirstName + " " + person.LastName,
+                          file != null && file.UploadedByUserId == user.Id
+                              ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null))
             .TagWith("MessagingSafeIdentityBatch")
             .ToDictionaryAsync(identity => identity.UserId, cancellationToken);
     }
@@ -202,6 +207,9 @@ public sealed partial class EfMessagingStore
         CancellationToken cancellationToken) =>
         (from user in dbContext.Users
          join person in dbContext.Persons on user.PersonId equals person.Id
+         join file in MakanApp.Infrastructure.Identity.ProfilePhotoQuery.ReadyImages(dbContext)
+             on user.ProfilePhotoFileAssetId equals file.Id into photos
+         from file in photos.DefaultIfEmpty()
          where user.Id == userId &&
                user.PersonId != null &&
                user.Username != null &&
@@ -213,7 +221,9 @@ public sealed partial class EfMessagingStore
              user.Username!,
              person.DisplayName ?? person.FirstName + " " + person.LastName,
              user.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified
-                 ? user.CommunicationAgeCategory : CommunicationAgeCategory.Unknown))
+                 ? user.CommunicationAgeCategory : CommunicationAgeCategory.Unknown,
+             file != null && file.UploadedByUserId == user.Id
+                 ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null))
         .AsNoTracking()
         .SingleOrDefaultAsync(cancellationToken);
 
@@ -367,5 +377,6 @@ public sealed partial class EfMessagingStore
         Guid? PersonId,
         string Username,
         string DisplayName,
-        CommunicationAgeCategory AgeCategory);
+        CommunicationAgeCategory AgeCategory,
+        MakanApp.Application.Identity.ProfilePhotoResult? ProfilePhoto);
 }

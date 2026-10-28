@@ -68,6 +68,7 @@ public static class DependencyInjection
 
         services.AddScoped<IIdentityStore, EfIdentityStore>();
         services.AddScoped<IIdentityService, IdentityService>();
+        services.AddScoped<ProfilePhotoService>();
         services.AddSingleton<IIdentitySecurityEventRecorder, LoggingIdentitySecurityEventRecorder>();
         services.AddScoped<IOrganizationStore, EfOrganizationStore>();
         services.AddScoped<SchoolManagementAccessResolver>();

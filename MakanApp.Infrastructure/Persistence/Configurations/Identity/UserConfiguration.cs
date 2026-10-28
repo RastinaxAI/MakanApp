@@ -1,4 +1,5 @@
 using MakanApp.Domain.Identity;
+using MakanApp.Domain.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -43,6 +44,14 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasOne<Person>()
             .WithOne()
             .HasForeignKey<User>(user => user.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(user => user.ProfilePhotoFileAssetId)
+            .IsUnique()
+            .HasFilter("[ProfilePhotoFileAssetId] IS NOT NULL");
+        builder.HasOne<FileAsset>()
+            .WithMany()
+            .HasForeignKey(user => user.ProfilePhotoFileAssetId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

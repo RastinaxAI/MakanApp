@@ -28,7 +28,12 @@ public sealed partial class MessagingEndpointsTests
             var now = DateTime.UtcNow; var user = User.Create(now); var conversation = Conversation.CreateSaved(user.Id, now);
             var participant = ConversationParticipant.CreateActive(conversation.Id, user.Id, now);
             var oldMessage = Message.CreateText(conversation.Id, participant.Id, user.Id, Guid.NewGuid(), conversation.AllocateNextMessageSequence(), "پیام پیش از ارتقا", 4000, now);
-            db.Users.Add(user); db.Conversations.Add(conversation); db.ConversationParticipants.Add(participant); db.Messages.Add(oldMessage);
+            // درجِ fixture قدیمی نباید ستون تازهٔ مدل جاری را از schema قدیمی درخواست کند.
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO [identity].[Users] ([Id],[CreatedAtUtc],[AccountStatus],[CommunicationAgeCategory],[CommunicationAgeVerificationStatus])
+                VALUES ({user.Id},{now},1,0,0)
+                """);
+            db.Conversations.Add(conversation); db.ConversationParticipants.Add(participant); db.Messages.Add(oldMessage);
             db.MessageRevisions.Add(MessageRevision.Create(oldMessage.Id, 1, oldMessage.Text, user.Id, now)); await db.SaveChangesAsync();
             await migrator.MigrateAsync(); Assert.Contains(migration, await db.Database.GetAppliedMigrationsAsync());
             Assert.Empty(await db.Database.GetPendingMigrationsAsync()); Assert.False(db.Database.HasPendingModelChanges());

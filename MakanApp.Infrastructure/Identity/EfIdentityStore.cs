@@ -1,6 +1,7 @@
 using System.Data;
 using MakanApp.Application.Identity;
 using MakanApp.Domain.Identity;
+using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,22 @@ public sealed class EfIdentityStore(MakanDbContext dbContext) : IIdentityStore
 
     public Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken) =>
         dbContext.Users.SingleOrDefaultAsync(user => user.Id == userId, cancellationToken);
+
+    public async Task<User?> GetUserForUpdateAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await dbContext.Users.FromSqlInterpolated(
+            $"SELECT * FROM [identity].[Users] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {userId}")
+            .SingleOrDefaultAsync(cancellationToken);
+        // Authentication ممکن است همین User را قبلاً track کرده باشد؛ قفل باید همراه دادهٔ تازه باشد.
+        if (user is not null) await dbContext.Entry(user).ReloadAsync(cancellationToken);
+        return user;
+    }
+
+    public Task<ProfilePhotoResult?> GetProfilePhotoAsync(Guid userId, CancellationToken cancellationToken) =>
+        (from user in dbContext.Users.AsNoTracking()
+         join file in ProfilePhotoQuery.ReadyImages(dbContext) on user.ProfilePhotoFileAssetId equals file.Id
+         where user.Id == userId && file.UploadedByUserId == user.Id
+         select new ProfilePhotoResult(file.Id, file.ContentType)).SingleOrDefaultAsync(cancellationToken);
 
     public Task<Person?> GetPersonAsync(Guid personId, CancellationToken cancellationToken) =>
         dbContext.Persons.SingleOrDefaultAsync(person => person.Id == personId, cancellationToken);

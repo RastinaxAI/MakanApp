@@ -378,6 +378,9 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                   user.PersonId != null &&
                   user.Username != null &&
                   user.ProfileCompletedAtUtc != null
+            join file in MakanApp.Infrastructure.Identity.ProfilePhotoQuery.ReadyImages(dbContext)
+                on user.ProfilePhotoFileAssetId equals file.Id into photos
+            from file in photos.DefaultIfEmpty()
             select new IdentityRow(
                 user.Id,
                 user.Username!,
@@ -388,7 +391,9 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                     .Select(credential => credential.NormalizedIdentifier)
                     .FirstOrDefault(),
                 user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
-                user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified))
+                user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified,
+                file != null && file.UploadedByUserId == user.Id
+                    ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null))
             .ToArrayAsync(cancellationToken);
         var validUserIds = identities.Select(identity => identity.UserId).ToArray();
         if (validUserIds.Length == 0)
@@ -448,7 +453,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 contact?.IsFavorite ?? false,
                 blockedUserIds.Contains(identity.UserId),
                 identity.IsProtected,
-                requesterCanMessage && (requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId)));
+                requesterCanMessage && (requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId)),
+                identity.ProfilePhoto);
         }
 
         return result;
@@ -493,7 +499,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         string Username,
         string DisplayName,
         string? NormalizedPhoneNumber,
-        bool IsProtected);
+        bool IsProtected,
+        MakanApp.Application.Identity.ProfilePhotoResult? ProfilePhoto);
 
     private sealed record RecentRow(Guid UserId, DateTime LastActivityAtUtc);
 }

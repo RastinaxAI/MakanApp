@@ -887,7 +887,7 @@ public sealed class MessagingService(
             Convert.ToBase64String(result.Participant.RowVersion));
 
     private static SafeMessagingIdentityResult Map(SafeMessagingIdentityRecord result) =>
-        new(result.UserId, result.Username, result.DisplayName);
+        new(result.UserId, result.Username, result.DisplayName, result.ProfilePhoto);
 
     internal static MessageReceiptResult ToReceipt(Message message) =>
         new(

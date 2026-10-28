@@ -113,6 +113,8 @@ public interface IIdentityStore
         CancellationToken cancellationToken);
 
     Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
+    Task<User?> GetUserForUpdateAsync(Guid userId, CancellationToken cancellationToken);
+    Task<ProfilePhotoResult?> GetProfilePhotoAsync(Guid userId, CancellationToken cancellationToken);
     Task<Person?> GetPersonAsync(Guid personId, CancellationToken cancellationToken);
 
     Task<UserSession?> GetSessionByTokenHashAsync(

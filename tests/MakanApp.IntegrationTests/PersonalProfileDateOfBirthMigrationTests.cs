@@ -42,7 +42,11 @@ public sealed class PersonalProfileDateOfBirthMigrationTests(MakanAppWebApplicat
                 """);
             var user = User.Create(now);
             user.SetProfile(personId, "existing.profile", "EXISTING.PROFILE", now);
-            db.Users.Add(user);
+            // دادهٔ نسخهٔ قبلی با ستون‌های همان نسخه درج می‌شود؛ مدل جاری ممکن است ستون جدیدتری داشته باشد.
+            await db.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO [identity].[Users] ([Id],[PersonId],[Username],[NormalizedUsername],[CreatedAtUtc],[ProfileCompletedAtUtc],[AccountStatus],[CommunicationAgeCategory],[CommunicationAgeVerificationStatus])
+                VALUES ({user.Id},{personId},N'existing.profile',N'EXISTING.PROFILE',{now},{now},1,0,0)
+                """);
             var evidence = CommunicationAgeVerification.Create(user.Id, new DateOnly(1990, 1, 1),
                 CommunicationAgeCategory.Unknown, false, CommunicationAgeVerificationSource.PlatformVerification,
                 user.Id, null, "شاهد قبلی مستقل از تاریخ تولد خوداظهاری", now);
@@ -68,6 +72,8 @@ public sealed class PersonalProfileDateOfBirthMigrationTests(MakanAppWebApplicat
             await db.Database.CloseConnectionAsync();
             db.ChangeTracker.Clear();
             Assert.Contains(migration, await db.Database.GetAppliedMigrationsAsync());
+            // بررسی DOB مستقل از این است که Migrationهای بعدی چه زمانی به پروژه اضافه می‌شوند.
+            await migrator.MigrateAsync();
             Assert.Empty(await db.Database.GetPendingMigrationsAsync());
             Assert.False(db.Database.HasPendingModelChanges());
             var person = await db.Persons.SingleAsync(p => p.Id == personId);

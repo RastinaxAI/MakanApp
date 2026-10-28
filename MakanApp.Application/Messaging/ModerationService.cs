@@ -220,7 +220,7 @@ public sealed class ModerationService(
         Convert.ToBase64String(record.Case.RowVersion));
 
     private static SafeMessagingIdentityResult Map(SafeMessagingIdentityRecord identity) =>
-        new(identity.UserId, identity.Username, identity.DisplayName);
+        new(identity.UserId, identity.Username, identity.DisplayName, identity.ProfilePhoto);
 
     private static byte[] DecodeVersion(string value)
     {

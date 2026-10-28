@@ -55,6 +55,9 @@ public sealed class FilesController(IStorageService storageService) : Controller
             fileId,
             cancellationToken);
         Response.ContentLength = result.SizeBytes;
+        // فایل احرازشده پس از حذف Avatar یا تغییر مجوز، از cache مشترک یا مرورگر بازپخش نشود.
+        Response.Headers.CacheControl = "private, no-store";
+        Response.Headers.Vary = "Authorization";
         return File(
             result.Content,
             result.ContentType,

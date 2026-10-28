@@ -1,4 +1,5 @@
 using MakanApp.Domain.Messaging;
+using MakanApp.Application.Identity;
 
 namespace MakanApp.Application.Messaging;
 
@@ -15,7 +16,8 @@ public sealed record MessagingProfileStoreRecord(
     bool IsFavorite,
     bool HasEffectiveDirectBlock,
     bool IsProtectedAccount = false,
-    bool SafetyAllowsDirect = true);
+    bool SafetyAllowsDirect = true,
+    ProfilePhotoResult? ProfilePhoto = null);
 
 public sealed record UserContactStoreRecord(
     UserContact Contact,

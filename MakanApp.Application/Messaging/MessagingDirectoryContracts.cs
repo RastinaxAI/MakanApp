@@ -1,4 +1,5 @@
 using MakanApp.Domain.Messaging;
+using MakanApp.Application.Identity;
 
 namespace MakanApp.Application.Messaging;
 
@@ -27,7 +28,8 @@ public sealed record MessagingPublicProfileResult(
     string? PhoneNumber,
     bool IsSavedContact,
     bool IsFavorite,
-    bool CanStartDirect);
+    bool CanStartDirect,
+    ProfilePhotoResult? ProfilePhoto = null);
 
 public sealed record UserContactResult(
     Guid ContactUserId,

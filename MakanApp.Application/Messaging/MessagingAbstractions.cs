@@ -1,4 +1,5 @@
 using MakanApp.Application.Organization;
+using MakanApp.Application.Identity;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Storage;
 
@@ -7,7 +8,8 @@ namespace MakanApp.Application.Messaging;
 public sealed record SafeMessagingIdentityRecord(
     Guid UserId,
     string Username,
-    string DisplayName);
+    string DisplayName,
+    ProfilePhotoResult? ProfilePhoto = null);
 
 public sealed record DirectConversationStoreResult(
     Conversation Conversation,

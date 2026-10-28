@@ -36,6 +36,9 @@ public sealed partial class EfMessagingStore
             from participant in dbContext.ConversationParticipants.AsNoTracking()
             join user in dbContext.Users.AsNoTracking() on participant.UserId equals user.Id
             join person in dbContext.Persons.AsNoTracking() on user.PersonId equals (Guid?)person.Id
+            join file in MakanApp.Infrastructure.Identity.ProfilePhotoQuery.ReadyImages(dbContext)
+                on user.ProfilePhotoFileAssetId equals file.Id into photos
+            from file in photos.DefaultIfEmpty()
             where participant.ConversationId == conversationId &&
                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
                    conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == participant.UserId &&
@@ -49,7 +52,9 @@ public sealed partial class EfMessagingStore
             {
                 Participant = participant,
                 Username = user.Username!,
-                DisplayName = person.DisplayName ?? person.FirstName + " " + person.LastName
+                DisplayName = person.DisplayName ?? person.FirstName + " " + person.LastName,
+                Photo = file != null && file.UploadedByUserId == user.Id
+                    ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null
             })
             .Skip((page - 1) * pageSize)
             .Take(pageSize + 1)
@@ -61,7 +66,8 @@ public sealed partial class EfMessagingStore
                     new SafeMessagingIdentityRecord(
                         row.Participant.UserId,
                         row.Username,
-                        row.DisplayName)))
+                        row.DisplayName,
+                        row.Photo)))
                 .ToArray(),
             rows.Length > pageSize);
     }

@@ -53,6 +53,7 @@ public sealed record CurrentUserResult(
     string? LastName,
     string? DisplayName,
     string? Username,
-    DateOnly? DateOfBirth = null);
+    DateOnly? DateOfBirth = null,
+    ProfilePhotoResult? ProfilePhoto = null);
 
 public sealed record SessionIdentity(Guid UserId, Guid SessionId);

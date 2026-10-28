@@ -444,7 +444,8 @@ public sealed class ConversationManagementService(
             new SafeMessagingIdentityResult(
                 item.Identity.UserId,
                 item.Identity.Username,
-                item.Identity.DisplayName),
+                item.Identity.DisplayName,
+                item.Identity.ProfilePhoto),
             item.Participant.Role,
             item.Participant.Status,
             MessagingWireTime.FromStoredUtc(item.Participant.JoinedAtUtc),

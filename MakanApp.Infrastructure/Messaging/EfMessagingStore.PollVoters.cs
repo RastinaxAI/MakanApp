@@ -23,7 +23,7 @@ public sealed partial class EfMessagingStore
         var result = new ConversationPollVoterPageResult(page.Select(v =>
         {
             var identity = identities.GetValueOrDefault(v.UserId) ?? throw RecipientNotAvailable();
-            return new ConversationPollVoterResult(new(identity.UserId, identity.Username, identity.DisplayName),
+            return new ConversationPollVoterResult(new(identity.UserId, identity.Username, identity.DisplayName, identity.ProfilePhoto),
                 choices.Where(s => s.UserId == v.UserId).Select(s => s.OptionNumber).ToArray(), AdvancedUtc(v.UpdatedAtUtc));
         }).ToArray(), votes.Length > take);
         await transaction.CommitAsync(ct); return result;

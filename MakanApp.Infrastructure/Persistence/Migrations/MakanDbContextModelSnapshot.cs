@@ -2511,6 +2511,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("ProfileCompletedAtUtc")
                         .HasColumnType("datetime2(7)");
 
+                    b.Property<Guid?>("ProfilePhotoFileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -2537,6 +2540,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("PersonId")
                         .IsUnique()
                         .HasFilter("[PersonId] IS NOT NULL");
+
+                    b.HasIndex("ProfilePhotoFileAssetId")
+                        .IsUnique()
+                        .HasFilter("[ProfilePhotoFileAssetId] IS NOT NULL");
 
                     b.ToTable("Users", "identity", t =>
                         {
@@ -7188,6 +7195,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.Person", null)
                         .WithOne()
                         .HasForeignKey("MakanApp.Domain.Identity.User", "PersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("ProfilePhotoFileAssetId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

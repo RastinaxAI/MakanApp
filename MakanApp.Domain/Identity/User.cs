@@ -15,6 +15,7 @@ public sealed class User
 
     public Guid Id { get; private set; }
     public Guid? PersonId { get; private set; }
+    public Guid? ProfilePhotoFileAssetId { get; private set; }
     public string? Username { get; private set; }
     public string? NormalizedUsername { get; private set; }
     public CommunicationAgeCategory CommunicationAgeCategory { get; private set; }
@@ -32,6 +33,17 @@ public sealed class User
 
     public static User Create(DateTime createdAtUtc) =>
         new(Guid.NewGuid(), createdAtUtc);
+
+    public void SetProfilePhoto(Guid? fileAssetId, DateTime updatedAtUtc)
+    {
+        if (fileAssetId == Guid.Empty)
+            throw new ArgumentException("شناسهٔ عکس پروفایل معتبر نیست.", nameof(fileAssetId));
+        if (updatedAtUtc.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("زمان تغییر عکس پروفایل باید UTC باشد.", nameof(updatedAtUtc));
+        if (ProfilePhotoFileAssetId == fileAssetId) return;
+        ProfilePhotoFileAssetId = fileAssetId;
+        UpdatedAtUtc = updatedAtUtc;
+    }
 
     public void Suspend(DateTime suspendedAtUtc)
     {

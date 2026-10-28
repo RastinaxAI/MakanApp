@@ -33,12 +33,15 @@ public interface IFileAssetStore
     Task<FileAsset?> GetAsync(Guid fileAssetId, CancellationToken cancellationToken);
     Task<FileAsset?> GetForUpdateAsync(Guid fileAssetId, CancellationToken cancellationToken);
     void Add(FileAsset fileAsset);
+    void TouchForBinding(FileAsset fileAsset);
     void SetOriginalRowVersion(FileAsset fileAsset, byte[] rowVersion);
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
 public interface IFileAssetBoundAccessResolver
 {
+    Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken);
+
     Task<bool> IsBoundAsync(
         Guid fileAssetId,
         CancellationToken cancellationToken);

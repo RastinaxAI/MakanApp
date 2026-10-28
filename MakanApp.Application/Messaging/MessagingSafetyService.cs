@@ -217,7 +217,7 @@ public sealed class MessagingSafetyService(
         report.CreatedAtUtc);
 
     private static SafeMessagingIdentityResult Map(SafeMessagingIdentityRecord identity) =>
-        new(identity.UserId, identity.Username, identity.DisplayName);
+        new(identity.UserId, identity.Username, identity.DisplayName, identity.ProfilePhoto);
 
     private static byte[] HashReportPayload(
         Guid conversationId,

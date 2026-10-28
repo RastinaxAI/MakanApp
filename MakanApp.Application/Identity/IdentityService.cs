@@ -445,7 +445,8 @@ public sealed partial class IdentityService(
             person?.LastName,
             person?.DisplayName,
             user.Username,
-            person?.DateOfBirth);
+            person?.DateOfBirth,
+            await store.GetProfilePhotoAsync(user.Id, cancellationToken));
     }
 
     private byte[] HashOtpForCurrentMode(string code, byte[] salt) =>

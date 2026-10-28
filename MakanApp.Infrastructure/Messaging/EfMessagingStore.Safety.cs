@@ -171,7 +171,7 @@ public sealed partial class EfMessagingStore
             await transaction.CommitAsync(cancellationToken);
             return new UserBlockStoreResult(
                 existing,
-                new SafeMessagingIdentityRecord(target.UserId, target.Username, target.DisplayName),
+                new SafeMessagingIdentityRecord(target.UserId, target.Username, target.DisplayName, target.ProfilePhoto),
                 true);
         }
 
@@ -181,7 +181,7 @@ public sealed partial class EfMessagingStore
         await transaction.CommitAsync(cancellationToken);
         return new UserBlockStoreResult(
             block,
-            new SafeMessagingIdentityRecord(target.UserId, target.Username, target.DisplayName),
+            new SafeMessagingIdentityRecord(target.UserId, target.Username, target.DisplayName, target.ProfilePhoto),
             false);
     }
 

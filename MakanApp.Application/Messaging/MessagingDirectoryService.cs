@@ -303,7 +303,8 @@ public sealed class MessagingDirectoryService(
             phoneVisible ? record.NormalizedPhoneNumber : null,
             record.IsSavedContact,
             record.IsFavorite,
-            canStartDirect);
+            canStartDirect,
+            record.ProfilePhoto);
     }
 
     private static MessagingPrivacySettingsResult MapPrivacy(

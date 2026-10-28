@@ -140,7 +140,7 @@ public sealed class StorageService(
             throw Error(StorageErrorCodes.FileAlreadyDeleted, "فایل قبلاً حذف شده است.");
         }
 
-        if (fileAsset.RetainedAtUtc.HasValue)
+        if (fileAsset.RetainedAtUtc.HasValue || await boundAccessResolver.IsProfilePhotoBoundAsync(fileAsset.Id, cancellationToken))
         {
             throw Error(StorageErrorCodes.FileInUse, "فایل بخشی از یک سابقه رسمی است و قابل حذف نیست.");
         }
@@ -180,8 +180,7 @@ public sealed class StorageService(
         var isBound = await boundAccessResolver.IsBoundAsync(fileAsset.Id, cancellationToken);
         if (isBound)
         {
-            if (!FileAccessPolicy.IsCurrentScope(fileAsset, context) ||
-                !await boundAccessResolver.CanReadBoundFileAsync(fileAsset, context, cancellationToken))
+            if (!await boundAccessResolver.CanReadBoundFileAsync(fileAsset, context, cancellationToken))
             {
                 throw NotFound();
             }

@@ -20,6 +20,9 @@ public sealed class EfFileAssetStore(MakanDbContext dbContext) : IFileAssetStore
 
     public void Add(FileAsset fileAsset) => dbContext.FileAssets.Add(fileAsset);
 
+    public void TouchForBinding(FileAsset fileAsset) =>
+        dbContext.Entry(fileAsset).Property(item => item.Status).IsModified = true;
+
     public void SetOriginalRowVersion(FileAsset fileAsset, byte[] rowVersion) =>
         dbContext.Entry(fileAsset).Property(item => item.RowVersion).OriginalValue = rowVersion;
 

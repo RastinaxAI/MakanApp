@@ -221,6 +221,8 @@ public sealed class MockOtpIdentityServiceTests
         public Task<UserCredential?> GetMobileCredentialAsync(string normalizedPhoneNumber, CancellationToken cancellationToken) => Task.FromResult(Credentials.SingleOrDefault(item => item.NormalizedIdentifier == normalizedPhoneNumber));
         public Task<UserCredential?> GetMobileCredentialByUserIdAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(Credentials.SingleOrDefault(item => item.UserId == userId));
         public Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(Users.SingleOrDefault(item => item.Id == userId));
+        public Task<User?> GetUserForUpdateAsync(Guid userId, CancellationToken cancellationToken) => GetUserAsync(userId, cancellationToken);
+        public Task<ProfilePhotoResult?> GetProfilePhotoAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult<ProfilePhotoResult?>(null);
         public Task<Person?> GetPersonAsync(Guid personId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<UserSession?> GetSessionByTokenHashAsync(byte[] tokenHash, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<UserSession?> GetSessionAsync(Guid sessionId, Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
