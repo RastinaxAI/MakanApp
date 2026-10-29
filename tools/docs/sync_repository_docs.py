@@ -104,6 +104,7 @@ def write_reference(api, inventory, baseline, date):
         '',
         'AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.',
         '',
+        'پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده\u200cاند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست\u200cهای date-only/null، عکس Bearer، visibility Draft و رضایت والد در [راهنما](backend-api-guide.md) و [قرارداد مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) توضیح داده شده\u200cاند.', '',
         '## فهرست Controllerها', ''
     ]
     counts = Counter(item['Controller'] for item in metadata.values())
@@ -172,7 +173,10 @@ def write_database(inventory, baseline, date):
     lines = ['# ساختار فعلی دیتابیس MakanApp', '', f'مدل طراحی EF Core از working tree با مبنای Git `main@{baseline}`؛ بازبینی `{date}`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.', '',
              f'**{len(tables)} جدول، {counts["Columns"]} ستون، {counts["ForeignKeys"]} FK، {counts["Indexes"]} index مستقل از key و {counts["Checks"]} CHECK؛ {len(inventory["Migrations"])} Migration.**', '',
              '## مفاهیم و مرزها', '',
-             'حذف عامل دوم، Migration جدید RemovePlatformMfa را برای دو جدول و دو ستون Session ایجاد کرده است؛ اعمال آن روی دیتابیس اصلی یا سرور مرحله جداگانه‌ای است. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).', '',
+             'مدل جاری شامل چهار migration پس از Checklist است: RemovePlatformMfa دو جدول MFA و ستون‌های AssuranceLevel/StepUpAtUtc نشست را حذف می‌کند؛ AddSelfDeclaredProfileDateOfBirth ستون date nullable به Persons، AddUserProfilePhoto مرجع nullable و unique filtered به Users، و CompleteSchoolManagement جدول‌های ClassLessons/ClassLessonAttachments و توسعه Invitation والد را می‌افزاید. آخرین migration 20261028202239_CompleteSchoolManagement است. اجرا روی دیتابیس عادی/سرور مرحلهٔ مستقل است؛ Down اطلاعات حذف‌شدهٔ MFA را بازنمی‌گرداند.',
+             '',
+             'cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذف می‌کند؛ مرجع فعال ProfilePhoto و Lesson attachment هم محافظت می‌شوند. metadata SQL پاک نمی‌شود و Ready-orphan reaper وجود ندارد. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md).',
+             '',
              '- SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.',
              '- PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.',
              '- rowversion توکن هم‌زمانی SQL است، نه تاریخ؛ nullable، PK/FK، unique/filtered index و CHECK از خود مدل طراحی خوانده شده‌اند.',
@@ -219,15 +223,29 @@ def write_frontend(inventory, api, baseline, date):
              'در Mock نیز حساب معلق رد می‌شود و نشست، workspace، عضویت و role عادی‌اند؛ شمارهٔ جدید می‌تواند مطابق مسیر قبلی User بسازد، اما نقش آموزشی یا Platform ساخته نمی‌شود. ورود دوباره session جدید می‌سازد؛ verify در Mock را idempotent فرض نکنید. تغییر flag نشست‌های قبلی را revoke نمی‌کند. انتخاب محیط و سیاست داده وظیفه deployment است؛ [راهنمای OTP](../dev/CONFIGURABLE_OTP_FA.md) و [Test محدود](../dev/SERVER_MOCK_OTP_FA.md).',
              '',
              'VerifyOtpResult شامل accessToken، tokenType، expiresAtUtc، refreshToken، refreshExpiresAtUtc و user است. access پایه یک ساعت و refresh چرخشی با عمر مطلق ۳۰ روز است؛ refresh token و OTP دادهٔ محرمانه‌اند. POST /api/v1/auth/refresh و APIهای sessions/logout برای lifecycle موجودند. storage امن سمت client تصمیم اجرایی جدا می‌خواهد؛ credential در URL، screenshot یا telemetry قرار نگیرد.', '',
-             '## سازمان، پرونده و فرزند', '',
+             '## پروفایل شخصی و عکس',
+             '',
+             'PATCH /api/v1/me/profile همان نام‌ها و Username را با dateOfBirth optional به شکل YYYY-MM-DD میلادی می‌گیرد؛ آینده400 PROFILE_VALIDATION_FAILED، omission/null حفظ مقدار قبلی و clear تعریف نشده. DOB شرط تکمیل یا تأیید سن نیست؛ People/Directory/AI DOB تازه نمی‌گیرند. DateOfBirth خوداظهاری با VerifiedBirthDate مستقل فرق دارد.',
+             '',
+             'عکس: upload موجود در Personal -> Ready JPEG/PNG خود کاربر با OrganizationId=null -> PUT /api/v1/me/profile-photo {fileAssetId}. DELETE همان مسیر204 و تکرارپذیر است؛ فقط مرجع پاک می‌شود. profilePhoto در پاسخ self و هویت امن Messenger nullable است. downloadUrl عمومی نیست و دریافت Bearer لازم دارد؛ client token را در URL نگذارد. نمایش عکس تابع grant همان هویت است و مجوز Send/Discovery تازه نیست. جایگزینی عکس blob قبلی را حذف نمی‌کند. [قرارداد عکس](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).',
+             '',
+             '## سازمان، پرونده و فرزند',
+             '',
              'Manager مدرسه می‌تواند از /api/v1/organization/people پرونده بسازد/بخواند/جست‌وجو یا تغییر مجاز نام دهد؛ نام Person حساب‌دار یا مشترک از این API تغییر نمی‌کند. دعوت اتصال حساب نیازمند User موجود و پذیرش صریح authenticated است؛ merge خودکار بر اساس نام/تلفن نداریم. پرونده، User، Membership، RoleAssignment و Enrollment مفاهیم جدا هستند.', '',
-             'مدیر از /api/v1/organization/guardian-relations رابطه Pending می‌سازد و با نسخهٔ جاری activate/end/revoke می‌کند. Parent از children و select موجود استفاده می‌کند؛ پس از revoke، cache قدیمی دسترسی نمی‌سازد. dashboard والد بدون انتخاب فرزند می‌تواند 200 خالی بدهد؛ Reports به context معتبر نیاز دارند. GuardianRelation هیچ مجوز private chat browsing نمی‌دهد.', '',
+             'Manager می‌تواند با POST /organization/people/{learnerId}/guardian-invitations و دقیقاً یکی از username/phoneNumber حساب موجود، دعوت والد بسازد؛ reason، clientOperationId و expiry آینده تا۳۰روز لازم‌اند. پاسخ مدیر هویت مقصد را افشا نمی‌کند. Parent در inbox خود با accept و confirmGuardianRelation=true رضایت می‌دهد؛ Membership/Parent Role و GuardianRelation در workflow موجود ایجاد/reuse می‌شوند و Enrollment یا Account جدید ساخته نمی‌شود. تکرار دقیق receipt و payload متفاوت409 است؛ رابطهٔ پایان‌یافته با replay زنده نمی‌شود. مسیرهای قدیمی GuardianRelation نیز حفظ‌اند.',
+             '',
+             'Parent از children/select موجود استفاده می‌کند و revoke رابطه، cache قبلی را مجاز نمی‌کند. GuardianRelation مجوز private chat یا همه فایل‌های کودک نیست. GET /organization/members برای Manager و GET کلاس learners/teachers برای Manager/Teacher منتسب، Directory و roster جاری می‌دهند؛ orgId از workspace resolve می‌شود. [قرارداد کامل مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md).',
+             '',
              '## آموزش، تکلیف و آزمون', '',
-             'AcademicPeriod/Course/Class/Enrollment/TeacherAssignment، Session/Schedule/Attendance و revisionهای رسمی موجودند. Teacher فقط کلاس منتسب و Student/Parent فقط رابطهٔ مجاز خود را می‌بیند؛ نبود حضور را Absent نمایش ندهید.', '',
+             'AcademicPeriod/Course/Class/Enrollment/TeacherAssignment و Session/Schedule/Attendance موجودند. ساخت Class فقط Manager و ساخت Session برای Teacher منتسب است؛ نبود حضور را Absent نمایش ندهید. roster صفحه‌بندی‌شده با list آرایه‌ای قبلی classes یکسان نیست و version جدید به معنی پارامتر ExpectedVersion تازه در End قدیمی نیست. Transfer مستقل اتمیک نداریم.',
+             '',
+             'Class Lesson/Handout: GET/POST classes/{id}/lessons، GET/PATCH lessons/{id} و POST lessons/{id}/publish زیر /academic. Manager/Teacher منتسب می‌نویسند؛ Student دارای Enrollment فعال فقط Published می‌بیند و Draft برای او404/پنهان است؛ Parent مجوز مستقل ندارد. PATCH کل title/body/displayOrder/fileAssetIds/expectedVersion را جایگزین می‌کند، [] اتصال فایل را حذف می‌کند نه blob؛ Published immutable است. body متن ساده است و publish حداقل متن یا فایل می‌خواهد. فایل Ready سازمانی مجاز و دانلود با grant جاری کلاس است؛ URL قدیمی پایان Assignment/Enrollment را دور نمی‌زند. این Lesson، AI Source یا Grade نیست.',
+             '',
              'AssignmentVersion سقف MaxScore مستقل و مثبت دارد؛ score در بازهٔ 0..MaxScore است و سقف سراسری ۲۰ نداریم. نسخهٔ منتشرشده، submission receipt، evaluation revision و GradeRelease معنای تاریخی را حفظ می‌کنند؛ Student/Parent نمرهٔ منتشرنشده و note خصوصی نمی‌بینند.', '',
              'ExamVersion/QuestionVersion، شروع Attempt، محدودیت تلاش، deadline سرور، question freeze، AnswerRevision/autosave، WriteLease، finalize receipt و grading/release/correction موجودند. قطع شبکه submit موفق ساختگی نیست؛ receipt و read جاری مرجع‌اند. clock دستگاه، autosave acknowledgement یا state محلی جای زمان سرور و finalization رسمی نیست. auto-finalize/background grace به‌عنوان قابلیت جاری ادعا نمی‌شود.', '',
              '## Messenger و ایمنی کودک', '',
-             'Contacts/profile privacy/discovery، Personal Direct، group/channel و مالکیت، revision/reaction/reply/mention، Saved Messages، state و delta sync وجود دارند. نام/شماره/UserId به‌تنهایی اجازهٔ CreateDirect/Send/Read نمی‌سازد.', '',
+             'Personal Direct/Group/Channel و Contacts/privacy بدون School Role مجاز با gateهای حساب/سن/رابطه/profile/block موجودند؛ پایان نقش، User/عکس/گفتگوی شخصی را حذف نمی‌کند. برای Profile ناقص messaging-status فقط ReadExistingConversations و ProfileCompletionRequired دارد؛ hint مجوز create/discovery نیست. پس از پایان role، انتخاب Personal از endpoint workspace موجود انجام می‌شود؛ fallback پنهان نداریم.',
+             '',
              'Policy مصوب GAP-05 حاکم است: UnknownAge مانند Minor محافظت می‌شود؛ Stranger -> Minor/Unknown ممنوع است؛ هر Send، Block و رابطه/عضویت/permission جاری را دوباره بررسی می‌کند. پایان رابطه تاریخچه را خودکار حذف نمی‌کند. گروه/کانال شخصی و Official Class Group قواعد جدا دارند؛ نقش Manager یا Guardian مجوز Direct browsing نیست.', '',
              'Internal Makan Content Safety provider واقعی قاعده‌محور محدود متن است، نه AI یا ادعای اسکن معنایی کامل. unavailable در مسیر محافظت‌شده fail-closed و رسانه unsupported ReviewRequired است؛ خطای safety را Sent نمایش ندهید. ارزیابی سنِ خوداظهاری تأیید رسمی نیست و AGE_VERIFICATION_CONFLICT با retry کور overwrite نمی‌شود.', '',
              'SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرجع پیام و read-state هستند. TypingChanged و PresenceChanged hint گذرا با TTL و privacy جاری‌اند، نه Message/Delta. handler فقط Bearer header می‌خواند؛ browser از LongPolling و withCredentials:false طبق allowlist میزبان استفاده کند. reconnect نیازمند subscription تازه و بازیابی Delta است؛ backplane و ephemeral state مشترک چند instance فراهم نیست.', '',
@@ -247,11 +265,14 @@ def write_frontend(inventory, api, baseline, date):
              'Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. نتیجه Fake-AI یا health این gate را نمی‌بندد. RAG source lifecycle نیز deferred و core آموزشی مستقل از AI است. [وضعیت جاری AI](../ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) و [شواهد Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md).',
              '',
              '## میزبانی و smoke', '',
-             'Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و فقط با Swagger:Enabled=true فعال است؛ Test طبق Program فعلی آن‌ها را منتشر می‌کند. CORS allowlist بدون credentials است. /health و /health/live فقط liveness و /health/ready، config معتبر، SQL و Storage را بررسی می‌کند؛ دریافت SMS/Push، پرداخت یا AI را اثبات نمی‌کند.',
+             'Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و با Swagger:Enabled=true فعال است؛ Test طبق Program آن‌ها را منتشر می‌کند. Cors:AllowAnyOrigin انتخاب مستقل از محیط است؛ base و نمونه Test/Production فعلی true با AllowedHosts=* هستند. true از AllowAnyOrigin/Header/Method و بدون credentials استفاده می‌کند؛ false فهرست معتبر لازم دارد. REST با credentials:omit و SignalR با LongPolling و withCredentials:false، نه query-token؛ موفقیت Postman رفتار مرورگر نیست. [قرارداد CORS](../production/CORS_CONFIGURATION_FA.md).',
+             '',
+             '/health و /health/live فقط liveness و /health/ready config/SQL/Storage را می‌سنجد؛ DataProtection/MFA حذف شده‌اند و provider اختیاری core را نمی‌بندد. مدل snapshot اثبات applied migration روی سرور نیست.',
+             '',
              '',
              'Job operations اکنون Queues تفکیک‌شده، تعدادها و سن قدیمی‌ترین کار را می‌دهد؛ notification operations شمارش pending/processing/deferred/failed و سن oldest و failureهای اخیر را دارد. health مدیریتی وضعیت dependencyهای جاری و FileCleanup را بدون path/key نشان می‌دهد. FileCleanup=Enabled فقط تنظیم است. export فقط پس از Completed و دانلود مجاز آماده است؛ Lost ACK یا retry worker موفقیت نمایشی جدید ایجاد نمی‌کند. [قرارداد Backoffice](../platform/BACKOFFICE_FRONTEND_HANDOFF.md).',
              '',
-             'انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. Origin مجاز باید دقیقاً Origin کلاینت باشد؛ موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. Identity key/Storage در redeploy حفظ شوند؛ فایل‌های قدیمی key ring سرور تا cleanup مستقل حذف نشوند. [runbook](../production/DEPLOYMENT_IIS.md).', '',
+             'انتشار فعلی مالک HTTP است و دو استثنای مستقل صریح دارد؛ default امن حفظ شده و TLS یا gate GAP-02 بسته نشده است. فایل Staging حذف و فایل Production واقعی خصوصی/ignored است. در mode=false، Origin باید دقیقاً در allowlist باشد؛ mode=true اجازه cookie credentials نمی‌دهد. موفقیت Postman رفتار مرورگر را اثبات نمی‌کند. Identity key/Storage در redeploy حفظ شوند؛ فایل‌های قدیمی key ring سرور تا cleanup مستقل حذف نشوند. [runbook](../production/DEPLOYMENT_IIS.md).', '',
              '## روش نگه‌داری و شواهد', '',
              'ابزار DocumentationSnapshot فقط TestServer بدون worker و مدل طراحی EF را می‌خواند؛ SMS/AI/SQL واقعی فراخوانی نمی‌شود. sync_repository_docs.py همهٔ method/routeها و ارجاع schemaها را تطبیق می‌دهد و build_backend_docs.py خروجی‌های HTML/PDF را می‌سازد. نام/فیلد/enum از metadata است؛ موفقیت سناریوی محصول یا محیط هدف از آن استنتاج نمی‌شود. [فهرست نگه‌داری اسناد](../documentation-inventory.csv).', '',
              '## مسیر مطالعه', '',
@@ -285,7 +306,7 @@ def document_inventory(baseline, date, preserve_paths=(), refresh_historical_not
             kind, handling = 'خروجی فنی جاری', 'بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است'
         elif inner == 'operations/PRODUCTION_HARDENING_AUDIT.md':
             kind, handling = 'ممیزی تاریخی عملیات', 'وضعیت شروع PH؛ قرارداد جاری از runbookهای operations و ماتریس Production خوانده شود'
-        elif inner in live or inner.startswith(('production/', 'platform/', 'operations/')) or inner in {'dev/CONFIGURABLE_OTP_FA.md', 'dev/SERVER_MOCK_OTP_FA.md', 'dev/DEVELOPMENT_TEST_USERS_FA.md'}:
+        elif inner in live or inner.startswith(('production/', 'platform/', 'operations/')) or inner in {'product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md', 'product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md'} or inner in {'product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md', 'product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md'} or inner in {'dev/CONFIGURABLE_OTP_FA.md', 'dev/SERVER_MOCK_OTP_FA.md', 'dev/DEVELOPMENT_TEST_USERS_FA.md'}:
             kind, handling = 'راهنمای جاری', 'همگام‌سازی با کد؛ بدون ادعای deployment'
         elif inner.startswith('ai-handoff/') or inner.startswith('contracts/') or '/AI_' in inner:
             kind, handling = 'قرارداد/شاهد موضوعی AI', 'حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود'

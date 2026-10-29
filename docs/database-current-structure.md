@@ -1,12 +1,14 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `main@e525c78a7a318ea3dc3c697ea6473d308dc5fae1`؛ بازبینی `2026-10-24`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `main@701cba057b358d9cf6d15d681389d0f8d22ac6d6`؛ بازبینی `2026-10-29`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**105 جدول، 1036 ستون، 236 FK، 293 index مستقل از key و 275 CHECK؛ 49 Migration.**
+**107 جدول، 1059 ستون، 243 FK، 302 index مستقل از key و 280 CHECK؛ 52 Migration.**
 
 ## مفاهیم و مرزها
 
-حذف عامل دوم، Migration جدید RemovePlatformMfa را برای دو جدول و دو ستون Session ایجاد کرده است؛ اعمال آن روی دیتابیس اصلی یا سرور مرحله جداگانه‌ای است. fencing/repair worker روی ستون‌ها، indexها و rowversion موجود است؛ retention جدید فقط bytes محلی Deleted/Rejected بدون reference را با opt-in حذف می‌کند و metadata SQL را نگه می‌دارد. انقضای Unattached مجوز purge خودکار همه فایل‌ها نیست. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [بازیابی worker](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
+مدل جاری شامل چهار migration پس از Checklist است: RemovePlatformMfa دو جدول MFA و ستون‌های AssuranceLevel/StepUpAtUtc نشست را حذف می‌کند؛ AddSelfDeclaredProfileDateOfBirth ستون date nullable به Persons، AddUserProfilePhoto مرجع nullable و unique filtered به Users، و CompleteSchoolManagement جدول‌های ClassLessons/ClassLessonAttachments و توسعه Invitation والد را می‌افزاید. آخرین migration 20261028202239_CompleteSchoolManagement است. اجرا روی دیتابیس عادی/سرور مرحلهٔ مستقل است؛ Down اطلاعات حذف‌شدهٔ MFA را بازنمی‌گرداند.
+
+cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذف می‌کند؛ مرجع فعال ProfilePhoto و Lesson attachment هم محافظت می‌شوند. metadata SQL پاک نمی‌شود و Ready-orphan reaper وجود ندارد. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md).
 
 - SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.
 - PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.
@@ -21,7 +23,7 @@
 
 | Schema | جدول |
 |---|---|
-| academic | 9 |
+| academic | 11 |
 | assessment | 18 |
 | commerce | 10 |
 | guardian | 1 |
@@ -86,6 +88,9 @@
 | 47 | 20261016211112_AddConversationPollsAndQuiz | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261016211112_AddConversationPollsAndQuiz.cs) |
 | 48 | 20261017033804_AddConversationChecklists | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261017033804_AddConversationChecklists.cs) |
 | 49 | 20261024184613_RemovePlatformMfa | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261024184613_RemovePlatformMfa.cs) |
+| 50 | 20261028102653_AddSelfDeclaredProfileDateOfBirth | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028102653_AddSelfDeclaredProfileDateOfBirth.cs) |
+| 51 | 20261028164838_AddUserProfilePhoto | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028164838_AddUserProfilePhoto.cs) |
+| 52 | 20261028202239_CompleteSchoolManagement | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028202239_CompleteSchoolManagement.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -263,6 +268,95 @@ CHECKها:
 |---|---|
 | CK_Classes_Capacity | `[Capacity] > 0` |
 | CK_Classes_Status | `[Status] IN (1, 2, 3, 4)` |
+
+### academic.ClassLessonAttachments
+
+Entity: `MakanApp.Domain.Academic.ClassLessonAttachment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| DisplayOrder | `int` | خیر | خیر | Never |
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| LessonId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ClassLessonAttachments | PK | LessonId, FileAssetId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ClassLessonAttachments_FileAssetId | FileAssetId | False | — |
+| IX_ClassLessonAttachments_OrganizationId_LessonId | OrganizationId, LessonId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| OrganizationId, LessonId | academic.ClassLessons | OrganizationId, Id | Cascade |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ClassLessonAttachments_Order | `[DisplayOrder] BETWEEN 0 AND 9` |
+
+### academic.ClassLessons
+
+Entity: `MakanApp.Domain.Academic.ClassLesson`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Body | `nvarchar(max)` | خیر | خیر | Never |
+| ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| CreationRequestHash | `nvarchar(64)` | خیر | خیر | Never |
+| DisplayOrder | `int` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| PublishedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| RevisionNumber | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| Title | `nvarchar(200)` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2(7)` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ClassLessons | PK | Id |
+| AK_ClassLessons_OrganizationId_Id | Alternate Key | OrganizationId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ClassLessons_CreatedByUserId | CreatedByUserId | False | — |
+| IX_ClassLessons_OrganizationId_CreatedByUserId_ClientOperationId | OrganizationId, CreatedByUserId, ClientOperationId | True | — |
+| IX_ClassLessons_OrganizationId_ClassId_Status_DisplayOrder | OrganizationId, ClassId, Status, DisplayOrder | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CreatedByUserId | identity.Users | Id | Restrict |
+| OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ClassLessons_Content | `LEN([Title]) BETWEEN 1 AND 200 AND LEN([Body]) <= 50000 AND [DisplayOrder] BETWEEN 0 AND 100000 AND [RevisionNumber] > 0` |
+| CK_ClassLessons_Publication | `([Status]=1 AND [PublishedAtUtc] IS NULL) OR ([Status]=2 AND [PublishedAtUtc] IS NOT NULL)` |
+| CK_ClassLessons_Status | `[Status] IN (1,2)` |
 
 ### academic.Courses
 
@@ -1888,6 +1982,7 @@ Entity: `MakanApp.Domain.Identity.Person`؛ مالک نگاشت: [EF Configurati
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| DateOfBirth | `date` | بله | خیر | Never |
 | DisplayName | `nvarchar(200)` | بله | خیر | Never |
 | FirstName | `nvarchar(100)` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
@@ -1993,6 +2088,7 @@ Entity: `MakanApp.Domain.Identity.User`؛ مالک نگاشت: [EF Configuration
 | NormalizedUsername | `nvarchar(32)` | بله | خیر | Never |
 | PersonId | `uniqueidentifier` | بله | خیر | Never |
 | ProfileCompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| ProfilePhotoFileAssetId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | SuspendedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | UpdatedAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -2010,12 +2106,14 @@ Indexها:
 |---|---|---|---|
 | UX_Users_NormalizedUsername | NormalizedUsername | True | [NormalizedUsername] IS NOT NULL |
 | IX_Users_PersonId | PersonId | True | [PersonId] IS NOT NULL |
+| IX_Users_ProfilePhotoFileAssetId | ProfilePhotoFileAssetId | True | [ProfilePhotoFileAssetId] IS NOT NULL |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | PersonId | identity.Persons | Id | Restrict |
+| ProfilePhotoFileAssetId | storage.FileAssets | Id | Restrict |
 
 CHECKها:
 
@@ -4134,6 +4232,7 @@ Entity: `MakanApp.Domain.Organization.Invitation`؛ مالک نگاشت: [EF Con
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AcceptedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| AcceptedGuardianRelationId | `uniqueidentifier` | بله | خیر | Never |
 | AcceptedMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | AcceptedRoleAssignmentId | `uniqueidentifier` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | بله | خیر | Never |
@@ -4141,6 +4240,7 @@ Entity: `MakanApp.Domain.Organization.Invitation`؛ مالک نگاشت: [EF Con
 | DeclinedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | DestinationUserId | `uniqueidentifier` | خیر | خیر | Never |
 | ExpiresAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| GuardianLearnerOrganizationPersonId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | InvitedByUserId | `uniqueidentifier` | خیر | خیر | Never |
 | OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
@@ -4160,22 +4260,27 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_Invitations_AcceptedGuardianRelationId | AcceptedGuardianRelationId | False | — |
 | IX_Invitations_AcceptedMembershipId | AcceptedMembershipId | False | — |
 | IX_Invitations_AcceptedRoleAssignmentId | AcceptedRoleAssignmentId | False | — |
 | IX_Invitations_InvitedByUserId | InvitedByUserId | False | — |
 | UX_Invitations_LinkOperation | OrganizationId, ClientOperationId | True | [ClientOperationId] IS NOT NULL |
+| IX_Invitations_OrganizationId_GuardianLearnerOrganizationPersonId | OrganizationId, GuardianLearnerOrganizationPersonId | False | — |
 | UX_Invitations_Pending_PersonLink | OrganizationId, OrganizationPersonId | True | [OrganizationPersonId] IS NOT NULL AND [Status] = 1 |
-| UX_Invitations_Pending_Destination_Organization_Role | DestinationUserId, OrganizationId, Role | True | [Status] = 1 |
+| UX_Invitations_Pending_Destination_Organization_Role | DestinationUserId, OrganizationId, Role | True | [Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NULL |
+| UX_Invitations_Pending_Guardian_Learner | OrganizationId, DestinationUserId, GuardianLearnerOrganizationPersonId | True | [Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NOT NULL |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| AcceptedGuardianRelationId | guardian.GuardianRelations | Id | Restrict |
 | AcceptedMembershipId | organization.Memberships | Id | Restrict |
 | AcceptedRoleAssignmentId | organization.RoleAssignments | Id | Restrict |
 | DestinationUserId | identity.Users | Id | Restrict |
 | InvitedByUserId | identity.Users | Id | Restrict |
 | OrganizationId | organization.Organizations | Id | Restrict |
+| OrganizationId, GuardianLearnerOrganizationPersonId | organization.OrganizationPersons | OrganizationId, Id | Restrict |
 | OrganizationId, OrganizationPersonId | organization.OrganizationPersons | OrganizationId, Id | Restrict |
 
 CHECKها:
@@ -4183,7 +4288,8 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_Invitations_Expiry | `[ExpiresAtUtc] > [CreatedAtUtc]` |
-| CK_Invitations_PersonLink | `([OrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1)` |
+| CK_Invitations_GuardianReceipt | `([GuardianLearnerOrganizationPersonId] IS NULL AND [AcceptedGuardianRelationId] IS NULL) OR ([GuardianLearnerOrganizationPersonId] IS NOT NULL AND (([Status]=2 AND [AcceptedGuardianRelationId] IS NOT NULL) OR ([Status]<>2 AND [AcceptedGuardianRelationId] IS NULL)))` |
+| CK_Invitations_PersonLink | `([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1) OR ([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 3)` |
 | CK_Invitations_Role | `[Role] IN (1, 2, 3, 4)` |
 | CK_Invitations_Status | `[Status] IN (1, 2, 3, 4, 5)` |
 

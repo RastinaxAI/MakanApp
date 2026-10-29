@@ -1,5 +1,7 @@
 # MakanApp — مدل محصول، قواعد کسب‌وکار و جهت معماری نسخهٔ ۲
 
+بازبینی تکمیلی `2026-10-29` از `main@701cba0`: DOB خوداظهاری، ProfilePhoto و تکمیل Directory/roster/دعوت والد/Lesson اکنون در کد موجودند. بخش‌های جاری مربوط به آن‌ها در این سند اصلاح شده‌اند؛ ممیزی baseline بخش۲۴ و طرح‌های تفصیلی۲۶..۳۲ سابقه/پیشنهادند و نسخهٔ اجرایی از [پروفایل](PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md)، [عکس](PROFILE_PHOTO_IMPLEMENTATION_FA.md) و [مدرسه](SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) خوانده می‌شود. اشتراک فردی، Learning Profile، Badge، AI/Source quota و Source lifecycle هنوز پیاده‌شده فرض نمی‌شوند. وجود migration اثبات applied schema سرور نیست.
+
 تاریخ ممیزی: `2026-10-28` — مخزن: `MakanApp-Backend` — شاخه: `main` — مبنای Git: `b87fbd89cef33f26315fddd4a1e57116b44cc781`.
 
 این سند **پیشنهاد Source of Truth برای مدل آیندهٔ محصول** است؛ ثبت آن به معنی پیاده‌سازی، تأیید همهٔ جزئیات پیشنهادی، اعمال Migration یا استقرار نیست. وضعیت جاری از فایل‌های واقعی Working Directory استخراج شده است؛ تغییرات قبلی CORS و فایل‌های ناتمام AI جزو خروجی این کار نیستند. هیچ پایگاه داده یا سروری برای این ممیزی بررسی عملیاتی نشده است.
@@ -21,11 +23,11 @@
 نتیجهٔ ممیزی:
 
 - `CURRENTLY IMPLEMENTED`: جدایی `User`، `Person`، `Membership` و `RoleAssignment`؛ Workspace شخصی؛ Contacts و Personal Direct؛ گروه/کانال شخصی با محدودیت‌های سن و ایمنی؛ گروه رسمی کلاس؛ Commerce سازمانی نسخه‌دار؛ AI سازمانی با Context سمت Backend.
-- `PROPOSED / NOT IMPLEMENTED`: تاریخ تولد قابل‌ویرایش در پروفایل خود کاربر، پروفایل آموزشی شخصی، Badge رسمیت سازمانی، اشتراک/خرید فردی، دورهٔ صورتحساب و حسابداری پیوستهٔ مصرف در تعویض پلن، Quotaهای AI/Source و چرخهٔ کامل Educational Source/RAG.
+- `PROPOSED / NOT IMPLEMENTED`: پروفایل آموزشی شخصی، Badge رسمیت سازمانی، اشتراک/خرید فردی، دورهٔ صورتحساب/حسابداری پیوسته مصرف، quotaهای AI/Source و Educational Source/RAG lifecycle. DOB و ProfilePhoto اکنون CURRENTLY IMPLEMENTED هستند.
 - گزارش «Messaging فقط با School Role کار می‌کند» به‌صورت یک قاعدهٔ عمومی در کد تأیید نشد. تست واقعی مخزن برای دو Adult تأییدشدهٔ بدون مدرسه وجود دارد. با این حال، Workspace انتخاب‌شده، پروفایل ناقص، وضعیت سن، رابطهٔ مجاز و Privacy می‌توانند عملیات کاربر عادی را محدود کنند؛ جزئیات در بخش 24 آمده است.
-- `DateOfBirth` در Profile وجود ندارد؛ `CommunicationAgeVerification.VerifiedBirthDate` موجود است و **مدرک تأیید سن** است. این دو را نباید یک مفهوم یا یک API دانست.
+- `CURRENTLY IMPLEMENTED`: Person.DateOfBirth اختیاری و خوداظهاری در self، و User.ProfilePhotoFileAssetId با FileAsset شخصی JPEG/PNG. VerifiedBirthDate شاهد مستقل سن است؛ هیچ‌یک دیگری یا مجوز ارتباط را نمی‌سازند.
 
-این Task فقط همین سند را اضافه می‌کند. کد، تنظیمات خصوصی، مدل EF، دیتابیس، Migrationها، Publish، Deploy، Commit و Push تغییر نمی‌کنند.
+مأموریت ممیزی اولیه فقط همین سند را اضافه کرده بود؛ baseline و شواهد آن تاریخچه‌اند. بازبینی جاری وضعیت DOB/Photo/School ثبت‌شده در کد را اصلاح می‌کند و اجرای migration، deployment یا پیاده‌سازی سایر پیشنهادها نیست.
 
 ## 2. Product Principles
 
@@ -88,13 +90,13 @@ Membership نباید شرط ایجاد حساب یا خرید فردی شود. 
 
 ### 5.1 وضعیت واقعی و پاسخ روشن دربارهٔ DOB
 
-`CURRENTLY IMPLEMENTED`: `CompleteProfileCommand(FirstName, LastName, DisplayName, Username)` و `CurrentUserResult` وجود دارند. پاسخ self علاوه بر نام‌ها، `Id`، `PhoneNumber` و `IsProfileComplete` دارد. `PersonConfiguration` نام‌ها، زمان‌ها و `RowVersion` را نگاشت می‌کند. تاریخ تولد در این Profile وجود ندارد.
+`CURRENTLY IMPLEMENTED`: CompleteProfileCommand نام‌ها/Username و dateOfBirth nullable را می‌گیرد؛ CurrentUserResult در self/login، dateOfBirth و profilePhoto دارد. null/omission DOB قبلی را حفظ می‌کند و آینده رد می‌شود؛ DOB/ProfilePhoto prerequisite تکمیل جدید نیستند. Person.DateOfBirth به SQL date nullable نگاشت شده؛ schema عکس مرجع User با FK/unique filtered است، نه جدول پروفایل تکراری.
 
 ```text
-DateOfBirth currently exists in DB? NO
-DateOfBirth currently exists in Domain? NO
-DateOfBirth currently exists in API Request? NO
-DateOfBirth currently exists in API Response? NO
+DateOfBirth currently exists in DB? YES
+DateOfBirth currently exists in Domain? YES
+DateOfBirth currently exists in API Request? YES
+DateOfBirth currently exists in API Response? YES
 ```
 
 دامنهٔ این چهار پاسخ، **فیلد DateOfBirth پروفایل عمومی/شخصی مورد درخواست** و schema نسخه‌دار مخزن است؛ وضعیت دیتابیس زنده ممیزی نشده است. استثنای مهم: `VerifiedBirthDate` در Domain و جدول `identity.CommunicationAgeVerifications` و درخواست `VerifyCommunicationAgeCommand` موجود است، اما پاسخ آن `CommunicationAgeResult` تاریخ تولد را برنمی‌گرداند. این endpoint مخصوص تأیید سن و دارای مجوز است؛ جایگزین self-profile نیست.
@@ -113,10 +115,10 @@ DateOfBirth currently exists in API Response? NO
 | `Person.DisplayName` | `CURRENTLY IMPLEMENTED` | Optional | Editable | User | نام نمایشی مجاز؛ nullable | جست‌وجوی Directory با قواعد فعلی |
 | `User.Username` | `CURRENTLY IMPLEMENTED` | Required برای Profile complete | Editable با uniqueness | User | در Messaging profile مجاز | Searchable با endpoint و محدودیت Discovery |
 | `PhoneNumber` | `CURRENTLY IMPLEMENTED` | شناسهٔ ورود فعلی | از PATCH Profile قابل‌ویرایش نیست | Identity | self؛ نمایش/کشف برای دیگران تابع دو Privacy مستقل | فقط Resolve مجاز؛ نه فهرست تلفن‌ها |
-| `Person.DateOfBirth` | `PROPOSED / NOT IMPLEMENTED` | پیشنهاد: Optional برای سازگاری حساب‌های قبلی؛ الزام تکمیل نیازمند تصمیم مالک | Editable با کنترل تعارض تأیید سن | User، مستقل از مدرسه | Private، فقط self و workflow صریح دارای مجوز | Non-searchable |
+| `Person.DateOfBirth` | `CURRENTLY IMPLEMENTED` | Optional؛ prerequisite تکمیل نیست | Editable self، null/omission حفظ مقدار؛ clear تعریف نشده | User مستقل از مدرسه | Private self؛ شاهد سن تغییر نمی‌کند | Non-searchable |
 | `VerifiedBirthDate` | `CURRENTLY IMPLEMENTED` در evidence جدا | Required هنگام ثبت verification | evidence جدید از workflow مجاز؛ نه ویرایش مستقیم self | مرجع تأیید سن | Private؛ پاسخ عمومی سن دقیق ندارد | Non-searchable |
 | `CommunicationAgeCategory/VerificationStatus` | `CURRENTLY IMPLEMENTED` | وضعیت امنیتی حساب | فقط workflow معتبر | سیستم/مرجع تأیید | self-status و projections مجاز | فیلتر کشف عمومیِ سن دقیق نیست |
-| `AvatarFileAssetId` | `PROPOSED - OWNER APPROVAL REQUIRED` | Optional | Editable | User | تنها با تأیید سیاست عکس و audience | Non-searchable |
+| `User.ProfilePhotoFileAssetId` | `CURRENTLY IMPLEMENTED` | Optional | PUT انتخاب/تعویض و DELETE مرجع | User | عکس تابع نمایش هویت مجاز؛ دانلود Bearer، بدون URL عمومی | Non-searchable |
 | `Bio` | `PROPOSED - OWNER APPROVAL REQUIRED` | Optional | Editable | User | audience باید تصویب شود؛ پیش‌فرض عمومی فرض نشود | Non-searchable تا تصویب |
 | `PreferredLanguage` | `PROPOSED - OWNER APPROVAL REQUIRED` | Optional | Editable | User | Private | Non-searchable |
 
@@ -530,7 +532,7 @@ UI باید «نداشتن مدرسه»، «پروفایل ناقص»، «Privac
 - **Badge:** رسمیت منبع/کلاس با Badge هویتی User یکی نیست.
 - **Role lifecycle:** پایان Enrollment، retrieval کلاس را قطع می‌کند؛ index cache یا history AI نباید راه بازگرداندن داده باشد؛ Personal حفظ می‌شود.
 
-## 24. Current Implementation Audit
+## 24. ممیزی تاریخی پیاده‌سازی در baseline اولیه
 
 ### 24.1 روش و حدود شواهد
 
@@ -611,7 +613,7 @@ UI باید «نداشتن مدرسه»، «پروفایل ناقص»، «Privac
 
 | شناسه | Gap واقعی | جهت رفع پیشنهادی / معیار خروج |
 |---|---|---|
-| G-01 | DOB self در Person/DTO/EF/API غایب است | افزودن additive با privacy و conflict policy verification؛ ثبت/دریافت self بدون افشای People |
+| G-01 | CLOSED_IN_CODE: DOB self در Person/DTO/EF/API موجود است | date-only nullable، آینده رد، omission/null حفظ مقدار؛ شاهد سن مستقل و بدون افشای People؛ clear/قانون تعارض تازه تصویب نشده |
 | G-02 | Profile حرفه‌ای، مالکیت و concurrency کامل قرارداد نشده | حداقل schema بخش 5؛ فیلد اضافی فقط با approval؛ حفظ workflow Identity |
 | G-03 | Personal Messaging موجود، ولی به selected workspace وابسته و incident بدون evidence است | ابتدا reproduce و UX mapping؛ سپس فقط coupling اثبات‌شده رفع شود؛ بدون تکرار Messenger |
 | G-04 | audience نوع‌دار همهٔ فضاهای رسمی و revoke وابسته به Role خاص کامل نیست | reuse Class binding؛ تعریف official org policy و revalidation برای همهٔ read/send/realtime/file/search paths |
@@ -854,7 +856,7 @@ Scope منبع صرفاً string/free-form OrganizationId نیست. در طرا�
 1. **DOB:** Required بودن برای کدام قابلیت، حذف/ویرایش، مرجع حل تعارض self-DOB/evidence و مسئول رسیدگی. اصل حفظ GAP-05 و عدم self-verification دوباره باز نمی‌شود.
 2. **Manager approval:** تأیید صرفاً توسط Owner یا تفویض آماده‌سازی به Operations با امضای نهایی Owner؛ مدیر اولیه/اضافی/جایگزین و انقضای approval. اختلاف permission فعلی باید صریح حل شود.
 3. **Official resources/badges:** authority صدور، audience هر گروه/کانال، شرط Role/Enrollment/Guardian، label عمومی و نمایش روابط کودکان؛ مدت اعتبار و مسیر اعتراض.
-4. **Profile additions:** پذیرش یا رد Avatar/Bio/PreferredLanguage و visibility آن‌ها؛ این فیلدها requirements مصوب فعلی نیستند.
+4. **Profile additions:** Bio/PreferredLanguage و visibility آن‌ها هنوز تأیید مستقل می‌خواهند. ProfilePhoto طبق درخواست بعدی مالک تأیید و پیاده‌سازی شده؛ این تأیید به فیلدهای دیگر تعمیم پیدا نمی‌کند.
 5. **Learning taxonomy:** کشور/نظام آموزشی، مقطع/پایه/سطح/Subject/Language/Category، منبع catalog، multiple contexts و required بودن هر جزء.
 6. **پلن‌های اولیه:** قیمت، currencyهای آینده، feature matrix، Quota، eligible audience، رایگان/پولی، trial و availability. نام‌ها قطعی اولیه‌اند؛ کد تجاری پایدار و امکان rename نیازمند طراحی است.
 7. **Billing:** دورهٔ پرداخت، دورهٔ سهمیه، timezone مرز دوره، تمدید، grace، cancel و سیاست پایان اشتراک؛ دورهٔ ماهانه یا ۳۰روزه فرض نشده است.
@@ -878,7 +880,7 @@ Scope منبع صرفاً string/free-form OrganizationId نیست. در طرا�
 |---|---|---|---|---|---|---|
 | User identity | `CURRENTLY IMPLEMENTED`: User/Person مستقل از Role | حفظ حساب در کل lifecycle | نیاز به rewrite پایه نیست | reuse Identity و lifecycle tests | برای این اصل ندارد | قرارداد self موجود |
 | Profile | `CURRENTLY IMPLEMENTED`: نام‌ها/Username و self-update | پروفایل شخصی مستقل و حداقلی | field policy و concurrency extension | Person/Identity service/DTO | DOB و احتمالات مصوب | توسعهٔ additive self |
-| DateOfBirth | `PROPOSED / NOT IMPLEMENTED` در Profile؛ evidence VerifiedBirthDate موجود | ثبت/دریافت/ویرایش خصوصی self | Domain/EF/DTO/API self فاقد فیلد | DateOnly و verification conflict rule | date nullable و migration آینده | PATCH/GET self؛ بدون People exposure |
+| DateOfBirth | `CURRENTLY IMPLEMENTED`: date nullable خوداظهاری self | حفظ جدایی VerifiedBirthDate | clear/الزام جدید تصویب نشده | Domain/Application فعلی | migration 20261028102653 | PATCH profile و GET me موجود |
 | Messaging for ordinary users | `CURRENTLY IMPLEMENTED`: Personal بدون School Role؛ guards سن/Profile/Workspace | Messenger حساب‌محور با safety و UX درست | incident اثبات نشده؛ coupling selected workspace | reproduce و بهبود targeted context/UX | لزوماً تغییر schema لازم نیست | reuse me/status/workspaces و Messaging |
 | Direct messages | `CURRENTLY IMPLEMENTED`: Personal و Organization جدا | Personal مستقل از Role طرفین | حفظ policy، نه ساخت Direct دوم | audit branchها و regression | no blanket conversion | Start/Send فعلی؛ contract fixes فقط در صورت اثبات |
 | Personal groups | `CURRENTLY IMPLEMENTED`: UserManaged، Public/Private با safety | حفظ بعد از Role loss | scope UX و acceptance | reuse Permission/invitation | احتمالاً ندارد | endpoints فعلی |

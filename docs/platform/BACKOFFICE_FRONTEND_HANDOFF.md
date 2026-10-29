@@ -1,5 +1,7 @@
 # قرارداد تحویل Backoffice به Frontend
 
+بازبینی `2026-10-29` از `main@701cba0`: ورود Platform فقط OTP/Session و permission جاری دارد؛ MFA/step-up و endpointهای آن حذف شده‌اند و UI نباید آن‌ها را فراخوانی کند. Directory مدرسه، roster و Lesson APIهای School با Workspace Manager/Teacher هستند؛ Platform role جای نقش آموزشی نیست. DOB شخصی و عکس مجوز admin یا تماس با فرد ایجاد نمی‌کنند. [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) و [حذف عامل دوم](PLATFORM_AUTHENTICATION_CHANGE_FA.md).
+
 ## افزودهٔ عملیات PH و ورود دو محیط
 
 ورود همچنان همان Bearer session است؛ Test/Mock مجوز Platform نمی‌سازد. پس از login، me و permission جاری resolve می‌شوند؛ عامل دوم و Step-Up حذف شده‌اند. مسیر Production از OTP واقعی استفاده می‌کند؛ UI از شکل challenge نباید محیط یا موفقیت OTP واقعی را حدس بزند.

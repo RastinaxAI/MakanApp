@@ -1,7 +1,9 @@
 # Release Checklist
 
+کنترل بازبینی۲۰۲۶-۱۰-۲۹: نسخه migration52 با آخرین CompleteSchoolManagement، consent دعوت والد، Draft/Published Lesson، دریافت احرازشده عکس/جزوه و سلب مجوز منبع بررسی شود. mode واقعی CORS از AllowAnyOrigin و Host filtering مستقل خوانده شود؛ wildcard در mode=true تصمیم تنظیم است، نه permission. هیچ تیک این سند با ساخت PDF یا regression محلی پر نمی‌شود.
+
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-29` از `main@701cba0`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
@@ -27,7 +29,7 @@
 - [ ] runtime و migration principal جدا و connection TLS معتبر است.
 - [ ] CORS origins، AllowedHosts، known proxy، storage root و write permission تأیید شده‌اند.
 - [ ] .NET 9 Hosting Bundle، IIS WebSocket، HTTPS binding، firewall و log collector آماده‌اند.
-- [ ] key ring فعلی MFA، هویت ثابت App Pool، Load User Profile، ACL و روش بازیابی DPAPI/certificate حفظ و بررسی شده‌اند؛ Identity key در deploy عادی عوض نشده است.
+- [ ] Identity key و Storage فعلی حفظ شده‌اند؛ MFA/key ring شرط نسخه جاری نیست. backup پیش از RemovePlatformMfa و توقف نسخه legacy برای schema ناسازگار تأیید شود؛ حذف فایل backup/key قدیمی scope جداست.
 
 ## migration و rollout
 
@@ -155,7 +157,7 @@ Get-MakanCoreProbe '/health/ready'
 
 | سناریو | شاهد مورد نیاز؛ همه فعلاً NOT_RUN |
 |---|---|
-| Fresh start | process درست، دو health، دسترسی core و key ring/storage پایدار |
+| Fresh start | process درست، دو health، دسترسی core و Storage پایدار |
 | Graceful Stop/Start | خروج process، budget bounded، بازیابی claim منقضی و یک اثر durable مصنوعی |
 | Hardened recycle/overlap | PIDهای کوتاه‌مدت، claim/fencing صحیح، canonical report و عدم اثر durable تکراری |
 | Rapid restart در محیط آزمایشی مجاز | recovery نهایی، backoff/سقف retry و نبود hot loop؛ crash اجباری مجوز مستقل می‌خواهد |

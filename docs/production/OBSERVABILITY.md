@@ -142,7 +142,7 @@ baseline، حداقل traffic، window، maintenance و owner escalation در س
 | Signal واقعی/منبع | معنا | دستهٔ آستانهٔ آغازین | Severity | اقدام اپراتور / Runbook |
 |---|---|---|---|---|
 | `/health/live` از probe مستقل | process قابل دسترسی نیست | استمرار خارج maintenance | CRITICAL | Hosting Bundle، App Pool، binding و Event Viewer؛ [IIS Runtime](DEPLOYMENT_IIS.md#قرارداد-runtime-و-shutdown-در-ph-5) |
-| `/health/ready` برابر 503 | core آماده نیست | استمرار failure core | CRITICAL | config/ring/SQL/storage؛ بخش Health همین سند؛ ring را برای سبزکردن probe بازسازی نکنید |
+| `/health/ready` برابر503 | core آماده نیست | استمرار failure core | CRITICAL | config/SQL/Storage؛ MFA/key ring حذف‌شده gate جاری نیست؛ علت dependency فعلی رفع شود |
 | خطای SQL در health محافظت‌شده | اتصال core ناموفق | failure همراه readiness و retry مشاهده‌شده | CRITICAL | شبکه/گواهی/principal/SQL؛ اتصال محرمانه چاپ نشود؛ [Configuration](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) |
 | نسبت `makan.http.server.errors/requests` | wire 5xx واقعی | افزایش نسبت با حداقل traffic/window | CRITICAL | route template و correlation امن؛ [معیار rollback](DEPLOYMENT_IIS.md#gate-شکست-و-rollback) |
 | `makan.http.server.failures`؛ aborted/unhandled | failure عبوری، حتی پس از wire 200 | افزایش غیرمنتظرهٔ پایدار | CRITICAL | failure را از status موفق جدا ببینید؛ cancellation به‌تنهایی failure تجاری نیست؛ بخش Logging |
@@ -183,7 +183,7 @@ Production، قطعی عمدی SQL یا ارسال secret روی HTTP اضافه
 ## Health
 
 - `/health/live`: فقط زنده‌بودن process.
-- `/health/ready`: اعتبار config لازم Production، ring پایدار همان provider، اتصال SQL Server و قابلیت write/delete فایل مصنوعی روی storage. timeout کل check پانزده ثانیه است؛ cancellation منتقل می‌شود.
+- `/health/ready`: اعتبار config لازم، اتصال SQL و write/delete فایل مصنوعی Storage؛ key ring/MFA حذف شده‌اند. timeout کل check۱۵s است و cancellation منتقل می‌شود.
 - `/health`: alias کم‌جزئیات liveness برای سازگاری.
 
 خروجی عمومی فقط Healthy/Unhealthy است و connection string، path، payload provider یا stack trace منتشر نمی‌کند. جزئیات عملیات موجود از endpointهای permissionدار Backoffice خوانده می‌شود.
@@ -198,8 +198,8 @@ gateهای rollout مستقل‌اند؛ health 200 آن‌ها یا دریاف�
 سه route عمومی health نشست نمی‌خوانند؛ حتی Bearer اشتباهیِ فرستاده‌شده به probe،
 احراز هویت وابسته به SQL را فعال نمی‌کند. این استثنا فقط metadata همین routeهاست، نه bypass APIهای محافظت‌شده.
 `/health/ready` برای شکست وابستگی core، HTTP 503 و فقط `Unhealthy` می‌دهد؛ exception فنی
-در `HealthCheckResult` قرار نمی‌گیرد. نبود runtime کلید/پوشه نباید با cache یا ایجاد ring جدید پنهان شود.
-در Development/Testing فقط الزام ring عملیاتی استثنا دارد؛ این محیط‌ها روش استقرار Production نیستند.
+در HealthCheckResult قرار نمی‌گیرد. وضعیت config/SQL/Storage جاری بررسی می‌شود؛ probe صرفاً key ring حذف شده است.
+نام Development/Testing مجوز Production یا CORS ضمنی نیست؛ CORS mode از Configuration و OTP از جفت flag و guard محیط می‌آید.
 
 `GET /api/admin/v1/operations/health` با session معتبر و permission فعلی `OperationsRead`
 جزئیات امن core و تنظیم providerهای اختیاری را برمی‌گرداند؛ permission تغییر نکرده و endpoint جدید نداریم.

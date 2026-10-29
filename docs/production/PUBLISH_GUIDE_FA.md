@@ -1,5 +1,7 @@
 # راهنمای انتشار MakanApp Backend — Test و Production
 
+بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+
 این راهنما مربوط به Release تأییدشدهٔ ۲۰۲۶-۱۰-۲۹ شامل School Backend Completion در مخزن اصلی است. Commit دقیق، نام ZIPها، SHA-256 و نتیجهٔ واقعی فرمان‌ها در `validation-summary.json` و `SHA256SUMS.txt` تحویل ثبت می‌شوند. ساخت بسته و smoke محلی، استقرار یا پذیرش سرور نیست.
 
 ## ۱. تغییرات این Release

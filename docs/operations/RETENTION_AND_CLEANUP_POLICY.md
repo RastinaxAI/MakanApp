@@ -1,5 +1,7 @@
 # سیاست نگه‌داری و پاک‌سازی محدود
 
+بازبینی `2026-10-29` از `main@701cba0`: موجودی اولیه جدول‌های زیر تاریخچهٔ PH-6 است؛ فرهنگ جاری [SQL](../database-current-structure.md) شامل حذف دو جدول MFA و اضافه‌شدن ClassLessons/ClassLessonAttachments است و جمع فعلی۱۰۷ جدول/۵۲ migration دارد. DOB و مرجع Photo ستون‌های افزوده‌اند. cleanup همچنان فقط bytes terminal بدون reference است؛ User.ProfilePhotoFileAssetId و ClassLessonAttachment نیز guard حذف‌اند. Ready-orphan reaper و purge تاریخچه SQL اضافه نشده‌اند؛ برای جدول/ستون جدید retention حقوقی پیش‌فرض اختراع نشده است.
+
 این موجودی از `MakanDbContextModelSnapshot` و ۱۰۷ جدول فعلی تهیه شده است؛ تعداد جدول، دورهٔ
 نگه‌داری حقوقی یا مجوز حذف ایجاد نمی‌کند. هیچ تاریخ انقضا یا ستون `Processed/Expired` به‌تنهایی
 مجوز purge نیست. PH-6 دادهٔ مالی، تحصیلی، امنیتی، moderation یا تاریخچهٔ Messenger را حذف نمی‌کند.

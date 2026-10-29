@@ -1,6 +1,8 @@
 # وضعیت جاری Messenger: P0، P1، P2 و مرز P3
 
-این بخش وضعیت کد ثبت‌شده تا `main@5885d11` در `2026-10-23` است. جدول‌های MISSING ابتدای ممیزی P2 و تعویق اولیه Checklist تاریخچهٔ شروع همان مرحله‌اند؛ وضعیت نهایی از [تحویل P2](MESSENGER_P2_FRONTEND_HANDOFF.md) و [ممیزی نهایی](MESSENGER_P2_DELIVERY_AUDIT.md) خوانده شود. پذیرش محلی Backend با deployment یا دریافت Push روی دستگاه یکی نیست.
+بازبینی جاری `2026-10-29` / `main@701cba0`: Personal Messaging بدون نقش مدرسه و با guardهای سن/رابطه/privacy موجود است. Profile ناقص فقط ReadExistingConversations در hint می‌گیرد؛ role loss حساب/عکس/گفتگوی شخصی را حذف نمی‌کند. profilePhoto در هویت امن افزایشی است و مجوز Send/Discovery نمی‌سازد. MFA حذف شده، ولی permission و نشست جاری عملیات ایمنی همچنان بررسی می‌شوند. [جریان شخصی](../product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) و [عکس/دانلود](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+
+این بخش وضعیت کد ثبت‌شده تا `main@701cba0` در `2026-10-29` است. جدول‌های MISSING ابتدای ممیزی P2 و تعویق اولیه Checklist تاریخچهٔ شروع همان مرحله‌اند؛ وضعیت نهایی از [تحویل P2](MESSENGER_P2_FRONTEND_HANDOFF.md) و [ممیزی نهایی](MESSENGER_P2_DELIVERY_AUDIT.md) خوانده شود. پذیرش محلی Backend با deployment یا دریافت Push روی دستگاه یکی نیست.
 
 افزودهٔ بازبینی: Outbox/realtime/scheduled/notification از fencing/repair محدود و completion budget استفاده می‌کنند؛ Push خارجی exactly-once نیست و Delta مرجع پیام است. query Block زوج فعال را با index یکتای موجود seek می‌کند؛ تست‌های ۴/۸/۱۲ درخواست موازی در [گزارش انتشار](../production/BACKEND_RELEASE_READINESS_FA.md) آمده‌اند. API، schema و سیاست privacy عوض نشده؛ [worker recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 

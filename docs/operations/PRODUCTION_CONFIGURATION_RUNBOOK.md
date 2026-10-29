@@ -1,5 +1,7 @@
 # قرارداد کانفیگ Production
 
+بازبینی `2026-10-29` از `main@701cba0`: CORS از Configuration و مستقل از Environment است؛ [دو mode و overrideها](../production/CORS_CONFIGURATION_FA.md). OTP/Identity/Storage قرارداد فعال‌اند، نه تنظیمات صرفاً MFA حذف‌شده. ProfilePhoto/Lesson Storage همان زیرساخت موجود را مصرف می‌کنند و secret/مسیر جدیدی لازم ندارند.
+
 این سند مرجع تنظیم‌های سخت‌سازی PH است؛ اجرای IIS، providerهای موجود و rollout در
 [راهنمای canonical IIS](../production/DEPLOYMENT_IIS.md) و بازیابی در
 [Backup/Restore](../production/BACKUP_RESTORE.md) باقی می‌مانند.

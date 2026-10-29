@@ -47,7 +47,7 @@ dotnet publish MakanApp.Api/MakanApp.Api.csproj --configuration Release --no-res
 
 ## حفظ کانفیگ موجود سرور
 
-۱. قبل از جایگزینی فایل‌های IIS، از کانفیگ خصوصی فعلی، دیتابیس و key ring نسخهٔ پشتیبان بگیرید. این مرحله Migration جدید ندارد؛ Seed که مالک اجرا کرده دوباره لازم نیست.
+۱. قبل از جایگزینی IIS، از DB، Storage و config خصوصی همان محیط backup سازگار بگیرید. code/schema جدید۵۲ migration دارد؛ این سند اجازه اجرای دوباره Seed یا migration سرور نیست.
 
 ۲. در محیط Test، `appsettings.Production.json` خودکار خوانده نمی‌شود. روی خودِ سرور، مقادیر خصوصیِ فعلی و مربوط به همان دیتابیس آزمایشی را با فایل خصوصی `appsettings.Test.json` ادغام کنید یا از متغیرهای محیطی IIS بدهید؛ الگوی نسخه‌بندی‌شده عمداً secret ندارد و بدون تنظیمات ضروری آمادهٔ اتصال نیست. خالی‌بودن جایگاه‌ها مجوز استفاده از دیتابیس Production نیست. فایل خصوصی و خروجی Publish حاوی آن را عمومی یا Commit نکنید.
 
@@ -57,21 +57,21 @@ dotnet publish MakanApp.Api/MakanApp.Api.csproj --configuration Release --no-res
 ConnectionStrings__MakanDatabase
 Identity__SecurityKey
 Storage__RootPath
-BackofficeSecurity__KeyRingPath
 AllowedHosts
+Cors__AllowAnyOrigin
 Cors__AllowedOrigins__0
 ReverseProxy__Enabled
 ReverseProxy__KnownProxies__0
 Hosting__RequireHttps
 ```
 
-نام canonical مربوط به key ring، `Security__DataProtection__KeyRingPath` است؛ alias قدیمی `BackofficeSecurity__KeyRingPath` همچنان توسط کد موجود پشتیبانی می‌شود. مقدار خالی در JSON مانع alias نمی‌شود. اگر هر دو را تنظیم می‌کنید باید یک مسیر باشند؛ مقدارهای متعارض Startup را متوقف می‌کنند. نام ثابت ApplicationName را نیز برای key ring موجود حفظ کنید.
+BackofficeSecurity و Security:DataProtection صرفاً متعلق به MFA حذف‌شده‌اند و قرارداد فعال تنظیم نیستند؛ Identity key/OTP/Storage پابرجایند. فایل backup/key قدیمی با این سند حذف نمی‌شود.
 
-کلید Identity، مسیر storage و key ring قبلی را بی‌دلیل عوض نکنید. App Pool باید روی storage و key ring مجوز لازم و برای DPAPI تنظیم هویت/پروفایل سازگار داشته باشد. در Linux علاوه بر key ring پایدار، گواهی محافظ آن لازم است؛ از پیکربندی موقت Development برای دورزدن این الزام استفاده نکنید.
+Identity key و Storage فعلی حفظ شوند؛ App Pool مجوز لازم Storage و read config دارد. key ring، DPAPI یا PFX صرفاً MFA شرط startup/ready فعلی نیستند؛ محیط Development راه دورزدن guardهای Production نیست.
 
 ۴. تنظیمات MeliPayamak را حذف یا عوض نکنید. با Mock فعال، provider ارسال OTP ثبت و فراخوانی نمی‌شود؛ با برگشت به OTP واقعی همان adapter موجود استفاده خواهد شد. `DevelopmentBypassEnabled=true` و `Identity:Otp:Mode=DevelopmentBypass` همچنان غیرمجازند.
 
-۵. اگر همین سایت آزمایشی هنوز HTTP-only است، مقدار قبلی `Hosting:RequireHttps=false` را صریحاً در config خصوصی Test نگه دارید؛ HTTP هیچ رمزگذاری شبکه‌ای برای token ایجاد نمی‌کند. `Test` را به دلیل نبود HTTPS برای سرویس واقعی استفاده نکنید. CORS و KnownProxies باید محدود و صریح باشند.
+۵. اگر سایت آزمایشی HTTP-only است، Hosting:RequireHttps=false فقط در config مجاز Test حفظ شود؛ HTTP رمزگذاری token ندارد. CORS از AllowAnyOrigin و مستقل از محیط می‌آید؛ KnownProxies واقعی همچنان صریح است.
 
 ۶. بعد از استقرار، App Pool را recycle کنید. تغییر flag بدون restart تضمین تغییر حالت نیست. ابتدا `GET /health/live` و `GET /health/ready`، سپس `/swagger/index.html` و مسیرهای ورود را بررسی کنید؛ این بررسی عملیاتی باید روی سرور توسط مالک انجام شود.
 

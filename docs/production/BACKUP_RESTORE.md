@@ -1,12 +1,14 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
+بازبینی `2026-10-29`: RemovePlatformMfa حذف داده دارد؛ سه migration جدید بعدی DOB/Photo/School را اضافه می‌کنند. DB و bytes عکس/جزوه یک snapshot سازگار می‌خواهند؛ applied migration سرور از این سند تأیید نشده. [مسیر استقرار](../deployment-windows-linux-docker.md).
+
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-29` از `main@701cba0`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 ## مرزبندی جدید Test و Production
 
-backup هر محیط باید DB، Storage، Identity key و Data Protection ring/محافظ همان محیط را کنار هم پوشش دهد؛ metadata schema همسان مجوز مخلوط‌کردن داده یا secretها نیست. restore روی Test با Mock نباید به نسخهٔ واقعی حساب/نشست/کلید Production متصل شود. XML قدیمی ring و محافظ DPAPI کاربر جاری یا private key/PFX لازم‌اند؛ ساخت ring تازه بازیابی MFA نیست. cleanup terminal bytes پیش‌فرض خاموش، جای backup یا purge مصوب نیست. [پیکربندی](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) و [retention](../operations/RETENTION_AND_CLEANUP_POLICY.md).
+backup جاری هر محیط DB، Storage و تنظیمات/Identity key همان محیط را پوشش می‌دهد؛ ProfilePhoto و Lesson bytes در Storage هستند. schema یکسان مجوز مخلوط‌کردن Test و Production نیست. MFA/key ring حذف شده‌اند؛ backupهای تاریخی و protector قبلی با این کار حذف نمی‌شوند. cleanup terminal جای backup یا purge مصوب نیست.
 
 ## روش فعلی پس از GAP-03
 
@@ -19,14 +21,14 @@ backup هر محیط باید DB، Storage، Identity key و Data Protection rin
 - `RESTORE VERIFYONLY` مفید است اما جای restore drill را نمی‌گیرد.
 - مسیر `Storage__RootPath` جداگانه versioned/snapshot شود؛ secrets فقط با reference و روش بازیابی در secret manager نگه‌داری شوند.
 - backupها encrypted، دسترسی‌محدود و خارج از همان failure domain سرور اصلی باشند.
-- پس از GAP-04، key ring پایدار MFA و custody محافظ DPAPI/certificate نیز دارایی recovery هستند؛ DB backup به‌تنهایی TOTP را بازیابی نمی‌کند. DPAPI به همان هویت Windows/ماشین وابسته است و کپی XML به سرور دیگر کافی نیست.
-- فایل خصوصی appsettings.Production.json، کلید Identity و tokenهای provider فقط در نسخهٔ پشتیبان محرمانه با ACL و روش بازیابی کنترل‌شده نگه‌داری شوند؛ داخل artifact مشترک، log یا Git نباشند. انتشار جدید نباید کلید Identity یا مسیر/کلیدهای MFA قبلی را عوض کند.
+- GAP-04 و PH-1 شاهد تاریخی نیاز ring بودند؛ در نسخه جاری MFA/key ring حذف شده‌اند. بازیابی backup پیش از RemovePlatformMfa یک سناریوی legacy مستقل است و به binary/schema سازگار نیاز دارد.
+- فایل خصوصی appsettings.Production.json، کلید Identity و tokenهای provider فقط در نسخهٔ پشتیبان محرمانه با ACL و روش بازیابی کنترل‌شده نگه‌داری شوند؛ داخل artifact مشترک، log یا Git نباشند. انتشار جدید نباید کلید Identity یا داده/مسیر Storage را عوض کند.
 
 ### تکمیل custody کلید در PH-1
 
-Data Protection همچنان از provider قبلی با discriminator پیش‌فرض `MakanApp.BackofficeMfa.v1` و purposeهای MFA قبلی استفاده می‌کند. aliasهای `Security:DataProtection:*` روش جایگزین تنظیم‌اند، نه مجوز جابه‌جایی حلقه. تمام XMLهای لازم برای داده‌های تاریخی، protector، هویت/profile ویندوز یا PFX/private key/رمز و `ApplicationName` جزو inventory محرمانهٔ recovery باشند. DPAPI جاری به current-user وابسته است؛ XML تنها روی سرور دیگر قابل بازیابی فرض نشود. مسیر PFX موجود گزینهٔ قابل انتقال با custody مستقل است؛ certificate store/thumbprint یا rotation تازه‌ای در PH-1 ساخته نشده است.
+در وضعیت جاری، DataProtection مخصوص MFA تنظیم/وابستگی runtime نیست. اگر restore نسخهٔ تاریخی دارای MFA لازم شد، محافظ/ring آن backup فقط همراه همان binary/schema و custody مجاز بررسی می‌شود؛ ساخت ring تازه بازیابی داده قدیمی نیست. Down migration دادهٔ حذف‌شده MFA را برنمی‌گرداند.
 
-startup عملیاتی اکنون وجود حلقهٔ پایدار قابل نوشتن و roundtrip حفاظت را الزام می‌کند؛ readiness probe پوشه/کلید گم‌شده را بازسازی نمی‌کند و حذف کلیدهای دیده‌شده در startup را حتی با provider cache تشخیص می‌دهد. این شاهد، decrypt تمام payloadهای تاریخی پس از disaster را ثابت نمی‌کند. پیش از بازکردن traffic پس از restore، با **همان** `ApplicationName` و purpose، یک payload مصنوعی ثبت‌شده پیش از backup را روی instance بازیابی‌شده بررسی کنید؛ از چاپ secret TOTP یا محتوای کلید در evidence خودداری شود. شواهد محلی recreate provider جای drill انتقال واقعی IIS/ماشین را نمی‌گیرند و هیچ job/off-server copy تازه‌ای اجرا نشده است.
+probe حلقهٔ پایدار و جریان MFA متعلق به PH-1 تاریخی بودند و در نسخهٔ جاری حذف شده‌اند. پس از restore فعلی، config/SQL/Storage در readiness و OTP/session/permission در smoke مجاز بررسی شوند. restore نسخهٔ legacy دارای MFA باید با binary/schema و محافظ همان نسخه باشد؛ این بازبینی drill یا secret واقعی سرور را اجرا نمی‌کند.
 
 ## سازگاری DB و Storage
 
@@ -63,4 +65,4 @@ WITH CHECKSUM;
 
 ## داده‌های افزوده P2
 
-backup/restore سازگار با ۴۸ migration شامل قصدهای Scheduled، Poll/Quiz و Checklist هم هست؛ قصد Dispatched را پس از recovery دوباره Message تازه نسازید. داده گذرای Typing/Presence backup دائمی یا تاریخچه حضور نیست. keyهای VAPID/FCM و MFA/Identity در custody جدا و امن حفظ شوند؛ حذف یا rotation آن‌ها از restore عادی استنتاج نشود.
+backup/restore سازگار با ۵۲ migration شامل قصدهای Scheduled، Poll/Quiz و Checklist هم هست؛ قصد Dispatched را پس از recovery دوباره Message تازه نسازید. داده گذرای Typing/Presence backup دائمی یا تاریخچه حضور نیست. keyهای VAPID/FCM و Identity در custody جدا و امن حفظ شوند؛ حذف یا rotation آن‌ها از restore عادی استنتاج نشود.

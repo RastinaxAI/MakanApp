@@ -1,5 +1,7 @@
 # قابلیت اطمینان و بازیابی Workerها
 
+بازبینی `2026-10-29` / `main@701cba0`: هشت worker کسب‌وکاری/عملیاتی حفظ‌اند؛ startup validator صرفاً MFA حذف شده است. cleanup مرجع ProfilePhoto و ClassLessonAttachment را هم می‌شناسد؛ bytes متصل حذف نمی‌شوند. هیچ scale-out یا runtime acceptance تازه با این بازبینی اعلام نشده است.
+
 این سند قرارداد عملیاتی PH-4 برای workerهای واقعی همان API است؛ validation نهایی این
 مرحله در [ممیزی PH](PRODUCTION_HARDENING_AUDIT.md) ثبت می‌شود. رقابت scopeها و اتصال‌های SQL
 مستقل، مدل رقابت processها را می‌سنجد؛ جای آزمایش recycle یا reboot واقعی IIS نیست. SQL منبع حقیقت durable است؛ wake signal،
@@ -133,7 +135,7 @@ ping، rapid-fail protection یا overlapping recycle را به‌طور عمو�
 3. count، oldest age، snapshot age/availability، failure جدید و کد ثابت worker را مقایسه کنید.
    صف آیندهٔ Scheduled، backlog موعدگذشته نیست؛ backoff Outbox همچنان pending است.
 4. اگر SQL/storage/ring خراب است، علت را اصلاح و recovery خودکار محدود را مشاهده کنید؛
-   SQL Server، key ring، metadata یا پیام‌ها را برای «سبز کردن» health پاک نکنید.
+   SQL Server، Storage، metadata یا پیام‌ها را برای «سبز کردن» health پاک نکنید.
 5. failed terminal نیازمند triage است؛ reset attempt و retry دستی بدون workflow مصوب مجاز نیست.
 6. رشد history/orphan، موضوع retention و ظرفیت است؛ قانون حذف عمومی از این سند استنتاج نشود.
 
@@ -184,7 +186,7 @@ failed/skipped=0 و build بدون warning/error. این شامل 40 مورد ج
 | `TerminalFileCleanupDispatcher` | SAFE | پیش‌فرض خاموش؛ scan محدود، دو cursor، قفل referenceها، حذف idempotent bytes بدون حذف metadata؛ lease durable موضوعیت ندارد. تنظیم activation/grace تغییر نمی‌کند. |
 | `MessagingEphemeralDispatcher` | SAFE | حافظه/TTL و drain محدود، gate محلی و authorization جاری؛ hint گذراست، SQL lease/recovery durable موضوعیت ندارد. این شاهد distributed Presence نیست. |
 | `OperationalMetricsPublisher` | SAFE | snapshot فقط خواندنی و budget محدود؛ failure availability را false می‌کند و poll بعدی retry است؛ ادغام gauge چند instance باید max/dedup باشد. |
-| `DataProtectionKeyRingStartupValidator` | SAFE | `StartingAsync` پیش از workerها fail-closed است، probe لغوشونده؛ queue/batch/lease/retry durable موضوعیت ندارد. |
+| `DataProtectionKeyRingStartupValidator` | REMOVED | ثبت PH تاریخی؛ همراه حذف MFA از host برداشته شده و gate startup فعلی نیست |
 
 ### مرزهای concurrency و failure
 

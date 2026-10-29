@@ -1,6 +1,6 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
-این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی `2026-10-24` با مبنای `main@e525c78` به‌همراه تغییرات حذف عامل دوم: **318 عملیات HTTP در 56 Controller و 283 مسیر؛ 547 schema، 105 جدول و 49 migration**. مرجع HTTP، فرهنگ SQL و HTML/PDF از همین کد بازتولید می‌شوند. اعداد تست گزارش‌های مرحله‌ای تاریخچهٔ همان اجرا هستند؛ نتیجهٔ جدید در [وضعیت جاری](CURRENT_PROJECT_STATUS.md) ثبت می‌شود.
+این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی `2026-10-29` از `main@701cba0`؛ **332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration**. منبع جاری شامل حذف MFA، پروفایل شخصی و تکمیل مدیریت مدرسه است؛ گزارش‌های مرحله‌ای شواهد همان اجرا هستند و پذیرش سرور محسوب نمی‌شوند. [شاخص پروژه](CURRENT_PROJECT_STATUS.md).
 
 ## وضعیت جاری و تغییرات مؤثر بر مطالعه
 
@@ -80,8 +80,12 @@ Poll/Quiz و Checklist APIهای Messenger و داده‌های همان scope �
 - [عملیات و بازیابی](#operations-current)
 - [قرارداد مشترک HTTP](#http)
 - [ورود و پروفایل](#identity)
+- [پروفایل، عکس و ارتباط شخصی](#personal-profile-current)
+- [پروفایل، عکس و ارتباط شخصی](#personal-profile-current)
 - [فضای کاری و سرپرست](#workspace)
 - [آموزش و حضور و غیاب](#academic)
+- [مدیریت مدرسه و جزوه](#school-management-current)
+- [مدیریت مدرسه و جزوه](#school-management-current)
 - [تکلیف و ارزیابی](#assignments)
 - [آزمون و انتشار نمره](#exams)
 - [فایل‌ها](#storage)
@@ -365,7 +369,7 @@ dotnet dev-certs https --trust
 dotnet run --project MakanApp.Api/MakanApp.Api.csproj --configuration Debug --launch-profile https
 ```
 
-برنامه migration را خودکار در startup اجرا نمی‌کند. آخرین migration `20261017033804_AddConversationChecklists` است؛ تغییرات عملیاتی، OTP و AI بعد از آن migration جدیدی ندارند. schema با seed داده فرق دارد: سازمان/provisioning از Backoffice و پرونده/Guardian از API مدیر ساخته می‌شوند. fixture نقش‌های توسعه فقط طبق [راهنمای مستقل](dev/DEVELOPMENT_TEST_USERS_FA.md)، روی پایگاه اختصاصی و با تأیید اتصال مجاز است؛ روی دیتابیس عادی اجرا نشود.
+برنامه migration خودکار در startup ندارد؛ آخرین migration `20261028202239_CompleteSchoolManagement` و جمع۵۲ است. پس از Checklist، حذف MFA، DOB، Photo و School ثبت شده‌اند. schema با دادهٔ onboarding فرق دارد؛ این اسناد روی DB عادی/سرور migration یا seed اجرا نمی‌کنند. fixture توسعه فقط روی پایگاه اختصاصی و با تأیید مقصد طبق [راهنمای مستقل](dev/DEVELOPMENT_TEST_USERS_FA.md) مجاز است.
 
 | نشانی محلی | کاربرد |
 |---|---|
@@ -545,6 +549,37 @@ $me = Invoke-MakanApi -Method PATCH -Path '/me/profile' -Token $accessToken -Bod
 
 `POST /auth/logout` بدون بدنه، نشست جاری را revoke می‌کند و `204` می‌دهد. پس از موفقیت، توکن محلی را پاک کنید.
 
+<a id="personal-profile-current"></a>
+## پروفایل شخصی، تاریخ تولد و عکس
+
+حساب User مستقل از Membership/Role است؛ افزودن یا پایان نقش، Profile، عکس یا گفتگوهای شخصی را حذف نمی‌کند. DOB و Avatar شرط جدید تکمیل پروفایل یا تأیید سن نیستند؛ Personal Context به مدرسهٔ صوری نیاز ندارد. [گزارش پروفایل و Messaging](product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md).
+
+### DOB خوداظهاری
+
+`PATCH /api/v1/me/profile` همان نام‌ها و Username قرارداد قبلی را می‌گیرد و `dateOfBirth` اختیاری افزوده دارد؛ فرمت میلادی `YYYY-MM-DD`، date-only و بدون timezone است. تاریخ آینده با روز UTC سرور، 400 PROFILE_VALIDATION_FAILED است؛ minimum age تازه تعریف نشده. omission/null مقدار قبلی را حفظ می‌کند؛ clear با null تعریف نشده و PATCH تک‌فیلدی مستقل ساخته نشده است. `GET /api/v1/me` و پاسخ ورود، تاریخ self را دارند؛ People/Directory/AI تاریخ تولد تازه دریافت نمی‌کنند.
+
+`Person.DateOfBirth` در `identity.Persons` و از نوع SQL date nullable است؛ با `CommunicationAgeVerification.VerifiedBirthDate` فرق دارد. تغییر self DOB، شاهد سن یا CommunicationAgeCategory/VerificationStatus را عوض نمی‌کند. Unknown همچنان protected است و DOB خوداظهاری شرط discovery/safety را دور نمی‌زند.
+
+### انتخاب، تعویض و برداشتن عکس
+
+```text
+POST /api/v1/files (multipart File, Personal Workspace)
+-> FileAsset Ready owned by current User, OrganizationId=null
+-> PUT /api/v1/me/profile-photo {fileAssetId}
+-> ProfileController -> ProfilePhotoService -> User.ProfilePhotoFileAssetId
+-> ProfilePhotoResult {fileAssetId,contentType,downloadUrl}
+```
+
+فقط Ready شخصی خود کاربر و JPEG/PNG مجاز است؛ WebP/SVG در این نسخه پشتیبانی نشده‌اند. سقف از Storage:MaxFileSizeBytes موجود می‌آید، پایه۱۰MiB؛ تصویر از allowlist/extension/signature موجود عبور می‌کند. Guid دانسته‌شده، فایل سازمانی یا عکس دیگری مجوز اتصال نیست: FILE_NOT_FOUND=404؛ غیرReady: FILE_NOT_READY=409؛ غیرتصویری: FILE_TYPE_NOT_ALLOWED=415. انتخاب مجدد همان فایل idempotent و تعویض تنها مرجع User را عوض می‌کند. `DELETE /api/v1/me/profile-photo` تکرارپذیر و204 است؛ User/Person/blob را حذف نمی‌کند. عکس فعال از حذف عمومی با FILE_IN_USE=409 و از cleanup محافظت می‌شود.
+
+`profilePhoto` nullable به CurrentUserResult، SafeMessagingIdentityResult و MessagingPublicProfileResult افزوده شده؛ ناموجودبودن با null نمایش داده می‌شود. People/Contacts/Direct/inbox/اعضا/فرستنده/mention هویت امن مشترک را مصرف می‌کنند. عکس در پیام snapshot نشده؛ خواندن دوبارهٔ پیام قدیمی عکس فعلی فرستنده را می‌گیرد. [قرارداد کامل عکس و migration](product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+
+دانلود `GET /api/v1/files/{id}/content` Bearer و grant جاری لازم دارد؛ URL عمومی یا CDN ناشناس نیست. client باید با header مجاز دریافت و در صورت نیاز Object URL بسازد؛ token در query نگذارد. نمایش عکس از مجوز نمایش همان هویت پیروی می‌کند: self، discoverable identity یا هویت واقعاً قابل مشاهده در conversation/history/poll مجاز. Block به‌تنهایی لزوماً تاریخچهٔ مجاز را پنهان نمی‌کند؛ عکس نیز مجوز Send یا دیدن تلفن/چت دیگران نیست. جایگزینی/برداشتن عکس، فایل قبلی را کورکورانه حذف نمی‌کند؛ Ready-orphan reaper وجود ندارد.
+
+### Personal Messaging بدون نقش مدرسه
+
+Personal Direct/Group/Channel بدون School Role از قبل وجود داشت؛ نشست، workspace، profile نمایشی، سن تأییدشده/رابطه، privacy، block و restriction جاری همچنان guard هستند. Profile ناقص در messaging-status فقط `ReadExistingConversations` را اعلام می‌کند و NextAction=ProfileCompletionRequired باقی است؛ این hint مجوز ایجاد Direct یا discovery تازه نیست. بعد از پایان نقش، client می‌تواند از workspace selection موجود به Personal برگردد؛ fallback پنهان یا role سراسری جدید ساخته نشده است.
+
 <a id="workspace"></a>
 ## فضای کاری و سرپرست
 
@@ -694,6 +729,50 @@ $class = Invoke-MakanApi -Method POST -Path '/academic/classes' -Token $accessTo
 ```
 
 مقادیر ثبت‌کردنی `Present`، `Absent`، `Late` و `Excused` هستند. `NotRecorded` وضعیت نمایش ثبت‌نشدن است. ثبت پیش از شروع جلسه و برای جلسه لغوشده مجاز نیست. برای اصلاح رکورد موجود از `PATCH /academic/sessions/{sessionId}/attendance/{attendanceId}` با `status`، `correctionReason` و `expectedRowVersion` استفاده کنید؛ اصلاح تاریخچه جدا دارد.
+
+<a id="school-management-current"></a>
+## مدیریت سازمان، کلاس، دعوت والد و جزوه
+
+مرجع دقیق UI، نمونه request/response و خطاهای جدید [قرارداد مدیریت مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) است؛ prefix همه مسیرهای این بخش /api/v1 است. شناسهٔ انتخابی client مدرک مجوز نیست.
+
+### Directory و roster
+
+Manager در Workspace سازمانی جاری، `GET /organization/members` را با search/role/status/page/pageSize می‌خواند؛ OrganizationId ورودی ندارد. Directory روی Membership است، نه پروندهٔ OrganizationPerson؛ account ناقص ممکن است PersonId/Username و پروندهٔ فعال null داشته باشد. activeRoles از Assignment فعال می‌آیند؛ تلفن، DOB و secret در این projection نیستند. عکس فقط با grant هویت موجود نمایش داده می‌شود.
+
+`GET /academic/classes/{classId}/learners` و `/teachers` roster صفحه‌بندی‌شده را به Manager یا Teacher با Assignment فعال همان کلاس می‌دهند؛ Student/Parent مجاز نیستند. learner تازه حتی پیش از Session/Assignment آموزشی دیده می‌شود. `GET /academic/classes` همان آرایه قبلی است؛ pagination یکسان به همه listها تحمیل نشده. ساخت Class فقط Manager است و Teacher با403 MANAGER_ROLE_REQUIRED رد می‌شود؛ ساخت Session برای Teacher منتسب مجاز است.
+
+Enrollment و TeacherAssignment همان writeهای موجود را دارند؛ rowversion پاسخ roster به معنی افزودن ExpectedVersion فرضی به End قبلی نیست. End و Enroll مقصد دو درخواست مستقل‌اند؛ transfer اتمیک جدید وجود ندارد. پایان Assignment یک مدرس، نقش سازمانی یا Assignment مدرس دیگر را پایان نمی‌دهد.
+
+### دعوت والد و رضایت صریح
+
+```text
+Manager: POST /organization/people/{learnerId}/guardian-invitations
+-> SchoolGuardianInvitationsController -> SchoolGuardianInvitationService
+-> OrganizationService / existing Invitation store -> Pending
+Parent: GET /invitations -> POST /invitations/{id}/accept
+    {confirmGuardianRelation:true}
+-> reuse/create Membership+Parent Role, Pending relation -> Active + audit
+```
+
+Request مدیر دقیقاً یکی از username یا phoneNumber، clientOperationId، expiresAtUtc و reason دارد. username exact و case-insensitive با @ اختیاری، یا شماره normalizeشده حساب موجود resolve می‌شود؛ ساخت حساب/credential، جست‌وجوی fuzzy و merge شخص نداریم. مقصد باید حساب فعال موجود باشد؛ expiry پس از اکنون و حداکثر۳۰روز و reason الزامی حداکثر۵۰۰ نویسه است. پاسخ مدیر تلفن/UserId/نام مقصد را افشا نمی‌کند. ایجاد201، replay200؛ همان clientOperationId با payload متفاوت409. دعوت Pending همان والد/کودک reuse می‌شود و کودک دوم مستقل است؛ rate limit ایجاد۱۰ درخواست در دقیقه برای actor است.
+
+inbox فقط دعوت حساب جاری را می‌دهد؛ guardianLearnerOrganizationPersonId/guardianLearnerDisplayName/requiresGuardianConsent/nextAction افزایشی‌اند. organizationPersonId دعوت والد null است؛ آن selector برای اتصال حساب فراگیر است. accept بدون confirmGuardianRelation=true با400 GUARDIAN_INVITATION_CONSENT_REQUIRED و حساب مقصد نادرست404 است. profile کامل مقصد و پروندهٔ کودک فعال لازم‌اند. Invitation/Membership/Role/GuardianRelation/Audit در تراکنش هماهنگ‌اند؛ Enrollment/TeacherAssignment یا شمارهٔ تأییدشده ساخته نمی‌شود.
+
+replay پذیرش همان receipt را می‌دهد و رابطهٔ Ended/Revoked یا Role پایان‌یافته را زنده نمی‌کند. revoke دعوت Pending با expectedRowVersion و reason از `/organization/guardian-invitations/{id}/revoke` است؛ رابطهٔ پذیرفته‌شده از lifecycle Guardian موجود پایان می‌یابد. statusهای Invitation برابر Pending/Accepted/Declined/Expired/Revoked هستند، نه statusهای GuardianRelation. SMS/Push تازه برای این flow ساخته نشده است.
+
+### Lesson / Handout
+
+| Method | مسیر | رفتار |
+|---|---|---|
+| GET/POST | /academic/classes/{classId}/lessons | list مجاز یا ساخت Draft با201/replay200 |
+| GET/PATCH | /academic/lessons/{lessonId} | خواندن مجاز یا جایگزینی محتوای Draft |
+| POST | /academic/lessons/{lessonId}/publish | انتشار یا receipt انتشار قبلی |
+
+`ClassLessonsController → ClassLessonService → ClassLesson → IClassLessonStore/EfClassLessonStore → SQL Server` مسیر واقعی است. عنوان۱..۲۰۰، body plain text حداکثر۵۰۰۰۰، displayOrder=0..100000 و حداکثر۱۰ FileId غیرتکراری. Course از Class resolve می‌شود؛ ورودی CourseId جدا نداریم. Draft می‌تواند خالی باشد ولی publish حداقل متن یا فایل لازم دارد. body را HTML مورداعتماد رندر نکنید.
+
+PATCH merge جزئی نیست؛ title/body/displayOrder/fileAssetIds/expectedVersion وضعیت کامل قابل‌ویرایش را تعیین می‌کنند. [] اتصال قبلی را برمی‌دارد و blob را حذف نمی‌کند؛ null body متن خالی است. Published immutable و ویرایش آن409 است؛ retry انتشار زمان و revision را دوباره نمی‌نویسد. optimistic concurrency از version واقعی response می‌آید.
+
+Manager یا Teacher منتسب می‌نویسد؛ Student دارای Enrollment/پرونده فعال فقط Published را می‌بیند، Draft از list حذف و در Get404 می‌شود. Parent دسترسی Lesson مستقل ندارد. فایل تازه باید Ready همان سازمان و متعلق به actor باشد؛ مدرس مجاز دوم می‌تواند attachment موجود را حفظ کند. دانلود grant جاری منبع را بررسی می‌کند؛ uploader بودن پس از binding راه عبور از پایان Assignment نیست. آخرین اتصال معتبر می‌تواند از منبع مستقل دیگر باقی بماند. FILE_IN_USE از حذف مستقیم و cleanup از فایل متصل محافظت می‌کنند. Lesson نه AI Source است و نه Assignment/Exam/Grade جدید.
 
 <a id="assignments"></a>
 ## تکلیف و ارزیابی
@@ -1082,7 +1161,7 @@ suppress می‌کند؛ Notification داخلی، خود پیام، unread، De
 provider خارجی داخل transaction ارسال پیام فراخوانی نمی‌شود و retry همان
 `clientMessageId` اعلان تکراری ایجاد نمی‌کند.
 
-Contact Sync و Avatar/Bio عمومی در این مرحله افزوده نشده‌اند؛ Typing/Presence/LastSeen اکنون در P2 قرارداد واقعی دارای privacy و TTL دارند. مرجع جاری، Handoff P2 است.
+Contact Sync و Bio عمومی افزوده نشده‌اند؛ ProfilePhoto شخصی اکنون از هویت مجاز و دانلود Bearer استفاده می‌کند و URL عمومی نیست. Typing/Presence/LastSeen در P2 قرارداد واقعی دارای privacy و TTL دارند. مرجع جاری، Handoff P2 و قرارداد عکس است.
 policy دقیق ساخت/عضویت Personal Group/Channel release blocker باقی مانده است.
 
 <a id="errors"></a>
@@ -1245,7 +1324,7 @@ Service Auth واقعی در شواهد پیشین PASS شده، ولی Parent C
 <a id="persistence"></a>
 ## نقشه persistence و مرز تراکنش‌ها
 
-[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) و مدل طراحی فعلی 105 جدول دارند؛ 49 migration در مخزن است. برای PK/FK، index، CHECK و rowversion به [فرهنگ جاری دیتابیس](database-current-structure.md) رجوع کنید؛ این شمارش تأیید schema یک سرور نیست.
+[MakanDbContext](../MakanApp.Infrastructure/Persistence/MakanDbContext.cs) و مدل طراحی فعلی 107 جدول دارند؛ 52 migration در مخزن است. برای PK/FK، index، CHECK و rowversion به [فرهنگ جاری دیتابیس](database-current-structure.md) رجوع کنید؛ این شمارش تأیید schema یک سرور نیست.
 
 | schema | تعداد جدول | گروه داده |
 |---|---:|---|
@@ -1297,7 +1376,7 @@ rowversion زمان رویداد نیست. پارامتر expected version در 
 
 ### migration و محیط توسعه
 
-49 migration تا `20261024184613_RemovePlatformMfa` مدل فعلی را می‌سازند؛ startup Migrate/EnsureCreated اجرا نمی‌کند. MakanDbContextFactory از ConnectionStrings__MakanDatabase می‌خواند. تغییر schema با principal جدا و artifact SQL بررسی‌شده انجام شود؛ tools/production/export-migration-sql.ps1 منطق batch لازم را نگه می‌دارد. Migration حذف عامل دوم تولید شده است؛ اجرای آن روی دیتابیس اصلی یا سرور مجوز جدا می‌خواهد و در این مرحله انجام نشده است.
+52 migration تا `20261024184613_RemovePlatformMfa` مدل فعلی را می‌سازند؛ startup Migrate/EnsureCreated اجرا نمی‌کند. MakanDbContextFactory از ConnectionStrings__MakanDatabase می‌خواند. تغییر schema با principal جدا و artifact SQL بررسی‌شده انجام شود؛ tools/production/export-migration-sql.ps1 منطق batch لازم را نگه می‌دارد. Migration حذف عامل دوم تولید شده است؛ اجرای آن روی دیتابیس اصلی یا سرور مجوز جدا می‌خواهد و در این مرحله انجام نشده است.
 
 برای تغییر schema ابتدا entity و configuration را کامل کنید، سپس migration بسازید و فایل‌های Up/Down و snapshot را بررسی کنید. فرمان زیر **الگوی توسعه** است؛ نام migration را متناسب تغییر واقعی انتخاب کنید و مقصد development را صریح تنظیم کرده باشید:
 
@@ -1457,7 +1536,7 @@ dotnet test tests/MakanApp.ArchitectureTests/MakanApp.ArchitectureTests.csproj -
 
 ### مرز میزبانی و موارد لازم برای تحویل عملیاتی
 
-میزبان migrations را اجرا نمی‌کند؛ /health و /health/live فقط liveness و /health/ready شامل probe SQL و Storage است. Swagger/OpenAPI در Production پیش‌فرض خاموش‌اند. Storage پایدار خارج Publish و CORS allowlist بدون credentials لازم‌اند. handler فقط Bearer header را می‌خواند؛ query-token مرورگر برای SignalR پشتیبانی نمی‌شود. LongPolling با header و withCredentials:false را مطابق [قرارداد مصرف API](frontend-contract/README.md) بررسی کنید.
+میزبان migration خودکار ندارد؛ /health و /health/live فقط process و /health/ready شامل config/SQL/Storage است، نه key ring حذف‌شده یا providerهای اختیاری. CORS از AllowAnyOrigin می‌آید؛ true با wildcard بدون credentials و false با allowlist معتبر. Production/Staging برای Swagger فعال‌سازی صریح می‌خواهند. SignalR مرورگر LongPolling با Authorization header و withCredentials:false است؛ query-token پشتیبانی نمی‌شود.
 
 UseForwardedHeaders با KnownProxies صریح و ForwardLimit=1 وجود دارد؛ اعتماد عمومی به proxy مجاز نیست. runtime principal SQL و migration principal جدا باشند. Backup دیتابیس بدون Storage و custody کلید Identity و Secretهای فعال کافی نیست. هیچ موفقیت تست یا دستور این کتاب اثبات IIS واقعی، تحویل SMS، recovery محیط هدف یا آماده‌بودن چند instance نیست. HTTP این انتشار استثنای صریح مالک است و رمزگذاری ندارد.
 
@@ -1501,7 +1580,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 | پاسخ آزمون ذخیره شده ولی رسید نهایی نیست | Finalize مستقل است و باید پیش از deadline موفق شود |
 | ویدئو یا صدا `415` می‌دهد | `Storage:AllowedContentTypes` پیش‌فرض این MIMEها را ندارد |
 | SignalR مرورگر `401` می‌دهد | محدودیت هدر در مقابل `access_token` Query و transport مورد استفاده |
-| مرورگر خطای CORS دارد | Origin دقیق، allowlist، scheme/redirect و preflight را بررسی کنید؛ cookie credentials نداریم و موفقیت Postman اثبات مرورگر نیست |
+| مرورگر خطای CORS دارد | AllowAnyOrigin و overrideهای واقعی را بررسی کنید؛ در false فهرست دقیق origin/redirect/preflight لازم است. credentials:omit و LongPolling بدون credentials؛ Postman شاهد مرورگر نیست |
 | Integration شکست می‌خورد | دسترس‌پذیری LocalDB، اجرای موازی suite و مجوز ایجاد دیتابیس تست |
 
 <a id="limits"></a>
@@ -1511,7 +1590,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 مرز نسخه جاری: Peer Read مجاز Direct، Web Push/FCM و Typing/Presence در کد وجود دارند. آزمون واقعی Push، scale-out و رسانه P3 gate مستقل دارند. پاراگراف تاریخی زیر قابلیت جاری را تعیین نمی‌کند؛ کاتالوگ، وضعیت بالای سند و Handoffهای P0/P1/P2 مبنا هستند.
 
-در این نسخه provisioning عمومی سازمان/عضویت/دعوت/اشخاص سازمانی/رابطه سرپرست، refresh token، پاک‌سازی زمان‌بندی‌شده فایل‌های unattached، auto-finalize آزمون، پنل moderation، Push provider واقعی، backplane چندinstance SignalR، Copilot، AI، Payment/Order و export/گزارش زمان‌بندی‌شده API قابل استفاده ندارند. Commerce فقط Summary خواندنی مدیر و foundation داخلی Entitlement/Quota دارد؛ مدیریت Plan و Subscription به Backoffice آینده موکول شده است. چهار داشبورد، شانزده گزارش تفصیلی، CORS باز، OTP ملی‌پیامک و LocalFileStorage قابل تنظیم در Production موجودند. وجود مدل یا Enum برای یک وضعیت به معنی وجود Endpoint انتقال به آن وضعیت نیست.
+قابلیت جاری شامل Identity/refresh/session، onboarding سازمان و Guardian با رضایت، Directory/roster، Class Lesson و attachment، آموزش/Assessment، Messenger P0/P1/P2، export، Notification، Commerce lifecycle، Backoffice permission و دوازده API AI اختیاری است. DOB و عکس self موجود و MFA/step-up حذف شده‌اند. اشتراک فردی، Learning Profile، Badge، AI/Source quota و Educational Source/RAG lifecycle در مدل V2 همچنان پیشنهاد یا deferred هستند. real Payment provider، Push دستگاه، P3 media، scale-out، AV/CDR کامل و پذیرش عملیاتی مستقل‌اند؛ auto-finalize آزمون و Ready-orphan reaper ساخته نشده‌اند.
 
 تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.
 
@@ -1519,7 +1598,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 Persistence با `MakanDbContext` و schemaهای `identity`، `organization`، `guardian`، `academic`، `assessment`، `storage` و `messaging` سازمان‌دهی شده است. روابط هم‌سازمانی با FKهای ترکیبی، یکتایی وضعیت فعال با filtered unique index و تغییرات حساس با `rowversion` و transaction محافظت می‌شوند. Outbox پیام‌رسانی اعلان را پس از commit کسب‌وکاری ارسال می‌کند.
 
-برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی جاری آن 105 جدول و 49 migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.
+برای جزئیات مدل، [راهنمای ساختار دیتابیس](database-current-structure.md) را کنار migrationها بخوانید؛ بازبینی جاری آن 107 جدول و 52 migration را از مدل طراحی EF پوشش می‌دهد. تطابق schema سرور باید جدا بررسی شود.
 
 مسیر مطالعه یک جریان واقعی آزمون:
 
@@ -1562,7 +1641,7 @@ python -X utf8 tools/docs/build_backend_docs.py --deps .artifacts/docs-python --
 
 restore موفق بود؛ build اولیه و نهایی هر دو صفر warning و صفر error داشتند. در هر دو دور suite، ۶۶۵ تست اجرا و موفق شدند: ۲۳۴ Unit، ۴۱۷ Integration و ۱۴ Architecture؛ شکست و skipped صفر. Integration از LocalDB ایزوله fixture استفاده کرد؛ SMS واقعی یا استقرار روی سرور انجام نشد.
 
-شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از 318 عملیات، 547 schema و مدل طراحی 105 جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.
+شاهد تاریخی همین تحویل ۲۰۲۶-۱۰-۱۲: ۱۴۱ عملیات، ۱۸۲ schema JSON و ۱۹۰ نمونهٔ همان snapshot کنترل شدند. این اعداد کاتالوگ امروز نیستند. بازتولید جاری از 332 عملیات، 570 schema و مدل طراحی 107 جدول استفاده می‌کند؛ metadata با ApiExplorer و ارجاع schemaها کنترل می‌شود. نتیجهٔ اجرای جدید ابزارها و تست‌ها در گزارش پایان همگام‌سازی ثبت می‌شود؛ validation قدیمی به‌جای اجرای تازه یا smoke سرور اعلام نمی‌شود.
 
 این بررسی، قرارداد نسخه مشخص مخزن را تأیید می‌کند. آمادگی داده اولیه سازمان، مجوز حساب‌های واقعی، اعتبار ServiceToken، تحویل SMS، storage پایدار و تنظیم proxy باید در محیط هدف جدا آزمایش شوند.
 
@@ -1808,7 +1887,7 @@ Platform permission مجوز خواندن دلخواه Direct، Contacts یا ف
 | `GET /health/live` | زنده‌بودن process | dependency را probe نمی‌کند |
 | `GET /health/ready` | آمادگی دریافت traffic | config معتبر، SQL Server و persistent storage |
 
-Production در startup به connection string امن SQL، security key، storage root مطلق، `AllowedHosts` محدود، CORS HTTPS allowlist و trusted proxy صریح نیاز دارد. Swagger/OpenAPI در Production پیش‌فرض خاموش است. پاسخ‌ها `X-Correlation-ID` و security headerهای ثابت دارند و `ProblemDetails` شامل `traceId` امن است.
+Production در startup اتصال امن SQL، Identity key پایدار، Storage root مطلق و تنظیم معتبر میزبان/proxy می‌خواهد. CORS/Host طبق Configuration هستند: پایه و نمونه Test/Production فعلی AllowAnyOrigin=true و AllowedHosts=*؛ حالت محدود false، allowlist معتبر لازم دارد. cookie credentials نداریم. MFA/key ring قبلی شرط startup/ready نیستند؛ HTTP/SQL exceptionهای مستقل همچنان صریح‌اند. Swagger پیش‌فرض Production خاموش و X-Correlation-ID/ProblemDetails حفظ‌اند.
 
 آپلود فقط با content type مجاز، پسوند سازگار و signature حداقلی معتبر پذیرفته می‌شود. mismatch با `FILE_CONTENT_INVALID` و `415` برمی‌گردد. دانلود همچنان authorization منبع را resolve می‌کند و content disposition از نوع attachment است.
 

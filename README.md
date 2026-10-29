@@ -10,14 +10,22 @@
 ## راهنمای استفاده از بک‌اند و API
 
 - [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۱۸ عملیات در ۵۶ Controller، پارامتر/بدنه/پاسخ واقعی، metadata احراز هویت و ۵۴۷ schema استخراج‌شده از OpenAPI.
+- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۳۲ عملیات، ۵۹ Controller و ۵۷۰ schema واقعی، همراه پارامتر/بدنه/پاسخ و metadata مجوز.
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 
-بازبینی `2026-10-24` با مبنای `main@e525c78` و تغییرات حذف عامل دوم؛ **318 عملیات HTTP در 56 Controller و 283 مسیر؛ 547 schema، 105 جدول و 49 migration**. Health/OpenAPI/Hub در شمار عملیات Controller نیستند. metadata بدون SQL/provider/worker استخراج شده؛ [وضعیت پروژه و نتیجهٔ validation](docs/CURRENT_PROJECT_STATUS.md).
+بازبینی `2026-10-29` از `main@701cba0`؛ **332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration**. آخرین migration `20261028202239_CompleteSchoolManagement` است. شمارش از metadata کد و مدل طراحی EF است؛ [وضعیت جاری و validation](docs/CURRENT_PROJECT_STATUS.md).
 
 Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
+
+## تغییرات پروفایل و مدیریت مدرسه
+
+DOB خوداظهاری date-only و عکس شخصی User اکنون موجودند؛ عکس با upload موجود، انتخاب/حذف مرجع و دانلود Bearer مصرف می‌شود. DOB مدرک سن و عکس مجوز ارتباط نیست. [پروفایل](docs/product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md)، [عکس](docs/product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+
+Directory سازمان، roster فراگیر/مدرس، دعوت والد با رضایت صاحب حساب و Lesson/Handout کلاس اضافه شده‌اند؛ [قرارداد فرانت مدرسه](docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). ساخت Class فقط Manager و نوشتن Lesson برای Manager/Teacher منتسب است. مدل محصول V2 همچنان برای اشتراک فردی، Badge، Learning Profile، quotaهای AI/Source و Source lifecycle پیشنهاد است؛ همه بخش‌های آن پیاده‌شده نیستند.
+
+MFA/step-up و probe/config صرفاً key ring حذف شده‌اند؛ OTP/session/permission فعال‌اند. CORS مستقل از نام محیط و تابع AllowAnyOrigin است؛ [تنظیم جاری](docs/production/CORS_CONFIGURATION_FA.md).
 
 ## وضعیت جاری قابلیت‌ها و استقرار
 

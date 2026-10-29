@@ -88,7 +88,7 @@ TeacherAssignment:   d3860000-0000-0000-0000-000000000001
 ```
 
 Usernameهای `dev.Student` و سایر `dev.<RoleKey>` برای کامل‌بودن profile لازم‌اند، نه Password Login.
-هیچ Password، MFA secret، age verification یا session آماده‌ای seed نمی‌شود؛ سن Unknown باقی می‌ماند.
+هیچ Password، age verification یا session آماده‌ای seed نمی‌شود؛ سن Unknown باقی می‌ماند.
 
 ## SSMS: اجرا و اطمینان از مقصد
 
@@ -201,7 +201,7 @@ dotnet run --project MakanApp.Api --no-launch-profile --urls http://127.0.0.1:52
 
 ۲. `POST /api/v1/auth/otp/verify` با همان شکل قرارداد و code دارای فرمت مجاز؛ در Mock مقدار کد/شناسه اثبات OTP نیست. حساب موجود reuse می‌شود و حساب معلق403 می‌گیرد. در Mock تکرار verify می‌تواند session جدید صادر کند؛ آن را retry idempotent فرض نکنید.
 
-۳. `GET /api/v1/workspaces/me` و انتخاب workspace سازمانی با MembershipId/Role واقعی. Parent فرزند مجاز را از guardian children انتخاب می‌کند؛ Backoffice MFA/step-up موجود را لازم دارد.
+۳. GET /api/v1/workspaces/me و انتخاب Workspace سازمانی با MembershipId/Role واقعی. Parent فرزند مجاز را از children انتخاب می‌کند؛ Backoffice نقش/permission پلتفرم لازم دارد و دیگر MFA/step-up ندارد.
 
 ۴. token را در URL، log، screenshot یا فایل مشترک نگذارید. cache نقش و workspace مدرک مجوز نیست؛ سرور رابطه جاری را دوباره بررسی می‌کند.
 
@@ -221,7 +221,7 @@ Real در Development با Sms:Provider=Development کد تصادفی حافظه
 ابتدا برنامهٔ تست و sessionهای کلاینت را متوقف کنید. روی همان DB توسعه و پس از همان session-context approval،
 [cleanup-development-test-users.sql](cleanup-development-test-users.sql) را کامل اجرا کنید.
 اسکریپت فقط accountهای fixture، session/refresh/challenge آن‌ها و روابط seed را در transaction حذف می‌کند؛
-catalog نقش/permission را حذف نمی‌کند. با وجود وابستگی تازه مثل تکلیف، پیام، MFA یا audit دارای FK محدودکننده،
+catalog نقش/permission را حذف نمی‌کند. با وجود وابستگی تازه مثل تکلیف، پیام یا audit دارای FK محدودکننده،
 عملیات rollback می‌شود؛ برای عبور از FK، cascade، پاک‌سازی عمومی یا حذف تاریخچه اضافه نکنید.
 این محدودیت عمدی است؛ وابستگی جدید باید جداگانه بررسی شود. ابتدا backup توسعه بگیرید؛ حذف داده بدون backup قابل بازیابی نیست.
 

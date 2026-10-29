@@ -1,5 +1,7 @@
 # آمادگی جاری Production و حدود انتشار
 
+بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+
 بازبینی `2026-10-23`، مبنا `main@5885d11`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
 
 ## تغییرات جدید مبنای آمادگی

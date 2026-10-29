@@ -1,5 +1,7 @@
 # استقرار MakanApp روی IIS
 
+بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+
 > مبنای بازبینی جاری `2026-10-23` / `main@5885d11` است. برای انتخاب و حفظ کانفیگ دو بسته از [Publish Guide](PUBLISH_GUIDE_FA.md) و برای نتیجهٔ محلی از [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) استفاده کنید. Production OTP=true/false و Test=false/true؛ schema یکسان به معنی secret/مقدار یکسان نیست. health و worker و ring این runbook به [شاخص وضعیت جاری](../CURRENT_PROJECT_STATUS.md) ارجاع دارند.
 
 بازبینی `2026-10-23` از `main@5885d11`؛ شمارش و gateهای جاری در [وضعیت پروژه](../CURRENT_PROJECT_STATUS.md) است. این متن اثبات استقرار روی سرور نیست.
@@ -262,9 +264,9 @@ headerهای API موجود (`nosniff`، `no-referrer` و Permissions-Policy) و
 publish بررسی‌شده Web SDK، `web.config` را با `AspNetCoreModuleV2`، `processPath=dotnet`، `hostingModel=inprocess` و `stdoutLogEnabled=false` تولید می‌کند؛ وجود artifact اثبات نصب module یا WebSocket روی سرور نیست. برای artifact رسمی از source تمیز commit تأییدشده و secret provisioning کنترل‌شده استفاده کنید، نه worktree دارای تغییرات نامرتبط. artifact بدون secret قابل‌اشتراک است؛ نسخهٔ خصوصی حاوی JSON واقعی فقط برای انتقال امن اپراتور است و عمومی/commit نشود.
 
 
-## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-18
+## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-29
 
-مبنای این بخش `main@5885d11` است. کاتالوگ جاری ۳۲۵ عملیات، ۵۷ Controller، ۵۵۱ schema، ۱۰۷ جدول و ۴۸ migration دارد. آماده‌بودن schema با پیکربندی یا تحویل واقعی provider متفاوت است؛ آخرین migration `20261017033804_AddConversationChecklists` است. [وضعیت جاری پروژه](../CURRENT_PROJECT_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) قراردادهای مصرف را مشخص می‌کنند.
+مبنای جاری این بخش `2026-10-29` / `main@701cba0`؛ ۳۳۲ عملیات،۵۹ Controller،۵۷۰ schema،۱۰۷ جدول و۵۲ migration. آخرین20261028202239_CompleteSchoolManagement است. schema با delivery provider یا applied migration سرور یکی نیست؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) و Handoffهای P1/P2 مرجع‌اند.
 
 ### انتخاب transport اعلان
 
