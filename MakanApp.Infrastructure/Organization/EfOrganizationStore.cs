@@ -120,10 +120,16 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext) : IOrg
             join person in dbContext.Persons
                 on schoolPerson.PersonId equals person.Id into people
             from person in people.DefaultIfEmpty()
+            join guardianLearner in dbContext.OrganizationPersons
+                on invitation.GuardianLearnerOrganizationPersonId equals (Guid?)guardianLearner.Id into guardianLearners
+            from guardianLearner in guardianLearners.DefaultIfEmpty()
+            join guardianPerson in dbContext.Persons on guardianLearner.PersonId equals guardianPerson.Id into guardianPeople
+            from guardianPerson in guardianPeople.DefaultIfEmpty()
             where invitation.DestinationUserId == userId
             orderby invitation.CreatedAtUtc descending
             select new InvitationWithOrganization(invitation, organization.Name,
-                person == null ? null : person.DisplayName ?? person.FirstName + " " + person.LastName))
+                person == null ? null : person.DisplayName ?? person.FirstName + " " + person.LastName,
+                guardianPerson == null ? null : guardianPerson.DisplayName ?? guardianPerson.FirstName + " " + guardianPerson.LastName))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 

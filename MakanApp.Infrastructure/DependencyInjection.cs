@@ -82,6 +82,8 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationPersonService, OrganizationPersonService>();
         services.AddScoped<IGuardianManagementStore, EfGuardianManagementStore>();
         services.AddScoped<IGuardianManagementService, GuardianManagementService>();
+        services.AddScoped<ISchoolGuardianInvitationStore, EfSchoolGuardianInvitationStore>();
+        services.AddScoped<SchoolGuardianInvitationService>();
         services.AddScoped<OrganizationService>();
         services.AddScoped<IOrganizationService>(serviceProvider =>
             serviceProvider.GetRequiredService<OrganizationService>());
@@ -101,6 +103,10 @@ public static class DependencyInjection
         services.AddScoped<IGuardianStore, EfGuardianStore>();
         services.AddScoped<IGuardianService, GuardianService>();
         services.AddScoped<IAcademicStore, EfAcademicStore>();
+        services.AddScoped<ISchoolReadStore, EfSchoolReadStore>();
+        services.AddScoped<SchoolReadService>();
+        services.AddScoped<IClassLessonStore, EfClassLessonStore>();
+        services.AddScoped<ClassLessonService>();
         services.AddScoped<IAcademicService, AcademicService>();
         services.AddScoped<IAcademicSessionStore, EfAcademicSessionStore>();
         services.AddScoped<IAcademicSessionService, AcademicSessionService>();

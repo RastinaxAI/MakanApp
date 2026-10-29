@@ -127,6 +127,7 @@ public sealed class TerminalFileCleanupProcessor(
 
     private async Task<bool> IsReferencedAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         await dbContext.Users.AnyAsync(user => user.ProfilePhotoFileAssetId == fileAssetId, cancellationToken) ||
+        await dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.MessageAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.ModerationEvidenceAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||

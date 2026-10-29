@@ -35,12 +35,16 @@ public sealed record InvitationResult(
     InvitationStatus Status,
     DateTime ExpiresAtUtc,
     Guid? OrganizationPersonId = null,
-    string? OrganizationPersonDisplayName = null)
+    string? OrganizationPersonDisplayName = null,
+    Guid? GuardianLearnerOrganizationPersonId = null,
+    string? GuardianLearnerDisplayName = null)
 {
     public bool RequiresPersonLinkConsent => OrganizationPersonId.HasValue;
+    public bool RequiresGuardianConsent => GuardianLearnerOrganizationPersonId.HasValue;
+    public string? NextAction => Status == InvitationStatus.Pending && RequiresGuardianConsent ? "CONFIRM_GUARDIAN_RELATION" : null;
 }
 
-public sealed record AcceptInvitationCommand(bool ConfirmPersonLink = false);
+public sealed record AcceptInvitationCommand(bool ConfirmPersonLink = false, bool ConfirmGuardianRelation = false);
 
 public sealed record AcceptInvitationResult(
     Guid InvitationId,
@@ -50,7 +54,8 @@ public sealed record AcceptInvitationResult(
     Guid RoleAssignmentId,
     OrganizationRole Role,
     bool AlreadyAccepted,
-    Guid? OrganizationPersonId = null);
+    Guid? OrganizationPersonId = null,
+    Guid? GuardianRelationId = null);
 
 public sealed record DeclineInvitationResult(
     Guid InvitationId,
@@ -65,4 +70,5 @@ public sealed record OrganizationWorkspaceRecord(
 public sealed record InvitationWithOrganization(
     Invitation Invitation,
     string OrganizationName,
-    string? OrganizationPersonDisplayName = null);
+    string? OrganizationPersonDisplayName = null,
+    string? GuardianLearnerDisplayName = null);

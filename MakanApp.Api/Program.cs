@@ -134,6 +134,9 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("school-parent-invite", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 10)));
     options.AddPolicy("messaging-search", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
@@ -251,7 +254,11 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
     options.MaxAge = TimeSpan.FromDays(builder.Configuration.GetValue("Hosting:HstsDays", 365));
 });
-builder.Services.AddOpenApi(options => options.AddSchemaTransformer<StringEnumSchemaTransformer>());
+builder.Services.AddOpenApi(options =>
+{
+    options.AddSchemaTransformer<StringEnumSchemaTransformer>();
+    options.AddOperationTransformer<SchoolOperationTransformer>();
+});
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>

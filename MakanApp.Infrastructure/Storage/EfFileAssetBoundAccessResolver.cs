@@ -1,4 +1,5 @@
 using MakanApp.Application.Organization;
+using MakanApp.Application.Academic;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
@@ -10,16 +11,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Storage;
 
-public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock)
+public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess)
     : IFileAssetBoundAccessResolver
 {
     public Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.Users.AnyAsync(user => user.ProfilePhotoFileAssetId == fileAssetId, cancellationToken);
 
+    public Task<bool> IsSchoolLessonBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
+        dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken);
+
     public async Task<bool> IsBoundAsync(
         Guid fileAssetId,
         CancellationToken cancellationToken) =>
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
+        await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
         await dbContext.MessageAttachments.AnyAsync(
             attachment => attachment.FileAssetId == fileAssetId,
             cancellationToken) ||
@@ -38,6 +43,15 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, Tim
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;
         // استثنای مرجع شخصی فقط برای Avatar است؛ scope قبلی همهٔ مصرف‌کننده‌های دیگر حفظ می‌شود.
         if (!FileAccessPolicy.IsCurrentScope(fileAsset, accessContext)) return false;
+        var lessons = await (from a in dbContext.ClassLessonAttachments
+                             join lesson in dbContext.ClassLessons on a.LessonId equals lesson.Id
+                             where a.FileAssetId == fileAsset.Id && a.OrganizationId == accessContext.OrganizationId && lesson.OrganizationId == accessContext.OrganizationId
+                             select new { lesson.ClassId, lesson.Status }).Distinct().ToArrayAsync(cancellationToken);
+        foreach (var lesson in lessons)
+        {
+            if (await schoolAccess.CanManageClassAsync(accessContext, lesson.ClassId, cancellationToken) ||
+                lesson.Status == MakanApp.Domain.Academic.LessonStatus.Published && await schoolAccess.CanStudyClassAsync(accessContext, lesson.ClassId, cancellationToken)) return true;
+        }
         var readableMessages = ReadableMessages(accessContext);
         var canReadMessage = await dbContext.MessageAttachments.AnyAsync(attachment =>
             attachment.FileAssetId == fileAsset.Id && readableMessages.Any(message => message.Id == attachment.MessageId),

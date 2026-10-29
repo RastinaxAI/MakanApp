@@ -35,7 +35,8 @@ public sealed class InvitationsController(IOrganizationService organizationServi
             invitationId,
             cancellationToken,
             command?.ConfirmPersonLink ?? false,
-            AuthenticatedSession.GetSessionId(User));
+            AuthenticatedSession.GetSessionId(User),
+            command?.ConfirmGuardianRelation ?? false);
         return Ok(result);
     }
 

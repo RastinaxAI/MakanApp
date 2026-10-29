@@ -231,6 +231,107 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Academic.ClassLesson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreationRequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("RevisionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("OrganizationId", "CreatedByUserId", "ClientOperationId")
+                        .IsUnique();
+
+                    b.HasIndex("OrganizationId", "ClassId", "Status", "DisplayOrder");
+
+                    b.ToTable("ClassLessons", "academic", t =>
+                        {
+                            t.HasCheckConstraint("CK_ClassLessons_Content", "LEN([Title]) BETWEEN 1 AND 200 AND LEN([Body]) <= 50000 AND [DisplayOrder] BETWEEN 0 AND 100000 AND [RevisionNumber] > 0");
+
+                            t.HasCheckConstraint("CK_ClassLessons_Publication", "([Status]=1 AND [PublishedAtUtc] IS NULL) OR ([Status]=2 AND [PublishedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_ClassLessons_Status", "[Status] IN (1,2)");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.ClassLessonAttachment", b =>
+                {
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LessonId", "FileAssetId");
+
+                    b.HasIndex("FileAssetId");
+
+                    b.HasIndex("OrganizationId", "LessonId");
+
+                    b.ToTable("ClassLessonAttachments", "academic", t =>
+                        {
+                            t.HasCheckConstraint("CK_ClassLessonAttachments_Order", "[DisplayOrder] BETWEEN 0 AND 9");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Academic.Course", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5089,6 +5190,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("AcceptedAtUtc")
                         .HasColumnType("datetime2(7)");
 
+                    b.Property<Guid?>("AcceptedGuardianRelationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("AcceptedMembershipId")
                         .HasColumnType("uniqueidentifier");
 
@@ -5109,6 +5213,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("GuardianLearnerOrganizationPersonId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("InvitedByUserId")
                         .HasColumnType("uniqueidentifier");
@@ -5136,6 +5243,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AcceptedGuardianRelationId");
+
                     b.HasIndex("AcceptedMembershipId");
 
                     b.HasIndex("AcceptedRoleAssignmentId");
@@ -5147,6 +5256,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UX_Invitations_LinkOperation")
                         .HasFilter("[ClientOperationId] IS NOT NULL");
 
+                    b.HasIndex("OrganizationId", "GuardianLearnerOrganizationPersonId");
+
                     b.HasIndex("OrganizationId", "OrganizationPersonId")
                         .IsUnique()
                         .HasDatabaseName("UX_Invitations_Pending_PersonLink")
@@ -5155,13 +5266,20 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("DestinationUserId", "OrganizationId", "Role")
                         .IsUnique()
                         .HasDatabaseName("UX_Invitations_Pending_Destination_Organization_Role")
-                        .HasFilter("[Status] = 1");
+                        .HasFilter("[Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NULL");
+
+                    b.HasIndex("OrganizationId", "DestinationUserId", "GuardianLearnerOrganizationPersonId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Invitations_Pending_Guardian_Learner")
+                        .HasFilter("[Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NOT NULL");
 
                     b.ToTable("Invitations", "organization", t =>
                         {
                             t.HasCheckConstraint("CK_Invitations_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
 
-                            t.HasCheckConstraint("CK_Invitations_PersonLink", "([OrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1)");
+                            t.HasCheckConstraint("CK_Invitations_GuardianReceipt", "([GuardianLearnerOrganizationPersonId] IS NULL AND [AcceptedGuardianRelationId] IS NULL) OR ([GuardianLearnerOrganizationPersonId] IS NOT NULL AND (([Status]=2 AND [AcceptedGuardianRelationId] IS NOT NULL) OR ([Status]<>2 AND [AcceptedGuardianRelationId] IS NULL)))");
+
+                            t.HasCheckConstraint("CK_Invitations_PersonLink", "([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1) OR ([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 3)");
 
                             t.HasCheckConstraint("CK_Invitations_Role", "[Role] IN (1, 2, 3, 4)");
 
@@ -6595,6 +6713,38 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId", "CourseId")
                         .HasPrincipalKey("OrganizationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.ClassLesson", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Academic.Class", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "ClassId")
+                        .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.ClassLessonAttachment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Academic.ClassLesson", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("OrganizationId", "LessonId")
+                        .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -8036,6 +8186,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MakanApp.Domain.Organization.Invitation", b =>
                 {
+                    b.HasOne("MakanApp.Domain.Guardian.GuardianRelation", null)
+                        .WithMany()
+                        .HasForeignKey("AcceptedGuardianRelationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Organization.Membership", null)
                         .WithMany()
                         .HasForeignKey("AcceptedMembershipId")
@@ -8063,6 +8218,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.OrganizationPerson", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "GuardianLearnerOrganizationPersonId")
+                        .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Organization.OrganizationPerson", null)
                         .WithMany()
@@ -8254,6 +8415,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ChangeEventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.ClassLesson", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Assessment.QuestionVersion", b =>

@@ -1,11 +1,14 @@
 # راهنمای انتشار MakanApp Backend — Test و Production
 
-این راهنما مربوط به Release تأییدشدهٔ ۲۰۲۶-۱۰-۲۸ در مخزن اصلی است. Commit دقیق، نام ZIPها، SHA-256 و نتیجهٔ واقعی فرمان‌ها در `validation-summary.json` و `SHA256SUMS.txt` تحویل ثبت می‌شوند. ساخت بسته و smoke محلی، استقرار یا پذیرش سرور نیست.
+این راهنما مربوط به Release تأییدشدهٔ ۲۰۲۶-۱۰-۲۹ شامل School Backend Completion در مخزن اصلی است. Commit دقیق، نام ZIPها، SHA-256 و نتیجهٔ واقعی فرمان‌ها در `validation-summary.json` و `SHA256SUMS.txt` تحویل ثبت می‌شوند. ساخت بسته و smoke محلی، استقرار یا پذیرش سرور نیست.
 
 ## ۱. تغییرات این Release
 
 - حذف Platform MFA، TOTP، Recovery Codes و Step-Up از Commit پایهٔ `b87fbd89cef33f26315fddd4a1e57116b44cc781` حفظ شده است؛ این سازوکارها برنگشته‌اند.
 - تاریخ تولد خوداظهاری `DateOfBirth` به پروفایل شخصی اضافه شده است.
+- عکس پروفایل شخصی User با FileAsset موجود، مالکیت فایل و حفظ Privacy در این Release وجود دارد؛ [شرح Avatar](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+- School شامل Directory اعضا، Roster مستقل فراگیر/مدرس، چندمدرسی، دعوت رضایت‌محور والد، Lesson/Handout و کاتالوگ‌های Course/AcademicPeriod است؛ [قرارداد کامل Frontend](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md).
+- ساخت Class فقط Manager است؛ Teacher فقط با Assignment فعال همان Class می‌تواند Session و محتوای مجاز بسازد. دسترسی Parent به جزوه همچنان `OPEN_PRODUCT_DECISION` و فعلاً deny است.
 - `MessagingStatusPolicy.Evaluate` برای پروفایل ناقص، خواندن گفتگوهای مجاز را در راهنمای قابلیت‌ها اعلام می‌کند؛ مجوز هر منبع همچنان جدا بررسی می‌شود.
 - CORS از `Cors:AllowAnyOrigin` تبعیت می‌کند. هر دو بسته فعلاً `AllowAnyOrigin=true`، `AllowedOrigins=[]` و `AllowedHosts=*` دارند.
 - سند تأییدشدهٔ [مدل محصول و کسب‌وکار V2](../product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) مرجع هدف محصول است؛ وجود این سند اثبات پیاده‌سازی همهٔ قابلیت‌های آن نیست.
@@ -122,9 +125,11 @@ API فعال MFA، TOTP و Step-Up در نسخهٔ جدید وجود ندارد.
 
 ## ۱۰. Migration SQL امن
 
-تعداد Migrationهای این Release **۵۰** است؛ آخرین Migration:
+تعداد Migrationهای این Release **۵۲** است؛ آخرین Migration:
 
-`20261028102653_AddSelfDeclaredProfileDateOfBirth`.
+`20261028202239_CompleteSchoolManagement`.
+
+Migration قبلی عکس `20261028164838_AddUserProfilePhoto` و Migration DOB نیز داخل همین chain هستند. Migration School جدول‌های `academic.ClassLessons` و `academic.ClassLessonAttachments`، مراجع Guardian روی Invitation و قیود/ایندکس‌های مربوط را اضافه می‌کند. User، Person، OrganizationPerson، Membership، Enrollment و GuardianRelation همچنان مفاهیم مستقل‌اند. روی دیتابیس‌های اصلی `MakanApp` و `MakanApp_Test` یا سرور هیچ Migration خودکاری اجرا نمی‌شود.
 
 خروجی تحویل: `migrations-idempotent-safe.sql`. این فایل از ابزار بررسی‌شدهٔ پروژه تولید می‌شود، تاریخچه را بررسی و عملیات را با کامپایل مؤخر اجرا می‌کند تا خطای قدیمی ستون‌های `Visibility/GroupHistoryPolicy/MemberCapabilities` تکرار نشود.
 
@@ -191,6 +196,8 @@ Production IIS AI activation: NOT TESTED
 
 وجود `dateOfBirth` در schemaهای request/response، Direct route و Personal scope و محافظت Official در قرارداد نهایی بررسی شود. اسمبلی‌ها باید با Build آزموده‌شدهٔ Release برابر باشند تا اصلاح MessagingStatusPolicy واقعاً در بسته باشد.
 
+routeهای Directory، Learners، Teachers، Guardian invitation/confirmation، Lesson list/create/update/publish، Course/Period catalog و پارامترهای اجباری UTC Schedule نیز از OpenAPI همان بسته بررسی شوند. در Test Publish، مسیر Manager → Enrollment و دو Teacher → Lesson/Session → Student download و Parent consent/report روی دیتابیس موقت آزموده شود. Teacher CreateClass، Teacher نامرتبط، Parent نامرتبط، cross-org، خواندن private chat توسط Manager و لینک فایل پس از revoke باید رد شوند. Production smoke شامل Startup/health/OpenAPI/Auth/CORS است؛ موفقیت ارسال واقعی ملی‌پیامک از آن استنباط نمی‌شود و در smoke محلی SMS واقعی ارسال نمی‌شود.
+
 Smoke سلامت، ارسال واقعی SMS/Push، AI، پذیرش اینترنتی یا مرورگر را اثبات نمی‌کند. در Production، تست SMS واقعی فقط با مجوز و شمارهٔ مجاز انجام شود.
 
 ## ۱۴. بازتولید خروجی
@@ -207,6 +214,8 @@ Publish پس از Commit دوباره Build می‌شود تا SourceRevisionId 
 در خروجی همان محیط، Swagger روشن، AI خاموش و OTP طبق جدول تنظیم شوند؛ کلیدهای Authentication سرویس AI از JSON خروجی حذف شوند. Secretهای مجاز Identity/SMS/SQL همان محیط حفظ شوند. پوشهٔ جدید انتخاب شود تا فایل قدیمی یا محیط مقابل باقی نماند.
 
 ZIP باید محتوای همان پوشه را در ریشه داشته باشد؛ `SHA256SUMS.txt` حداقل هر دو ZIP و SQL امن را پوشش دهد. Commit جدید بخشی از نام ZIP است. پیش و پس از انتقال با `Get-FileHash -Algorithm SHA256` تطبیق داده شود.
+
+نام‌های این تحویل `MakanApp-Test-20261029-<sha7>.zip` و `MakanApp-Production-20261029-<sha7>.zip` هستند. ZIPهای قبلی برای این انتشار `SUPERSEDED / DO_NOT_DEPLOY` محسوب می‌شوند؛ حذف نمی‌شوند و جایگزین نسخهٔ جدید نیستند. Commit باید قبل از Build/Test نهایی و Publish ساخته شود؛ هر چهار اسمبلی باید metadata و hash متناظر همان Commit را داشته باشند. در این مأموریت Push، Deploy و Server Migration انجام نمی‌شود.
 
 ## ۱۵. عیب‌یابی
 

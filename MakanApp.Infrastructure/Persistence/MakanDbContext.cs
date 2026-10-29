@@ -20,6 +20,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
 {
     public DbSet<AcademicPeriod> AcademicPeriods => Set<AcademicPeriod>();
     public DbSet<Course> Courses => Set<Course>();
+    public DbSet<ClassLesson> ClassLessons => Set<ClassLesson>();
+    public DbSet<ClassLessonAttachment> ClassLessonAttachments => Set<ClassLessonAttachment>();
     public DbSet<MakanApp.Domain.Academic.Class> Classes => Set<MakanApp.Domain.Academic.Class>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<TeacherAssignment> TeacherAssignments => Set<TeacherAssignment>();

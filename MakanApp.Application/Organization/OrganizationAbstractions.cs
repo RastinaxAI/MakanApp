@@ -29,7 +29,8 @@ public interface IOrganizationService
         Guid invitationId,
         CancellationToken cancellationToken,
         bool confirmPersonLink = false,
-        Guid? sessionId = null);
+        Guid? sessionId = null,
+        bool confirmGuardianRelation = false);
 
     Task<DeclineInvitationResult> DeclineInvitationAsync(
         Guid userId,
@@ -99,6 +100,7 @@ public interface IOrganizationStore
         CancellationToken cancellationToken);
 
     Task CompletePersonLinkAsync(Invitation invitation, Guid userId, Guid sessionId, DateTime nowUtc, bool replayed, CancellationToken cancellationToken);
+    Task CompleteGuardianInvitationAsync(Invitation invitation, Guid userId, Guid sessionId, DateTime nowUtc, bool replayed, CancellationToken cancellationToken);
 
     void Add(Membership membership);
     void Add(RoleAssignment roleAssignment);

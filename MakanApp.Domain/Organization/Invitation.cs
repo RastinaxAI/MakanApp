@@ -41,6 +41,28 @@ public sealed class Invitation
     public byte[] RowVersion { get; private set; } = [];
     public Guid? OrganizationPersonId { get; private set; }
     public Guid? ClientOperationId { get; private set; }
+    public Guid? GuardianLearnerOrganizationPersonId { get; private set; }
+    public Guid? AcceptedGuardianRelationId { get; private set; }
+
+    public static Invitation CreateGuardianLink(Guid organizationId, Guid learnerId, Guid destinationUserId,
+        Guid invitedByUserId, Guid operationId, DateTime createdAtUtc, DateTime expiresAtUtc)
+    {
+        if (organizationId == Guid.Empty || learnerId == Guid.Empty || destinationUserId == Guid.Empty ||
+            invitedByUserId == Guid.Empty || operationId == Guid.Empty || createdAtUtc.Kind != DateTimeKind.Utc || expiresAtUtc.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("شناسه‌ها و زمان دعوت والد معتبر نیستند.");
+        var invitation = Create(organizationId, destinationUserId, invitedByUserId, OrganizationRole.Parent, createdAtUtc, expiresAtUtc);
+        invitation.GuardianLearnerOrganizationPersonId = learnerId;
+        invitation.ClientOperationId = operationId;
+        return invitation;
+    }
+
+    public void ConfirmGuardianRelation(Guid relationId)
+    {
+        if (!GuardianLearnerOrganizationPersonId.HasValue || Status != InvitationStatus.Accepted || relationId == Guid.Empty ||
+            AcceptedGuardianRelationId.HasValue && AcceptedGuardianRelationId != relationId)
+            throw new InvalidOperationException("اتصال رابطهٔ تأییدشدهٔ والد معتبر نیست.");
+        AcceptedGuardianRelationId = relationId;
+    }
 
     public static Invitation CreatePersonLink(
         Guid organizationId, Guid organizationPersonId, Guid destinationUserId,

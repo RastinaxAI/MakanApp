@@ -8,8 +8,20 @@ namespace MakanApp.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/academic/classes")]
-public sealed class ClassesController(IAcademicService academicService) : ControllerBase
+public sealed class ClassesController(IAcademicService academicService, SchoolReadService schoolReads) : ControllerBase
 {
+    [HttpGet("{classId:guid}/learners")]
+    [ProducesResponseType<SchoolPage<ClassLearnerResult>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SchoolPage<ClassLearnerResult>>> GetLearners(Guid classId, [FromQuery] SchoolPageQuery query,
+        [FromQuery] MakanApp.Domain.Academic.EnrollmentStatus? status = null, CancellationToken ct = default) =>
+        Ok(await schoolReads.LearnersAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), classId, query, Request.Query.ContainsKey(nameof(status)) ? status : MakanApp.Domain.Academic.EnrollmentStatus.Active, ct));
+
+    [HttpGet("{classId:guid}/teachers")]
+    [ProducesResponseType<SchoolPage<ClassTeacherResult>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<SchoolPage<ClassTeacherResult>>> GetTeachers(Guid classId, [FromQuery] SchoolPageQuery query,
+        [FromQuery] MakanApp.Domain.Academic.TeacherAssignmentStatus? status = null, CancellationToken ct = default) =>
+        Ok(await schoolReads.TeachersAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), classId, query, Request.Query.ContainsKey(nameof(status)) ? status : MakanApp.Domain.Academic.TeacherAssignmentStatus.Active, ct));
+
     [HttpPost]
     [ProducesResponseType<ClassResult>(StatusCodes.Status201Created)]
     public async Task<ActionResult<ClassResult>> Create(

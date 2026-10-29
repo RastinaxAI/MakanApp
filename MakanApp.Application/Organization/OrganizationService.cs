@@ -153,7 +153,9 @@ public sealed class OrganizationService(
                 item.Invitation.GetEffectiveStatus(nowUtc),
                 item.Invitation.ExpiresAtUtc,
                 item.Invitation.OrganizationPersonId,
-                item.OrganizationPersonDisplayName))
+                item.OrganizationPersonDisplayName,
+                item.Invitation.GuardianLearnerOrganizationPersonId,
+                item.GuardianLearnerDisplayName))
             .ToArray();
     }
 
@@ -162,7 +164,8 @@ public sealed class OrganizationService(
         Guid invitationId,
         CancellationToken cancellationToken,
         bool confirmPersonLink = false,
-        Guid? sessionId = null)
+        Guid? sessionId = null,
+        bool confirmGuardianRelation = false)
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
@@ -187,6 +190,11 @@ public sealed class OrganizationService(
 
         if (invitation.Status == InvitationStatus.Accepted)
         {
+            if (invitation.GuardianLearnerOrganizationPersonId.HasValue)
+            {
+                EnsureGuardianConsent(confirmGuardianRelation);
+                await store.CompleteGuardianInvitationAsync(invitation, userId, sessionId ?? Guid.Empty, nowUtc, true, cancellationToken);
+            }
             if (invitation.OrganizationPersonId.HasValue)
             {
                 EnsurePersonLinkConsent(confirmPersonLink);
@@ -222,6 +230,7 @@ public sealed class OrganizationService(
             await store.CompletePersonLinkAsync(invitation, userId, session.Id, nowUtc, false, cancellationToken);
         }
 
+        if (invitation.GuardianLearnerOrganizationPersonId.HasValue) EnsureGuardianConsent(confirmGuardianRelation);
         var membership = await store.GetActiveMembershipAsync(
             userId,
             invitation.OrganizationId,
@@ -255,6 +264,12 @@ public sealed class OrganizationService(
             throw new InvalidOperationException("وضعیت دعوت هنگام پذیرش تغییر کرد.");
         }
 
+        if (invitation.GuardianLearnerOrganizationPersonId.HasValue)
+        {
+            EnsureGuardianConsent(confirmGuardianRelation);
+            await store.CompleteGuardianInvitationAsync(invitation, userId, sessionId ?? Guid.Empty, nowUtc, false, cancellationToken);
+        }
+
         await store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return CreateAcceptanceResult(invitation, organization.Name, false);
@@ -264,6 +279,12 @@ public sealed class OrganizationService(
     {
         if (!confirmed)
             throw new OrganizationException(SchoolOnboardingErrorCodes.ConsentRequired, "برای اتصال پرونده، تأیید صریح کاربر لازم است.");
+    }
+
+    private static void EnsureGuardianConsent(bool confirmed)
+    {
+        if (!confirmed) throw new OrganizationException(MakanApp.Application.Academic.SchoolErrorCodes.GuardianConsentRequired,
+            "تأیید صریح رابطه توسط حساب والد لازم است.");
     }
 
     public async Task<DeclineInvitationResult> DeclineInvitationAsync(
@@ -339,7 +360,8 @@ public sealed class OrganizationService(
                 ?? throw new InvalidOperationException("نقش پذیرفته‌شده ثبت نشده است."),
             invitation.Role,
             alreadyAccepted,
-            invitation.OrganizationPersonId);
+            invitation.OrganizationPersonId,
+            invitation.AcceptedGuardianRelationId);
 
     private static OrganizationException WorkspaceNotFoundException() =>
         new(

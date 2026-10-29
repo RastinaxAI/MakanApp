@@ -1,5 +1,6 @@
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Guardian;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,7 +18,12 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
                 "CK_Invitations_Expiry",
                 "[ExpiresAtUtc] > [CreatedAtUtc]");
             table.HasCheckConstraint("CK_Invitations_PersonLink",
-                "([OrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1)");
+                "([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR " +
+                "([OrganizationPersonId] IS NOT NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1) OR " +
+                $"([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = {(int)OrganizationRole.Parent})");
+            table.HasCheckConstraint("CK_Invitations_GuardianReceipt",
+                "([GuardianLearnerOrganizationPersonId] IS NULL AND [AcceptedGuardianRelationId] IS NULL) OR " +
+                "([GuardianLearnerOrganizationPersonId] IS NOT NULL AND (([Status]=2 AND [AcceptedGuardianRelationId] IS NOT NULL) OR ([Status]<>2 AND [AcceptedGuardianRelationId] IS NULL)))");
         });
         builder.HasKey(invitation => invitation.Id);
         builder.Property(invitation => invitation.CreatedAtUtc).HasColumnType("datetime2(7)");
@@ -37,6 +43,14 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
             .HasPrincipalKey(person => new { person.OrganizationId, person.Id })
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne<OrganizationPerson>().WithMany()
+            .HasForeignKey(invitation => new { invitation.OrganizationId, invitation.GuardianLearnerOrganizationPersonId })
+            .HasPrincipalKey(person => new { person.OrganizationId, person.Id }).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<GuardianRelation>().WithMany().HasForeignKey(invitation => invitation.AcceptedGuardianRelationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(invitation => new { invitation.OrganizationId, invitation.DestinationUserId, invitation.GuardianLearnerOrganizationPersonId })
+            .IsUnique().HasFilter("[Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NOT NULL")
+            .HasDatabaseName("UX_Invitations_Pending_Guardian_Learner");
+
         builder.HasIndex(invitation => new
         {
             invitation.DestinationUserId,
@@ -44,7 +58,7 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
             invitation.Role
         })
             .IsUnique()
-            .HasFilter("[Status] = 1")
+            .HasFilter("[Status] = 1 AND [GuardianLearnerOrganizationPersonId] IS NULL")
             .HasDatabaseName("UX_Invitations_Pending_Destination_Organization_Role");
 
         builder.HasOne<MakanApp.Domain.Organization.Organization>()

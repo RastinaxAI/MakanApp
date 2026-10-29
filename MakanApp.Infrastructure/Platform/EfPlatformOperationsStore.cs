@@ -252,7 +252,7 @@ public sealed class EfPlatformOperationsStore(
 
         var existing = await dbContext.Invitations.SingleOrDefaultAsync(item =>
             item.OrganizationId == organizationId && item.DestinationUserId == command.UserId &&
-            item.Role == command.Role && item.Status == InvitationStatus.Pending,
+            item.Role == command.Role && item.Status == InvitationStatus.Pending && item.GuardianLearnerOrganizationPersonId == null,
             cancellationToken);
         if (existing is not null)
         {
