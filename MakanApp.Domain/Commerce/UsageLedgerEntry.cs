@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Commerce;
 
-public sealed class UsageLedgerEntry
+public sealed partial class UsageLedgerEntry
 {
     private UsageLedgerEntry()
     {
@@ -28,6 +28,8 @@ public sealed class UsageLedgerEntry
 
         Id = id;
         OrganizationId = organizationId;
+        OwnerType = SubscriptionOwnerType.Organization;
+        OwnerId = organizationId;
         SubscriptionId = subscriptionId;
         QuotaKey = quotaKey;
         Amount = amount;
@@ -36,8 +38,8 @@ public sealed class UsageLedgerEntry
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
-    public Guid SubscriptionId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? SubscriptionId { get; private set; }
     public QuotaKey QuotaKey { get; private set; }
     public long Amount { get; private set; }
     public Guid SourceOperationId { get; private set; }

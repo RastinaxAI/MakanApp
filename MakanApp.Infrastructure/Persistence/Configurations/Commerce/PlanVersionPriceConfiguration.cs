@@ -11,7 +11,7 @@ public sealed class PlanVersionPriceConfiguration : IEntityTypeConfiguration<Pla
     {
         builder.ToTable("PlanVersionPrices", "commerce", table =>
         {
-            table.HasCheckConstraint("CK_PlanVersionPrices_Amount", "[Amount] > 0");
+            table.HasCheckConstraint("CK_PlanVersionPrices_Amount", "[Amount] >= 0");
             table.HasCheckConstraint("CK_PlanVersionPrices_Currency", "[Currency] = 'IRR'");
         });
         builder.HasKey(price => price.PlanVersionId);

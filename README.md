@@ -14,8 +14,13 @@
 - [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
 - [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
+- [پیاده‌سازی اشتراک، حق استفاده و سهمیه](docs/product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md): مالکیت Individual/Organization، بنیاد PersonalClass، دوره و تغییر پلن، رزرو اتمیک و قراردادهای جدید کاربر/Admin.
 
 بازبینی `2026-10-29` از `main@701cba0`؛ **332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration**. آخرین migration `20261028202239_CompleteSchoolManagement` است. شمارش از metadata کد و مدل طراحی EF است؛ [وضعیت جاری و validation](docs/CURRENT_PROJECT_STATUS.md).
+
+آمار این بازبینی پیش از Foundation اشتراک است؛ APIهای تازه و دو Migration بعدی در سند اشتراک بالا معرفی شده‌اند. Source Commit، نتیجهٔ Validation و بسته‌های Test/Production از گزارش Release مربوط خوانده شوند؛ [راهنمای انتشار جاری](docs/production/PUBLISH_GUIDE_FA.md).
+
+سازمان Legacy تا ثبت قرارداد معتبر توسط Platform Admin، Commercial Enforcement تازه نمی‌گیرد و دادهٔ تجاری برای آن حدس زده نمی‌شود. گزارش جدید، LegacyPendingContract/AwaitingValidContract را از قرارداد واقعی جدا می‌کند؛ API قدیمی با metadata مهاجرت، رفتار قبلی را حفظ می‌کند. تاریخ و مصرف قدیمی برای Audit باقی می‌مانند.
 
 Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
 
@@ -23,7 +28,7 @@ Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HT
 
 DOB خوداظهاری date-only و عکس شخصی User اکنون موجودند؛ عکس با upload موجود، انتخاب/حذف مرجع و دانلود Bearer مصرف می‌شود. DOB مدرک سن و عکس مجوز ارتباط نیست. [پروفایل](docs/product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md)، [عکس](docs/product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
 
-Directory سازمان، roster فراگیر/مدرس، دعوت والد با رضایت صاحب حساب و Lesson/Handout کلاس اضافه شده‌اند؛ [قرارداد فرانت مدرسه](docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). ساخت Class فقط Manager و نوشتن Lesson برای Manager/Teacher منتسب است. مدل محصول V2 همچنان برای اشتراک فردی، Badge، Learning Profile، quotaهای AI/Source و Source lifecycle پیشنهاد است؛ همه بخش‌های آن پیاده‌شده نیستند.
+Directory سازمان، roster فراگیر/مدرس، دعوت والد با رضایت صاحب حساب و Lesson/Handout کلاس اضافه شده‌اند؛ [قرارداد فرانت مدرسه](docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). ساخت Class سازمانی فقط Manager و نوشتن Lesson برای Manager/Teacher منتسب است. اشتراک فردی، قرارداد سهمیهٔ AI/Source و بنیاد PersonalClass اکنون در کد موجودند؛ چرخهٔ کامل آموزشی کلاس مستقل، lifecycle منابع، Badge و Learning Profile همچنان جدا هستند. AI Runtime فعال نشده است.
 
 MFA/step-up و probe/config صرفاً key ring حذف شده‌اند؛ OTP/session/permission فعال‌اند. CORS مستقل از نام محیط و تابع AllowAnyOrigin است؛ [تنظیم جاری](docs/production/CORS_CONFIGURATION_FA.md).
 
@@ -36,7 +41,7 @@ MFA/step-up و probe/config صرفاً key ring حذف شده‌اند؛ OTP/ses
 | Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
 | Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
 | Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
-| Commerce / Backoffice | Plan/Subscription/Order/Payment lifecycle و IAM/operations؛ gateway مالی واقعی unavailable؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
+| Commerce / Backoffice | اشتراک Individual/Organization، نسخهٔ پلن و دورهٔ ماهانه، رزرو/ledger، Trial و Upgrade/Downgrade؛ فعال‌شدن کنترل سازمان با ثبت قرارداد معتبر Admin؛ gateway مالی واقعی unavailable؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
 | AI | ۱۲ API v1، grounding/telemetry و probe رسمی؛ Service Auth واقعی قبلاً PASS، Parent Provider Timeout و Full-12 Deferred؛ RAG lifecycle deferred |
 | Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
 

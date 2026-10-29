@@ -8,34 +8,45 @@ namespace MakanApp.Application.Commerce;
 
 public sealed class OrderPaymentService(
     IAccessContextResolver accessContextResolver,
+    CommercialActorAccess actors,
     IOrderPaymentStore store,
     IPaymentGateway paymentGateway,
     PaymentOptions options,
     TimeProvider timeProvider) : IOrderPaymentService, IPaymentVerificationService
 {
+    public async Task<CommercialQuoteDto> QuoteAsync(Guid userId, Guid sessionId, CreateOrderCommand command, CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
+    {
+        if (command.PlanVersionId == Guid.Empty || !Enum.IsDefined(command.Purpose)) throw Error(CommerceErrorCodes.OrderInvalid, "درخواست پیش‌فاکتور معتبر نیست.");
+        var organizationId = await ResolveOwnerOrganizationAsync(userId, sessionId, ownerType, cancellationToken);
+        return await store.QuoteAsync(userId, organizationId, command, UtcNow(), cancellationToken);
+    }
     public async Task<CreateOrderResult> CreateOrderAsync(
         Guid userId,
         Guid sessionId,
         CreateOrderCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
         if (command.PlanVersionId == Guid.Empty || command.ClientOperationId == Guid.Empty)
         {
             throw Error(CommerceErrorCodes.OrderInvalid, "شناسه نسخه پلن و عملیات سفارش الزامی است.");
         }
 
-        var organizationId = await ResolveManagerOrganizationAsync(
+        var organizationId = await ResolveOwnerOrganizationAsync(
             userId,
             sessionId,
+            ownerType,
             cancellationToken);
         var result = await store.CreateOrderAsync(
             userId,
             organizationId,
             command.PlanVersionId,
             command.ClientOperationId,
-            Hash($"order|{organizationId:N}|{command.PlanVersionId:N}"),
+            Hash($"order|{ownerType}|{organizationId:N}|{command.PlanVersionId:N}|{command.Purpose}|{command.SubscriptionId:N}"),
             UtcNow(),
-            cancellationToken);
+            cancellationToken,
+            command.Purpose, command.SubscriptionId);
         return result.Status switch
         {
             CreateOrderStoreStatus.Created or CreateOrderStoreStatus.Replayed =>
@@ -57,16 +68,18 @@ public sealed class OrderPaymentService(
         Guid sessionId,
         Guid orderId,
         InitiatePaymentCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
         if (orderId == Guid.Empty || command.ClientOperationId == Guid.Empty)
         {
             throw Error(CommerceErrorCodes.PaymentInvalid, "شناسه سفارش و عملیات پرداخت الزامی است.");
         }
 
-        var organizationId = await ResolveManagerOrganizationAsync(
+        var organizationId = await ResolveOwnerOrganizationAsync(
             userId,
             sessionId,
+            ownerType,
             cancellationToken);
         var created = await store.CreatePaymentAttemptAsync(
             organizationId,
@@ -75,7 +88,8 @@ public sealed class OrderPaymentService(
             command.ClientOperationId,
             Hash($"payment|{orderId:N}|{paymentGateway.ProviderName}"),
             UtcNow(),
-            cancellationToken);
+            cancellationToken,
+            organizationId.HasValue ? null : userId);
         if (created.Status == CreatePaymentAttemptStoreStatus.IdempotencyConflict)
         {
             throw Error(
@@ -105,7 +119,7 @@ public sealed class OrderPaymentService(
             cancellationToken);
         if (!claimed)
         {
-            var current = await store.GetOrderAsync(organizationId, orderId, cancellationToken)
+            var current = await store.GetOrderAsync(organizationId, orderId, cancellationToken, organizationId.HasValue ? null : userId)
                 ?? throw Error(CommerceErrorCodes.OrderNotFound, "سفارش پیدا نشد.");
             var currentAttempt = current.PaymentAttempts.Single(item => item.Id == attempt.Id);
             return new InitiatePaymentResult(
@@ -162,7 +176,7 @@ public sealed class OrderPaymentService(
 
         if (completed.Status == CompletePaymentInitiationStoreStatus.StaleClaim)
         {
-            var current = await store.GetOrderAsync(organizationId, orderId, cancellationToken)
+            var current = await store.GetOrderAsync(organizationId, orderId, cancellationToken, organizationId.HasValue ? null : userId)
                 ?? throw Error(CommerceErrorCodes.OrderNotFound, "سفارش پیدا نشد.");
             var currentAttempt = current.PaymentAttempts.Single(item => item.Id == attempt.Id);
             return new InitiatePaymentResult(MapOrder(current), MapAttempt(currentAttempt), true);
@@ -178,10 +192,11 @@ public sealed class OrderPaymentService(
         Guid userId,
         Guid sessionId,
         Guid orderId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
-        var organizationId = await ResolveManagerOrganizationAsync(userId, sessionId, cancellationToken);
-        var order = await store.GetOrderAsync(organizationId, orderId, cancellationToken);
+        var organizationId = await ResolveOwnerOrganizationAsync(userId, sessionId, ownerType, cancellationToken);
+        var order = await store.GetOrderAsync(organizationId, orderId, cancellationToken, organizationId.HasValue ? null : userId);
         return order is null
             ? throw Error(CommerceErrorCodes.OrderNotFound, "سفارش پیدا نشد.")
             : MapOrder(order);
@@ -191,15 +206,16 @@ public sealed class OrderPaymentService(
         Guid userId,
         Guid sessionId,
         int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
         if (limit is < 1 or > 100)
         {
             throw Error(CommerceErrorCodes.OrderInvalid, "limit باید بین ۱ و ۱۰۰ باشد.");
         }
 
-        var organizationId = await ResolveManagerOrganizationAsync(userId, sessionId, cancellationToken);
-        var orders = await store.ListOrdersAsync(organizationId, limit, cancellationToken);
+        var organizationId = await ResolveOwnerOrganizationAsync(userId, sessionId, ownerType, cancellationToken);
+        var orders = await store.ListOrdersAsync(organizationId, limit, cancellationToken, organizationId.HasValue ? null : userId);
         return new OrderListResult(orders.Select(MapListItem).ToArray());
     }
 
@@ -257,13 +273,11 @@ public sealed class OrderPaymentService(
         }
 
         var verifiedAtUtc = UtcNow();
-        var activation = attempt.OrganizationId.HasValue
-            ? SubscriptionActivationOutboxContract.Create(
+        var activation = SubscriptionActivationOutboxContract.Create(
                 attempt.OrderId,
-                attempt.OrganizationId.Value,
+                attempt.OrganizationId,
                 attempt.PlanVersionId,
-                verifiedAtUtc)
-            : null;
+                verifiedAtUtc, attempt.PurchaserUserId);
         var stored = await store.RecordPaymentVerificationAsync(
             attempt.Id,
             providerResult,
@@ -286,13 +300,16 @@ public sealed class OrderPaymentService(
             MapAttempt(stored.Attempt!));
     }
 
-    private async Task<Guid> ResolveManagerOrganizationAsync(
+    private async Task<Guid?> ResolveOwnerOrganizationAsync(
         Guid userId,
         Guid sessionId,
+        SubscriptionOwnerType ownerType,
         CancellationToken cancellationToken)
     {
+        await actors.EnsureAsync(userId, sessionId, cancellationToken);
+        if (ownerType == SubscriptionOwnerType.Individual) return null;
         var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
+        if (ownerType != SubscriptionOwnerType.Organization || context.WorkspaceType != WorkspaceType.Organization ||
             !context.OrganizationId.HasValue ||
             !context.MembershipId.HasValue ||
             context.ActiveRole != OrganizationRole.Manager)

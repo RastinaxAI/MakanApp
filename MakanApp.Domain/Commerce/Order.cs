@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Commerce;
 
-public sealed class Order
+public sealed partial class Order
 {
     public const int RequestPayloadHashLength = 32;
 
@@ -110,7 +110,7 @@ public sealed class Order
 
     private static void EnsureAmountAndCurrency(decimal amount, CurrencyCode currency)
     {
-        if (amount <= 0 || amount > PlanVersionPrice.MaximumAmount || !Enum.IsDefined(currency))
+        if (amount < 0 || amount > PlanVersionPrice.MaximumAmount || !Enum.IsDefined(currency))
         {
             throw new ArgumentOutOfRangeException(nameof(amount), "مبلغ یا واحد پول سفارش معتبر نیست.");
         }

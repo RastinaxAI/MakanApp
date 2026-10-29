@@ -5,9 +5,10 @@ namespace MakanApp.Application.Commerce;
 
 public sealed record SubscriptionActivationRequested(
     Guid OrderId,
-    Guid OrganizationId,
+    Guid? OrganizationId,
     Guid PlanVersionId,
-    DateTime PaidAtUtc);
+    DateTime PaidAtUtc,
+    Guid? PurchaserUserId = null);
 
 public static class SubscriptionActivationOutboxContract
 {
@@ -15,9 +16,10 @@ public static class SubscriptionActivationOutboxContract
 
     public static OutboxEnvelope Create(
         Guid orderId,
-        Guid organizationId,
+        Guid? organizationId,
         Guid planVersionId,
-        DateTime paidAtUtc) =>
+        DateTime paidAtUtc,
+        Guid? purchaserUserId = null) =>
         new(
             Guid.NewGuid(),
             MessageType,
@@ -25,7 +27,8 @@ public static class SubscriptionActivationOutboxContract
                 orderId,
                 organizationId,
                 planVersionId,
-                paidAtUtc)),
+                paidAtUtc,
+                purchaserUserId)),
             paidAtUtc);
 
     public static bool Matches(string messageType) =>

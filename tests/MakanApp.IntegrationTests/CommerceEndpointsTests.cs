@@ -96,6 +96,10 @@ public sealed class CommerceEndpointsTests(MakanAppWebApplicationFactory factory
         var summary = JsonSerializer.Deserialize<ManagerCommerceSummaryDto>(json, JsonOptions)!;
 
         Assert.Equal(CommerceSummaryState.Active, summary.State);
+        Assert.Equal(CommercialMigrationStatus.AwaitingValidContract, summary.MigrationStatus);
+        Assert.False(summary.CommercialControlEnabled);
+        Assert.False(summary.HasVerifiedCommercialContract);
+        Assert.Null(summary.CommercialEnforcementFromUtc);
         Assert.Equal(subscriptionId, summary.Subscription!.SubscriptionId);
         Assert.Equal(1, summary.Subscription.PlanVersionNumber);
         Assert.True(summary.Entitlements.Single(item => item.Key == EntitlementKey.Academic).Enabled);

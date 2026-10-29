@@ -1,5 +1,9 @@
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Reports;
+using MakanApp.Application.Commerce;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace MakanApp.Application.Reports.Exports;
 
@@ -17,7 +21,7 @@ public sealed class ReportExportService(
         CreateReportExportCommand command,
         CancellationToken cancellationToken)
     {
-        if (!Enum.IsDefined(command.ReportType))
+        if (!Enum.IsDefined(command.ReportType) || command.ClientOperationId == Guid.Empty)
         {
             throw Error(ReportExportErrorCodes.InvalidRequest, "نوع گزارش export معتبر نیست.");
         }
@@ -25,6 +29,18 @@ public sealed class ReportExportService(
         if (command.Format != ReportExportFormat.Csv)
         {
             throw Error(ReportExportErrorCodes.UnsupportedFormat, "در این مرحله فقط خروجی CSV پشتیبانی می‌شود.");
+        }
+
+        if (command.ClientOperationId.HasValue)
+        {
+            var existing = await jobStore.GetByOperationAsync(userId, command.ClientOperationId.Value, cancellationToken);
+            if (existing is not null)
+            {
+                await dataSource.EnsureCurrentAccessAsync(userId, sessionId, existing, cancellationToken);
+                if (existing.RequestPayloadHash is null || !CryptographicOperations.FixedTimeEquals(existing.RequestPayloadHash, Fingerprint(command, existing)))
+                    throw new CommerceException(CommerceErrorCodes.UsageConflict, "شناسهٔ خروجی گزارش با درخواست دیگری استفاده شده است.");
+                return ToResult(existing);
+            }
         }
 
         var preparation = await dataSource.PrepareAsync(
@@ -61,7 +77,8 @@ public sealed class ReportExportService(
             preparation.Sort,
             preparation.ExpectedRowCount,
             nowUtc);
-        await jobStore.AddAsync(job, cancellationToken);
+        job.SetIdempotency(command.ClientOperationId ?? job.Id, Fingerprint(command, job));
+        job = await jobStore.AddAsync(job, cancellationToken);
         queueSignal.Signal();
         return ToResult(job);
     }
@@ -124,4 +141,9 @@ public sealed class ReportExportService(
             job.Status == ReportExportJobStatus.Failed ? job.FailureCode : null);
 
     private static ReportExportException Error(string code, string message) => new(code, message);
+    private static byte[] Fingerprint(CreateReportExportCommand command, ReportExportJob job) => SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+    {
+        Contract = "report-export.v1", command.ReportType, command.Format, Filters = command.Filters ?? new ReportExportFilters(),
+        job.OrganizationId, job.MembershipId, job.Audience, job.SubjectOrganizationPersonId
+    })));
 }

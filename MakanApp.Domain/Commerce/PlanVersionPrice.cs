@@ -8,16 +8,23 @@ public sealed class PlanVersionPrice
     {
     }
 
-    internal PlanVersionPrice(Guid planVersionId, decimal amount, CurrencyCode currency)
+    internal PlanVersionPrice(Guid planVersionId, decimal amount, CurrencyCode currency, bool explicitlyFree = false)
     {
         PlanVersionId = planVersionId;
-        Change(amount, currency);
+        if (explicitlyFree && amount == 0) { Amount = 0; Currency = currency; }
+        else Change(amount, currency);
     }
 
     public Guid PlanVersionId { get; private set; }
     public decimal Amount { get; private set; }
     public CurrencyCode Currency { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+
+    internal void MakeFree()
+    {
+        Amount = 0;
+        Currency = CurrencyCode.Irr;
+    }
 
     internal void Change(decimal amount, CurrencyCode currency)
     {

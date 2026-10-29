@@ -50,13 +50,14 @@ public sealed class CommerceService(
                 subscription,
                 [],
                 [],
-                utcNow);
+                utcNow) { CommercialControlEnabled = snapshot.CommercialControlEnabled,
+                    CommercialEnforcementFromUtc = snapshot.CommercialEnforcementFromUtc };
         }
 
         var usage = await store.GetCurrentUsageAsync(
             snapshot.OrganizationId,
             snapshot.SubscriptionId,
-            snapshot.Quotas.Keys.ToArray(),
+            snapshot.Quotas.Keys.Where(key => snapshot.CommercialControlEnabled || CommercePolicy.IsLegacyCompatible(key)).ToArray(),
             cancellationToken);
 
         return new ManagerCommerceSummaryDto(
@@ -64,14 +65,17 @@ public sealed class CommerceService(
             CommerceSummaryState.Active,
             subscription,
             snapshot.Entitlements
+                .Where(item => snapshot.CommercialControlEnabled || CommercePolicy.IsLegacyCompatible(item.Key))
                 .OrderBy(item => item.Key)
                 .Select(item => new CommerceEntitlementDto(item.Key, item.Value))
                 .ToArray(),
             snapshot.Quotas
+                .Where(item => snapshot.CommercialControlEnabled || CommercePolicy.IsLegacyCompatible(item.Key))
                 .OrderBy(item => item.Key)
-                .Select(item => MapQuota(item.Key, item.Value, usage.GetValueOrDefault(item.Key)))
+                .Select(item => MapQuota(item.Key, item.Value, usage.GetValueOrDefault(item.Key), snapshot.Reservations?.GetValueOrDefault(item.Key) ?? 0))
                 .ToArray(),
-            utcNow);
+            utcNow) { CommercialControlEnabled = snapshot.CommercialControlEnabled,
+                CommercialEnforcementFromUtc = snapshot.CommercialEnforcementFromUtc };
     }
 
     public async Task<EffectiveSubscriptionResult?> GetEffectiveSubscriptionAsync(
@@ -87,7 +91,7 @@ public sealed class CommerceService(
                 snapshot.PlanVersionId,
                 snapshot.PlanVersionNumber,
                 snapshot.StartsAtUtc,
-                snapshot.EndsAtUtc);
+                snapshot.EndsAtUtc) { CommercialControlEnabled = snapshot.CommercialControlEnabled };
     }
 
     public async Task<bool> IsEnabledAsync(
@@ -97,7 +101,8 @@ public sealed class CommerceService(
     {
         EnsureOrganizationAndEnum(organizationId, key);
         var snapshot = await GetEffectiveSnapshotAsync(organizationId, cancellationToken);
-        return snapshot is not null && snapshot.Entitlements.GetValueOrDefault(key);
+        return snapshot is not null && (snapshot.CommercialControlEnabled || CommercePolicy.IsLegacyCompatible(key))
+            && snapshot.Entitlements.GetValueOrDefault(key);
     }
 
     public async Task<EffectiveQuotaResult?> GetQuotaAsync(
@@ -107,20 +112,22 @@ public sealed class CommerceService(
     {
         EnsureOrganizationAndEnum(organizationId, key);
         var snapshot = await GetEffectiveSnapshotAsync(organizationId, cancellationToken);
-        if (snapshot is null || !snapshot.Quotas.TryGetValue(key, out var limit))
+        if (snapshot is null || !snapshot.CommercialControlEnabled && !CommercePolicy.IsLegacyCompatible(key)
+            || !snapshot.Quotas.TryGetValue(key, out var limit))
         {
             return null;
         }
 
         var currentUsage = await GetUsageAsync(snapshot, key, cancellationToken);
+        var reserved = snapshot.Reservations?.GetValueOrDefault(key) ?? 0;
         return new EffectiveQuotaResult(
             snapshot.SubscriptionId,
             key,
             limit,
             currentUsage,
             !limit.HasValue,
-            limit.HasValue && currentUsage > limit.Value,
-            CommercePolicy.GetUsageSource(key));
+            limit.HasValue && (currentUsage > limit.Value || reserved > limit.Value - currentUsage),
+            CommercePolicy.GetUsageSource(key)) { Reserved = reserved, CommercialControlEnabled = snapshot.CommercialControlEnabled };
     }
 
     public async Task<CapacityCheckResult> CheckCapacityAsync(
@@ -151,6 +158,9 @@ public sealed class CommerceService(
             return Denied(key, requestedAmount, CommerceErrorCodes.SubscriptionInactive, snapshot.SubscriptionId);
         }
 
+        if (!snapshot.CommercialControlEnabled && !CommercePolicy.IsLegacyCompatible(key))
+            return Denied(key, requestedAmount, CommerceErrorCodes.TermsIncomplete, snapshot.SubscriptionId);
+
         if (!snapshot.Quotas.TryGetValue(key, out var limit))
         {
             return Denied(key, requestedAmount, CommerceErrorCodes.QuotaRequired, snapshot.SubscriptionId);
@@ -172,8 +182,9 @@ public sealed class CommerceService(
                 false);
         }
 
-        var overQuota = currentUsage > limit.Value;
-        var allowed = !overQuota && requestedAmount <= limit.Value - currentUsage;
+        var reserved = snapshot.Reservations?.GetValueOrDefault(key) ?? 0;
+        var overQuota = currentUsage > limit.Value || reserved > limit.Value - currentUsage;
+        var allowed = !overQuota && requestedAmount <= limit.Value - currentUsage - reserved;
         return new CapacityCheckResult(
             allowed,
             allowed ? null : CommerceErrorCodes.QuotaExceeded,
@@ -182,7 +193,7 @@ public sealed class CommerceService(
             requestedAmount,
             currentUsage,
             limit,
-            Math.Max(0, limit.Value - currentUsage - (allowed ? requestedAmount : 0)),
+            Math.Max(0, limit.Value - currentUsage - reserved - (allowed ? requestedAmount : 0)),
             false,
             overQuota);
     }
@@ -282,15 +293,15 @@ public sealed class CommerceService(
             snapshot.StartsAtUtc,
             snapshot.EndsAtUtc);
 
-    private static CommerceQuotaDto MapQuota(QuotaKey key, long? limit, long currentUsage) =>
+    private static CommerceQuotaDto MapQuota(QuotaKey key, long? limit, long currentUsage, long reserved) =>
         new(
             key,
             limit,
             currentUsage,
-            limit.HasValue ? Math.Max(0, limit.Value - currentUsage) : null,
+            limit.HasValue ? Math.Max(0, limit.Value - currentUsage - reserved) : null,
             !limit.HasValue,
             limit.HasValue && currentUsage > limit.Value,
-            CommercePolicy.GetUsageSource(key));
+            CommercePolicy.GetUsageSource(key)) { Reserved = reserved };
 
     private static CapacityCheckResult Denied(
         QuotaKey key,

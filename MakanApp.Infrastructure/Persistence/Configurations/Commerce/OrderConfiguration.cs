@@ -13,7 +13,8 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.ToTable("Orders", "commerce", table =>
         {
             table.HasCheckConstraint("CK_Orders_Status", "[Status] BETWEEN 1 AND 3");
-            table.HasCheckConstraint("CK_Orders_Amount", "[Amount] > 0");
+            table.HasCheckConstraint("CK_Orders_Amount", "[Amount] >= 0");
+            table.HasCheckConstraint("CK_Orders_CommercialPurpose", "[Purpose] BETWEEN 1 AND 3 AND ([HasCommercialTerms]=0 OR ([BillingAnchorUtc] IS NOT NULL AND [TermsExpireAtUtc]>[CreatedAtUtc]))");
             table.HasCheckConstraint("CK_Orders_Currency", "[Currency] = 'IRR'");
             table.HasCheckConstraint(
                 "CK_Orders_RequestPayloadHash",
@@ -38,6 +39,8 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(order => order.PaidAtUtc).HasColumnType("datetime2(7)");
         builder.Property(order => order.CancelledAtUtc).HasColumnType("datetime2(7)");
         builder.Property(order => order.RowVersion).IsRowVersion();
+        builder.HasOne<Subscription>().WithMany().HasForeignKey(o => o.TargetSubscriptionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<PlanVersion>().WithMany().HasForeignKey(o => o.ExpectedPreviousPlanVersionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(order => new { order.PurchaserUserId, order.ClientOperationId })
             .IsUnique()
             .HasDatabaseName("UX_Orders_Purchaser_ClientOperation");

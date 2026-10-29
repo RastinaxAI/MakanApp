@@ -7,7 +7,8 @@ namespace MakanApp.Application.Reports.Exports;
 public sealed record CreateReportExportCommand(
     ReportExportType ReportType,
     ReportExportFormat Format,
-    ReportExportFilters? Filters);
+    ReportExportFilters? Filters,
+    Guid? ClientOperationId = null);
 
 public sealed record ReportExportFilters(
     DateTime? FromUtc = null,

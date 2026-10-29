@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
+public sealed class EfCommerceStore(MakanDbContext dbContext, EfCommercialStore commerce) : ICommerceStore
 {
     public async Task<CommerceSubscriptionSnapshot?> GetLatestSubscriptionAsync(
         Guid organizationId,
@@ -22,11 +22,12 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
             join plan in dbContext.Plans
                 on planVersion.PlanId equals plan.Id
             where subscription.OrganizationId == organizationId
-            orderby subscription.Status == SubscriptionStatus.Active descending,
+            orderby ((subscription.Status == SubscriptionStatus.Active || subscription.Status == SubscriptionStatus.Scheduled)
+                && subscription.StartsAtUtc <= utcNow && (!subscription.EndsAtUtc.HasValue || subscription.EndsAtUtc > utcNow)) descending,
                 subscription.CreatedAtUtc descending
             select new SubscriptionRow(
                 subscription.Id,
-                subscription.OrganizationId,
+                subscription.OrganizationId!.Value,
                 plan.Id,
                 planVersion.Id,
                 plan.Code,
@@ -35,7 +36,9 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
                 planVersion.Status,
                 subscription.Status,
                 subscription.StartsAtUtc,
-                subscription.EndsAtUtc))
+                subscription.EndsAtUtc,
+                subscription.CreatedAtUtc,
+                subscription.CommercialControlEnabled))
             .AsNoTracking()
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -53,10 +56,24 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
             .Where(item => item.PlanVersionId == row.PlanVersionId)
             .ToDictionaryAsync(item => item.Key, item => item.Limit, cancellationToken);
         var isEffective = row.PlanVersionStatus == PlanVersionStatus.Published &&
-                          row.Status == SubscriptionStatus.Active &&
+                          (row.Status == SubscriptionStatus.Active || row.Status == SubscriptionStatus.Scheduled) &&
                           row.StartsAtUtc <= utcNow &&
                           (!row.EndsAtUtc.HasValue || utcNow < row.EndsAtUtc.Value);
 
+        var reserved = new Dictionary<QuotaKey, long>();
+        if (isEffective)
+        {
+            var subscription = await dbContext.Subscriptions.AsNoTracking().SingleAsync(s => s.Id == row.SubscriptionId, cancellationToken);
+            if (subscription.CommercialControlEnabled)
+            {
+                var version = await commerce.VersionAsync(subscription.PlanVersionId, cancellationToken);
+                foreach (var key in quotas.Keys.ToArray())
+                {
+                    var effective = await commerce.QuotaAsync(subscription, version, key, cancellationToken);
+                    quotas[key] = effective.Limit; reserved[key] = effective.Reserved;
+                }
+            }
+        }
         return new CommerceSubscriptionSnapshot(
             row.SubscriptionId,
             row.OrganizationId,
@@ -70,7 +87,9 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
             row.EndsAtUtc,
             isEffective,
             entitlements,
-            quotas);
+            quotas, reserved) { CommercialControlEnabled = row.CommercialControlEnabled,
+                CommercialEnforcementFromUtc = row.CommercialControlEnabled
+                    ? row.StartsAtUtc > row.CreatedAtUtc ? row.StartsAtUtc : row.CreatedAtUtc : null };
     }
 
     public async Task<IReadOnlyDictionary<QuotaKey, long>> GetCurrentUsageAsync(
@@ -116,14 +135,14 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
                 .SumAsync(file => (long?)file.SizeBytes, cancellationToken) ?? 0;
         }
 
-        if (requested.Contains(QuotaKey.ReportExports))
+        foreach (var metered in requested.Where(k => k is QuotaKey.ReportExports or QuotaKey.AiTextRequests))
         {
-            result[QuotaKey.ReportExports] = await dbContext.UsageLedgerEntries
+            result[metered] = await dbContext.UsageLedgerEntries
                 .AsNoTracking()
                 .Where(entry =>
                     entry.OrganizationId == organizationId &&
                     entry.SubscriptionId == subscriptionId &&
-                    entry.QuotaKey == QuotaKey.ReportExports)
+                    entry.QuotaKey == metered && entry.Status == UsageReservationStatus.Consumed)
                 .SumAsync(entry => (long?)entry.Amount, cancellationToken) ?? 0;
         }
 
@@ -141,6 +160,7 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+        await commerce.LockOwnerAsync(SubscriptionOwner.Organization(organizationId), cancellationToken);
 
         var subscription = await dbContext.Subscriptions
             .FromSqlInterpolated(
@@ -170,6 +190,12 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
                 0,
                 null);
         }
+
+        if (subscription.CommercialControlEnabled)
+            throw new CommerceException(CommerceErrorCodes.UsageInvalid, "مصرف قرارداد مدیریت‌شده باید از مسیر رزرو و نهایی‌سازی انجام شود.");
+
+        if (!CommercePolicy.IsLegacyCompatible(key))
+            return new UsageRecordStoreResult(UsageRecordStoreStatus.QuotaRequired, null, subscription.Id, 0, null);
 
         var versionIsPublished = await dbContext.PlanVersions
             .AsNoTracking()
@@ -266,5 +292,7 @@ public sealed class EfCommerceStore(MakanDbContext dbContext) : ICommerceStore
         PlanVersionStatus PlanVersionStatus,
         SubscriptionStatus Status,
         DateTime StartsAtUtc,
-        DateTime? EndsAtUtc);
+        DateTime? EndsAtUtc,
+        DateTime CreatedAtUtc,
+        bool CommercialControlEnabled);
 }

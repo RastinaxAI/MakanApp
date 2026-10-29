@@ -1173,10 +1173,10 @@ public sealed class EfPlatformOperationsStore(
             from subscription in dbContext.Subscriptions.AsNoTracking()
             join version in dbContext.PlanVersions.AsNoTracking() on subscription.PlanVersionId equals version.Id
             join plan in dbContext.Plans.AsNoTracking() on version.PlanId equals plan.Id
-            where organizationIds.Contains(subscription.OrganizationId)
+            where subscription.OrganizationId.HasValue && organizationIds.Contains(subscription.OrganizationId.Value)
             orderby subscription.OrganizationId, subscription.CreatedAtUtc descending
             select new SubscriptionRow(
-                subscription.OrganizationId,
+                subscription.OrganizationId!.Value,
                 subscription.Id,
                 subscription.PlanVersionId,
                 plan.DisplayName,

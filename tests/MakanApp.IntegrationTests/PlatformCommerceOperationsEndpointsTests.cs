@@ -466,7 +466,7 @@ public sealed class PlatformCommerceOperationsEndpointsTests(
                 CurrencyCode.Irr,
                 [new PlatformPlanEntitlementItem(EntitlementKey.Messaging, true)],
                 [new PlatformPlanQuotaItem(QuotaKey.ActiveLearners, learnerLimit)],
-                reason),
+                reason, BillingCalendar.Gregorian, "integration-test-terms"),
             JsonOptions);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await ReadAsync<PlatformPlanVersionItem>(createResponse);

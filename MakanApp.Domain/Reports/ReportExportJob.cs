@@ -3,7 +3,7 @@ using MakanApp.Domain.Organization;
 
 namespace MakanApp.Domain.Reports;
 
-public sealed class ReportExportJob
+public sealed partial class ReportExportJob
 {
     private ReportExportJob()
     {

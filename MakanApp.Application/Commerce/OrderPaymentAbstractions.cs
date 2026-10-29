@@ -5,30 +5,36 @@ namespace MakanApp.Application.Commerce;
 
 public interface IOrderPaymentService
 {
+    Task<CommercialQuoteDto> QuoteAsync(Guid userId, Guid sessionId, CreateOrderCommand command, CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization);
     Task<CreateOrderResult> CreateOrderAsync(
         Guid userId,
         Guid sessionId,
         CreateOrderCommand command,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization);
 
     Task<InitiatePaymentResult> InitiatePaymentAsync(
         Guid userId,
         Guid sessionId,
         Guid orderId,
         InitiatePaymentCommand command,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization);
 
     Task<OrderDto> GetOrderAsync(
         Guid userId,
         Guid sessionId,
         Guid orderId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization);
 
     Task<OrderListResult> ListOrdersAsync(
         Guid userId,
         Guid sessionId,
         int limit,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization);
 }
 
 public interface IPaymentVerificationService
@@ -50,7 +56,8 @@ public sealed record PaymentAttemptSnapshot(
     string? ProviderReference,
     string? PaymentUrl,
     DateTime CreatedAtUtc,
-    DateTime? CompletedAtUtc);
+    DateTime? CompletedAtUtc,
+    Guid? PurchaserUserId = null);
 
 public sealed record OrderPaymentSnapshot(
     Guid Id,
@@ -123,33 +130,39 @@ public sealed record RecordPaymentVerificationStoreResult(
 
 public interface IOrderPaymentStore
 {
+    Task<CommercialQuoteDto> QuoteAsync(Guid purchaserUserId, Guid? organizationId, CreateOrderCommand command, DateTime utcNow, CancellationToken cancellationToken);
     Task<CreateOrderStoreResult> CreateOrderAsync(
         Guid purchaserUserId,
-        Guid organizationId,
+        Guid? organizationId,
         Guid planVersionId,
         Guid clientOperationId,
         byte[] requestPayloadHash,
         DateTime createdAtUtc,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        CommercialOrderPurpose purpose = CommercialOrderPurpose.Purchase,
+        Guid? targetSubscriptionId = null);
 
     Task<OrderPaymentSnapshot?> GetOrderAsync(
-        Guid organizationId,
+        Guid? organizationId,
         Guid orderId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null);
 
     Task<IReadOnlyCollection<OrderPaymentSnapshot>> ListOrdersAsync(
-        Guid organizationId,
+        Guid? organizationId,
         int limit,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null);
 
     Task<CreatePaymentAttemptStoreResult> CreatePaymentAttemptAsync(
-        Guid organizationId,
+        Guid? organizationId,
         Guid orderId,
         string provider,
         Guid clientOperationId,
         byte[] requestPayloadHash,
         DateTime createdAtUtc,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null);
 
     Task<bool> TryClaimPaymentInitiationAsync(
         Guid paymentAttemptId,

@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Commerce;
 
-public sealed class PlanVersion
+public sealed partial class PlanVersion
 {
     private readonly List<PlanEntitlement> _entitlements = [];
     private readonly List<PlanQuotaDefinition> _quotaDefinitions = [];
@@ -90,15 +90,19 @@ public sealed class PlanVersion
         if (Price is null)
         {
             Price = new PlanVersionPrice(Id, amount, currency);
+            ExplicitlyFree = false;
             return;
         }
 
         Price.Change(amount, currency);
+        ExplicitlyFree = false;
     }
 
-    public void Publish(DateTime publishedAtUtc)
+    public void Publish(DateTime publishedAtUtc, SubscriptionOwnerType? audience = null)
     {
         EnsureDraft();
+        var missing = ValidatePublication(audience);
+        if (missing.Count != 0) throw new InvalidOperationException("شرایط تجاری ناقص است: " + string.Join(", ", missing));
         EnsureUtc(publishedAtUtc, nameof(publishedAtUtc));
         if (publishedAtUtc < CreatedAtUtc)
         {

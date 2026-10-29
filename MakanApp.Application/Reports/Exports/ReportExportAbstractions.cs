@@ -19,7 +19,8 @@ public interface IReportExportDataSource
 
 public interface IReportExportJobStore
 {
-    Task AddAsync(ReportExportJob job, CancellationToken cancellationToken);
+    Task<ReportExportJob> AddAsync(ReportExportJob job, CancellationToken cancellationToken);
+    Task<ReportExportJob?> GetByOperationAsync(Guid userId, Guid operationId, CancellationToken cancellationToken);
     Task<ReportExportJob?> GetAsync(Guid jobId, CancellationToken cancellationToken);
     Task<ReportExportJob?> TryClaimNextAsync(DateTime nowUtc, TimeSpan lease, int maximumAttempts, CancellationToken cancellationToken);
     Task<bool> TrySaveClaimChangesAsync(ReportExportJob job, byte[] expectedClaimRowVersion, CancellationToken cancellationToken);

@@ -2,6 +2,12 @@ namespace MakanApp.Application.Commerce;
 
 public static class CommerceErrorCodes
 {
+    public const string FeatureNotEntitled = "FEATURE_NOT_ENTITLED";
+    public const string CommercialLocked = "ORGANIZATION_COMMERCIALLY_LOCKED";
+    public const string ContextNotAllowed = "COMMERCE_CONTEXT_NOT_ALLOWED";
+    public const string ResourceNotFound = "COMMERCE_RESOURCE_NOT_FOUND";
+    public const string TermsIncomplete = "PLAN_TERMS_INCOMPLETE";
+    public const string MeterUnavailable = "COMMERCE_METER_UNAVAILABLE";
     public const string SummaryNotAllowed = "COMMERCE_SUMMARY_NOT_ALLOWED";
     public const string SubscriptionRequired = "SUBSCRIPTION_REQUIRED";
     public const string SubscriptionInactive = "SUBSCRIPTION_INACTIVE";

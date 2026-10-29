@@ -2,6 +2,7 @@ using MakanApp.Domain.Identity;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
+using MakanApp.Domain.Commerce;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,6 +15,8 @@ public sealed class ReportExportJobConfiguration : IEntityTypeConfiguration<Repo
         builder.ToTable("ReportExportJobs", "reports", table =>
         {
             table.HasCheckConstraint("CK_ReportExportJobs_Status", "[Status] IN (1, 2, 3, 4)");
+            table.HasCheckConstraint("CK_ReportExportJobs_CommercialOwner", "[CommercialOwnerType]=2");
+            table.HasCheckConstraint("CK_ReportExportJobs_Idempotency", "([ClientOperationId] IS NULL AND [RequestPayloadHash] IS NULL) OR ([ClientOperationId] IS NOT NULL AND [RequestPayloadHash] IS NOT NULL AND DATALENGTH([RequestPayloadHash])=32)");
             table.HasCheckConstraint("CK_ReportExportJobs_Audience", "[Audience] IN (1, 2, 3, 4)");
             table.HasCheckConstraint("CK_ReportExportJobs_Format", "[Format] = 1");
             table.HasCheckConstraint("CK_ReportExportJobs_ReportType", "[ReportType] BETWEEN 1 AND 14");
@@ -46,6 +49,11 @@ public sealed class ReportExportJobConfiguration : IEntityTypeConfiguration<Repo
         builder.Property(job => job.LeaseExpiresAtUtc).HasColumnType("datetime2(7)");
         builder.Property(job => job.NextAttemptAtUtc).HasColumnType("datetime2(7)");
         builder.Property(job => job.RowVersion).IsRowVersion();
+        builder.Property(job => job.RequestPayloadHash).HasColumnType("binary(32)");
+        builder.Property<SubscriptionOwnerType>("CommercialOwnerType").HasDefaultValue(SubscriptionOwnerType.Organization);
+        builder.HasIndex(job => new { job.RequestedByUserId, job.ClientOperationId }).IsUnique().HasFilter("[ClientOperationId] IS NOT NULL");
+        builder.HasOne<UsageReservation>().WithMany().HasForeignKey("CommercialOwnerType", "OrganizationId", "RequestedByUserId", "CommerceReservationId")
+            .HasPrincipalKey(r => new { r.OwnerType, r.OwnerId, r.ConsumerUserId, r.Id }).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(job => new { job.Status, job.NextAttemptAtUtc, job.RequestedAtUtc })
             .HasDatabaseName("IX_ReportExportJobs_Status_NextAttempt_Requested");

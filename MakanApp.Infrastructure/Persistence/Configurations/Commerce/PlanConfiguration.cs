@@ -8,7 +8,8 @@ public sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
 {
     public void Configure(EntityTypeBuilder<Plan> builder)
     {
-        builder.ToTable("Plans", "commerce");
+        builder.ToTable("Plans", "commerce", t => t.HasCheckConstraint("CK_Plans_Audience", "[Audience] IN (1,2)"));
+        builder.Property(p => p.AvailabilityEffectiveAtUtc).HasColumnType("datetime2(7)");
         builder.HasKey(plan => plan.Id);
         builder.Property(plan => plan.Code).HasMaxLength(Plan.MaximumCodeLength).IsRequired();
         builder.Property(plan => plan.DisplayName).HasMaxLength(Plan.MaximumDisplayNameLength).IsRequired();

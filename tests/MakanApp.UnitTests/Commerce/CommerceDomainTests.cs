@@ -139,10 +139,14 @@ public sealed class CommerceDomainTests
         var first = PlanVersion.CreateDraft(plan.Id, 1, NowUtc);
         first.SetEntitlement(EntitlementKey.Reports, true);
         first.SetQuota(QuotaKey.ReportExports, 10);
+        first.SetFreePrice();
+        first.SetMonthlyTerms(BillingCalendar.Gregorian, "unit-test-terms", null, null);
         first.Publish(NowUtc.AddMinutes(1));
         var second = PlanVersion.CreateDraft(plan.Id, 2, NowUtc.AddMinutes(2));
         second.SetEntitlement(EntitlementKey.Reports, false);
         second.SetQuota(QuotaKey.ReportExports, 3);
+        second.SetFreePrice();
+        second.SetMonthlyTerms(BillingCalendar.Gregorian, "unit-test-terms", null, null);
         second.Publish(NowUtc.AddMinutes(3));
 
         Assert.True(Assert.Single(first.Entitlements).Enabled);
@@ -235,9 +239,10 @@ public sealed class CommerceDomainTests
     }
 
     [Fact]
-    public void OnlyReportExportsUsesLedgerAccountingInThisStep()
+    public void PeriodicReportAndAiKeysUseLedgerAccounting()
     {
         Assert.True(CommercePolicy.IsLedgerMetered(QuotaKey.ReportExports));
+        Assert.True(CommercePolicy.IsLedgerMetered(QuotaKey.AiTextRequests));
         Assert.False(CommercePolicy.IsLedgerMetered(QuotaKey.ActiveLearners));
         Assert.Equal(
             QuotaUsageSource.AuthoritativeModule,
@@ -247,7 +252,11 @@ public sealed class CommerceDomainTests
     private static PlanVersion CreateDraftVersion(int number)
     {
         var plan = Plan.Create($"plan.{Guid.NewGuid():N}", "پلن تست", NowUtc);
-        return PlanVersion.CreateDraft(plan.Id, number, NowUtc);
+        var version = PlanVersion.CreateDraft(plan.Id, number, NowUtc);
+        version.SetMonthlyTerms(BillingCalendar.Gregorian, "unit-test-terms", null, null);
+        version.SetFreePrice();
+        version.SetEntitlement(EntitlementKey.Messaging, false);
+        return version;
     }
 
     private static PlanVersion CreatePublishedVersion()

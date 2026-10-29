@@ -53,7 +53,12 @@ public sealed record CommerceSubscriptionSnapshot(
     DateTime? EndsAtUtc,
     bool IsEffective,
     IReadOnlyDictionary<EntitlementKey, bool> Entitlements,
-    IReadOnlyDictionary<QuotaKey, long?> Quotas);
+    IReadOnlyDictionary<QuotaKey, long?> Quotas,
+    IReadOnlyDictionary<QuotaKey, long>? Reservations = null)
+{
+    public bool CommercialControlEnabled { get; init; }
+    public DateTime? CommercialEnforcementFromUtc { get; init; }
+}
 
 public enum UsageRecordStoreStatus
 {

@@ -59,7 +59,8 @@ public sealed class PlatformCommerceOperationsService(
         ValidateReason(command.Reason);
         var entitlements = command.Entitlements ?? [];
         var quotas = command.Quotas ?? [];
-        if (command.PriceAmount <= 0 || decimal.Round(command.PriceAmount, 2) != command.PriceAmount ||
+        if (command.PriceAmount.HasValue && (command.PriceAmount < 0 || decimal.Round(command.PriceAmount.Value, 2) != command.PriceAmount
+                || command.PriceAmount == 0 && !command.ExplicitlyFree) ||
             command.Currency != CurrencyCode.Irr ||
             entitlements.Any(item => !Enum.IsDefined(item.Key)) ||
             quotas.Any(item => !Enum.IsDefined(item.Key) || item.Limit < 0) ||

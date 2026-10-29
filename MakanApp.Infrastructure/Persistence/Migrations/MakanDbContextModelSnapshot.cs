@@ -417,6 +417,135 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ArchivedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HostUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostUserId", "ClientOperationId")
+                        .IsUnique();
+
+                    b.ToTable("PersonalClasses", "academic");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClassInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AcceptedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DestinationUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PersonalClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DestinationUserId");
+
+                    b.HasIndex("PersonalClassId", "ClientOperationId")
+                        .IsUnique();
+
+                    b.ToTable("PersonalClassInvitations", "academic", t =>
+                        {
+                            t.HasCheckConstraint("CK_PersonalClassInvitations_Expiry", "[ExpiresAtUtc]>[CreatedAtUtc]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClassParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("EndedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("InvitationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PersonalClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitationId")
+                        .IsUnique();
+
+                    b.HasIndex("StudentUserId");
+
+                    b.HasIndex("PersonalClassId", "StudentUserId")
+                        .IsUnique()
+                        .HasFilter("[EndedAtUtc] IS NULL");
+
+                    b.HasIndex("PersonalClassId", "StudentUserId", "InvitationId");
+
+                    b.ToTable("PersonalClassParticipants", "academic", t =>
+                        {
+                            t.HasCheckConstraint("CK_PersonalClassParticipants_End", "[EndedAtUtc] IS NULL OR [EndedAtUtc]>=[JoinedAtUtc]");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Academic.ScheduleRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1827,6 +1956,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("BillingAnchorUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("BillingPeriodIndex")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CancelledAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -1840,6 +1975,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("char(3)");
 
+                    b.Property<Guid?>("ExpectedPreviousPlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("HasCommercialTerms")
+                        .HasColumnType("bit");
+
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1851,6 +1992,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("PurchaserUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RequestPayloadHash")
                         .IsRequired()
@@ -1865,9 +2009,19 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("TargetSubscriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TermsExpireAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ExpectedPreviousPlanVersionId");
+
                     b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("TargetSubscriptionId");
 
                     b.HasIndex("PurchaserUserId", "ClientOperationId")
                         .IsUnique()
@@ -1881,7 +2035,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("Orders", "commerce", t =>
                         {
-                            t.HasCheckConstraint("CK_Orders_Amount", "[Amount] > 0");
+                            t.HasCheckConstraint("CK_Orders_Amount", "[Amount] >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_CommercialPurpose", "[Purpose] BETWEEN 1 AND 3 AND ([HasCommercialTerms]=0 OR ([BillingAnchorUtc] IS NOT NULL AND [TermsExpireAtUtc]>[CreatedAtUtc]))");
 
                             t.HasCheckConstraint("CK_Orders_Currency", "[Currency] = 'IRR'");
 
@@ -2050,6 +2206,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Audience")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AvailabilityEffectiveAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<bool>("CatalogVisible")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2063,6 +2228,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool>("NewPurchaseAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RenewalAvailable")
+                        .HasColumnType("bit");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -2075,7 +2246,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_Plans_Code");
 
-                    b.ToTable("Plans", "commerce");
+                    b.ToTable("Plans", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_Plans_Audience", "[Audience] IN (1,2)");
+                        });
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.PlanEntitlement", b =>
@@ -2107,7 +2281,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("PlanEntitlements", "commerce", t =>
                         {
-                            t.HasCheckConstraint("CK_PlanEntitlements_Key", "[Key] BETWEEN 1 AND 6");
+                            t.HasCheckConstraint("CK_PlanEntitlements_Key", "[Key] BETWEEN 1 AND 9");
                         });
                 });
 
@@ -2140,7 +2314,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("PlanQuotaDefinitions", "commerce", t =>
                         {
-                            t.HasCheckConstraint("CK_PlanQuotaDefinitions_Key", "[Key] BETWEEN 1 AND 4");
+                            t.HasCheckConstraint("CK_PlanQuotaDefinitions_Key", "[Key] BETWEEN 1 AND 7");
 
                             t.HasCheckConstraint("CK_PlanQuotaDefinitions_Limit", "[Limit] IS NULL OR [Limit] >= 0");
                         });
@@ -2152,8 +2326,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("Calendar")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
+
+                    b.Property<int?>("CriticalWarningPercent")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ExplicitlyFree")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("PlanId")
                         .HasColumnType("uniqueidentifier");
@@ -2167,10 +2350,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("SaleTermsReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<int>("VersionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WarningPercent")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -2181,11 +2371,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("PlanVersions", "commerce", t =>
                         {
+                            t.HasCheckConstraint("CK_PlanVersions_Calendar", "[Calendar] IS NULL OR [Calendar] IN (1,2)");
+
                             t.HasCheckConstraint("CK_PlanVersions_Publication", "([Status] = 1 AND [PublishedAtUtc] IS NULL) OR ([Status] = 2 AND [PublishedAtUtc] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_PlanVersions_Status", "[Status] IN (1, 2)");
 
                             t.HasCheckConstraint("CK_PlanVersions_VersionNumber", "[VersionNumber] > 0");
+
+                            t.HasCheckConstraint("CK_PlanVersions_Warnings", "([WarningPercent] IS NULL OR [WarningPercent] BETWEEN 1 AND 99) AND ([CriticalWarningPercent] IS NULL OR [CriticalWarningPercent] BETWEEN 1 AND 99) AND ([WarningPercent] IS NULL OR [CriticalWarningPercent] IS NULL OR [WarningPercent]<[CriticalWarningPercent])");
                         });
                 });
 
@@ -2212,7 +2406,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("PlanVersionPrices", "commerce", t =>
                         {
-                            t.HasCheckConstraint("CK_PlanVersionPrices_Amount", "[Amount] > 0");
+                            t.HasCheckConstraint("CK_PlanVersionPrices_Amount", "[Amount] >= 0");
 
                             t.HasCheckConstraint("CK_PlanVersionPrices_Currency", "[Currency] = 'IRR'");
                         });
@@ -2227,8 +2421,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("ActivatedAtUtc")
                         .HasColumnType("datetime2(7)");
 
+                    b.Property<DateTime?>("BillingAnchorUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("BillingPeriodIndex")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CancelledAtUtc")
                         .HasColumnType("datetime2(7)");
+
+                    b.Property<bool>("CommercialControlEnabled")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
@@ -2236,7 +2439,19 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("EndsAtUtc")
                         .HasColumnType("datetime2(7)");
 
-                    b.Property<Guid>("OrganizationId")
+                    b.Property<Guid>("InitialPlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OwnerType")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("OwnerUserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PlanVersionId")
@@ -2247,6 +2462,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("ScheduledPlanVersionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("SourceOrderId")
                         .HasColumnType("uniqueidentifier");
@@ -2259,15 +2477,23 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("OrganizationId", "Id")
-                        .HasName("UQ_Subscriptions_Organization_Id");
+                    b.HasAlternateKey("OwnerType", "OwnerId", "Id")
+                        .HasName("UQ_Subscriptions_Owner_Id");
+
+                    b.HasIndex("InitialPlanVersionId");
 
                     b.HasIndex("OrganizationId")
                         .IsUnique()
                         .HasDatabaseName("UX_Subscriptions_Organization_Active")
-                        .HasFilter("[Status] = 2");
+                        .HasFilter("[Status] = 2 AND [OrganizationId] IS NOT NULL");
+
+                    b.HasIndex("OwnerUserId")
+                        .IsUnique()
+                        .HasFilter("[Status]=2 AND [OwnerUserId] IS NOT NULL");
 
                     b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("ScheduledPlanVersionId");
 
                     b.HasIndex("SourceOrderId")
                         .IsUnique()
@@ -2277,13 +2503,68 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("OrganizationId", "CreatedAtUtc")
                         .HasDatabaseName("IX_Subscriptions_Organization_CreatedAt");
 
+                    b.HasIndex("OwnerType", "OwnerId", "StartsAtUtc")
+                        .HasDatabaseName("IX_Subscriptions_Owner_Period");
+
                     b.ToTable("Subscriptions", "commerce", t =>
                         {
                             t.HasCheckConstraint("CK_Subscriptions_Cancellation", "([Status] = 4 AND [CancelledAtUtc] IS NOT NULL) OR ([Status] <> 4 AND [CancelledAtUtc] IS NULL)");
 
                             t.HasCheckConstraint("CK_Subscriptions_Dates", "[EndsAtUtc] IS NULL OR [EndsAtUtc] > [StartsAtUtc]");
 
-                            t.HasCheckConstraint("CK_Subscriptions_Status", "[Status] BETWEEN 1 AND 4");
+                            t.HasCheckConstraint("CK_Subscriptions_ManagedPeriod", "[CommercialControlEnabled]=0 OR ([BillingAnchorUtc] IS NOT NULL AND [EndsAtUtc] IS NOT NULL AND [BillingPeriodIndex]>=0)");
+
+                            t.HasCheckConstraint("CK_Subscriptions_Owner", "([OwnerType]=1 AND [OwnerUserId]=[OwnerId] AND [OwnerUserId] IS NOT NULL AND [OrganizationId] IS NULL) OR ([OwnerType]=2 AND [OrganizationId]=[OwnerId] AND [OrganizationId] IS NOT NULL AND [OwnerUserId] IS NULL)");
+
+                            t.HasCheckConstraint("CK_Subscriptions_Status", "[Status] BETWEEN 1 AND 5");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SubscriptionAmendment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ChargedToman")
+                        .HasPrecision(18)
+                        .HasColumnType("decimal(18,0)");
+
+                    b.Property<long>("DurationTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("EffectiveAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("NextPlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PreviousPlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("RemainingTicks")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NextPlanVersionId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("PreviousPlanVersionId");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("SubscriptionAmendments", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_SubscriptionAmendments_Proration", "[DurationTicks]>0 AND [RemainingTicks]>=0 AND [RemainingTicks]<=[DurationTicks] AND [ChargedToman]>=0");
                         });
                 });
 
@@ -2296,35 +2577,175 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<long>("Amount")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid?>("ConsumerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ContextId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ContextType")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("datetime2(7)");
 
-                    b.Property<Guid>("OrganizationId")
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OwnerType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PeriodEndsAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<DateTime?>("PeriodStartsAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("PlanVersionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("QuotaKey")
                         .HasColumnType("int");
 
+                    b.Property<string>("ReasonCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("ReservationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("SourceOperationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SubscriptionId")
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SubscriptionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConsumerUserId");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("ReservationId", "Status")
+                        .IsUnique()
+                        .HasFilter("[ReservationId] IS NOT NULL");
+
+                    b.HasIndex("OwnerType", "OwnerId", "SubscriptionId");
+
                     b.HasIndex("SubscriptionId", "QuotaKey", "SourceOperationId")
                         .IsUnique()
-                        .HasDatabaseName("UX_UsageLedger_Subscription_Quota_SourceOperation");
+                        .HasDatabaseName("UX_UsageLedger_Subscription_Quota_SourceOperation")
+                        .HasFilter("[Status]=2 AND [SubscriptionId] IS NOT NULL");
 
                     b.HasIndex("OrganizationId", "SubscriptionId", "QuotaKey", "OccurredAtUtc")
                         .HasDatabaseName("IX_UsageLedger_Organization_Subscription_Quota_OccurredAt");
+
+                    b.HasIndex("OwnerType", "OwnerId", "ConsumerUserId", "ReservationId");
 
                     b.ToTable("UsageLedger", "commerce", t =>
                         {
                             t.HasCheckConstraint("CK_UsageLedger_Amount", "[Amount] > 0");
 
-                            t.HasCheckConstraint("CK_UsageLedger_QuotaKey", "[QuotaKey] BETWEEN 1 AND 4");
+                            t.HasCheckConstraint("CK_UsageLedger_Owner", "([OwnerType]=1 AND [OrganizationId] IS NULL) OR ([OwnerType]=2 AND [OrganizationId]=[OwnerId] AND [OrganizationId] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_UsageLedger_QuotaKey", "[QuotaKey] BETWEEN 1 AND 7");
+
+                            t.HasCheckConstraint("CK_UsageLedger_Reservation", "[ReservationId] IS NULL OR ([ConsumerUserId] IS NOT NULL AND [ContextType] IS NOT NULL AND [ContextId] IS NOT NULL AND [PeriodStartsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc])");
+
+                            t.HasCheckConstraint("CK_UsageLedger_Status", "[Status] BETWEEN 1 AND 4");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.UsageReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ConsumerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ContextId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("ContextType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FinalizationReason")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("FinalizedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsTrial")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OwnerType")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("PayloadHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<DateTime>("PeriodEndsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PeriodStartsAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("QuotaKey")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SubscriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("ConsumerUserId", "OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerType", "OwnerId", "SubscriptionId", "QuotaKey", "PeriodStartsAtUtc", "Status");
+
+                    b.ToTable("UsageReservations", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_UsageReservations_Finalization", "([Status] IN (1,4) AND [FinalizedAtUtc] IS NULL) OR ([Status] IN (2,3) AND [FinalizedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_UsageReservations_Trial", "([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_UsageReservations_Values", "[Amount]>0 AND [Status] BETWEEN 1 AND 4 AND [OwnerType] IN (1,2) AND [ContextType] BETWEEN 1 AND 3 AND [QuotaKey] BETWEEN 1 AND 7 AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc]");
                         });
                 });
 
@@ -6315,6 +6736,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ClassId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CommerceReservationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CommercialOwnerType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
+
                     b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -6362,6 +6794,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("ReportType")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RequestPayloadHash")
+                        .HasColumnType("binary(32)");
+
                     b.Property<DateTime>("RequestedAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -6406,11 +6841,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UX_ReportExportJobs_OutputFileAsset")
                         .HasFilter("[OutputFileAssetId] IS NOT NULL");
 
+                    b.HasIndex("RequestedByUserId", "ClientOperationId")
+                        .IsUnique()
+                        .HasFilter("[ClientOperationId] IS NOT NULL");
+
                     b.HasIndex("RequestedByUserId", "OrganizationId", "RequestedAtUtc")
                         .HasDatabaseName("IX_ReportExportJobs_Owner_Organization_Requested");
 
                     b.HasIndex("Status", "NextAttemptAtUtc", "RequestedAtUtc")
                         .HasDatabaseName("IX_ReportExportJobs_Status_NextAttempt_Requested");
+
+                    b.HasIndex("CommercialOwnerType", "OrganizationId", "RequestedByUserId", "CommerceReservationId");
 
                     b.ToTable("ReportExportJobs", "reports", t =>
                         {
@@ -6419,6 +6860,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_ReportExportJobs_AttemptCount", "[AttemptCount] >= 0");
 
                             t.HasCheckConstraint("CK_ReportExportJobs_Audience", "[Audience] IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_CommercialOwner", "[CommercialOwnerType]=2");
 
                             t.HasCheckConstraint("CK_ReportExportJobs_CompletedState", "([Status] = 3 AND [CompletedAtUtc] IS NOT NULL AND [OutputFileAssetId] IS NOT NULL AND [FailureCode] IS NULL) OR [Status] <> 3");
 
@@ -6431,6 +6874,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_ReportExportJobs_FailedState", "([Status] = 4 AND [FailedAtUtc] IS NOT NULL AND [FailureCode] IS NOT NULL AND [OutputFileAssetId] IS NULL) OR [Status] <> 4");
 
                             t.HasCheckConstraint("CK_ReportExportJobs_Format", "[Format] = 1");
+
+                            t.HasCheckConstraint("CK_ReportExportJobs_Idempotency", "([ClientOperationId] IS NULL AND [RequestPayloadHash] IS NULL) OR ([ClientOperationId] IS NOT NULL AND [RequestPayloadHash] IS NOT NULL AND DATALENGTH([RequestPayloadHash])=32)");
 
                             t.HasCheckConstraint("CK_ReportExportJobs_ProcessingLease", "([Status] = 2 AND [LeaseExpiresAtUtc] IS NOT NULL) OR [Status] <> 2");
 
@@ -6770,6 +7215,46 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationId", "LearnerOrganizationPersonId")
                         .HasPrincipalKey("OrganizationId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClass", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("HostUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClassInvitation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("DestinationUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Academic.PersonalClass", null)
+                        .WithMany()
+                        .HasForeignKey("PersonalClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Academic.PersonalClassParticipant", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("StudentUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Academic.PersonalClassInvitation", null)
+                        .WithMany()
+                        .HasForeignKey("PersonalClassId", "StudentUserId", "InvitationId")
+                        .HasPrincipalKey("PersonalClassId", "DestinationUserId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -7176,6 +7661,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.Order", b =>
                 {
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("ExpectedPreviousPlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
@@ -7192,6 +7682,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PurchaserUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("TargetSubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.Payment", b =>
@@ -7256,11 +7751,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.Subscription", b =>
                 {
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("InitialPlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
                         .WithMany()
@@ -7268,20 +7773,87 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("ScheduledPlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Commerce.Order", null)
                         .WithMany()
                         .HasForeignKey("SourceOrderId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("MakanApp.Domain.Commerce.UsageLedgerEntry", b =>
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SubscriptionAmendment", b =>
                 {
-                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
                         .WithMany()
-                        .HasForeignKey("OrganizationId", "SubscriptionId")
-                        .HasPrincipalKey("OrganizationId", "Id")
+                        .HasForeignKey("NextPlanVersionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.Order", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PreviousPlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.UsageLedgerEntry", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ConsumerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerType", "OwnerId", "SubscriptionId")
+                        .HasPrincipalKey("OwnerType", "OwnerId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.UsageReservation", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerType", "OwnerId", "ConsumerUserId", "ReservationId")
+                        .HasPrincipalKey("OwnerType", "OwnerId", "ConsumerUserId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.UsageReservation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ConsumerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerType", "OwnerId", "SubscriptionId")
+                        .HasPrincipalKey("OwnerType", "OwnerId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Guardian.GuardianRelation", b =>
@@ -8392,6 +8964,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("RequestedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.UsageReservation", null)
+                        .WithMany()
+                        .HasForeignKey("CommercialOwnerType", "OrganizationId", "RequestedByUserId", "CommerceReservationId")
+                        .HasPrincipalKey("OwnerType", "OwnerId", "ConsumerUserId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Storage.FileAsset", b =>

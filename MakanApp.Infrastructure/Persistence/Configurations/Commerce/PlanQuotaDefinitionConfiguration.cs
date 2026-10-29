@@ -10,7 +10,7 @@ public sealed class PlanQuotaDefinitionConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("PlanQuotaDefinitions", "commerce", table =>
         {
-            table.HasCheckConstraint("CK_PlanQuotaDefinitions_Key", "[Key] BETWEEN 1 AND 4");
+            table.HasCheckConstraint("CK_PlanQuotaDefinitions_Key", "[Key] BETWEEN 1 AND 7");
             table.HasCheckConstraint("CK_PlanQuotaDefinitions_Limit", "[Limit] IS NULL OR [Limit] >= 0");
         });
         builder.HasKey(item => item.Id);

@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Commerce;
 
-public sealed class Plan
+public sealed partial class Plan
 {
     public const int MaximumCodeLength = 100;
     public const int MaximumDisplayNameLength = 200;
@@ -23,7 +23,7 @@ public sealed class Plan
     public DateTime CreatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
-    public static Plan Create(string code, string displayName, DateTime createdAtUtc)
+    public static Plan Create(string code, string displayName, DateTime createdAtUtc, SubscriptionOwnerType audience = SubscriptionOwnerType.Organization)
     {
         var normalizedCode = code?.Trim();
         var normalizedDisplayName = displayName?.Trim();
@@ -42,7 +42,8 @@ public sealed class Plan
         }
 
         EnsureUtc(createdAtUtc, nameof(createdAtUtc));
-        return new Plan(Guid.NewGuid(), normalizedCode, normalizedDisplayName, createdAtUtc);
+        if (!Enum.IsDefined(audience)) throw new ArgumentOutOfRangeException(nameof(audience));
+        return new Plan(Guid.NewGuid(), normalizedCode, normalizedDisplayName, createdAtUtc) { Audience = audience };
     }
 
     private static void EnsureUtc(DateTime value, string parameterName)

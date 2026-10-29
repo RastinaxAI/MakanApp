@@ -4,7 +4,9 @@ namespace MakanApp.Application.Commerce;
 
 public sealed record CreateOrderCommand(
     Guid PlanVersionId,
-    Guid ClientOperationId);
+    Guid ClientOperationId,
+    CommercialOrderPurpose Purpose = CommercialOrderPurpose.Purchase,
+    Guid? SubscriptionId = null);
 
 public sealed record InitiatePaymentCommand(Guid ClientOperationId);
 
@@ -41,7 +43,11 @@ public sealed record OrderDto(
     DateTime CreatedAtUtc,
     DateTime? PaidAtUtc,
     OrderFulfillmentState FulfillmentState,
-    IReadOnlyCollection<PaymentAttemptDto> PaymentAttempts);
+    IReadOnlyCollection<PaymentAttemptDto> PaymentAttempts)
+{
+    public decimal PriceToman => Amount / 10m;
+    public string DisplayCurrency => "TOMAN";
+}
 
 public sealed record CreateOrderResult(OrderDto Order, bool Replayed);
 
@@ -59,7 +65,11 @@ public sealed record OrderListItemDto(
     DateTime CreatedAtUtc,
     DateTime? PaidAtUtc,
     OrderFulfillmentState FulfillmentState,
-    PaymentAttemptStatus? LatestPaymentStatus);
+    PaymentAttemptStatus? LatestPaymentStatus)
+{
+    public decimal PriceToman => Amount / 10m;
+    public string DisplayCurrency => "TOMAN";
+}
 
 public sealed record OrderListResult(IReadOnlyCollection<OrderListItemDto> Items);
 

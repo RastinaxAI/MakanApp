@@ -1,6 +1,7 @@
 ﻿[CmdletBinding()]
 param(
     [string]$OutputPath = '.artifacts/deployment/migrations-idempotent-safe.sql',
+    [string]$FromMigration = '0',
     [string]$ToMigration,
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Debug',
@@ -14,6 +15,9 @@ $migrations = @(Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'MakanApp.
     Select-Object -ExpandProperty BaseName | Sort-Object)
 if ([string]::IsNullOrWhiteSpace($ToMigration)) { $ToMigration = $migrations[-1] }
 if ($ToMigration -notin $migrations) { throw 'Migration مقصد باید یکی از شناسه‌های نسخه‌بندی‌شده باشد.' }
+if ($FromMigration -ne '0' -and ($FromMigration -notin $migrations -or $FromMigration -ge $ToMigration)) {
+    throw 'Migration مبدأ باید صفر یا شناسهٔ معتبر قبل از مقصد باشد.'
+}
 if (-not [IO.Path]::IsPathRooted($OutputPath)) { $OutputPath = Join-Path $repositoryRoot $OutputPath }
 $OutputPath = [IO.Path]::GetFullPath($OutputPath)
 if (-not $OutputPath.StartsWith($repositoryRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
@@ -27,7 +31,7 @@ function ConvertTo-SqlLiteral([string]$Value) { return "N'" + $Value.Replace("'"
 
 Push-Location $repositoryRoot
 try {
-    $efArguments = @('ef', 'migrations', 'script', '0', $ToMigration, '--idempotent',
+    $efArguments = @('ef', 'migrations', 'script', $FromMigration, $ToMigration, '--idempotent',
         '--project', 'MakanApp.Infrastructure', '--startup-project', 'MakanApp.Infrastructure',
         '--context', 'MakanDbContext', '--configuration', $Configuration, '--output', $rawPath)
     if ($NoBuild) { $efArguments += '--no-build' }
@@ -52,7 +56,7 @@ try {
     })
     $migrationIds = @([regex]::Matches($rawSql, "VALUES \(N'(\d{14}_[^']+)', N'[0-9.]+'\)") |
         ForEach-Object { $_.Groups[1].Value })
-    $expectedIds = @($migrations | Where-Object { $_ -le $ToMigration })
+    $expectedIds = @($migrations | Where-Object { $_ -gt $FromMigration -and $_ -le $ToMigration })
     if (@(Compare-Object $expectedIds $migrationIds).Count -ne 0) { throw 'فهرست Migrationهای SQL با کد تطابق ندارد.' }
 
     # فایل نهایی یک batch است؛ خطا، ادامه مراحل بعدی را متوقف و تراکنش همین فایل را rollback می‌کند.
@@ -61,6 +65,7 @@ try {
     [void]$script.AppendLine('-- پیش از اجرا: Backup، دیتابیس صحیح، بازبینی history و یک پنجره تازه SSMS.')
     [void]$script.AppendLine('-- فایل را کامل اجرا کنید؛ اتصال یا Migration روی سرور توسط ابزار تولید انجام نمی‌شود.')
     [void]$script.AppendLine("-- آخرین Migration: $ToMigration")
+    [void]$script.AppendLine("-- مبدأ: $FromMigration؛ پیش‌نیازهای مبدأ باید قبلاً اعمال شده باشند.")
     [void]$script.AppendLine(@'
 IF @@TRANCOUNT <> 0 OR XACT_STATE() <> 0
 BEGIN
@@ -90,6 +95,7 @@ SELECT DB_NAME() AS DatabaseName, @@TRANCOUNT AS OpenTransactions, XACT_STATE() 
         Output = $OutputPath
         RawEfOutput = $rawPath
         MigrationCount = $migrationIds.Count
+        FromMigration = $FromMigration
         LastMigration = $ToMigration
         DeferredOperations = $guards.Count
         DatabaseExecuted = $false

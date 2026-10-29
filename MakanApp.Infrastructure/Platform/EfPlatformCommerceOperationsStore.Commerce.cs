@@ -37,7 +37,9 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 _dbContext.PlanVersions
                     .Where(version => version.PlanId == plan.Id && version.Status == PlanVersionStatus.Published)
                     .Max(version => (int?)version.VersionNumber),
-                plan.CreatedAtUtc))
+                plan.CreatedAtUtc) { Audience = plan.Audience, CatalogVisible = plan.CatalogVisible,
+                    NewPurchaseAvailable = plan.NewPurchaseAvailable, RenewalAvailable = plan.RenewalAvailable,
+                    Version = Convert.ToBase64String(plan.RowVersion) })
             .ToArrayAsync(cancellationToken);
         return new PlatformPlanPage(items, query.Page, query.PageSize, totalCount);
     }
@@ -103,7 +105,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 subscriptionCounts.GetValueOrDefault(version.Id),
                 version.CreatedAtUtc,
                 version.PublishedAtUtc,
-                Convert.ToBase64String(version.RowVersion));
+                Convert.ToBase64String(version.RowVersion)) { Calendar = version.Calendar, SaleTermsReference = version.SaleTermsReference,
+                    WarningPercent = version.WarningPercent, CriticalWarningPercent = version.CriticalWarningPercent };
         }).ToArray();
 
         return new PlatformPlanDetail(
@@ -112,7 +115,9 @@ public sealed partial class EfPlatformCommerceOperationsStore
             plan.DisplayName,
             plan.CreatedAtUtc,
             mapped,
-            versionsTruncated);
+            versionsTruncated) { Audience = plan.Audience, CatalogVisible = plan.CatalogVisible,
+                NewPurchaseAvailable = plan.NewPurchaseAvailable, RenewalAvailable = plan.RenewalAvailable,
+                Version = Convert.ToBase64String(plan.RowVersion) };
     }
 
     public async Task<PlatformPlanDetail> CreatePlanAsync(
@@ -123,7 +128,7 @@ public sealed partial class EfPlatformCommerceOperationsStore
         Plan plan;
         try
         {
-            plan = Plan.Create(command.Code, command.DisplayName, actor.OccurredAtUtc);
+            plan = Plan.Create(command.Code, command.DisplayName, actor.OccurredAtUtc, command.Audience);
         }
         catch (ArgumentException)
         {
@@ -162,7 +167,10 @@ public sealed partial class EfPlatformCommerceOperationsStore
         try
         {
             version = PlanVersion.CreateDraft(plan.Id, versionNumber, actor.OccurredAtUtc);
-            version.SetPrice(command.PriceAmount, command.Currency);
+            if (command.ExplicitlyFree) version.SetFreePrice();
+            else if (command.PriceAmount.HasValue) version.SetPrice(command.PriceAmount.Value, command.Currency);
+            if (command.Calendar.HasValue) version.SetMonthlyTerms(command.Calendar.Value, command.SaleTermsReference ?? string.Empty,
+                command.WarningPercent, command.CriticalWarningPercent);
             foreach (var entitlement in command.Entitlements)
             {
                 version.SetEntitlement(entitlement.Key, entitlement.Enabled);
@@ -206,9 +214,13 @@ public sealed partial class EfPlatformCommerceOperationsStore
             .FromSqlInterpolated($"SELECT * FROM [commerce].[PlanVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {planVersionId}")
             .SingleOrDefaultAsync(cancellationToken) ?? throw PlanNotFound();
         EnsureVersion(version, expectedVersion);
+        await _dbContext.Entry(version).Reference(v => v.Price).LoadAsync(cancellationToken);
+        await _dbContext.Entry(version).Collection(v => v.Entitlements).LoadAsync(cancellationToken);
+        await _dbContext.Entry(version).Collection(v => v.QuotaDefinitions).LoadAsync(cancellationToken);
         try
         {
-            version.Publish(actor.OccurredAtUtc);
+            var audience = await _dbContext.Plans.Where(p => p.Id == version.PlanId).Select(p => p.Audience).SingleAsync(cancellationToken);
+            version.Publish(actor.OccurredAtUtc, audience);
         }
         catch (InvalidOperationException)
         {
@@ -311,9 +323,9 @@ public sealed partial class EfPlatformCommerceOperationsStore
         var subscriptionIds = rows.Select(item => item.SubscriptionId).ToArray();
         var reportExports = requiredKeys.Contains(QuotaKey.ReportExports)
             ? await _dbContext.UsageLedgerEntries.AsNoTracking()
-                .Where(item => subscriptionIds.Contains(item.SubscriptionId) &&
-                               item.QuotaKey == QuotaKey.ReportExports)
-                .GroupBy(item => item.SubscriptionId)
+                .Where(item => item.SubscriptionId.HasValue && subscriptionIds.Contains(item.SubscriptionId.Value) &&
+                               item.QuotaKey == QuotaKey.ReportExports && item.Status == UsageReservationStatus.Consumed)
+                .GroupBy(item => item.SubscriptionId!.Value)
                 .Select(group => new { SubscriptionId = group.Key, Usage = group.Sum(item => item.Amount) })
                 .ToDictionaryAsync(item => item.SubscriptionId, item => item.Usage, cancellationToken)
             : [];
@@ -355,6 +367,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        if (await _dbContext.Subscriptions.AnyAsync(s => s.OrganizationId == organizationId && s.CommercialControlEnabled, cancellationToken))
+            throw SubscriptionConflict();
         var organizationExists = await _dbContext.Organizations
             .FromSqlInterpolated($"SELECT * FROM [organization].[Organizations] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {organizationId}")
             .AnyAsync(cancellationToken);
@@ -439,7 +453,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
             subscriptions,
             version.CreatedAtUtc,
             version.PublishedAtUtc,
-            Convert.ToBase64String(version.RowVersion));
+            Convert.ToBase64String(version.RowVersion)) { Calendar = version.Calendar, SaleTermsReference = version.SaleTermsReference,
+                WarningPercent = version.WarningPercent, CriticalWarningPercent = version.CriticalWarningPercent };
     }
 
     private async Task<PlatformSubscriptionItem> MapSubscriptionAsync(
@@ -459,7 +474,7 @@ public sealed partial class EfPlatformCommerceOperationsStore
             .OrderBy(item => item.Key)
             .ToArrayAsync(cancellationToken);
         var usage = await _commerceStore.GetCurrentUsageAsync(
-            subscription.OrganizationId,
+            subscription.OrganizationId!.Value,
             subscription.Id,
             quotas.Select(item => item.Key).ToArray(),
             cancellationToken);

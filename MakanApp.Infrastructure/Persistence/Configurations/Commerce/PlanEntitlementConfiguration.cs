@@ -9,7 +9,7 @@ public sealed class PlanEntitlementConfiguration : IEntityTypeConfiguration<Plan
     public void Configure(EntityTypeBuilder<PlanEntitlement> builder)
     {
         builder.ToTable("PlanEntitlements", "commerce", table =>
-            table.HasCheckConstraint("CK_PlanEntitlements_Key", "[Key] BETWEEN 1 AND 6"));
+            table.HasCheckConstraint("CK_PlanEntitlements_Key", "[Key] BETWEEN 1 AND 9"));
         builder.HasKey(item => item.Id);
         builder.Property(item => item.RowVersion).IsRowVersion();
         builder.HasIndex(item => new { item.PlanVersionId, item.Key })

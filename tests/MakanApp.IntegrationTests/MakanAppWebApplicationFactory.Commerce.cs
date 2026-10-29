@@ -17,6 +17,7 @@ public sealed partial class MakanAppWebApplicationFactory
             displayName ?? $"Test Plan {Guid.NewGuid():N}",
             Clock.GetUtcNow().UtcDateTime.AddHours(-3));
         dbContext.Plans.Add(plan);
+        plan.SetAvailability(true, true, true, Clock.GetUtcNow().UtcDateTime.AddHours(-3));
         await dbContext.SaveChangesAsync();
         return plan.Id;
     }
@@ -33,7 +34,7 @@ public sealed partial class MakanAppWebApplicationFactory
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
         var nowUtc = Clock.GetUtcNow().UtcDateTime;
         var version = PlanVersion.CreateDraft(planId, versionNumber, nowUtc.AddHours(-2));
-        foreach (var entitlement in entitlements ?? new Dictionary<EntitlementKey, bool>())
+        foreach (var entitlement in entitlements ?? new Dictionary<EntitlementKey, bool> { [EntitlementKey.Messaging] = false })
         {
             version.SetEntitlement(entitlement.Key, entitlement.Value);
         }
@@ -43,10 +44,8 @@ public sealed partial class MakanAppWebApplicationFactory
             version.SetQuota(quota.Key, quota.Value);
         }
 
-        if (price.HasValue)
-        {
-            version.SetPrice(price.Value, currency);
-        }
+        version.SetPrice(price ?? 1_000_000m, currency);
+        version.SetMonthlyTerms(BillingCalendar.Gregorian, "integration-test-terms", null, null);
 
         version.Publish(nowUtc.AddHours(-1));
         dbContext.PlanVersions.Add(version);
@@ -187,8 +186,8 @@ public sealed partial class MakanAppWebApplicationFactory
                 entry.SourceOperationId == sourceOperationId)
             .Select(entry => new CommerceUsageRecord(
                 entry.Id,
-                entry.OrganizationId,
-                entry.SubscriptionId,
+                entry.OrganizationId!.Value,
+                entry.SubscriptionId!.Value,
                 entry.QuotaKey,
                 entry.Amount,
                 entry.SourceOperationId,

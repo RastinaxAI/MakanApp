@@ -128,6 +128,18 @@ public static class DependencyInjection
         services.AddScoped<IExamGradingStore, EfExamGradingStore>();
         services.AddScoped<IExamGradingService, ExamGradingService>();
         services.AddScoped<ICommerceStore, EfCommerceStore>();
+        services.AddScoped<EfCommercialStore>();
+        services.AddScoped<ICommercialStore>(p => p.GetRequiredService<EfCommercialStore>());
+        services.AddScoped<CommercialSubscriptionService>();
+        services.AddScoped<CommercialActorAccess>();
+        services.AddScoped<CommercialAdminService>();
+        services.AddScoped<ICommercialAdminStore, EfCommercialAdminStore>();
+        services.AddOptions<CommercialOptions>().Bind(configuration.GetSection("Commerce"))
+            .Validate(o => o.QuoteLifetimeMinutes is > 0 and <= 1440, "اعتبار پیش‌فاکتور معتبر نیست.").ValidateOnStart();
+        services.AddScoped<IPersonalClassStore, EfPersonalClassStore>();
+        services.AddScoped<PersonalClassService>();
+        services.AddOptions<PersonalClassOptions>().Bind(configuration.GetSection("PersonalClasses"))
+            .Validate(o => o.InvitationLifetimeHours is > 0 and <= 8760, "مدت اعتبار دعوت کلاس مستقل معتبر نیست.").ValidateOnStart();
         services.AddScoped<CommerceService>();
         services.AddScoped<ICommerceService>(serviceProvider =>
             serviceProvider.GetRequiredService<CommerceService>());

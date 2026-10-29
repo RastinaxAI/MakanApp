@@ -9,29 +9,36 @@ using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed class EfOrderPaymentStore(
+public sealed partial class EfOrderPaymentStore(
     MakanDbContext dbContext,
     IOutbox outbox,
+    EfCommercialStore commerce,
+    Microsoft.Extensions.Options.IOptions<CommercialOptions> commercialOptions,
     ILogger<EfOrderPaymentStore> logger) : IOrderPaymentStore
 {
     public async Task<CreateOrderStoreResult> CreateOrderAsync(
         Guid purchaserUserId,
-        Guid organizationId,
+        Guid? organizationId,
         Guid planVersionId,
         Guid clientOperationId,
         byte[] requestPayloadHash,
         DateTime createdAtUtc,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        CommercialOrderPurpose purpose = CommercialOrderPurpose.Purchase,
+        Guid? targetSubscriptionId = null)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+        await commerce.LockOwnerAsync(organizationId.HasValue ? SubscriptionOwner.Organization(organizationId.Value) : SubscriptionOwner.Individual(purchaserUserId), cancellationToken);
         var existing = await dbContext.Orders
             .FromSqlInterpolated($"SELECT * FROM [commerce].[Orders] WITH (UPDLOCK, HOLDLOCK) WHERE [PurchaserUserId] = {purchaserUserId} AND [ClientOperationId] = {clientOperationId}")
             .SingleOrDefaultAsync(cancellationToken);
         if (existing is not null)
         {
-            var matches = FixedEquals(existing.RequestPayloadHash, requestPayloadHash);
+            var matches = FixedEquals(existing.RequestPayloadHash, requestPayloadHash)
+                || !existing.HasCommercialTerms && purpose == CommercialOrderPurpose.Purchase && targetSubscriptionId is null
+                    && existing.PlanVersionId == planVersionId && existing.OrganizationId == organizationId;
             var snapshot = matches
                 ? await CreateSnapshotAsync(existing, cancellationToken)
                 : null;
@@ -42,7 +49,7 @@ public sealed class EfOrderPaymentStore(
         }
 
         var planVersion = await dbContext.PlanVersions
-            .Include(version => version.Price)
+            .Include(version => version.Price).Include(version => version.Entitlements).Include(version => version.QuotaDefinitions)
             .SingleOrDefaultAsync(version => version.Id == planVersionId, cancellationToken);
         if (planVersion is null || !planVersion.IsPublished || planVersion.Price is null)
         {
@@ -57,7 +64,13 @@ public sealed class EfOrderPaymentStore(
             clientOperationId,
             requestPayloadHash,
             createdAtUtc);
+        await SetCommercialOrderTermsAsync(order, planVersion, purpose, targetSubscriptionId, createdAtUtc, cancellationToken);
         dbContext.Orders.Add(order);
+        if (order.Amount == 0)
+        {
+            order.MarkPaid(createdAtUtc);
+            outbox.Enqueue(SubscriptionActivationOutboxContract.Create(order.Id, order.OrganizationId, order.PlanVersionId, createdAtUtc, order.PurchaserUserId));
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
         var created = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -70,28 +83,30 @@ public sealed class EfOrderPaymentStore(
     }
 
     public async Task<OrderPaymentSnapshot?> GetOrderAsync(
-        Guid organizationId,
+        Guid? organizationId,
         Guid orderId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null)
     {
         var order = await dbContext.Orders
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 item => item.Id == orderId &&
-                        item.OrganizationId == organizationId,
+                        item.OrganizationId == organizationId && (organizationId != null || item.PurchaserUserId == individualUserId),
                 cancellationToken);
         return order is null ? null : await CreateSnapshotAsync(order, cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<OrderPaymentSnapshot>> ListOrdersAsync(
-        Guid organizationId,
+        Guid? organizationId,
         int limit,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null)
     {
         var orders = await dbContext.Orders
             .AsNoTracking()
             .Where(order =>
-                order.OrganizationId == organizationId)
+                order.OrganizationId == organizationId && (organizationId != null || order.PurchaserUserId == individualUserId))
             .OrderByDescending(order => order.CreatedAtUtc)
             .ThenByDescending(order => order.Id)
             .Take(limit)
@@ -114,6 +129,8 @@ public sealed class EfOrderPaymentStore(
                 orderIds.Contains(subscription.SourceOrderId.Value))
             .Select(subscription => subscription.SourceOrderId!.Value)
             .ToHashSetAsync(cancellationToken);
+        activatedOrders.UnionWith(await dbContext.SubscriptionAmendments.Where(a => orderIds.Contains(a.OrderId))
+            .Select(a => a.OrderId).ToArrayAsync(cancellationToken));
 
         return orders.Select(order => MapOrder(
             order,
@@ -124,19 +141,20 @@ public sealed class EfOrderPaymentStore(
     }
 
     public async Task<CreatePaymentAttemptStoreResult> CreatePaymentAttemptAsync(
-        Guid organizationId,
+        Guid? organizationId,
         Guid orderId,
         string provider,
         Guid clientOperationId,
         byte[] requestPayloadHash,
         DateTime createdAtUtc,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? individualUserId = null)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
         var order = await dbContext.Orders
-            .FromSqlInterpolated($"SELECT * FROM [commerce].[Orders] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {orderId} AND [OrganizationId] = {organizationId}")
+            .FromSqlInterpolated($"SELECT * FROM [commerce].[Orders] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {orderId} AND (({organizationId} IS NOT NULL AND [OrganizationId] = {organizationId}) OR ({organizationId} IS NULL AND [OrganizationId] IS NULL AND [PurchaserUserId] = {individualUserId}))")
             .SingleOrDefaultAsync(cancellationToken);
         if (order is null)
         {
@@ -163,7 +181,7 @@ public sealed class EfOrderPaymentStore(
                 matches ? MapAttempt(existing, order) : null);
         }
 
-        if (order.Status != OrderStatus.PendingPayment)
+        if (order.Status != OrderStatus.PendingPayment || order.TermsExpireAtUtc.HasValue && createdAtUtc >= order.TermsExpireAtUtc.Value)
         {
             await transaction.CommitAsync(cancellationToken);
             return new CreatePaymentAttemptStoreResult(
@@ -462,7 +480,7 @@ public sealed class EfOrderPaymentStore(
         attempt.MarkSucceeded(providerResult.ProviderReference, verifiedAtUtc);
         order.MarkPaid(verifiedAtUtc);
         dbContext.Payments.Add(Payment.Create(attempt, verifiedAtUtc));
-        if (order.OrganizationId.HasValue)
+        if (order.OrganizationId.HasValue || order.HasCommercialTerms)
         {
             if (subscriptionActivationMessage is null)
             {
@@ -527,9 +545,10 @@ public sealed class EfOrderPaymentStore(
             .OrderBy(attempt => attempt.CreatedAtUtc)
             .ToArrayAsync(cancellationToken);
         var activated = order.Status == OrderStatus.Paid &&
-                        await dbContext.Subscriptions
+                        (await dbContext.Subscriptions
                             .AsNoTracking()
-                            .AnyAsync(subscription => subscription.SourceOrderId == order.Id, cancellationToken);
+                            .AnyAsync(subscription => subscription.SourceOrderId == order.Id, cancellationToken)
+                         || await dbContext.SubscriptionAmendments.AnyAsync(a => a.OrderId == order.Id, cancellationToken));
         return MapOrder(
             order,
             attempts.Select(attempt => MapAttempt(attempt, order)).ToArray(),
@@ -566,7 +585,8 @@ public sealed class EfOrderPaymentStore(
             attempt.ProviderReference,
             attempt.PaymentUrl,
             attempt.CreatedAtUtc,
-            attempt.CompletedAtUtc);
+            attempt.CompletedAtUtc,
+            order.PurchaserUserId);
 
     private static OrderFulfillmentState FulfillmentState(Order order, bool activated)
     {
@@ -575,7 +595,7 @@ public sealed class EfOrderPaymentStore(
             return OrderFulfillmentState.NotStarted;
         }
 
-        if (!order.OrganizationId.HasValue)
+        if (!order.OrganizationId.HasValue && !order.HasCommercialTerms)
         {
             return OrderFulfillmentState.ProvisioningPending;
         }

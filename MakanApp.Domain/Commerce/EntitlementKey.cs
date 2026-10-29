@@ -7,5 +7,8 @@ public enum EntitlementKey
     Exams = 3,
     Messaging = 4,
     Reports = 5,
-    Storage = 6
+    Storage = 6,
+    Ai = 7,
+    PersonalClassHosting = 8,
+    PersonalSources = 9
 }

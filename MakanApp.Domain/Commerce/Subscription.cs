@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Commerce;
 
-public sealed class Subscription
+public sealed partial class Subscription
 {
     private Subscription()
     {
@@ -35,6 +35,9 @@ public sealed class Subscription
 
         Id = id;
         OrganizationId = organizationId;
+        OwnerType = SubscriptionOwnerType.Organization;
+        OwnerId = organizationId;
+        InitialPlanVersionId = planVersionId;
         PlanVersionId = planVersionId;
         SourceOrderId = sourceOrderId;
         Status = SubscriptionStatus.Pending;
@@ -44,7 +47,7 @@ public sealed class Subscription
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
     public Guid PlanVersionId { get; private set; }
     public Guid? SourceOrderId { get; private set; }
     public SubscriptionStatus Status { get; private set; }
@@ -122,7 +125,7 @@ public sealed class Subscription
     public bool IsEffectiveAt(DateTime utcNow)
     {
         EnsureUtc(utcNow, nameof(utcNow));
-        return Status == SubscriptionStatus.Active &&
+        return (Status == SubscriptionStatus.Active || Status == SubscriptionStatus.Scheduled) &&
                StartsAtUtc <= utcNow &&
                (!EndsAtUtc.HasValue || utcNow < EndsAtUtc.Value);
     }

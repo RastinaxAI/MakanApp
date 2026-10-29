@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Persistence;
 
-public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
+public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, TimeProvider? timeProvider = null)
     : DbContext(options)
 {
     public DbSet<AcademicPeriod> AcademicPeriods => Set<AcademicPeriod>();
@@ -48,6 +48,11 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     public DbSet<ExamQuestionGrade> ExamQuestionGrades => Set<ExamQuestionGrade>();
     public DbSet<ExamGradeRelease> ExamGradeReleases => Set<ExamGradeRelease>();
     public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<PersonalClass> PersonalClasses => Set<PersonalClass>();
+    public DbSet<PersonalClassInvitation> PersonalClassInvitations => Set<PersonalClassInvitation>();
+    public DbSet<PersonalClassParticipant> PersonalClassParticipants => Set<PersonalClassParticipant>();
+    public DbSet<UsageReservation> UsageReservations => Set<UsageReservation>();
+    public DbSet<SubscriptionAmendment> SubscriptionAmendments => Set<SubscriptionAmendment>();
     public DbSet<PlanVersion> PlanVersions => Set<PlanVersion>();
     public DbSet<PlanEntitlement> PlanEntitlements => Set<PlanEntitlement>();
     public DbSet<PlanQuotaDefinition> PlanQuotaDefinitions => Set<PlanQuotaDefinition>();
@@ -131,24 +136,39 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MakanDbContext).Assembly);
+        // SQL Server نوع Kind را ذخیره نمی‌کند؛ مرز دامنهٔ قرارداد و رزرو همیشه UTC است.
+        var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+            value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+        foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType.Namespace == "MakanApp.Domain.Commerce"
+            || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
+            foreach (var property in entity.GetProperties().Where(p => (p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)) && p.Name.EndsWith("Utc", StringComparison.Ordinal)))
+                property.SetValueConverter(utcConverter);
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        EnsureAdminAuditIsAppendOnly();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        return SaveChangesAsync(acceptAllChangesOnSuccess).GetAwaiter().GetResult();
     }
 
-    public override Task<int> SaveChangesAsync(
+    public override async Task<int> SaveChangesAsync(
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
         EnsureAdminAuditIsAppendOnly();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var relevant = ChangeTracker.Entries().Any(MakanApp.Infrastructure.Commerce.CommercialWritePolicy.IsRelevant);
+        await using var transaction = relevant && Database.CurrentTransaction is null
+            ? await Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken) : null;
+        if (relevant) await MakanApp.Infrastructure.Commerce.CommercialWritePolicy.EnsureAsync(this,
+            (timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime, cancellationToken);
+        var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+        return result;
     }
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries().Any(e => e.Entity is UsageLedgerEntry or SubscriptionAmendment && e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("سابقهٔ مصرف و اصلاح قرارداد فقط قابل افزودن است.");
         if (ChangeTracker.Entries<CommunicationAgeVerification>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("شاهد تأیید سن فقط قابل افزودن است.");
         if (ChangeTracker.Entries<AdminAuditLog>().Any(entry =>

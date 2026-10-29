@@ -12,7 +12,14 @@ public sealed record PlatformPlanItem(
     string DisplayName,
     int VersionCount,
     int? LatestPublishedVersion,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc)
+{
+    public SubscriptionOwnerType Audience { get; init; }
+    public bool CatalogVisible { get; init; }
+    public bool NewPurchaseAvailable { get; init; }
+    public bool RenewalAvailable { get; init; }
+    public string Version { get; init; } = string.Empty;
+}
 
 public sealed record PlatformPlanPage(
     IReadOnlyCollection<PlatformPlanItem> Items,
@@ -21,7 +28,7 @@ public sealed record PlatformPlanPage(
     int TotalCount);
 
 public sealed record PlatformPlanEntitlementItem(EntitlementKey Key, bool Enabled);
-public sealed record PlatformPlanQuotaItem(QuotaKey Key, long? Limit);
+public sealed record PlatformPlanQuotaItem(QuotaKey Key, [property: System.Text.Json.Serialization.JsonRequired] long? Limit);
 
 public sealed record PlatformPlanVersionItem(
     Guid PlanVersionId,
@@ -34,7 +41,15 @@ public sealed record PlatformPlanVersionItem(
     int SubscriptionCount,
     DateTime CreatedAtUtc,
     DateTime? PublishedAtUtc,
-    string Version);
+    string Version)
+{
+    public BillingCalendar? Calendar { get; init; }
+    public string? SaleTermsReference { get; init; }
+    public int? WarningPercent { get; init; }
+    public int? CriticalWarningPercent { get; init; }
+    public decimal? PriceToman => PriceAmount / 10m;
+    public string DisplayCurrency => "TOMAN";
+}
 
 public sealed record PlatformPlanDetail(
     Guid PlanId,
@@ -42,16 +57,29 @@ public sealed record PlatformPlanDetail(
     string DisplayName,
     DateTime CreatedAtUtc,
     IReadOnlyCollection<PlatformPlanVersionItem> Versions,
-    bool VersionsTruncated);
+    bool VersionsTruncated)
+{
+    public SubscriptionOwnerType Audience { get; init; }
+    public bool CatalogVisible { get; init; }
+    public bool NewPurchaseAvailable { get; init; }
+    public bool RenewalAvailable { get; init; }
+    public string Version { get; init; } = string.Empty;
+}
 
-public sealed record CreatePlatformPlanCommand(string Code, string DisplayName, string Reason);
+public sealed record CreatePlatformPlanCommand(string Code, string DisplayName, string Reason,
+    SubscriptionOwnerType Audience = SubscriptionOwnerType.Organization);
 
 public sealed record CreatePlatformPlanVersionCommand(
-    decimal PriceAmount,
+    decimal? PriceAmount,
     CurrencyCode Currency,
     IReadOnlyCollection<PlatformPlanEntitlementItem> Entitlements,
     IReadOnlyCollection<PlatformPlanQuotaItem> Quotas,
-    string Reason);
+    string Reason,
+    BillingCalendar? Calendar = null,
+    string? SaleTermsReference = null,
+    int? WarningPercent = null,
+    int? CriticalWarningPercent = null,
+    bool ExplicitlyFree = false);
 
 public sealed record PublishPlatformPlanVersionCommand(string ExpectedVersion, string Reason);
 

@@ -37,7 +37,10 @@ public sealed record CommerceQuotaDto(
     long? Remaining,
     bool IsUnlimited,
     bool IsOverQuota,
-    QuotaUsageSource UsageSource);
+    QuotaUsageSource UsageSource)
+{
+    public long Reserved { get; init; }
+}
 
 public sealed record ManagerCommerceSummaryDto(
     Guid OrganizationId,
@@ -45,7 +48,14 @@ public sealed record ManagerCommerceSummaryDto(
     CommerceSubscriptionDto? Subscription,
     IReadOnlyCollection<CommerceEntitlementDto> Entitlements,
     IReadOnlyCollection<CommerceQuotaDto> Quotas,
-    DateTime DataAsOfUtc);
+    DateTime DataAsOfUtc)
+{
+    public bool CommercialControlEnabled { get; init; }
+    public bool HasVerifiedCommercialContract => CommercialControlEnabled && Subscription?.EndsAtUtc is not null;
+    public CommercialMigrationStatus MigrationStatus => CommercialControlEnabled
+        ? CommercialMigrationStatus.Completed : CommercialMigrationStatus.AwaitingValidContract;
+    public DateTime? CommercialEnforcementFromUtc { get; init; }
+}
 
 public sealed record EffectiveSubscriptionResult(
     Guid SubscriptionId,
@@ -53,7 +63,12 @@ public sealed record EffectiveSubscriptionResult(
     Guid PlanVersionId,
     int PlanVersionNumber,
     DateTime StartsAtUtc,
-    DateTime? EndsAtUtc);
+    DateTime? EndsAtUtc)
+{
+    public bool CommercialControlEnabled { get; init; }
+    public CommercialMigrationStatus MigrationStatus => CommercialControlEnabled
+        ? CommercialMigrationStatus.Completed : CommercialMigrationStatus.AwaitingValidContract;
+}
 
 public sealed record EffectiveQuotaResult(
     Guid SubscriptionId,
@@ -62,7 +77,13 @@ public sealed record EffectiveQuotaResult(
     long CurrentUsage,
     bool IsUnlimited,
     bool IsOverQuota,
-    QuotaUsageSource UsageSource);
+    QuotaUsageSource UsageSource)
+{
+    public long Reserved { get; init; }
+    public bool CommercialControlEnabled { get; init; }
+    public CommercialMigrationStatus MigrationStatus => CommercialControlEnabled
+        ? CommercialMigrationStatus.Completed : CommercialMigrationStatus.AwaitingValidContract;
+}
 
 public sealed record CapacityCheckResult(
     bool Allowed,

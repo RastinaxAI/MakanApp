@@ -1,5 +1,19 @@
 # راهنمای انتشار MakanApp Backend — Test و Production
 
+## انتشار Foundation اشتراک — ۲۰۲۶/۱۰/۲۹
+
+Release جاری، تمام قابلیت‌های قبلی به‌اضافهٔ Subscription/Entitlement/Quota و بنیاد PersonalClass را دارد. زنجیرهٔ فعلی ۵۴ Migration و آخرین مورد `20261029122246_BindReportExportsToCommercialReservations` است. مبنای قبل از این Foundation، `20261028202239_CompleteSchoolManagement` بود. نتیجهٔ نهایی تست، Commit و SHA بسته‌ها از `validation-summary.json` همان پوشهٔ Release خوانده شوند؛ اعداد بازبینی تاریخی پایین این بخش، وضعیت همان نسخهٔ قدیمی‌اند.
+
+بسته‌های این انتشار **بدون credential واقعی** هستند. فایل خصوصی اصلی مخزن تغییر نمی‌کند؛ پیش از استقرار، ConnectionStrings:MakanDatabase، Identity:SecurityKey و Sms:MeliPayamakOtp:ServiceToken معتبر مقصد از تنظیمات خصوصی موجود یا environment variables فراهم شوند. تنظیمات خصوصی سرور را با مقادیر خالی بسته جایگزین نکنید. کلید Identity موجود حفظ شود؛ کلید تازهٔ تصادفی برای سرور نسازید. User Secrets یا credential AI داخل ZIP نیست. قابلیت واقعی ملی‌پیامک حفظ شده، اما ارسال زنده در smoke محلی بررسی نمی‌شود.
+
+Test با Mock OTP و Production با OTP واقعی اجرا می‌شود؛ AI در هر دو خاموش، Swagger روشن، AllowedHosts=* و Cors.AllowAnyOrigin=true است. مقصدهای آینده C:\Sites\MakanApp-Test و C:\Sites\MakanApp هستند؛ این مأموریت Deploy، Push یا Migration روی این مقاصد انجام نمی‌دهد. بازکردن ZIP داخل مسیر فعلی بدون Backup/حفظ کانفیگ خصوصی مجازِ این راهنما نیست.
+
+نام فایل‌های SQL تحویل `migrations-idempotent-safe.sql` و `migrations-subscription-incremental.sql` است. افزایشی فقط برای دیتابیسی با پیش‌نیاز تا CompleteSchoolManagement است؛ SQL کامل برای زنجیرهٔ کامل استفاده می‌شود. هر دو باید مطابق history واقعی و پس از Backup اجرا شوند؛ اجرای این مرحله فقط روی LocalDB موقت است.
+
+Foundation تجاری به معنی فعال‌شدن فروش عمومی نیست. قیمت‌ها و سقف‌های پولی حدس زده نمی‌شوند و درگاه واقعی unavailable است. سازمان Legacy تا قرارداد معتبر Admin کنترل تازه نمی‌گیرد؛ وضعیت مهاجرت آن از قرارداد فعال واقعی جداست. چرخهٔ مستقل Assignment/Exam برای PersonalClass خارج از این Release است. قراردادهای [Frontend](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md) و [شرح پیاده‌سازی](../product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md) مرجع قابلیت تازه‌اند.
+
+بسته‌های ZIP قبلی برای این انتشار SUPERSEDED / DO_NOT_DEPLOY هستند؛ فایل‌ها و Backupهای قبلی حذف نمی‌شوند. smoke محلیِ Publish، پذیرش IIS/SQL/TLS سرور نیست. جزئیات تاریخی انتشار مدرسه در ادامه حفظ شده‌اند.
+
 بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
 
 این راهنما مربوط به Release تأییدشدهٔ ۲۰۲۶-۱۰-۲۹ شامل School Backend Completion در مخزن اصلی است. Commit دقیق، نام ZIPها، SHA-256 و نتیجهٔ واقعی فرمان‌ها در `validation-summary.json` و `SHA256SUMS.txt` تحویل ثبت می‌شوند. ساخت بسته و smoke محلی، استقرار یا پذیرش سرور نیست.
