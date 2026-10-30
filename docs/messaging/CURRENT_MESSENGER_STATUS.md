@@ -1,10 +1,14 @@
 # وضعیت جاری Messenger: P0، P1، P2 و مرز P3
 
-بازبینی جاری `2026-10-29` / `main@701cba0`: Personal Messaging بدون نقش مدرسه و با guardهای سن/رابطه/privacy موجود است. Profile ناقص فقط ReadExistingConversations در hint می‌گیرد؛ role loss حساب/عکس/گفتگوی شخصی را حذف نمی‌کند. profilePhoto در هویت امن افزایشی است و مجوز Send/Discovery نمی‌سازد. MFA حذف شده، ولی permission و نشست جاری عملیات ایمنی همچنان بررسی می‌شوند. [جریان شخصی](../product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) و [عکس/دانلود](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+افزودهٔ جاری `2026-10-30` / `main@e11d4ec`: replay حساب با GET /api/v1/realtime/changes و ClientInvalidated، ContextRevision، bootstrap پیش از Snapshot و resync/backoff موجودند. مجوز read فعلی، نه گروه قدیمی Hub، مخاطب را تعیین می‌کند. Direct/Saved از summary خوانده می‌شود. [Handoff جاری](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md).
+
+BE-01 همچنان PRODUCT_DECISION_BLOCKED است: رسانهٔ Minor/Unknown با ReviewRequired پیام یا binding تازه نمی‌سازد؛422 قرارداد امن NotApplied/KEEP_DRAFT_NO_AUTO_RETRY دارد. پیوست آموزشی مسیر جدا دارد و Safety پیام‌رسان را Approved نمی‌کند. [قرارداد و ردیابی](BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
+
+بازبینی جاری `2026-10-30` / `main@e11d4ec`: Personal Messaging بدون نقش مدرسه و با guardهای سن/رابطه/privacy موجود است. Profile ناقص فقط ReadExistingConversations در hint می‌گیرد؛ role loss حساب/عکس/گفتگوی شخصی را حذف نمی‌کند. profilePhoto در هویت امن افزایشی است و مجوز Send/Discovery نمی‌سازد. MFA حذف شده، ولی permission و نشست جاری عملیات ایمنی همچنان بررسی می‌شوند. [جریان شخصی](../product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) و [عکس/دانلود](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
 
 این بخش وضعیت کد ثبت‌شده تا `main@701cba0` در `2026-10-29` است. جدول‌های MISSING ابتدای ممیزی P2 و تعویق اولیه Checklist تاریخچهٔ شروع همان مرحله‌اند؛ وضعیت نهایی از [تحویل P2](MESSENGER_P2_FRONTEND_HANDOFF.md) و [ممیزی نهایی](MESSENGER_P2_DELIVERY_AUDIT.md) خوانده شود. پذیرش محلی Backend با deployment یا دریافت Push روی دستگاه یکی نیست.
 
-افزودهٔ بازبینی: Outbox/realtime/scheduled/notification از fencing/repair محدود و completion budget استفاده می‌کنند؛ Push خارجی exactly-once نیست و Delta مرجع پیام است. query Block زوج فعال را با index یکتای موجود seek می‌کند؛ تست‌های ۴/۸/۱۲ درخواست موازی در [گزارش انتشار](../production/BACKEND_RELEASE_READINESS_FA.md) آمده‌اند. API، schema و سیاست privacy عوض نشده؛ [worker recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md).
+افزودهٔ بازبینی: Outbox/realtime/scheduled/notification از fencing/repair محدود و completion budget استفاده می‌کنند؛ Push خارجی exactly-once نیست و Delta مرجع پیام است. query Block زوج فعال را با index یکتای موجود seek می‌کند؛ تست‌های ۴/۸/۱۲ درخواست موازی در [گزارش انتشار](../production/BACKEND_RELEASE_READINESS_FA.md) آمده‌اند. سیاست privacy حفظ شده؛ قرارداد افزایشی replay و Safety در ابتدای همین سند آمده است؛ [worker recovery](../operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 
 | حوزه | وضعیت جاری و مرجع |
 |---|---|
@@ -23,7 +27,7 @@
 
 ### جریان‌های گذرا و پیام‌های پایدار
 
-Hub `/hubs/messaging` اکنون شش invoke عمومی دارد: `SubscribeConversation`، `UnsubscribeConversation`، `SetTyping`، `Heartbeat`، `SubscribePresence` و `UnsubscribePresence`. قراردادهای client شامل `ConversationChanged`، `TypingChanged` و `PresenceChanged` است. `ConversationChanged` برای تغییر پایدار به read/Delta هدایت می‌کند؛ دو event دیگر فقط hint دارای expiry هستند. ارتباط Direct مجاز و privacy دوطرفه شرط Presence است؛ `Hidden` با timestamp خالی وضعیت private مقصد را افشا نمی‌کند.
+Hub `/hubs/messaging` اکنون شش invoke عمومی دارد: `SubscribeConversation`، `UnsubscribeConversation`، `SetTyping`، `Heartbeat`، `SubscribePresence` و `UnsubscribePresence`. قراردادهای client شامل `ConversationChanged`، `ClientInvalidated`، `TypingChanged` و `PresenceChanged` است. `ConversationChanged` برای تغییر پایدار به read/Delta هدایت می‌کند؛ دو event دیگر فقط hint دارای expiry هستند. ارتباط Direct مجاز و privacy دوطرفه شرط Presence است؛ `Hidden` با timestamp خالی وضعیت private مقصد را افشا نمی‌کند.
 
 پیش‌فرض‌های فعلی `MessagingEphemeralOptions`: typing TTL شش ثانیه، refresh سه ثانیه، heartbeat ده ثانیه، connection lease چهل‌وپنج ثانیه، Recently پنج دقیقه و نگهداری Last Seen یک روز. budget و سقف اتصال/subscription از همان options اعتبارسنجی می‌شوند. reconnect همهٔ subscriptionهای قبلی را برای اتصال جدید معتبر نمی‌کند؛ ثبت دوباره و بازیابی Delta لازم است. Group عضویت دائمی اجازهٔ send/read نمی‌سازد؛ نقش، account/session، Block، رابطه و visibility دوباره بررسی می‌شوند.
 

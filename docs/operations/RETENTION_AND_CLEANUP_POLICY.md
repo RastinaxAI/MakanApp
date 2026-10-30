@@ -1,8 +1,23 @@
 # سیاست نگه‌داری و پاک‌سازی محدود
 
-بازبینی `2026-10-29` از `main@701cba0`: موجودی اولیه جدول‌های زیر تاریخچهٔ PH-6 است؛ فرهنگ جاری [SQL](../database-current-structure.md) شامل حذف دو جدول MFA و اضافه‌شدن ClassLessons/ClassLessonAttachments است و جمع فعلی۱۰۷ جدول/۵۲ migration دارد. DOB و مرجع Photo ستون‌های افزوده‌اند. cleanup همچنان فقط bytes terminal بدون reference است؛ User.ProfilePhotoFileAssetId و ClassLessonAttachment نیز guard حذف‌اند. Ready-orphan reaper و purge تاریخچه SQL اضافه نشده‌اند؛ برای جدول/ستون جدید retention حقوقی پیش‌فرض اختراع نشده است.
+## موجودی افزودهٔ جاری — ۲۰۲۶-۱۰-۳۰
 
-این موجودی از `MakanDbContextModelSnapshot` و ۱۰۷ جدول فعلی تهیه شده است؛ تعداد جدول، دورهٔ
+فرهنگ جاری SQL دارای113 جدول و55 migration تا AddExamAnswerAttachments است. جدول پایین موجودی تاریخی PH-6 است؛ شش جدول تازه همگی DO_NOT_AUTO_DELETE هستند:
+
+| جدول | دلیل حفظ |
+|---|---|
+| `academic.PersonalClasses` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+| `academic.PersonalClassInvitations` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+| `academic.PersonalClassParticipants` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+| `commerce.SubscriptionAmendments` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+| `commerce.UsageReservations` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+| `assessment.AnswerRevisionAttachments` | سابقهٔ آموزشی/عضویت یا قرارداد و مصرف مالی؛ حذف خودکار مجاز نیست |
+
+AnswerRevisionAttachments و فایل Retained آن guard حذف‌اند؛ Detach revision تاریخی/blob را purge نمی‌کند. ReportExportJob.Commerce reservation و Unknown برای settlement/recovery نگه‌داری می‌شوند. Outbox عمومی و Messaging/ChangeEvents منبع replay حساب‌اند؛ پیش از طراحی کف replay/epoch/resync هیچ purge جدیدی مجاز فرض نمی‌شود. TerminalCleanup پیش‌فرض خاموش و محدود به bytes Deleted/Rejected بدون reference است؛ Ready-orphan یا SQL history reaper ایجاد نشده است.
+
+بازبینی `2026-10-30` از `main@e11d4ec`: موجودی اولیه جدول‌های زیر تاریخچهٔ PH-6 است؛ فرهنگ جاری [SQL](../database-current-structure.md) شامل حذف دو جدول MFA و اضافه‌شدن ClassLessons/ClassLessonAttachments است و جمع فعلی۱۱۳ جدول/۵۵ migration دارد؛ PersonalClass، رزرو و پیوست پاسخ در افزودهٔ بالا آمده‌اند. DOB و مرجع Photo ستون‌های افزوده‌اند. cleanup همچنان فقط bytes terminal بدون reference است؛ User.ProfilePhotoFileAssetId و ClassLessonAttachment نیز guard حذف‌اند. Ready-orphan reaper و purge تاریخچه SQL اضافه نشده‌اند؛ برای جدول/ستون جدید retention حقوقی پیش‌فرض اختراع نشده است.
+
+جدول زیر موجودی تاریخی PH-6 است؛ موارد جاری در ابتدای سند و فرهنگ SQL آمده‌اند. تعداد جدول، دورهٔ
 نگه‌داری حقوقی یا مجوز حذف ایجاد نمی‌کند. هیچ تاریخ انقضا یا ستون `Processed/Expired` به‌تنهایی
 مجوز purge نیست. PH-6 دادهٔ مالی، تحصیلی، امنیتی، moderation یا تاریخچهٔ Messenger را حذف نمی‌کند.
 

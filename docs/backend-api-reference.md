@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-10-29` با مبنای Git `main@701cba057b358d9cf6d15d681389d0f8d22ac6d6` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-10-30` با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **332 عملیات HTTP، 291 مسیر متمایز، 59 Controller و 570 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **365 عملیات HTTP، 322 مسیر متمایز، 63 Controller و 608 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -28,6 +28,12 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 
 پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده‌اند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست‌های date-only/null، عکس Bearer، visibility Draft و رضایت والد در [راهنما](backend-api-guide.md) و [قرارداد مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) توضیح داده شده‌اند.
 
+اشتراک Individual/Organization و بنیاد PersonalClass اکنون موجودند؛ خرید نقش نمی‌سازد، Legacy قبل از قرارداد معتبر Admin قفل تازه نمی‌گیرد و AI Runtime فعال نیست. [قرارداد کاربر](product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md).
+
+Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و ClientInvalidated افزوده شده است؛ Snapshot و مجوز read جاری مرجع‌اند. [قرارداد Event](product/REALTIME_EVENT_CONTRACT_FA.md).
+
+پیوست پاسخ آزمون از policy نسخهٔ سؤال، revision و write lease استفاده می‌کند؛ Ready مجوز Safety یا دانلود عمومی نیست. [قرارداد پیوست](product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md#frontend_handoff) و [ReviewRequired پیام‌رسان](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
+
 ## فهرست Controllerها
 
 | Controller | تعداد عملیات | سورس |
@@ -40,6 +46,7 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 | ClassLessons | 5 | [ClassLessonsController](../MakanApp.Api/Controllers/ClassLessonsController.cs) |
 | Classes | 8 | [ClassesController](../MakanApp.Api/Controllers/ClassesController.cs) |
 | Commerce | 5 | [CommerceController](../MakanApp.Api/Controllers/CommerceController.cs) |
+| CommercialSubscriptions | 12 | [CommercialSubscriptionsController](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs) |
 | CommunicationAge | 6 | [CommunicationAgeController](../MakanApp.Api/Controllers/CommunicationAgeController.cs) |
 | Contacts | 5 | [ContactsController](../MakanApp.Api/Controllers/ContactsController.cs) |
 | ConversationAdvancedManagement | 4 | [ConversationAdvancedManagementController](../MakanApp.Api/Controllers/ConversationAdvancedManagementController.cs) |
@@ -49,12 +56,12 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 | ConversationModeration | 6 | [ConversationModerationController](../MakanApp.Api/Controllers/ConversationModerationController.cs) |
 | ConversationPolls | 5 | [ConversationPollsController](../MakanApp.Api/Controllers/ConversationPollsController.cs) |
 | ConversationTopics | 3 | [ConversationTopicsController](../MakanApp.Api/Controllers/ConversationTopicsController.cs) |
-| Conversations | 42 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
+| Conversations | 43 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
 | Courses | 2 | [CoursesController](../MakanApp.Api/Controllers/CoursesController.cs) |
 | Dashboards | 4 | [DashboardsController](../MakanApp.Api/Controllers/DashboardsController.cs) |
 | Evaluations | 8 | [EvaluationsController](../MakanApp.Api/Controllers/EvaluationsController.cs) |
 | ExamGradings | 9 | [ExamGradingsController](../MakanApp.Api/Controllers/ExamGradingsController.cs) |
-| Exams | 21 | [ExamsController](../MakanApp.Api/Controllers/ExamsController.cs) |
+| Exams | 23 | [ExamsController](../MakanApp.Api/Controllers/ExamsController.cs) |
 | Files | 4 | [FilesController](../MakanApp.Api/Controllers/FilesController.cs) |
 | Guardian | 3 | [GuardianController](../MakanApp.Api/Controllers/GuardianController.cs) |
 | Invitations | 3 | [InvitationsController](../MakanApp.Api/Controllers/InvitationsController.cs) |
@@ -71,7 +78,9 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 | OrganizationPeople | 7 | [OrganizationPeopleController](../MakanApp.Api/Controllers/OrganizationPeopleController.cs) |
 | People | 3 | [PeopleController](../MakanApp.Api/Controllers/PeopleController.cs) |
 | PeoplePresence | 1 | [PeoplePresenceController](../MakanApp.Api/Controllers/PeoplePresenceController.cs) |
+| PersonalClasses | 9 | [PersonalClassesController](../MakanApp.Api/Controllers/PersonalClassesController.cs) |
 | PlatformCommerce | 7 | [PlatformCommerceController](../MakanApp.Api/Controllers/PlatformCommerceController.cs) |
+| PlatformCommercialContracts | 8 | [PlatformCommercialContractsController](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs) |
 | PlatformEducation | 6 | [PlatformEducationController](../MakanApp.Api/Controllers/PlatformEducationController.cs) |
 | PlatformFinance | 2 | [PlatformFinanceController](../MakanApp.Api/Controllers/PlatformFinanceController.cs) |
 | PlatformIam | 5 | [PlatformIamController](../MakanApp.Api/Controllers/PlatformIamController.cs) |
@@ -82,6 +91,7 @@ AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و 
 | PlatformSystemOperations | 3 | [PlatformSystemOperationsController](../MakanApp.Api/Controllers/PlatformSystemOperationsController.cs) |
 | PlatformUsers | 6 | [PlatformUsersController](../MakanApp.Api/Controllers/PlatformUsersController.cs) |
 | Profile | 4 | [ProfileController](../MakanApp.Api/Controllers/ProfileController.cs) |
+| Realtime | 1 | [RealtimeController](../MakanApp.Api/Controllers/RealtimeController.cs) |
 | Reports | 19 | [ReportsController](../MakanApp.Api/Controllers/ReportsController.cs) |
 | SavedMessageLabels | 2 | [SavedMessageLabelsController](../MakanApp.Api/Controllers/SavedMessageLabelsController.cs) |
 | Schedule | 3 | [ScheduleController](../MakanApp.Api/Controllers/ScheduleController.cs) |
@@ -952,6 +962,193 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto)<br>`application/json`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto)<br>`text/json`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto) |
+
+
+## CommercialSubscriptions
+
+### POST /api/v1/commerce/ai/simple-text/preflight
+
+کد واقعی: [CommercialSubscriptionsController.Preflight](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [AiQuotaPreflightCommand](#contract-AiQuotaPreflightCommand)<br>`text/json`: [AiQuotaPreflightCommand](#contract-AiQuotaPreflightCommand)<br>`application/*+json`: [AiQuotaPreflightCommand](#contract-AiQuotaPreflightCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto)<br>`application/json`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto)<br>`text/json`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto) |
+
+### GET /api/v1/commerce/catalog
+
+کد واقعی: [CommercialSubscriptionsController.Catalog](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `audience` | query | خیر | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto)<br>`application/json`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto)<br>`text/json`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto) |
+
+### POST /api/v1/commerce/organization/quote
+
+کد واقعی: [CommercialSubscriptionsController.OrganizationQuote](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`text/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`application/*+json`: [CreateOrderCommand](#contract-CreateOrderCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`application/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`text/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto) |
+
+### GET /api/v1/commerce/organization/subscription
+
+کد واقعی: [CommercialSubscriptionsController.Organization](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### POST /api/v1/commerce/organization/subscription/downgrade
+
+کد واقعی: [CommercialSubscriptionsController.OrganizationDowngrade](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)<br>`text/json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)<br>`application/*+json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### GET /api/v1/commerce/personal/orders
+
+کد واقعی: [CommercialSubscriptionsController.Orders](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `limit` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [OrderListResult](#contract-OrderListResult)<br>`application/json`: [OrderListResult](#contract-OrderListResult)<br>`text/json`: [OrderListResult](#contract-OrderListResult) |
+
+### POST /api/v1/commerce/personal/orders
+
+کد واقعی: [CommercialSubscriptionsController.CreatePersonalOrder](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`text/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`application/*+json`: [CreateOrderCommand](#contract-CreateOrderCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CreateOrderResult](#contract-CreateOrderResult)<br>`application/json`: [CreateOrderResult](#contract-CreateOrderResult)<br>`text/json`: [CreateOrderResult](#contract-CreateOrderResult) |
+
+### GET /api/v1/commerce/personal/orders/{orderId}
+
+کد واقعی: [CommercialSubscriptionsController.Order](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `orderId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [OrderDto](#contract-OrderDto)<br>`application/json`: [OrderDto](#contract-OrderDto)<br>`text/json`: [OrderDto](#contract-OrderDto) |
+
+### POST /api/v1/commerce/personal/orders/{orderId}/payments
+
+کد واقعی: [CommercialSubscriptionsController.Pay](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `orderId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [InitiatePaymentCommand](#contract-InitiatePaymentCommand)<br>`text/json`: [InitiatePaymentCommand](#contract-InitiatePaymentCommand)<br>`application/*+json`: [InitiatePaymentCommand](#contract-InitiatePaymentCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`application/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`text/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult) |
+
+### POST /api/v1/commerce/personal/quote
+
+کد واقعی: [CommercialSubscriptionsController.PersonalQuote](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`text/json`: [CreateOrderCommand](#contract-CreateOrderCommand)<br>`application/*+json`: [CreateOrderCommand](#contract-CreateOrderCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`application/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`text/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto) |
+
+### GET /api/v1/commerce/personal/subscription
+
+کد واقعی: [CommercialSubscriptionsController.Personal](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### POST /api/v1/commerce/personal/subscription/downgrade
+
+کد واقعی: [CommercialSubscriptionsController.PersonalDowngrade](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialSubscriptionService`، `MakanApp.Application.Commerce.IOrderPaymentService`
+
+بدنه درخواست: `application/json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)<br>`text/json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)<br>`application/*+json`: [ScheduleDowngradeCommand](#contract-ScheduleDowngradeCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
 
 
 ## CommunicationAge
@@ -2279,6 +2476,7 @@ policy: `platform.users.manage`
 |---|---|---|
 | 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+| 422 | MESSAGE_SAFETY_REVIEW_REQUIRED: وضعیت PendingReview، یا MESSAGE_SAFETY_BLOCKED: وضعیت Rejected. تغییر اعمال نشده و مجوز تحویل/دانلود تازه ایجاد نشده است. Ready فایل تأیید ایمنی نیست. پیش‌نویس حفظ شود و retry خودکار نشود؛ همان شناسه و payload همان نتیجه را می‌دهد. PendingReview وعدهٔ صف انسانی، SLA یا تأیید async نیست. دلیل داخلی و اطلاعات provider عمومی نیستند. | `application/problem+json`: object |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}
 
@@ -2640,6 +2838,24 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+
+### GET /api/v1/conversations/{conversationId}/summary
+
+کد واقعی: [ConversationsController.GetSummary](../MakanApp.Api/Controllers/ConversationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`application/json`: [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`text/json`: [ConversationSummaryResult](#contract-ConversationSummaryResult) |
 
 
 ## Courses
@@ -3135,6 +3351,58 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
 
+### POST /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments
+
+کد واقعی: [ExamsController.AttachAnswerFile](../MakanApp.Api/Controllers/ExamsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.IExamAttemptService`، `MakanApp.Application.Assessment.IExamAnswerService`، `MakanApp.Application.Assessment.IExamFinalizationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `attemptId` | path | بله | string / uuid |
+| `attemptQuestionId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [AttachExamAnswerFileCommand](#contract-AttachExamAnswerFileCommand)<br>`text/json`: [AttachExamAnswerFileCommand](#contract-AttachExamAnswerFileCommand)<br>`application/*+json`: [AttachExamAnswerFileCommand](#contract-AttachExamAnswerFileCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
+| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+
+### DELETE /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments/{fileAssetId}
+
+کد واقعی: [ExamsController.DetachAnswerFile](../MakanApp.Api/Controllers/ExamsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.IExamAttemptService`، `MakanApp.Application.Assessment.IExamAnswerService`، `MakanApp.Application.Assessment.IExamFinalizationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `attemptId` | path | بله | string / uuid |
+| `attemptQuestionId` | path | بله | string / uuid |
+| `fileAssetId` | path | بله | string / uuid |
+| `ClientOperationId` | query | خیر | string / uuid |
+| `WriteLeaseVersion` | query | خیر | integer / int64 |
+| `ExpectedRevisionNumber` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
+| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+
 ### POST /api/v1/academic/exam-attempts/{attemptId}/finalize
 
 کد واقعی: [ExamsController.FinalizeAttempt](../MakanApp.Api/Controllers/ExamsController.cs).
@@ -3509,7 +3777,14 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | `text/plain`: [FileStreamResult](#contract-FileStreamResult)<br>`application/json`: [FileStreamResult](#contract-FileStreamResult)<br>`text/json`: [FileStreamResult](#contract-FileStreamResult) |
+| 200 | فایل کامل؛ مصرف‌کننده باید bytes یا Blob بخواند. | `application/octet-stream`: string / binary |
+| 206 | بخشی از بایت‌ها برای Range معتبر روی stream قابل seek؛ Content-Range مشخص است. | `application/octet-stream`: string / binary |
+| 416 | Range خارج محدوده است؛ پاسخ موفق فایل نیست. | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
+| 403 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
+| 404 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
+| 409 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
+| 503 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
 
 
 ## Guardian
@@ -4272,6 +4547,160 @@ policy: `platform.users.manage`
 | 200 | OK | `text/plain`: [PresenceResult](#contract-PresenceResult)<br>`application/json`: [PresenceResult](#contract-PresenceResult)<br>`text/json`: [PresenceResult](#contract-PresenceResult) |
 
 
+## PersonalClasses
+
+### GET /api/v1/personal-classes
+
+کد واقعی: [PersonalClassesController.List](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: آرایه از [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: آرایه از [PersonalClassDto](#contract-PersonalClassDto) |
+
+### POST /api/v1/personal-classes
+
+کد واقعی: [PersonalClassesController.Create](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+بدنه درخواست: `application/json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)<br>`text/json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)<br>`application/*+json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+
+### GET /api/v1/personal-classes/invitations
+
+کد واقعی: [PersonalClassesController.Invitations](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+
+### POST /api/v1/personal-classes/invitations/{invitationId}/accept
+
+کد واقعی: [PersonalClassesController.Accept](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `invitationId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+
+### GET /api/v1/personal-classes/{classId}
+
+کد واقعی: [PersonalClassesController.Get](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+
+### POST /api/v1/personal-classes/{classId}/archive
+
+کد واقعی: [PersonalClassesController.Archive](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+
+### POST /api/v1/personal-classes/{classId}/invitations
+
+کد واقعی: [PersonalClassesController.Invite](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [InvitePersonalClassStudentCommand](#contract-InvitePersonalClassStudentCommand)<br>`text/json`: [InvitePersonalClassStudentCommand](#contract-InvitePersonalClassStudentCommand)<br>`application/*+json`: [InvitePersonalClassStudentCommand](#contract-InvitePersonalClassStudentCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+
+### GET /api/v1/personal-classes/{classId}/participants
+
+کد واقعی: [PersonalClassesController.Participants](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto)<br>`application/json`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto)<br>`text/json`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto) |
+
+### DELETE /api/v1/personal-classes/{classId}/participants/{participantId}
+
+کد واقعی: [PersonalClassesController.End](../MakanApp.Api/Controllers/PersonalClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `participantId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | بدون بدنهٔ منتشرشده |
+
+
 ## PlatformCommerce
 
 ### POST /api/admin/v1/commerce/organizations/{organizationId}/subscription-override
@@ -4414,6 +4843,169 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage)<br>`application/json`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage)<br>`text/json`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage) |
+
+
+## PlatformCommercialContracts
+
+### GET /api/admin/v1/commerce/history/{targetId}
+
+کد واقعی: [PlatformCommercialContractsController.History](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `targetId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto)<br>`application/json`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto)<br>`text/json`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto) |
+
+### POST /api/admin/v1/commerce/organizations/{ownerId}/commercial-contracts
+
+کد واقعی: [PlatformCommercialContractsController.RegisterOrganization](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `ownerId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)<br>`text/json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)<br>`application/*+json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### GET /api/admin/v1/commerce/organizations/{ownerId}/subscription
+
+کد واقعی: [PlatformCommercialContractsController.OrganizationSummary](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `ownerId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### PUT /api/admin/v1/commerce/plan-versions/{versionId}/draft
+
+کد واقعی: [PlatformCommercialContractsController.Draft](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `versionId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CommercialDraftCommand](#contract-CommercialDraftCommand)<br>`text/json`: [CommercialDraftCommand](#contract-CommercialDraftCommand)<br>`application/*+json`: [CommercialDraftCommand](#contract-CommercialDraftCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`application/json`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`text/json`: [CommercialValidationDto](#contract-CommercialValidationDto) |
+
+### GET /api/admin/v1/commerce/plan-versions/{versionId}/validation
+
+کد واقعی: [PlatformCommercialContractsController.Validate](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `versionId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`application/json`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`text/json`: [CommercialValidationDto](#contract-CommercialValidationDto) |
+
+### PUT /api/admin/v1/commerce/plans/{planId}/availability
+
+کد واقعی: [PlatformCommercialContractsController.Availability](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `planId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CommercialAvailabilityCommand](#contract-CommercialAvailabilityCommand)<br>`text/json`: [CommercialAvailabilityCommand](#contract-CommercialAvailabilityCommand)<br>`application/*+json`: [CommercialAvailabilityCommand](#contract-CommercialAvailabilityCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | بدون بدنهٔ منتشرشده |
+
+### POST /api/admin/v1/commerce/users/{ownerId}/commercial-contracts
+
+کد واقعی: [PlatformCommercialContractsController.RegisterIndividual](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `ownerId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)<br>`text/json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)<br>`application/*+json`: [RegisterCommercialContractCommand](#contract-RegisterCommercialContractCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+
+### GET /api/admin/v1/commerce/users/{ownerId}/subscription
+
+کد واقعی: [PlatformCommercialContractsController.IndividualSummary](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.CommercialAdminService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `ownerId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
 
 
 ## PlatformEducation
@@ -5404,6 +5996,33 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3)<br>`application/json`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3)<br>`text/json`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3) |
+
+
+## Realtime
+
+### GET /api/v1/realtime/changes
+
+کد واقعی: [RealtimeController.Changes](../MakanApp.Api/Controllers/RealtimeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Realtime.IRealtimeSyncService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `cursor` | query | خیر | string |
+| `limit` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`application/json`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`text/json`: [AccountChangePageResult](#contract-AccountChangePageResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 401 | Unauthorized | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
 
 
 ## Reports
@@ -6530,6 +7149,21 @@ literalهای JSON واقعی MVC: `["Submitted", "UnderReview", "Resolved", "Di
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-AcademicAnswerAttachmentDto"></a>
+### AcademicAnswerAttachmentDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `originalFileName` | string | بله | خیر/تصریح نشده | — |
+| `contentType` | string | بله | خیر/تصریح نشده | — |
+| `sizeBytes` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `fileStatus` | [FileAssetStatus](#contract-FileAssetStatus) | بله | خیر/تصریح نشده | — |
+| `canDownload` | boolean | بله | خیر/تصریح نشده | — |
+| `downloadPath` | string | بله | بله | — |
+
 <a id="contract-AcademicPeriodResult"></a>
 ### AcademicPeriodResult
 
@@ -6596,6 +7230,33 @@ object
 | `activeRole` | [NullableOfOrganizationRole](#contract-NullableOfOrganizationRole) | بله | خیر/تصریح نشده | — |
 | `subjectOrganizationPersonId` | string / uuid | بله | بله | — |
 
+<a id="contract-AccountChangePageResult"></a>
+### AccountChangePageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `changes` | آرایه از [AccountChangeResult](#contract-AccountChangeResult) | بله | خیر/تصریح نشده | — |
+| `nextCursor` | string | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+| `watermark` | string | بله | خیر/تصریح نشده | — |
+| `epoch` | string | بله | خیر/تصریح نشده | — |
+| `contextRevision` | string | بله | خیر/تصریح نشده | — |
+| `retryAfterMilliseconds` | integer / int32 | خیر | بله | {"default": null} |
+
+<a id="contract-AccountChangeResult"></a>
+### AccountChangeResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `streamVersion` | string | بله | خیر/تصریح نشده | — |
+| `conversation` | [MessagingRealtimeNotification](#contract-MessagingRealtimeNotification) | بله | خیر/تصریح نشده | — |
+| `invalidation` | [RealtimeInvalidation](#contract-RealtimeInvalidation) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-AddConversationMemberCommand"></a>
 ### AddConversationMemberCommand
 
@@ -6618,6 +7279,7 @@ object
 | `score` | number / double | بله | خیر/تصریح نشده | — |
 | `options` | آرایه از [ExamQuestionOptionCommand](#contract-ExamQuestionOptionCommand) | بله | بله | — |
 | `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `attachmentPolicy` | [ExamQuestionAttachmentPolicyCommand](#contract-ExamQuestionAttachmentPolicyCommand) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-AddReactionCommand"></a>
 ### AddReactionCommand
@@ -6791,6 +7453,15 @@ object
 | `sources` | آرایه از [AiSourceReference](#contract-AiSourceReference) | بله | خیر/تصریح نشده | — |
 | `metadata` | [AiResponseMetadata](#contract-AiResponseMetadata) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-AiPayerSelection"></a>
+### AiPayerSelection
+
+CLR واقعی: `MakanApp.Domain.Commerce.AiPayerSelection`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Individual", "Organization", "FreeTrial"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-AiPlanItem"></a>
 ### AiPlanItem
 
@@ -6812,6 +7483,36 @@ object
 |---|---|---|---|---|
 | `trend` | string | بله | خیر/تصریح نشده | — |
 | `description` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AiQuotaPreflightCommand"></a>
+### AiQuotaPreflightCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `contextType` | [CommerceContextType](#contract-CommerceContextType) | بله | خیر/تصریح نشده | — |
+| `contextId` | string / uuid | خیر | بله | {"default": null} |
+| `payer` | [NullableOfAiPayerSelection](#contract-NullableOfAiPayerSelection) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AiQuotaPreflightDto"></a>
+### AiQuotaPreflightDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `payer` | [AiPayerSelection](#contract-AiPayerSelection) | بله | خیر/تصریح نشده | — |
+| `ownerType` | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) | بله | خیر/تصریح نشده | — |
+| `ownerId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `unit` | string | بله | خیر/تصریح نشده | — |
+| `amount` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `remaining` | integer / int64 | بله | بله | — |
+| `periodEndsAtUtc` | string / date-time | بله | بله | — |
+| `allowed` | boolean | بله | خیر/تصریح نشده | — |
+| `errorCode` | string | بله | بله | — |
+| `requiresExplicitSelection` | boolean | بله | خیر/تصریح نشده | — |
+| `authorizesEducationalData` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
 <a id="contract-AiRecommendation"></a>
 ### AiRecommendation
@@ -6982,6 +7683,18 @@ literalهای JSON واقعی MVC: `["Draft", "Published", "Closed", "Archived"]
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-AttachExamAnswerFileCommand"></a>
+### AttachExamAnswerFileCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `writeLeaseVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `expectedRevisionNumber` | integer / int32 | بله | بله | — |
+
 <a id="contract-AttachSubmissionFileCommand"></a>
 ### AttachSubmissionFileCommand
 
@@ -7099,6 +7812,15 @@ object
 | `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `organizationName` | string | بله | خیر/تصریح نشده | — |
 | `relationStatus` | [GuardianRelationStatus](#contract-GuardianRelationStatus) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-BillingCalendar"></a>
+### BillingCalendar
+
+CLR واقعی: `MakanApp.Domain.Commerce.BillingCalendar`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Gregorian", "Persian"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-BlockedUserResult"></a>
 ### BlockedUserResult
@@ -7265,6 +7987,15 @@ object
 |---|---|---|---|---|
 | `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-CommerceContextType"></a>
+### CommerceContextType
+
+CLR واقعی: `MakanApp.Domain.Commerce.CommerceContextType`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Personal", "PersonalClass", "Organization"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-CommerceEntitlementDto"></a>
 ### CommerceEntitlementDto
 
@@ -7289,6 +8020,7 @@ object
 | `isUnlimited` | boolean | بله | خیر/تصریح نشده | — |
 | `isOverQuota` | boolean | بله | خیر/تصریح نشده | — |
 | `usageSource` | [QuotaUsageSource](#contract-QuotaUsageSource) | بله | خیر/تصریح نشده | — |
+| `reserved` | integer / int64 | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-CommerceSubscriptionDto"></a>
 ### CommerceSubscriptionDto
@@ -7315,6 +8047,186 @@ CLR واقعی: `MakanApp.Application.Commerce.CommerceSummaryState`؛ Flags: Fa
 literalهای JSON واقعی MVC: `["NoSubscription", "Active", "Inactive"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-CommercialAvailabilityCommand"></a>
+### CommercialAvailabilityCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `catalogVisible` | boolean | بله | خیر/تصریح نشده | — |
+| `newPurchaseAvailable` | boolean | بله | خیر/تصریح نشده | — |
+| `renewalAvailable` | boolean | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CommercialDraftCommand"></a>
+### CommercialDraftCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `priceToman` | number / double | بله | بله | — |
+| `explicitlyFree` | boolean | بله | خیر/تصریح نشده | — |
+| `calendar` | [NullableOfBillingCalendar](#contract-NullableOfBillingCalendar) | بله | خیر/تصریح نشده | — |
+| `saleTermsReference` | string | بله | بله | — |
+| `warningPercent` | integer / int32 | بله | بله | — |
+| `criticalWarningPercent` | integer / int32 | بله | بله | — |
+| `entitlements` | آرایه از [PlatformPlanEntitlementItem](#contract-PlatformPlanEntitlementItem) | بله | خیر/تصریح نشده | — |
+| `quotas` | آرایه از [PlatformPlanQuotaItem](#contract-PlatformPlanQuotaItem) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CommercialHistoryDto"></a>
+### CommercialHistoryDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `actorUserId` | string / uuid | بله | بله | — |
+| `action` | string | بله | خیر/تصریح نشده | — |
+| `targetId` | string | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `before` | string | بله | بله | — |
+| `after` | string | بله | بله | — |
+
+<a id="contract-CommercialMigrationStatus"></a>
+### CommercialMigrationStatus
+
+CLR واقعی: `MakanApp.Domain.Commerce.CommercialMigrationStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["NotApplicable", "AwaitingValidContract", "Completed"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-CommercialOrderPurpose"></a>
+### CommercialOrderPurpose
+
+CLR واقعی: `MakanApp.Domain.Commerce.CommercialOrderPurpose`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Purchase", "Renewal", "Upgrade"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-CommercialOrderPurpose2"></a>
+### CommercialOrderPurpose2
+
+string / Purchase, Renewal, Upgrade
+
+<a id="contract-CommercialPlanDto"></a>
+### CommercialPlanDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `planId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `code` | string | بله | خیر/تصریح نشده | — |
+| `displayName` | string | بله | خیر/تصریح نشده | — |
+| `audience` | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) | بله | خیر/تصریح نشده | — |
+| `versionNumber` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `priceToman` | number / double | بله | خیر/تصریح نشده | — |
+| `displayCurrency` | string | بله | خیر/تصریح نشده | — |
+| `calendar` | [BillingCalendar](#contract-BillingCalendar) | بله | خیر/تصریح نشده | — |
+| `renewalMode` | string | بله | خیر/تصریح نشده | — |
+| `autoRenew` | boolean | بله | خیر/تصریح نشده | — |
+| `entitlements` | object / مقادیر دیکشنری: boolean | بله | خیر/تصریح نشده | — |
+| `quotas` | object / مقادیر دیکشنری: integer / int64 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CommercialQuotaDto"></a>
+### CommercialQuotaDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `key` | [QuotaKey](#contract-QuotaKey) | بله | خیر/تصریح نشده | — |
+| `kind` | [QuotaKind](#contract-QuotaKind) | بله | خیر/تصریح نشده | — |
+| `unit` | string | بله | خیر/تصریح نشده | — |
+| `limit` | integer / int64 | بله | بله | — |
+| `consumed` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `reserved` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `remaining` | integer / int64 | بله | بله | — |
+| `isOverQuota` | boolean | بله | خیر/تصریح نشده | — |
+| `warningPercent` | integer / int32 | بله | بله | — |
+| `criticalWarningPercent` | integer / int32 | خیر | بله | — |
+| `isUsageAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `isUnlimited` | boolean | خیر | خیر/تصریح نشده | — |
+| `warningLevel` | string | خیر | بله | — |
+
+<a id="contract-CommercialQuoteDto"></a>
+### CommercialQuoteDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `purpose` | [CommercialOrderPurpose2](#contract-CommercialOrderPurpose2) | بله | خیر/تصریح نشده | — |
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `subscriptionId` | string / uuid | بله | بله | — |
+| `priceToman` | number / double | بله | خیر/تصریح نشده | — |
+| `displayCurrency` | string | بله | خیر/تصریح نشده | — |
+| `effectiveAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `periodEndsAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `effectiveQuotas` | آرایه از [CommercialQuotaDto](#contract-CommercialQuotaDto) | بله | خیر/تصریح نشده | — |
+| `autoRenew` | boolean | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | خیر | خیر/تصریح نشده | — |
+| `previewOnly` | boolean | خیر | خیر/تصریح نشده | — |
+| `startsUponVerifiedPayment` | boolean | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-CommercialSummaryDto"></a>
+### CommercialSummaryDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `ownerType` | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) | بله | خیر/تصریح نشده | — |
+| `ownerId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `state` | [SubscriptionDisplayState](#contract-SubscriptionDisplayState) | بله | خیر/تصریح نشده | — |
+| `commercialControlEnabled` | boolean | بله | خیر/تصریح نشده | — |
+| `subscriptionId` | string / uuid | بله | بله | — |
+| `planVersionId` | string / uuid | بله | بله | — |
+| `periodStartsAtUtc` | string / date-time | بله | بله | — |
+| `periodEndsAtUtc` | string / date-time | بله | بله | — |
+| `graceEndsAtUtc` | string / date-time | بله | بله | — |
+| `scheduledPlanVersionId` | string / uuid | بله | بله | — |
+| `entitlements` | object / مقادیر دیکشنری: boolean | بله | خیر/تصریح نشده | — |
+| `quotas` | آرایه از [CommercialQuotaDto](#contract-CommercialQuotaDto) | بله | خیر/تصریح نشده | — |
+| `observedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | خیر | بله | — |
+| `migrationStatus` | [CommercialMigrationStatus](#contract-CommercialMigrationStatus) | خیر | خیر/تصریح نشده | — |
+| `legacySubscriptionId` | string / uuid | خیر | بله | — |
+| `commercialEnforcementFromUtc` | string / date-time | خیر | بله | — |
+| `hasVerifiedCommercialContract` | boolean | خیر | خیر/تصریح نشده | — |
+| `planCode` | string | خیر | بله | — |
+| `planDisplayName` | string | خیر | بله | — |
+| `planVersionNumber` | integer / int32 | خیر | بله | — |
+| `monthlyPriceToman` | number / double | خیر | بله | — |
+| `displayCurrency` | string | خیر | بله | — |
+| `autoRenew` | boolean | خیر | خیر/تصریح نشده | — |
+| `renewalMode` | string | خیر | بله | — |
+| `hasPendingPayment` | boolean | خیر | خیر/تصریح نشده | — |
+| `renewalPlanVersionId` | string / uuid | خیر | بله | — |
+| `renewalPriceToman` | number / double | خیر | بله | — |
+
+<a id="contract-CommercialValidationDto"></a>
+### CommercialValidationDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `missingFields` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `canPublish` | boolean | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CommunicationAgeCategory"></a>
 ### CommunicationAgeCategory
@@ -8170,6 +9082,8 @@ object
 |---|---|---|---|---|
 | `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `purpose` | [CommercialOrderPurpose](#contract-CommercialOrderPurpose) | خیر | خیر/تصریح نشده | — |
+| `subscriptionId` | string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-CreateOrderResult"></a>
 ### CreateOrderResult
@@ -8207,6 +9121,16 @@ object
 | `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-CreatePersonalClassCommand"></a>
+### CreatePersonalClassCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+
 <a id="contract-CreatePlatformInvitationCommand"></a>
 ### CreatePlatformInvitationCommand
 
@@ -8240,6 +9164,7 @@ object
 | `code` | string | بله | خیر/تصریح نشده | — |
 | `displayName` | string | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
+| `audience` | [SubscriptionOwnerType2](#contract-SubscriptionOwnerType2) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-CreatePlatformPlanVersionCommand"></a>
 ### CreatePlatformPlanVersionCommand
@@ -8248,11 +9173,16 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `priceAmount` | number / double | بله | خیر/تصریح نشده | — |
+| `priceAmount` | number / double | بله | بله | — |
 | `currency` | [CurrencyCode](#contract-CurrencyCode) | بله | خیر/تصریح نشده | — |
 | `entitlements` | آرایه از [PlatformPlanEntitlementItem](#contract-PlatformPlanEntitlementItem) | بله | خیر/تصریح نشده | — |
 | `quotas` | آرایه از [PlatformPlanQuotaItem](#contract-PlatformPlanQuotaItem) | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
+| `calendar` | [NullableOfBillingCalendar2](#contract-NullableOfBillingCalendar2) | خیر | خیر/تصریح نشده | — |
+| `saleTermsReference` | string | خیر | بله | {"default": null} |
+| `warningPercent` | integer / int32 | خیر | بله | {"default": null} |
+| `criticalWarningPercent` | integer / int32 | خیر | بله | {"default": null} |
+| `explicitlyFree` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
 <a id="contract-CreateReportExportCommand"></a>
 ### CreateReportExportCommand
@@ -8264,6 +9194,7 @@ object
 | `reportType` | [ReportExportType](#contract-ReportExportType) | بله | خیر/تصریح نشده | — |
 | `format` | [ReportExportFormat](#contract-ReportExportFormat) | بله | خیر/تصریح نشده | — |
 | `filters` | [ReportExportFilters](#contract-ReportExportFilters) | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-CreateScheduleRuleCommand"></a>
 ### CreateScheduleRuleCommand
@@ -8694,7 +9625,7 @@ literalهای JSON واقعی MVC: `["Active", "Completed", "Withdrawn"]`
 
 CLR واقعی: `MakanApp.Domain.Commerce.EntitlementKey`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Academic", "Assignments", "Exams", "Messaging", "Reports", "Storage"]`
+literalهای JSON واقعی MVC: `["Academic", "Assignments", "Exams", "Messaging", "Reports", "Storage", "Ai", "PersonalClassHosting", "PersonalSources"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -8851,6 +9782,7 @@ object
 | `score` | number / double | بله | خیر/تصریح نشده | — |
 | `options` | آرایه از [ExamEditorOptionDto](#contract-ExamEditorOptionDto) | بله | خیر/تصریح نشده | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
+| `attachmentPolicy` | [ExamQuestionAttachmentPolicyDto](#contract-ExamQuestionAttachmentPolicyDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ExamFinalReceiptDto"></a>
 ### ExamFinalReceiptDto
@@ -8969,6 +9901,32 @@ object
 | `readyForReleaseCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `totalPendingCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-ExamQuestionAttachmentPolicyCommand"></a>
+### ExamQuestionAttachmentPolicyCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `attachmentsAllowed` | boolean | بله | خیر/تصریح نشده | — |
+| `textRequired` | boolean | بله | خیر/تصریح نشده | — |
+| `allowedContentTypes` | آرایه از string | بله | بله | — |
+| `maximumCount` | integer / int32 | بله | بله | — |
+| `maximumTotalBytes` | integer / int64 | بله | بله | — |
+
+<a id="contract-ExamQuestionAttachmentPolicyDto"></a>
+### ExamQuestionAttachmentPolicyDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `attachmentsAllowed` | boolean | بله | خیر/تصریح نشده | — |
+| `textRequired` | boolean | بله | خیر/تصریح نشده | — |
+| `allowedContentTypes` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `maximumCount` | integer / int32 | بله | بله | — |
+| `maximumTotalBytes` | integer / int64 | بله | بله | — |
+
 <a id="contract-ExamQuestionGradeDto"></a>
 ### ExamQuestionGradeDto
 
@@ -8992,6 +9950,7 @@ object
 | `evaluatorPrivateNote` | string | بله | بله | — |
 | `reviewedByMembershipId` | string / uuid | بله | بله | — |
 | `reviewedAtUtc` | string / date-time | بله | بله | — |
+| `attachments` | آرایه از [AcademicAnswerAttachmentDto](#contract-AcademicAnswerAttachmentDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ExamQuestionGradingMode"></a>
 ### ExamQuestionGradingMode
@@ -9385,6 +10344,16 @@ object
 | `revokedAtUtc` | string / date-time | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-InvitePersonalClassStudentCommand"></a>
+### InvitePersonalClassStudentCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `destinationUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+
 <a id="contract-LessonAttachmentResult"></a>
 ### LessonAttachmentResult
 
@@ -9503,6 +10472,10 @@ object
 | `entitlements` | آرایه از [CommerceEntitlementDto](#contract-CommerceEntitlementDto) | بله | خیر/تصریح نشده | — |
 | `quotas` | آرایه از [CommerceQuotaDto](#contract-CommerceQuotaDto) | بله | خیر/تصریح نشده | — |
 | `dataAsOfUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `commercialControlEnabled` | boolean | خیر | خیر/تصریح نشده | — |
+| `hasVerifiedCommercialContract` | boolean | خیر | خیر/تصریح نشده | — |
+| `migrationStatus` | [CommercialMigrationStatus](#contract-CommercialMigrationStatus) | خیر | خیر/تصریح نشده | — |
+| `commercialEnforcementFromUtc` | string / date-time | خیر | بله | — |
 
 <a id="contract-ManagerDashboardDto"></a>
 ### ManagerDashboardDto
@@ -9828,6 +10801,23 @@ object
 | `canStartDirect` | boolean | بله | خیر/تصریح نشده | — |
 | `profilePhoto` | [ProfilePhotoResult](#contract-ProfilePhotoResult) | خیر | خیر/تصریح نشده | — |
 
+<a id="contract-MessagingRealtimeNotification"></a>
+### MessagingRealtimeNotification
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `type` | [MessagingChangeType](#contract-MessagingChangeType) | بله | خیر/تصریح نشده | — |
+| `resourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `resourceVersion` | string | بله | بله | — |
+| `cursor` | string | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `payloadVersion` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `peerReadThroughSequence` | integer / int64 | خیر | بله | {"default": null} |
+| `contextRevision` | string | خیر | بله | {"default": null} |
+
 <a id="contract-MessagingStatusResult"></a>
 ### MessagingStatusResult
 
@@ -10085,6 +11075,21 @@ object
 |---|---|---|---|---|
 | `count` | integer / int32 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-NullableOfAiPayerSelection"></a>
+### NullableOfAiPayerSelection
+
+string / Individual, Organization, FreeTrial, None
+
+<a id="contract-NullableOfBillingCalendar"></a>
+### NullableOfBillingCalendar
+
+string / Gregorian, Persian, None
+
+<a id="contract-NullableOfBillingCalendar2"></a>
+### NullableOfBillingCalendar2
+
+string / Gregorian, Persian, None
+
 <a id="contract-NullableOfConversationChecklistMode"></a>
 ### NullableOfConversationChecklistMode
 
@@ -10199,6 +11204,8 @@ object
 | `paidAtUtc` | string / date-time | بله | بله | — |
 | `fulfillmentState` | [OrderFulfillmentState](#contract-OrderFulfillmentState) | بله | خیر/تصریح نشده | — |
 | `paymentAttempts` | آرایه از [PaymentAttemptDto](#contract-PaymentAttemptDto) | بله | خیر/تصریح نشده | — |
+| `priceToman` | number / double | خیر | خیر/تصریح نشده | — |
+| `displayCurrency` | string | خیر | بله | — |
 
 <a id="contract-OrderFulfillmentState"></a>
 ### OrderFulfillmentState
@@ -10225,6 +11232,8 @@ object
 | `paidAtUtc` | string / date-time | بله | بله | — |
 | `fulfillmentState` | [OrderFulfillmentState](#contract-OrderFulfillmentState) | بله | خیر/تصریح نشده | — |
 | `latestPaymentStatus` | [NullableOfPaymentAttemptStatus](#contract-NullableOfPaymentAttemptStatus) | بله | خیر/تصریح نشده | — |
+| `priceToman` | number / double | خیر | خیر/تصریح نشده | — |
+| `displayCurrency` | string | خیر | بله | — |
 
 <a id="contract-OrderListResult"></a>
 ### OrderListResult
@@ -10524,6 +11533,47 @@ object
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
+<a id="contract-PersonalClassDto"></a>
+### PersonalClassDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `hostUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `archived` | boolean | بله | خیر/تصریح نشده | — |
+| `isHost` | boolean | بله | خیر/تصریح نشده | — |
+| `canCreateEducationalContent` | boolean | بله | خیر/تصریح نشده | — |
+| `educationalWorkflowStatus` | string | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassInvitationDto"></a>
+### PersonalClassInvitationDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `destinationUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `accepted` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassParticipantDto"></a>
+### PersonalClassParticipantDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `studentUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `joinedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `active` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-PersonalMessagingAction"></a>
 ### PersonalMessagingAction
@@ -11282,6 +12332,11 @@ object
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `versions` | آرایه از [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem) | بله | خیر/تصریح نشده | — |
 | `versionsTruncated` | boolean | بله | خیر/تصریح نشده | — |
+| `audience` | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) | خیر | خیر/تصریح نشده | — |
+| `catalogVisible` | boolean | خیر | خیر/تصریح نشده | — |
+| `newPurchaseAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `renewalAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `version` | string | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-PlatformPlanEntitlementItem"></a>
 ### PlatformPlanEntitlementItem
@@ -11306,6 +12361,11 @@ object
 | `versionCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `latestPublishedVersion` | integer / int32 | بله | بله | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `audience` | [SubscriptionOwnerType](#contract-SubscriptionOwnerType) | خیر | خیر/تصریح نشده | — |
+| `catalogVisible` | boolean | خیر | خیر/تصریح نشده | — |
+| `newPurchaseAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `renewalAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `version` | string | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-PlatformPlanPage"></a>
 ### PlatformPlanPage
@@ -11347,6 +12407,12 @@ object
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `publishedAtUtc` | string / date-time | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+| `calendar` | [NullableOfBillingCalendar](#contract-NullableOfBillingCalendar) | خیر | خیر/تصریح نشده | — |
+| `saleTermsReference` | string | خیر | بله | — |
+| `warningPercent` | integer / int32 | خیر | بله | — |
+| `criticalWarningPercent` | integer / int32 | خیر | بله | — |
+| `priceToman` | number / double | خیر | بله | — |
+| `displayCurrency` | string | خیر | بله | — |
 
 <a id="contract-PlatformProvisioningItem"></a>
 ### PlatformProvisioningItem
@@ -11885,7 +12951,16 @@ object
 
 CLR واقعی: `MakanApp.Domain.Commerce.QuotaKey`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["ActiveLearners", "ActiveClasses", "StorageBytes", "ReportExports"]`
+literalهای JSON واقعی MVC: `["ActiveLearners", "ActiveClasses", "StorageBytes", "ReportExports", "AiTextRequests", "SourceCount", "AssignmentFileBytes"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-QuotaKind"></a>
+### QuotaKind
+
+CLR واقعی: `MakanApp.Domain.Commerce.QuotaKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["CurrentCapacity", "PeriodicConsumption"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -11897,6 +12972,22 @@ CLR واقعی: `MakanApp.Application.Commerce.QuotaUsageSource`؛ Flags: False
 literalهای JSON واقعی MVC: `["AuthoritativeModule", "UsageLedger"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-RealtimeInvalidation"></a>
+### RealtimeInvalidation
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `key` | string | بله | خیر/تصریح نشده | — |
+| `resourceId` | string / uuid | بله | بله | — |
+| `contextRevision` | string | بله | خیر/تصریح نشده | — |
+| `streamVersion` | string | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `payloadVersion` | integer / int32 | خیر | خیر/تصریح نشده | {"default": 1} |
+| `traceId` | string | خیر | بله | {"default": null} |
 
 <a id="contract-RecentContactPageResult"></a>
 ### RecentContactPageResult
@@ -11969,6 +13060,19 @@ object
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `refreshToken` | string | بله | خیر/تصریح نشده | — |
 | `refreshExpiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
+<a id="contract-RegisterCommercialContractCommand"></a>
+### RegisterCommercialContractCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `billingAnchorUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `billingPeriodIndex` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `expectedCurrentVersion` | string | بله | بله | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-RegisterPushDeviceCommand"></a>
 ### RegisterPushDeviceCommand
@@ -12406,6 +13510,17 @@ object
 | `messageId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `labels` | آرایه از string | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | بله | — |
+
+<a id="contract-ScheduleDowngradeCommand"></a>
+### ScheduleDowngradeCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ScheduleMessageCommand"></a>
 ### ScheduleMessageCommand
@@ -12911,6 +14026,7 @@ object
 | `selectedOptionId` | string / uuid | بله | بله | — |
 | `textAnswer` | string | بله | بله | — |
 | `acceptedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `attachments` | آرایه از [AcademicAnswerAttachmentDto](#contract-AcademicAnswerAttachmentDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-StudentDashboardDto"></a>
 ### StudentDashboardDto
@@ -12983,6 +14099,7 @@ object
 | `prompt` | string | بله | خیر/تصریح نشده | — |
 | `score` | number / double | بله | خیر/تصریح نشده | — |
 | `options` | آرایه از [StudentExamAttemptOptionDto](#contract-StudentExamAttemptOptionDto) | بله | خیر/تصریح نشده | — |
+| `attachmentPolicy` | [ExamQuestionAttachmentPolicyDto](#contract-ExamQuestionAttachmentPolicyDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-StudentExamAttemptSummaryDto"></a>
 ### StudentExamAttemptSummaryDto
@@ -13156,6 +14273,7 @@ object
 | `prompt` | string | بله | خیر/تصریح نشده | — |
 | `score` | number / double | بله | خیر/تصریح نشده | — |
 | `options` | آرایه از [StudentSafeExamOption](#contract-StudentSafeExamOption) | بله | خیر/تصریح نشده | — |
+| `attachmentPolicy` | [ExamQuestionAttachmentPolicyDto](#contract-ExamQuestionAttachmentPolicyDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-SubmissionAttachmentResult"></a>
 ### SubmissionAttachmentResult
@@ -13240,12 +14358,35 @@ object
 | `status` | [SubmissionAttemptStatus](#contract-SubmissionAttemptStatus) | بله | خیر/تصریح نشده | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-SubscriptionDisplayState"></a>
+### SubscriptionDisplayState
+
+CLR واقعی: `MakanApp.Application.Commerce.SubscriptionDisplayState`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["NoSubscription", "PendingPayment", "Active", "QuotaWarning", "QuotaExceeded", "GracePeriod", "Expired", "ScheduledDowngrade", "LegacyPendingContract"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SubscriptionOwnerType"></a>
+### SubscriptionOwnerType
+
+CLR واقعی: `MakanApp.Domain.Commerce.SubscriptionOwnerType`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Individual", "Organization"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SubscriptionOwnerType2"></a>
+### SubscriptionOwnerType2
+
+string / Individual, Organization
+
 <a id="contract-SubscriptionStatus"></a>
 ### SubscriptionStatus
 
 CLR واقعی: `MakanApp.Domain.Commerce.SubscriptionStatus`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Pending", "Active", "Expired", "Cancelled"]`
+literalهای JSON واقعی MVC: `["Pending", "Active", "Expired", "Cancelled", "Scheduled"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -13505,6 +14646,7 @@ object
 | `options` | آرایه از [ExamQuestionOptionCommand](#contract-ExamQuestionOptionCommand) | بله | بله | — |
 | `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
 | `expectedQuestionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `attachmentPolicy` | [ExamQuestionAttachmentPolicyCommand](#contract-ExamQuestionAttachmentPolicyCommand) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateMessagingPrivacyCommand"></a>
 ### UpdateMessagingPrivacyCommand
@@ -13792,6 +14934,9 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `CLASS_NOT_ACTIVE` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_SESSION_CONFLICT` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `COMMERCE_CONTEXT_NOT_ALLOWED` | 403 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
+| `COMMERCE_METER_UNAVAILABLE` | 503 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
+| `COMMERCE_RESOURCE_NOT_FOUND` | 404 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `COMMERCE_SUMMARY_NOT_ALLOWED` | 403 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `COMMERCE_USAGE_CONFLICT` | 409 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `COMMERCE_USAGE_INVALID` | 400 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
@@ -13858,6 +15003,8 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `EXAM_ANSWER_SET_VERSION_CONFLICT` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_ANSWER_TYPE_INVALID` | 400 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_ANSWER_VERSION_CONFLICT` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
+| `EXAM_ATTACHMENT_LIMIT_EXCEEDED` | 400 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
+| `EXAM_ATTACHMENT_NOT_ALLOWED` | طبق handler/مسیر فراخوانی | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_ATTEMPTS_EXHAUSTED` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_ATTEMPTS_INVALID` | طبق handler/مسیر فراخوانی | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_ATTEMPT_NOT_ALLOWED` | 403 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
@@ -13901,6 +15048,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `EXAM_WRITE_LEASE_HELD_BY_OTHER_SESSION` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_WRITE_LEASE_REQUIRED` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `EXAM_WRITE_LEASE_STALE` | 409 | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
+| `FEATURE_NOT_ENTITLED` | 403 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `FILE_ALREADY_DELETED` | 409 | [StorageErrorCodes](../MakanApp.Application/Storage/StorageErrorCodes.cs) |
 | `FILE_CONTENT_INVALID` | 415 | [StorageErrorCodes](../MakanApp.Application/Storage/StorageErrorCodes.cs) |
 | `FILE_EMPTY` | طبق handler/مسیر فراخوانی | [StorageErrorCodes](../MakanApp.Application/Storage/StorageErrorCodes.cs) |
@@ -13965,6 +15113,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `ORDER_MANAGEMENT_NOT_ALLOWED` | 403 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `ORDER_NOT_FOUND` | 404 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `ORDER_NOT_PAYABLE` | 409 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
+| `ORGANIZATION_COMMERCIALLY_LOCKED` | 409 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `ORGANIZATION_NOT_FOUND` | 404 | [OrganizationErrorCodes](../MakanApp.Application/Organization/OrganizationErrorCodes.cs) |
 | `ORGANIZATION_SCOPE_MISMATCH` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `ORGANIZATION_SCOPE_MISMATCH` | طبق handler/مسیر فراخوانی | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
@@ -13995,6 +15144,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `PHONE_INVALID` | طبق handler/مسیر فراخوانی | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `PIN_NOT_ALLOWED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `PLAN_NOT_PURCHASABLE` | 409 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
+| `PLAN_TERMS_INCOMPLETE` | 422 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `PLATFORM_ACCESS_DENIED` | 403 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_ACCOUNT_SUSPENDED` | 409 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |
 | `PLATFORM_ASSIGNMENT_CONFLICT` | 409 | [PlatformErrorCodes](../MakanApp.Application/Platform/PlatformErrorCodes.cs) |

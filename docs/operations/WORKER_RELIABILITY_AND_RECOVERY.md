@@ -1,6 +1,12 @@
 # قابلیت اطمینان و بازیابی Workerها
 
-بازبینی `2026-10-29` / `main@701cba0`: هشت worker کسب‌وکاری/عملیاتی حفظ‌اند؛ startup validator صرفاً MFA حذف شده است. cleanup مرجع ProfilePhoto و ClassLessonAttachment را هم می‌شناسد؛ bytes متصل حذف نمی‌شوند. هیچ scale-out یا runtime acceptance تازه با این بازبینی اعلام نشده است.
+## افزودهٔ Realtime و رزرو تجاری — ۲۰۲۶-۱۰-۳۰
+
+شاخهٔ platform.realtime-invalidation.v1 در Outbox عمومی، ارسال شبکه را خارج transaction و با token/lease معتبر قبل و بعد انجام می‌دهد؛ crash پس از ارسال ممکن است همان EventId را تکرار کند. replay حساب از Outbox عمومی و Messaging/ChangeEvents موجود می‌خواند؛ worker یا جدول موازی تازه ندارد. StreamVersion با claim/retry تغییر می‌کند و dedup بر EventId است. پردازش‌شدن Outbox رسید همهٔ مرورگرها نیست. [Runbook اختصاصی](REALTIME_RUNBOOK_FA.md).
+
+ReportExportJob اکنون reservation/operation تجاری دارد؛ ثبت Job+رزرو و terminal settlement با claim/fence فعلی هماهنگ‌اند. Unknown نتیجهٔ مالی قطعی نیست و completion worker قدیمی حق overwrite نسل جدید ندارد. [جریان رزرو و recovery](../product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md). هیچ cleanup SQL ledger/reservation/Outbox در این مرحله افزوده نشده است.
+
+بازبینی `2026-10-30` / `main@e11d4ec`: هشت worker کسب‌وکاری/عملیاتی حفظ‌اند؛ startup validator صرفاً MFA حذف شده است. cleanup مرجع ProfilePhoto و ClassLessonAttachment را هم می‌شناسد؛ bytes متصل حذف نمی‌شوند. هیچ scale-out یا runtime acceptance تازه با این بازبینی اعلام نشده است.
 
 این سند قرارداد عملیاتی PH-4 برای workerهای واقعی همان API است؛ validation نهایی این
 مرحله در [ممیزی PH](PRODUCTION_HARDENING_AUDIT.md) ثبت می‌شود. رقابت scopeها و اتصال‌های SQL
@@ -129,7 +135,7 @@ ping، rapid-fail protection یا overlapping recycle را به‌طور عمو�
 
 ## عیب‌یابی و اقدام اپراتور
 
-1. live و ready را جدا بخوانید؛ ready شرط config/ring/SQL/storage است، نه دریافت Push.
+1. live و ready را جدا بخوانید؛ ready شرط config/SQL/storage است، نه دریافت Push.
 2. با permission فعلی `OperationsRead`، health/jobs و با `NotificationsRead`، notifications را بخوانید؛
    payload، credential، token یا connection string را برای شواهد استخراج نکنید.
 3. count، oldest age، snapshot age/availability، failure جدید و کد ثابت worker را مقایسه کنید.

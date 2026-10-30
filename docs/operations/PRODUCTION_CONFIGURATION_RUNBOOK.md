@@ -1,6 +1,14 @@
 # قرارداد کانفیگ Production
 
-بازبینی `2026-10-29` از `main@701cba0`: CORS از Configuration و مستقل از Environment است؛ [دو mode و overrideها](../production/CORS_CONFIGURATION_FA.md). OTP/Identity/Storage قرارداد فعال‌اند، نه تنظیمات صرفاً MFA حذف‌شده. ProfilePhoto/Lesson Storage همان زیرساخت موجود را مصرف می‌کنند و secret/مسیر جدیدی لازم ندارند.
+## تنظیمات افزودهٔ مبنای ۲۰۲۶-۱۰-۳۰
+
+Commerce:QuoteLifetimeMinutes پیش‌فرض15 و Commerce:RenewalAfterGraceStartsAtPayment پیش‌فرضtrue است؛ این تنظیم‌ها نام/قیمت/سقف فروش یا مجوز پرداخت دستی نیستند. قرارداد Legacy بدون ثبت معتبر Admin خودکار enforce نمی‌شود. AiService:Enabled همچنان false است؛ Preflight یا Trial foundation تماس AI نمی‌سازد.
+
+Program.cs از AddDataProtection استاندارد برای cursor حساب استفاده می‌کند؛ ring اختصاصی MFA حذف مانده است. مسیر خصوصی کلیدها/ACL/persistence باید متناسب host بررسی شود و تنظیم حذف‌شدهٔ Security:DataProtection دوباره اختراع نشود. Identity:SecurityKey جای ring cursor نیست. از دست‌رفتن ring، context change یا cursor بیش از24ساعت409/resync می‌خواهد؛ readiness فقط config/SQL/Storage است. [قرارداد و عملیات](REALTIME_RUNBOOK_FA.md).
+
+Account replay پیش‌فرض100 و حداکثر200 رکورد و budget عادی120 درخواست در دقیقه برای حساب دارد؛ limiter درون process است. Cache-Control=no-store و عدم log cursor حفظ شوند. keyring مشترک/backplane/Load چند instance به‌صورت عملیاتی تأیید نشده‌اند.
+
+بازبینی `2026-10-30` از `main@e11d4ec`: CORS از Configuration و مستقل از Environment است؛ [دو mode و overrideها](../production/CORS_CONFIGURATION_FA.md). OTP/Identity/Storage قرارداد فعال‌اند، نه تنظیمات صرفاً MFA حذف‌شده. ProfilePhoto/Lesson Storage همان زیرساخت موجود را مصرف می‌کنند و secret/مسیر جدیدی لازم ندارند.
 
 این سند مرجع تنظیم‌های سخت‌سازی PH است؛ اجرای IIS، providerهای موجود و rollout در
 [راهنمای canonical IIS](../production/DEPLOYMENT_IIS.md) و بازیابی در

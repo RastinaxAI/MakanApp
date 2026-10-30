@@ -16,9 +16,9 @@
 - [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
 - [پیاده‌سازی اشتراک، حق استفاده و سهمیه](docs/product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md): مالکیت Individual/Organization، بنیاد PersonalClass، دوره و تغییر پلن، رزرو اتمیک و قراردادهای جدید کاربر/Admin.
 
-بازبینی `2026-10-29` از `main@701cba0`؛ **332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration**. آخرین migration `20261028202239_CompleteSchoolManagement` است. شمارش از metadata کد و مدل طراحی EF است؛ [وضعیت جاری و validation](docs/CURRENT_PROJECT_STATUS.md).
+بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در 63 Controller و 322 مسیر؛ 608 schema، 113 جدول و 55 migration**. آخرین migration `20261030060025_AddExamAnswerAttachments` است. شمارش از metadata کد و مدل طراحی EF است؛ [وضعیت جاری و validation](docs/CURRENT_PROJECT_STATUS.md).
 
-آمار این بازبینی پیش از Foundation اشتراک است؛ APIهای تازه و دو Migration بعدی در سند اشتراک بالا معرفی شده‌اند. Source Commit، نتیجهٔ Validation و بسته‌های Test/Production از گزارش Release مربوط خوانده شوند؛ [راهنمای انتشار جاری](docs/production/PUBLISH_GUIDE_FA.md).
+آمار این بازبینی Foundation اشتراک و تغییرات Realtime/پیوست پاسخ را پوشش می‌دهد؛ [قرارداد Event](docs/product/REALTIME_EVENT_CONTRACT_FA.md)، [Handoff فرانت](docs/product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [پیوست آموزشی](docs/product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) مرجع جزئیات‌اند. Source Commit، نتیجهٔ Validation و بسته‌های Test/Production از گزارش Release مربوط خوانده شوند؛ [راهنمای انتشار جاری](docs/production/PUBLISH_GUIDE_FA.md).
 
 سازمان Legacy تا ثبت قرارداد معتبر توسط Platform Admin، Commercial Enforcement تازه نمی‌گیرد و دادهٔ تجاری برای آن حدس زده نمی‌شود. گزارش جدید، LegacyPendingContract/AwaitingValidContract را از قرارداد واقعی جدا می‌کند؛ API قدیمی با metadata مهاجرت، رفتار قبلی را حفظ می‌کند. تاریخ و مصرف قدیمی برای Audit باقی می‌مانند.
 

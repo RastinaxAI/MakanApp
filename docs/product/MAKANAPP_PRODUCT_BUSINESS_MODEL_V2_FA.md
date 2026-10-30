@@ -1,6 +1,6 @@
 # MakanApp — مدل محصول، قواعد کسب‌وکار و جهت معماری نسخهٔ ۲
 
-بازبینی تکمیلی `2026-10-29` از `main@701cba0`: DOB خوداظهاری، ProfilePhoto و تکمیل Directory/roster/دعوت والد/Lesson اکنون در کد موجودند. بخش‌های جاری مربوط به آن‌ها در این سند اصلاح شده‌اند؛ ممیزی baseline بخش۲۴ و طرح‌های تفصیلی۲۶..۳۲ سابقه/پیشنهادند و نسخهٔ اجرایی از [پروفایل](PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md)، [عکس](PROFILE_PHOTO_IMPLEMENTATION_FA.md) و [مدرسه](SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) خوانده می‌شود. اشتراک فردی، Learning Profile، Badge، AI/Source quota و Source lifecycle هنوز پیاده‌شده فرض نمی‌شوند. وجود migration اثبات applied schema سرور نیست.
+بازبینی تکمیلی `2026-10-30` از `main@e11d4ec`: پروفایل، مدرسه، اشتراک Individual/Organization، دورهٔ ماهانه، reserve/settle و بنیاد PersonalClass در کد موجودند. replay حساب و پیوست آزمون هم افزوده شده‌اند. ممیزی baseline بخش۲۴ و طرح‌های۲۶..۳۳ مربوط به قبل از اجرا هستند؛ قسمت‌های تحقق‌یافتهٔ آن‌ها با قراردادهای [اشتراک](SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md)، [Realtime](REALTIME_EVENT_CONTRACT_FA.md) و [پیوست](ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) جایگزین می‌شوند. Learning Profile، Badge، Source lifecycle/RAG، AI Runtime شخصی و چرخهٔ کامل آموزشی PersonalClass همچنان خارج از قابلیت جاری‌اند؛ نام/قیمت/سقف پولی یا Refund نهایی از این سند استنتاج نشود.
 
 تاریخ ممیزی: `2026-10-28` — مخزن: `MakanApp-Backend` — شاخه: `main` — مبنای Git: `b87fbd89cef33f26315fddd4a1e57116b44cc781`.
 
@@ -20,10 +20,10 @@
 
 اصل محصول: **هویت حساب مستقل از نقش سازمانی است.** سازمان و نقش، قابلیت رسمی اضافه می‌کنند؛ پایان نقش نباید حساب و دارایی شخصی را حذف کند. کاربر مستقل باید بتواند پروفایل، پیام‌رسانی مجاز، اشتراک فردی، AI شخصی و منابع آموزشی شخصی/عمومی داشته باشد، بدون ساخت مدرسهٔ صوری.
 
-نتیجهٔ ممیزی:
+نتیجهٔ ممیزی با اصلاح وضعیت جاری:
 
-- `CURRENTLY IMPLEMENTED`: جدایی `User`، `Person`، `Membership` و `RoleAssignment`؛ Workspace شخصی؛ Contacts و Personal Direct؛ گروه/کانال شخصی با محدودیت‌های سن و ایمنی؛ گروه رسمی کلاس؛ Commerce سازمانی نسخه‌دار؛ AI سازمانی با Context سمت Backend.
-- `PROPOSED / NOT IMPLEMENTED`: پروفایل آموزشی شخصی، Badge رسمیت سازمانی، اشتراک/خرید فردی، دورهٔ صورتحساب/حسابداری پیوسته مصرف، quotaهای AI/Source و Educational Source/RAG lifecycle. DOB و ProfilePhoto اکنون CURRENTLY IMPLEMENTED هستند.
+- `CURRENTLY IMPLEMENTED`: جدایی `User`، `Person`، `Membership` و `RoleAssignment`؛ Workspace شخصی؛ Contacts و Personal Direct؛ گروه/کانال شخصی با محدودیت‌های سن و ایمنی؛ گروه رسمی کلاس؛ Commerce فردی/سازمانی با نسخه، دوره، Quote و رزرو؛ بنیاد PersonalClass؛ AI سازمانی با Context سمت Backend و Runtime پیش‌فرض خاموش.
+- `PROPOSED / NOT IMPLEMENTED`: پروفایل آموزشی شخصی، Badge رسمیت سازمانی، AI Runtime شخصی و Educational Source/RAG lifecycle. بنیاد اشتراک فردی/سازمانی، دوره، quotaهای قراردادی، رزرو و PersonalClass اکنون موجود است؛ این foundation به معنی فعال‌بودن Runtime AI یا workflow کامل محتوای کلاس مستقل نیست. DOB و ProfilePhoto نیز CURRENTLY IMPLEMENTED هستند.
 - گزارش «Messaging فقط با School Role کار می‌کند» به‌صورت یک قاعدهٔ عمومی در کد تأیید نشد. تست واقعی مخزن برای دو Adult تأییدشدهٔ بدون مدرسه وجود دارد. با این حال، Workspace انتخاب‌شده، پروفایل ناقص، وضعیت سن، رابطهٔ مجاز و Privacy می‌توانند عملیات کاربر عادی را محدود کنند؛ جزئیات در بخش 24 آمده است.
 - `CURRENTLY IMPLEMENTED`: Person.DateOfBirth اختیاری و خوداظهاری در self، و User.ProfilePhotoFileAssetId با FileAsset شخصی JPEG/PNG. VerifiedBirthDate شاهد مستقل سن است؛ هیچ‌یک دیگری یا مجوز ارتباط را نمی‌سازند.
 
@@ -140,7 +140,7 @@ DateOfBirth currently exists in API Response? YES
 | نام Person از سمت مدرسه | `CURRENTLY IMPLEMENTED`: GAP-01 اجازهٔ محدود برای Person فاقد حساب و غیرمشترک دارد | مدرسه مالک نام/هویت حسابِ متصل نمی‌شود؛ دورزدن self-profile ممنوع |
 | Manager سازمان | `CURRENTLY IMPLEMENTED`: provisioning و دعوت از Backoffice، پذیرش توسط حساب مقصد | نیاز جدید: تأیید Platform Owner، نه self-claim |
 | سایر نقش‌ها | دعوت/RoleAssignment و روابط معتبر موجودند؛ پوشش UX همهٔ نقش‌ها یکسان نیست | Student/Teacher/Parent از workflow سازمان مجاز؛ Profile approval جای آن را نمی‌گیرد |
-| Individual Subscription | هنوز وجود ندارد | `PROPOSED / NOT IMPLEMENTED`: بدون تأیید Manager و بدون عضویت مدرسه |
+| Individual Subscription | CURRENTLY IMPLEMENTED؛ مالک User و Quote/Order شخصی | بدون تأیید Manager یا ساخت عضویت؛ خرید نقش رسمی نمی‌سازد |
 
 اختلاف مهم: `PlatformProvisioningController` مجوز `platform.provisioning.manage` می‌خواهد؛ در seed فعلی این مجوز به `PlatformOwner` **و Operations** داده شده است. `EfPlatformOperationsStore.EnsureManagerInvitationStageAsync` دعوت Manager ایجاد می‌کند؛ مدل جداگانهٔ Owner Approval پیش از این کار دیده نشد. پس «فقط Owner می‌تواند تأیید کند» وضعیت فعلی نیست.
 
@@ -237,32 +237,29 @@ read-time revalidation و invalidate اعلان/Cache لازم است؛ حذف �
 
 ### 13.1 موجودی واقعی Commerce
 
-| مفهوم | وضعیت ممیزی و شاهد |
+`CURRENTLY IMPLEMENTED` در مبنای e11d4ec؛ این جدول وضعیت ممیزی اولیه را جایگزین می‌کند:
+
+| موضوع | وضعیت جاری |
 |---|---|
-| Plan | `CURRENTLY IMPLEMENTED`: [Plan](../../MakanApp.Domain/Commerce/Plan.cs)، دارای Code و DisplayName؛ داده در DB نگهداری می‌شود. |
-| PlanVersion | `CURRENTLY IMPLEMENTED`: [PlanVersion](../../MakanApp.Domain/Commerce/PlanVersion.cs)، نسخهٔ Draft/Published، قیمت و terms؛ terms منتشرشده immutable هستند. |
-| Entitlement | `CURRENTLY IMPLEMENTED`: [PlanEntitlement](../../MakanApp.Domain/Commerce/PlanEntitlement.cs) و `EntitlementKey`؛ مقدار فعال/غیرفعال روی نسخه. |
-| Quota | `CURRENTLY IMPLEMENTED`: [PlanQuotaDefinition](../../MakanApp.Domain/Commerce/PlanQuotaDefinition.cs)؛ Limit نامنفی یا null به معنی unlimited صریح. |
-| Subscription سازمانی | `CURRENTLY IMPLEMENTED`: [Subscription](../../MakanApp.Domain/Commerce/Subscription.cs)، OrganizationId اجباری و PlanVersionId، وضعیت و StartsAtUtc/EndsAtUtc. |
-| Usage | `CURRENTLY IMPLEMENTED`: [UsageLedgerEntry](../../MakanApp.Domain/Commerce/UsageLedgerEntry.cs)، metering فعلی ReportExports؛ سایر Quotaها از شمارش دادهٔ واقعی. |
-| Order/Payment | `CURRENTLY IMPLEMENTED`: مدل سفارش، تلاش پرداخت، verification و activation سازمانی؛ وجود آن اثبات اتصال عملیاتی درگاه واقعی نیست. |
-| Individual Subscription | `PROPOSED / NOT IMPLEMENTED`: Subscription صاحب User ندارد؛ route خرید شخصی وجود ندارد. |
-| Billing Period | `PROPOSED / NOT IMPLEMENTED`: Starts/Ends عمر اشتراک هستند؛ entity/مرز دورهٔ مصرف و renewal عمومی نیستند. |
-| Reservation/settlement مصرف AI | `PROPOSED / NOT IMPLEMENTED`: ledger فعلی رزرو عملیات بلندمدت AI نیست. |
+| Plan / PlanVersion | Audience فردی/سازمانی و availability مستقل؛ Draft/validation/publish و terms immutable |
+| Subscription | مالک User یا Organization با قیود typed، PlanVersion، ماه تقویمی، لنگر ثابت و سررسید معتبر |
+| Legacy | AwaitingValidContract تا ثبت معتبر Admin؛ LegacyPendingContract نامحدود نیست؛ enforcement از زمان واقعی ثبت |
+| Individual Order | Quote/Order/payment initiation شخصی؛ خریدار با مالک قرارداد یکی فرض نمی‌شود |
+| Usage | CurrentCapacity از دادهٔ جاری؛ ReportExports و foundation متن ساده از reservation/ledger دوره‌دار |
+| تغییر پلن | Upgrade بعد از پرداخت معتبر، proration مصرف دوره‌ای و Downgrade دورهٔ بعد؛ تاریخچهٔ Amendment محفوظ |
+| Runtime | درگاه واقعی unavailable، AI غیرفعال؛ بنیاد quota به معنی فعال‌بودن provider یا Source lifecycle نیست |
 
-شواهد اجرای سرویس/نگاشت: [CommerceService](../../MakanApp.Application/Commerce/CommerceService.cs)، [IEntitlementService](../../MakanApp.Application/Commerce/CommerceAbstractions.cs)، [EfCommerceStore](../../MakanApp.Infrastructure/Commerce/EfCommerceStore.cs)، [SubscriptionConfiguration](../../MakanApp.Infrastructure/Persistence/Configurations/Commerce/SubscriptionConfiguration.cs)، [UsageLedgerEntryConfiguration](../../MakanApp.Infrastructure/Persistence/Configurations/Commerce/UsageLedgerEntryConfiguration.cs).
+شواهد: [CommercialOwnership](../../MakanApp.Domain/Commerce/CommercialOwnership.cs)، [Subscription.Monthly](../../MakanApp.Domain/Commerce/Subscription.Monthly.cs)، [CommercialSubscriptionService](../../MakanApp.Application/Commerce/CommercialSubscriptionService.cs)، [EfCommercialStore](../../MakanApp.Infrastructure/Commerce/EfCommercialStore.cs) و [شرح پیاده‌سازی](SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md).
 
-### 13.2 مدل دو Scope و precedence
+### 13.2 زمینه، payer و PersonalClass
 
-`PROPOSED DESIGN`: توسعهٔ مدل موجود به owner صریح Individual/Organization؛ نه ساخت Plan و Entitlement موازی. در اشتراک فردی UserId صاحب است؛ در اشتراک سازمانی OrganizationId. ترکیب‌های نامعتبر باید با FK و CHECK رد شوند. انتخاب مدل نهاییِ owner و migration آن پس از بازبینی Order/Payment موجود است.
+در Organization، payer پیش‌فرض همان سازمان و انتخاب Individual صریح است؛ در Personal یا PersonalClass، بودجهٔ شخصی/Trial خود مصرف‌کننده استفاده می‌شود. تجمیع، fallback یا برداشت دوگانهٔ خودکار نداریم. انتخاب context/payer مجوز دادهٔ آموزشی نمی‌سازد و role/enrollment/guardian/resource همچنان مستقل enforce می‌شوند.
 
-پیشنهاد حل Entitlement: در Personal AI از اشتراک فردی و در Organization AI از اشتراک همان سازمان استفاده شود. انتخاب Context توسط کاربر تنها selector است و Backend eligibility را محاسبه می‌کند. **این precedence تصمیم تجاری قطعی نیست.** اشتراک فردی نباید مجوز دادهٔ مدرسهٔ لغوشده را بازگرداند؛ اشتراک سازمانی هم مجوز خواندن منبع شخصی ایجاد نمی‌کند.
-
-fallback خودکار به اعتبار فردی هنگام تمام‌شدن سهمیهٔ مدرسه، تجمیع دو بودجه یا پرداخت دوگانه ممنوع فرض اجرایی نیست؛ تا تعیین سیاست، نباید بی‌صدا پیاده‌سازی شود. در صورت تصویب fallback، payer/Context و اثر مالی باید پیش از درخواست روشن و قابل Audit باشد. Quota warning نیز مجوز انتخاب خودکار مدل گران‌تر نیست.
+PersonalClass اکنون مدل User-owned جداگانه با HostUserId، دعوت، پذیرش صاحب حساب، participants و archive دارد. ظرفیت کلاس و دانشجوی distinct از میزبان است؛ عضویت پایهٔ دانشجو خرید نمی‌خواهد و امور مالی میزبان افشا نمی‌شود. CanCreateEducationalContent=false و EducationalWorkflowStatus=NotAvailable است؛ workflow کامل Assignment/Exam/فایل مستقل هنوز خارج scope است. [قرارداد API مصرف](SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
 
 ## 14. Individual Plans
 
-`PROPOSED / NOT IMPLEMENTED` — سه نام اولیهٔ تجاری مورد درخواست مالک:
+زیرساخت پلن Individual اکنون موجود است؛ نام‌ها و قیمت/حدود فروش زیر پیشنهاد تجاری‌اند و به معنی Plan پولی Seedشده نیستند:
 
 | نام تجاری | هدف مفهومی | موارد تعیین‌نشده |
 |---|---|---|
@@ -270,9 +267,9 @@ fallback خودکار به اعتبار فردی هنگام تمام‌شدن س
 | دانش‌آموز / معلم حرفه‌ای | قابلیت‌های فردی گسترده‌تر طبق catalog مصوب | تفاوت دقیق با عادی و سهمیه‌ها |
 | اشتراک آزاد Makan | استفادهٔ فردی بدون الزام affiliation آموزشی | audience، eligibility و دامنهٔ امکانات |
 
-هیچ قیمت، Quota، free trial، ترتیب ارزش یا محدودیت نقش برای این نام‌ها تعیین نشده است. «حرفه‌ای» عنوان بازاریابی است و privilege Teacher ایجاد نمی‌کند. Owner باید نام نمایشی را بتواند تغییر دهد؛ کد پایدار پلن و تاریخچهٔ خرید نباید به نام وابسته باشند.
+برای این نام‌ها قیمت و سقف پولی یا ترتیب ارزش نهایی تعیین نشده است؛ دورهٔ ماهانه و بنیاد Trial سه موفقیت متن سادهٔ روزانه اکنون طبق تصمیم بعدی موجودند، ولی Runtime AI فعال نشده است. «حرفه‌ای» عنوان بازاریابی است و privilege Teacher ایجاد نمی‌کند. Owner باید نام نمایشی را بتواند تغییر دهد؛ کد پایدار پلن و تاریخچهٔ خرید نباید به نام وابسته باشند.
 
-`CURRENTLY IMPLEMENTED`: ایجاد Plan و ساخت/انتشار Version با قیمت، Entitlement و Quota از Backoffice موجود است. `Plan.DisplayName` در Create مقدار می‌گیرد، اما mutator/endpoint ویرایش نام یا غیرفعال‌کردن catalog در API فعلی دیده نشد. audience و visibility نیز روی Plan موجود نیستند. بنابراین نیاز Owner به تغییر نام، availability و scope به توسعهٔ صریح نیاز دارد؛ catalog فعلی از صفر بازسازی نشود.
+`CURRENTLY IMPLEMENTED`: ساخت Plan/Version و Draft/validation/publish موجود است. Audience و CatalogVisible/NewPurchaseAvailable/RenewalAvailable مستقل روی Plan قرار دارند و endpoint availability با rowversion/reason قابل تغییر است. rename نمایشی را از availability نتیجه نگیرید؛ catalog و terms نسخه‌دار موجود reuse می‌شوند و Published terms درجا تغییر نمی‌کنند.
 
 `PROPOSED DESIGN`: Scope مخاطب (`Individual`/`Organization`) از Visibility بازاریابی (`Public`/`Hidden`/`InviteOnly`) جدا باشد. `Organization-only` و `Individual-only` audience هستند؛ قرار دادن همه در یک enum مبهم، ترکیب‌های معتبر را محدود می‌کند. غیرفعال‌کردن فروش جدید نباید به‌تنهایی اشتراک پرداخت‌شدهٔ موجود را باطل کند؛ معنای توقف سرویس نیازمند تصمیم جداست.
 
@@ -280,9 +277,9 @@ fallback خودکار به اعتبار فردی هنگام تمام‌شدن س
 
 `CURRENTLY IMPLEMENTED`: اشتراک فعال سازمانی، terms نسخه‌دار، Manager summary، سفارش سازمانی و مدیریت Backoffice وجود دارند. مالک سازمانی و مالک حساب متفاوت‌اند؛ Student/Parent/Teacher به اعتبار نام نقش، سهمیهٔ شخصی دریافت نمی‌کند.
 
-Quotaهای سازمانی موجود فقط `ActiveLearners`، `ActiveClasses`، `StorageBytes` و `ReportExports` هستند. ActiveLearners از Enrollment فعالِ distinct learner محاسبه می‌شود؛ با تعداد User دارای Student Role برابر فرض نشود. سهمیهٔ اختصاصی Teacher/Manager/Parent، درخواست AI، Source و Official Channel فعلاً وجود ندارد.
+Catalog مشترک علاوه بر ظرفیت‌های ActiveLearners/ActiveClasses/StorageBytes و ReportExports، foundation AiTextRequests/SourceCount/AssignmentFileBytes دارد؛ وجود کلید به معنی meter/runtime همهٔ آن‌ها نیست. ActiveLearners دانشجوی distinct در Enrollment معتبر است و تعداد User با Student Role نیست. quota اختصاصی Teacher/Manager/Parent یا Official Channel ساخته نشده است؛ AI Runtime و Source lifecycle جدا هستند.
 
-`PROPOSED / NOT IMPLEMENTED`: تعریف limits جدید مورد نیاز سازمان، audience و availability و تخصیص مصرف بین اعضا. تعداد افراد با نقش در برابر پرونده‌های بدون حساب، ظرفیت فعال در برابر مصرف دوره‌ای و سهمیهٔ مشترک در برابر per-user باید دقیق تعریف شوند. هیچ عددی در این سند تعیین نمی‌شود.
+Audience، availability، حدود نسخه و مصرف سازمانی اکنون موجودند؛ limits پولی نهایی، metricهای بیشتر و تخصیص اختصاصی per-user فراتر از قرارداد فعلی همچنان پیشنهادند. تعداد افراد با نقش در برابر پرونده‌های بدون حساب، ظرفیت فعال در برابر مصرف دوره‌ای و سهمیهٔ مشترک در برابر per-user باید دقیق تعریف شوند. هیچ عددی در این سند تعیین نمی‌شود.
 
 `PROPOSED DESIGN`: Owner یا عامل مجاز با permission مشخص، نسخهٔ جدید Plan ایجاد کند؛ terms نسخهٔ خریداری‌شده درجا تغییر نکنند. Manager فقط عملیات خرید/مشاهدهٔ سازمان مجاز و فعال‌سازی منابع در اختیار خود را دارد؛ Plan catalog سراسری را مدیریت نمی‌کند. دسترسی فعلی Finance به CommerceManage حفظ یا محدود می‌شود فقط پس از تصمیم تفویض Owner؛ کد فعلی Owner-only نیست.
 
@@ -292,18 +289,20 @@ Quotaهای سازمانی موجود فقط `ActiveLearners`، `ActiveClasses`�
 
 `CURRENTLY IMPLEMENTED`:
 
-- `EntitlementKey`: `Academic`، `Assignments`، `Exams`، `Messaging`، `Reports`، `Storage`.
-- `QuotaKey`: `ActiveLearners`، `ActiveClasses`، `StorageBytes`، `ReportExports`.
-- values روی PlanVersion داده‌محورند، اما **کلیدها catalog کدنویسی‌شده** هستند. Owner نمی‌تواند با ثبت یک نام دلخواه در DB، evaluator و مجوز runtime آن را بسازد.
-- EF دارای `CK_PlanEntitlements_Key` برای بازهٔ ۱ تا ۶ و `CK_PlanQuotaDefinitions_Key`/Usage برای بازهٔ ۱ تا ۴ است. افزودن metric جدید صرفاً تغییر enum نیست؛ validation، evaluator، قرارداد، migration و tests هم لازم‌اند.
+- EntitlementKey: Academic، Assignments، Exams، Messaging، Reports، Storage، Ai، PersonalClassHosting و PersonalSources.
+- QuotaKey: ActiveLearners، ActiveClasses، StorageBytes، ReportExports، AiTextRequests، SourceCount و AssignmentFileBytes.
+- values روی PlanVersion داده‌محور و کلیدها catalog کدنویسی‌شده‌اند؛ ثبت نام دلخواه evaluator/runtime ایجاد نمی‌کند.
+- schema/validation/enumهای جدید در migration AddCommercialOwnershipPeriodsAndPersonalClasses همگام‌اند؛ فرهنگ SQL جاری قیود دقیق را دارد. افزودن metric فقط تغییر enum نیست.
+- Limit باید در JSON تعریف quota حاضر باشد؛ صفر سقف صفر و null در definition موجود، Unlimited صریح است. meter ناموجود با IsUsageAvailable گزارش می‌شود و مصرف صفر فرض نمی‌شود.
+- ActiveClasses/ActiveLearners ظرفیت جاری‌اند و ماهانه reset نمی‌شوند؛ دانشجو distinct شمرده می‌شود. SourceCount/AssignmentFileBytes foundation قراردادند و lifecycle/meter مستقلِ هنوز موجودنشده را اثبات نمی‌کنند.
 
-شواهد: [EntitlementKey](../../MakanApp.Domain/Commerce/EntitlementKey.cs)، [QuotaKey](../../MakanApp.Domain/Commerce/QuotaKey.cs)، [CommercePolicy](../../MakanApp.Application/Commerce/CommercePolicy.cs)، [Entitlement EF](../../MakanApp.Infrastructure/Persistence/Configurations/Commerce/PlanEntitlementConfiguration.cs)، [Quota EF](../../MakanApp.Infrastructure/Persistence/Configurations/Commerce/PlanQuotaDefinitionConfiguration.cs).
+شواهد: [EntitlementKey](../../MakanApp.Domain/Commerce/EntitlementKey.cs)، [QuotaKey](../../MakanApp.Domain/Commerce/QuotaKey.cs)، [CommercialPolicy](../../MakanApp.Infrastructure/Commerce/CommercialWritePolicy.cs) و [فرهنگ SQL](../database-current-structure.md).
 
-وجود `EntitlementKey.Messaging` در catalog اثبات paywall عمومی Messenger شخصی نیست. مسیرهای ممیزی‌شدهٔ Contacts/Personal Messaging آن را به‌عنوان شرط School Subscription استفاده نمی‌کنند. تصمیم دربارهٔ premium messaging آینده باز است؛ این Task paywall جدید پیشنهاد اجرایی نمی‌دهد.
+Messaging در catalog، paywall عمومی پیام‌رسان شخصی ایجاد نکرده است. Legacy فقط با قرارداد معتبر Admin مشمول کنترل جدید می‌شود. حق تجاری جای مجوز رابطه یا Content Safety نیست.
 
 ### 16.2 catalog هدف
 
-همهٔ ردیف‌های زیر `PROPOSED / NOT IMPLEMENTED` هستند؛ واحد و semantics هرکدام باید پیش از افزودن catalog نهایی شود:
+جدول زیر ایده‌های catalog گسترده‌تر در ممیزی اولیه است. AiTextRequests، SourceCount و AssignmentFileBytes اکنون foundation دارند؛ ردیف‌های عمومی این جدول فراتر از همین کلیدها همچنان پیشنهادند و meter/runtime تازه ایجاد نمی‌کنند:
 
 | قابلیت/metric | نوع پیشنهادی | نکتهٔ محاسبه |
 |---|---|---|
@@ -319,32 +318,25 @@ Quotaهای سازمانی موجود فقط `ActiveLearners`، `ActiveClasses`�
 
 ## 17. Usage & Upgrade Flow
 
-### 17.1 رفتار فعلی
+### 17.1 وضعیت، ظرفیت و دوره
 
-`CURRENTLY IMPLEMENTED`: `EfCommerceStore.GetCurrentUsageAsync` ظرفیت learner/class/storage را از دادهٔ جاری می‌خواند؛ `ReportExports` را از UsageLedger همان Subscription جمع می‌کند. `RecordMeteredUsageAsync` با transaction سریال‌پذیر و unique operation، Retry را یک اثر حساب می‌کند. `ManagerCommerceSummaryDto` وضعیت اشتراک و مصرف/باقی‌مانده را ارائه می‌دهد.
+CommercialSummaryDto وضعیت NoSubscription، PendingPayment، Active، QuotaWarning، QuotaExceeded، GracePeriod، Expired، ScheduledDowngrade یا LegacyPendingContract و Quotaهای همان مالک را گزارش می‌کند. دوره ماه تقویمی با Calendar/BillingAnchorUtc/BillingPeriodIndex است؛ ماه کوتاه لنگر ماه‌های بعد را جابه‌جا نمی‌کند. تمدید دستی و AutoRenew=false است.
 
-ErrorCodeهای واقعی Commerce شامل `COMMERCE_SUMMARY_NOT_ALLOWED`، `SUBSCRIPTION_REQUIRED`، `SUBSCRIPTION_INACTIVE`، `ENTITLEMENT_REQUIRED`، `QUOTA_REQUIRED`، `QUOTA_EXCEEDED`، `COMMERCE_USAGE_INVALID` و `COMMERCE_USAGE_CONFLICT` است. `AI_QUOTA_EXCEEDED`، `SOURCE_LIMIT_REACHED` و `STORAGE_LIMIT_REACHED` در catalog فعلی یافت نشدند؛ این‌ها مثال/پیشنهاد قرارداد آینده‌اند، نه خطای جاری Backend.
+CurrentCapacity با شروع ماه صفر نمی‌شود. ظرفیت distinct دانشجو/کلاس از ماژول مالک و مصرف دوره‌ای از ledger/reservation می‌آید. Consumed و Reserved/Unknown جدا هستند. Remaining=null فقط با IsUnlimited و IsUsageAvailable تفسیر می‌شود. ناموجودبودن meter، مصرف صفر یا حق رایگان ایجاد نمی‌کند.
 
-### 17.2 تعویض پلن و خطر reset مصرف
+### 17.2 تغییر پلن و Legacy
 
-`CURRENTLY IMPLEMENTED`: `EfPlatformCommerceOperationsStore.OverrideSubscriptionAsync` اشتراک جاری را Cancel و اشتراک جدید ایجاد می‌کند و Audit دارد. ReportExports با SubscriptionId جمع می‌شود، نه یک دورهٔ مستقل و پایدار بین Plan switchها. پس نمی‌توان این مدل را بدون توسعه، proof عدم reset مصرف AI در تعویض پلن دانست. Capacityهای learner/class/storage از دادهٔ واقعی می‌آیند و عوض‌شدن Subscription به‌تنهایی آن داده‌ها را پاک نمی‌کند.
+Quote پیش‌نمایش سروری با اعتبار محدود است و حق ایجاد نمی‌کند؛ قیمت نمایشی تومان و قرارداد فعلی persistence/درگاه IRR است. Upgrade غیرکاهنده پس از پرداخت معتبر، due date را حفظ می‌کند؛ افزایش quota دوره‌ای prorated و ظرفیت جاری کامل است. Downgrade در دورهٔ بعد اثر می‌کند و دادهٔ مازاد حذف نمی‌شود. تغییر نسخه، مصرف قبلی را پاک نمی‌کند و Amendment/Audit باقی است. Refund/Discount و gateway واقعی هنوز آماده نیستند.
 
-`PROPOSED DESIGN`: «Active Plan» نسخهٔ معتبر برای owner، زمان مؤثر، Context و audience مصوب است؛ انتخاب تصویری UI کافی نیست. نیازهای حسابداری:
+سازمان Legacy بدون قرارداد معتبر Admin، AwaitingValidContract می‌ماند و سررسید حدسی یا قفل تازه نمی‌گیرد. ثبت موفق، Completed و CommercialEnforcementFromUtc واقعی دارد؛ مصرف قدیمی backfill حدسی نمی‌شود. برای سازمان کنترل‌شده Grace هفت روز است و پس از آن write آموزشی مشمول قفل می‌شود؛ read مجاز، پیام‌رسانی شخصی، پرداخت و کاهش ظرفیت حفظ می‌شوند. مهلت سازمان را برای Individual فرض نکنید.
 
-1. `Billing Period` و `Quota Window` صریح و بر اساس زمان سرور باشند؛ یکسان‌بودن دورهٔ مالی و دورهٔ مصرف نباید فرض شود.
-2. مصرف و رزرو به owner/budget و window پایدار متصل شوند؛ ساخت SubscriptionId جدید، rename پلن یا workspace switch آن‌ها را صفر نکند.
-3. PlanVersion اعمال‌شده به هر operation و تغییرات entitlement در میانهٔ دوره قابل پیگیری باشد.
-4. Preview تعویض پلن، قیمت/زمان اثر/حدود جدید و مصرف قبلی را نشان دهد. Upgrade/Downgrade نباید سوابق Ledger را بازنویسی کند.
-5. عملیات هم‌زمان در مرز دوره یا Plan switch یک ترتیب تراکنشی قطعی داشته باشند؛ اثر یک درخواست از دو بودجه کسر نشود.
-6. اگر حد جدید از مصرف کمتر باشد، رفتار over-quota و توقف عملیات جدید صریح باشد؛ حذف خودکار داده راه رفع Quota نیست.
+### 17.3 رزرو، retry و AI
 
-فرمول پیشنهادی کنترل مصرف در window مجاز: `committed usage + active reservations + requested cost <= effective limit`. مبلغ/واحد cost، charge-on-success یا charge-on-attempt و سیاست timeout هنوز تجاری‌اند.
+UsageReservation، immutable ledger و قفل مشترک مالک از مصرف هم‌زمان و retry تکراری جلوگیری می‌کنند. ReportExport واقعی Job و رزرو را اتمیک ثبت و terminal settlement را با fence فعلی هماهنگ می‌کند. نتیجهٔ Unknown قطعی نیست؛ timeout/قطع ACK را به مصرف یا شکست قطعی تبدیل نکنید. تماس خارجی داخل transaction بلند نیست و endpoint عمومی اعلام موفقیت مصرف از Client نداریم.
 
-### 17.3 رزرو، تماس خارجی و CTA
+بنیاد Trial سه عملیات موفق متن ساده در روز برای Account با مرز تهران است؛ Device/Role/Organization Trial تازه نمی‌سازند. ai/simple-text/preflight صرفاً eligibility/remaining را بررسی می‌کند و AI یا برداشت اجرا نمی‌کند. Runtime AI پیش‌فرض خاموش است؛ هزینه/مدل‌ها و lifecycle منابع آتی را از این foundation نتیجه نگیرید.
 
-`PROPOSED / NOT IMPLEMENTED`: reserve در transaction کوتاه SQL، سپس تماس AI خارج از transaction، سپس commit/release حسابداری idempotent. Crash یا timeout باید reservation قابل بازیابی ایجاد کند، نه شارژ دوم یا سهمیهٔ رهاشدهٔ بی‌انتها. retry identity به درخواست ثابت و payload/context سازگار متصل شود؛ duration رزرو و settlement timeout تصمیم اجرا پس از تثبیت semantics است.
-
-پاسخ پیشنهادی Usage شامل Context مجاز، quota key/unit، limit، used، reserved، remaining، period start/end، زمان محاسبه و مجوز مشاهدهٔ plan catalog باشد. threshold هشدار، قیمت، upgrade eligibility و مقصد CTA دادهٔ مصوب می‌خواهند. در خطای quota، Backend فقط upgradeهای واجد شرایط و metadata غیرحساس برگرداند؛ CTA نباید SourceId یا اطلاعات پلن خصوصی سازمان دیگر را افشا کند. قالب پیشنهادی در بخش 27 از ProblemDetails جاری جداست.
+خطای FEATURE_NOT_ENTITLED با QUOTA_EXCEEDED و COMMERCE_METER_UNAVAILABLE متفاوت است؛ نبود مجوز داده CTA خرید نیست. request/response، وضعیت‌های409/422/503 و idempotency در [Handoff کاربر](SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [مرجع API](../backend-api-reference.md) آمده‌اند.
 
 ## 18. Educational Sources
 
@@ -620,12 +612,12 @@ UI باید «نداشتن مدرسه»، «پروفایل ناقص»، «Privac
 | G-05 | Badge contextual با lifecycle و privacy غایب | derive از روابط معتبر، ثبت issuance/revoke در صورت نیاز؛ بدون bool جهانی |
 | G-06 | Owner approval مستقل Manager غایب و Operations provisioning مجاز است | تصمیم تفویض، سپس اتصال approval معتبر به Invitation موجود |
 | G-07 | Personal Learning Context و taxonomy عمومی غایب | context واقعی User، بدون سازمان/نمرهٔ ساختگی |
-| G-08 | Commerce فقط سازمانی؛ User owner و خرید فردی نیست | تعمیم owner/Order/Subscription با حفظ نسخه‌ها و قیود فعلی |
-| G-09 | rename/deactivate/visibility/audience پلن در catalog فعلی کامل نیست | lifecycle catalog، display metadata و versioned terms؛ entitlement جدید evaluator لازم دارد |
-| G-10 | AI/Source quotas و billing window/usage continuity نیست | owner/window پایدار، reserve/settle و plan-switch accounting؛ unit و charge policy مصوب |
+| G-08 | CLOSED_IN_CODE: owner User/Organization و Quote/Order شخصی موجود | gateway و شرایط پولی واقعی همچنان gate مستقل‌اند |
+| G-09 | Audience و availability مستقل با Draft/validation/publish موجود | تغییر کلید قابلیت evaluator/validation/schema می‌خواهد؛ نام/قیمت واقعی نهایی نیست |
+| G-10 | FOUNDATION_IMPLEMENTED: ماه تقویمی، reservation/ledger و plan-switch accounting موجود | AI Runtime و Source lifecycle/meter مستقل خارج از scope مانده‌اند |
 | G-11 | Educational Source و publication/revocation/indexing runtime نیست | reuse FileAsset؛ source versions و scope authorization با Outbox و delete propagation |
 | G-12 | Personal AI از use case سازمانی عبور نمی‌کند | مسیر شخصی واقعی، قرارداد AI توافق‌شده و entitlement/resource gate پیش از call |
-| G-13 | Upgrade CTA و precedence دو اشتراک قرارداد ندارد | Preview/Usage/eligible catalog و سیاست تجاری صریح؛ بدون fallback مالی پنهان |
+| G-13 | Quote/Usage و payer صریح موجود؛ fallback خودکار نداریم | اتصال CTA واقعی Frontend، قیمت مصوب و provider مستقل بررسی شوند |
 
 تعارض‌های مستندات: معماری تاریخی بخش‌هایی سازمان‌محور و ایده‌های Knowledge/Quota reservation دارد؛ این‌ها پیاده‌سازی محسوب نمی‌شوند. Master PRD شخصی‌بودن پیام‌رسان و جدایی مدرسه را تأکید می‌کند و با هستهٔ Personal موجود سازگار است. هدف جدید Profile/اشتراک/Source باید قراردادهای قدیمی را **به‌صورت نسخه‌دار** گسترش دهد؛ SQL Server و guards جدید GAP-05 اولویت دارند. اسناد تاریخی MFA با الحاقیهٔ حذف عامل دوم اصلاح تفسیر می‌شوند، نه با ایجاد دوبارهٔ آن.
 
@@ -717,7 +709,7 @@ Domain قواعد lifecycle/invariant را نگه می‌دارد؛ Application 
 
 ### 27.2 PROPOSED API
 
-همهٔ routeها و DTOهای این جدول **پیشنهاد طراحی و هنوز پیاده‌سازی‌نشده‌اند**؛ سازگاری نسخه و نام نهایی باید در هر فاز تثبیت شود.
+این جدول طرح اولیهٔ قبل از اجراست؛ routeهای جاری Profile/Commerce/PersonalClass از Handoffهای بالای سند خوانده شوند و نام‌های پیشنهادی این جدول فراخوانی نشوند؛ سایر موارد **پیشنهاد طراحی** هستند؛ سازگاری نسخه و نام نهایی باید در هر فاز تثبیت شود.
 
 | پیشنهاد | Request / Response هدف | Validation / Authorization و خطا |
 |---|---|---|
@@ -858,15 +850,15 @@ Scope منبع صرفاً string/free-form OrganizationId نیست. در طرا�
 3. **Official resources/badges:** authority صدور، audience هر گروه/کانال، شرط Role/Enrollment/Guardian، label عمومی و نمایش روابط کودکان؛ مدت اعتبار و مسیر اعتراض.
 4. **Profile additions:** Bio/PreferredLanguage و visibility آن‌ها هنوز تأیید مستقل می‌خواهند. ProfilePhoto طبق درخواست بعدی مالک تأیید و پیاده‌سازی شده؛ این تأیید به فیلدهای دیگر تعمیم پیدا نمی‌کند.
 5. **Learning taxonomy:** کشور/نظام آموزشی، مقطع/پایه/سطح/Subject/Language/Category، منبع catalog، multiple contexts و required بودن هر جزء.
-6. **پلن‌های اولیه:** قیمت، currencyهای آینده، feature matrix، Quota، eligible audience، رایگان/پولی، trial و availability. نام‌ها قطعی اولیه‌اند؛ کد تجاری پایدار و امکان rename نیازمند طراحی است.
-7. **Billing:** دورهٔ پرداخت، دورهٔ سهمیه، timezone مرز دوره، تمدید، grace، cancel و سیاست پایان اشتراک؛ دورهٔ ماهانه یا ۳۰روزه فرض نشده است.
-8. **Plan switch:** زمان اثر Upgrade/Downgrade، proration، refund/credit و تکلیف مصرف دورهٔ جاری. قاعدهٔ عدم bypass قطعی است؛ نحوهٔ محاسبهٔ مبلغ هنوز تعیین نشده.
-9. **دو اشتراک:** precedence، fallback با رضایت، مدل‌های مجاز و payer هر operation؛ پیشنهاد بخش 13 تصمیم نهایی نیست.
-10. **Metering AI:** Request در برابر Message/Analysis/Insight، هزینهٔ هر مدل/operation، charge-on-success/attempt، timeout/cancel/provider failure و رزرو/settlement آن‌ها.
+6. **پلن‌های اولیه:** قیمت/سقف پولی واقعی، نام و feature matrix نهایی همچنان بازند؛ audience/availability، شروط publish و بنیاد Trial در کد موجودند و دوباره تصمیم‌نگرفته فرض نشوند.
+7. **Billing:** تصمیم ماه تقویمی با لنگر ثابت، تمدید دستی و Grace هفت‌روزهٔ سازمان اجرا شده است؛ مالیات/شرایط پولی و عملیات واقعی درگاه نیازمند تصمیم/پذیرش جدا هستند.
+8. **Plan switch:** Upgrade پس از پرداخت معتبر با due date ثابت و proration مصرف، و Downgrade دورهٔ بعد اجرا شده‌اند؛ Refund/Discount و شرایط مالی خارج از آن هنوز بازند.
+9. **دو اشتراک:** payer سازمانی پیش‌فرض در Organization و انتخاب Individual صریح اجرا شده؛ pooling و fallback خودکار نداریم. قابلیت‌های اضافی آینده تأیید مستقل می‌خواهند.
+10. **Metering AI:** foundation متن ساده، Trial سه موفقیت روزانه و reserve/settle موجود است؛ Runtime واقعی، هزینهٔ مدل/عملیات گسترده و قرارداد سرویس آینده هنوز باید تصویب شوند.
 11. **Source quotas:** فایل/منبع/نسخه/بایت کدام واحد است؟ حذف، supersession، duplicate و index bytes چگونه اثر می‌گذارند؟
 12. **Library/licensing:** مرجع تأیید محتوا، eligibility منابع Global/Organization، حق دانلود در برابر retrieval، retention، copyright و پردازش فایل حساس.
 13. **scope combination:** کدام ترکیب‌های Personal/Class/Org/Global مجازند، UI consent و payer چیست و provenance چگونه نمایش داده می‌شود؟ تا تصمیم، mix خودکار نشود.
-14. **Upgrade CTA:** threshold هشدار، candidate plan و audience، disclosure قیمت و contract خطا؛ هیچ درصد هشدار تعیین نشده است.
+14. **Upgrade CTA:** آستانهٔ هشدار قابل تنظیم نسخه، Quote و وضعیت quota موجود است؛ مقادیر پولی واقعی و اتصال/نمایش CTA در Frontend از این تحویل اثبات نمی‌شود.
 15. **Account deletion/retention:** تفکیک پایان Role از حذف واقعی حساب، نگهداری history، legal hold و حق خروجی شخصی/رسمی.
 16. **Personal AI contract:** قابلیت‌های مستقل، role-free actor و source grant در توافق Backend ↔ AI؛ رفتار در Contract v1 بدون تأیید تغییر نکند.
 
@@ -891,11 +883,11 @@ Scope منبع صرفاً string/free-form OrganizationId نیست. در طرا�
 | Role loss | حساب/Personal جدا؛ کلاس رسمی revalidate می‌شود | revoke وابسته و حفظ همهٔ Personal | generic official audience و stale context | revoke/invalidation policy | binding policy احتمالی | status/availability قابل‌فهم |
 | Badges | `PROPOSED / NOT IMPLEMENTED` | چند Badge زمینه‌دار با lifecycle | issuance/source/privacy | projection + audit use cases | issuance/history در صورت لزوم | DTO مجاز، نه bool جهانی |
 | Manager approval | provisioning/دعوت موجود؛ Owner و Operations permission دارند | تأیید Owner بدون self-claim | approval اختصاصی/تفویض روشن نیست | compose workflow موجود | approval reference احتمالی | admin approval پیشنهادی |
-| Individual subscription | `PROPOSED / NOT IMPLEMENTED` | خرید/اشتراک بدون مدرسه | owner User و order flow | توسعه Commerce موجود | owner/FK/index/Order | catalog/self/order پیشنهادی |
+| Individual subscription | CURRENTLY IMPLEMENTED؛ User-owned و Quote/Order شخصی | خرید بدون مدرسه | درگاه/قیمت واقعی هنوز آماده نیست | Commerce فعلی | owner/FK/index و reservation موجود | personal/subscription و personal/orders موجود |
 | Organization subscription | `CURRENTLY IMPLEMENTED` | حفظ و تکمیل حدود جدید | metrics جدید و catalog availability | reuse Plan/Version/Service | constraints/catalog extension | summary/admin فعلی + extension |
-| Owner plan catalog | create/version/price/publish موجود | rename/deactivate/audience/visibility | lifecycle catalog غایب | Plan metadata + validation | فیلدها و rowversion | admin extension |
-| AI quotas | `PROPOSED / NOT IMPLEMENTED`؛ IEntitlementService سازمانی موجود | AI feature/model/usage gate | catalog، units، reserve/settle | Application gate و Infrastructure accounting | period/reservation/catalog constraints | quota/usage/error پیشنهادی |
-| Source quotas | `PROPOSED / NOT IMPLEMENTED` | count/bytes/version policy داده‌محور | Source entity و evaluator نیست | Knowledge + Commerce integration | source/usage schema | Source/Usage پیشنهادی |
+| Owner plan catalog | CURRENTLY IMPLEMENTED؛ Audience و availability مستقل | حفظ Published terms | قیمت/شرایط پولی واقعی Product باقی است | Draft/validation/publish و Audit | فیلدهای عرضه و rowversion موجود | plans/availability و draft/validation جاری |
+| AI quotas | FOUNDATION IMPLEMENTED؛ preflight/Trial/reservation | Runtime پس از پذیرش جدا | AI runtime خاموش؛ meterهای آتی ناموجود ممکن‌اند | payer صریح، بدون pooling | UsageReservations/ledger موجود | ai/simple-text/preflight؛ عملیات AI اجرا نمی‌کند |
+| Source quotas | تعریف سهمیه و foundation موجود | lifecycle منابع | meter/lifecycle Source شخصی موجود نیست | Knowledge/Commerce آینده | قرارداد سقف جای Source نیست | API Source هنوز پیشنهاد است |
 | Personal sources | FileAsset شخصی ممکن؛ Knowledge Source نیست | User-owned، مستقل از Role | lifecycle و retrieval grant | source use cases | Source/Version/owner | API Source شخصی |
 | Class sources | Class/TeacherAssignment موجود؛ Source binding نیست | فقط کلاس مجاز | publication/authorization/index sync | reuse academic relations | org/class composite FK | Source scoped endpoints |
 | Organization sources | org فایل/داده موجود؛ SourceActivation نیست | ورود رسمی و فعال‌سازی Manager | licensing/publication/activation | مجوز محتوا و activation | source scope/activation | org source activation |
@@ -903,8 +895,8 @@ Scope منبع صرفاً string/free-form OrganizationId نیست. در طرا�
 | Personal Learning Context | `PROPOSED / NOT IMPLEMENTED` | پایه/سطح/Subject مناسب | catalog شخصی نیست | User-owned context | taxonomy/context | GET/PUT self پیشنهادی |
 | Personal AI | use case فعلی Organization role می‌خواهد | AI واقعی برای User مستقل | personal actor/context/payer | resolver/client contract توافقی | persistence هدف پس از طراحی | Personal AI extension پیشنهادی |
 | AI source isolation | projection/identifier grounding موجود؛ RAG lifecycle deferred | grants و source-version isolation در تمام مسیر | Source runtime و revocation propagation | authorization + grant + grounding | source/outbox/checkpoint | versioned AI/source contracts |
-| Usage / Billing Period | ظرفیت واقعی و ReportExports ledger per Subscription | window پایدار، reserve و settlement | period مستقل وجود ندارد | accounting consistency | period/bucket/reservation | Usage/preview metadata |
-| Plan switching | admin override اشتراک جدید و audit می‌سازد | بدون reset/bypass، مالی شفاف | self-switch و continuity دوره‌ای نیست | preview/effective terms/idempotency | stable window و history | change-preview/change-request پیشنهادی |
+| Usage / Billing Period | CURRENTLY IMPLEMENTED؛ ماه تقویمی/لنگر، reserve/settle و Export | حفظ ledger و نتیجهٔ Unknown | اثبات مالی/عملیاتی هدف باقی است | قفل مالک و fence worker | دوره/رزرو/ledger موجود | Summary/Quota/Quote جاری |
+| Plan switching | CURRENTLY IMPLEMENTED؛ Upgrade پرداختی و Downgrade دوره بعد | بدون reset مصرف | Refund/Discount نهایی و gateway واقعی غایب | Quote و نسخهٔ immutable | SubscriptionAmendments موجود | quote و subscription/downgrade جاری |
 
-سند با ایجاد قابلیت‌ها برابر نیست. اقدام بعدی، تأیید تصمیم‌های باز و انتخاب یک فاز مستقل برای اجراست؛ هیچ‌یک از فازهای پیشنهادی در این Task شروع نشده‌اند.
+سند با ایجاد قابلیت‌ها برابر نیست. اقدام بعدی، تأیید تصمیم‌های باز و انتخاب یک فاز مستقل برای اجراست؛ این ممیزی اولیه خود مجوز اجرا نبود؛ اجرای بعدی Profile/School/Commerce/Realtime/Attachment با محدودهٔ تأییدشده در اسناد تخصصی ثبت شده است.
 

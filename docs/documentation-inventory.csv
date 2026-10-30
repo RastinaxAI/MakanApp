@@ -1,145 +1,155 @@
 ﻿Path,DocumentKind,Handling,SourceCommit,ReviewDate
-docs/CURRENT_PROJECT_STATUS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/DOCUMENTATION_UPDATE_REPORT.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/MakanApp_Business_and_Functional_Logic_FA_v1.0.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/01_AI_INTEGRATION_OVERVIEW.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/02_AI_SERVICE_AUTH_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/03_AI_API_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/04_AI_CONTEXT_AND_PRIVACY_RULES.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/05_AI_ERROR_AND_RESILIENCE_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/06_AI_RAG_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/07_AI_TEST_ACCEPTANCE_MATRIX.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/09_AI_TEAM_IMPLEMENTATION_PROMPT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/10_BACKEND_REAL_E2E_GATE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/11_STEP10G_FAILURE_EVIDENCE_SANITIZED.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/12_STEP10G_FINAL_REAL_E2E_REPORT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/STEP10G_AI_CONTRACT_AUDIT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai-handoff/STEP10G_REAL_AI_E2E_REPORT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/ai/BACKEND_STEP10G_REAL_AI_FINAL_ACCEPTANCE.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_CONTEXT_MAPPING_MATRIX.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_INTEGRATION_CONTRACT_FREEZE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_SERVICE_AUTH_DECISION.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10A_BACKEND_AI_CONTRACT_AUDIT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10B_SERVICE_AUTH.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10C_DOTNET_CLIENT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10D_GENERIC_CHAT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10E_ROLE_CONTEXTS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10F_BACKEND_RAG_BOUNDARY.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10_BACKEND_IMPLEMENTATION_ACCEPTANCE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10_BACKEND_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/AI_STEP_10_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/BACKOFFICE_PRODUCT_DECISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/GAP_05_MESSENGER_CHILD_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/MESSENGER_V2_PRODUCT_DECISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_11B_DETAILED_REPORTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_11C_REPORT_EXPORTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_12A_NOTIFICATION_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_12B_NOTIFICATION_PREFERENCES_DELIVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_13A_COMMERCE_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_14B_CONTACTS_PRIVACY_DISCOVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_14C_MESSAGING_BEHAVIOR_HARDENING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_14D_MODERATION_CHILD_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15A_PLATFORM_IAM_OWNER_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15B_ORGANIZATION_USER_PROVISIONING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15C_EDUCATION_MESSAGING_PLATFORM_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15D_COMMERCE_FINANCE_OPERATIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15E_BACKOFFICE_FINAL_ACCEPTANCE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_15_0_OWNER_PANEL_CONTRACT_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_16_PRODUCTION_HARDENING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_6B_FILE_STORAGE_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_6C_ASSIGNMENT_SUBMISSIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_6D_ASSIGNMENT_EVALUATIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_7A_DIRECT_MESSAGING_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_7B_GROUP_CHANNEL_MANAGEMENT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_7C_ADVANCED_MESSAGING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_7D_MESSAGING_REALTIME_SYNC.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_8A_EXAM_AUTHORING_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_8B_EXAM_ATTEMPTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_8C_EXAM_ANSWER_REVISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/architecture/STEP_8D_EXAM_FINALIZATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-guide.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-guide.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-guide.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-reference.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-reference.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/backend-api-reference.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/contracts/AI_INTEGRATION_CONTRACT_V1.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/database-current-structure.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/deployment-windows-linux-docker.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/CONFIGURABLE_OTP_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/DEVELOPMENT_TEST_USERS_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/DEVELOPMENT_TEST_USERS_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/IRANIAN_SEED_PHONES_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/MAIN_INTEGRATION_RECOVERY_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/MOCK_OTP_FIX_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/ORIGINAL_TEST_CONFIGURATION_AND_CLEANUP_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/SERVER_MOCK_OTP_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/TEST_CONFIGURATION_ALIGNMENT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/check-development-test-users-database.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/cleanup-development-test-users.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/create-development-test-users.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/dev/update-development-test-user-phones-to-iranian.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/frontend-contract/README.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/CURRENT_MESSENGER_STATUS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P0_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P0_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P0_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P1_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P1_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P1_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P2_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P2_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P2_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_IMPLEMENTATION_ROADMAP.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_MEDIA_ARCHITECTURE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MESSENGER_P3_TEST_ACCEPTANCE_MATRIX.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/messaging/MakanApp_Messenger_Master_PRD_v3.0_FA.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/operations/PRODUCTION_HARDENING_AUDIT.md,ممیزی تاریخی عملیات,وضعیت شروع PH؛ قرارداد جاری از runbookهای operations و ماتریس Production خوانده شود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/operations/RETENTION_AND_CLEANUP_POLICY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/platform/BACKOFFICE_FRONTEND_HANDOFF.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/product/PROFILE_PHOTO_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/BACKEND_RELEASE_READINESS_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/BACKUP_RESTORE.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/CORS_CONFIGURATION_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/DEPLOYMENT_IIS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/LOAD_TESTING.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/OBSERVABILITY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/PRODUCTION_READINESS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/PUBLISH_GUIDE_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/RELEASE_CHECKLIST.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/production/SQL_SERVER_SECURITY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/00_CODEX_START_HERE.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/01_SQLSERVER_ARCHITECTURE_OVERRIDE.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/02_CODEX_BASELINE_PROMPT.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/02_Makan_Architecture_v3_Original_MySQL_Reference.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/03_Makan_User_Flows_and_Screens_UX_v1.0.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/04_Flow.png,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/project-context/05_Makan_Project_Status.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/GAP_03_BACKUP_RESTORE_RECOVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/GAP_04_BACKOFFICE_TOTP_MFA.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-README.md,ورودی جاری مخزن,آمار و مسیر مطالعهٔ جاری؛ بخش‌های مرحله‌ای تاریخچه‌اند,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/database-current-structure.html,خروجی فنی محلی/ignored,بازتولید از مدل جاری؛ مطابق gitignore وارد commit نمی‌شود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/database-current-structure.pdf,خروجی فنی محلی/ignored,بازتولید از مدل جاری؛ مطابق gitignore وارد commit نمی‌شود,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
-docs/documentation-inventory.csv,فهرست نگه‌داری,اسناد tracked، خروجی محلی و استثناهای dirty تفکیک شده‌اند,701cba057b358d9cf6d15d681389d0f8d22ac6d6,2026-10-29
+docs/CURRENT_PROJECT_STATUS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/DOCUMENTATION_UPDATE_REPORT.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/MakanApp_Business_and_Functional_Logic_FA_v1.0.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/01_AI_INTEGRATION_OVERVIEW.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/02_AI_SERVICE_AUTH_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/03_AI_API_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/04_AI_CONTEXT_AND_PRIVACY_RULES.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/05_AI_ERROR_AND_RESILIENCE_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/06_AI_RAG_CONTRACT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/07_AI_TEST_ACCEPTANCE_MATRIX.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/09_AI_TEAM_IMPLEMENTATION_PROMPT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/10_BACKEND_REAL_E2E_GATE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/11_STEP10G_FAILURE_EVIDENCE_SANITIZED.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/12_STEP10G_FINAL_REAL_E2E_REPORT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/STEP10G_AI_CONTRACT_AUDIT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai-handoff/STEP10G_REAL_AI_E2E_REPORT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/ai/BACKEND_STEP10G_REAL_AI_FINAL_ACCEPTANCE.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_CONTEXT_MAPPING_MATRIX.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_INTEGRATION_CONTRACT_FREEZE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_SERVICE_AUTH_DECISION.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10A_BACKEND_AI_CONTRACT_AUDIT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10B_SERVICE_AUTH.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10C_DOTNET_CLIENT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10D_GENERIC_CHAT.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10E_ROLE_CONTEXTS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10F_BACKEND_RAG_BOUNDARY.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10_BACKEND_IMPLEMENTATION_ACCEPTANCE.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10_BACKEND_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/AI_STEP_10_STATUS.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/BACKOFFICE_PRODUCT_DECISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/GAP_01_ORGANIZATION_PERSON_GUARDIAN_ONBOARDING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/GAP_05_MESSENGER_CHILD_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/MESSENGER_V2_PRODUCT_DECISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_11B_DETAILED_REPORTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_11C_REPORT_EXPORTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_12A_NOTIFICATION_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_12B_NOTIFICATION_PREFERENCES_DELIVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_13A_COMMERCE_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_14A_MESSENGER_PRD_V2_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_14B_CONTACTS_PRIVACY_DISCOVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_14C_MESSAGING_BEHAVIOR_HARDENING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_14D_MODERATION_CHILD_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_14E_MESSENGER_FINAL_ACCEPTANCE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15A_PLATFORM_IAM_OWNER_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15B_ORGANIZATION_USER_PROVISIONING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15C_EDUCATION_MESSAGING_PLATFORM_SAFETY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15D_COMMERCE_FINANCE_OPERATIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15E_BACKOFFICE_FINAL_ACCEPTANCE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_15_0_OWNER_PANEL_CONTRACT_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_16_PRODUCTION_HARDENING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_6B_FILE_STORAGE_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_6C_ASSIGNMENT_SUBMISSIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_6D_ASSIGNMENT_EVALUATIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_7A_DIRECT_MESSAGING_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_7B_GROUP_CHANNEL_MANAGEMENT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_7C_ADVANCED_MESSAGING.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_7D_MESSAGING_REALTIME_SYNC.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_8A_EXAM_AUTHORING_FOUNDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_8B_EXAM_ATTEMPTS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_8C_EXAM_ANSWER_REVISIONS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/architecture/STEP_8D_EXAM_FINALIZATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-guide.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-guide.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-guide.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-reference.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-reference.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/backend-api-reference.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/contracts/AI_INTEGRATION_CONTRACT_V1.md,قرارداد/شاهد موضوعی AI,حفظ قرارداد و شواهد تاریخی؛ real E2E بسته‌شده فرض نشود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/database-current-structure.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/deployment-windows-linux-docker.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/CONFIGURABLE_OTP_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/DEVELOPMENT_TEST_USERS_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/DEVELOPMENT_TEST_USERS_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/IRANIAN_SEED_PHONES_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/MAIN_INTEGRATION_RECOVERY_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/MOCK_OTP_FIX_REPORT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/ORIGINAL_TEST_CONFIGURATION_AND_CLEANUP_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/SERVER_MOCK_OTP_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/TEST_CONFIGURATION_ALIGNMENT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/check-development-test-users-database.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/cleanup-development-test-users.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/create-development-test-users.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/dev/update-development-test-user-phones-to-iranian.sql,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf,خروجی فنی جاری,بازتولید از source نگه‌داری‌شده؛ کنترل HTML/PDF جدا لازم است,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/frontend-contract/README.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/CURRENT_MESSENGER_STATUS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P0_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P0_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P0_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P1_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P1_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P1_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P2_DELIVERY_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P2_DEVELOPER_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P2_FRONTEND_HANDOFF.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_APPROVED_MEDIA_POLICY_V1.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_IMPLEMENTATION_ROADMAP.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_MEDIA_ARCHITECTURE.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_PRODUCT_DECISIONS_REQUIRED.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_PLAN.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_S_MEDIA_SECURITY_SPIKE_REPORT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MESSENGER_P3_TEST_ACCEPTANCE_MATRIX.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/messaging/MakanApp_Messenger_Master_PRD_v3.0_FA.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/operations/PRODUCTION_HARDENING_AUDIT.md,ممیزی تاریخی عملیات,وضعیت شروع PH؛ قرارداد جاری از runbookهای operations و ماتریس Production خوانده شود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/operations/REALTIME_RUNBOOK_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/operations/RETENTION_AND_CLEANUP_POLICY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/platform/BACKOFFICE_FRONTEND_HANDOFF.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/BACKEND_ISSUES_RESOLUTION_MATRIX_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/MESSAGING_REALTIME_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/PROFILE_PHOTO_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/REALTIME_EVENT_CONTRACT_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md,سند موضوعی,حفظ محتوا و تفکیک تاریخچه از وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/BACKEND_RELEASE_READINESS_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/BACKUP_RESTORE.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/CORS_CONFIGURATION_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/DEPLOYMENT_IIS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/LOAD_TESTING.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/OBSERVABILITY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/PRODUCTION_READINESS.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/PUBLISH_GUIDE_FA.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/RELEASE_CHECKLIST.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/production/SQL_SERVER_SECURITY.md,راهنمای جاری,همگام‌سازی با کد؛ بدون ادعای deployment,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/00_CODEX_START_HERE.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/01_SQLSERVER_ARCHITECTURE_OVERRIDE.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/02_CODEX_BASELINE_PROMPT.md,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/02_Makan_Architecture_v3_Original_MySQL_Reference.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/03_Makan_User_Flows_and_Screens_UX_v1.0.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/04_Flow.png,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/project-context/05_Makan_Project_Status.pdf,مرجع اصلی/تاریخی محصول,حفظ اصل؛ بدون تغییر تصمیم‌ها یا فایل PDF/تصویر,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/DEFERRED_DECISIONS_AND_REMAINING_GAPS.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/GAP_03_BACKUP_RESTORE_RECOVERY.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/GAP_04_BACKOFFICE_TOTP_MFA.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md,قرارداد/گزارش مرحله‌ای,حفظ تصمیم و اعداد اجرای همان مرحله؛ رجوع به وضعیت جاری,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+README.md,ورودی جاری مخزن,آمار و مسیر مطالعهٔ جاری؛ بخش‌های مرحله‌ای تاریخچه‌اند,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/database-current-structure.html,خروجی فنی محلی/ignored,بازتولید از مدل جاری؛ مطابق gitignore وارد commit نمی‌شود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/database-current-structure.pdf,خروجی فنی محلی/ignored,بازتولید از مدل جاری؛ مطابق gitignore وارد commit نمی‌شود,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30
+docs/documentation-inventory.csv,فهرست نگه‌داری,اسناد tracked، خروجی محلی و استثناهای dirty تفکیک شده‌اند,e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9,2026-10-30

@@ -1,6 +1,18 @@
 # استقرار MakanApp روی IIS
 
-بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+## مبنای جاری Realtime، اشتراک و پیوست پاسخ — ۲۰۲۶-۱۰-۳۰
+
+مبنای کد `main@e11d4ec`، 365 عملیات HTTP، 608 schema، 113 جدول و55 migration است؛ آخرین `20261030060025_AddExamAnswerAttachments`. سه migration پس از CompleteSchoolManagement به‌ترتیب AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments هستند. اولی مالکیت/دوره/رزرو و PersonalClass، دومی اتصال Export به رزرو و سومی policy سؤال و AnswerRevisionAttachments را می‌افزاید. از SQL export تازه و history واقعی مقصد استفاده کنید؛ بستهٔ قدیمی خودکار schema/binary جدید ندارد. در این بازبینی Publish/Deploy یا migration سرور اجرا نشده است.
+
+Data Protection استاندارد host اکنون برای cursor حساب در RealtimeCursorProtector مصرف می‌شود. تداوم cursor پس از restart/redeploy به persistence و دسترسی درست key ring وابسته است؛ Identity:SecurityKey جای آن را نمی‌گیرد. در IIS پروفایل/هویت App Pool و مسیر امن کلیدها، و در Linux/Docker مکان پایدار خارج از filesystem موقت container بررسی شوند. کد AddDataProtection پیش‌فرض دارد و setting خصوصی تازه‌ای برای محل ring یا ApplicationName اضافه نشده است؛ متغیر ساختگی Security:DataProtection نسازید. از دست‌رفتن کلید یا context/epoch ناسازگار،409 REALTIME_RESYNC_REQUIRED و Snapshot تازه می‌خواهد؛ readiness این تداوم را probe نمی‌کند. این مصرف جدید، بازگشت MFA/Step-Up نیست. چند replica/backplane و اشتراک کلیدها هنوز gate مستقل‌اند. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
+
+Outbox عمومی اکنون invalidation را پس از Commit و بیرون transaction ارسال می‌کند؛ crash می‌تواند همان EventId را تکرار کند. replay به Outboxهای موجود تکیه دارد؛ processed بودن مجوز purge نیست. bootstrap پیش از Snapshot، قطع/وصل و replay همان cursor، ContextRevision، صفحهٔ خالی با HasMore=true و RetryAfterMilliseconds و خطای503 با حفظ cursor در smoke هدف بررسی شوند. cursor/credential/payload در log نباشند.
+
+کنترل تجاری Legacy خودکار فعال نمی‌شود؛ ثبت قرارداد معتبر Admin نقطهٔ enforcement است. دورهٔ ماهانه، Grace هفت‌روزهٔ سازمان، رزرو ReportExport و تفاوت meter unavailable/Unlimited در smoke بررسی شوند؛ بدون درخواست مستقل قرارداد واقعی نسازید. قیمت/سقف پولی یا gateway واقعی و AI runtime با این اسناد فعال نمی‌شوند.
+
+DB و Storage پیوست آزمون، تکلیف، Lesson و Photo با هم backup/restore شوند. AnswerRevision تاریخی و فایل Retained با Detach حذف فیزیکی نمی‌شوند؛ Parent/Guardian و Teacher لغوشده grant raw attachment ندارند. BE-01 رسانهٔ Messenger همچنان Product-blocked است. [پیوست آموزشی](../product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) و [اشتراک](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
+
+بازبینی هماهنگی `2026-10-30` / `main@e11d4ec`: آخرین schema مخزن `20261030060025_AddExamAnswerAttachments`،۵۵ migration است؛ Profile/School، Commerce، Realtime و پیوست پاسخ آزمون به binary/schema سازگار نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA و ring اختصاصی آن حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
 
 > مبنای بازبینی جاری `2026-10-23` / `main@5885d11` است. برای انتخاب و حفظ کانفیگ دو بسته از [Publish Guide](PUBLISH_GUIDE_FA.md) و برای نتیجهٔ محلی از [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) استفاده کنید. Production OTP=true/false و Test=false/true؛ schema یکسان به معنی secret/مقدار یکسان نیست. health و worker و ring این runbook به [شاخص وضعیت جاری](../CURRENT_PROJECT_STATUS.md) ارجاع دارند.
 
@@ -266,7 +278,7 @@ publish بررسی‌شده Web SDK، `web.config` را با `AspNetCoreModuleV2
 
 ## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-29
 
-مبنای جاری این بخش `2026-10-29` / `main@701cba0`؛ ۳۳۲ عملیات،۵۹ Controller،۵۷۰ schema،۱۰۷ جدول و۵۲ migration. آخرین20261028202239_CompleteSchoolManagement است. schema با delivery provider یا applied migration سرور یکی نیست؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) و Handoffهای P1/P2 مرجع‌اند.
+مبنای جاری این بخش `2026-10-30` / `main@e11d4ec`؛ ۳۶۵ عملیات،۶۳ Controller،۶۰۸ schema،۱۱۳ جدول و۵۵ migration. آخرین20261030060025_AddExamAnswerAttachments است. schema با delivery provider یا applied migration سرور یکی نیست؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) و Handoffهای P1/P2 مرجع‌اند.
 
 ### انتخاب transport اعلان
 

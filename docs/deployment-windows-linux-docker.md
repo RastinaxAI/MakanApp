@@ -1,8 +1,20 @@
 # راهنمای استقرار MakanApp در Windows، Linux و Docker
 
+## مبنای جاری Realtime، اشتراک و پیوست پاسخ — ۲۰۲۶-۱۰-۳۰
+
+مبنای کد `main@e11d4ec`، 365 عملیات HTTP، 608 schema، 113 جدول و55 migration است؛ آخرین `20261030060025_AddExamAnswerAttachments`. سه migration پس از CompleteSchoolManagement به‌ترتیب AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments هستند. اولی مالکیت/دوره/رزرو و PersonalClass، دومی اتصال Export به رزرو و سومی policy سؤال و AnswerRevisionAttachments را می‌افزاید. از SQL export تازه و history واقعی مقصد استفاده کنید؛ بستهٔ قدیمی خودکار schema/binary جدید ندارد. در این بازبینی Publish/Deploy یا migration سرور اجرا نشده است.
+
+Data Protection استاندارد host اکنون برای cursor حساب در RealtimeCursorProtector مصرف می‌شود. تداوم cursor پس از restart/redeploy به persistence و دسترسی درست key ring وابسته است؛ Identity:SecurityKey جای آن را نمی‌گیرد. در IIS پروفایل/هویت App Pool و مسیر امن کلیدها، و در Linux/Docker مکان پایدار خارج از filesystem موقت container بررسی شوند. کد AddDataProtection پیش‌فرض دارد و setting خصوصی تازه‌ای برای محل ring یا ApplicationName اضافه نشده است؛ متغیر ساختگی Security:DataProtection نسازید. از دست‌رفتن کلید یا context/epoch ناسازگار،409 REALTIME_RESYNC_REQUIRED و Snapshot تازه می‌خواهد؛ readiness این تداوم را probe نمی‌کند. این مصرف جدید، بازگشت MFA/Step-Up نیست. چند replica/backplane و اشتراک کلیدها هنوز gate مستقل‌اند. [Runbook Realtime](operations/REALTIME_RUNBOOK_FA.md).
+
+Outbox عمومی اکنون invalidation را پس از Commit و بیرون transaction ارسال می‌کند؛ crash می‌تواند همان EventId را تکرار کند. replay به Outboxهای موجود تکیه دارد؛ processed بودن مجوز purge نیست. bootstrap پیش از Snapshot، قطع/وصل و replay همان cursor، ContextRevision، صفحهٔ خالی با HasMore=true و RetryAfterMilliseconds و خطای503 با حفظ cursor در smoke هدف بررسی شوند. cursor/credential/payload در log نباشند.
+
+کنترل تجاری Legacy خودکار فعال نمی‌شود؛ ثبت قرارداد معتبر Admin نقطهٔ enforcement است. دورهٔ ماهانه، Grace هفت‌روزهٔ سازمان، رزرو ReportExport و تفاوت meter unavailable/Unlimited در smoke بررسی شوند؛ بدون درخواست مستقل قرارداد واقعی نسازید. قیمت/سقف پولی یا gateway واقعی و AI runtime با این اسناد فعال نمی‌شوند.
+
+DB و Storage پیوست آزمون، تکلیف، Lesson و Photo با هم backup/restore شوند. AnswerRevision تاریخی و فایل Retained با Detach حذف فیزیکی نمی‌شوند؛ Parent/Guardian و Teacher لغوشده grant raw attachment ندارند. BE-01 رسانهٔ Messenger همچنان Product-blocked است. [پیوست آموزشی](product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) و [اشتراک](product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
+
 این سند روش استقرار backend فعلی MakanApp و تأمین امن تنظیمات محرمانه را توضیح می‌دهد. مثال‌ها برای `.NET 9`، `SQL Server` و provider واقعی `MeliPayamakOtp` نوشته شده‌اند.
 
-مبنای جاری `main@701cba0` در `2026-10-29`؛ 332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration. آخرین migration `20261028202239_CompleteSchoolManagement`؛ این سند اجرای سرور یا applied schema را اثبات نمی‌کند. [بسته‌های IIS](production/PUBLISH_GUIDE_FA.md).
+مبنای جاری `main@e11d4ec` در `2026-10-30`؛ 365 عملیات HTTP در 63 Controller و 322 مسیر؛ 608 schema، 113 جدول و 55 migration. آخرین migration `20261030060025_AddExamAnswerAttachments`؛ این سند اجرای سرور یا applied schema را اثبات نمی‌کند. [بسته‌های IIS](production/PUBLISH_GUIDE_FA.md).
 
 انتشار انتخابی فعلی مالک Production روی HTTP است؛ appsettings.Staging.json حذف شده. فایل واقعی Production محلی و ignored است و نمونهٔ عمومی .json.example بدون secret نسخه‌بندی می‌شود. دو استثنای Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate فقط با تأیید صریح مالک در فایل خصوصی این انتشار فعال‌اند؛ پیش‌فرض امن تغییر نکرده است. HTTP، OTP و توکن را رمزگذاری نمی‌کند. این تصمیم gate امن [GAP-02](release/GAP_02_STAGING_CORE_SMOKE_VALIDATION.md) را نمی‌بندد و ابزارهای HTTPS-only را دور نمی‌زند. [مراحل جاری IIS](production/DEPLOYMENT_IIS.md) مبنای Windows است؛ نمونه‌های Linux/Docker حالت امن و مقادیر مختص محیط می‌خواهند.
 
@@ -17,7 +29,7 @@
 
 IIS دو profile مستقل `TestIis` و `ProductionIis` دارد. فرمان‌های عمومی Linux/Docker این سند Production واقعی فرض می‌کنند؛ `Otp__Enabled=true` و `Otp__AllowMockAuthentication=false` را در تنظیمات امن همان محیط تأمین کنید. JSON مشترک فعلی false/true است و به‌تنهایی برای Production کافی نیست. templateهای Test/Production هم‌شکل‌اند، نه هم‌مقدار؛ فقط در نبود فایل خصوصی از example استفاده کنید.
 
-`/health/ready` config/SQL/Storage را بررسی می‌کند؛ key ring، DPAPI/PFX و probe صرفاً MFA حذف شده‌اند و شرط اجرای میزبان نیستند. Identity key و Storage همان محیط حفظ می‌شوند؛ فایل‌ها/نسخه‌های پشتیبان قدیمی با این سند حذف نمی‌شوند. [تغییر Platform](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md).
+`/health/ready` config/SQL/Storage را بررسی می‌کند؛ ring و probe صرفاً MFA حذف شده‌اند؛ Data Protection استاندارد host برای cursor حساب استفاده می‌شود و تداومش مستقل از readiness کنترل می‌شود. Identity key و Storage همان محیط حفظ می‌شوند؛ فایل‌ها/نسخه‌های پشتیبان قدیمی با این سند حذف نمی‌شوند. [تغییر Platform](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md).
 
 بودجه Host با override اختیاری `Hosting:ShutdownTimeoutSeconds` در بازه ۵..۹۰s و ANCM با `shutdownTimeLimit=120` مستقل‌اند؛ WAS/idle/preload هم روی سرور بررسی می‌شوند. worker داخل host با توقف آن می‌ایستد. نخستین rollout report-export fencing جدید، legacy process را drain/stop می‌خواهد؛ scale-out realtime/Presence تأیید نشده است. [worker recovery](operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 
@@ -238,7 +250,7 @@ icacls "C:\MakanAppData\Storage" `
 Restart-WebAppPool -Name "MakanApp"
 ```
 
-web.config فعلی محیط Production را دارد و override key ring حذف شده است. DOTNET_ENVIRONMENT و ASPNETCORE_ENVIRONMENT متعارض نباشند؛ متغیرهای محیطی هم‌نام بر JSON اولویت دارند. برای بررسی، مقدار secret چاپ نشود.
+web.config فعلی محیط Production را دارد و override ring اختصاصی MFA حذف شده است. DOTNET_ENVIRONMENT و ASPNETCORE_ENVIRONMENT متعارض نباشند؛ متغیرهای محیطی هم‌نام بر JSON اولویت دارند. برای بررسی، مقدار secret چاپ نشود.
 
 ### 3.6 Windows Service
 
@@ -553,7 +565,7 @@ Server=sqlserver,1433;Database=MakanApp;User Id=<USER>;Password=<PASSWORD>;Encry
 
 ## مرز نسخهٔ جدید و migrationها
 
-پس از Checklist چهار migration ثبت شده‌اند: RemovePlatformMfa، AddSelfDeclaredProfileDateOfBirth، AddUserProfilePhoto و CompleteSchoolManagement. اولی دو جدول PlatformMfaCredentials/PlatformMfaRecoveryCodes و AssuranceLevel/StepUpAtUtc در UserSessions را Drop می‌کند؛ Down فقط schema می‌سازد و دادهٔ از‌دست‌رفته را بازیابی نمی‌کند. سه migration بعد DOB nullable، مرجع عکس و Lesson/attachment/دعوت والد را می‌افزایند. آخرین نسخه `20261028202239_CompleteSchoolManagement` است. این سند هیچ‌کدام را روی دیتابیس عادی یا سرور اعمال نمی‌کند.
+چهار migration نخست پس از Checklist عبارت‌اند از: RemovePlatformMfa، AddSelfDeclaredProfileDateOfBirth، AddUserProfilePhoto و CompleteSchoolManagement. اولی دو جدول PlatformMfaCredentials/PlatformMfaRecoveryCodes و AssuranceLevel/StepUpAtUtc در UserSessions را Drop می‌کند؛ Down فقط schema می‌سازد و دادهٔ از‌دست‌رفته را بازیابی نمی‌کند. سه migration بعد DOB nullable، مرجع عکس و Lesson/attachment/دعوت والد را می‌افزایند. نسخهٔ مدرسه `20261028202239_CompleteSchoolManagement` است و سه migration بعدی در ابتدای این سند آمده‌اند؛ آخرین نسخه `20261030060025_AddExamAnswerAttachments` است. این سند هیچ‌کدام را روی دیتابیس عادی یا سرور اعمال نمی‌کند.
 
 Blobهای عکس و Lesson در Storage موجودند؛ DB و Storage باید با هم backup/restore شوند. snapshot قدیمی بدون schema جدید برای binary جدید کافی نیست. ABI/APIهای قدیمی حفظ یا افزایشی‌اند، ولی DB compatibility old/new برای RemovePlatformMfa نیازمند rollout کنترل‌شده است.
 
@@ -581,7 +593,7 @@ dotnet tool run dotnet-ef database update `
 
 Migration را داخل startup عادی container یا IIS قرار ندهید؛ اجرای هم‌زمان چند instance می‌تواند عملیات schema را مبهم و پرخطر کند.
 
-شاهد GAP-02 شامل۳۵ migration همان مرحله بود؛ مدل جاری۵۲ migration تا20261028202239_CompleteSchoolManagement دارد. وجود source یا موفقیت LocalDB اثبات applied schema سرور نیست. برای binary جدید، history واقعی مقصد و SQL export تازه بررسی شوند؛ اجرای script قدیمی یا ادعای نداشتن تغییر schema جای این بررسی نیست. این مرحله فقط اسناد را اصلاح می‌کند.
+شاهد GAP-02 شامل۳۵ migration همان مرحله بود؛ مدل جاری۵۵ migration تا20261030060025_AddExamAnswerAttachments دارد. وجود source یا موفقیت LocalDB اثبات applied schema سرور نیست. برای binary جدید، history واقعی مقصد و SQL export تازه بررسی شوند؛ اجرای script قدیمی یا ادعای نداشتن تغییر schema جای این بررسی نیست. این مرحله فقط اسناد را اصلاح می‌کند.
 
 برای artifact قابل بازبینی، از ریشه مخزن و SDK سازگار SQL idempotent بسازید؛ این فرمان به‌خودی‌خود آن را روی سرور اجرا نمی‌کند:
 
@@ -620,7 +632,7 @@ sudo test -s /etc/makanapp/makanapp.env \
 ### health و smoke test
 
 1. محیط انتخاب‌شده و OTP جفت صحیح را بدون چاپ secret بررسی کنید؛ Test و Production را روی داده مشترک اجرا نکنید.
-2. GET /health/live برای process و GET /health/ready برای config/ring/SQL/storage باید 200 شوند؛ readiness provider خارجی یا کامل‌بودن schema را اثبات نمی‌کند.
+2. GET /health/live برای process و GET /health/ready برای config/SQL/storage باید 200 شوند؛ readiness provider خارجی یا کامل‌بودن schema را اثبات نمی‌کند.
 3. applied migrationهای مقصد را با handoff نسخه تطبیق دهید؛ هیچ migration خودکار startup وجود ندارد.
 4. در Production/Real فقط با شمارهٔ مجاز و تأیید صریح هزینه، OTP واقعی بخواهید؛ در Test/Mock SMS نباید فراخوانی شود.
 5. پاسخ challenge برابر202 و بدون کد/credential است؛ سپس verify، me و دسترسی مجاز را بررسی کنید. HTTP401 بدون نشست برای مسیر حفاظت‌شده انتظار می‌رود.
@@ -700,7 +712,7 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 - [ ] storage روی مسیر/volume پایدار قرار دارد.
 - [ ] TLS در reverse proxy/IIS تنظیم شده است.
 - [ ] اگر انتشار HTTP با تأیید مالک انجام می‌شود، دو استثنا و خطر plaintext ثبت و gate امن TLS/GAP-02 باز مانده است؛ HTTP را امن اعلام نکرده‌ایم.
-- [ ] Identity key و Storage/backup سازگار حفظ شده‌اند؛ MFA/key ring شرط این نسخه نیستند و دادهٔ حذف‌شدهٔ MFA با rollback برنامه برنمی‌گردد.
+- [ ] Identity key و Storage/backup سازگار حفظ شده‌اند؛ MFA و ring اختصاصی آن شرط این نسخه نیستند؛ تداوم کلید cursor جدا بررسی شده است و دادهٔ حذف‌شدهٔ MFA با rollback برنامه برنمی‌گردد.
 - [ ] health و OTP smoke test بعد از استقرار انجام شده‌اند.
 - [ ] logها حاوی OTP، token یا connection string نیستند.
 - [ ] preflight و REST واقعی با Bearer و بدون cookie بررسی شده‌اند.
@@ -720,7 +732,7 @@ curl.exe -i -X OPTIONS 'https://api.example.com/api/v1/files' `
 
 ## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-29
 
-بازبینی `2026-10-29` از `main@701cba0`؛ وضعیت Messenger و Push از snapshot جاری و Handoffها خوانده شود؛ delivery واقعی و P3 همچنان gate مستقل‌اند.
+بازبینی `2026-10-30` از `main@e11d4ec`؛ وضعیت Messenger و Push از snapshot جاری و Handoffها خوانده شود؛ delivery واقعی و P3 همچنان gate مستقل‌اند.
 
 ### انتخاب transport اعلان
 

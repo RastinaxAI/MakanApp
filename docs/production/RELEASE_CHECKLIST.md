@@ -1,9 +1,20 @@
 # Release Checklist
 
-کنترل بازبینی۲۰۲۶-۱۰-۲۹: نسخه migration52 با آخرین CompleteSchoolManagement، consent دعوت والد، Draft/Published Lesson، دریافت احرازشده عکس/جزوه و سلب مجوز منبع بررسی شود. mode واقعی CORS از AllowAnyOrigin و Host filtering مستقل خوانده شود؛ wildcard در mode=true تصمیم تنظیم است، نه permission. هیچ تیک این سند با ساخت PDF یا regression محلی پر نمی‌شود.
+## کنترل نسخهٔ ۲۰۲۶-۱۰-۳۰
+
+- [ ] binary/schema مربوط به e11d4ec و55 migration تا AddExamAnswerAttachments، history مقصد و SQL export تازه بررسی شده‌اند.
+- [ ] persistence و ACL کلیدهای Data Protection cursor و رفتار409 resync پس از restart بررسی شده‌اند؛ ring MFA بازنگشته و ready تداوم cursor را probe نمی‌کند.
+- [ ] listener → bootstrap → Snapshot → replay، duplicate EventId، ContextRevision و503/backoff همان cursor با دو نشست مجاز آزموده شده‌اند.
+- [ ] قرارداد معتبر Admin/Legacy، Grace سازمان و رزرو/settlement Export بدون فعال‌سازی حدسی قیمت/AI/provider بررسی شده‌اند.
+- [ ] Upload/Ready/Attach/Save/Reload/Finalize/Download و revoke معلم/Enrollment، Parent concealment و backup bytes پیوست آزمون بررسی شده‌اند.
+- [ ]422 Safety در Messenger به Sent یا release تبدیل نشده و PRODUCT_DECISION_BLOCKED رسانه ثبت است.
+
+این موارد با ساخت مستندات تیک نمی‌خورند؛ پذیرش محیط هدف جدا است. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
+
+کنترل بازبینی۲۰۲۶-۱۰-۳۰: نسخه migration55 با آخرین AddExamAnswerAttachments، consent دعوت والد، Draft/Published Lesson، دریافت احرازشده عکس/جزوه و سلب مجوز منبع بررسی شود. mode واقعی CORS از AllowAnyOrigin و Host filtering مستقل خوانده شود؛ wildcard در mode=true تصمیم تنظیم است، نه permission. هیچ تیک این سند با ساخت PDF یا regression محلی پر نمی‌شود.
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-29` از `main@701cba0`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-30` از `main@e11d4ec`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
@@ -29,7 +40,7 @@
 - [ ] runtime و migration principal جدا و connection TLS معتبر است.
 - [ ] CORS origins، AllowedHosts، known proxy، storage root و write permission تأیید شده‌اند.
 - [ ] .NET 9 Hosting Bundle، IIS WebSocket، HTTPS binding، firewall و log collector آماده‌اند.
-- [ ] Identity key و Storage فعلی حفظ شده‌اند؛ MFA/key ring شرط نسخه جاری نیست. backup پیش از RemovePlatformMfa و توقف نسخه legacy برای schema ناسازگار تأیید شود؛ حذف فایل backup/key قدیمی scope جداست.
+- [ ] Identity key و Storage فعلی حفظ شده‌اند؛ MFA و ring اختصاصی آن شرط نسخه جاری نیست؛ persistence کلید cursor مستقل بررسی شود. backup پیش از RemovePlatformMfa و توقف نسخه legacy برای schema ناسازگار تأیید شود؛ حذف فایل backup/key قدیمی scope جداست.
 
 ## migration و rollout
 
@@ -118,7 +129,7 @@ Get-MakanCoreProbe '/health/live'
 Get-MakanCoreProbe '/health/ready'
 ```
 
-انتظار: live برابر 200/Healthy مستقل از SQL و ready برابر 200/Healthy فقط با config/ring/SQL/storage
+انتظار: live برابر 200/Healthy مستقل از SQL و ready برابر 200/Healthy فقط با config/SQL/storage
 سالم؛ failure core باید 503 باشد. redirect/404/timeout/بدنهٔ غیرمنتظره را PASS ننامید.
 برای detail فقط پس از آماده‌شدن HTTPS یا کانال مدیریتی امن و نشست مجاز، health/jobs با `OperationsRead`
 و notifications با `NotificationsRead` مشاهده شوند؛ credential در command history یا evidence ذخیره نشود.

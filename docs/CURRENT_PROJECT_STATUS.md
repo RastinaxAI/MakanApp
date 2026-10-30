@@ -1,48 +1,52 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
-بازبینی `2026-10-29` از `main@701cba0`؛ **332 عملیات HTTP در 59 Controller و 291 مسیر؛ 570 schema، 107 جدول و 52 migration**. آخرین migration `20261028202239_CompleteSchoolManagement` است. کاتالوگ از source commit‌شده و بدون SQL/worker/provider واقعی استخراج شده؛ وضعیت سرور از این شمارش معلوم نمی‌شود.
+بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در63 Controller و322 مسیر؛608 schema،113 جدول و55 migration**. آخرین migration `20261030060025_AddExamAnswerAttachments` است. شمارش از OpenAPI/ApiExplorer و مدل طراحی EF بدون اتصال SQL، worker، SMS یا AI استخراج شده است؛ applied schema یا پذیرش سرور از آن معلوم نمی‌شود.
 
 ## تغییرات کد و بیزینس
 
-| حوزه | وضعیت واقعی |
+| حوزه | وضعیت جاری و مرجع |
 |---|---|
-| Platform | MFA/step-up، endpoint و key ring اختصاصی حذف؛ OTP/session/role/permission و reason/audit فعال‌اند؛ [تصمیم](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) |
-| پروفایل | DOB nullable date-only self؛ omission/null حفظ مقدار، آینده رد؛ شاهد سن مستقل؛ [گزارش](product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) |
-| عکس | مرجع اختیاری User به FileAsset شخصی Ready JPEG/PNG؛ PUT/DELETE self و دانلود Bearer تابع هویت مجاز؛ [قرارداد](product/PROFILE_PHOTO_IMPLEMENTATION_FA.md) |
-| Personal Messaging | بدون School Role با gateهای سن/رابطه/privacy؛ Profile ناقص hint خواندن دارد؛ پایان نقش داده شخصی را حذف نمی‌کند |
-| مدرسه | Directory، roster کلاس، دعوت والد با consent، Lesson/attachment و انتشار؛ [قرارداد فرانت](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) |
-| CORS | AllowAnyOrigin مستقل از محیط؛ پایه/نمونه‌ها true، mode=false allowlist معتبر لازم دارد؛ بدون credentials؛ [قرارداد](production/CORS_CONFIGURATION_FA.md) |
-| عملیات | claim/fencing/repair و cleanup محدود opt-in، shutdown/metrics؛ probe صرفاً MFA حذف شده؛ [runbook](operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) |
+| Identity / Platform | opaque session و refresh چرخشی؛ MFA/Step-Up حذف مانده، permission/reason/audit فعال؛ [قرارداد Platform](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) |
+| Profile / School | DOB خوداظهاری، Photo با grant احرازشده، Directory/roster، Guardian consent و Lesson موجود؛ [مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) |
+| Commerce | مالک Individual/Organization، PlanVersion immutable، Quote/Order، دورهٔ ماهانه و Upgrade/Downgrade؛ [Handoff کاربر](product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md) |
+| Legacy | تا قرارداد معتبر Admin، AwaitingValidContract؛ LegacyPendingContract نامحدود نیست؛ enforcement از زمان واقعی ثبت و Grace هفت‌روزهٔ سازمان |
+| Quota / Export | CurrentCapacity بدون reset ماهانه، reservation/ledger و اتصال واقعی ReportExport با settlement و recovery؛ Unknown نتیجهٔ مالی قطعی نیست |
+| PersonalClass | میزبان User، دعوت/پذیرش/عضویت/archive و ظرفیت؛ CanCreateEducationalContent=false، بدون Assignment/Exam مستقل |
+| Realtime | bootstrap پیش از Snapshot، account replay و ClientInvalidated با مجوز جاری؛ cursor24ساعت وابسته به Session/Context و Data Protection host؛ [قرارداد Event](product/REALTIME_EVENT_CONTRACT_FA.md) |
+| پاسخ آموزشی | تکلیف workflow موجود را حفظ کرده؛ آزمون policy نسخه‌دار سؤال، Attach/Detach revision و Finalize/Download مجاز دارد؛ [قرارداد](product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) |
+| Safety Messenger |422 PendingReview/Rejected، NotApplied و KEEP_DRAFT_NO_AUTO_RETRY؛ workflow انتشار رسانه هنوز PRODUCT_DECISION_BLOCKED؛ [BE-01](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md) |
+| Hosting | CORS از config مستقل از محیط؛ OTP Test=false/true و Production=true/false؛ ready=config/SQL/Storage، تداوم کلید cursor جدا بررسی می‌شود؛ [استقرار](deployment-windows-linux-docker.md) |
 
-## آنچه هنوز پیاده‌شده فرض نمی‌شود
+خرید نقش آموزشی یا مجوز داده ایجاد نمی‌کند. Trial و AI preflight بنیاد قراردادند؛ Runtime AI فعال نشده است. meter ناموجود مصرف صفر یا Unlimited قطعی نیست. پایان نقش حساب، عکس یا پیام‌رسانی شخصی مجاز را حذف نمی‌کند.
 
-مدل محصول V2 برای Learning Profile، Badge، اشتراک/خرید فردی، accounting تعویض پلن، quotaهای AI/Source و Educational Source/RAG lifecycle پیشنهاد است. DOB، عکس و مدیریت مدرسه مصوب و موجودند؛ مجوز آن‌ها به دیگر پیشنهادها تعمیم ندارد. [ماتریس جاری/پیشنهادی](product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md).
+## محدودیت‌ها و gateهای مستقل
 
-| gate | وضعیت |
+| موضوع | وضعیت |
 |---|---|
+| درگاه پرداخت واقعی / قیمت و سقف تجاری | provider unavailable؛ مقدار تجاری حدسی Seed نشده است |
+| Learning Profile / Badge / Source lifecycle / RAG | هنوز پیاده‌شده فرض نمی‌شوند؛ [تفکیک محصول](product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) |
+| AI واقعی | پیش‌فرض خاموش؛ Service Auth قبلی PASS، Parent Provider Timeout و Full-12 Deferred |
 | Push دستگاه واقعی | P1_PUSH_RUNTIME_PENDING |
-| state/backplane چند instance | PENDING_SCALE_INFRA |
+| چند replica، backplane، keyring مشترک و Load/SLO | PENDING_SCALE_INFRA؛ replay محلی اثبات topology هدف نیست |
 | P3/LiveKit/TURN | P3_S_INFRA_REQUIRED؛ rejoin NOT_TESTED و Production approval NOT_GRANTED |
-| AI واقعی | Service Auth قبلی PASS؛ Parent Provider Timeout و Full-12 Deferred |
-| RAG، پرداخت واقعی، SMS عمومی اعلان | lifecycle یا provider مربوط موجود/تأییدشده فرض نشده؛ OTP ملی‌پیامک جداست |
-| TLS، recycle/reboot، backup/restore/load و alert | پذیرش محیط هدف مستقل از regression محلی لازم دارد |
+| IIS/TLS/Proxy، restart/reboot، backup/restore/alert | پذیرش محیط هدف جدا؛ این مرحله Deploy/Publish یا migration سرور نیست |
 
-## دیتابیس و مرز استقرار
+## دیتابیس و نگه‌داری
 
-چهار migration پس از Checklist: RemovePlatformMfa، AddSelfDeclaredProfileDateOfBirth، AddUserProfilePhoto و CompleteSchoolManagement. دو جدول MFA حذف و دو جدول Lesson اضافه شده‌اند؛ جمع۱۰۷ با بازبینی قدیمی۱۰۷ برابر است، اما schema یکسان نیست. RemovePlatformMfa داده را حذف می‌کند و Down بازیابی داده نیست. startup migration/EnsureCreated نداریم و این مرحله روی DB عادی یا سرور migration/seed اجرا نمی‌کند.
+سه migration پس از CompleteSchoolManagement: AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments. شش جدول افزوده: سه PersonalClass، UsageReservations، SubscriptionAmendments و AnswerRevisionAttachments. migration خودکار startup نداریم. RemovePlatformMfa قدیمی حذف داده دارد و Down داده را برنمی‌گرداند؛ rollout و backup هدف مستقل است.
+
+DB و Storage پیوست آزمون/تکلیف/Lesson/Photo سازگار backup شوند؛ Detach blob تاریخی را حذف نمی‌کند. Outboxهای منبع replay خودکار purge نمی‌شوند و cleanup terminal همچنان opt-in و خاموش است. key ring اختصاصی MFA حذف است، ولی Data Protection استاندارد حفاظت cursor مصرف جدید دارد؛ Identity key جای آن نیست. [Runbook](operations/REALTIME_RUNBOOK_FA.md)، [retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [Backup](production/BACKUP_RESTORE.md).
 
 ## مسیر مطالعه
 
-[راهنمای بک‌اند](backend-api-guide.md) → [مرجع API](backend-api-reference.md) → [قرارداد فرانت](frontend-contract/README.md) → اسناد تخصصی Profile/Photo/School بالا → [فرهنگ SQL](database-current-structure.md) → [استقرار](deployment-windows-linux-docker.md) و [Production](production/PRODUCTION_READINESS.md).
-
-[inventory همه اسناد](documentation-inventory.csv) قرارداد جاری و شاهد تاریخی را جدا می‌کند؛ نتایج تست/commit گزارش‌های قدیمی به‌عنوان نتیجهٔ امروز تکرار نشده‌اند. [گزارش تحویل و فهرست فایل‌های اصلاح‌شده](DOCUMENTATION_UPDATE_REPORT.md).
+[راهنمای بک‌اند](backend-api-guide.md) → [مرجع API](backend-api-reference.md) → [قرارداد فرانت](frontend-contract/README.md) → Handoffهای تخصصی جدول بالا → [فرهنگ SQL](database-current-structure.md) → [استقرار](deployment-windows-linux-docker.md). HTML/PDF چهار کتاب از همین Markdownها ساخته می‌شوند؛ نسخهٔ Database مطابق ignore قبلی محلی است. [فهرست اسناد](documentation-inventory.csv) و [گزارش تغییرها](DOCUMENTATION_UPDATE_REPORT.md).
 
 ## Validation بازبینی جاری
 
-Restore موفق؛ Build اولیه و نهایی هر دو صفر warning/error. هر دو suite کامل **۲۳۳۹ تست موفق** داشتند: ۸۹۳ Unit،۱۴۳۲ Integration و۱۴ Architecture؛ failed/skipped صفر. شش TRX دو دور کنترل شدند. دوازده تست ابزار مستندسازی هم موفق‌اند؛ تست محصول تازه‌ای در این کار اسناد اضافه نشده است.
+Restore موفق؛ Build اولیه و نهایی هر دو با **صفر warning و صفر error** موفق شدند. suite کامل اولیه و نهایی هر کدام **2478 تست موفق** داشتند:922 Unit،1542 Integration و14 Architecture؛ failed/skipped صفر. شمارنده‌های شش TRX کنترل شدند.12 تست ابزار اسناد هم موفق‌اند؛ تست تازهٔ محصول به کار مستندات اضافه نشد.
 
-اجرا روی checkout مستقل و LocalDB تست با نام یکتا بود؛ تغییر موقت نام fixture بعد از اجرا به bytes اصلی بازگشت و وارد commit نیست. EF pending-model ندارد؛ migration روی DB عادی یا سرور اعمال نشده است.
+اجرای محصول روی checkout مستقل و LocalDB یکتای `MakanApp_DocsSync_20261030_c817e6d9` بود؛ نام موقت fixture پس از suite نهایی به bytes اصلی برگشت و وارد تحویل نیست. EF has-pending-model-changes تغییر معلق ندارد؛ هیچ migration روی دیتابیس معمول یا سرور اجرا نشده است.
 
-کنترل۳۳۲ عملیات/۵۷۰ schema/۱۰۷ جدول/۵۲ migration و۱۴۴ ورودی inventory موفق؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب۷۴/۴۲۱/۴۲۸/۱۵۹ صفحه دارند؛ bookmark و hash HTML متناظر کنترل شده و صفحه خالی/متن خارج صفحه صفر است. صفحات جدید DOB/Photo/Lesson/SQL بصری بازبینی شدند؛ gateهای runtime از این نتایج محلی بسته اعلام نشده‌اند.
+کنترل365 operation،608 schema،113 جدول،55 migration و154 ورودی inventory موفق است؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب 78 / 458 / 466 / 172 صفحه دارند؛ bookmark و SHA متناظر HTML کنترل شدند. کنترل صفحهٔ خالی و متن خارج صفحه موفق و صفحات Commerce/Replay/Attachment/SQL بصری بازبینی شدند. این‌ها پذیرش UI، دستگاه یا سرور واقعی نیستند.
 
-سه فایل Python محلی ابزار AI حفظ و از scope تغییرات کنار گذاشته شده‌اند؛ تنظیم خصوصی یا فایل Frontend تغییر نمی‌کند. چهار commit قبلی main هنوز روی upstream منتشر نشده‌اند؛ Push این تحویل بدون تعیین تکلیف آن‌ها مجوز انتشار خودکار کار قبلی کاربر نیست.
+فایل‌های محلی قبلی ابزار AI خارج scope و بدون stage/تغییر باقی‌اند. فایل خصوصی تنظیمات، کد Frontend، دیتابیس معمول توسعه و سرور تغییر نکرده‌اند. Source baseline گزارش با commit اسناد متفاوت است؛ نتیجهٔ Commit/Push پس از موفقیت validation در گزارش تحویل Git ارائه می‌شود.

@@ -1,5 +1,11 @@
 # Observability و عملیات
 
+## Realtime، replay و Safety — ۲۰۲۶-۱۰-۳۰
+
+Meter جدید MakanApp.Realtime شامل makan.realtime.replay.requests، makan.realtime.resync.required، makan.realtime.authorization.rejections، makan.realtime.invalidation.deliveries، makan.realtime.connections.started، makan.realtime.connections.active و makan.realtime.replay.duration است. outcome محدود و بدون User/Session/Child/Token label است. connections.active تعداد transport و deliveries پایان invocation به گروه نشست است؛ read receipt، reconnect مستقل یا SLO تولید محسوب نمی‌شوند. cursor، پیام، پاسخ آزمون و موجودی مالی log نشوند.
+
+503 replay با RETRY_SAME_CURSOR خطای واقعی است؛ صفحهٔ خالی با HasMore=true و retryAfter وضعیت انتظار cut است و backlog صفر محسوب نشود. SafetyReference پاسخ422 فقط رخداد تلاش است؛ تصمیم خصوصی و filename/content/hash وارد log کمینه نمی‌شوند. [Runbook و SQLهای خواندنی](../operations/REALTIME_RUNBOOK_FA.md) و [BE-01](../messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md). exporter/alert، storm و p95/p99 واقعی همچنان نیازمند پذیرش هدف‌اند.
+
 <!-- CURRENT-REVIEW:BEGIN -->
 بازبینی `2026-10-23` از `main@5885d11`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->

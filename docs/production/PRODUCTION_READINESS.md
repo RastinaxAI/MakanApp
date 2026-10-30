@@ -1,12 +1,24 @@
 # آمادگی جاری Production و حدود انتشار
 
-بازبینی هماهنگی `2026-10-29` / `main@701cba0`: آخرین schema مخزن `20261028202239_CompleteSchoolManagement`، ۵۲ migration است؛ Profile DOB/Photo و مدیریت مدرسه/Guardian consent/Lesson به binary جدید نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA/key ring حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+## مبنای جاری Realtime، اشتراک و پیوست پاسخ — ۲۰۲۶-۱۰-۳۰
+
+مبنای کد `main@e11d4ec`، 365 عملیات HTTP، 608 schema، 113 جدول و55 migration است؛ آخرین `20261030060025_AddExamAnswerAttachments`. سه migration پس از CompleteSchoolManagement به‌ترتیب AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments هستند. اولی مالکیت/دوره/رزرو و PersonalClass، دومی اتصال Export به رزرو و سومی policy سؤال و AnswerRevisionAttachments را می‌افزاید. از SQL export تازه و history واقعی مقصد استفاده کنید؛ بستهٔ قدیمی خودکار schema/binary جدید ندارد. در این بازبینی Publish/Deploy یا migration سرور اجرا نشده است.
+
+Data Protection استاندارد host اکنون برای cursor حساب در RealtimeCursorProtector مصرف می‌شود. تداوم cursor پس از restart/redeploy به persistence و دسترسی درست key ring وابسته است؛ Identity:SecurityKey جای آن را نمی‌گیرد. در IIS پروفایل/هویت App Pool و مسیر امن کلیدها، و در Linux/Docker مکان پایدار خارج از filesystem موقت container بررسی شوند. کد AddDataProtection پیش‌فرض دارد و setting خصوصی تازه‌ای برای محل ring یا ApplicationName اضافه نشده است؛ متغیر ساختگی Security:DataProtection نسازید. از دست‌رفتن کلید یا context/epoch ناسازگار،409 REALTIME_RESYNC_REQUIRED و Snapshot تازه می‌خواهد؛ readiness این تداوم را probe نمی‌کند. این مصرف جدید، بازگشت MFA/Step-Up نیست. چند replica/backplane و اشتراک کلیدها هنوز gate مستقل‌اند. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
+
+Outbox عمومی اکنون invalidation را پس از Commit و بیرون transaction ارسال می‌کند؛ crash می‌تواند همان EventId را تکرار کند. replay به Outboxهای موجود تکیه دارد؛ processed بودن مجوز purge نیست. bootstrap پیش از Snapshot، قطع/وصل و replay همان cursor، ContextRevision، صفحهٔ خالی با HasMore=true و RetryAfterMilliseconds و خطای503 با حفظ cursor در smoke هدف بررسی شوند. cursor/credential/payload در log نباشند.
+
+کنترل تجاری Legacy خودکار فعال نمی‌شود؛ ثبت قرارداد معتبر Admin نقطهٔ enforcement است. دورهٔ ماهانه، Grace هفت‌روزهٔ سازمان، رزرو ReportExport و تفاوت meter unavailable/Unlimited در smoke بررسی شوند؛ بدون درخواست مستقل قرارداد واقعی نسازید. قیمت/سقف پولی یا gateway واقعی و AI runtime با این اسناد فعال نمی‌شوند.
+
+DB و Storage پیوست آزمون، تکلیف، Lesson و Photo با هم backup/restore شوند. AnswerRevision تاریخی و فایل Retained با Detach حذف فیزیکی نمی‌شوند؛ Parent/Guardian و Teacher لغوشده grant raw attachment ندارند. BE-01 رسانهٔ Messenger همچنان Product-blocked است. [پیوست آموزشی](../product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) و [اشتراک](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
+
+بازبینی هماهنگی `2026-10-30` / `main@e11d4ec`: آخرین schema مخزن `20261030060025_AddExamAnswerAttachments`،۵۵ migration است؛ Profile/School، Commerce، Realtime و پیوست پاسخ آزمون به binary/schema سازگار نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA و ring اختصاصی آن حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
 
 بازبینی `2026-10-23`، مبنا `main@5885d11`؛ نتیجهٔ انتشار عمومی همچنان `NOT_READY_FOR_PUBLIC_RELEASE` است. closure کد GAP-01/04/05 با smoke محیط هدف، استقرار یا تأیید حقوقی/عملیاتی یکی نیست. مالک انتشار فعلی Production/HTTP را با دو استثنای صریح پذیرفته، نه یک محیط Staging تازه. [runbook IIS](DEPLOYMENT_IIS.md) و [ممیزی gapها](../release/NON_AI_BACKEND_FINAL_GAP_AUDIT.md) مرجع جزئیات‌اند.
 
 ## تغییرات جدید مبنای آمادگی
 
-PH-1..6 در کد شامل readiness، log/metrics امن، worker recovery، shutdown و cleanup محدود opt-in است؛ این‌ها نیاز عملیات target را حذف نمی‌کنند. [مراجع PH](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md). مدل جاری ۱۰۵ جدول و ۴۹ Migration دارد؛ حذف MFA فقط در مدل و تست ایزوله اعمال شده است.
+PH-1..6 در کد شامل readiness، log/metrics امن، worker recovery، shutdown و cleanup محدود opt-in است؛ این‌ها نیاز عملیات target را حذف نمی‌کنند. [مراجع PH](../operations/PRODUCTION_CONFIGURATION_RUNBOOK.md). مدل جاری ۱۱۳ جدول و۵۵ migration دارد؛ applied schema مقصد باید مستقل بررسی شود.
 
 TestIis و ProductionIis در انتشار محلی جدا و با OTP false/true و true/false آزموده شده‌اند؛ templateهای Test/Production هم‌شکل‌اند. گزارش قبلی [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) با ۲۲۳۹ تست، شاهد همان مرحله است؛ نتیجهٔ بازبینی فعلی در [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) درج می‌شود. [راهنمای دو بسته](PUBLISH_GUIDE_FA.md) کانفیگ خصوصی بسته را عمومی نمی‌کند.
 
@@ -46,10 +58,10 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Logging | CODE_VALIDATED / COLLECTOR_POLICY_PENDING | correlation واحد، metadata محدود، خطای امن و تست نشت؛ پاک‌سازی عمومی همهٔ loggerها/DiagnosticSource ادعا نمی‌شود |
 | Metrics | CODE_VALIDATED / EXPORTER_PENDING | meterهای vendor-neutral درخواست/worker/صف و snapshot stale-aware؛ collector یا endpoint metrics نصب‌شده نداریم |
 | Tracing | CODE_VALIDATED / EXPORTER_PENDING | ActivitySourceهای API/worker؛ collector نباید body/header/exception حساس را خودکار جمع کند |
-| Health | CODE_VALIDATED / SERVER_PENDING | live سبک؛ ready با config/ring/SQL/storage؛ optional provider readiness core را نمی‌بندد |
+| Health | CODE_VALIDATED / SERVER_PENDING | live سبک؛ ready با config/SQL/storage؛ optional provider readiness core را نمی‌بندد |
 | Workers | CODE_VALIDATED / IIS_LIFECYCLE_PENDING | claim/fencing/repair محدود و SQL recovery محلی؛ recycle/reboot و old/new legacy هم‌پوشان آزمایش سرور نیستند؛ تحویل خارجی exactly-once نیست |
 | IIS runtime | CODE_AND_RUNBOOK / SERVER_PENDING | shutdown Host محدود، ANCM 120s و دستور بررسی WAS/idle/preload؛ تنظیم سرور اجرا نشده است |
-| Retention | INVENTORIED / POLICY_PENDING | ۱۰۷ جدول طبقه‌بندی شده؛ فقط مکانیزم خاموشِ bytes terminal بدون reference؛ هیچ SQL history purge ندارد |
+| Retention | INVENTORIED / POLICY_PENDING | ۱۱۳ جدول با افزوده‌های جاری طبقه‌بندی شده؛ فقط مکانیزم خاموشِ bytes terminal بدون reference؛ هیچ SQL history purge ندارد |
 | Alerting | CONTRACT_READY / DELIVERY_PENDING | signal/severity/runbook مشخص؛ exporter و دریافت واقعی alert همچنان زیرساخت لازم دارد |
 | Backup | READY_WITH_LIMITATION | runbook آماده؛ job واقعی SQL/VPS باید ایجاد شود |
 | Restore | READY_WITH_LIMITATION | drill disposable روی LocalDB موفق؛ rehearsal روی topology واقعی staging باقی است |

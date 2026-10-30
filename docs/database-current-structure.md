@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `main@701cba057b358d9cf6d15d681389d0f8d22ac6d6`؛ بازبینی `2026-10-29`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9`؛ بازبینی `2026-10-30`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**107 جدول، 1059 ستون، 243 FK، 302 index مستقل از key و 280 CHECK؛ 52 Migration.**
+**113 جدول، 1162 ستون، 266 FK، 332 index مستقل از key و 298 CHECK؛ 55 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -23,9 +23,9 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 
 | Schema | جدول |
 |---|---|
-| academic | 11 |
-| assessment | 18 |
-| commerce | 10 |
+| academic | 14 |
+| assessment | 19 |
+| commerce | 12 |
 | guardian | 1 |
 | identity | 7 |
 | messaging | 42 |
@@ -91,6 +91,9 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 50 | 20261028102653_AddSelfDeclaredProfileDateOfBirth | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028102653_AddSelfDeclaredProfileDateOfBirth.cs) |
 | 51 | 20261028164838_AddUserProfilePhoto | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028164838_AddUserProfilePhoto.cs) |
 | 52 | 20261028202239_CompleteSchoolManagement | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261028202239_CompleteSchoolManagement.cs) |
+| 53 | 20261029111645_AddCommercialOwnershipPeriodsAndPersonalClasses | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261029111645_AddCommercialOwnershipPeriodsAndPersonalClasses.cs) |
+| 54 | 20261029122246_BindReportExportsToCommercialReservations | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261029122246_BindReportExportsToCommercialReservations.cs) |
+| 55 | 20261030060025_AddExamAnswerAttachments | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261030060025_AddExamAnswerAttachments.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -432,6 +435,123 @@ CHECKها:
 |---|---|
 | CK_Enrollments_Status | `[Status] IN (1, 2, 3)` |
 
+### academic.PersonalClasses
+
+Entity: `MakanApp.Domain.Academic.PersonalClass`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ArchivedAtUtc | `datetime2` | بله | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| HostUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Title | `nvarchar(200)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClasses | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClasses_HostUserId_ClientOperationId | HostUserId, ClientOperationId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| HostUserId | identity.Users | Id | Restrict |
+
+### academic.PersonalClassInvitations
+
+Entity: `MakanApp.Domain.Academic.PersonalClassInvitation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AcceptedAtUtc | `datetime2` | بله | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DestinationUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ExpiresAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
+| RevokedAtUtc | `datetime2` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassInvitations | PK | Id |
+| AK_PersonalClassInvitations_PersonalClassId_DestinationUserId_Id | Alternate Key | PersonalClassId, DestinationUserId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassInvitations_DestinationUserId | DestinationUserId | False | — |
+| IX_PersonalClassInvitations_PersonalClassId_ClientOperationId | PersonalClassId, ClientOperationId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| DestinationUserId | identity.Users | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassInvitations_Expiry | `[ExpiresAtUtc]>[CreatedAtUtc]` |
+
+### academic.PersonalClassParticipants
+
+Entity: `MakanApp.Domain.Academic.PersonalClassParticipant`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| EndedAtUtc | `datetime2` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| InvitationId | `uniqueidentifier` | خیر | خیر | Never |
+| JoinedAtUtc | `datetime2` | خیر | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| StudentUserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassParticipants | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassParticipants_InvitationId | InvitationId | True | — |
+| IX_PersonalClassParticipants_StudentUserId | StudentUserId | False | — |
+| IX_PersonalClassParticipants_PersonalClassId_StudentUserId | PersonalClassId, StudentUserId | True | [EndedAtUtc] IS NULL |
+| IX_PersonalClassParticipants_PersonalClassId_StudentUserId_InvitationId | PersonalClassId, StudentUserId, InvitationId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| StudentUserId | identity.Users | Id | Restrict |
+| PersonalClassId, StudentUserId, InvitationId | academic.PersonalClassInvitations | PersonalClassId, DestinationUserId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassParticipants_End | `[EndedAtUtc] IS NULL OR [EndedAtUtc]>=[JoinedAtUtc]` |
+
 ### academic.ScheduleRules
 
 Entity: `MakanApp.Domain.Academic.ScheduleRule`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -567,6 +687,40 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_TeacherAssignments_Status | `[Status] IN (1, 2)` |
+
+### assessment.AnswerRevisionAttachments
+
+Entity: `MakanApp.Domain.Assessment.AnswerRevisionAttachment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AnswerRevisionId | `uniqueidentifier` | خیر | خیر | Never |
+| AttachedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
+| ExamAttemptQuestionId | `uniqueidentifier` | خیر | خیر | Never |
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AnswerRevisionAttachments | PK | AnswerRevisionId, FileAssetId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AnswerRevisionAttachments_FileAssetId | FileAssetId | False | — |
+| IX_AnswerRevisionAttachments_OrganizationId_ExamAttemptId_FileAssetId | OrganizationId, ExamAttemptId, FileAssetId | False | — |
+| IX_AnswerRevisionAttachments_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | assessment.AnswerRevisions | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
 
 ### assessment.AnswerRevisions
 
@@ -1322,9 +1476,14 @@ Entity: `MakanApp.Domain.Assessment.QuestionVersion`؛ مالک نگاشت: [EF 
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| AllowedAnswerContentTypes | `nvarchar(2048)` | بله | خیر | Never |
+| AnswerTextRequired | `bit` | خیر | خیر | OnAdd |
+| AttachmentsAllowed | `bit` | خیر | خیر | OnAdd |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | ExamVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| MaximumAnswerAttachmentBytes | `bigint` | بله | خیر | Never |
+| MaximumAnswerAttachmentCount | `int` | بله | خیر | Never |
 | Order | `int` | خیر | خیر | Never |
 | OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
 | Prompt | `nvarchar(max)` | خیر | خیر | Never |
@@ -1356,6 +1515,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_QuestionVersions_AttachmentPolicy | `([AttachmentsAllowed] = 0 AND [AnswerTextRequired] = 0 AND [MaximumAnswerAttachmentCount] IS NULL AND [MaximumAnswerAttachmentBytes] IS NULL AND [AllowedAnswerContentTypes] IS NULL) OR ([AttachmentsAllowed] = 1 AND [MaximumAnswerAttachmentCount] IS NOT NULL AND [MaximumAnswerAttachmentCount] > 0 AND [MaximumAnswerAttachmentBytes] IS NOT NULL AND [MaximumAnswerAttachmentBytes] > 0 AND [AllowedAnswerContentTypes] IS NOT NULL AND LEN([AllowedAnswerContentTypes]) > 0 AND ([Type] = 2 OR [AnswerTextRequired] = 0))` |
 | CK_QuestionVersions_Order | `[Order] > 0` |
 | CK_QuestionVersions_Score | `[Score] > 0` |
 | CK_QuestionVersions_Type | `[Type] IN (1, 2)` |
@@ -1452,18 +1612,25 @@ Entity: `MakanApp.Domain.Commerce.Order`؛ مالک نگاشت: [EF Configuratio
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | Amount | `decimal(18,2)` | خیر | خیر | Never |
+| BillingAnchorUtc | `datetime2` | بله | خیر | Never |
+| BillingPeriodIndex | `int` | خیر | خیر | Never |
 | CancelledAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | Currency | `char(3)` | خیر | خیر | Never |
+| ExpectedPreviousPlanVersionId | `uniqueidentifier` | بله | خیر | Never |
+| HasCommercialTerms | `bit` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OrganizationId | `uniqueidentifier` | بله | خیر | Never |
 | PaidAtUtc | `datetime2(7)` | بله | خیر | Never |
 | PlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | PurchaserUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Purpose | `int` | خیر | خیر | Never |
 | RequestPayloadHash | `binary(32)` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Status | `int` | خیر | خیر | Never |
+| TargetSubscriptionId | `uniqueidentifier` | بله | خیر | Never |
+| TermsExpireAtUtc | `datetime2` | بله | خیر | Never |
 
 کلیدها:
 
@@ -1475,7 +1642,9 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_Orders_ExpectedPreviousPlanVersionId | ExpectedPreviousPlanVersionId | False | — |
 | IX_Orders_PlanVersionId | PlanVersionId | False | — |
+| IX_Orders_TargetSubscriptionId | TargetSubscriptionId | False | — |
 | UX_Orders_Purchaser_ClientOperation | PurchaserUserId, ClientOperationId | True | — |
 | IX_Orders_Purchaser_CreatedAt | PurchaserUserId, CreatedAtUtc | False | — |
 | IX_Orders_Organization_Status_CreatedAt | OrganizationId, Status, CreatedAtUtc | False | — |
@@ -1484,15 +1653,18 @@ Indexها:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| ExpectedPreviousPlanVersionId | commerce.PlanVersions | Id | Restrict |
 | OrganizationId | organization.Organizations | Id | Restrict |
 | PlanVersionId | commerce.PlanVersions | Id | Restrict |
 | PurchaserUserId | identity.Users | Id | Restrict |
+| TargetSubscriptionId | commerce.Subscriptions | Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_Orders_Amount | `[Amount] > 0` |
+| CK_Orders_Amount | `[Amount] >= 0` |
+| CK_Orders_CommercialPurpose | `[Purpose] BETWEEN 1 AND 3 AND ([HasCommercialTerms]=0 OR ([BillingAnchorUtc] IS NOT NULL AND [TermsExpireAtUtc]>[CreatedAtUtc]))` |
 | CK_Orders_Currency | `[Currency] = 'IRR'` |
 | CK_Orders_Lifecycle | `([Status] = 1 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NULL) OR ([Status] = 2 AND [PaidAtUtc] IS NOT NULL AND [CancelledAtUtc] IS NULL) OR ([Status] = 3 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NOT NULL)` |
 | CK_Orders_RequestPayloadHash | `DATALENGTH([RequestPayloadHash]) = 32` |
@@ -1630,7 +1802,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_PlanEntitlements_Key | `[Key] BETWEEN 1 AND 6` |
+| CK_PlanEntitlements_Key | `[Key] BETWEEN 1 AND 9` |
 
 ### commerce.PlanQuotaDefinitions
 
@@ -1666,7 +1838,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_PlanQuotaDefinitions_Key | `[Key] BETWEEN 1 AND 4` |
+| CK_PlanQuotaDefinitions_Key | `[Key] BETWEEN 1 AND 7` |
 | CK_PlanQuotaDefinitions_Limit | `[Limit] IS NULL OR [Limit] >= 0` |
 
 ### commerce.Plans
@@ -1675,10 +1847,15 @@ Entity: `MakanApp.Domain.Commerce.Plan`؛ مالک نگاشت: [EF Configuration
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| Audience | `int` | خیر | خیر | Never |
+| AvailabilityEffectiveAtUtc | `datetime2(7)` | بله | خیر | Never |
+| CatalogVisible | `bit` | خیر | خیر | Never |
 | Code | `nvarchar(100)` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | DisplayName | `nvarchar(200)` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| NewPurchaseAvailable | `bit` | خیر | خیر | Never |
+| RenewalAvailable | `bit` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 
 کلیدها:
@@ -1692,6 +1869,12 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | UX_Plans_Code | Code | True | — |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_Plans_Audience | `[Audience] IN (1,2)` |
 
 ### commerce.PlanVersionPrices
 
@@ -1720,7 +1903,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_PlanVersionPrices_Amount | `[Amount] > 0` |
+| CK_PlanVersionPrices_Amount | `[Amount] >= 0` |
 | CK_PlanVersionPrices_Currency | `[Currency] = 'IRR'` |
 
 ### commerce.PlanVersions
@@ -1729,13 +1912,18 @@ Entity: `MakanApp.Domain.Commerce.PlanVersion`؛ مالک نگاشت: [EF Config
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| Calendar | `int` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CriticalWarningPercent | `int` | بله | خیر | Never |
+| ExplicitlyFree | `bit` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | PlanId | `uniqueidentifier` | خیر | خیر | Never |
 | PublishedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SaleTermsReference | `nvarchar(200)` | بله | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
 | VersionNumber | `int` | خیر | خیر | Never |
+| WarningPercent | `int` | بله | خیر | Never |
 
 کلیدها:
 
@@ -1759,9 +1947,57 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_PlanVersions_Calendar | `[Calendar] IS NULL OR [Calendar] IN (1,2)` |
 | CK_PlanVersions_Publication | `([Status] = 1 AND [PublishedAtUtc] IS NULL) OR ([Status] = 2 AND [PublishedAtUtc] IS NOT NULL)` |
 | CK_PlanVersions_Status | `[Status] IN (1, 2)` |
 | CK_PlanVersions_VersionNumber | `[VersionNumber] > 0` |
+| CK_PlanVersions_Warnings | `([WarningPercent] IS NULL OR [WarningPercent] BETWEEN 1 AND 99) AND ([CriticalWarningPercent] IS NULL OR [CriticalWarningPercent] BETWEEN 1 AND 99) AND ([WarningPercent] IS NULL OR [CriticalWarningPercent] IS NULL OR [WarningPercent]<[CriticalWarningPercent])` |
+
+### commerce.SubscriptionAmendments
+
+Entity: `MakanApp.Domain.Commerce.SubscriptionAmendment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ChargedToman | `decimal(18,0)` | خیر | خیر | Never |
+| DurationTicks | `bigint` | خیر | خیر | Never |
+| EffectiveAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| NextPlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| OrderId | `uniqueidentifier` | خیر | خیر | Never |
+| PreviousPlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| RemainingTicks | `bigint` | خیر | خیر | Never |
+| SubscriptionId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SubscriptionAmendments | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SubscriptionAmendments_NextPlanVersionId | NextPlanVersionId | False | — |
+| IX_SubscriptionAmendments_OrderId | OrderId | True | — |
+| IX_SubscriptionAmendments_PreviousPlanVersionId | PreviousPlanVersionId | False | — |
+| IX_SubscriptionAmendments_SubscriptionId | SubscriptionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| NextPlanVersionId | commerce.PlanVersions | Id | Restrict |
+| OrderId | commerce.Orders | Id | Restrict |
+| PreviousPlanVersionId | commerce.PlanVersions | Id | Restrict |
+| SubscriptionId | commerce.Subscriptions | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SubscriptionAmendments_Proration | `[DurationTicks]>0 AND [RemainingTicks]>=0 AND [RemainingTicks]<=[DurationTicks] AND [ChargedToman]>=0` |
 
 ### commerce.Subscriptions
 
@@ -1770,13 +2006,21 @@ Entity: `MakanApp.Domain.Commerce.Subscription`؛ مالک نگاشت: [EF Confi
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | ActivatedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| BillingAnchorUtc | `datetime2(7)` | بله | خیر | Never |
+| BillingPeriodIndex | `int` | خیر | خیر | Never |
 | CancelledAtUtc | `datetime2(7)` | بله | خیر | Never |
+| CommercialControlEnabled | `bit` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | EndsAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| InitialPlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| OwnerId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerType | `int` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | بله | خیر | Never |
 | PlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| ScheduledPlanVersionId | `uniqueidentifier` | بله | خیر | Never |
 | SourceOrderId | `uniqueidentifier` | بله | خیر | Never |
 | StartsAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
@@ -1786,23 +2030,30 @@ Entity: `MakanApp.Domain.Commerce.Subscription`؛ مالک نگاشت: [EF Confi
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_Subscriptions | PK | Id |
-| UQ_Subscriptions_Organization_Id | Alternate Key | OrganizationId, Id |
+| UQ_Subscriptions_Owner_Id | Alternate Key | OwnerType, OwnerId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_Subscriptions_Organization_Active | OrganizationId | True | [Status] = 2 |
+| IX_Subscriptions_InitialPlanVersionId | InitialPlanVersionId | False | — |
+| UX_Subscriptions_Organization_Active | OrganizationId | True | [Status] = 2 AND [OrganizationId] IS NOT NULL |
+| IX_Subscriptions_OwnerUserId | OwnerUserId | True | [Status]=2 AND [OwnerUserId] IS NOT NULL |
 | IX_Subscriptions_PlanVersionId | PlanVersionId | False | — |
+| IX_Subscriptions_ScheduledPlanVersionId | ScheduledPlanVersionId | False | — |
 | UX_Subscriptions_SourceOrder | SourceOrderId | True | [SourceOrderId] IS NOT NULL |
 | IX_Subscriptions_Organization_CreatedAt | OrganizationId, CreatedAtUtc | False | — |
+| IX_Subscriptions_Owner_Period | OwnerType, OwnerId, StartsAtUtc | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| InitialPlanVersionId | commerce.PlanVersions | Id | Restrict |
 | OrganizationId | organization.Organizations | Id | Restrict |
+| OwnerUserId | identity.Users | Id | Restrict |
 | PlanVersionId | commerce.PlanVersions | Id | Restrict |
+| ScheduledPlanVersionId | commerce.PlanVersions | Id | Restrict |
 | SourceOrderId | commerce.Orders | Id | Restrict |
 
 CHECKها:
@@ -1811,7 +2062,9 @@ CHECKها:
 |---|---|
 | CK_Subscriptions_Cancellation | `([Status] = 4 AND [CancelledAtUtc] IS NOT NULL) OR ([Status] <> 4 AND [CancelledAtUtc] IS NULL)` |
 | CK_Subscriptions_Dates | `[EndsAtUtc] IS NULL OR [EndsAtUtc] > [StartsAtUtc]` |
-| CK_Subscriptions_Status | `[Status] BETWEEN 1 AND 4` |
+| CK_Subscriptions_ManagedPeriod | `[CommercialControlEnabled]=0 OR ([BillingAnchorUtc] IS NOT NULL AND [EndsAtUtc] IS NOT NULL AND [BillingPeriodIndex]>=0)` |
+| CK_Subscriptions_Owner | `([OwnerType]=1 AND [OwnerUserId]=[OwnerId] AND [OwnerUserId] IS NOT NULL AND [OrganizationId] IS NULL) OR ([OwnerType]=2 AND [OrganizationId]=[OwnerId] AND [OrganizationId] IS NOT NULL AND [OwnerUserId] IS NULL)` |
+| CK_Subscriptions_Status | `[Status] BETWEEN 1 AND 5` |
 
 ### commerce.UsageLedger
 
@@ -1820,12 +2073,23 @@ Entity: `MakanApp.Domain.Commerce.UsageLedgerEntry`؛ مالک نگاشت: [EF C
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | Amount | `bigint` | خیر | خیر | Never |
+| ConsumerUserId | `uniqueidentifier` | بله | خیر | Never |
+| ContextId | `uniqueidentifier` | بله | خیر | Never |
+| ContextType | `int` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OccurredAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| OwnerId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerType | `int` | خیر | خیر | Never |
+| PeriodEndsAtUtc | `datetime2(7)` | بله | خیر | Never |
+| PeriodStartsAtUtc | `datetime2(7)` | بله | خیر | Never |
+| PlanVersionId | `uniqueidentifier` | بله | خیر | Never |
 | QuotaKey | `int` | خیر | خیر | Never |
+| ReasonCode | `nvarchar(100)` | بله | خیر | Never |
+| ReservationId | `uniqueidentifier` | بله | خیر | Never |
 | SourceOperationId | `uniqueidentifier` | خیر | خیر | Never |
-| SubscriptionId | `uniqueidentifier` | خیر | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| SubscriptionId | `uniqueidentifier` | بله | خیر | Never |
 
 کلیدها:
 
@@ -1837,21 +2101,90 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_UsageLedger_Subscription_Quota_SourceOperation | SubscriptionId, QuotaKey, SourceOperationId | True | — |
+| IX_UsageLedger_ConsumerUserId | ConsumerUserId | False | — |
+| IX_UsageLedger_PlanVersionId | PlanVersionId | False | — |
+| IX_UsageLedger_ReservationId_Status | ReservationId, Status | True | [ReservationId] IS NOT NULL |
+| IX_UsageLedger_OwnerType_OwnerId_SubscriptionId | OwnerType, OwnerId, SubscriptionId | False | — |
+| UX_UsageLedger_Subscription_Quota_SourceOperation | SubscriptionId, QuotaKey, SourceOperationId | True | [Status]=2 AND [SubscriptionId] IS NOT NULL |
 | IX_UsageLedger_Organization_Subscription_Quota_OccurredAt | OrganizationId, SubscriptionId, QuotaKey, OccurredAtUtc | False | — |
+| IX_UsageLedger_OwnerType_OwnerId_ConsumerUserId_ReservationId | OwnerType, OwnerId, ConsumerUserId, ReservationId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, SubscriptionId | commerce.Subscriptions | OrganizationId, Id | Restrict |
+| ConsumerUserId | identity.Users | Id | Restrict |
+| PlanVersionId | commerce.PlanVersions | Id | Restrict |
+| OwnerType, OwnerId, SubscriptionId | commerce.Subscriptions | OwnerType, OwnerId, Id | Restrict |
+| OwnerType, OwnerId, ConsumerUserId, ReservationId | commerce.UsageReservations | OwnerType, OwnerId, ConsumerUserId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
 | CK_UsageLedger_Amount | `[Amount] > 0` |
-| CK_UsageLedger_QuotaKey | `[QuotaKey] BETWEEN 1 AND 4` |
+| CK_UsageLedger_Owner | `([OwnerType]=1 AND [OrganizationId] IS NULL) OR ([OwnerType]=2 AND [OrganizationId]=[OwnerId] AND [OrganizationId] IS NOT NULL)` |
+| CK_UsageLedger_QuotaKey | `[QuotaKey] BETWEEN 1 AND 7` |
+| CK_UsageLedger_Reservation | `[ReservationId] IS NULL OR ([ConsumerUserId] IS NOT NULL AND [ContextType] IS NOT NULL AND [ContextId] IS NOT NULL AND [PeriodStartsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc])` |
+| CK_UsageLedger_Status | `[Status] BETWEEN 1 AND 4` |
+
+### commerce.UsageReservations
+
+Entity: `MakanApp.Domain.Commerce.UsageReservation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Amount | `bigint` | خیر | خیر | Never |
+| ConsumerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextType | `int` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| FinalizationReason | `nvarchar(100)` | بله | خیر | Never |
+| FinalizedAtUtc | `datetime2` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsTrial | `bit` | خیر | خیر | Never |
+| OperationId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerType | `int` | خیر | خیر | Never |
+| PayloadHash | `binary(32)` | خیر | خیر | Never |
+| PeriodEndsAtUtc | `datetime2` | خیر | خیر | Never |
+| PeriodStartsAtUtc | `datetime2` | خیر | خیر | Never |
+| PlanVersionId | `uniqueidentifier` | بله | خیر | Never |
+| QuotaKey | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| SubscriptionId | `uniqueidentifier` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_UsageReservations | PK | Id |
+| AK_UsageReservations_OwnerType_OwnerId_ConsumerUserId_Id | Alternate Key | OwnerType, OwnerId, ConsumerUserId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_UsageReservations_PlanVersionId | PlanVersionId | False | — |
+| IX_UsageReservations_ConsumerUserId_OperationId | ConsumerUserId, OperationId | True | — |
+| IX_UsageReservations_OwnerType_OwnerId_SubscriptionId_QuotaKey_PeriodStartsAtUtc_Status | OwnerType, OwnerId, SubscriptionId, QuotaKey, PeriodStartsAtUtc, Status | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConsumerUserId | identity.Users | Id | Restrict |
+| PlanVersionId | commerce.PlanVersions | Id | Restrict |
+| OwnerType, OwnerId, SubscriptionId | commerce.Subscriptions | OwnerType, OwnerId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_UsageReservations_Finalization | `([Status] IN (1,4) AND [FinalizedAtUtc] IS NULL) OR ([Status] IN (2,3) AND [FinalizedAtUtc] IS NOT NULL)` |
+| CK_UsageReservations_Trial | `([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL)` |
+| CK_UsageReservations_Values | `[Amount]>0 AND [Status] BETWEEN 1 AND 4 AND [OwnerType] IN (1,2) AND [ContextType] BETWEEN 1 AND 3 AND [QuotaKey] BETWEEN 1 AND 7 AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc]` |
 
 ### guardian.GuardianRelations
 
@@ -4722,6 +5055,9 @@ Entity: `MakanApp.Domain.Reports.ReportExportJob`؛ مالک نگاشت: [EF Con
 | AttemptCount | `int` | خیر | خیر | Never |
 | Audience | `int` | خیر | خیر | Never |
 | ClassId | `uniqueidentifier` | بله | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | بله | خیر | Never |
+| CommerceReservationId | `uniqueidentifier` | بله | خیر | Never |
+| CommercialOwnerType | `int` | خیر | خیر | OnAdd |
 | CompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | CourseId | `uniqueidentifier` | بله | خیر | Never |
 | DataAsOfUtc | `datetime2(7)` | خیر | خیر | Never |
@@ -4741,6 +5077,7 @@ Entity: `MakanApp.Domain.Reports.ReportExportJob`؛ مالک نگاشت: [EF Con
 | RequestedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | RequestedBySessionId | `uniqueidentifier` | خیر | خیر | Never |
 | RequestedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RequestPayloadHash | `binary(32)` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Sort | `varchar(32)` | خیر | خیر | Never |
 | StartedAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -4761,8 +5098,10 @@ Indexها:
 | IX_ReportExportJobs_MembershipId | MembershipId | False | — |
 | IX_ReportExportJobs_OrganizationId | OrganizationId | False | — |
 | UX_ReportExportJobs_OutputFileAsset | OutputFileAssetId | True | [OutputFileAssetId] IS NOT NULL |
+| IX_ReportExportJobs_RequestedByUserId_ClientOperationId | RequestedByUserId, ClientOperationId | True | [ClientOperationId] IS NOT NULL |
 | IX_ReportExportJobs_Owner_Organization_Requested | RequestedByUserId, OrganizationId, RequestedAtUtc | False | — |
 | IX_ReportExportJobs_Status_NextAttempt_Requested | Status, NextAttemptAtUtc, RequestedAtUtc | False | — |
+| IX_ReportExportJobs_CommercialOwnerType_OrganizationId_RequestedByUserId_CommerceReservationId | CommercialOwnerType, OrganizationId, RequestedByUserId, CommerceReservationId | False | — |
 
 روابط:
 
@@ -4772,6 +5111,7 @@ Indexها:
 | OrganizationId | organization.Organizations | Id | Restrict |
 | OutputFileAssetId | storage.FileAssets | Id | Restrict |
 | RequestedByUserId | identity.Users | Id | Restrict |
+| CommercialOwnerType, OrganizationId, RequestedByUserId, CommerceReservationId | commerce.UsageReservations | OwnerType, OwnerId, ConsumerUserId, Id | Restrict |
 
 CHECKها:
 
@@ -4780,12 +5120,14 @@ CHECKها:
 | CK_ReportExportJobs_AssessmentKind | `[AssessmentKind] IS NULL OR [AssessmentKind] IN (1, 2)` |
 | CK_ReportExportJobs_AttemptCount | `[AttemptCount] >= 0` |
 | CK_ReportExportJobs_Audience | `[Audience] IN (1, 2, 3, 4)` |
+| CK_ReportExportJobs_CommercialOwner | `[CommercialOwnerType]=2` |
 | CK_ReportExportJobs_CompletedState | `([Status] = 3 AND [CompletedAtUtc] IS NOT NULL AND [OutputFileAssetId] IS NOT NULL AND [FailureCode] IS NULL) OR [Status] <> 3` |
 | CK_ReportExportJobs_DateRange | `[FromUtc] IS NULL OR [ToUtc] IS NULL OR [FromUtc] <= [ToUtc]` |
 | CK_ReportExportJobs_EnrollmentStatus | `[EnrollmentStatus] IS NULL OR [EnrollmentStatus] IN (1, 2, 3)` |
 | CK_ReportExportJobs_ExpectedRowCount | `[ExpectedRowCount] >= 0` |
 | CK_ReportExportJobs_FailedState | `([Status] = 4 AND [FailedAtUtc] IS NOT NULL AND [FailureCode] IS NOT NULL AND [OutputFileAssetId] IS NULL) OR [Status] <> 4` |
 | CK_ReportExportJobs_Format | `[Format] = 1` |
+| CK_ReportExportJobs_Idempotency | `([ClientOperationId] IS NULL AND [RequestPayloadHash] IS NULL) OR ([ClientOperationId] IS NOT NULL AND [RequestPayloadHash] IS NOT NULL AND DATALENGTH([RequestPayloadHash])=32)` |
 | CK_ReportExportJobs_ProcessingLease | `([Status] = 2 AND [LeaseExpiresAtUtc] IS NOT NULL) OR [Status] <> 2` |
 | CK_ReportExportJobs_ReportType | `[ReportType] BETWEEN 1 AND 14` |
 | CK_ReportExportJobs_Status | `[Status] IN (1, 2, 3, 4)` |

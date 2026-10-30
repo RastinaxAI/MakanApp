@@ -1,6 +1,14 @@
 # قرارداد تحویل Backoffice به Frontend
 
-بازبینی `2026-10-29` از `main@701cba0`: ورود Platform فقط OTP/Session و permission جاری دارد؛ MFA/step-up و endpointهای آن حذف شده‌اند و UI نباید آن‌ها را فراخوانی کند. Directory مدرسه، roster و Lesson APIهای School با Workspace Manager/Teacher هستند؛ Platform role جای نقش آموزشی نیست. DOB شخصی و عکس مجوز admin یا تماس با فرد ایجاد نمی‌کنند. [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) و [حذف عامل دوم](PLATFORM_AUTHENTICATION_CHANGE_FA.md).
+## قرارداد تجاری افزودهٔ Admin — ۲۰۲۶-۱۰-۳۰
+
+PlatformCommercialContractsController مسیرهای زیر /api/admin/v1/commerce را با permissionهای CommerceRead/CommerceManage اضافه می‌کند: summary مالک User/Organization، availability مستقل Plan، ویرایش Draft و validation نسخه، ثبت commercial-contract و history. [Handoff دقیق Admin](../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md) و [مرجع request/response](../backend-api-reference.md).
+
+School Manager مجوز Global Plan ندارد. Limit باید در JSON حاضر باشد؛ صفر، null صریح و حذف field متفاوت‌اند. Published terms از Draft تغییر نمی‌کند؛ قیمت صفر ExplicitlyFree می‌خواهد. Legacy بدون ثبت معتبر Admin خودکار قفل نمی‌شود؛ ثبت موفق MigrationStatus=Completed و زمان واقعی CommercialEnforcementFromUtc می‌دهد. قیمت/سقف یا سررسید گذشته حدس نزنید و پرداخت دستی موفق نسازید. reason، rowversion، قفل مالک و Audit حفظ‌اند؛ AI/provider واقعی با این API فعال نمی‌شود.
+
+ClientInvalidated کلید commerce یا access فقط refetch مجاز می‌خواهد؛ تغییر زمان‌محور پایان دوره event مستقل جدید ندارد. [قرارداد Realtime](../product/REALTIME_EVENT_CONTRACT_FA.md).
+
+بازبینی `2026-10-30` از `main@e11d4ec`: ورود Platform فقط OTP/Session و permission جاری دارد؛ MFA/step-up و endpointهای آن حذف شده‌اند و UI نباید آن‌ها را فراخوانی کند. Directory مدرسه، roster و Lesson APIهای School با Workspace Manager/Teacher هستند؛ Platform role جای نقش آموزشی نیست. DOB شخصی و عکس مجوز admin یا تماس با فرد ایجاد نمی‌کنند. [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) و [حذف عامل دوم](PLATFORM_AUTHENTICATION_CHANGE_FA.md).
 
 ## افزودهٔ عملیات PH و ورود دو محیط
 

@@ -1,14 +1,20 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
+## افزودهٔ بازیابی نسخهٔ جاری — ۲۰۲۶-۱۰-۳۰
+
+schema جاری55 migration تا AddExamAnswerAttachments و113 جدول دارد. UsageReservations، SubscriptionAmendments و PersonalClassها همراه کل دادهٔ Commerce backup می‌شوند؛ Job و reservation را جدا به نقطهٔ زمانی ناسازگار نبرید. policy سؤال و AnswerRevisionAttachments به bytes Retained آزمون وابسته‌اند؛ DB+Storage سازگار و کنترل مجوز پس از restore لازم است. Detach مجوز حذف فایل تاریخی نیست.
+
+Data Protection استاندارد host اکنون cursor حساب را محافظت می‌کند. persistence/custody کلیدهای جاری و هویت host در backup/restart بررسی شوند؛ ring MFA منسوخ با ring cursor یکی فرض نشود. بدون کلید معتبر، cursor قدیمی resync می‌خواهد و Client باید Snapshot مجاز تازه بگیرد؛ این مسیر را در drill هدف بررسی کنید. Identity key پایدار جایگزین ring نیست. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
+
 بازبینی `2026-10-29`: RemovePlatformMfa حذف داده دارد؛ سه migration جدید بعدی DOB/Photo/School را اضافه می‌کنند. DB و bytes عکس/جزوه یک snapshot سازگار می‌خواهند؛ applied migration سرور از این سند تأیید نشده. [مسیر استقرار](../deployment-windows-linux-docker.md).
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-29` از `main@701cba0`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-10-30` از `main@e11d4ec`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 ## مرزبندی جدید Test و Production
 
-backup جاری هر محیط DB، Storage و تنظیمات/Identity key همان محیط را پوشش می‌دهد؛ ProfilePhoto و Lesson bytes در Storage هستند. schema یکسان مجوز مخلوط‌کردن Test و Production نیست. MFA/key ring حذف شده‌اند؛ backupهای تاریخی و protector قبلی با این کار حذف نمی‌شوند. cleanup terminal جای backup یا purge مصوب نیست.
+backup جاری هر محیط DB، Storage و تنظیمات/Identity key همان محیط را پوشش می‌دهد؛ ProfilePhoto و Lesson bytes در Storage هستند. schema یکسان مجوز مخلوط‌کردن Test و Production نیست. MFA و ring اختصاصی آن حذف شده‌اند؛ Data Protection استاندارد cursor نیاز مستقل دارد؛ backupهای تاریخی و protector قبلی با این کار حذف نمی‌شوند. cleanup terminal جای backup یا purge مصوب نیست.
 
 ## روش فعلی پس از GAP-03
 
@@ -21,7 +27,7 @@ backup جاری هر محیط DB، Storage و تنظیمات/Identity key هما
 - `RESTORE VERIFYONLY` مفید است اما جای restore drill را نمی‌گیرد.
 - مسیر `Storage__RootPath` جداگانه versioned/snapshot شود؛ secrets فقط با reference و روش بازیابی در secret manager نگه‌داری شوند.
 - backupها encrypted، دسترسی‌محدود و خارج از همان failure domain سرور اصلی باشند.
-- GAP-04 و PH-1 شاهد تاریخی نیاز ring بودند؛ در نسخه جاری MFA/key ring حذف شده‌اند. بازیابی backup پیش از RemovePlatformMfa یک سناریوی legacy مستقل است و به binary/schema سازگار نیاز دارد.
+- GAP-04 و PH-1 شاهد تاریخی نیاز ring بودند؛ در نسخه جاری MFA و ring اختصاصی آن حذف شده‌اند؛ حفاظت cursor از Data Protection استاندارد استفاده می‌کند. بازیابی backup پیش از RemovePlatformMfa یک سناریوی legacy مستقل است و به binary/schema سازگار نیاز دارد.
 - فایل خصوصی appsettings.Production.json، کلید Identity و tokenهای provider فقط در نسخهٔ پشتیبان محرمانه با ACL و روش بازیابی کنترل‌شده نگه‌داری شوند؛ داخل artifact مشترک، log یا Git نباشند. انتشار جدید نباید کلید Identity یا داده/مسیر Storage را عوض کند.
 
 ### تکمیل custody کلید در PH-1
@@ -65,4 +71,4 @@ WITH CHECKSUM;
 
 ## داده‌های افزوده P2
 
-backup/restore سازگار با ۵۲ migration شامل قصدهای Scheduled، Poll/Quiz و Checklist هم هست؛ قصد Dispatched را پس از recovery دوباره Message تازه نسازید. داده گذرای Typing/Presence backup دائمی یا تاریخچه حضور نیست. keyهای VAPID/FCM و Identity در custody جدا و امن حفظ شوند؛ حذف یا rotation آن‌ها از restore عادی استنتاج نشود.
+backup/restore سازگار با۵۵ migration شامل قصدهای Scheduled، Poll/Quiz و Checklist هم هست؛ قصد Dispatched را پس از recovery دوباره Message تازه نسازید. داده گذرای Typing/Presence backup دائمی یا تاریخچه حضور نیست. keyهای VAPID/FCM و Identity در custody جدا و امن حفظ شوند؛ حذف یا rotation آن‌ها از restore عادی استنتاج نشود.
