@@ -26,13 +26,15 @@ internal static class LiveAiProgram
             return 0;
         }
         var allowRemoteHttps = args.Count(value => value == "--allow-remote-https") == 1;
-        var selectedArgs = args.Where(value => value != "--allow-remote-https").ToArray();
+        var allowWireGuard = args.Count(value => value == "--allow-wireguard") == 1;
+        var selectedArgs = args.Where(value => value is not ("--allow-remote-https" or "--allow-wireguard")).ToArray();
         var evidenceOnly = selectedArgs.SequenceEqual(["--run-live", "--collect-failure-evidence"]);
         var authorizationOnly = selectedArgs.SequenceEqual(["--run-live", "--authorization-only"]);
         var serviceAuthOnly = selectedArgs.SequenceEqual(["--run-live", "--service-auth-only"]);
         var operation = selectedArgs.Length == 3 && selectedArgs[0] == "--run-live" &&
             selectedArgs[1] == "--operation" ? selectedArgs[2] : null;
-        if (args.Count(value => value == "--allow-remote-https") > 1 ||
+        if (args.Count(value => value == "--allow-remote-https") > 1 || args.Count(value => value == "--allow-wireguard") > 1 ||
+            allowRemoteHttps && allowWireGuard ||
             (!selectedArgs.SequenceEqual(["--run-live"]) && !authorizationOnly && !serviceAuthOnly && !evidenceOnly &&
              operation is not ("focused_three" or "parent_child_summary" or "remaining_roles" or
                  "remaining_managers" or "manager_student_insight")))
@@ -54,7 +56,9 @@ internal static class LiveAiProgram
                 .AddEnvironmentVariables()
                 .Build();
             var target = LiveAiTargetPolicy.Validate(configuration["AiService:BaseUrl"], allowRemoteHttps,
-                configuration["AiLiveProbe:ApprovedOrigin"]);
+                configuration["AiLiveProbe:ApprovedOrigin"], allowWireGuard,
+                allowWireGuard && System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+                    .SelectMany(i => i.GetIPProperties().UnicastAddresses).Any(a => a.Address.ToString() == "10.77.0.1"));
             var authentication = configuration.GetSection(AiServiceAuthenticationOptions.SectionName)
                 .Get<AiServiceAuthenticationOptions>() ?? new();
             var credentials = new HmacAiServiceCredentialProvider(authentication, TimeProvider.System);

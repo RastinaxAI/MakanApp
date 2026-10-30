@@ -7,7 +7,8 @@ public sealed class AiChatService(
     IAccessContextResolver accessContextResolver,
     IAiScopeStore scopeStore,
     IAiServiceClient client,
-    IAiSourceSelectionService sourceSelection) : IAiChatService
+    IAiSourceSelectionService sourceSelection,
+    IAiInvocationExecutor invocationExecutor) : IAiChatService
 {
     private const int MaximumMessageLength = 4_000;
 
@@ -16,11 +17,12 @@ public sealed class AiChatService(
         Guid sessionId,
         string correlationId,
         SendAiChatCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         Validate(command, correlationId);
         await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.Chat, command.SelectedSourceIds,
-            command.OperationId, new { Message = command.Message.Trim(), command.ConversationId }, null, null, cancellationToken);
+            command.OperationId ?? invocation?.OperationId, new { Message = command.Message.Trim(), command.ConversationId }, null, null, cancellationToken);
         var context = await accessContextResolver.ResolveAsync(
             userId,
             sessionId,
@@ -53,7 +55,15 @@ public sealed class AiChatService(
             new AiMessage(command.Message.Trim()),
             AiAuthorizedContext.Empty);
 
-        var response = await client.ChatAsync(request, cancellationToken);
+        var response = await invocationExecutor.ExecuteAsync(userId, sessionId, request, client.ChatAsync, async token =>
+        {
+            var current = await accessContextResolver.ResolveAsync(userId, sessionId, token);
+            EnsureOrganizationRole(current);
+            AiInvocationContext.EnsureSame(context, current);
+            if (current.ActiveRole == OrganizationRole.Student &&
+                await scopeStore.GetActiveLearnerOrganizationPersonIdAsync(current.OrganizationId!.Value, userId, token) != learnerId)
+                throw ContextNotAllowed();
+        }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
         return new AiChatResult(
             response.RequestId,
             response.CorrelationId,

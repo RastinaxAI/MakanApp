@@ -32,7 +32,8 @@ public sealed class AiController(
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
             command,
-            cancellationToken));
+            cancellationToken,
+            Invocation(command.OperationId)));
 
     [HttpPost("students/analyze")]
     [ProducesResponseType<AiStudentAnalysisResponse>(StatusCodes.Status200OK)]
@@ -42,7 +43,8 @@ public sealed class AiController(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("study-plan")]
     [ProducesResponseType<AiStudyPlanResponse>(StatusCodes.Status200OK)]
@@ -54,7 +56,8 @@ public sealed class AiController(
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
             command,
-            cancellationToken));
+            cancellationToken,
+            Invocation(command.OperationId)));
 
     [HttpPost("homeworks/{assignmentId:guid}/explain")]
     [ProducesResponseType<AiHomeworkExplanationResponse>(StatusCodes.Status200OK)]
@@ -68,7 +71,8 @@ public sealed class AiController(
             HttpContext.TraceIdentifier,
             assignmentId,
             command,
-            cancellationToken));
+            cancellationToken,
+            Invocation(command.OperationId)));
 
     [HttpPost("exams/{examId:guid}/prepare")]
     [ProducesResponseType<AiExamPreparationResponse>(StatusCodes.Status200OK)]
@@ -80,7 +84,8 @@ public sealed class AiController(
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
             examId,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("parents/child-summary")]
     [ProducesResponseType<AiParentChildSummaryResponse>(StatusCodes.Status200OK)]
@@ -90,7 +95,8 @@ public sealed class AiController(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("teachers/classes/{classId:guid}/summary")]
     [ProducesResponseType<AiRoleInsightResponse>(StatusCodes.Status200OK)]
@@ -102,7 +108,8 @@ public sealed class AiController(
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
             classId,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("teachers/classes/{classId:guid}/students/{studentId:guid}/insight")]
     [ProducesResponseType<AiRoleInsightResponse>(StatusCodes.Status200OK)]
@@ -116,7 +123,8 @@ public sealed class AiController(
             HttpContext.TraceIdentifier,
             classId,
             studentId,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("teachers/classes/{classId:guid}/activity-suggestions")]
     [ProducesResponseType<AiActivitySuggestionsResponse>(StatusCodes.Status200OK)]
@@ -130,7 +138,8 @@ public sealed class AiController(
             HttpContext.TraceIdentifier,
             classId,
             command,
-            cancellationToken));
+            cancellationToken,
+            Invocation(command.OperationId)));
 
     [HttpPost("managers/school-summary")]
     [ProducesResponseType<AiRoleInsightResponse>(StatusCodes.Status200OK)]
@@ -140,7 +149,8 @@ public sealed class AiController(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("managers/classes/{classId:guid}/insight")]
     [ProducesResponseType<AiRoleInsightResponse>(StatusCodes.Status200OK)]
@@ -152,7 +162,8 @@ public sealed class AiController(
             AuthenticatedSession.GetSessionId(User),
             HttpContext.TraceIdentifier,
             classId,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
 
     [HttpPost("managers/classes/{classId:guid}/students/{studentId:guid}/insight")]
     [ProducesResponseType<AiRoleInsightResponse>(StatusCodes.Status200OK)]
@@ -166,5 +177,26 @@ public sealed class AiController(
             HttpContext.TraceIdentifier,
             classId,
             studentId,
-            cancellationToken));
+            cancellationToken,
+            Invocation()));
+    private AiInvocationOptions Invocation(Guid? bodyId = null)
+    {
+        var ids = Request.Headers["X-AI-Operation-Id"];
+        var payers = Request.Headers["X-AI-Payer"];
+        Guid? operationId = null;
+        MakanApp.Domain.Commerce.AiPayerSelection? payer = null;
+        if (ids.Count > 1 || payers.Count > 1 || ids.Count == 1 && !Guid.TryParse(ids[0], out _)) throw InvalidHeaders();
+        if (ids.Count == 1) operationId = Guid.Parse(ids[0]!);
+        if (payers.Count == 1)
+        {
+            if (!Enum.TryParse<MakanApp.Domain.Commerce.AiPayerSelection>(payers[0], out var parsed) || !Enum.IsDefined(parsed)) throw InvalidHeaders();
+            payer = parsed;
+        }
+        var options = operationId.HasValue || bodyId.HasValue
+            ? AiInvocationOptions.Resolve(new(operationId, payer), bodyId) : new AiInvocationOptions(null, payer);
+        if (options.OperationId.HasValue) Response.Headers["X-AI-Operation-Id"] = options.OperationId.Value.ToString("D");
+        return options;
+    }
+    private static AiServiceException InvalidHeaders() => new(AiServiceErrorCodes.InvalidRequest, "Header عملیات AI معتبر نیست.");
+
 }

@@ -76,15 +76,15 @@ public interface IManagerStudentContextBuilder
 
 public interface IAiRoleContextService
 {
-    Task<AiStudentAnalysisResponse> AnalyzeStudentAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken);
-    Task<AiStudyPlanResponse> CreateStudyPlanAsync(Guid userId, Guid sessionId, string correlationId, CreateStudyPlanCommand command, CancellationToken cancellationToken);
-    Task<AiHomeworkExplanationResponse> ExplainHomeworkAsync(Guid userId, Guid sessionId, string correlationId, Guid assignmentId, ExplainHomeworkCommand command, CancellationToken cancellationToken);
-    Task<AiExamPreparationResponse> PrepareExamAsync(Guid userId, Guid sessionId, string correlationId, Guid examId, CancellationToken cancellationToken);
-    Task<AiParentChildSummaryResponse> SummarizeChildAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken);
-    Task<AiRoleInsightResponse> SummarizeTeacherClassAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, CancellationToken cancellationToken);
-    Task<AiRoleInsightResponse> GetTeacherStudentInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, Guid studentId, CancellationToken cancellationToken);
-    Task<AiActivitySuggestionsResponse> SuggestTeacherActivitiesAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, SuggestTeacherActivitiesCommand command, CancellationToken cancellationToken);
-    Task<AiRoleInsightResponse> SummarizeManagerSchoolAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken);
-    Task<AiRoleInsightResponse> GetManagerClassInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, CancellationToken cancellationToken);
-    Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, Guid studentId, CancellationToken cancellationToken);
+    Task<AiStudentAnalysisResponse> AnalyzeStudentAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiStudyPlanResponse> CreateStudyPlanAsync(Guid userId, Guid sessionId, string correlationId, CreateStudyPlanCommand command, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiHomeworkExplanationResponse> ExplainHomeworkAsync(Guid userId, Guid sessionId, string correlationId, Guid assignmentId, ExplainHomeworkCommand command, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiExamPreparationResponse> PrepareExamAsync(Guid userId, Guid sessionId, string correlationId, Guid examId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiParentChildSummaryResponse> SummarizeChildAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiRoleInsightResponse> SummarizeTeacherClassAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiRoleInsightResponse> GetTeacherStudentInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, Guid studentId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiActivitySuggestionsResponse> SuggestTeacherActivitiesAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, SuggestTeacherActivitiesCommand command, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiRoleInsightResponse> SummarizeManagerSchoolAsync(Guid userId, Guid sessionId, string correlationId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiRoleInsightResponse> GetManagerClassInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(Guid userId, Guid sessionId, string correlationId, Guid classId, Guid studentId, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
 }

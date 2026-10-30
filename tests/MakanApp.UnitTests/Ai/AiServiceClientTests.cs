@@ -35,7 +35,7 @@ public sealed class AiServiceClientTests
         body["correlationId"] = request.CorrelationId;
         body["recommendations"] = new JsonArray();
         body["sources"] = new JsonArray();
-        body["metadata"] = new JsonObject { ["modelAlias"] = "synthetic-model", ["processingTimeMs"] = 1 };
+        body["metadata"] = new JsonObject { ["modelAlias"] = "education-fast", ["processingTimeMs"] = 1 };
         var handler = new StubHandler(async (outgoing, cancellation) =>
         {
             path = outgoing.RequestUri!.AbsolutePath;
@@ -203,10 +203,10 @@ public sealed class AiServiceClientTests
 
     [Theory]
     [InlineData("not-json")]
-    [InlineData("{\"requestId\":\"different\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"model\",\"processingTimeMs\":1}}")]
-    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"model\",\"processingTimeMs\":1}}")]
-    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[{\"type\":\"Learning\",\"severity\":\"Unknown\"}],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"model\",\"processingTimeMs\":1}}")]
-    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"model\",\"processingTimeMs\":1},\"unexpected\":true}")]
+    [InlineData("{\"requestId\":\"different\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":1}}")]
+    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":1}}")]
+    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[{\"type\":\"Learning\",\"severity\":\"Unknown\"}],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":1}}")]
+    [InlineData("{\"requestId\":\"req-1\",\"answer\":{\"text\":\"ok\",\"language\":\"fa\"},\"insights\":[],\"risks\":[],\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":1},\"unexpected\":true}")]
     public async Task ChatAsync_RejectsMalformedOrSchemaInvalidResponse(string body)
     {
         var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK, body)));
@@ -453,7 +453,7 @@ public sealed class AiServiceClientTests
             new AiTeacherStudentScope("org", "org", "class", "selected-student"),
             new AiTeacherStudentData("selected-student", [], [], [], [], []));
         var response = new AiRoleInsightResponse("req-1", "corr-1", "خلاصه", [], [], [], [],
-            [new AiSourceReference("Student", sourceId)], new AiResponseMetadata("synthetic", 1));
+            [new AiSourceReference("Student", sourceId)], new AiResponseMetadata("education-fast", 1));
         var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK,
             JsonSerializer.Serialize(response, new JsonSerializerOptions(JsonSerializerDefaults.Web)))));
         var client = CreateClient(handler);
@@ -479,7 +479,7 @@ public sealed class AiServiceClientTests
             new AiScope("org", "org", null, "child"), new AiAuthorizedContext([], [], [records], [], []));
         var response = new AiParentChildSummaryResponse("req-1", "corr-1", "خلاصه", new AiProgress("Unknown", "داده کافی نیست"), [],
             [new AiUpcomingItem("Homework", "assignment-1", matchingTitle ? "عنوان مجاز" : "عنوان ساختگی", null)], [], [], [],
-            new AiResponseMetadata("synthetic", 1));
+            new AiResponseMetadata("education-fast", 1));
         var handler = new StubHandler((_, _) => Task.FromResult(JsonResponse(HttpStatusCode.OK,
             JsonSerializer.Serialize(response, new JsonSerializerOptions(JsonSerializerDefaults.Web)))));
         var client = CreateClient(handler);

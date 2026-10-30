@@ -223,8 +223,8 @@ public sealed class AiServiceClient(
                     "success",
                     "none",
                     Stopwatch.GetElapsedTime(started));
-                logger?.LogInformation("AI invocation completed: {Operation} {StatusCode} {DurationMs}.",
-                    operation, (int)response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+                logger?.LogInformation("AI invocation completed: {Operation} {StatusCode} {DurationMs} {ModelAlias}.",
+                    operation, (int)response.StatusCode, Stopwatch.GetElapsedTime(started).TotalMilliseconds, result!.Metadata.ModelAlias);
                 return result!;
             }
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -311,7 +311,7 @@ public sealed class AiServiceClient(
             circuitBreaker.RecordTransientFailure();
         }
 
-        RecordFailure(operation, code, started);
+        RecordFailure(operation, code, started, statusCode);
 
         throw new AiServiceException(
             code,
@@ -465,7 +465,7 @@ public sealed class AiServiceClient(
             response.RequestId != request.RequestId ||
             response.CorrelationId != request.CorrelationId ||
             response.Metadata is null ||
-            string.IsNullOrWhiteSpace(response.Metadata.ModelAlias) ||
+            response.Metadata.ModelAlias != "education-fast" ||
             response.Metadata.ProcessingTimeMs < 0)
         {
             throw InvalidResponse();
@@ -493,12 +493,12 @@ public sealed class AiServiceClient(
         values.All(item =>
             item is not null && !string.IsNullOrWhiteSpace(item.Type) && !string.IsNullOrWhiteSpace(item.Id));
 
-    private void RecordFailure(string operation, string code, long started)
+    private void RecordFailure(string operation, string code, long started, int? statusCode = null)
     {
         var elapsed = Stopwatch.GetElapsedTime(started);
         AiServiceTelemetry.Record(operation, "failure", code, elapsed);
         // Exception، header، URL و payload عمداً به logger داده نمی‌شوند.
-        logger?.LogError("AI invocation failed: {Operation} {ErrorCode} {DurationMs}.",
-            operation, code, elapsed.TotalMilliseconds);
+        logger?.LogError("AI invocation failed: {Operation} {ErrorCode} {DurationMs} {StatusCode}.",
+            operation, code, elapsed.TotalMilliseconds, statusCode);
     }
 }

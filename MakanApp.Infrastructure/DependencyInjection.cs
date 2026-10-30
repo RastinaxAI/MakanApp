@@ -273,9 +273,12 @@ public static class DependencyInjection
         services.AddSingleton<AiServiceCircuitBreaker>();
         services.AddSingleton<IAiServiceCredentialProvider, HmacAiServiceCredentialProvider>();
         services.AddHttpClient<IAiServiceClient, AiServiceClient>((provider, client) =>
-            client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds));
+                client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
         services.AddScoped<IAiChatService, AiChatService>();
+        services.AddScoped<IAiInvocationExecutor, AiInvocationExecutor>();
+        services.AddScoped<IAiRuntimeAvailability, AiRuntimeAvailability>();
         services.AddScoped<IAiSourceSelectionService, AiSourceSelectionService>();
         services.AddScoped<IAiSourceAuthorizationService, EfAiSourceAuthorizationService>();
         services.AddScoped<IAiSourceSelectionStore, EfAiSourceSelectionStore>();

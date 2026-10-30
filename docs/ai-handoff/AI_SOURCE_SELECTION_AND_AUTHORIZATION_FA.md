@@ -27,7 +27,7 @@ DTO عمومی Backend با DTO مستقیم AI یکی نیست. `selectedSource
 | Manager Class Insight | `managers/classes/{classId}/insight` | `managers/class-insight` | Manager، Class همان سازمان | NotApplicable؛ aggregate | سازمان کلاس |
 | Manager Student Insight | `managers/classes/{classId}/students/{studentId}/insight` | `managers/student-insight` | Manager، Class و enrollment همان سازمان | NotApplicable؛ گزارش دانش‌آموز | سازمان کلاس |
 
-در baseline این ۱۲ Use Case مستقیماً Client را فراخوانی می‌کردند؛ Commerce preflight/reservation موجود بود اما coordinator سراسری برای invocation آن‌ها وجود نداشت. این مرحله رفتار source-less را به coordinator تجاری جدید منتقل نکرده است. بنابراین این سند ادعا نمی‌کند همهٔ ۱۲ مسیر از قبل metered بوده‌اند.
+در baseline این ۱۲ Use Case مستقیماً Client را فراخوانی می‌کردند؛ Commerce preflight/reservation موجود بود اما coordinator سراسری برای invocation آن‌ها وجود نداشت. مرحلهٔ انتخاب منبع رفتار source-less را به coordinator تجاری منتقل نکرد. در مرحلهٔ بعد، [اتصال Backend به Contract v1](AI_V1_BACKEND_INTEGRATION_FA.md)، هر ۱۲ مسیر source-less به رزرو و finalize موجود وصل شدند؛ مرز unavailable انتخاب منبع همچنان حفظ شده است.
 
 ## مسیر واقعی و مرز Onion
 

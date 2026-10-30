@@ -9,20 +9,26 @@ public sealed class AiRoleContextService(
     IManagerClassContextBuilder managerClassContextBuilder,
     IManagerStudentContextBuilder managerStudentContextBuilder,
     IAiServiceClient client,
-    IAiSourceSelectionService sourceSelection) : IAiRoleContextService
+    IAiSourceSelectionService sourceSelection,
+    IAiInvocationExecutor invocationExecutor) : IAiRoleContextService
 {
     public async Task<AiStudentAnalysisResponse> AnalyzeStudentAsync(
         Guid userId,
         Guid sessionId,
         string correlationId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await studentContextBuilder.BuildAsync(userId, sessionId, cancellationToken);
-        return await client.AnalyzeStudentAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiStudentAnalysisRequest(
                 RequestId(), correlationId, context.Actor, context.Scope, context.Data),
-            cancellationToken);
+            client.AnalyzeStudentAsync, async token =>
+            {
+                var current = await studentContextBuilder.BuildAsync(userId, sessionId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiStudyPlanResponse> CreateStudyPlanAsync(
@@ -30,7 +36,8 @@ public sealed class AiRoleContextService(
         Guid sessionId,
         string correlationId,
         CreateStudyPlanCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var goals = NormalizeValues(command.Goals, AiContextLimits.GoalCount, 200);
@@ -42,8 +49,8 @@ public sealed class AiRoleContextService(
 
         var context = await studentContextBuilder.BuildAsync(userId, sessionId, cancellationToken);
         await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.StudyPlan, command.SelectedSourceIds,
-            command.OperationId, new { Goals = goals, command.AvailableMinutes, Notes = notes }, null, null, cancellationToken);
-        return await client.CreateStudyPlanAsync(
+            command.OperationId ?? invocation?.OperationId, new { Goals = goals, command.AvailableMinutes, Notes = notes }, null, null, cancellationToken);
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiStudyPlanRequest(
                 RequestId(),
                 correlationId,
@@ -52,7 +59,11 @@ public sealed class AiRoleContextService(
                 context.Data,
                 goals,
                 new AiStudyPreferences(command.AvailableMinutes, notes)),
-            cancellationToken);
+            client.CreateStudyPlanAsync, async token =>
+            {
+                var current = await studentContextBuilder.BuildAsync(userId, sessionId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
     }
 
     public async Task<AiHomeworkExplanationResponse> ExplainHomeworkAsync(
@@ -61,15 +72,16 @@ public sealed class AiRoleContextService(
         string correlationId,
         Guid assignmentId,
         ExplainHomeworkCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var question = NormalizeRequired(command.Question, AiContextLimits.FreeTextLength);
         var (context, homework) = await studentContextBuilder.BuildHomeworkAsync(
             userId, sessionId, assignmentId, cancellationToken);
         await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.HomeworkExplain, command.SelectedSourceIds,
-            command.OperationId, new { Question = question }, null, assignmentId, cancellationToken);
-        return await client.ExplainHomeworkAsync(
+            command.OperationId ?? invocation?.OperationId, new { Question = question }, null, assignmentId, cancellationToken);
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiHomeworkExplanationRequest(
                 RequestId(),
                 correlationId,
@@ -78,7 +90,12 @@ public sealed class AiRoleContextService(
                 AiContextProjection.Homework(homework),
                 question,
                 context.Data),
-            cancellationToken);
+            client.ExplainHomeworkAsync, async token =>
+            {
+                var current = await studentContextBuilder.BuildHomeworkAsync(userId, sessionId, assignmentId, token);
+                AiInvocationContext.EnsureSame(context, current.Context);
+                AiInvocationContext.EnsureSame(homework, current.Homework);
+            }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
     }
 
     public async Task<AiExamPreparationResponse> PrepareExamAsync(
@@ -86,12 +103,13 @@ public sealed class AiRoleContextService(
         Guid sessionId,
         string correlationId,
         Guid examId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var (context, exam) = await studentContextBuilder.BuildExamAsync(
             userId, sessionId, examId, cancellationToken);
-        return await client.PrepareExamAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiExamPreparationRequest(
                 RequestId(),
                 correlationId,
@@ -100,21 +118,31 @@ public sealed class AiRoleContextService(
                 AiContextProjection.Exam(exam),
                 context.Data,
                 context.Data),
-            cancellationToken);
+            client.PrepareExamAsync, async token =>
+            {
+                var current = await studentContextBuilder.BuildExamAsync(userId, sessionId, examId, token);
+                AiInvocationContext.EnsureSame(context, current.Context);
+                AiInvocationContext.EnsureSame(exam, current.Exam);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiParentChildSummaryResponse> SummarizeChildAsync(
         Guid userId,
         Guid sessionId,
         string correlationId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await parentChildContextBuilder.BuildAsync(userId, sessionId, cancellationToken);
-        return await client.SummarizeChildAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiParentChildSummaryRequest(
                 RequestId(), correlationId, context.Actor, context.Scope, context.Data),
-            cancellationToken);
+            client.SummarizeChildAsync, async token =>
+            {
+                var current = await parentChildContextBuilder.BuildAsync(userId, sessionId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiRoleInsightResponse> SummarizeTeacherClassAsync(
@@ -122,15 +150,20 @@ public sealed class AiRoleContextService(
         Guid sessionId,
         string correlationId,
         Guid classId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await teacherClassContextBuilder.BuildAsync(
             userId, sessionId, classId, cancellationToken);
-        return await client.SummarizeTeacherClassAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiTeacherClassSummaryRequest(
                 RequestId(), correlationId, context.Actor, TeacherClassScope(context.Scope), context.Data),
-            cancellationToken);
+            client.SummarizeTeacherClassAsync, async token =>
+            {
+                var current = await teacherClassContextBuilder.BuildAsync(userId, sessionId, classId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiRoleInsightResponse> GetTeacherStudentInsightAsync(
@@ -139,15 +172,20 @@ public sealed class AiRoleContextService(
         string correlationId,
         Guid classId,
         Guid studentId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await teacherStudentContextBuilder.BuildAsync(
             userId, sessionId, classId, studentId, cancellationToken);
-        return await client.GetTeacherStudentInsightAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiTeacherStudentInsightRequest(
                 RequestId(), correlationId, context.Actor, TeacherStudentScope(context.Scope), context.Data),
-            cancellationToken);
+            client.GetTeacherStudentInsightAsync, async token =>
+            {
+                var current = await teacherStudentContextBuilder.BuildAsync(userId, sessionId, classId, studentId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiActivitySuggestionsResponse> SuggestTeacherActivitiesAsync(
@@ -156,7 +194,8 @@ public sealed class AiRoleContextService(
         string correlationId,
         Guid classId,
         SuggestTeacherActivitiesCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var objective = NormalizeRequired(command.Objective, 500);
@@ -170,8 +209,8 @@ public sealed class AiRoleContextService(
         var context = await teacherClassContextBuilder.BuildAsync(
             userId, sessionId, classId, cancellationToken);
         await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.TeacherActivitySuggestions, command.SelectedSourceIds,
-            command.OperationId, new { Objective = objective, command.AvailableMinutes, Materials = materials, Notes = notes }, classId, null, cancellationToken);
-        return await client.SuggestTeacherActivitiesAsync(
+            command.OperationId ?? invocation?.OperationId, new { Objective = objective, command.AvailableMinutes, Materials = materials, Notes = notes }, classId, null, cancellationToken);
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiTeacherActivitySuggestionsRequest(
                 RequestId(),
                 correlationId,
@@ -180,21 +219,30 @@ public sealed class AiRoleContextService(
                 context.Data,
                 objective,
                 new AiActivityConstraints(command.AvailableMinutes, materials, notes)),
-            cancellationToken);
+            client.SuggestTeacherActivitiesAsync, async token =>
+            {
+                var current = await teacherClassContextBuilder.BuildAsync(userId, sessionId, classId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
     }
 
     public async Task<AiRoleInsightResponse> SummarizeManagerSchoolAsync(
         Guid userId,
         Guid sessionId,
         string correlationId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await managerSchoolContextBuilder.BuildAsync(userId, sessionId, cancellationToken);
-        return await client.SummarizeManagerSchoolAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiManagerSchoolSummaryRequest(
                 RequestId(), correlationId, context.Actor, ManagerSchoolScope(context.Scope), context.Data),
-            cancellationToken);
+            client.SummarizeManagerSchoolAsync, async token =>
+            {
+                var current = await managerSchoolContextBuilder.BuildAsync(userId, sessionId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiRoleInsightResponse> GetManagerClassInsightAsync(
@@ -202,15 +250,20 @@ public sealed class AiRoleContextService(
         Guid sessionId,
         string correlationId,
         Guid classId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await managerClassContextBuilder.BuildAsync(
             userId, sessionId, classId, cancellationToken);
-        return await client.GetManagerClassInsightAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiManagerClassInsightRequest(
                 RequestId(), correlationId, context.Actor, ManagerClassScope(context.Scope), context.Data),
-            cancellationToken);
+            client.GetManagerClassInsightAsync, async token =>
+            {
+                var current = await managerClassContextBuilder.BuildAsync(userId, sessionId, classId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     public async Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(
@@ -219,15 +272,20 @@ public sealed class AiRoleContextService(
         string correlationId,
         Guid classId,
         Guid studentId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null)
     {
         ValidateCorrelation(correlationId);
         var context = await managerStudentContextBuilder.BuildAsync(
             userId, sessionId, classId, studentId, cancellationToken);
-        return await client.GetManagerStudentInsightAsync(
+        return await invocationExecutor.ExecuteAsync(userId, sessionId,
             new AiManagerStudentInsightRequest(
                 RequestId(), correlationId, context.Actor, ManagerStudentScope(context.Scope), context.Data),
-            cancellationToken);
+            client.GetManagerStudentInsightAsync, async token =>
+            {
+                var current = await managerStudentContextBuilder.BuildAsync(userId, sessionId, classId, studentId, token);
+                AiInvocationContext.EnsureSame(context, current);
+            }, AiInvocationOptions.Resolve(invocation), cancellationToken);
     }
 
     private static string RequestId() => Guid.NewGuid().ToString("N");

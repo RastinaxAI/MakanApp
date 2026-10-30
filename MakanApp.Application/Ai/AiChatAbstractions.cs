@@ -9,7 +9,8 @@ public interface IAiChatService
         Guid sessionId,
         string correlationId,
         SendAiChatCommand command,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        AiInvocationOptions? invocation = null);
 }
 
 public interface IAiScopeStore

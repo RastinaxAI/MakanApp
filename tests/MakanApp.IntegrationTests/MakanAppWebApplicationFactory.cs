@@ -204,6 +204,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<IContentSafetyProvider, RecordingContentSafetyProvider>();
             services.RemoveAll<IAiServiceClient>();
             services.AddSingleton<IAiServiceClient, RecordingAiServiceClient>();
+            services.RemoveAll<IAiRuntimeAvailability>();
+            services.AddSingleton<IAiRuntimeAvailability, TestAiRuntimeAvailability>();
             services.RemoveAll<NotificationDeliveryOptions>();
             services.RemoveAll<PushDeviceOptions>();
             services.AddSingleton(new PushDeviceOptions { AllowedWebPushHosts = ["push.example.test"] });

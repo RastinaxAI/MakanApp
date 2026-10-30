@@ -45,4 +45,19 @@ public sealed class LiveAiTargetPolicyTests
     public void RemoteHttp_IsRejectedEvenWhenApproved() =>
         Assert.Throws<InvalidOperationException>(() =>
             LiveAiTargetPolicy.Validate("http://ai.example.test", true, "http://ai.example.test"));
+
+    [Fact]
+    public void ApprovedWireGuardRequiresExplicitFlagAndBackendInterface()
+    {
+        Assert.Equal("http://10.77.0.2:8001/", LiveAiTargetPolicy.Validate("http://10.77.0.2:8001", false,
+            "http://10.77.0.2:8001", true, true).AbsoluteUri);
+        Assert.Throws<InvalidOperationException>(() => LiveAiTargetPolicy.Validate("http://10.77.0.2:8001", false, "http://10.77.0.2:8001", true, false));
+        Assert.Throws<InvalidOperationException>(() => LiveAiTargetPolicy.Validate("http://10.77.0.2:8001", false, "http://10.77.0.2:8001"));
+    }
+    [Theory]
+    [InlineData("http://10.77.0.3:8001", "http://10.77.0.3:8001")]
+    [InlineData("http://10.77.0.2:8002", "http://10.77.0.2:8002")]
+    [InlineData("http://10.77.0.2:8001", "http://10.77.0.3:8001")]
+    public void WireGuardOptInCannotPermitArbitraryRemoteHttp(string target, string approved) =>
+        Assert.Throws<InvalidOperationException>(() => LiveAiTargetPolicy.Validate(target, false, approved, true, true));
 }

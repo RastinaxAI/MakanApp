@@ -19,7 +19,7 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
+public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 9_100_000;
@@ -657,7 +657,7 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
         return (await verifyResponse.Content.ReadFromJsonAsync<VerifyOtpResult>(JsonOptions))!;
     }
 
-    private static async Task SelectWorkspaceAsync(
+    private async Task SelectWorkspaceAsync(
         HttpClient client,
         Guid membershipId,
         OrganizationRole role)
@@ -667,6 +667,8 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
             new SelectWorkspaceCommand(WorkspaceType.Organization, membershipId, role),
             JsonOptions);
         response.EnsureSuccessStatusCode();
+        var context = (await response.Content.ReadFromJsonAsync<AccessContext>(JsonOptions))!;
+        await EnsureAiContractAsync(context.OrganizationId!.Value);
     }
 
     private static async Task<string?> ReadProblemCodeAsync(HttpResponseMessage response)
@@ -721,7 +723,7 @@ public sealed class AiChatEndpointsTests(MakanAppWebApplicationFactory factory) 
                 risks = Array.Empty<object>(),
                 recommendations = Array.Empty<object>(),
                 sources = Array.Empty<object>(),
-                metadata = new { modelAlias = "fake-ai", processingTimeMs = 1 }
+                metadata = new { modelAlias = "education-fast", processingTimeMs = 1 }
             });
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

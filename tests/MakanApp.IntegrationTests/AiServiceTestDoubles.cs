@@ -9,6 +9,7 @@ public sealed class AiServiceTestControl
     private IAiServiceRequest? _lastRoleRequest;
     private Exception? _nextException;
     public int ProviderCallCount { get; private set; }
+    public bool Enabled { get; set; } = true;
 
     public AiChatRequest? LastRequest
     {
@@ -48,6 +49,7 @@ public sealed class AiServiceTestControl
             _lastRoleRequest = null;
             _nextException = null;
             ProviderCallCount = 0;
+            Enabled = true;
         }
     }
 
@@ -97,6 +99,14 @@ public sealed class AiServiceTestControl
         var exception = _nextException;
         _nextException = null;
         throw exception;
+    }
+}
+
+public sealed class TestAiRuntimeAvailability(AiServiceTestControl control) : IAiRuntimeAvailability
+{
+    public void EnsureEnabled()
+    {
+        if (!control.Enabled) throw new AiServiceException(AiServiceErrorCodes.FeatureDisabled, "AI کنترل‌شده غیرفعال است.");
     }
 }
 

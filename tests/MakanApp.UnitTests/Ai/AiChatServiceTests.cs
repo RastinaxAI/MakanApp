@@ -24,7 +24,7 @@ public sealed class AiChatServiceTests
         var resolver = new StubContextResolver(context);
         var scopeStore = new StubScopeStore { LearnerId = Guid.NewGuid() };
         var client = new RecordingClient();
-        var service = new AiChatService(resolver, scopeStore, client, new NoSourceSelection());
+        var service = new AiChatService(resolver, scopeStore, client, new NoSourceSelection(), new DirectInvocation());
 
         var result = await service.ChatAsync(
             context.UserId,
@@ -56,7 +56,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection());
+            client, new NoSourceSelection(), new DirectInvocation());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -77,7 +77,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection());
+            client, new NoSourceSelection(), new DirectInvocation());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -100,7 +100,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection());
+            client, new NoSourceSelection(), new DirectInvocation());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -188,6 +188,13 @@ public sealed class AiChatServiceTests
         { Assert.Empty(ids ?? []); return Task.CompletedTask; }
         public Task<AiSourcePreflightResult> PreflightAsync(Guid u, Guid s, AiSourcePreflightCommand command, CancellationToken ct) =>
             throw new NotSupportedException();
+    }
+
+    private sealed class DirectInvocation : IAiInvocationExecutor
+    {
+        public Task<TResponse> ExecuteAsync<TRequest,TResponse>(Guid u, Guid session, TRequest request,
+            Func<TRequest,CancellationToken,Task<TResponse>> invoke, Func<CancellationToken,Task> reauthorize,
+            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiServiceRequest where TResponse:class,IAiServiceResponse => invoke(request,ct);
     }
 
 }

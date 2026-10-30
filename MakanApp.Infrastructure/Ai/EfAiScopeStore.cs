@@ -44,6 +44,10 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
                   enrollment.Status == EnrollmentStatus.Active &&
                   enrollment.EndedAtUtc == null &&
+                  dbContext.Classes.Any(c => c.Id == assignment.ClassId && c.OrganizationId == organizationId &&
+                      c.Status == ClassStatus.Active && c.EndedAtUtc == null) &&
+                  dbContext.OrganizationPersons.Any(p => p.Id == learnerOrganizationPersonId && p.OrganizationId == organizationId &&
+                      p.Status == OrganizationPersonStatus.Active && p.EndedAtUtc == null) &&
                   assignment.CurrentVersionNumber == version.VersionNumber &&
                   (assignment.Status == AssignmentStatus.Published ||
                    assignment.Status == AssignmentStatus.Closed) &&
@@ -88,6 +92,10 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
                   enrollment.Status == EnrollmentStatus.Active &&
                   enrollment.EndedAtUtc == null
+                  && dbContext.Classes.Any(c => c.Id == exam.ClassId && c.OrganizationId == organizationId &&
+                      c.Status == ClassStatus.Active && c.EndedAtUtc == null)
+                  && dbContext.OrganizationPersons.Any(p => p.Id == learnerOrganizationPersonId && p.OrganizationId == organizationId &&
+                      p.Status == OrganizationPersonStatus.Active && p.EndedAtUtc == null)
             select new AiSelectedExam(
                 exam.Id,
                 exam.ClassId,
@@ -118,7 +126,9 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
                   enrollment.Status == EnrollmentStatus.Active &&
                   enrollment.EndedAtUtc == null &&
-                  academicClass.Status == ClassStatus.Active
+                  academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null &&
+                  dbContext.OrganizationPersons.Any(p => p.Id == learnerOrganizationPersonId && p.OrganizationId == organizationId &&
+                      p.Status == OrganizationPersonStatus.Active && p.EndedAtUtc == null)
             select new AiLearnerClassScope(
                 academicClass.Id,
                 academicClass.Title,
@@ -143,7 +153,9 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
                   enrollment.Status == EnrollmentStatus.Active &&
                   enrollment.EndedAtUtc == null &&
-                  academicClass.Status == ClassStatus.Active
+                  academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null &&
+                  dbContext.OrganizationPersons.Any(p => p.Id == learnerOrganizationPersonId && p.OrganizationId == organizationId &&
+                      p.Status == OrganizationPersonStatus.Active && p.EndedAtUtc == null)
             orderby academicClass.Title, academicClass.Id
             select new AiLearnerClassScope(
                 academicClass.Id,

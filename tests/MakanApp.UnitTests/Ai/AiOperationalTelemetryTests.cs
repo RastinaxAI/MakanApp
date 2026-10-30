@@ -25,7 +25,7 @@ public sealed class AiOperationalTelemetryTests
         var request = Request();
         var body = "{\"requestId\":\"" + request.RequestId + "\",\"correlationId\":\"" + request.CorrelationId +
             "\",\"answer\":{\"text\":\"ok\",\"language\":\"en\"},\"insights\":[],\"risks\":[]," +
-            "\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"synthetic\",\"processingTimeMs\":1}}";
+            "\"recommendations\":[],\"sources\":[],\"metadata\":{\"modelAlias\":\"education-fast\",\"processingTimeMs\":1}}";
         var logger = new CaptureLogger();
         using var http = new HttpClient(new ResponseHandler(HttpStatusCode.OK, body));
         var options = Options();

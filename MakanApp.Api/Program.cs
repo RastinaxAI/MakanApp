@@ -262,6 +262,7 @@ builder.Services.AddOpenApi(options =>
     options.AddSchemaTransformer<StringEnumSchemaTransformer>();
     options.AddOperationTransformer<SchoolOperationTransformer>();
     options.AddOperationTransformer<FileAndMessagingOperationTransformer>();
+    options.AddOperationTransformer<AiInvocationOperationTransformer>();
 });
 builder.Services.AddProblemDetails(options =>
 {

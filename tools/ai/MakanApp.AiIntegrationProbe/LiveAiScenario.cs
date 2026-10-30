@@ -7,6 +7,7 @@ using MakanApp.Application.Ai;
 using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Commerce;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
 using MakanApp.Infrastructure.Ai;
@@ -62,6 +63,7 @@ internal sealed class LiveAiScenario(
         using (var selected = await parent.Client.PostAsync($"/api/v1/guardian/children/{_studentId}/select", null))
             selected.EnsureSuccessStatusCode();
         var (assignmentId, examId, draftId) = await CreateAssessmentsAsync(teacher.MembershipId, enrollment);
+        await CreateSyntheticAiContractAsync();
         var foreignTeacher = await factory.CreateMembershipAsync(teacher.UserId, foreignOrganization, OrganizationRole.Teacher);
         var (foreignAssignment, foreignExam, _) = await CreateAssessmentsAsync(
             foreignTeacher.MembershipId, foreignEnrollment, foreignOrganization, foreignClass.ClassId);
@@ -226,6 +228,23 @@ internal sealed class LiveAiScenario(
             new SelectWorkspaceCommand(WorkspaceType.Organization, membership.MembershipId, role), jsonOptions);
         selected.EnsureSuccessStatusCode();
         return new Actor(client, user.User.Id, membership.MembershipId, role);
+    }
+
+    private async Task CreateSyntheticAiContractAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var database = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+        if (!database.Database.GetDbConnection().Database.StartsWith(MakanAppWebApplicationFactory.DatabaseName, StringComparison.Ordinal))
+            throw new InvalidOperationException("ISOLATED_AI_FIXTURE_DATABASE_REQUIRED");
+        var now = factory.Clock.GetUtcNow().UtcDateTime;
+        var plan = Plan.Create("ai-probe." + Guid.NewGuid().ToString("N"), "قرارداد ساختگی Probe؛ غیرقابل فروش", now.AddDays(-2), SubscriptionOwnerType.Organization);
+        var version = PlanVersion.CreateDraft(plan.Id, 1, now.AddDays(-2));
+        version.SetMonthlyTerms(BillingCalendar.Gregorian, "synthetic-probe-only", 80, 95); version.SetPrice(1000, CurrencyCode.Irr);
+        foreach (var key in new[] { EntitlementKey.Ai, EntitlementKey.Academic, EntitlementKey.Assignments, EntitlementKey.Exams }) version.SetEntitlement(key, true);
+        version.SetQuota(QuotaKey.AiTextRequests, 100); version.SetQuota(QuotaKey.ActiveClasses, 100); version.SetQuota(QuotaKey.ActiveLearners, 100);
+        version.Publish(now.AddDays(-1)); database.Plans.Add(plan); database.PlanVersions.Add(version);
+        database.Subscriptions.Add(Subscription.CreateMonthly(SubscriptionOwner.Organization(_organizationId), version, now.AddHours(-1), 0, now, null, true));
+        await database.SaveChangesAsync();
     }
 
     private async Task<(Guid AssignmentId, Guid ExamId, Guid DraftId)> CreateAssessmentsAsync(
