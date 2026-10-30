@@ -24,7 +24,8 @@ namespace MakanApp.Infrastructure.Realtime;
 
 public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolver contexts,
     ISchoolReadStore school, IMessagingService messaging, IRealtimeCursorProtector protection,
-    IServiceScopeFactory scopes, TimeProvider clock, RealtimeTelemetry telemetry, AssessmentRealtimeAccess assessment)
+    IServiceScopeFactory scopes, TimeProvider clock, RealtimeTelemetry telemetry, AssessmentRealtimeAccess assessment,
+    MakanApp.Application.Platform.IPlatformPermissionResolver platform)
     : IRealtimeSyncService, IRealtimeInvalidationAudience, IRealtimeSessionScope
 {
     public const string Epoch = "outbox-v1";
@@ -81,18 +82,20 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
                 UNION ALL
                 SELECT q.[Id], q.[RowVersion], CAST(NULL AS uniqueidentifier), q.[Payload], q.[OccurredAtUtc]
                 FROM [platform].[OutboxMessages] q WHERE q.[MessageType] = {RealtimeInvalidationWriter.MessageType}
-                  AND (JSON_VALUE(CASE WHEN ISJSON(q.[Payload]) = 1 THEN q.[Payload] ELSE 'null' END, '$.TargetUserId') = {userId.ToString()}
+                  AND ((JSON_VALUE(CASE WHEN ISJSON(q.[Payload]) = 1 THEN q.[Payload] ELSE 'null' END, '$.Key') = 'knowledge.library'
+                        AND JSON_VALUE(q.[Payload], '$.TargetUserId') IS NULL)
+                    OR JSON_VALUE(CASE WHEN ISJSON(q.[Payload]) = 1 THEN q.[Payload] ELSE 'null' END, '$.TargetUserId') = {userId.ToString()}
                     OR (JSON_VALUE(CASE WHEN ISJSON(q.[Payload]) = 1 THEN q.[Payload] ELSE 'null' END, '$.OrganizationId') = {(orgId == null ? null : orgId.Value.ToString())}
                       AND JSON_VALUE(q.[Payload], '$.TargetUserId') IS NULL
                       AND ({role == OrganizationRole.Manager} = 1
                         OR ({role == OrganizationRole.Teacher} = 1 AND JSON_VALUE(q.[Payload], '$.Key') IN ('school.class','school.roster','school.lesson','school.schedule',
-                            'assessment.assignment','assessment.exam','assessment.submission','assessment.grade','assessment.exam-grade')
+                            'assessment.assignment','assessment.exam','assessment.submission','assessment.grade','assessment.exam-grade','knowledge.source')
                           AND EXISTS (SELECT 1 FROM [academic].[TeacherAssignments] t WHERE t.[OrganizationId] = {orgId}
                             AND t.[ClassId] = TRY_CONVERT(uniqueidentifier, JSON_VALUE(q.[Payload], '$.ClassId'))
                             AND t.[TeacherMembershipId] = {membershipId} AND t.[Status] = {(int)TeacherAssignmentStatus.Active} AND t.[EndedAtUtc] IS NULL))
                         OR ({role == OrganizationRole.Student} = 1 AND JSON_VALUE(q.[Payload], '$.StaffOnly') = 'false'
                           AND JSON_VALUE(q.[Payload], '$.Key') IN ('school.class','school.lesson','school.schedule',
-                            'assessment.assignment','assessment.exam','assessment.submission','assessment.grade','assessment.exam-grade','assessment.exam-attempt')
+                            'assessment.assignment','assessment.exam','assessment.submission','assessment.grade','assessment.exam-grade','assessment.exam-attempt','knowledge.source')
                           AND EXISTS (SELECT 1 FROM [academic].[Enrollments] e JOIN [organization].[OrganizationPersons] p ON p.[Id] = e.[LearnerOrganizationPersonId]
                             JOIN [identity].[Users] u ON u.[PersonId] = p.[PersonId]
                             WHERE u.[Id] = {userId} AND e.[OrganizationId] = {orgId} AND p.[OrganizationId] = {orgId}
@@ -154,7 +157,7 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
         {
             var now = clock.GetUtcNow().UtcDateTime;
             var query = db.UserSessions.AsNoTracking().Where(s => s.RevokedAtUtc == null && s.ExpiresAtUtc > now && s.AbsoluteExpiresAtUtc > now &&
-                (envelope.TargetUserId.HasValue ? s.UserId == envelope.TargetUserId : s.SelectedMembershipId != null &&
+                (envelope.TargetUserId.HasValue ? s.UserId == envelope.TargetUserId : envelope.Key == "knowledge.library" || s.SelectedMembershipId != null &&
                     db.Memberships.Any(m => m.Id == s.SelectedMembershipId && m.OrganizationId == envelope.OrganizationId)));
             if (after is Guid id) query = query.Where(s => s.Id.CompareTo(id) > 0);
             var page = await query.OrderBy(s => s.Id).Select(s => new { s.Id, s.UserId }).Take(128).ToArrayAsync(ct);
@@ -166,7 +169,8 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
                 await using var scope = scopes.CreateAsyncScope();
                 var fresh = scope.ServiceProvider.GetRequiredService<RealtimeSyncService>();
                 Binding? binding = null;
-                try { binding = await fresh.BindAsync(session.UserId, session.Id, ct); }
+                try { binding = await fresh.BindAsync(session.UserId, session.Id, ct,
+                    envelope.Key == "knowledge.source" && envelope.TargetUserId.HasValue ? ConversationScope.Personal : null); }
                 catch (IdentityException) { }
                 if (binding is not null && await fresh.AllowsAsync(binding, envelope, ct))
                     yield return (session.Id, Notification(binding, envelope, eventId, Convert.ToHexString(row.RowVersion), row.OccurredAtUtc));
@@ -193,6 +197,24 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
     private async Task<bool> AllowsAsync(Binding binding, InvalidationEnvelope item, CancellationToken ct)
     {
         if (item.Key == "access") return item.TargetUserId == binding.UserId && item.ResourceId is null && item.OrganizationId is null;
+        if (item.Key == "knowledge.library")
+            return item.ResourceId is null && item.OrganizationId is null && item.ClassId is null &&
+                (!item.TargetUserId.HasValue || item.TargetUserId == binding.UserId &&
+                    await platform.HasPermissionAsync(binding.UserId, MakanApp.Domain.Platform.PlatformPermissionKeys.LibrarySourcesManage, ct));
+        if (item.Key == "knowledge.source")
+        {
+            var source = await db.EducationalSources.AsNoTracking().SingleOrDefaultAsync(s => s.Id == item.ResourceId, ct);
+            if (source is null) return false;
+            if (source.Scope == MakanApp.Domain.Knowledge.EducationalSourceScope.Personal)
+                return item.TargetUserId == binding.UserId && source.OwnerUserId == binding.UserId && item.OrganizationId is null;
+            var context = binding.Context;
+            if (context is null || context.OrganizationId != source.OrganizationId || item.OrganizationId != source.OrganizationId ||
+                item.ClassId != source.ClassId || item.TargetUserId.HasValue) return false;
+            if (source.Scope == MakanApp.Domain.Knowledge.EducationalSourceScope.Organization)
+                return await school.CanManageOrganizationAsync(context, ct);
+            return source.ClassId is Guid sourceClassId && (await school.CanManageClassAsync(context, sourceClassId, ct) ||
+                !item.StaffOnly && source.PublishedVersion.HasValue && await school.CanStudyClassAsync(context, sourceClassId, ct));
+        }
         var c = binding.Context;
         if (c is null) return false;
         if (item.Key.StartsWith("assessment.", StringComparison.Ordinal))

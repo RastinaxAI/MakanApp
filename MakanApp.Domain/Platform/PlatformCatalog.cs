@@ -49,6 +49,7 @@ public static class PlatformPermissionKeys
     public const string OperationsManage = "platform.operations.manage";
     public const string NotificationsRead = "platform.notifications.read";
     public const string AiRead = "platform.ai.read";
+    public const string LibrarySourcesManage = "platform.library.sources.manage";
 
     public static readonly IReadOnlyCollection<string> Step15A =
     [
@@ -81,7 +82,8 @@ public static class PlatformPermissionKeys
         OperationsRead,
         OperationsManage,
         NotificationsRead,
-        AiRead
+        AiRead,
+        LibrarySourcesManage
     ];
 }
 
@@ -120,4 +122,5 @@ public static class PlatformCatalogIds
     public static readonly Guid OperationsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000023");
     public static readonly Guid NotificationsReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000024");
     public static readonly Guid AiReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000025");
+    public static readonly Guid LibrarySourcesManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000026");
 }

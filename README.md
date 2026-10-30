@@ -425,4 +425,6 @@ Search، Block و Report پس از STEP 7D اضافه شده‌اند و در ر
 
 ## محدودیت‌ها
 
+بنیاد منابع آموزشی چندبافتی در [سند پیاده‌سازی](docs/product/EDUCATIONAL_SOURCES_IMPLEMENTATION_FA.md) و [قرارداد Frontend](docs/product/EDUCATIONAL_SOURCES_FRONTEND_HANDOFF_FA.md) توضیح داده شده است. Source از FileAsset جداست؛ Personal/Class/Organization/Library، revision منتشرشدهٔ immutable، quota واقعی SourceCount و ACL جاری فایل/منبع دارد. OCR، Index و runtime AI در این مرحله فعال نشده‌اند.
+
 محدودیت‌های جاری: gateway مالی واقعی، دریافت Push دستگاه واقعی، SMS عمومی اعلان، AV/CDR، limiter/backplane چند instance، P3 media و پذیرش عملیاتی TLS/restore/load بازند. Web Push/VAPID و FCM در کد موجودند؛ P1_PUSH_RUNTIME_PENDING تحویل واقعی را تفکیک می‌کند. Service Auth واقعی AI قبلاً PASS، Parent Provider Timeout و Full-12 Deferred است. auto-finalize آزمون و Rubric ساختاریافته بسته نشده‌اند؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md).

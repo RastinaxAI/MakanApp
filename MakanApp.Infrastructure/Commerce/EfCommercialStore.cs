@@ -135,7 +135,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
                 .SumAsync(e => (long?)e.Amount, ct) ?? 0;
         var reserved = await db.UsageReservations.AsNoTracking().Where(r => r.SubscriptionId == subscription.Id && r.QuotaKey == key
             && (r.Status == UsageReservationStatus.Reserved || r.Status == UsageReservationStatus.Unknown)).SumAsync(r => (long?)r.Amount, ct) ?? 0;
-        var available = key is not (QuotaKey.SourceCount or QuotaKey.AssignmentFileBytes)
+        var available = key is not QuotaKey.AssignmentFileBytes
             && (key != QuotaKey.StorageBytes || subscription.OwnerType == SubscriptionOwnerType.Organization);
         return new CommercialQuotaDto(key, QuotaKinds.For(key), QuotaKinds.Unit(key), limit, consumed, reserved,
             available && limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
@@ -149,6 +149,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
             return key switch
             {
                 QuotaKey.ActiveClasses => await db.PersonalClasses.LongCountAsync(c => c.HostUserId == owner.Id && c.ArchivedAtUtc == null, ct),
+                QuotaKey.SourceCount => await db.EducationalSources.LongCountAsync(s => s.OwnerUserId == owner.Id && s.Scope == MakanApp.Domain.Knowledge.EducationalSourceScope.Personal, ct),
                 QuotaKey.ActiveLearners => await (from p in db.PersonalClassParticipants join c in db.PersonalClasses on p.PersonalClassId equals c.Id
                     where c.HostUserId == owner.Id && c.ArchivedAtUtc == null && p.EndedAtUtc == null select p.StudentUserId).Distinct().LongCountAsync(ct),
                 _ => 0
@@ -156,6 +157,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
         return key switch
         {
             QuotaKey.ActiveClasses => await db.Classes.LongCountAsync(c => c.OrganizationId == owner.Id && c.Status == ClassStatus.Active && c.EndedAtUtc == null, ct),
+            QuotaKey.SourceCount => await db.EducationalSources.LongCountAsync(s => s.OrganizationId == owner.Id, ct),
             QuotaKey.ActiveLearners => await (from e in db.Enrollments join c in db.Classes on e.ClassId equals c.Id
                 where e.OrganizationId == owner.Id && e.Status == EnrollmentStatus.Active && e.EndedAtUtc == null
                     && c.Status == ClassStatus.Active && c.EndedAtUtc == null select e.LearnerOrganizationPersonId).Distinct().LongCountAsync(ct),

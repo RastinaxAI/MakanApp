@@ -263,6 +263,8 @@ public static class DependencyInjection
         services.AddScoped<IFileAssetStore, EfFileAssetStore>();
         services.AddScoped<IFileAssetBoundAccessResolver, EfFileAssetBoundAccessResolver>();
         services.AddScoped<IStorageService, StorageService>();
+        services.AddScoped<MakanApp.Application.Knowledge.IEducationalSourceStore, MakanApp.Infrastructure.Knowledge.EfEducationalSourceStore>();
+        services.AddScoped<MakanApp.Application.Knowledge.EducationalSourceService>();
         services.AddSingleton<IFileContentValidator, FileSignatureValidator>();
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
         services.AddSingleton(TimeProvider.System);

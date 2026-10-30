@@ -45,6 +45,7 @@ public sealed class GlobalExceptionHandler(
     {
         ProblemDetails? problemDetails = exception switch
         {
+            MakanApp.Application.Knowledge.EducationalSourceException sourceException => CreateKnownProblem(sourceException.Code, sourceException.Message),
             RealtimeException realtimeException => CreateKnownProblem(realtimeException.Code, realtimeException.Message),
             AssessmentException assessmentException => CreateKnownProblem(
                 assessmentException.Code,
@@ -147,6 +148,13 @@ public sealed class GlobalExceptionHandler(
     private static int? GetKnownStatusCode(string code) =>
         code switch
         {
+            MakanApp.Application.Knowledge.SourceErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            MakanApp.Application.Knowledge.SourceErrorCodes.NotAllowed => StatusCodes.Status403Forbidden,
+            MakanApp.Application.Knowledge.SourceErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            MakanApp.Application.Knowledge.SourceErrorCodes.NotReady => StatusCodes.Status409Conflict,
+            MakanApp.Application.Knowledge.SourceErrorCodes.Conflict => StatusCodes.Status409Conflict,
+            MakanApp.Application.Knowledge.SourceErrorCodes.QuotaExceeded => StatusCodes.Status409Conflict,
+            MakanApp.Application.Knowledge.SourceErrorCodes.IdempotencyConflict => StatusCodes.Status409Conflict,
             RealtimeErrorCodes.ResyncRequired => StatusCodes.Status409Conflict,
             RealtimeErrorCodes.InvalidQuery => StatusCodes.Status400BadRequest,
             RealtimeErrorCodes.Unavailable => StatusCodes.Status503ServiceUnavailable,

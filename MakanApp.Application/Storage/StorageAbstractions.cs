@@ -40,6 +40,7 @@ public interface IFileAssetStore
 
 public interface IFileAssetBoundAccessResolver
 {
+    Task<bool> IsEducationalSourceBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) => Task.FromResult(false);
     Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken);
     Task<bool> IsSchoolLessonBoundAsync(Guid fileAssetId, CancellationToken cancellationToken);
 

@@ -13,9 +13,12 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Storage;
 
 public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess,
-    ISubmissionService submissions, ISubmissionStore submissionStore, IExamAttemptService examAttempts, IExamGradingStore grading)
+    ISubmissionService submissions, ISubmissionStore submissionStore, IExamAttemptService examAttempts, IExamGradingStore grading,
+    MakanApp.Application.Knowledge.IEducationalSourceStore sources)
     : IFileAssetBoundAccessResolver
 {
+    public Task<bool> IsEducationalSourceBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
+        dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken);
     public Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.Users.AnyAsync(user => user.ProfilePhotoFileAssetId == fileAssetId, cancellationToken);
 
@@ -25,6 +28,7 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
     public async Task<bool> IsBoundAsync(
         Guid fileAssetId,
         CancellationToken cancellationToken) =>
+        await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
         await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
         await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
@@ -44,6 +48,8 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         AccessContext accessContext,
         CancellationToken cancellationToken)
     {
+        if (await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAsset.Id, cancellationToken))
+            return await sources.CanReadFileAsync(fileAsset.Id, accessContext, cancellationToken);
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;
         // استثنای مرجع شخصی فقط برای Avatar است؛ scope قبلی همهٔ مصرف‌کننده‌های دیگر حفظ می‌شود.
         if (!FileAccessPolicy.IsCurrentScope(fileAsset, accessContext)) return false;

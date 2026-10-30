@@ -14,7 +14,7 @@ namespace MakanApp.Infrastructure.Commerce;
 internal static class CommercialWritePolicy
 {
     public static bool IsRelevant(EntityEntry e) => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted
-        && (e.Entity.GetType().Namespace is "MakanApp.Domain.Academic" or "MakanApp.Domain.Assessment"
+        && (e.Entity.GetType().Namespace is "MakanApp.Domain.Academic" or "MakanApp.Domain.Assessment" or "MakanApp.Domain.Knowledge"
             || e.Entity is Membership or RoleAssignment or GuardianRelation or OrganizationPerson or Invitation
             || e.Entity is Person && e.State == EntityState.Modified)
         && e.Entity is not (PersonalClass or PersonalClassParticipant or PersonalClassInvitation);
@@ -57,7 +57,7 @@ internal static class CommercialWritePolicy
             foreach (var entry in changes)
             {
                 var reduction = IsReduction(entry);
-                var newCapacity = entry.State == EntityState.Added && entry.Entity is AcademicClass or AcademicPeriod or Course or Enrollment or TeacherAssignment or Membership or RoleAssignment or Invitation;
+                var newCapacity = entry.State == EntityState.Added && entry.Entity is AcademicClass or AcademicPeriod or Course or Enrollment or TeacherAssignment or Membership or RoleAssignment or Invitation or MakanApp.Domain.Knowledge.EducationalSource;
                 var action = reduction ? CommercialEducationalAction.AccessReduction : newCapacity ? CommercialEducationalAction.NewCapacity : CommercialEducationalAction.ExistingWrite;
                 if (!OrganizationCommercialAccess.IsAllowed(contract, action, now)) throw EfCommercialStore.Error(CommerceErrorCodes.CommercialLocked);
             }
@@ -85,6 +85,7 @@ internal static class CommercialWritePolicy
         TeacherAssignment t => t.EndedAtUtc.HasValue,
         AcademicClass c => c.EndedAtUtc.HasValue,
         Invitation i => i.Status != InvitationStatus.Pending,
+        MakanApp.Domain.Knowledge.EducationalSource s => s.Status != MakanApp.Domain.Knowledge.EducationalSourceStatus.Active,
         _ => false
     };
 
