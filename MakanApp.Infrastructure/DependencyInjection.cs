@@ -63,6 +63,7 @@ public static class DependencyInjection
 
         services.AddMetrics();
         services.AddSingleton<WorkerTelemetry>();
+        services.AddSingleton<RealtimeTelemetry>();
         services.AddSingleton(OperationalMetricsOptions.FromConfiguration(configuration));
         services.AddHostedService<OperationalMetricsPublisher>();
 
@@ -240,6 +241,12 @@ public static class DependencyInjection
         });
         services.AddScoped<INotificationDeliveryCoordinator, NotificationDeliveryCoordinator>();
         services.AddScoped<IOutbox, EfOutbox>();
+        services.AddScoped<MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter>();
+        services.AddScoped<MakanApp.Infrastructure.Realtime.AssessmentRealtimeAccess>();
+        services.AddScoped<MakanApp.Infrastructure.Realtime.RealtimeSyncService>();
+        services.AddScoped<MakanApp.Application.Realtime.IRealtimeSyncService>(sp => sp.GetRequiredService<MakanApp.Infrastructure.Realtime.RealtimeSyncService>());
+        services.AddScoped<MakanApp.Application.Realtime.IRealtimeInvalidationAudience>(sp => sp.GetRequiredService<MakanApp.Infrastructure.Realtime.RealtimeSyncService>());
+        services.AddScoped<MakanApp.Application.Realtime.IRealtimeSessionScope>(sp => sp.GetRequiredService<MakanApp.Infrastructure.Realtime.RealtimeSyncService>());
         services.AddScoped<OutboxProcessor>();
         services.AddHostedService<OutboxDispatcher>();
         services.AddScoped<NotificationDeliveryProcessor>();

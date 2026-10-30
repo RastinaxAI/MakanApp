@@ -837,6 +837,37 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Assessment.AnswerRevisionAttachment", b =>
+                {
+                    b.Property<Guid>("AnswerRevisionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AttachedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("ExamAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ExamAttemptQuestionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AnswerRevisionId", "FileAssetId");
+
+                    b.HasIndex("FileAssetId");
+
+                    b.HasIndex("OrganizationId", "ExamAttemptId", "FileAssetId");
+
+                    b.HasIndex("OrganizationId", "ExamAttemptId", "ExamAttemptQuestionId", "AnswerRevisionId");
+
+                    b.ToTable("AnswerRevisionAttachments", "assessment");
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Assessment.Assignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1785,11 +1816,31 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AllowedAnswerContentTypes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
+                    b.Property<bool>("AnswerTextRequired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("AttachmentsAllowed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
 
                     b.Property<Guid>("ExamVersionId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<long?>("MaximumAnswerAttachmentBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("MaximumAnswerAttachmentCount")
+                        .HasColumnType("int");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");
@@ -1829,6 +1880,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("QuestionVersions", "assessment", t =>
                         {
+                            t.HasCheckConstraint("CK_QuestionVersions_AttachmentPolicy", "([AttachmentsAllowed] = 0 AND [AnswerTextRequired] = 0 AND [MaximumAnswerAttachmentCount] IS NULL AND [MaximumAnswerAttachmentBytes] IS NULL AND [AllowedAnswerContentTypes] IS NULL) OR ([AttachmentsAllowed] = 1 AND [MaximumAnswerAttachmentCount] IS NOT NULL AND [MaximumAnswerAttachmentCount] > 0 AND [MaximumAnswerAttachmentBytes] IS NOT NULL AND [MaximumAnswerAttachmentBytes] > 0 AND [AllowedAnswerContentTypes] IS NOT NULL AND LEN([AllowedAnswerContentTypes]) > 0 AND ([Type] = 2 OR [AnswerTextRequired] = 0))");
+
                             t.HasCheckConstraint("CK_QuestionVersions_Order", "[Order] > 0");
 
                             t.HasCheckConstraint("CK_QuestionVersions_Score", "[Score] > 0");
@@ -7337,6 +7390,22 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Assessment.AnswerRevisionAttachment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Assessment.AnswerRevision", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("OrganizationId", "ExamAttemptId", "ExamAttemptQuestionId", "AnswerRevisionId")
+                        .HasPrincipalKey("OrganizationId", "ExamAttemptId", "ExamAttemptQuestionId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Assessment.Assignment", b =>
                 {
                     b.HasOne("MakanApp.Domain.Academic.Class", null)
@@ -8996,6 +9065,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Academic.ClassLesson", b =>
+                {
+                    b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Assessment.AnswerRevision", b =>
                 {
                     b.Navigation("Attachments");
                 });

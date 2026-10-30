@@ -94,6 +94,12 @@ public sealed class ConversationsController(
             new GetConversationListQuery(filter, page, pageSize, search, folderId),
             cancellationToken));
 
+    [HttpGet("{conversationId:guid}/summary")]
+    [ProducesResponseType<ConversationSummaryResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ConversationSummaryResult>> GetSummary(Guid conversationId, CancellationToken cancellationToken) =>
+        Ok(await messagingService.GetConversationSummaryAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), conversationId, cancellationToken));
+
     [HttpGet("discover")]
     [ProducesResponseType<DiscoverableConversationPageResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<DiscoverableConversationPageResult>> Discover(

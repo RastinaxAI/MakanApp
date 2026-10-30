@@ -656,7 +656,9 @@ public sealed class ReportExportRecoveryTests
         public async Task<ReportExportJob> ClaimAsync(MakanDbContext db) =>
             (await Store(db).TryClaimNextAsync(Now, TimeSpan.FromMinutes(2), 3, CancellationToken.None))!;
         public EfReportExportJobStore Store(MakanDbContext db, ILogger<EfReportExportJobStore>? logger = null) =>
-            new(db, new MakanApp.Infrastructure.Commerce.EfCommercialStore(db), factory.Clock,
+            new(db, new MakanApp.Infrastructure.Commerce.EfCommercialStore(db,
+                new MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter(db,
+                    new MakanApp.Infrastructure.Outbox.EfOutbox(db), factory.Clock)), factory.Clock,
                 factory.Services.GetRequiredService<WorkerTelemetry>(), logger ?? NullLogger<EfReportExportJobStore>.Instance);
 
         public async Task<Guid[]> SeedJobsAsync(int count, bool exhausted = false, bool activeFinalLease = false)

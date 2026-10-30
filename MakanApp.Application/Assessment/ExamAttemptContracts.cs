@@ -16,7 +16,10 @@ public sealed record StudentExamAttemptQuestionDto(
     ExamQuestionType QuestionType,
     string Prompt,
     decimal Score,
-    IReadOnlyCollection<StudentExamAttemptOptionDto> Options);
+    IReadOnlyCollection<StudentExamAttemptOptionDto> Options)
+{
+    public ExamQuestionAttachmentPolicyDto? AttachmentPolicy { get; init; }
+}
 
 public sealed record StudentExamAttemptDto(
     Guid ExamAttemptId,

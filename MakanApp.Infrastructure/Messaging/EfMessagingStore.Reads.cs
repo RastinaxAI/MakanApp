@@ -18,7 +18,8 @@ public sealed partial class EfMessagingStore
         int pageSize,
         string? search,
         CancellationToken cancellationToken,
-        Guid? folderId = null)
+        Guid? folderId = null,
+        Guid? conversationId = null)
     {
         var workspaceType = accessContext.WorkspaceType;
         var organizationId = accessContext.OrganizationId;
@@ -40,15 +41,16 @@ public sealed partial class EfMessagingStore
                 into organizations
             from organization in organizations.DefaultIfEmpty()
             where participant.UserId == userId &&
+                  (!conversationId.HasValue || conversation.Id == conversationId) &&
                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
                    conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == userId &&
                        m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   conversation.Status == ConversationStatus.Active &&
-                  (filter == ConversationListFilter.Archived
+                  (conversationId.HasValue || (filter == ConversationListFilter.Archived
                       ? state != null && state.ArchivedAtUtc != null
-                      : state == null || state.ArchivedAtUtc == null) &&
+                      : state == null || state.ArchivedAtUtc == null)) &&
                   (filter != ConversationListFilter.Direct || conversation.Type == ConversationType.Direct) &&
                   (filter != ConversationListFilter.Group || conversation.Type == ConversationType.Group) &&
                   (filter != ConversationListFilter.Channel || conversation.Type == ConversationType.Channel) &&

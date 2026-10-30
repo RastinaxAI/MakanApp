@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, EfCommercialStore commerce, TimeProvider timeProvider)
+public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, EfCommercialStore commerce, TimeProvider timeProvider,
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime)
     : ISubscriptionActivationHandler
 {
     public async Task HandleAsync(SubscriptionActivationRequested payload, CancellationToken ct)
@@ -27,7 +28,7 @@ public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, Ef
             if (previous is { CommercialControlEnabled: true }) throw new InvalidOperationException("سفارش قدیمی حق بازنویسی قرارداد مدیریت‌شده را ندارد.");
             previous?.Cancel(now);
             var legacy = Subscription.CreatePending(order.OrganizationId.Value, version, now, null, now, order.Id);
-            legacy.Activate(now); dbContext.Subscriptions.Add(legacy); return;
+            legacy.Activate(now); dbContext.Subscriptions.Add(legacy); realtime.CaptureCommerce(); return;
         }
         if (order.Purpose == CommercialOrderPurpose.Upgrade)
         {
@@ -37,7 +38,7 @@ public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, Ef
             var previous = await commerce.VersionAsync(target.PlanVersionId, ct);
             CommercialPlanChange.EnsureUpgrade(previous, version);
             dbContext.SubscriptionAmendments.Add(SubscriptionAmendment.Create(target, version, order.Id, now, order.Amount / 10m, order.CreatedAtUtc));
-            target.ApplyUpgrade(version, now); return;
+            target.ApplyUpgrade(version, now); realtime.CaptureCommerce(); return;
         }
         var startsUponPayment = order.Purpose == CommercialOrderPurpose.Purchase
             || order.Purpose == CommercialOrderPurpose.Renewal && order.BillingPeriodIndex == 0 && order.BillingAnchorUtc == order.CreatedAtUtc;
@@ -57,5 +58,6 @@ public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, Ef
             foreach (var item in old) item.Cancel(now);
         }
         dbContext.Subscriptions.Add(monthly);
+        realtime.CaptureCommerce();
     }
 }

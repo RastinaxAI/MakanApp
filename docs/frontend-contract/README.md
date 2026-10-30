@@ -10,6 +10,10 @@
 
 ## قرارداد مشترک انتقال و مجوز
 
+بازبینی Audit/Realtime روی `main@8084485` و Working Tree پس از آن: آمار و HTML/PDF بالای صفحه Snapshot نسخهٔ `701cba0` هستند و شامل بنیاد Subscription و اصلاحات جدید این مرحله نیستند. مرجع اتصال جدید [Handoff پیام‌رسان](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md)، [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md) و [Matrix مسائل](../product/BACKEND_ISSUES_RESOLUTION_MATRIX_FA.md) است؛ این به‌روزرسانی شاهد استقرار روی سرور نیست.
+
+مسیر `/api/v1/conversations/{conversationId}/summary` برای deep-link مجاز Direct/Saved و سایر انواع اضافه شده؛ GET مدیریتی بدون `/summary` فقط Group/Channel است. دانلود `/api/v1/files/{fileId}/content` در OpenAPI باینری و Range توصیف می‌شود. roster کامل به Student/Parent باز نشده است. account catch-up جدید و invalidation چنددامنه‌ای هنوز منتظر تأیید طرح محدود‌اند و API آماده معرفی نمی‌شوند. قرارداد Individual/Organization و Quota موجود در [Handoff اشتراک](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) reuse می‌شود.
+
 - API اصلی /api/v1 و Backoffice مستقل /api/admin/v1 است. شناسهٔ GUID، enum رشته‌ای، زمان UTC و rowversion/Base64 را از response واقعی بگیرید؛ placeholderهای سند دادهٔ آمادهٔ محیط نیستند.
 - Bearer در Authorization header ارسال می‌شود؛ cookie session، query-token برای SignalR و هدر عمومی Idempotency-Key نداریم. public بودن OTP/refresh مجوز دسترسی به resource نیست.
 - role، organization، membership و child جاری را سرور resolve می‌کند؛ selectorهای client مدرک مجوز نیستند. 401 ورود، 403 منع مجوز، 404 پنهان‌سازی/نبود منبع، 409/412 تضاد و 429 محدودیت باید از ProblemDetails/code خوانده شوند.
@@ -126,3 +130,11 @@ Job operations اکنون Queues تفکیک‌شده، تعدادها و سن ق
 
 
 Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.
+
+## افزودهٔ Account Replay و invalidation مجاز
+
+در Working Tree جاری، `GET /api/v1/realtime/changes` بازیابی حساب را روی Outboxهای موجود فراهم می‌کند و Hub موجود علاوه بر `ConversationChanged`، رویداد `ClientInvalidated` دارد. ContextRevision هر نشست، cursor محافظت‌شده و بازبینی مجوز جاری مانع اتکا به گروه قدیمی می‌شوند. پیام اول به SubscribeConversation قبلی وابسته نیست. رویداد فقط hint برای refetch است؛ تکرار آن نباید unread یا رکورد تازه بسازد. bootstrap پیش از Snapshot و replay تا `HasMore=false`، با رعایت `RetryAfterMilliseconds` لازم است؛ reconnect به‌تنهایی کافی نیست.
+
+این افزوده، خروجی‌های HTML/PDF تاریخی این پوشه را بازتولید نمی‌کند. قرارداد جاری، خطاهای resync/backoff و دامنهٔ اجراشده/Deferred را در [Handoff](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md)، [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md) و [Matrix](../product/BACKEND_ISSUES_RESOLUTION_MATRIX_FA.md) بخوانید. Client واقعی، AI runtime، backplane، load/SLO و اعلان زمان‌محور بدون Write در این اجرا پذیرفته نشده‌اند.
+
+خطای 422 ارسال رسانهٔ محافظت‌شده با PendingReview نباید Sent/Delivered یا فایل قابل دانلود گیرنده نمایش داده شود. state، safetyReference و KEEP_DRAFT_NO_AUTO_RETRY در [قرارداد BE-01](../messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md) آمده‌اند؛ این state وعدهٔ Human Review یا تأیید async نیست. PRODUCT_DECISION_BLOCKED برای workflow نهایی برقرار است.

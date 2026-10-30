@@ -11,6 +11,7 @@ using MakanApp.Application.Platform;
 using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
+using MakanApp.Application.Realtime;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Frozen;
@@ -30,7 +31,7 @@ public sealed class GlobalExceptionHandler(
         typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(MessagingErrorCodes),
         typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
         typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
-        typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes)
+        typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes), typeof(RealtimeErrorCodes)
     }.SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
         .Where(field => field.IsLiteral && field.FieldType == typeof(string))
         .Select(field => field.GetRawConstantValue())
@@ -44,6 +45,7 @@ public sealed class GlobalExceptionHandler(
     {
         ProblemDetails? problemDetails = exception switch
         {
+            RealtimeException realtimeException => CreateKnownProblem(realtimeException.Code, realtimeException.Message),
             AssessmentException assessmentException => CreateKnownProblem(
                 assessmentException.Code,
                 assessmentException.Message),
@@ -101,6 +103,33 @@ public sealed class GlobalExceptionHandler(
         httpContext.Response.StatusCode = problemDetails.Status
             ?? StatusCodes.Status500InternalServerError;
 
+        if (exception is MessagingException safetyException && safetyException.Code is
+            MessagingErrorCodes.MessageSafetyReviewRequired or MessagingErrorCodes.MessageSafetyBlocked)
+        {
+            problemDetails.Extensions["safetyState"] = safetyException.Code == MessagingErrorCodes.MessageSafetyReviewRequired
+                ? "PendingReview" : "Rejected";
+            problemDetails.Extensions["operationState"] = "NotApplied";
+            problemDetails.Extensions["newMessageCreated"] = false;
+            problemDetails.Extensions["newAttachmentsBound"] = false;
+            problemDetails.Extensions["recipientDeliveryGranted"] = false;
+            problemDetails.Extensions["recipientDownloadGranted"] = false;
+            problemDetails.Extensions["requiredAction"] = "KEEP_DRAFT_NO_AUTO_RETRY";
+            problemDetails.Extensions["retryable"] = false;
+            if (safetyException.SafetyReference is Guid reference && reference != Guid.Empty)
+                problemDetails.Extensions["safetyReference"] = reference;
+        }
+
+        if (exception is RealtimeException { Code: RealtimeErrorCodes.ResyncRequired })
+        {
+            problemDetails.Extensions["requiredAction"] = "REFETCH_AUTHORIZED_SNAPSHOTS";
+            problemDetails.Extensions["retryable"] = false;
+        }
+        if (exception is RealtimeException { Code: RealtimeErrorCodes.Unavailable })
+        {
+            problemDetails.Extensions["requiredAction"] = "RETRY_SAME_CURSOR";
+            problemDetails.Extensions["retryable"] = true;
+        }
+
         if (await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
@@ -118,6 +147,9 @@ public sealed class GlobalExceptionHandler(
     private static int? GetKnownStatusCode(string code) =>
         code switch
         {
+            RealtimeErrorCodes.ResyncRequired => StatusCodes.Status409Conflict,
+            RealtimeErrorCodes.InvalidQuery => StatusCodes.Status400BadRequest,
+            RealtimeErrorCodes.Unavailable => StatusCodes.Status503ServiceUnavailable,
             IdentityErrorCodes.AuthRequired => StatusCodes.Status401Unauthorized,
             AiServiceErrorCodes.InvalidRequest => StatusCodes.Status400BadRequest,
             AiServiceErrorCodes.ContextNotAllowed => StatusCodes.Status403Forbidden,
@@ -385,6 +417,7 @@ public sealed class GlobalExceptionHandler(
             AssessmentErrorCodes.ExamWriteLeaseHeldByOtherSession => StatusCodes.Status409Conflict,
             AssessmentErrorCodes.ExamWriteLeaseStale => StatusCodes.Status409Conflict,
             AssessmentErrorCodes.ExamAnswerNotAllowed => StatusCodes.Status403Forbidden,
+            AssessmentErrorCodes.ExamAttachmentNotAllowed or AssessmentErrorCodes.ExamAttachmentLimitExceeded => StatusCodes.Status400BadRequest,
             AssessmentErrorCodes.ExamAnswerTypeInvalid => StatusCodes.Status400BadRequest,
             AssessmentErrorCodes.ExamAnswerOptionInvalid => StatusCodes.Status400BadRequest,
             AssessmentErrorCodes.ExamAnswerVersionConflict => StatusCodes.Status409Conflict,

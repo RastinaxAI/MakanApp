@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Guardian;
 
-public sealed class EfGuardianStore(MakanDbContext dbContext) : IGuardianStore
+public sealed class EfGuardianStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IGuardianStore
 {
     public async Task<IReadOnlyCollection<AuthorizedChildRecord>> GetAuthorizedChildrenAsync(
         Guid guardianUserId,
@@ -51,6 +51,7 @@ public sealed class EfGuardianStore(MakanDbContext dbContext) : IGuardianStore
     {
         try
         {
+            await realtime.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

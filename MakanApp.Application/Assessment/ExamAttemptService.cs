@@ -262,7 +262,8 @@ public sealed class ExamAttemptService(
                             option.Id,
                             option.Order,
                             option.Text))
-                        .ToArray()))
+                        .ToArray())
+                { AttachmentPolicy = ExamQuestionAttachmentPolicyDto.From(item.Question) })
                 .ToArray());
 
     private static StudentExamAttemptSummaryDto ToSummary(ExamAttempt attempt, DateTime serverNowUtc) =>

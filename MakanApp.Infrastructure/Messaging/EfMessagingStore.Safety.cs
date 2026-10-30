@@ -378,6 +378,7 @@ public sealed partial class EfMessagingStore
     {
         try
         {
+            realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)

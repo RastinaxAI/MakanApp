@@ -21,7 +21,8 @@ public sealed partial class EfMessagingStore(
     MessagingOutboxWakeSignal outboxWakeSignal,
     TimeProvider timeProvider,
     WorkerTelemetry telemetry,
-    ILogger<EfMessagingStore> logger) :
+    ILogger<EfMessagingStore> logger,
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) :
     IMessagingStore,
     IConversationManagementStore,
     IMessagingSafetyStore,
@@ -67,6 +68,7 @@ public sealed partial class EfMessagingStore(
             await EnsureActorCanMessageAsync(actorUserId, nowUtc, cancellationToken);
             if (await HasEffectiveUserBlockAsync(actorUserId, targetUserId, cancellationToken))
             {
+                LogDirectDenial("Blocked");
                 throw RecipientNotAvailable();
             }
 
@@ -80,6 +82,7 @@ public sealed partial class EfMessagingStore(
                 cancellationToken);
             if (!eligibilityPolicy.CanStartOrSend(facts, MessagingEligibilityOperation.Start))
             {
+                await LogDirectPolicyDenialAsync(facts, cancellationToken);
                 throw RecipientNotAvailable();
             }
 

@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text.Json;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Notification;
+using MakanApp.Application.Realtime;
+using MakanApp.Infrastructure.Realtime;
 using MakanApp.Infrastructure.Hosting;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
@@ -69,7 +71,8 @@ public sealed class OutboxProcessor(
     ISubscriptionActivationHandler subscriptionActivationHandler,
     TimeProvider timeProvider,
     WorkerTelemetry telemetry,
-    ILogger<OutboxProcessor> logger)
+    ILogger<OutboxProcessor> logger,
+    IRealtimeInvalidationNotifier? realtimeNotifier = null)
 {
     public const int BatchSize = 50;
     public const int MaximumAttempts = 10;
@@ -161,6 +164,23 @@ public sealed class OutboxProcessor(
     {
         try
         {
+            var candidate = await dbContext.OutboxMessages.AsNoTracking().SingleOrDefaultAsync(m =>
+                m.Id == messageId && m.ClaimToken == claimToken && m.ProcessedAtUtc == null, cancellationToken);
+            if (candidate?.MessageType == RealtimeInvalidationWriter.MessageType)
+            {
+                if (candidate.ClaimedUntilUtc is not DateTime validUntil || validUntil <= timeProvider.GetUtcNow().UtcDateTime)
+                {
+                    telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "LeaseLost");
+                    return;
+                }
+                if (realtimeNotifier is null) throw new InvalidOperationException("درگاه Realtime ثبت نشده است.");
+                // شبکه خارج تراکنش است؛ پس از Publish دوباره مالکیت و زمان claim سنجیده می‌شود.
+                using var budget = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                budget.CancelAfter(TimeSpan.FromSeconds(10));
+                await realtimeNotifier.NotifyAsync(candidate.Id, candidate.Payload, budget.Token);
+                await CompleteInvalidationAsync(messageId, claimToken, cancellationToken);
+                return;
+            }
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             var message = await dbContext.OutboxMessages.FromSqlInterpolated($"""
                 SELECT * FROM [platform].[OutboxMessages] WITH (UPDLOCK, HOLDLOCK)
@@ -248,6 +268,25 @@ public sealed class OutboxProcessor(
         {
             dbContext.ChangeTracker.Clear();
         }
+    }
+
+    private async Task CompleteInvalidationAsync(Guid messageId, Guid token, CancellationToken ct)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(ct);
+        var message = await dbContext.OutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM [platform].[OutboxMessages] WITH (UPDLOCK, HOLDLOCK)
+            WHERE [Id] = {messageId} AND [ClaimToken] = {token} AND [ProcessedAtUtc] IS NULL
+            """).SingleOrDefaultAsync(ct);
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        if (message is null || message.ClaimedUntilUtc is not DateTime until || until <= now)
+        {
+            telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "LeaseLost");
+            return;
+        }
+        message.MarkProcessed(token, now);
+        await dbContext.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "Completed");
     }
 
     private async Task<RetryOutcome> ScheduleRetryAsync(

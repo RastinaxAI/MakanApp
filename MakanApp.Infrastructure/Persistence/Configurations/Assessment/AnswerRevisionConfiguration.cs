@@ -24,6 +24,8 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
             table.HasCheckConstraint("CK_AnswerRevisions_RequestHash", "LEN([RequestHash]) = 64");
         });
         builder.HasKey(revision => revision.Id);
+        builder.Ignore(revision => revision.HasAnswer);
+        builder.Navigation(revision => revision.Attachments).UsePropertyAccessMode(PropertyAccessMode.Field);
         builder.HasAlternateKey(revision => new
         {
             revision.OrganizationId,

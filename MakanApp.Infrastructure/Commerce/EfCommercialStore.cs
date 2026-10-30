@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed partial class EfCommercialStore(MakanDbContext db) : ICommercialStore
+public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : ICommercialStore
 {
     public async Task<IReadOnlyList<CommercialPlanDto>> CatalogAsync(SubscriptionOwnerType audience, DateTime utcNow, CancellationToken ct)
     {
@@ -194,6 +194,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db) : ICommercialSt
         tracked.ScheduleDowngrade(next, utcNow);
         db.AdminAuditLogs.Add(Audit(actorUserId, sessionId, "commerce.subscription.schedule-downgrade", tracked.Id, owner, command.Reason,
             current.PlanVersionId.ToString(), next.Id.ToString(), utcNow));
+        realtime.CaptureCommerce();
         await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
         return await SummaryAsync(owner, utcNow, ct);
     }

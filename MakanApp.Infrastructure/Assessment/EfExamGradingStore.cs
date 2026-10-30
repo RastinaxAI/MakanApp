@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Assessment;
 
-public sealed class EfExamGradingStore(MakanDbContext dbContext) : IExamGradingStore
+public sealed class EfExamGradingStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IExamGradingStore
 {
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -122,6 +122,7 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext) : IExamGradingS
     {
         try
         {
+            await realtime.CaptureAssessmentAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
@@ -270,6 +271,7 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext) : IExamGradingS
         var revisionIds = finalAnswers.Values.Select(answer => answer.AnswerRevisionId).ToArray();
         var finalRevisions = await dbContext.AnswerRevisions
             .AsNoTracking()
+            .Include(revision => revision.Attachments)
             .Where(revision => revision.OrganizationId == attempt.OrganizationId &&
                                revision.ExamAttemptId == attempt.Id &&
                                revisionIds.Contains(revision.Id))
@@ -287,6 +289,7 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext) : IExamGradingS
             })
             .AsNoTracking()
             .SingleAsync(cancellationToken);
+        var attachments = await ExamAttachmentQuery.LoadAsync(dbContext, revisionIds, cancellationToken);
         var gradingQuestions = attemptQuestions.Select(attemptQuestion =>
         {
             finalAnswers.TryGetValue(attemptQuestion.Id, out var finalAnswer);
@@ -300,7 +303,8 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext) : IExamGradingS
                 attemptQuestion,
                 questions[attemptQuestion.QuestionVersionId],
                 finalAnswer,
-                finalRevision);
+                finalRevision,
+                finalRevision is not null && attachments.TryGetValue(finalRevision.Id, out var files) ? files : []);
         }).ToArray();
         return new ExamGradingSourceRecord(
             attempt,

@@ -13,8 +13,15 @@ public sealed class QuestionVersionConfiguration : IEntityTypeConfiguration<Ques
             table.HasCheckConstraint("CK_QuestionVersions_Order", "[Order] > 0");
             table.HasCheckConstraint("CK_QuestionVersions_Type", "[Type] IN (1, 2)");
             table.HasCheckConstraint("CK_QuestionVersions_Score", "[Score] > 0");
+            table.HasCheckConstraint("CK_QuestionVersions_AttachmentPolicy",
+                "([AttachmentsAllowed] = 0 AND [AnswerTextRequired] = 0 AND [MaximumAnswerAttachmentCount] IS NULL AND [MaximumAnswerAttachmentBytes] IS NULL AND [AllowedAnswerContentTypes] IS NULL) OR " +
+                "([AttachmentsAllowed] = 1 AND [MaximumAnswerAttachmentCount] IS NOT NULL AND [MaximumAnswerAttachmentCount] > 0 AND [MaximumAnswerAttachmentBytes] IS NOT NULL AND [MaximumAnswerAttachmentBytes] > 0 AND [AllowedAnswerContentTypes] IS NOT NULL AND LEN([AllowedAnswerContentTypes]) > 0 AND ([Type] = 2 OR [AnswerTextRequired] = 0))");
         });
         builder.HasKey(question => question.Id);
+        builder.Ignore(question => question.AttachmentPolicy);
+        builder.Property(question => question.AttachmentsAllowed).HasDefaultValue(false);
+        builder.Property(question => question.AnswerTextRequired).HasDefaultValue(false);
+        builder.Property(question => question.AllowedAnswerContentTypes).HasMaxLength(2048);
         builder.HasAlternateKey(question => new { question.OrganizationId, question.Id })
             .HasName("UQ_QuestionVersions_OrganizationId_Id");
         builder.HasAlternateKey(question => new

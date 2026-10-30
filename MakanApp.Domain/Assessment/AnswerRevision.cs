@@ -2,6 +2,7 @@ namespace MakanApp.Domain.Assessment;
 
 public sealed class AnswerRevision
 {
+    private readonly List<AnswerRevisionAttachment> _attachments = [];
     public const int MaximumTextAnswerLength = 20_000;
     public const int RequestHashLength = 64;
 
@@ -61,7 +62,9 @@ public sealed class AnswerRevision
     public long AcceptedWriteLeaseVersion { get; private set; }
     public long AcceptedAnswerSetVersion { get; private set; }
     public DateTime AcceptedAtUtc { get; private set; }
-    public bool HasAnswer => SelectedOptionId.HasValue || !string.IsNullOrEmpty(TextAnswer);
+    public IReadOnlyCollection<AnswerRevisionAttachment> Attachments => _attachments;
+    public bool HasAnswer => SelectedOptionId.HasValue || !string.IsNullOrEmpty(TextAnswer) ||
+        AnswerType == ExamQuestionType.Descriptive && _attachments.Count > 0;
 
     public static AnswerRevision CreateObjective(
         ExamAttempt attempt,
@@ -75,7 +78,8 @@ public sealed class AnswerRevision
         Guid? supersedesAnswerRevisionId,
         long acceptedWriteLeaseVersion,
         long acceptedAnswerSetVersion,
-        DateTime acceptedAtUtc)
+        DateTime acceptedAtUtc,
+        IReadOnlyCollection<Guid>? attachmentFileIds = null)
     {
         EnsureRelationship(attempt, attemptQuestion, question);
         if (question.Type != ExamQuestionType.ObjectiveSingleChoice)
@@ -102,7 +106,7 @@ public sealed class AnswerRevision
             supersedesAnswerRevisionId,
             acceptedWriteLeaseVersion,
             acceptedAnswerSetVersion,
-            acceptedAtUtc);
+            acceptedAtUtc, attachmentFileIds);
     }
 
     public static AnswerRevision CreateDescriptive(
@@ -117,7 +121,8 @@ public sealed class AnswerRevision
         Guid? supersedesAnswerRevisionId,
         long acceptedWriteLeaseVersion,
         long acceptedAnswerSetVersion,
-        DateTime acceptedAtUtc)
+        DateTime acceptedAtUtc,
+        IReadOnlyCollection<Guid>? attachmentFileIds = null)
     {
         EnsureRelationship(attempt, attemptQuestion, question);
         if (question.Type != ExamQuestionType.Descriptive)
@@ -144,7 +149,7 @@ public sealed class AnswerRevision
             supersedesAnswerRevisionId,
             acceptedWriteLeaseVersion,
             acceptedAnswerSetVersion,
-            acceptedAtUtc);
+            acceptedAtUtc, attachmentFileIds);
     }
 
     private static AnswerRevision Create(
@@ -161,7 +166,8 @@ public sealed class AnswerRevision
         Guid? supersedesAnswerRevisionId,
         long acceptedWriteLeaseVersion,
         long acceptedAnswerSetVersion,
-        DateTime acceptedAtUtc)
+        DateTime acceptedAtUtc,
+        IReadOnlyCollection<Guid>? attachmentFileIds)
     {
         if (revisionNumber <= 0 || acceptedWriteLeaseVersion <= 0 || acceptedAnswerSetVersion <= 0)
         {
@@ -183,7 +189,11 @@ public sealed class AnswerRevision
             throw new ArgumentException("زمان پذیرش پاسخ باید UTC باشد.", nameof(acceptedAtUtc));
         }
 
-        return new AnswerRevision(
+        var files = attachmentFileIds ?? [];
+        if (files.Count > 0 && (question.AttachmentPolicy is not { } policy || files.Count > policy.MaximumCount ||
+            files.Any(id => id == Guid.Empty) || files.Distinct().Count() != files.Count))
+            throw new ExamAnswerTypeInvalidException();
+        var revision = new AnswerRevision(
             Guid.NewGuid(),
             attempt.OrganizationId,
             attempt.Id,
@@ -200,6 +210,8 @@ public sealed class AnswerRevision
             acceptedWriteLeaseVersion,
             acceptedAnswerSetVersion,
             acceptedAtUtc);
+        revision._attachments.AddRange(files.Select(id => AnswerRevisionAttachment.Create(revision, id)));
+        return revision;
     }
 
     private static void EnsureRelationship(

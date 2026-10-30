@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.SignalR;
 namespace MakanApp.Api.Realtime;
 
 [Authorize]
-public sealed class MessagingHub(IMessagingService messagingService, MessagingEphemeralService ephemeral) : Hub<IMessagingHubClient>
+public sealed class MessagingHub(IMessagingService messagingService, MessagingEphemeralService ephemeral,
+    MakanApp.Infrastructure.Observability.RealtimeTelemetry telemetry) : Hub<IMessagingHubClient>
 {
     private EphemeralConnection Connection => new(Context.ConnectionId,
         AuthenticatedSession.GetUserId(Context.User!), AuthenticatedSession.GetSessionId(Context.User!));
@@ -21,6 +22,8 @@ public sealed class MessagingHub(IMessagingService messagingService, MessagingEp
             MessagingRealtimeGroups.Session(sessionId),
             Context.ConnectionAborted);
         await base.OnConnectedAsync();
+        Context.Items["realtime-counted"] = true;
+        telemetry.Connected();
     }
 
     public async Task SubscribeConversation(Guid conversationId)
@@ -77,6 +80,7 @@ public sealed class MessagingHub(IMessagingService messagingService, MessagingEp
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        if (Context.Items.Remove("realtime-counted")) telemetry.Disconnected();
         ephemeral.Disconnect(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }

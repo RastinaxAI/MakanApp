@@ -89,11 +89,13 @@ public sealed partial class EfMessagingStore
         if (existingIncident is not null)
         {
             EnsureSafetyRetryMatches(existingIncident, requestPayloadHash);
+            LogSafetyDecision(existingIncident, true);
             return new MessageSafetyPreparationStoreResult(
                 null,
                 existingIncident.Decision,
                 false,
-                []);
+                [],
+                existingIncident.Id);
         }
 
         var files = await LoadAndValidateSafetyFilesAsync(
@@ -268,7 +270,8 @@ public sealed partial class EfMessagingStore
         {
             EnsureSafetyRetryMatches(existingIncident, requestPayloadHash);
             await transaction.CommitAsync(cancellationToken);
-            return new SafetyIncidentStoreResult(null, existingIncident.Decision);
+            LogSafetyDecision(existingIncident, true);
+            return new SafetyIncidentStoreResult(null, existingIncident.Decision, existingIncident.Id);
         }
 
         var files = await LoadAndValidateSafetyFilesAsync(
@@ -315,7 +318,8 @@ public sealed partial class EfMessagingStore
 
         await SaveSafetyAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return new SafetyIncidentStoreResult(null, incident.Decision);
+        LogSafetyDecision(incident, false);
+        return new SafetyIncidentStoreResult(null, incident.Decision, incident.Id);
     }
 
     private async Task<MakanApp.Domain.Storage.FileAsset[]> LoadAndValidateSafetyFilesAsync(

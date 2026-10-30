@@ -11,7 +11,7 @@ using AcademicClass = MakanApp.Domain.Academic.Class;
 
 namespace MakanApp.Infrastructure.Academic;
 
-public sealed class EfAcademicStore(MakanDbContext dbContext) : IAcademicStore
+public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IAcademicStore
 {
     public async Task<IAcademicTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -251,6 +251,7 @@ public sealed class EfAcademicStore(MakanDbContext dbContext) : IAcademicStore
     {
         try
         {
+            await realtime.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

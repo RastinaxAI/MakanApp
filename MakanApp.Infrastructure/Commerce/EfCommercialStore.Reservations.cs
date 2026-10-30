@@ -79,6 +79,7 @@ public sealed partial class EfCommercialStore
             1, operationId, hash, context.Trial, utcNow);
         db.UsageReservations.Add(reservation);
         db.UsageLedgerEntries.Add(UsageLedgerEntry.FromReservation(reservation, utcNow, "reserved"));
+        realtime.CaptureCommerce();
         await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return Map(reservation, false);
     }
 
@@ -97,6 +98,7 @@ public sealed partial class EfCommercialStore
         catch (ArgumentException) { throw Error(CommerceErrorCodes.UsageInvalid); }
         catch (InvalidOperationException) { throw Error(CommerceErrorCodes.UsageConflict); }
         if (changed) db.UsageLedgerEntries.Add(UsageLedgerEntry.FromReservation(reservation, utcNow, reasonCode));
+        realtime.CaptureCommerce();
         await db.SaveChangesAsync(ct); if (tx is not null) await tx.CommitAsync(ct); return Map(reservation, !changed);
     }
 

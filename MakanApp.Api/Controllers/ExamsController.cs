@@ -249,6 +249,21 @@ public sealed class ExamsController(
             command,
             cancellationToken));
 
+    [HttpPost("exam-attempts/{attemptId:guid}/answers/{attemptQuestionId:guid}/attachments")]
+    [ProducesResponseType<ExamAnswerReceiptDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ExamAnswerReceiptDto>> AttachAnswerFile(
+        Guid attemptId, Guid attemptQuestionId, AttachExamAnswerFileCommand command, CancellationToken cancellationToken) =>
+        Ok(await examAnswerService.AttachFileAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), attemptId, attemptQuestionId, command, cancellationToken));
+
+    [HttpDelete("exam-attempts/{attemptId:guid}/answers/{attemptQuestionId:guid}/attachments/{fileAssetId:guid}")]
+    [ProducesResponseType<ExamAnswerReceiptDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ExamAnswerReceiptDto>> DetachAnswerFile(
+        Guid attemptId, Guid attemptQuestionId, Guid fileAssetId,
+        [FromQuery] ChangeExamAnswerAttachmentCommand command, CancellationToken cancellationToken) =>
+        Ok(await examAnswerService.DetachFileAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), attemptId, attemptQuestionId, fileAssetId, command, cancellationToken));
+
     [HttpGet("exam-attempts/{attemptId:guid}/answers")]
     [ProducesResponseType<StudentExamAnswersDto>(StatusCodes.Status200OK)]
     public async Task<ActionResult<StudentExamAnswersDto>> GetMyAnswers(

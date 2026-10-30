@@ -43,6 +43,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<ExamAttempt> ExamAttempts => Set<ExamAttempt>();
     public DbSet<ExamAttemptQuestion> ExamAttemptQuestions => Set<ExamAttemptQuestion>();
     public DbSet<AnswerRevision> AnswerRevisions => Set<AnswerRevision>();
+    public DbSet<AnswerRevisionAttachment> AnswerRevisionAttachments => Set<AnswerRevisionAttachment>();
     public DbSet<ExamFinalAnswer> ExamFinalAnswers => Set<ExamFinalAnswer>();
     public DbSet<ExamGradeRevision> ExamGradeRevisions => Set<ExamGradeRevision>();
     public DbSet<ExamQuestionGrade> ExamQuestionGrades => Set<ExamQuestionGrade>();

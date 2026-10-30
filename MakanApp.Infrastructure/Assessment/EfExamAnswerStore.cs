@@ -13,7 +13,7 @@ namespace MakanApp.Infrastructure.Assessment;
 
 public sealed class EfExamAnswerStore(
     MakanDbContext dbContext,
-    ILogger<EfExamAnswerStore> logger) : IExamAnswerStore
+    ILogger<EfExamAnswerStore> logger, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IExamAnswerStore
 {
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -102,13 +102,16 @@ public sealed class EfExamAnswerStore(
         {
             currentRevision = await dbContext.AnswerRevisions
                 .AsNoTracking()
+                .Include(revision => revision.Attachments)
                 .SingleAsync(
                     revision => revision.OrganizationId == organizationId &&
                                 revision.Id == attemptQuestion.CurrentAnswerRevisionId.Value,
                     cancellationToken);
         }
 
-        return new ExamAnswerQuestionRecord(attemptQuestion, question, currentRevision);
+        var attachments = await ExamAttachmentQuery.LoadAsync(dbContext, currentRevision is null ? [] : [currentRevision.Id], cancellationToken);
+        return new ExamAnswerQuestionRecord(attemptQuestion, question, currentRevision,
+            currentRevision is not null && attachments.TryGetValue(currentRevision.Id, out var files) ? files : []);
     }
 
     public Task<AnswerRevision?> GetByClientOperationForUpdateAsync(
@@ -123,10 +126,21 @@ public sealed class EfExamAnswerStore(
 
     public void Add(AnswerRevision revision) => dbContext.AnswerRevisions.Add(revision);
 
+    public async Task<bool> IsFileUsableForAttemptAsync(Guid fileAssetId, Guid attemptId, CancellationToken ct) =>
+        !await dbContext.AnswerRevisionAttachments.AnyAsync(x => x.FileAssetId == fileAssetId && x.ExamAttemptId != attemptId, ct) &&
+        !await dbContext.SubmissionAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.MessageAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.Set<MakanApp.Domain.Messaging.ScheduledMessageAttachment>().AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.ModerationEvidenceAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileAssetId, ct) &&
+        !await dbContext.ReportExportJobs.AnyAsync(x => x.Id == fileAssetId || x.OutputFileAssetId == fileAssetId, ct);
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
+            await realtime.CaptureAssessmentAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)
@@ -188,14 +202,17 @@ public sealed class EfExamAnswerStore(
             .ToDictionaryAsync(question => question.Id, cancellationToken);
         var revisions = await dbContext.AnswerRevisions
             .AsNoTracking()
+            .Include(revision => revision.Attachments)
             .Where(revision => currentRevisionIds.Contains(revision.Id))
             .ToDictionaryAsync(revision => revision.Id, cancellationToken);
+        var attachments = await ExamAttachmentQuery.LoadAsync(dbContext, currentRevisionIds, cancellationToken);
         return mappings.Select(mapping => new ExamAnswerQuestionRecord(
             mapping,
             questions[mapping.QuestionVersionId],
             mapping.CurrentAnswerRevisionId.HasValue
                 ? revisions[mapping.CurrentAnswerRevisionId.Value]
-                : null))
+                : null,
+            mapping.CurrentAnswerRevisionId.HasValue && attachments.TryGetValue(mapping.CurrentAnswerRevisionId.Value, out var files) ? files : []))
             .ToArray();
     }
 

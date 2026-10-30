@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Storage;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 
@@ -9,7 +10,10 @@ namespace MakanApp.Application.Assessment;
 public sealed class ExamFinalizationService(
     IAccessContextResolver accessContextResolver,
     IExamFinalizationStore store,
-    TimeProvider timeProvider) : IExamFinalizationService
+    TimeProvider timeProvider,
+    IFileAssetStore fileStore,
+    IExamAnswerStore answerStore,
+    StorageOptions storageOptions) : IExamFinalizationService
 {
     public async Task<ExamFinalReceiptDto> FinalizeAsync(
         Guid userId,
@@ -35,6 +39,8 @@ public sealed class ExamFinalizationService(
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
+        nowUtc = UtcNow();
+        access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
         if (!await store.IsSessionActiveForUpdateAsync(
                 sessionId,
                 userId,
@@ -89,6 +95,15 @@ public sealed class ExamFinalizationService(
             organizationId,
             attemptId,
             cancellationToken);
+        foreach (var question in questions)
+        {
+            if (question.Question.AnswerTextRequired && string.IsNullOrWhiteSpace(question.CurrentRevision?.TextAnswer))
+                throw Error(AssessmentErrorCodes.ExamAnswerTypeInvalid, "متن پاسخ طبق سیاست ثابت سؤال الزامی است.");
+            var files = question.CurrentRevision?.Attachments.Select(item => item.FileAssetId).ToArray() ?? [];
+            await ExamAnswerAttachmentValidator.ValidateAsync(fileStore, answerStore, storageOptions, access, attempt,
+                question.Question, files, files.ToHashSet(), UtcNow(), cancellationToken);
+        }
+        nowUtc = UtcNow();
         var finalAnswers = questions
             .Where(question => question.CurrentRevision is not null)
             .Select(question => ExamFinalAnswer.Create(

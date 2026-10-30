@@ -4,6 +4,10 @@ namespace MakanApp.Application.Assessment;
 
 public interface IExamAnswerService
 {
+    Task<ExamAnswerReceiptDto> AttachFileAsync(Guid userId, Guid sessionId, Guid attemptId, Guid attemptQuestionId,
+        AttachExamAnswerFileCommand command, CancellationToken cancellationToken);
+    Task<ExamAnswerReceiptDto> DetachFileAsync(Guid userId, Guid sessionId, Guid attemptId, Guid attemptQuestionId,
+        Guid fileAssetId, ChangeExamAnswerAttachmentCommand command, CancellationToken cancellationToken);
     Task<ExamWriteLeaseDto> AcquireWriteLeaseAsync(
         Guid userId,
         Guid sessionId,
@@ -33,6 +37,7 @@ public interface IExamAnswerService
 
 public interface IExamAnswerStore
 {
+    Task<bool> IsFileUsableForAttemptAsync(Guid fileAssetId, Guid attemptId, CancellationToken cancellationToken);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamAttempt?> GetOwnedAttemptForUpdateAsync(

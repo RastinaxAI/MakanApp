@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed class EfCommerceStore(MakanDbContext dbContext, EfCommercialStore commerce) : ICommerceStore
+public sealed class EfCommerceStore(MakanDbContext dbContext, EfCommercialStore commerce, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : ICommerceStore
 {
     public async Task<CommerceSubscriptionSnapshot?> GetLatestSubscriptionAsync(
         Guid organizationId,
@@ -271,6 +271,7 @@ public sealed class EfCommerceStore(MakanDbContext dbContext, EfCommercialStore 
             sourceOperationId,
             occurredAtUtc);
         dbContext.UsageLedgerEntries.Add(entry);
+        realtime.CaptureCommerce();
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new UsageRecordStoreResult(

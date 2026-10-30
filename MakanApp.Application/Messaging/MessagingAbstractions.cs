@@ -82,11 +82,13 @@ public sealed record MessageSafetyPreparationStoreResult(
     Message? ExistingMessage,
     ContentSafetyDecision? ExistingSafetyDecision,
     bool RequiresEvaluation,
-    IReadOnlyCollection<ContentSafetyAttachment> Attachments);
+    IReadOnlyCollection<ContentSafetyAttachment> Attachments,
+    Guid? SafetyIncidentId = null);
 
 public sealed record SafetyIncidentStoreResult(
     Message? ExistingMessage,
-    ContentSafetyDecision Decision);
+    ContentSafetyDecision Decision,
+    Guid? SafetyIncidentId = null);
 
 public sealed record ConversationMediaStoreRecord(
     Message Message,
@@ -135,7 +137,8 @@ public interface IMessagingStore
         int pageSize,
         string? search,
         CancellationToken cancellationToken,
-        Guid? folderId = null);
+        Guid? folderId = null,
+        Guid? conversationId = null);
 
     Task<ConversationMessagePageStoreResult> GetConversationMessagesAsync(
         Guid userId,
@@ -361,6 +364,7 @@ public interface IMessagingRealtimeAudienceResolver
 
 public interface IMessagingService
 {
+    Task<ConversationSummaryResult> GetConversationSummaryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken);
     Task<ConversationPeerReadStateResult> GetPeerReadStateAsync(
         Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken);
 

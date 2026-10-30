@@ -13,10 +13,12 @@ namespace MakanApp.Infrastructure.Academic;
 public sealed partial class EfAcademicSessionStore : IAcademicSessionStore
 {
     private readonly MakanDbContext _dbContext;
+    private readonly MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter _realtime;
 
-    public EfAcademicSessionStore(MakanDbContext dbContext)
+    public EfAcademicSessionStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime)
     {
         _dbContext = dbContext;
+        _realtime = realtime;
     }
 
     public async Task<IAcademicTransaction> BeginSerializableTransactionAsync(
@@ -199,6 +201,7 @@ public sealed partial class EfAcademicSessionStore : IAcademicSessionStore
     {
         try
         {
+            await _realtime.CaptureSchoolAsync(cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

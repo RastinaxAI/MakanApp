@@ -270,7 +270,8 @@ public sealed class NotificationEndpointsTests(MakanAppWebApplicationFactory fac
             JsonOptions);
         createResponse.EnsureSuccessStatusCode();
         var assignment = (await createResponse.Content.ReadFromJsonAsync<AssignmentResult>(JsonOptions))!;
-        var pendingBefore = await factory.CountPendingNotificationOutboxAsync();
+        var notificationsBefore = await factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.AssignmentPublishedMessageType);
 
         using var publishResponse = await managerClient.PostAsJsonAsync(
             $"/api/v1/academic/assignments/{assignment.Id}/publish",
@@ -280,7 +281,8 @@ public sealed class NotificationEndpointsTests(MakanAppWebApplicationFactory fac
             JsonOptions);
         publishResponse.EnsureSuccessStatusCode();
 
-        Assert.Equal(pendingBefore + 1, await factory.CountPendingNotificationOutboxAsync());
+        Assert.Equal(notificationsBefore + 1, await factory.CountOutboxMessagesAsync(
+            NotificationOutboxContract.AssignmentPublishedMessageType));
         _ = await factory.DrainNotificationOutboxAsync();
         var page = await learnerClient.GetFromJsonAsync<NotificationPage>(
             $"/api/v1/notifications?organizationId={organizationId}",

@@ -180,7 +180,8 @@ public sealed partial class ExamGradingService
                     grade.LearnerFeedback,
                     grade.EvaluatorPrivateNote,
                     grade.ReviewedByMembershipId,
-                    grade.ReviewedAtUtc);
+                    grade.ReviewedAtUtc)
+                { Attachments = source.AttachmentFiles?.Select(item => AcademicAnswerAttachmentDto.From(item.FileAsset)).ToArray() ?? [] };
             })
             .ToArray();
         var release = aggregate.Releases.SingleOrDefault(

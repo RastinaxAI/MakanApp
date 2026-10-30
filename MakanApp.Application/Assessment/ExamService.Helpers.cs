@@ -185,7 +185,8 @@ public sealed partial class ExamService
                             option.Text,
                             option.IsCorrect))
                         .ToArray(),
-                    Convert.ToBase64String(question.RowVersion)))
+                    Convert.ToBase64String(question.RowVersion))
+                { AttachmentPolicy = ExamQuestionAttachmentPolicyDto.From(question) })
                 .ToArray());
 
     private static StudentExamSummary ToSummary(ExamSummaryRecord record) =>
@@ -223,7 +224,8 @@ public sealed partial class ExamService
                             option.Id,
                             option.Order,
                             option.Text))
-                        .ToArray()))
+                        .ToArray())
+                { AttachmentPolicy = ExamQuestionAttachmentPolicyDto.From(question) })
                 .ToArray());
 
     private static ExamTeacherPreview ToTeacherPreview(ExamAggregateRecord record)

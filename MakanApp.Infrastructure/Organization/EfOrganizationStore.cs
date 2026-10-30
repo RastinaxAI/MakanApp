@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Organization;
 
-public sealed partial class EfOrganizationStore(MakanDbContext dbContext) : IOrganizationStore
+public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IOrganizationStore
 {
     public async Task<IOrganizationTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -157,6 +157,7 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext) : IOrg
     {
         try
         {
+            await realtime.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

@@ -14,10 +14,12 @@ namespace MakanApp.Infrastructure.Assessment;
 public sealed partial class EfAssignmentStore : IAssignmentStore
 {
     private readonly MakanDbContext _dbContext;
+    private readonly MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter _realtime;
 
-    public EfAssignmentStore(MakanDbContext dbContext)
+    public EfAssignmentStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime)
     {
         _dbContext = dbContext;
+        _realtime = realtime;
     }
 
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
@@ -138,6 +140,7 @@ public sealed partial class EfAssignmentStore : IAssignmentStore
     {
         try
         {
+            await _realtime.CaptureAssessmentAsync(cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

@@ -255,7 +255,8 @@ public sealed record MessagingRealtimeNotification(
     string Cursor,
     DateTime OccurredAtUtc,
     int PayloadVersion,
-    long? PeerReadThroughSequence = null);
+    long? PeerReadThroughSequence = null,
+    string? ContextRevision = null);
 
 public enum PeerReadVisibility
 {

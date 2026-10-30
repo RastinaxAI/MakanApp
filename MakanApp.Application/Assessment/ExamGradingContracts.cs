@@ -73,7 +73,10 @@ public sealed record ExamQuestionGradeDto(
     string? LearnerFeedback,
     string? EvaluatorPrivateNote,
     Guid? ReviewedByMembershipId,
-    DateTime? ReviewedAtUtc);
+    DateTime? ReviewedAtUtc)
+{
+    public IReadOnlyCollection<AcademicAnswerAttachmentDto> Attachments { get; init; } = [];
+}
 
 public sealed record ExamGradeDto(
     Guid ExamGradeRevisionId,
@@ -142,7 +145,8 @@ public sealed record ExamGradingQuestionSourceRecord(
     ExamAttemptQuestion AttemptQuestion,
     QuestionVersion Question,
     ExamFinalAnswer? FinalAnswer,
-    AnswerRevision? FinalRevision);
+    AnswerRevision? FinalRevision,
+    IReadOnlyCollection<ExamAnswerAttachmentRecord>? AttachmentFiles = null);
 
 public sealed record ExamGradingSourceRecord(
     ExamAttempt Attempt,

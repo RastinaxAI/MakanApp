@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Storage;
 
-public sealed class EfFileAssetStore(MakanDbContext dbContext) : IFileAssetStore
+public sealed class EfFileAssetStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IFileAssetStore
 {
     public Task<FileAsset?> GetAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.FileAssets.AsNoTracking().SingleOrDefaultAsync(
@@ -30,6 +30,7 @@ public sealed class EfFileAssetStore(MakanDbContext dbContext) : IFileAssetStore
     {
         try
         {
+            realtime.CaptureStorage();
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)

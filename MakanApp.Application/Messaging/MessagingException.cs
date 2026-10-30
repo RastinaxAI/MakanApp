@@ -4,4 +4,5 @@ public sealed class MessagingException(string code, string message, Exception? i
     : Exception(message, innerException)
 {
     public string Code { get; } = code;
+    public Guid? SafetyReference { get; init; }
 }

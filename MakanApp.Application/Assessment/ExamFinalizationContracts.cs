@@ -21,7 +21,8 @@ public sealed record ExamFinalReceiptDto(
 
 public sealed record ExamFinalizationQuestionRecord(
     ExamAttemptQuestion AttemptQuestion,
-    AnswerRevision? CurrentRevision);
+    AnswerRevision? CurrentRevision,
+    QuestionVersion Question);
 
 public sealed record ExamFinalAnswerRecord(
     ExamFinalAnswer FinalAnswer,

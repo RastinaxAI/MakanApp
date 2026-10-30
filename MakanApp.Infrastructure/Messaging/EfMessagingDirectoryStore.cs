@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
 
-public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProvider clock)
+public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProvider clock,
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime)
     : IMessagingDirectoryStore
 {
     public async Task<UserContactStorePage> GetContactsAsync(
@@ -87,6 +88,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
 
             var contact = UserContact.Create(ownerUserId, contactUserId, savedName, nowUtc);
             dbContext.UserContacts.Add(contact);
+            realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
             var profile = await LoadProfileAsync(ownerUserId, contactUserId, cancellationToken)
                 ?? throw ContactTargetNotAvailable();
@@ -129,6 +131,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         contact.Update(savedName, isFavorite, nowUtc);
         try
         {
+            realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)
@@ -155,6 +158,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         }
 
         dbContext.UserContacts.Remove(contact);
+        realtime.CaptureMessaging();
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -334,6 +338,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         settings.UpdatePresenceAudiences(onlineAudience, lastSeenAudience);
         try
         {
+            realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)

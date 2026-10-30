@@ -14,7 +14,7 @@ namespace MakanApp.Infrastructure.Assessment;
 
 public sealed class EfExamStore(
     MakanDbContext dbContext,
-    ILogger<EfExamStore> logger) : IExamStore
+    ILogger<EfExamStore> logger, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IExamStore
 {
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -253,6 +253,7 @@ public sealed class EfExamStore(
     {
         try
         {
+            await realtime.CaptureAssessmentAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)

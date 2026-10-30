@@ -1,6 +1,7 @@
 using MakanApp.Application.Organization;
 using MakanApp.Application.Academic;
 using MakanApp.Application.Storage;
+using MakanApp.Application.Assessment;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Reports;
@@ -11,7 +12,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Storage;
 
-public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess)
+public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess,
+    ISubmissionService submissions, ISubmissionStore submissionStore, IExamAttemptService examAttempts, IExamGradingStore grading)
     : IFileAssetBoundAccessResolver
 {
     public Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
@@ -25,6 +27,8 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, Tim
         CancellationToken cancellationToken) =>
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
         await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
+        await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
+        await dbContext.AnswerRevisionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.MessageAttachments.AnyAsync(
             attachment => attachment.FileAssetId == fileAssetId,
             cancellationToken) ||
@@ -43,6 +47,7 @@ public sealed class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, Tim
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;
         // استثنای مرجع شخصی فقط برای Avatar است؛ scope قبلی همهٔ مصرف‌کننده‌های دیگر حفظ می‌شود.
         if (!FileAccessPolicy.IsCurrentScope(fileAsset, accessContext)) return false;
+        if (await CanReadAcademicAnswerAsync(fileAsset, accessContext, cancellationToken)) return true;
         var lessons = await (from a in dbContext.ClassLessonAttachments
                              join lesson in dbContext.ClassLessons on a.LessonId equals lesson.Id
                              where a.FileAssetId == fileAsset.Id && a.OrganizationId == accessContext.OrganizationId && lesson.OrganizationId == accessContext.OrganizationId

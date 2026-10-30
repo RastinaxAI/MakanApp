@@ -141,6 +141,9 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 60)));
+    options.AddPolicy("realtime-replay", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetAuthenticatedPartitionKey(httpContext),
+            _ => FixedWindow(builder.Environment, 120)));
     options.AddPolicy("notification-device", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
@@ -258,6 +261,7 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer<StringEnumSchemaTransformer>();
     options.AddOperationTransformer<SchoolOperationTransformer>();
+    options.AddOperationTransformer<FileAndMessagingOperationTransformer>();
 });
 builder.Services.AddProblemDetails(options =>
 {
@@ -282,6 +286,9 @@ builder.Services.AddScoped<SignalRMessagingEphemeralNotifier>();
 builder.Services.AddScoped<IMessagingEphemeralNotifier>(provider => provider.GetRequiredService<SignalRMessagingEphemeralNotifier>());
 builder.Services.AddScoped<IMessagingRealtimeNotifier>(serviceProvider =>
     serviceProvider.GetRequiredService<SignalRMessagingRealtimeNotifier>());
+builder.Services.AddScoped<MakanApp.Application.Realtime.IRealtimeInvalidationNotifier, SignalRInvalidationNotifier>();
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<MakanApp.Application.Realtime.IRealtimeCursorProtector, RealtimeCursorProtector>();
 builder.Services.AddOptions<FormOptions>().Configure<StorageOptions>((formOptions, storageOptions) =>
 {
     formOptions.MultipartBodyLengthLimit = checked(storageOptions.MaxFileSizeBytes + 65_536);

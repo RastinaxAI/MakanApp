@@ -2,6 +2,7 @@ using MakanApp.Application.Academic;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Outbox;
+using MakanApp.Application.Storage;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Notification;
 
@@ -13,14 +14,17 @@ public sealed partial class ExamService : IExamService
     private readonly IExamStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
+    private readonly StorageOptions _storageOptions;
 
     public ExamService(
         IAccessContextResolver accessContextResolver,
         IExamStore store,
         TimeProvider timeProvider,
-        IOutbox outbox)
+        IOutbox outbox,
+        StorageOptions storageOptions)
     {
         _accessContextResolver = accessContextResolver;
+        _storageOptions = storageOptions;
         _store = store;
         _timeProvider = timeProvider;
         _outbox = outbox;
@@ -141,7 +145,8 @@ public sealed partial class ExamService : IExamService
                 command.Prompt,
                 command.Score,
                 ToDefinitions(command.Options),
-                nowUtc);
+                nowUtc,
+                ToAttachmentPolicy(command.AttachmentPolicy));
             record.Version.MarkQuestionsChanged(nowUtc);
         }
         catch (Exception exception) when (IsDomainValidationException(exception))
@@ -184,7 +189,9 @@ public sealed partial class ExamService : IExamService
                 command.Prompt,
                 command.Score,
                 ToDefinitions(command.Options),
-                nowUtc);
+                nowUtc,
+                ToAttachmentPolicy(command.AttachmentPolicy),
+                command.AttachmentPolicy is not null);
             record.Version.MarkQuestionsChanged(nowUtc);
         }
         catch (Exception exception) when (IsDomainValidationException(exception))

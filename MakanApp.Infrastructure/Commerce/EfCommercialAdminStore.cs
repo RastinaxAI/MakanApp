@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Commerce;
 
-public sealed class EfCommercialAdminStore(MakanDbContext db, EfCommercialStore commerce) : ICommercialAdminStore
+public sealed class EfCommercialAdminStore(MakanDbContext db, EfCommercialStore commerce, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : ICommercialAdminStore
 {
     public async Task SetAvailabilityAsync(Guid actor, Guid session, Guid id, CommercialAvailabilityCommand command, DateTime now, CancellationToken ct)
     {
@@ -82,6 +82,7 @@ public sealed class EfCommercialAdminStore(MakanDbContext db, EfCommercialStore 
         db.AdminAuditLogs.Add(EfCommercialStore.Audit(actor, session, "commerce.subscription.register-managed-contract", subscription.Id,
             owner, command.Reason, string.Join(',', previous.Select(p => p.Id)),
             $"PlanVersion={version.Id:D};Start={subscription.StartsAtUtc:O};End={subscription.EndsAtUtc:O};CommercialControlEnabled=true;EffectiveAt={now:O};MigrationStatus={subscription.MigrationStatus};EnforcementFrom={subscription.CommercialEnforcementFromUtc:O}", now));
+        realtime.CaptureCommerce();
         await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return await commerce.SummaryAsync(owner, now, ct);
     }
 

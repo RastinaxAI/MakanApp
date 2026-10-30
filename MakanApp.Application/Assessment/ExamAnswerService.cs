@@ -1,15 +1,18 @@
 using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Storage;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
 
-public sealed class ExamAnswerService(
+public sealed partial class ExamAnswerService(
     IAccessContextResolver accessContextResolver,
     IExamAnswerStore store,
-    TimeProvider timeProvider) : IExamAnswerService
+    TimeProvider timeProvider,
+    IFileAssetStore fileStore,
+    StorageOptions storageOptions) : IExamAnswerService
 {
     public async Task<ExamWriteLeaseDto> AcquireWriteLeaseAsync(
         Guid userId,
@@ -92,6 +95,8 @@ public sealed class ExamAnswerService(
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
+        nowUtc = UtcNow();
+        _ = await GetStudentContextAsync(userId, sessionId, cancellationToken);
         var idempotentRevision = await store.GetByClientOperationForUpdateAsync(
             organizationId,
             attemptId,
@@ -134,10 +139,13 @@ public sealed class ExamAnswerService(
         }
 
         var nextRevisionNumber = checked((answerQuestion.CurrentRevision?.RevisionNumber ?? 0) + 1);
+        var attachmentIds = answerQuestion.CurrentRevision?.Attachments.Select(item => item.FileAssetId).ToArray() ?? [];
+        await ValidateAttachmentFilesAsync(access, attempt, answerQuestion.Question, attachmentIds, attachmentIds.ToHashSet(), UtcNow(), cancellationToken);
         var nextAnswerSetVersion = checked(attempt.AnswerSetVersion + 1);
         AnswerRevision revision;
         try
         {
+            attempt.EnsureWriteLease(sessionId, command.WriteLeaseVersion, UtcNow());
             revision = CreateRevision(
                 attempt,
                 answerQuestion,
@@ -146,7 +154,7 @@ public sealed class ExamAnswerService(
                 sessionId,
                 nextRevisionNumber,
                 nextAnswerSetVersion,
-                nowUtc);
+                UtcNow(), attachmentIds);
             var acceptedVersion = attempt.AcceptAnswerMutation();
             if (acceptedVersion != nextAnswerSetVersion)
             {
@@ -186,7 +194,7 @@ public sealed class ExamAnswerService(
             record.Questions
                 .Where(question => question.CurrentRevision is not null)
                 .OrderBy(question => question.AttemptQuestion.DisplayOrder)
-                .Select(question => ToCurrentAnswer(question.AttemptQuestion, question.CurrentRevision!))
+                .Select(question => ToCurrentAnswer(question))
                 .ToArray());
     }
 
@@ -215,7 +223,8 @@ public sealed class ExamAnswerService(
         Guid sessionId,
         int revisionNumber,
         long answerSetVersion,
-        DateTime acceptedAtUtc)
+        DateTime acceptedAtUtc,
+        IReadOnlyCollection<Guid>? attachmentIds = null)
     {
         if (answerQuestion.Question.Type == ExamQuestionType.ObjectiveSingleChoice)
         {
@@ -236,12 +245,12 @@ public sealed class ExamAnswerService(
                 answerQuestion.CurrentRevision?.Id,
                 attempt.WriteLeaseVersion,
                 answerSetVersion,
-                acceptedAtUtc);
+                acceptedAtUtc, attachmentIds);
         }
 
         if (answerQuestion.Question.Type == ExamQuestionType.Descriptive)
         {
-            if (command.SelectedOptionId.HasValue || command.TextAnswer is null)
+            if (command.SelectedOptionId.HasValue || command.TextAnswer is null && !answerQuestion.Question.AttachmentsAllowed)
             {
                 throw new ExamAnswerTypeInvalidException();
             }
@@ -250,7 +259,7 @@ public sealed class ExamAnswerService(
                 attempt,
                 answerQuestion.AttemptQuestion,
                 answerQuestion.Question,
-                command.TextAnswer,
+                command.TextAnswer ?? string.Empty,
                 revisionNumber,
                 command.ClientOperationId,
                 requestHash,
@@ -258,7 +267,7 @@ public sealed class ExamAnswerService(
                 answerQuestion.CurrentRevision?.Id,
                 attempt.WriteLeaseVersion,
                 answerSetVersion,
-                acceptedAtUtc);
+                acceptedAtUtc, attachmentIds);
         }
 
         throw new ExamAnswerTypeInvalidException();
@@ -292,9 +301,11 @@ public sealed class ExamAnswerService(
             revision.AcceptedAnswerSetVersion,
             "Saved");
 
-    private static StudentCurrentExamAnswerDto ToCurrentAnswer(
-        ExamAttemptQuestion attemptQuestion,
-        AnswerRevision revision) =>
+    private static StudentCurrentExamAnswerDto ToCurrentAnswer(ExamAnswerQuestionRecord record)
+    {
+        var attemptQuestion = record.AttemptQuestion;
+        var revision = record.CurrentRevision!;
+        return
         new(
             attemptQuestion.Id,
             attemptQuestion.QuestionVersionId,
@@ -303,7 +314,9 @@ public sealed class ExamAnswerService(
             revision.AnswerType,
             revision.SelectedOptionId,
             revision.TextAnswer,
-            revision.AcceptedAtUtc);
+            revision.AcceptedAtUtc)
+        { Attachments = (record.AttachmentFiles ?? []).Select(item => AcademicAnswerAttachmentDto.From(item.FileAsset)).ToArray() };
+    }
 
     private static string ComputeRequestHash(
         Guid attemptId,

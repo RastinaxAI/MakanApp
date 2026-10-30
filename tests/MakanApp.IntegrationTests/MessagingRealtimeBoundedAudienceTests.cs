@@ -75,7 +75,7 @@ public sealed class SignalRBoundedAudienceTests
     {
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience);
-        await new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System)
+        await new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
             .NotifyConversationChangedAsync(Notification(), null, CancellationToken.None);
         Assert.Equal(new[] { 128, 128, 7 }, clients.Batches.Select(batch => batch.Length));
         Assert.Equal(new[] { 128, 256, 263 }, clients.EnumeratedAtSend);
@@ -88,7 +88,7 @@ public sealed class SignalRBoundedAudienceTests
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience, index =>
         { if (index == 2) throw new IOException("synthetic-private-hub-marker"); });
-        await Assert.ThrowsAsync<IOException>(() => new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System)
+        await Assert.ThrowsAsync<IOException>(() => new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
             .NotifyConversationChangedAsync(Notification(), null, CancellationToken.None));
         Assert.Equal(2, clients.Batches.Count);
         Assert.Equal(256, audience.Enumerated);
@@ -101,7 +101,7 @@ public sealed class SignalRBoundedAudienceTests
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience, _ => caller.Cancel());
         var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System)
+            new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
                 .NotifyConversationChangedAsync(Notification(), null, caller.Token));
         Assert.Equal(caller.Token, exception.CancellationToken);
         Assert.Single(clients.Batches);
@@ -110,6 +110,15 @@ public sealed class SignalRBoundedAudienceTests
 
     private static MessagingRealtimeNotification Notification() => new(Guid.NewGuid(), MessagingChangeType.ConversationChanged,
         Guid.NewGuid(), null, "synthetic-cursor", DateTime.UtcNow, 1);
+
+    private sealed class FixedSessionScope : MakanApp.Application.Realtime.IRealtimeSessionScope
+    {
+        public Task<string?> AuthorizeConversationAsync(Guid sessionId, MessagingRealtimeNotification notification, CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Task.FromResult<string?>("synthetic-context");
+        }
+    }
 
     private sealed class StreamingAudience(int count) : IMessagingRealtimeAudienceResolver
     {
@@ -156,6 +165,7 @@ public sealed class SignalRBoundedAudienceTests
 
     private sealed class BoundedHubClient(Action sending) : IMessagingHubClient
     {
+        public Task ClientInvalidated(MakanApp.Application.Realtime.RealtimeInvalidation notification) => throw new NotSupportedException();
         public Task ConversationChanged(MessagingRealtimeNotification notification) { sending(); return Task.CompletedTask; }
         public Task TypingChanged(TypingNotification notification) => throw new NotSupportedException();
         public Task PresenceChanged(PresenceResult notification) => throw new NotSupportedException();

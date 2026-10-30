@@ -95,7 +95,8 @@ public sealed partial class MakanAppWebApplicationFactory :
                 ["Storage:AllowedContentTypes:1"] = "application/pdf",
                 ["Storage:AllowedContentTypes:2"] = "image/png",
                 ["Storage:AllowedContentTypes:3"] = "video/mp4",
-                ["Storage:AllowedContentTypes:4"] = "audio/mpeg"
+                ["Storage:AllowedContentTypes:4"] = "audio/mpeg",
+                ["Storage:AllowedContentTypes:5"] = "image/jpeg"
             });
             if (_recoverySecurityKey is not null)
             {
@@ -107,6 +108,12 @@ public sealed partial class MakanAppWebApplicationFactory :
         });
         builder.ConfigureTestServices(services =>
         {
+            services.AddSingleton<RealtimeBoundaryGate>();
+            services.AddDbContext<MakanDbContext>((provider, options) =>
+                options.AddInterceptors(provider.GetRequiredService<RealtimeBoundaryGate>()));
+            // کلید cursor فقط در حافظهٔ fixture است؛ keyring شخصی توسعه‌دهنده لمس نمی‌شود.
+            services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(
+                new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider());
             var operationalMetricsPublisher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(OperationalMetricsPublisher));
             if (operationalMetricsPublisher is not null) services.Remove(operationalMetricsPublisher);
@@ -167,6 +174,7 @@ public sealed partial class MakanAppWebApplicationFactory :
                     "text/plain",
                     "application/pdf",
                     "image/png",
+                    "image/jpeg",
                     "video/mp4",
                     "audio/mpeg"
                 }

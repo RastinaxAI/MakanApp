@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Assessment;
 
-public sealed class EfEvaluationStore(MakanDbContext dbContext) : IEvaluationStore
+public sealed class EfEvaluationStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IEvaluationStore
 {
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -112,6 +112,7 @@ public sealed class EfEvaluationStore(MakanDbContext dbContext) : IEvaluationSto
     {
         try
         {
+            await realtime.CaptureAssessmentAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)

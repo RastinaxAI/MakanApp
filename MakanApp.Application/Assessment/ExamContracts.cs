@@ -31,7 +31,8 @@ public sealed record AddExamQuestionCommand(
     string Prompt,
     decimal Score,
     IReadOnlyCollection<ExamQuestionOptionCommand>? Options,
-    string ExpectedVersionRowVersion);
+    string ExpectedVersionRowVersion,
+    ExamQuestionAttachmentPolicyCommand? AttachmentPolicy = null);
 
 public sealed record UpdateExamQuestionCommand(
     int Order,
@@ -40,7 +41,8 @@ public sealed record UpdateExamQuestionCommand(
     decimal Score,
     IReadOnlyCollection<ExamQuestionOptionCommand>? Options,
     string ExpectedVersionRowVersion,
-    string ExpectedQuestionRowVersion);
+    string ExpectedQuestionRowVersion,
+    ExamQuestionAttachmentPolicyCommand? AttachmentPolicy = null);
 
 public sealed record DeleteExamQuestionCommand(
     string ExpectedVersionRowVersion,
@@ -67,7 +69,10 @@ public sealed record ExamEditorQuestionDto(
     string Prompt,
     decimal Score,
     IReadOnlyCollection<ExamEditorOptionDto> Options,
-    string RowVersion);
+    string RowVersion)
+{
+    public ExamQuestionAttachmentPolicyDto? AttachmentPolicy { get; init; }
+}
 
 public sealed record ExamEditorDto(
     Guid Id,
@@ -122,7 +127,10 @@ public sealed record StudentSafeExamQuestion(
     ExamQuestionType Type,
     string Prompt,
     decimal Score,
-    IReadOnlyCollection<StudentSafeExamOption> Options);
+    IReadOnlyCollection<StudentSafeExamOption> Options)
+{
+    public ExamQuestionAttachmentPolicyDto? AttachmentPolicy { get; init; }
+}
 
 public sealed record StudentSafeExamPreview(
     StudentExamSummary Exam,

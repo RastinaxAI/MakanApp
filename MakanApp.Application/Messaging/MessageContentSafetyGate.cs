@@ -32,7 +32,7 @@ internal static class MessageContentSafetyGate
 
         if (preparation.ExistingSafetyDecision.HasValue)
         {
-            throw SafetyDecisionError(preparation.ExistingSafetyDecision.Value);
+            throw SafetyDecisionError(preparation.ExistingSafetyDecision.Value, preparation.SafetyIncidentId);
         }
 
         if (!preparation.RequiresEvaluation)
@@ -93,7 +93,7 @@ internal static class MessageContentSafetyGate
             return (incidentResult.ExistingMessage, false);
         }
 
-        throw SafetyDecisionError(incidentResult.Decision);
+        throw SafetyDecisionError(incidentResult.Decision, incidentResult.SafetyIncidentId);
     }
 
     private static void ValidateSafetyResult(ContentSafetyResult result)
@@ -110,15 +110,16 @@ internal static class MessageContentSafetyGate
         }
     }
 
-    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision) =>
+    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision, Guid? safetyReference) =>
         decision switch
         {
             ContentSafetyDecision.Blocked => new(
                 MessagingErrorCodes.MessageSafetyBlocked,
-                "ارسال این پیام مجاز نیست."),
+                "ارسال این پیام مجاز نیست.") { SafetyReference = safetyReference },
             ContentSafetyDecision.ReviewRequired => new(
                 MessagingErrorCodes.MessageSafetyReviewRequired,
-                "این پیام قابل ارسال نیست."),
+                "این تغییر اعمال نشد؛ بررسی ایمنی به نتیجهٔ قابل ارسال نرسیده است. پیش‌نویس را نگه دارید و خودکار دوباره ارسال نکنید.")
+                { SafetyReference = safetyReference },
             _ => SafetyUnavailable()
         };
 

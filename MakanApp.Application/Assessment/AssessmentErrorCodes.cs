@@ -2,6 +2,8 @@ namespace MakanApp.Application.Assessment;
 
 public static class AssessmentErrorCodes
 {
+    public const string ExamAttachmentNotAllowed = "EXAM_ATTACHMENT_NOT_ALLOWED";
+    public const string ExamAttachmentLimitExceeded = "EXAM_ATTACHMENT_LIMIT_EXCEEDED";
     public const string AssignmentNotFound = "ASSIGNMENT_NOT_FOUND";
     public const string AssignmentNotDraft = "ASSIGNMENT_NOT_DRAFT";
     public const string AssignmentAlreadyPublished = "ASSIGNMENT_ALREADY_PUBLISHED";

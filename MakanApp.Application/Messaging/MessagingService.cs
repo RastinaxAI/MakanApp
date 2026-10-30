@@ -67,6 +67,15 @@ public sealed class MessagingService(
         return Map(result);
     }
 
+    public async Task<ConversationSummaryResult> GetConversationSummaryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken)
+    {
+        ValidateConversationId(conversationId);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var records = await store.GetMyConversationsAsync(userId, context, ConversationListFilter.All, 1, 1,
+            null, cancellationToken, conversationId: conversationId);
+        return records.Count == 1 ? Map(records.Single()) : throw Error(MessagingErrorCodes.ConversationNotFound, "گفتگوی مجاز یافت نشد.");
+    }
+
     public async Task<IReadOnlyCollection<ConversationSummaryResult>> GetMyConversationsAsync(
         Guid userId,
         Guid sessionId,

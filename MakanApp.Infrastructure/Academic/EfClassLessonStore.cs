@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Academic;
 
-public sealed class EfClassLessonStore(MakanDbContext db) : IClassLessonStore
+public sealed class EfClassLessonStore(MakanDbContext db, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IClassLessonStore
 {
     public async Task<IOrganizationTransaction> BeginAsync(CancellationToken ct) =>
         new Transaction(await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct));
@@ -66,7 +66,7 @@ public sealed class EfClassLessonStore(MakanDbContext db) : IClassLessonStore
     public void Add(ClassLesson lesson) => db.ClassLessons.Add(lesson);
     public async Task SaveAsync(CancellationToken ct)
     {
-        try { await db.SaveChangesAsync(ct); }
+        try { await realtime.CaptureSchoolAsync(ct); await db.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw new AcademicException(SchoolErrorCodes.LessonVersionConflict, "درس یا فایل هم‌زمان تغییر کرده است."); }
         catch (DbUpdateException e) when (e.InnerException is SqlException { Number: 2601 or 2627 or 1205 })
         { throw new AcademicException(SchoolErrorCodes.LessonConflict, "عملیات درس با درخواست هم‌زمان تعارض دارد."); }

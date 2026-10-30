@@ -16,7 +16,8 @@ public sealed class PersonalClassOptions
     public int InvitationLifetimeHours { get; set; } = 168;
 }
 
-public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore commerce, IOptions<PersonalClassOptions> options) : IPersonalClassStore
+public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore commerce, IOptions<PersonalClassOptions> options,
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IPersonalClassStore
 {
     public async Task<PersonalClassDto> CreateAsync(Guid host, CreatePersonalClassCommand command, DateTime now, CancellationToken ct)
     {
@@ -31,7 +32,7 @@ public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore co
         }
         await commerce.RequireCapacityAsync(owner, EntitlementKey.PersonalClassHosting, QuotaKey.ActiveClasses, 1, now, ct);
         var entity = PersonalClass.Create(host, command.Title, command.ClientOperationId, now);
-        db.PersonalClasses.Add(entity); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Map(entity, host);
+        db.PersonalClasses.Add(entity); await realtime.CapturePersonalClassesAsync(ct); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Map(entity, host);
     }
 
     public async Task<IReadOnlyList<PersonalClassDto>> ListAsync(Guid userId, CancellationToken ct) =>
@@ -50,7 +51,7 @@ public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore co
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         await commerce.LockOwnerAsync(SubscriptionOwner.Individual(userId), ct);
         var entity = await db.PersonalClasses.SingleOrDefaultAsync(c => c.Id == classId && c.HostUserId == userId, ct) ?? throw NotFound();
-        entity.Archive(now); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Map(entity, userId);
+        entity.Archive(now); await realtime.CapturePersonalClassesAsync(ct); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Map(entity, userId);
     }
 
     public async Task<PersonalClassInvitationDto> InviteAsync(Guid host, Guid classId, InvitePersonalClassStudentCommand command, DateTime now, CancellationToken ct)
@@ -70,7 +71,7 @@ public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore co
         if (!await db.Users.AnyAsync(u => u.Id == command.DestinationUserId && u.AccountStatus == UserAccountStatus.Active, ct)) throw NotFound();
         var invitation = PersonalClassInvitation.Create(entity.Id, command.DestinationUserId, command.ClientOperationId, now,
             now.AddHours(options.Value.InvitationLifetimeHours));
-        db.PersonalClassInvitations.Add(invitation); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Invitation(invitation);
+        db.PersonalClassInvitations.Add(invitation); await realtime.CapturePersonalClassesAsync(ct); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Invitation(invitation);
     }
 
     public async Task<IReadOnlyList<PersonalClassInvitationDto>> InvitationsAsync(Guid userId, CancellationToken ct) =>
@@ -101,6 +102,7 @@ public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore co
         await commerce.RequireCapacityAsync(owner, EntitlementKey.PersonalClassHosting, QuotaKey.ActiveLearners, consumesSeat ? 1 : 0, now, ct);
         try { invitation.Accept(userId, now); } catch (InvalidOperationException) { throw NotFound(); }
         db.PersonalClassParticipants.Add(PersonalClassParticipant.Join(invitation, now));
+        await realtime.CapturePersonalClassesAsync(ct);
         await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); return Map(entity, userId);
     }
 
@@ -118,7 +120,7 @@ public sealed class EfPersonalClassStore(MakanDbContext db, EfCommercialStore co
         await commerce.LockOwnerAsync(SubscriptionOwner.Individual(entity.HostUserId), ct, requireActive: false);
         var participant = await db.PersonalClassParticipants.SingleOrDefaultAsync(p => p.Id == participantId && p.PersonalClassId == classId
             && (entity.HostUserId == userId || p.StudentUserId == userId), ct) ?? throw NotFound();
-        participant.End(now); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
+        participant.End(now); await realtime.CapturePersonalClassesAsync(ct); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
     }
 
     private static PersonalClassDto Map(PersonalClass entity, Guid userId) => new(entity.Id, entity.HostUserId, entity.Title,

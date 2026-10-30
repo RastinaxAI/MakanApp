@@ -13,7 +13,7 @@ namespace MakanApp.Infrastructure.Assessment;
 
 public sealed class EfExamFinalizationStore(
     MakanDbContext dbContext,
-    ILogger<EfExamFinalizationStore> logger) : IExamFinalizationStore
+    ILogger<EfExamFinalizationStore> logger, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IExamFinalizationStore
 {
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -73,16 +73,22 @@ public sealed class EfExamFinalizationStore(
             .ToArray();
         var revisions = await dbContext.AnswerRevisions
             .AsNoTracking()
+            .Include(revision => revision.Attachments)
             .Where(revision => revision.OrganizationId == organizationId &&
                                revision.ExamAttemptId == attemptId &&
                                revisionIds.Contains(revision.Id))
             .ToDictionaryAsync(revision => revision.Id, cancellationToken);
+        var questionIds = questions.Select(item => item.QuestionVersionId).ToArray();
+        var versions = await dbContext.QuestionVersions.AsNoTracking()
+            .Where(item => item.OrganizationId == organizationId && questionIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
         return questions
             .Select(question => new ExamFinalizationQuestionRecord(
                 question,
                 question.CurrentAnswerRevisionId.HasValue
                     ? revisions[question.CurrentAnswerRevisionId.Value]
-                    : null))
+                    : null,
+                versions[question.QuestionVersionId]))
             .ToArray();
     }
 
@@ -134,6 +140,11 @@ public sealed class EfExamFinalizationStore(
                   finalAnswer.ExamAttemptId == attemptId
             select new ExamFinalAnswerRecord(finalAnswer, revision))
             .ToArrayAsync(cancellationToken);
+        var finalIds = finalAnswers.Select(item => item.Revision.Id).ToArray();
+        var finalRevisions = await dbContext.AnswerRevisions.AsNoTracking().Include(item => item.Attachments)
+            .Where(item => item.OrganizationId == organizationId && finalIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
+        finalAnswers = finalAnswers.Select(item => item with { Revision = finalRevisions[item.Revision.Id] }).ToArray();
         return new ExamFinalizationRecord(attempt, questions, finalAnswers);
     }
 
@@ -144,6 +155,7 @@ public sealed class EfExamFinalizationStore(
     {
         try
         {
+            await realtime.CaptureAssessmentAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException exception)

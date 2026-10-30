@@ -36,7 +36,10 @@ public sealed record StudentCurrentExamAnswerDto(
     ExamQuestionType AnswerType,
     Guid? SelectedOptionId,
     string? TextAnswer,
-    DateTime AcceptedAtUtc);
+    DateTime AcceptedAtUtc)
+{
+    public IReadOnlyCollection<AcademicAnswerAttachmentDto> Attachments { get; init; } = [];
+}
 
 public sealed record StudentExamAnswersDto(
     Guid ExamAttemptId,
@@ -47,7 +50,8 @@ public sealed record StudentExamAnswersDto(
 public sealed record ExamAnswerQuestionRecord(
     ExamAttemptQuestion AttemptQuestion,
     QuestionVersion Question,
-    AnswerRevision? CurrentRevision);
+    AnswerRevision? CurrentRevision,
+    IReadOnlyCollection<ExamAnswerAttachmentRecord>? AttachmentFiles = null);
 
 public sealed record ExamAnswersRecord(
     ExamAttempt Attempt,
