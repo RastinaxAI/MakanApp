@@ -74,6 +74,8 @@ requestId و correlationId پاسخ باید دقیقاً با درخواست ب
 
 دو header عمومی اختیاری به OpenAPI اضافه شده‌اند؛ به AI forward نمی‌شوند:
 
+در حالت CORS محدود نیز هر دو header برای Originهای مصوب مجازند و `X-AI-Operation-Id` در exposed headers قرار دارد. Origin نامجاز همچنان رد می‌شود؛ allowlist یا credential policy گسترش نیافته است.
+
 | Header | معنا |
 |---|---|
 | `X-AI-Operation-Id` | GUID ثابت برای یک intent؛ برای retry همان مقدار را حفظ کنید. با `operationId` body در چهار Command موجود باید یکسان باشد. |
@@ -123,7 +125,7 @@ log امن شامل operation، status در صورت وجود پاسخ HTTP، el
 
 پذیرش مستقل محلی با Kestrel واقعی Backend + LocalDB موقت + AI کنترل‌شده انجام شد: **۱۲/۱۲ عملیات و Focused Three موفق**؛ ۱۷۶ درخواست HTTP و ۷۴ check؛ ۱۲ reservation مصرف‌شده، ۲۴ ledger row، صفر OTP واقعی، صفر SMS و صفر Provider واقعی. schema موجود با ۵۸ migration فقط در SQL ایزوله اعمال شد و دیتابیس پذیرش حذف شد. این نتیجه، PASS سرور واقعی نیست.
 
-Restore و Release Build موفق و compiler warning/error صفر بودند. رگرسیون نهایی پیش از commit: **۱۰۱۳ Unit + ۱۶۵۱ Integration + ۱۴ Architecture = ۲۶۷۸ تست**، failed/skipped صفر؛ ۴۷ تست بیشتر از baseline. بررسی `HasPendingModelChanges()` موجود نیز در Integration پاس شد. پس از commit، Build و هر سه سوییت دوباره اجرا و نتیجهٔ واقعی آن‌ها همراه Git در گزارش پایان مرحله ثبت می‌شود.
+Restore و Release Build موفق و compiler warning/error صفر بودند. رگرسیون نهایی شامل CORS پیش از commit تکمیلی: **۱۰۱۳ Unit + ۱۶۵۲ Integration + ۱۴ Architecture = ۲۶۷۹ تست**، failed/skipped صفر؛ ۴۸ تست بیشتر از baseline. بررسی `HasPendingModelChanges()` موجود نیز در Integration پاس شد. پس از commit، Build و هر سه سوییت دوباره اجرا و نتیجهٔ واقعی آن‌ها همراه Git در گزارش پایان مرحله ثبت می‌شود.
 
 ## وضعیت انتشار
 

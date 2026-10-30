@@ -201,7 +201,7 @@ public sealed class ProductionHostingTests(MakanAppWebApplicationFactory factory
             Assert.Equal(new[] { "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT" },
                 string.Join(",", response.Headers.GetValues("Access-Control-Allow-Methods"))
                     .Split(',', StringSplitOptions.TrimEntries).OrderBy(value => value, StringComparer.Ordinal));
-            Assert.Equal(new[] { "authorization", "content-type", "x-client-version", "x-correlation-id" },
+            Assert.Equal(new[] { "authorization", "content-type", "x-ai-operation-id", "x-ai-payer", "x-client-version", "x-correlation-id" },
                 string.Join(",", response.Headers.GetValues("Access-Control-Allow-Headers"))
                     .ToLowerInvariant().Split(',', StringSplitOptions.TrimEntries).OrderBy(value => value, StringComparer.Ordinal));
             Assert.Equal("3600", Assert.Single(response.Headers.GetValues("Access-Control-Max-Age")));

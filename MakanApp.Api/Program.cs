@@ -80,7 +80,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithExposedHeaders("Retry-After", CorrelationIdMiddleware.HeaderName)
+        policy.WithExposedHeaders("Retry-After", CorrelationIdMiddleware.HeaderName, "X-AI-Operation-Id")
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
         if (allowAnyOrigin)
         {
@@ -89,7 +89,8 @@ builder.Services.AddCors(options =>
         }
 
         policy.WithOrigins(allowedOrigins)
-            .WithHeaders("authorization", "content-type", "x-client-version", CorrelationIdMiddleware.HeaderName)
+            .WithHeaders("authorization", "content-type", "x-client-version", CorrelationIdMiddleware.HeaderName,
+                "X-AI-Operation-Id", "X-AI-Payer")
             .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
     });
 });

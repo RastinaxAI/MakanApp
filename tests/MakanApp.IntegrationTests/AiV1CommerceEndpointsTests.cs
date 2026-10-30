@@ -16,6 +16,52 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class AiChatEndpointsTests
 {
     [Fact]
+    public async Task RestrictedCorsAllowsAiInvocationHeadersOnlyForApprovedOriginsAndExposesOperationId()
+    {
+        const string origin = "https://ai-client.example.test";
+        using var application = factory.WithWebHostBuilder(_ => { });
+        using var client = CreateRestrictedClient();
+        foreach (var selectedOrigin in new[] { origin, "https://unapproved.example.test" })
+        {
+            using var preflight = new HttpRequestMessage(HttpMethod.Options, "/api/v1/ai/students/analyze");
+            preflight.Headers.Add("Origin", selectedOrigin); preflight.Headers.Add("Access-Control-Request-Method", "POST");
+            preflight.Headers.Add("Access-Control-Request-Headers", "authorization,content-type,x-ai-operation-id,x-ai-payer");
+            using var response = await client.SendAsync(preflight);
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+            if (selectedOrigin == origin)
+            {
+                Assert.Equal(origin, Assert.Single(response.Headers.GetValues("Access-Control-Allow-Origin")));
+                var allowed = string.Join(",", response.Headers.GetValues("Access-Control-Allow-Headers"));
+                Assert.Contains("x-ai-operation-id", allowed, StringComparison.OrdinalIgnoreCase);
+                Assert.Contains("x-ai-payer", allowed, StringComparison.OrdinalIgnoreCase);
+            }
+            else Assert.False(response.Headers.Contains("Access-Control-Allow-Origin"));
+        }
+        using var health = new HttpRequestMessage(HttpMethod.Get, "/health/live"); health.Headers.Add("Origin", origin);
+        using var healthy = await client.SendAsync(health); healthy.EnsureSuccessStatusCode();
+        Assert.Contains("X-AI-Operation-Id", string.Join(",", healthy.Headers.GetValues("Access-Control-Expose-Headers")), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(0, factory.AiService.ProviderCallCount);
+
+        HttpClient CreateRestrictedClient()
+        {
+            // Program پیش از callback دیرهنگام TestHost مقدار CORS را می‌خواند؛ فقط هنگام ساخت این میزبان override می‌شود.
+            var previousMode = Environment.GetEnvironmentVariable("Cors__AllowAnyOrigin");
+            var previousOrigin = Environment.GetEnvironmentVariable("Cors__AllowedOrigins__0");
+            try
+            {
+                Environment.SetEnvironmentVariable("Cors__AllowAnyOrigin", "false");
+                Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", origin);
+                return application.CreateClient();
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("Cors__AllowAnyOrigin", previousMode);
+                Environment.SetEnvironmentVariable("Cors__AllowedOrigins__0", previousOrigin);
+            }
+        }
+    }
+
+    [Fact]
     public async Task AiInvocationOpenApiListsOptionalHeadersWithoutInvokingAi()
     {
         using var client = factory.CreateClient(); using var response = await client.GetAsync("/openapi/v1.json");
