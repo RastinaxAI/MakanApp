@@ -6,7 +6,8 @@ namespace MakanApp.Application.Ai;
 public sealed class AiChatService(
     IAccessContextResolver accessContextResolver,
     IAiScopeStore scopeStore,
-    IAiServiceClient client) : IAiChatService
+    IAiServiceClient client,
+    IAiSourceSelectionService sourceSelection) : IAiChatService
 {
     private const int MaximumMessageLength = 4_000;
 
@@ -18,6 +19,8 @@ public sealed class AiChatService(
         CancellationToken cancellationToken)
     {
         Validate(command, correlationId);
+        await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.Chat, command.SelectedSourceIds,
+            command.OperationId, new { Message = command.Message.Trim(), command.ConversationId }, null, null, cancellationToken);
         var context = await accessContextResolver.ResolveAsync(
             userId,
             sessionId,

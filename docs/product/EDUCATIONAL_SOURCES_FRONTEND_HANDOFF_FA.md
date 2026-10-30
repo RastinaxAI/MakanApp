@@ -1,5 +1,7 @@
 # قرارداد Frontend منابع آموزشی
 
+قرارداد جدید [انتخاب Source برای AI](AI_SOURCE_SELECTION_FRONTEND_HANDOFF_FA.md) فیلدهای additiveِ `aiReadiness/aiUnavailableReason`، Preflight مجوز و مرز RetrievalUnavailable را توضیح می‌دهد. این تغییر `aiReady` یا `canUseForAi` را true نمی‌کند.
+
 این سند فقط APIهای پیاده‌سازی‌شدهٔ Backend را توصیف می‌کند؛ frontend در این مرحله تغییر نکرده است. همهٔ مسیرها authenticated هستند. منبع با فایل تفاوت دارد: upload موفق، به معنی منبع Published یا AI-ready نیست.
 
 ## ترتیب ساخت

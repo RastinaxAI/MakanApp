@@ -12,8 +12,16 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/ai")]
 public sealed class AiController(
     IAiChatService chatService,
-    IAiRoleContextService roleContextService) : ControllerBase
+    IAiRoleContextService roleContextService,
+    IAiSourceSelectionService sourceSelection) : ControllerBase
 {
+    [HttpPost("sources/preflight")]
+    [ProducesResponseType<AiSourcePreflightResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AiSourcePreflightResult>> SourcePreflight(
+        [FromBody] AiSourcePreflightCommand command, CancellationToken cancellationToken) =>
+        Ok(await sourceSelection.PreflightAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), command, cancellationToken));
+
     [HttpPost("chat")]
     [ProducesResponseType<AiChatResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<AiChatResult>> Chat(

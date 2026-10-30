@@ -276,6 +276,9 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds));
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
         services.AddScoped<IAiChatService, AiChatService>();
+        services.AddScoped<IAiSourceSelectionService, AiSourceSelectionService>();
+        services.AddScoped<IAiSourceAuthorizationService, EfAiSourceAuthorizationService>();
+        services.AddScoped<IAiSourceSelectionStore, EfAiSourceSelectionStore>();
         services.AddScoped<IStudentContextBuilder, StudentContextBuilder>();
         services.AddScoped<IParentChildContextBuilder, ParentChildContextBuilder>();
         services.AddScoped<ITeacherClassContextBuilder, TeacherClassContextBuilder>();

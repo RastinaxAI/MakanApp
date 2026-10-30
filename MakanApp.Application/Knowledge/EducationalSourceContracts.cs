@@ -24,7 +24,14 @@ public sealed record EducationalSourceResult(Guid SourceId, EducationalSourceSco
     string Title, string? Description, EducationalSourceType SourceType, SourcePublicationStatus PublicationStatus,
     SourceSafetyStatus SafetyStatus, SourceProcessingStatus ProcessingStatus, string? ProcessingFailureCode,
     bool FileReady, bool SourceReady, bool AiReady, SourceCapabilities Capabilities, SourceFileMetadata? File,
-    Guid CreatedByUserId, DateTime CreatedAtUtc, DateTime? PublishedAtUtc, string Version, bool Replayed = false);
+    Guid CreatedByUserId, DateTime CreatedAtUtc, DateTime? PublishedAtUtc, string Version, bool Replayed = false)
+{
+    public string AiReadiness => "Unavailable";
+    public string AiUnavailableReason => Scope == EducationalSourceScope.Library ? "ProductPolicyDisabled"
+        : !SourceReady || PublicationStatus != SourcePublicationStatus.Published ||
+          ProcessingStatus is SourceProcessingStatus.Pending or SourceProcessingStatus.Processing or SourceProcessingStatus.Failed
+            ? "SourceNotReady" : "RetrievalUnavailable";
+}
 public sealed record SourcePage(int Page, int PageSize, int TotalCount, IReadOnlyList<EducationalSourceResult> Items);
 
 public interface IEducationalSourceStore

@@ -2,7 +2,11 @@ namespace MakanApp.Application.Ai;
 
 public sealed record SendAiChatCommand(
     string Message,
-    Guid? ConversationId);
+    Guid? ConversationId)
+{
+    public IReadOnlyCollection<Guid>? SelectedSourceIds { get; init; }
+    public Guid? OperationId { get; init; }
+}
 
 public sealed record AiChatResult(
     string RequestId,

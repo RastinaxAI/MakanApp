@@ -8,6 +8,7 @@ public sealed class AiServiceTestControl
     private AiChatRequest? _lastRequest;
     private IAiServiceRequest? _lastRoleRequest;
     private Exception? _nextException;
+    public int ProviderCallCount { get; private set; }
 
     public AiChatRequest? LastRequest
     {
@@ -46,6 +47,7 @@ public sealed class AiServiceTestControl
             _lastRequest = null;
             _lastRoleRequest = null;
             _nextException = null;
+            ProviderCallCount = 0;
         }
     }
 
@@ -54,6 +56,7 @@ public sealed class AiServiceTestControl
         lock (_sync)
         {
             _lastRequest = request;
+            ProviderCallCount++;
             if (_nextException is not null)
             {
                 var exception = _nextException;
@@ -79,6 +82,7 @@ public sealed class AiServiceTestControl
         lock (_sync)
         {
             _lastRoleRequest = request;
+            ProviderCallCount++;
             ThrowPendingFailure();
         }
     }

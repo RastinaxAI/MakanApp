@@ -8,7 +8,8 @@ public sealed class AiRoleContextService(
     IManagerSchoolContextBuilder managerSchoolContextBuilder,
     IManagerClassContextBuilder managerClassContextBuilder,
     IManagerStudentContextBuilder managerStudentContextBuilder,
-    IAiServiceClient client) : IAiRoleContextService
+    IAiServiceClient client,
+    IAiSourceSelectionService sourceSelection) : IAiRoleContextService
 {
     public async Task<AiStudentAnalysisResponse> AnalyzeStudentAsync(
         Guid userId,
@@ -40,6 +41,8 @@ public sealed class AiRoleContextService(
         }
 
         var context = await studentContextBuilder.BuildAsync(userId, sessionId, cancellationToken);
+        await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.StudyPlan, command.SelectedSourceIds,
+            command.OperationId, new { Goals = goals, command.AvailableMinutes, Notes = notes }, null, null, cancellationToken);
         return await client.CreateStudyPlanAsync(
             new AiStudyPlanRequest(
                 RequestId(),
@@ -64,6 +67,8 @@ public sealed class AiRoleContextService(
         var question = NormalizeRequired(command.Question, AiContextLimits.FreeTextLength);
         var (context, homework) = await studentContextBuilder.BuildHomeworkAsync(
             userId, sessionId, assignmentId, cancellationToken);
+        await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.HomeworkExplain, command.SelectedSourceIds,
+            command.OperationId, new { Question = question }, null, assignmentId, cancellationToken);
         return await client.ExplainHomeworkAsync(
             new AiHomeworkExplanationRequest(
                 RequestId(),
@@ -164,6 +169,8 @@ public sealed class AiRoleContextService(
 
         var context = await teacherClassContextBuilder.BuildAsync(
             userId, sessionId, classId, cancellationToken);
+        await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.TeacherActivitySuggestions, command.SelectedSourceIds,
+            command.OperationId, new { Objective = objective, command.AvailableMinutes, Materials = materials, Notes = notes }, classId, null, cancellationToken);
         return await client.SuggestTeacherActivitiesAsync(
             new AiTeacherActivitySuggestionsRequest(
                 RequestId(),

@@ -173,6 +173,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries().Any(e => e.Entity is MakanApp.Domain.Knowledge.AiSourceSelectionOperation or MakanApp.Domain.Knowledge.AiSourceSelectionPin
+            && e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("سابقهٔ انتخاب نسخهٔ منبع فقط قابل افزودن است.");
         if (ChangeTracker.Entries().Any(e => e.Entity is UsageLedgerEntry or SubscriptionAmendment && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("سابقهٔ مصرف و اصلاح قرارداد فقط قابل افزودن است.");
         if (ChangeTracker.Entries<CommunicationAgeVerification>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))

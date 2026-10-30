@@ -3230,6 +3230,53 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("UserSessions", "identity");
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionOperation", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("PayloadHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.HasKey("UserId", "OperationId");
+
+                    b.ToTable("AiSourceSelectionOperations", "knowledge", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiSourceSelectionOperations_Hash", "DATALENGTH([PayloadHash])=32");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionPin", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "OperationId", "SourceId");
+
+                    b.HasIndex("SourceId", "Number");
+
+                    b.ToTable("AiSourceSelectionPins", "knowledge", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiSourceSelectionPins_Number", "[Number]>0");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Knowledge.EducationalSource", b =>
                 {
                     b.Property<Guid>("Id")
@@ -8376,6 +8423,30 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionPin", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Knowledge.EducationalSourceVersion", null)
+                        .WithMany()
+                        .HasForeignKey("SourceId", "Number")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Knowledge.AiSourceSelectionOperation", null)
+                        .WithMany("Pins")
+                        .HasForeignKey("UserId", "OperationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Knowledge.EducationalSource", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -9570,6 +9641,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Navigation("Price");
 
                     b.Navigation("QuotaDefinitions");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionOperation", b =>
+                {
+                    b.Navigation("Pins");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.ScheduledMessage", b =>

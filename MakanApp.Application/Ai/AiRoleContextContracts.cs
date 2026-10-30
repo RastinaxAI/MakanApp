@@ -6,15 +6,27 @@ namespace MakanApp.Application.Ai;
 public sealed record CreateStudyPlanCommand(
     IReadOnlyCollection<string> Goals,
     int? AvailableMinutes,
-    string? Notes);
+    string? Notes)
+{
+    public IReadOnlyCollection<Guid>? SelectedSourceIds { get; init; }
+    public Guid? OperationId { get; init; }
+}
 
-public sealed record ExplainHomeworkCommand(string Question);
+public sealed record ExplainHomeworkCommand(string Question)
+{
+    public IReadOnlyCollection<Guid>? SelectedSourceIds { get; init; }
+    public Guid? OperationId { get; init; }
+}
 
 public sealed record SuggestTeacherActivitiesCommand(
     string Objective,
     int? AvailableMinutes,
     IReadOnlyCollection<string> Materials,
-    string? Notes);
+    string? Notes)
+{
+    public IReadOnlyCollection<Guid>? SelectedSourceIds { get; init; }
+    public Guid? OperationId { get; init; }
+}
 
 public sealed record AiStudentContext(
     AiActor Actor,

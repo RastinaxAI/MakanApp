@@ -24,7 +24,7 @@ public sealed class AiChatServiceTests
         var resolver = new StubContextResolver(context);
         var scopeStore = new StubScopeStore { LearnerId = Guid.NewGuid() };
         var client = new RecordingClient();
-        var service = new AiChatService(resolver, scopeStore, client);
+        var service = new AiChatService(resolver, scopeStore, client, new NoSourceSelection());
 
         var result = await service.ChatAsync(
             context.UserId,
@@ -56,7 +56,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client);
+            client, new NoSourceSelection());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -77,7 +77,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client);
+            client, new NoSourceSelection());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -100,7 +100,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client);
+            client, new NoSourceSelection());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -181,4 +181,13 @@ public sealed class AiChatServiceTests
         public Task<AiRoleInsightResponse> GetManagerClassInsightAsync(AiManagerClassInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(AiManagerStudentInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
+    private sealed class NoSourceSelection : IAiSourceSelectionService
+    {
+        public Task GuardAsync(Guid u, Guid s, AiSourceOperation op, IReadOnlyCollection<Guid>? ids,
+            Guid? operationId, object payload, Guid? classId, Guid? assignmentId, CancellationToken ct)
+        { Assert.Empty(ids ?? []); return Task.CompletedTask; }
+        public Task<AiSourcePreflightResult> PreflightAsync(Guid u, Guid s, AiSourcePreflightCommand command, CancellationToken ct) =>
+            throw new NotSupportedException();
+    }
+
 }
