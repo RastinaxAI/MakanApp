@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MakanApp.Api\MakanApp.Api.csproj" />
+    <ProjectReference Include="..\..\tools\organization\MakanApp.OfficialSpacesMaintenance\MakanApp.OfficialSpacesMaintenance.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,6 +35,7 @@ public sealed class ConversationParticipant
     public DateTime JoinedAtUtc { get; private set; }
     public DateTime? EndedAtUtc { get; private set; }
     public Guid? EndedByUserId { get; private set; }
+    public bool EndedBySystem { get; private set; }
     public long LastDeliveredMessageSequence { get; private set; }
     public long LastReadMessageSequence { get; private set; }
     public DateTime? CursorUpdatedAtUtc { get; private set; }
@@ -96,6 +97,12 @@ public sealed class ConversationParticipant
 
     public void Leave(DateTime endedAtUtc) =>
         End(ConversationParticipantStatus.Left, UserId, endedAtUtc);
+
+    public void EndSystemAccess(DateTime now)
+    {
+        if (now.Kind != DateTimeKind.Utc) throw new ArgumentException("زمان باید UTC باشد.");
+        Status = ConversationParticipantStatus.Removed; EndedAtUtc = now; EndedByUserId = null; EndedBySystem = true;
+    }
 
     public void ChangeRole(
         ConversationParticipantRole role,

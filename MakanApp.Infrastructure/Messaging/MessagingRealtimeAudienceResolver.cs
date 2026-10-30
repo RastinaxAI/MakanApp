@@ -35,7 +35,7 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
             yield break;
         }
 
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         var query =
             from participant in dbContext.ConversationParticipants.AsNoTracking()
             join session in dbContext.UserSessions.AsNoTracking()
@@ -43,8 +43,7 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
             join user in dbContext.Users.AsNoTracking() on session.UserId equals user.Id
             where participant.ConversationId == conversationId &&
                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == session.UserId &&
-                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
+                   officialMembers.Any(m => m.UserId == session.UserId && m.ConversationId == conversation.Id)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   user.AccountStatus == UserAccountStatus.Active &&
@@ -63,6 +62,19 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
                        membership.Status == MembershipStatus.Active &&
                        membership.EndedAtUtc == null))
             select new { session.Id, session.UserId };
+
+        // مسیر افزایشی فقط برای participant شخصیِ خود Account است؛ شاخهٔ Organization بالا دست‌نخورده می‌ماند.
+        if (conversation.Scope == ConversationScope.Personal && conversation.OrganizationId is null)
+        {
+            var personal = from participant in dbContext.ConversationParticipants.AsNoTracking()
+                join session in dbContext.UserSessions.AsNoTracking() on participant.UserId equals session.UserId
+                join user in dbContext.Users.AsNoTracking() on session.UserId equals user.Id
+                where participant.ConversationId == conversation.Id && participant.Status == ConversationParticipantStatus.Active && participant.EndedAtUtc == null &&
+                    user.AccountStatus == UserAccountStatus.Active && session.RevokedAtUtc == null && session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
+                    (!audienceUserId.HasValue || participant.UserId == audienceUserId.Value)
+                select new { session.Id, session.UserId };
+            query = query.Union(personal);
+        }
 
         Guid? afterSessionId = null;
         while (true)

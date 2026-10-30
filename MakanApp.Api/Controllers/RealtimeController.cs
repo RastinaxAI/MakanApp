@@ -3,6 +3,7 @@ using MakanApp.Application.Realtime;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Api.Controllers;
 
@@ -22,6 +23,6 @@ public sealed class RealtimeController(IRealtimeSyncService sync) : ControllerBa
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AccountChangePageResult>> Changes([FromQuery] string? cursor = null,
-        [FromQuery] int limit = 100, CancellationToken cancellationToken = default) =>
-        Ok(await sync.ReadAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), cursor, limit, cancellationToken));
+        [FromQuery] int limit = 100, CancellationToken cancellationToken = default, [FromQuery] ConversationScope? scope = null) =>
+        Ok(await sync.ReadAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), cursor, limit, cancellationToken, scope));
 }

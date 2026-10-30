@@ -33,14 +33,16 @@ public sealed partial class MessagingEndpointsTests
                 INSERT INTO [identity].[Users] ([Id],[CreatedAtUtc],[AccountStatus],[CommunicationAgeCategory],[CommunicationAgeVerificationStatus])
                 VALUES ({user.Id},{now},1,0,0)
                 """);
-            db.Conversations.Add(conversation); db.ConversationParticipants.Add(participant); db.Messages.Add(oldMessage);
-            db.MessageRevisions.Add(MessageRevision.Create(oldMessage.Id, 1, oldMessage.Text, user.Id, now)); await db.SaveChangesAsync();
+            await InsertLegacyAsync("messaging", "Conversations", conversation);
+            await InsertLegacyAsync("messaging", "ConversationParticipants", participant);
+            await InsertLegacyAsync("messaging", "Messages", oldMessage);
+            await InsertLegacyAsync("messaging", "MessageRevisions", MessageRevision.Create(oldMessage.Id, 1, oldMessage.Text, user.Id, now));
             await migrator.MigrateAsync(); Assert.Contains(migration, await db.Database.GetAppliedMigrationsAsync());
             Assert.Empty(await db.Database.GetPendingMigrationsAsync()); Assert.False(db.Database.HasPendingModelChanges());
             Assert.Equal("پیام پیش از ارتقا", (await db.Messages.AsNoTracking().SingleAsync()).Text);
             Assert.Empty(await db.ConversationChecklists.ToArrayAsync());
             await migrator.MigrateAsync(baseline); Assert.DoesNotContain(migration, await db.Database.GetAppliedMigrationsAsync());
-            Assert.Equal(oldMessage.Id, (await db.Messages.AsNoTracking().SingleAsync()).Id);
+            Assert.Equal(oldMessage.Id, await db.Database.SqlQuery<Guid>($"SELECT [Id] AS [Value] FROM [messaging].[Messages]").SingleAsync());
             await migrator.MigrateAsync();
             var definition = ConversationChecklistDefinition.Create("فهرست پس از ارتقا", ConversationChecklistMode.Personal, [new(Guid.NewGuid(), "آیتم")]);
             var message = Message.Create(conversation.Id, participant.Id, user.Id, Guid.NewGuid(), conversation.AllocateNextMessageSequence(), MessageKind.Checklist, definition.Title, 0, null, null, 4000, now);
@@ -57,6 +59,32 @@ public sealed partial class MessagingEndpointsTests
         {
             // فقط DB یکتای همین تست؛ نه fixture مشترک، DB توسعه یا سرور.
             await db.Database.EnsureDeletedAsync();
+        }
+
+        async Task InsertLegacyAsync(string schema, string table, object entity)
+        {
+            // fixture با ستون‌های همان schema قدیمی درج می‌شود؛ مدل جدید نباید پیش از Migration به آن تحمیل شود.
+            await using var sql = new SqlConnection(connection.ConnectionString); await sql.OpenAsync();
+            var columns = new HashSet<string>();
+            await using (var metadata = sql.CreateCommand())
+            {
+                metadata.CommandText = "SELECT name FROM sys.columns WHERE object_id=OBJECT_ID(@table) AND system_type_id<>189 AND is_computed=0 AND is_identity=0";
+                metadata.Parameters.AddWithValue("@table", schema + "." + table);
+                await using var reader = await metadata.ExecuteReaderAsync();
+                while (await reader.ReadAsync()) columns.Add(reader.GetString(0));
+            }
+            var properties = entity.GetType().GetProperties().Where(p => columns.Contains(p.Name)).ToArray();
+            await using var command = sql.CreateCommand();
+            command.CommandText = $"INSERT INTO [{schema}].[{table}] ({string.Join(',', properties.Select(p => '[' + p.Name + ']'))}) VALUES ({string.Join(',', properties.Select((_, i) => "@p" + i))})";
+            for (var i = 0; i < properties.Length; i++)
+            {
+                var value = properties[i].GetValue(entity);
+                if (value?.GetType().IsEnum == true) value = Convert.ToInt32(value);
+                var parameter = command.Parameters.AddWithValue("@p" + i, value ?? DBNull.Value);
+                if (properties[i].PropertyType == typeof(byte[]))
+                { parameter.SqlDbType = System.Data.SqlDbType.VarBinary; parameter.Size = -1; }
+            }
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

@@ -1,5 +1,7 @@
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Storage;
+using MakanApp.Domain.Organization;
+using MakanApp.Application.Guardian;
 
 namespace MakanApp.Application.Storage;
 
@@ -11,7 +13,8 @@ public sealed class StorageService(
     IFileContentValidator fileContentValidator,
     FileUploadPolicy uploadPolicy,
     StorageOptions options,
-    TimeProvider timeProvider) : IStorageService
+    TimeProvider timeProvider,
+    IAccountOperationContextResolver? accountContexts = null) : IStorageService
 {
     public async Task<FileAssetResult> UploadFileAsync(
         Guid userId,
@@ -19,7 +22,13 @@ public sealed class StorageService(
         UploadFileCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        if (command.WorkspaceScope.HasValue && !Enum.IsDefined(command.WorkspaceScope.Value))
+            throw Error(StorageErrorCodes.FileNotAllowed, "بافت بارگذاری معتبر نیست.");
+        var context = command.WorkspaceScope == WorkspaceType.Personal && accountContexts is not null
+            ? await accountContexts.PersonalAsync(userId, sessionId, cancellationToken)
+            : await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        if (command.WorkspaceScope == WorkspaceType.Organization && context.WorkspaceType != WorkspaceType.Organization)
+            throw Error(StorageErrorCodes.FileNotAllowed, "بافت سازمانی معتبر لازم است.");
         var validated = uploadPolicy.Validate(command);
         await fileContentValidator.ValidateAsync(
             command.Content,
@@ -84,7 +93,7 @@ public sealed class StorageService(
         Guid fileAssetId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveFileContextAsync(userId, sessionId, fileAssetId, cancellationToken);
         var fileAsset = await GetAuthorizedAsync(context, fileAssetId, cancellationToken);
         return ToResult(fileAsset);
     }
@@ -95,7 +104,7 @@ public sealed class StorageService(
         Guid fileAssetId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveFileContextAsync(userId, sessionId, fileAssetId, cancellationToken);
         var fileAsset = await GetAuthorizedAsync(context, fileAssetId, cancellationToken);
         if (fileAsset.Status != FileAssetStatus.Ready)
         {
@@ -131,7 +140,7 @@ public sealed class StorageService(
         string expectedRowVersion,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveFileContextAsync(userId, sessionId, fileAssetId, cancellationToken);
         var fileAsset = await store.GetForUpdateAsync(fileAssetId, cancellationToken) ?? throw NotFound();
         EnsureUploaderAuthorized(fileAsset, context);
 
@@ -170,6 +179,18 @@ public sealed class StorageService(
         }
 
         return ToResult(fileAsset);
+    }
+
+    private async Task<AccessContext> ResolveFileContextAsync(Guid userId, Guid sessionId, Guid fileId, CancellationToken ct)
+    {
+        if (accountContexts is null) return await accessContextResolver.ResolveAsync(userId, sessionId, ct);
+        var account = await accountContexts.PersonalAsync(userId, sessionId, ct);
+        var file = await store.GetAsync(fileId, ct) ?? throw NotFound();
+        // فقط نوع بافت از رکورد سرور گرفته می‌شود؛ ACL مالک/پیام/درس/ارزیابی بعداً بدون تغییر اجرا می‌شود.
+        if (file.OrganizationId is null) return account;
+        try { return await accessContextResolver.ResolveAsync(userId, sessionId, ct); }
+        catch (OrganizationException) { throw NotFound(); }
+        catch (GuardianException) { throw NotFound(); }
     }
 
     private async Task<FileAsset> GetAuthorizedAsync(

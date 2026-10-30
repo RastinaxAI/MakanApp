@@ -213,6 +213,9 @@ public sealed partial class EfMessagingStore
             .Select(pin => pin.MessageId)
             .ToArrayAsync(cancellationToken);
         var pinned = pinnedMessageIds.ToHashSet();
+        var activities = new Dictionary<Guid, AcademicActivityCardResult?>();
+        foreach (var message in messages.Where(m => m.AcademicActivityPublicationId.HasValue))
+            activities[message.Id] = await AcademicActivityProjection.CardAsync(dbContext, message, cancellationToken);
 
         return messages.Select(message => new ConversationMessageStoreRecord(
                 message,
@@ -229,7 +232,7 @@ public sealed partial class EfMessagingStore
                 reactions.GetValueOrDefault(message.Id, []),
                 mentions.GetValueOrDefault(message.Id, []),
                 attachments.GetValueOrDefault(message.Id, []),
-                pinned.Contains(message.Id)))
+                pinned.Contains(message.Id)) { AcademicActivity = activities.GetValueOrDefault(message.Id) })
             .ToArray();
     }
 }

@@ -31,22 +31,24 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
     public static readonly TimeSpan CursorLifetime = TimeSpan.FromHours(24);
     private readonly IRealtimeCursorProtector _protector = protection;
 
-    public async Task<AccountChangePageResult> ReadAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct)
+    public async Task<AccountChangePageResult> ReadAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct, ConversationScope? scope = null)
     {
         var started = Stopwatch.GetTimestamp();
         var outcome = "failed";
-        try { var result = await ReadCoreAsync(userId, sessionId, cursor, limit, ct); outcome = "success"; return result; }
+        try { var result = await ReadCoreAsync(userId, sessionId, cursor, limit, ct, scope); outcome = "success"; return result; }
         catch (RealtimeException e) { outcome = e.Code == RealtimeErrorCodes.ResyncRequired ? "resync" : "invalid"; throw; }
         catch (IdentityException) { outcome = "denied"; throw; }
         catch (SqlException e) when (e.Number is 1205 or -2) { throw new RealtimeException(RealtimeErrorCodes.Unavailable); }
         finally { telemetry.Replay(outcome, Stopwatch.GetElapsedTime(started).TotalMilliseconds); }
     }
 
-    private async Task<AccountChangePageResult> ReadCoreAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct)
+    private async Task<AccountChangePageResult> ReadCoreAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct, ConversationScope? scope)
     {
-        if (limit is < 1 or > 200) throw new RealtimeException(RealtimeErrorCodes.InvalidQuery);
-        var binding = await BindAsync(userId, sessionId, ct);
+        if (limit is < 1 or > 200 || scope.HasValue && !Enum.IsDefined(scope.Value)) throw new RealtimeException(RealtimeErrorCodes.InvalidQuery);
+        var binding = await BindAsync(userId, sessionId, ct, scope);
         if (binding.Context is null) throw new RealtimeException(RealtimeErrorCodes.ResyncRequired);
+        if (scope == ConversationScope.Organization && binding.Context.WorkspaceType != WorkspaceType.Organization)
+            throw new RealtimeException(RealtimeErrorCodes.InvalidQuery);
         // مرز exclusive، transaction باز و دیرCommitشده را از replay حذف نمی‌کند.
         var upper = await db.Database.SqlQuery<byte[]>($"SELECT CONVERT(binary(8), MIN_ACTIVE_ROWVERSION()) AS [Value]").SingleAsync(ct);
         if (cursor is null)
@@ -135,7 +137,7 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
             }
         }
         // Context عوض‌شده هنگام Query نباید پاسخ موفقِ بافت قبلی بگیرد.
-        var current = await BindAsync(userId, sessionId, ct);
+        var current = await BindAsync(userId, sessionId, ct, scope);
         if (binding.Revision != current.Revision) throw new RealtimeException(RealtimeErrorCodes.ResyncRequired);
         var next = stable.Length > limit ? Increment(scanned[^1].Revision) : upper;
         return new(changes, Encode(binding, next), hasMore, Encode(binding, upper), Epoch, binding.Revision,
@@ -214,17 +216,20 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
         if (!owner.HasValue || !MessagingChangeCursor.TryDecode(notification.Cursor, notification.ConversationId, out var sequence)) return null;
         try
         {
-            var binding = await fresh.BindAsync(owner.Value, sessionId, ct);
+            var sourceScope = await database.Conversations.AsNoTracking().Where(c => c.Id == notification.ConversationId).Select(c => (ConversationScope?)c.Scope).SingleOrDefaultAsync(ct);
+            var operationScope = sourceScope == ConversationScope.Personal ? ConversationScope.Personal : (ConversationScope?)null;
+            var binding = await fresh.BindAsync(owner.Value, sessionId, ct, operationScope);
+            if (notification.ContextRevision is not null && notification.ContextRevision != binding.Revision) return null;
             var id = await database.MessagingChangeEvents.AsNoTracking().Where(e => e.ConversationId == notification.ConversationId &&
                 e.ChangeSequence == sequence && e.ResourceId == notification.ResourceId && e.ChangeType == notification.Type).Select(e => (Guid?)e.Id).SingleOrDefaultAsync(ct);
             if (binding.Context is null || !id.HasValue || await fresh.AuthorizedConversationAsync(binding, id.Value, ct) is null) return null;
-            var current = await fresh.BindAsync(owner.Value, sessionId, ct);
+            var current = await fresh.BindAsync(owner.Value, sessionId, ct, operationScope);
             return current.Revision == binding.Revision ? binding.Revision : null;
         }
         catch (IdentityException) { telemetry.Denied(); return null; }
     }
 
-    private async Task<Binding> BindAsync(Guid userId, Guid sessionId, CancellationToken ct)
+    private async Task<Binding> BindAsync(Guid userId, Guid sessionId, CancellationToken ct, ConversationScope? operationScope = null)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var session = await db.UserSessions.AsNoTracking().SingleOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId &&
@@ -232,10 +237,13 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
             db.Users.Any(u => u.Id == userId && u.AccountStatus == UserAccountStatus.Active), ct)
             ?? throw new IdentityException(IdentityErrorCodes.AuthRequired, "نشست معتبر لازم است.");
         AccessContext? c;
-        try { c = await contexts.ResolveAsync(userId, sessionId, ct); }
+        // نشست و Account بالا از SQL اثبات شده‌اند؛ فقط درخواست صریح Personal بافت موقت می‌سازد.
+        try { c = operationScope == ConversationScope.Personal ? new(userId, userId, sessionId, WorkspaceType.Personal, null, null, null, null)
+            : await contexts.ResolveAsync(userId, sessionId, ct); }
         catch (Exception e) when (e is OrganizationException or GuardianException) { c = null; }
         var parts = new List<string> { userId.ToString(), sessionId.ToString(), Convert.ToHexString(session.RowVersion),
             session.SelectedMembershipId.ToString() ?? "", session.SelectedRole ?? "", session.SelectedSubjectOrganizationPersonId.ToString() ?? "", c is null ? "invalid" : "valid" };
+        parts.Add(c?.WorkspaceType == WorkspaceType.Personal ? "PersonalOperation" : "SelectedOrganization");
         if (c?.MembershipId is Guid membershipId)
         {
             var membership = await db.Memberships.AsNoTracking().SingleAsync(m => m.Id == membershipId, ct);

@@ -87,11 +87,12 @@ public sealed class ConversationsController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 30,
         [FromQuery(Name = "q")] string? search = null,
-        [FromQuery] Guid? folderId = null) =>
+        [FromQuery] Guid? folderId = null,
+        [FromQuery] ConversationScope? scope = null) =>
         Ok(await messagingService.GetMyConversationsAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
-            new GetConversationListQuery(filter, page, pageSize, search, folderId),
+            new GetConversationListQuery(filter, page, pageSize, search, folderId, scope),
             cancellationToken));
 
     [HttpGet("{conversationId:guid}/summary")]
@@ -107,11 +108,12 @@ public sealed class ConversationsController(
         [FromQuery] ConversationType? type,
         [FromQuery(Name = "q")] string? query,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 30) =>
+        [FromQuery] int pageSize = 30,
+        [FromQuery] ConversationScope? scope = null) =>
         Ok(await managementService.DiscoverAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
-            new DiscoverConversationsQuery(type, query, page, pageSize),
+            new DiscoverConversationsQuery(type, query, page, pageSize, scope),
             cancellationToken));
 
     [HttpGet("{conversationId:guid}/messages")]

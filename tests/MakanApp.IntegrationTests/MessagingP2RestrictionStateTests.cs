@@ -44,11 +44,11 @@ public sealed partial class MessagingEndpointsTests
     {
         using var setup = await CreateP2ManagedSetupAsync("groups", initiallyMember: true); var now = DateTime.UtcNow; factory.Clock.SetUtcNow(now);
         await using var realScope = factory.Services.CreateAsyncScope(); var advanced = false;
-        var resolver = new P2AfterContextResolver(realScope.ServiceProvider.GetRequiredService<IAccessContextResolver>(), () => { advanced = true; factory.Clock.SetUtcNow(now.AddSeconds(2)); });
+        var resolver = new P2AfterOperationContextStore(realScope.ServiceProvider.GetRequiredService<IMessagingOperationContextStore>(), () => { advanced = true; factory.Clock.SetUtcNow(now.AddSeconds(2)); });
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IHostedService>(); services.RemoveAll<IIdentitySecurity>(); services.AddSingleton(factory.Services.GetRequiredService<IIdentitySecurity>());
-            services.RemoveAll<IAccessContextResolver>(); services.AddSingleton<IAccessContextResolver>(resolver);
+            services.RemoveAll<IMessagingOperationContextStore>(); services.AddSingleton<IMessagingOperationContextStore>(resolver);
         }));
         using var client = host.CreateClient(); UseBearerToken(client, setup.Owner.AccessToken);
         try
@@ -61,12 +61,14 @@ public sealed partial class MessagingEndpointsTests
         }
         finally { factory.Clock.UseSystemTime(); }
     }
-    private sealed class P2AfterContextResolver(IAccessContextResolver inner, Action afterResolve) : IAccessContextResolver
+    private sealed class P2AfterOperationContextStore(IMessagingOperationContextStore inner, Action afterResolve) : IMessagingOperationContextStore
     {
-        public async Task<AccessContext> ResolveAsync(Guid userId, Guid sessionId, CancellationToken ct)
+        public async Task<bool> HasActiveAccountSessionAsync(Guid userId, Guid sessionId, DateTime nowUtc, CancellationToken ct)
         {
-            // مجوز از resolver واقعی می‌آید؛ فقط گذر ساعت میان validation و transaction کنترل می‌شود.
-            var context = await inner.ResolveAsync(userId, sessionId, ct); afterResolve(); return context;
+            // اعتبار نشست از SQL واقعی می‌آید؛ فقط ساعت پس از تشخیص بافت شخصی و قبل از Store جلو می‌رود.
+            var active = await inner.HasActiveAccountSessionAsync(userId, sessionId, nowUtc, ct); afterResolve(); return active;
         }
+        public Task<bool> IsPersonalParticipantAsync(Guid userId, Guid conversationId, CancellationToken ct) =>
+            inner.IsPersonalParticipantAsync(userId, conversationId, ct);
     }
 }

@@ -301,7 +301,7 @@ public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory fact
     }
 
     [Fact]
-    public async Task UploaderMustUseTheMatchingCurrentWorkspace()
+    public async Task PersonalUploaderKeepsAccountFileAccessWhileOrganizationWorkspaceIsSelected()
     {
         using var client = factory.CreateClient();
         var user = await AuthenticateAsync(client);
@@ -316,8 +316,9 @@ public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory fact
 
         using var response = await client.GetAsync($"/api/v1/files/{file.Id}");
 
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Equal(StorageErrorCodes.FileNotAllowed, await ReadProblemCodeAsync(response));
+        response.EnsureSuccessStatusCode();
+        var actual = await ReadRequiredAsync<FileAssetResult>(response);
+        Assert.Equal(file.Id, actual.Id); Assert.Null(actual.OrganizationId);
     }
 
     private async Task<VerifyOtpResult> AuthenticateAsync(HttpClient client)

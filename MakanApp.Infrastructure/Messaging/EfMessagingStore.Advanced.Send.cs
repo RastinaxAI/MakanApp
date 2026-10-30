@@ -505,8 +505,8 @@ public sealed partial class EfMessagingStore
                 messageKind == MessageKind.Text ? GroupMemberCapability.SendMessages : GroupMemberCapability.SendMedia, nowUtc, cancellationToken);
             if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && dbContext.Database.CurrentTransaction is not null)
             {
-                var members = await MessengerRelationshipQuery.ClassMembers(dbContext).Where(m => m.ClassId == conversation.AcademicClassId &&
-                    m.OrganizationId == conversation.OrganizationId).Select(m => m.UserId).Distinct().ToArrayAsync(cancellationToken);
+                var members = await OfficialSpaceAccessQuery.Conversations(dbContext).Where(m => m.ConversationId == conversation.Id)
+                    .Select(m => m.UserId).Distinct().ToArrayAsync(cancellationToken);
                 await SynchronizeOfficialParticipantsAsync(conversation, userId, members, nowUtc, cancellationToken);
             }
             await EnsurePersonalAudienceSafetyAsync(conversation, userId, nowUtc, cancellationToken);
@@ -515,8 +515,8 @@ public sealed partial class EfMessagingStore
             if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
                 !await IsVerifiedAdultAsync(userId, cancellationToken)) throw ManagementNotAllowed();
             var canPublish = conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic &&
-                conversation.AcademicClassId.HasValue && await MessengerRelationshipQuery.ClassMembers(dbContext).AnyAsync(m =>
-                    m.UserId == userId && m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId, cancellationToken) ||
+                await OfficialSpaceAccessQuery.Conversations(dbContext).AnyAsync(m =>
+                    m.UserId == userId && m.ConversationId == conversation.Id && m.CanPublish, cancellationToken) ||
                 conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
                 (conversation.Type == ConversationType.Channel
                     ? participant.Role == ConversationParticipantRole.Owner ||

@@ -71,6 +71,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<OfficialSpaceProvision> OfficialSpaceProvisions => Set<OfficialSpaceProvision>();
+    public DbSet<AcademicActivityPublication> AcademicActivityPublications => Set<AcademicActivityPublication>();
+    public DbSet<AcademicActivityDelivery> AcademicActivityDeliveries => Set<AcademicActivityDelivery>();
     public DbSet<ConversationInvitation> ConversationInvitations => Set<ConversationInvitation>();
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<ConversationUserState> ConversationUserStates => Set<ConversationUserState>();

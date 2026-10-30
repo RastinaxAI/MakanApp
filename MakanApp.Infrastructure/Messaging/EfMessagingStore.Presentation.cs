@@ -135,14 +135,14 @@ public sealed partial class EfMessagingStore : IMessagingPresentationStore
     private async Task AuthorizeFolderOverridesAsync(Guid userId, Guid[] conversationIds, AccessContext context, CancellationToken cancellationToken)
     {
         if (conversationIds.Length == 0) return;
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         // همان مرز خواندن فهرست گفتگوها، قبل از mutation و به‌صورت batch؛ انتخاب پوشه مجوز تازه نیست.
         var allowed = await (from c in dbContext.Conversations
             join p in dbContext.ConversationParticipants on c.Id equals p.ConversationId
             where conversationIds.Contains(c.Id) && p.UserId == userId && p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null &&
                 (c.Type != ConversationType.Saved || c.SavedOwnerUserId == userId) &&
-                (c.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic || c.AcademicClassId != null &&
-                    officialMembers.Any(m => m.UserId == userId && m.ClassId == c.AcademicClassId && m.OrganizationId == c.OrganizationId)) &&
+                (c.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+                    officialMembers.Any(m => m.UserId == userId && m.ConversationId == c.Id)) &&
                 (context.WorkspaceType == WorkspaceType.Personal && c.Scope == ConversationScope.Personal && context.OrganizationId == null ||
                  context.WorkspaceType == WorkspaceType.Organization && c.Scope == ConversationScope.Organization && c.OrganizationId == context.OrganizationId &&
                     dbContext.Memberships.Any(m => m.Id == context.MembershipId && m.UserId == userId && m.OrganizationId == c.OrganizationId &&

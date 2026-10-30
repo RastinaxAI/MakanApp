@@ -32,7 +32,8 @@ public sealed record DiscoverConversationsQuery(
     ConversationType? Type,
     string? Query,
     int Page = 1,
-    int PageSize = 30);
+    int PageSize = 30,
+    ConversationScope? Scope = null);
 
 public sealed record StartOwnershipTransferCommand(Guid TargetUserId);
 

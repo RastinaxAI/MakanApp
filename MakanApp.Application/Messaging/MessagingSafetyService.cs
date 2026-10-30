@@ -9,7 +9,8 @@ public sealed class MessagingSafetyService(
     IAccessContextResolver accessContextResolver,
     IMessagingSafetyStore store,
     MessagingOptions options,
-    TimeProvider timeProvider) : IMessagingSafetyService
+    TimeProvider timeProvider,
+    MessagingOperationContextResolver? operationContexts = null) : IMessagingSafetyService
 {
     private const int SearchSnippetLength = 240;
 
@@ -38,6 +39,7 @@ public sealed class MessagingSafetyService(
             query.SenderUserId == Guid.Empty ||
             query.TopicId == Guid.Empty ||
             query.Kind.HasValue && !Enum.IsDefined(query.Kind.Value) ||
+            query.Scope.HasValue && !Enum.IsDefined(query.Scope.Value) ||
             !IsUtc(query.FromUtc) || !IsUtc(query.ToUtc) ||
             query.FromUtc.HasValue && query.ToUtc.HasValue && query.FromUtc >= query.ToUtc)
         {
@@ -56,7 +58,12 @@ public sealed class MessagingSafetyService(
             throw Error(MessagingErrorCodes.SearchQueryInvalid, "تعداد نتایج جستجو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : query.Scope.HasValue ? await operationContexts.ScopeAsync(userId, sessionId, query.Scope.Value, cancellationToken)
+            : query.ConversationId.HasValue ? await operationContexts.ConversationAsync(userId, sessionId, query.ConversationId.Value, cancellationToken)
+            : await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        if (query.Scope == ConversationScope.Organization && context.WorkspaceType != MakanApp.Domain.Organization.WorkspaceType.Organization)
+            throw Error(MessagingErrorCodes.SearchQueryInvalid, "برای جست‌وجوی سازمانی، بافت سازمانی معتبر لازم است.");
         var page = await store.SearchMessagesAsync(
             userId,
             context,
@@ -91,7 +98,8 @@ public sealed class MessagingSafetyService(
             throw Error(MessagingErrorCodes.UserBlockNotAllowed, "این کاربر قابل مسدودسازی نیست.");
         }
 
-        _ = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        _ = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.PersonalAsync(userId, sessionId, cancellationToken);
         var result = await store.BlockUserAsync(
             userId,
             blockedUserId,
@@ -117,7 +125,8 @@ public sealed class MessagingSafetyService(
             throw Error(MessagingErrorCodes.UserBlockNotAllowed, "این کاربر قابل رفع مسدودی نیست.");
         }
 
-        _ = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        _ = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.PersonalAsync(userId, sessionId, cancellationToken);
         await store.UnblockUserAsync(userId, blockedUserId, UtcNow(), cancellationToken);
     }
 
@@ -126,7 +135,8 @@ public sealed class MessagingSafetyService(
         Guid sessionId,
         CancellationToken cancellationToken)
     {
-        _ = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        _ = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.PersonalAsync(userId, sessionId, cancellationToken);
         var records = await store.GetBlockedUsersAsync(userId, cancellationToken);
         return records.Select(record => new BlockedUserResult(
             record.Block.Id,
@@ -157,7 +167,8 @@ public sealed class MessagingSafetyService(
             throw Error(MessagingErrorCodes.ReportNotAllowed, "توضیح گزارش از طول مجاز بیشتر است.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.ConversationAsync(userId, sessionId, conversationId, cancellationToken);
         var report = await store.ReportMessageAsync(
             userId,
             conversationId,
@@ -184,7 +195,8 @@ public sealed class MessagingSafetyService(
             throw Error(MessagingErrorCodes.ReportMessageNotFound, "گزارش یافت نشد.");
         }
 
-        _ = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        _ = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.PersonalAsync(userId, sessionId, cancellationToken);
         return Map(await store.GetMyReportAsync(userId, reportId, cancellationToken));
     }
 

@@ -15,6 +15,7 @@ public sealed class Conversation
     public ConversationScope Scope { get; private set; }
     public Guid? OrganizationId { get; private set; }
     public Guid? AcademicClassId { get; private set; }
+    public bool IsOfficialOrganizationSpace { get; private set; }
     public Guid? DirectUserLowId { get; private set; }
     public Guid? DirectUserHighId { get; private set; }
     public Guid? SavedOwnerUserId { get; private set; }
@@ -208,11 +209,18 @@ public sealed class Conversation
 
     public void BindAcademicClass(Guid classId)
     {
-        if (classId == Guid.Empty || ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-            Type != ConversationType.Group || Scope != ConversationScope.Organization ||
+        if (classId == Guid.Empty || IsOfficialOrganizationSpace || ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+            Type is not ConversationType.Group and not ConversationType.Channel || Scope != ConversationScope.Organization ||
             AcademicClassId.HasValue && AcademicClassId != classId)
             throw new InvalidOperationException("اتصال رسمی کلاس معتبر نیست.");
         AcademicClassId = classId;
+    }
+
+    public static Conversation CreateOfficialOrganization(ConversationType purpose, Guid organizationId, string title, DateTime now)
+    {
+        var conversation = CreateSystemManagedAcademic(purpose, organizationId, title, null, now);
+        conversation.IsOfficialOrganizationSpace = true;
+        return conversation;
     }
 
     public long AllocateNextMessageSequence()

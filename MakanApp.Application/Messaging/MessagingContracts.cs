@@ -45,7 +45,8 @@ public sealed record GetConversationListQuery(
     int Page = 1,
     int PageSize = 30,
     string? Search = null,
-    Guid? FolderId = null);
+    Guid? FolderId = null,
+    ConversationScope? Scope = null);
 
 public sealed record ConversationOrganizationBadgeResult(
     Guid OrganizationId,
@@ -71,7 +72,11 @@ public sealed record ConversationSummaryResult(
     DateTime? MutedUntilUtc,
     bool IsPinned,
     bool IsManuallyUnread,
-    ConversationOrganizationBadgeResult? Organization);
+    ConversationOrganizationBadgeResult? Organization)
+{
+    public OfficialSpaceMetadata? Official { get; init; }
+    public bool IsOfficial => Official is not null;
+}
 
 public sealed record GetConversationMessagesQuery(
     long? BeforeSequence,
@@ -127,7 +132,11 @@ public sealed record ConversationMessageResult(
     bool IsPinned,
     string Version,
     Guid? TopicId = null,
-    bool IsSilent = false);
+    bool IsSilent = false)
+{
+    public string OriginKind { get; init; } = "User";
+    public AcademicActivityCardResult? AcademicActivity { get; init; }
+}
 
 public sealed record ConversationMessagePageResult(
     IReadOnlyCollection<ConversationMessageResult> Messages,

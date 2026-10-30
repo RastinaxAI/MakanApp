@@ -5,6 +5,8 @@ using MakanApp.Application.Outbox;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Notification;
+using MakanApp.Application.Messaging;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Assessment;
 
@@ -15,19 +17,22 @@ public sealed partial class ExamService : IExamService
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
     private readonly StorageOptions _storageOptions;
+    private readonly IAcademicActivityPublisher? _activities;
 
     public ExamService(
         IAccessContextResolver accessContextResolver,
         IExamStore store,
         TimeProvider timeProvider,
         IOutbox outbox,
-        StorageOptions storageOptions)
+        StorageOptions storageOptions,
+        IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
         _storageOptions = storageOptions;
         _store = store;
         _timeProvider = timeProvider;
         _outbox = outbox;
+        _activities = activities;
     }
 
     public async Task<ExamEditorDto> CreateDraftAsync(
@@ -270,6 +275,11 @@ public sealed partial class ExamService : IExamService
             throw MapValidationException(exception);
         }
 
+        if (_activities is not null)
+            await _activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Exam,
+                record.Version.OrganizationId, record.Exam.ClassId, record.Version.Id, record.Version.VersionNumber,
+                userId, record.Version.Title, nowUtc, availableFromUtc: DateTime.SpecifyKind(record.Version.AvailableFromUtc, DateTimeKind.Utc),
+                availableUntilUtc: DateTime.SpecifyKind(record.Version.AvailableUntilUtc, DateTimeKind.Utc)), cancellationToken);
         _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
             Guid.NewGuid(),
             record.Exam.OrganizationId,

@@ -64,6 +64,10 @@ public sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .WithMany()
             .HasForeignKey(message => message.ConversationId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<AcademicActivityPublication>().WithMany()
+            .HasForeignKey(x => x.AcademicActivityPublicationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(x => new { x.AcademicActivityPublicationId, x.ConversationId }).IsUnique()
+            .HasFilter("[AcademicActivityPublicationId] IS NOT NULL");
         builder.HasOne<ConversationTopic>().WithMany()
             .HasForeignKey(message => new { message.TopicId, message.ConversationId })
             .HasPrincipalKey(topic => new { topic.Id, topic.ConversationId }).OnDelete(DeleteBehavior.Restrict);

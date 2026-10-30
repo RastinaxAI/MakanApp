@@ -18,10 +18,10 @@ public sealed partial class EfMessagingStore
             .Select(u => new { IsAdult = u.CommunicationAgeCategory == CommunicationAgeCategory.Adult && u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified })
             .SingleOrDefaultAsync(ct) ?? throw RecipientNotAvailable();
         var related = MessengerRelationshipQuery.RelatedUsers(dbContext, subjectId, now);
-        var official = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var official = OfficialSpaceAccessQuery.Conversations(dbContext);
         // عضویت کلاس مرجع است؛ participant تازه ممکن است هنوز در همان transaction ذخیره نشده باشد.
         var audienceIds = conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic
-            ? official.Where(m => m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId).Select(m => m.UserId)
+            ? official.Where(m => m.ConversationId == conversation.Id).Select(m => m.UserId)
             : dbContext.ConversationParticipants.Where(p => p.ConversationId == conversation.Id && p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null).Select(p => p.UserId);
         // یک query برای همهٔ مخاطبان بالقوهٔ مجاز؛ نه یک profile lookup به‌ازای هر عضو.
         var viewers = from u in dbContext.Users

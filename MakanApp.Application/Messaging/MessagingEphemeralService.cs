@@ -7,26 +7,26 @@ namespace MakanApp.Application.Messaging;
 public sealed class MessagingEphemeralService(
     IAccessContextResolver contexts, IMessagingEphemeralAccessStore access,
     IMessagingEphemeralState state, IMessagingEphemeralNotifier notifier,
-    MessagingEphemeralOptions options, TimeProvider clock)
+    MessagingEphemeralOptions options, TimeProvider clock, MessagingOperationContextResolver? operationContexts = null)
 {
     private DateTime Now => clock.GetUtcNow().UtcDateTime;
 
     public async Task ConnectAsync(EphemeralConnection connection, CancellationToken cancellationToken)
     {
-        await contexts.ResolveAsync(connection.UserId, connection.SessionId, cancellationToken);
+        await ResolveAccountAsync(connection.UserId, connection.SessionId, cancellationToken);
         state.Connect(connection, Now);
     }
 
     public async Task SubscribeConversationAsync(EphemeralConnection connection, Guid conversationId, CancellationToken cancellationToken)
     {
-        var context = await AuthorizeConnectionAsync(connection, cancellationToken);
+        var context = await AuthorizeConnectionAsync(connection, cancellationToken, conversationId);
         await access.AuthorizeTypingRecipientAsync(connection.UserId, connection.UserId, conversationId, context, Now, cancellationToken);
         state.SubscribeConversation(connection.ConnectionId, conversationId);
     }
 
     public async Task SetTypingAsync(EphemeralConnection connection, Guid conversationId, bool isTyping, CancellationToken cancellationToken)
     {
-        var context = await AuthorizeConnectionAsync(connection, cancellationToken);
+        var context = await AuthorizeConnectionAsync(connection, cancellationToken, conversationId);
         await access.AuthorizeTypingAsync(connection.UserId, conversationId, context, Now, cancellationToken);
         state.SetTyping(connection.ConnectionId, conversationId, isTyping, Now);
         await FlushAsync(cancellationToken);
@@ -51,7 +51,7 @@ public sealed class MessagingEphemeralService(
 
     public async Task<PresenceResult> GetPresenceAsync(Guid userId, Guid sessionId, Guid targetUserId, CancellationToken cancellationToken)
     {
-        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveAccountAsync(userId, sessionId, cancellationToken);
         return await PresenceCoreAsync(userId, targetUserId, context, cancellationToken);
     }
 
@@ -76,7 +76,7 @@ public sealed class MessagingEphemeralService(
                     {
                         try
                         {
-                            var context = await contexts.ResolveAsync(observer.UserId, observer.SessionId, cancellationToken);
+                            var context = await ResolveAccountAsync(observer.UserId, observer.SessionId, cancellationToken);
                             var result = await PresenceCoreAsync(observer.UserId, change.UserId, context, cancellationToken);
                             // Hidden را بر اثر فعالیت مقصد broadcast نمی‌کنیم؛ زمان رخداد هم می‌تواند نشت باشد.
                             // وقتی Online مخفی است، حتی تکرار Recently با ریتم heartbeat نباید فعالیت را لو بدهد.
@@ -98,7 +98,7 @@ public sealed class MessagingEphemeralService(
         {
             try
             {
-                var context = await contexts.ResolveAsync(source.UserId, source.SessionId, cancellationToken);
+                var context = await ResolveConversationAsync(source.UserId, source.SessionId, conversationId, cancellationToken);
                 await access.AuthorizeTypingAsync(source.UserId, conversationId, context, Now, cancellationToken);
                 sourceAllowed = true;
                 break;
@@ -111,7 +111,7 @@ public sealed class MessagingEphemeralService(
         {
             try
             {
-                var context = await contexts.ResolveAsync(observer.UserId, observer.SessionId, cancellationToken);
+                var context = await ResolveConversationAsync(observer.UserId, observer.SessionId, conversationId, cancellationToken);
                 await access.AuthorizeTypingRecipientAsync(observer.UserId, change.UserId, conversationId, context, Now, cancellationToken);
                 recipients.Add(observer.ConnectionId);
             }
@@ -138,11 +138,17 @@ public sealed class MessagingEphemeralService(
         return new(targetUserId, status, exact, Now.Add(options.ConnectionLease));
     }
 
-    private async Task<AccessContext> AuthorizeConnectionAsync(EphemeralConnection connection, CancellationToken cancellationToken)
+    private async Task<AccessContext> AuthorizeConnectionAsync(EphemeralConnection connection, CancellationToken cancellationToken, Guid? conversationId = null)
     {
         state.Consume(connection, Now);
-        return await contexts.ResolveAsync(connection.UserId, connection.SessionId, cancellationToken);
+        return conversationId.HasValue
+            ? await ResolveConversationAsync(connection.UserId, connection.SessionId, conversationId.Value, cancellationToken)
+            : await ResolveAccountAsync(connection.UserId, connection.SessionId, cancellationToken);
     }
 
     private static bool IsDenied(Exception exception) => exception is IdentityException or OrganizationException or GuardianException or MessagingException;
+    private Task<AccessContext> ResolveAccountAsync(Guid userId, Guid sessionId, CancellationToken ct) =>
+        operationContexts is null ? contexts.ResolveAsync(userId, sessionId, ct) : operationContexts.PersonalAsync(userId, sessionId, ct);
+    private Task<AccessContext> ResolveConversationAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct) =>
+        operationContexts is null ? contexts.ResolveAsync(userId, sessionId, ct) : operationContexts.ConversationAsync(userId, sessionId, conversationId, ct);
 }

@@ -9,6 +9,8 @@ public interface IOrganizationService
         Guid userId,
         CancellationToken cancellationToken);
 
+    Task<WorkspaceSnapshotResult> GetWorkspaceSnapshotAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<AccessContext> SelectWorkspaceAsync(
         Guid userId,
         Guid sessionId,
@@ -44,6 +46,11 @@ public interface IAccessContextResolver
         Guid userId,
         Guid sessionId,
         CancellationToken cancellationToken);
+}
+
+public interface IAccountOperationContextResolver
+{
+    Task<AccessContext> PersonalAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken);
 }
 
 public interface IOrganizationTransaction : IAsyncDisposable

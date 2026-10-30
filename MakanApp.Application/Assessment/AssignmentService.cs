@@ -5,6 +5,8 @@ using MakanApp.Application.Outbox;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
+using MakanApp.Application.Messaging;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Assessment;
 
@@ -14,17 +16,20 @@ public sealed partial class AssignmentService : IAssignmentService
     private readonly IAssignmentStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
+    private readonly IAcademicActivityPublisher? _activities;
 
     public AssignmentService(
         IAccessContextResolver accessContextResolver,
         IAssignmentStore store,
         TimeProvider timeProvider,
-        IOutbox outbox)
+        IOutbox outbox,
+        IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
         _outbox = outbox;
+        _activities = activities;
     }
 
     public async Task<AssignmentResult> CreateDraftAsync(
@@ -159,6 +164,10 @@ public sealed partial class AssignmentService : IAssignmentService
         }
 
         _store.AddRange(recipients);
+        if (_activities is not null)
+            await _activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Assignment,
+                record.Version.OrganizationId, record.Version.ClassId, record.Version.Id, record.Version.VersionNumber,
+                userId, record.Version.Title, nowUtc, dueAtUtc: DateTime.SpecifyKind(record.Version.DueAtUtc, DateTimeKind.Utc)), cancellationToken);
         _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
             Guid.NewGuid(),
             record.Assignment.OrganizationId,

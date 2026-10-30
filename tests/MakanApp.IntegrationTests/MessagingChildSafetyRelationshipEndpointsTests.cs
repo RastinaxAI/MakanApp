@@ -58,9 +58,9 @@ public sealed partial class MessagingEndpointsTests
         var assignment = await factory.CreateTeacherAssignmentAsync(school.OrganizationId, school.ClassId, teacherMembership.MembershipId);
         using var resolve = await managerClient.PostAsync($"/api/v1/organization/classes/{school.ClassId}/conversation", null);
         resolve.EnsureSuccessStatusCode(); var group = (await resolve.Content.ReadFromJsonAsync<OfficialClassConversationResult>(JsonOptions))!;
-        Assert.Equal(2, group.ActiveMemberCount);
+        Assert.Equal(3, group.ActiveMemberCount);
         using var managerRead = await managerClient.GetAsync($"/api/v1/conversations/{group.ConversationId}/messages");
-        Assert.Equal(HttpStatusCode.NotFound, managerRead.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, managerRead.StatusCode);
         await SelectOrganizationAsync(teacherClient, teacherMembership.MembershipId, OrganizationRole.Teacher);
         await SelectOrganizationAsync(childClient, school.StudentMembershipId, OrganizationRole.Student);
         await SendMessageAndReadAsync(teacherClient, group.ConversationId, Guid.NewGuid(), "پیام رسمی");

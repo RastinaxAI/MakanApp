@@ -13,7 +13,8 @@ namespace MakanApp.Infrastructure.Platform;
 
 public sealed class EfPlatformOperationsStore(
     MakanDbContext dbContext,
-    TimeProvider timeProvider) : IPlatformOperationsStore
+    TimeProvider timeProvider,
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IPlatformOperationsStore
 {
     public async Task<PlatformOrganizationPage> GetOrganizationsAsync(
         PlatformOrganizationQuery query,
@@ -174,6 +175,7 @@ public sealed class EfPlatformOperationsStore(
                 before,
                 organization.Status.ToString(),
                 cancellationToken));
+            if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
 
@@ -344,6 +346,7 @@ public sealed class EfPlatformOperationsStore(
             command.FromRole.ToString(),
             command.ToRole.ToString(),
             cancellationToken));
+        if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlatformMembershipMutationResult(
@@ -395,6 +398,7 @@ public sealed class EfPlatformOperationsStore(
             "Active",
             "Ended",
             cancellationToken));
+        if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlatformMembershipMutationResult(
@@ -817,6 +821,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             $"name={organization.Name}",
             cancellationToken));
+        if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();

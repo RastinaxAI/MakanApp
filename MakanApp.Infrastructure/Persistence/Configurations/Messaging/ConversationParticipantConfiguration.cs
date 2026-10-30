@@ -16,7 +16,7 @@ public sealed class ConversationParticipantConfiguration :
             table.HasCheckConstraint("CK_ConversationParticipants_Role", "[Role] IN (1, 2, 3)");
             table.HasCheckConstraint(
                 "CK_ConversationParticipants_Lifecycle",
-                "([Status] = 1 AND [EndedAtUtc] IS NULL AND [EndedByUserId] IS NULL) OR ([Status] IN (2, 3) AND [EndedAtUtc] IS NOT NULL AND [EndedByUserId] IS NOT NULL)");
+                "([Status] = 1 AND [EndedAtUtc] IS NULL AND [EndedByUserId] IS NULL AND [EndedBySystem]=0) OR ([Status] IN (2, 3) AND [EndedAtUtc] IS NOT NULL AND (([EndedByUserId] IS NOT NULL AND [EndedBySystem]=0) OR ([Status]=2 AND [EndedByUserId] IS NULL AND [EndedBySystem]=1)))");
             table.HasCheckConstraint(
                 "CK_ConversationParticipants_Cursors",
                 "[LastDeliveredMessageSequence] >= 0 AND [LastReadMessageSequence] >= 0 AND [LastReadMessageSequence] <= [LastDeliveredMessageSequence]");

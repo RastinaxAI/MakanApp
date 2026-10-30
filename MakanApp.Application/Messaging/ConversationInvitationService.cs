@@ -14,20 +14,20 @@ public interface IConversationInvitationStore
     Task<ConversationInvitationResult> CompleteInvitationAsync(Guid actorId, Guid sessionId, Guid invitationId,
         ConversationInvitationStatus status, AccessContext access, string correlationId, DateTime nowUtc, CancellationToken ct);
 }
-public sealed class ConversationInvitationService(IConversationInvitationStore store, IAccessContextResolver access, TimeProvider clock)
+public sealed class ConversationInvitationService(IConversationInvitationStore store, IAccessContextResolver access, TimeProvider clock, MessagingOperationContextResolver? operationContexts = null)
 {
     public async Task<ConversationInvitationResult> InviteAsync(Guid actorId, Guid sessionId, Guid conversationId,
         CreateConversationInvitationCommand command, string correlationId, CancellationToken ct)
     {
         try { _ = ConversationInvitation.Create(conversationId, actorId, command.TargetUserId, command.ExpiresAtUtc, clock.GetUtcNow().UtcDateTime); }
         catch (ArgumentException) { throw new MessagingException(MessagingErrorCodes.ManagedConversationInvalid, "دعوت معتبر نیست."); }
-        return await store.InviteAsync(actorId, sessionId, conversationId, command, await access.ResolveAsync(actorId, sessionId, ct),
+        return await store.InviteAsync(actorId, sessionId, conversationId, command, operationContexts is null ? await access.ResolveAsync(actorId, sessionId, ct) : await operationContexts.ConversationAsync(actorId, sessionId, conversationId, ct),
             correlationId, clock.GetUtcNow().UtcDateTime, ct);
     }
     public Task<IReadOnlyCollection<ConversationInvitationResult>> ListAsync(Guid actorId, CancellationToken ct) =>
         store.ListInvitationsAsync(actorId, clock.GetUtcNow().UtcDateTime, ct);
     public async Task<ConversationInvitationResult> CompleteAsync(Guid actorId, Guid sessionId, Guid invitationId,
         ConversationInvitationStatus status, string correlationId, CancellationToken ct) =>
-        await store.CompleteInvitationAsync(actorId, sessionId, invitationId, status, await access.ResolveAsync(actorId, sessionId, ct),
+        await store.CompleteInvitationAsync(actorId, sessionId, invitationId, status, operationContexts is null ? await access.ResolveAsync(actorId, sessionId, ct) : await operationContexts.InvitationAsync(actorId, sessionId, invitationId, ct),
             correlationId, clock.GetUtcNow().UtcDateTime, ct);
 }

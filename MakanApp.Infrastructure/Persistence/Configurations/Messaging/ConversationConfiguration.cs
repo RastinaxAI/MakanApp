@@ -13,7 +13,8 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
     {
         builder.ToTable("Conversations", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_Conversations_AcademicClass", "[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type]=2 AND [Scope]=2 AND [OrganizationId] IS NOT NULL)");
+            table.HasCheckConstraint("CK_Conversations_AcademicClass", "[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [IsOfficialOrganizationSpace]=0)");
+            table.HasCheckConstraint("CK_Conversations_OfficialOrganization", "[IsOfficialOrganizationSpace]=0 OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [AcademicClassId] IS NULL)");
             table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3, 4)");
             table.HasCheckConstraint("CK_Conversations_Scope", "[Scope] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_Status", "[Status] IN (1, 2)");
@@ -52,7 +53,8 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
         });
         builder.HasKey(conversation => conversation.Id);
         builder.HasIndex(c => c.OrganizationId);
-        builder.HasIndex(c => new { c.OrganizationId, c.AcademicClassId }).IsUnique().HasFilter("[AcademicClassId] IS NOT NULL");
+        builder.HasIndex(c => new { c.OrganizationId, c.AcademicClassId, c.Type }).IsUnique().HasFilter("[AcademicClassId] IS NOT NULL");
+        builder.HasIndex(c => new { c.OrganizationId, c.Type }).IsUnique().HasFilter("[IsOfficialOrganizationSpace]=1");
         builder.HasOne<MakanApp.Domain.Academic.Class>().WithMany()
             .HasForeignKey(c => new { c.OrganizationId, c.AcademicClassId })
             .HasPrincipalKey(c => new { c.OrganizationId, c.Id }).OnDelete(DeleteBehavior.Restrict);

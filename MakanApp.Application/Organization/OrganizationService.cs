@@ -12,13 +12,12 @@ public sealed class OrganizationService(
         CancellationToken cancellationToken)
     {
         var records = await store.GetWorkspaceRecordsAsync(userId, cancellationToken);
-        var workspaces = new List<WorkspaceResult>(records.Count + 1)
-        {
-            WorkspaceFactory.CreatePersonal()
-        };
-        workspaces.AddRange(records.Select(WorkspaceFactory.CreateOrganization));
-        return workspaces;
+        var snapshot = WorkspaceFactory.CreateSnapshot(records);
+        return snapshot.Workspaces.Where(w => w.WorkspaceType == WorkspaceType.Personal || w.CanEnter).ToArray();
     }
+
+    public async Task<WorkspaceSnapshotResult> GetWorkspaceSnapshotAsync(Guid userId, CancellationToken cancellationToken) =>
+        WorkspaceFactory.CreateSnapshot(await store.GetWorkspaceRecordsAsync(userId, cancellationToken));
 
     public async Task<AccessContext> SelectWorkspaceAsync(
         Guid userId,

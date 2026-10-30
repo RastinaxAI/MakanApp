@@ -30,6 +30,7 @@ public sealed partial class EfMessagingStore
             accessContext,
             cancellationToken);
         nowUtc = await EnsureAdvancedSessionAsync(userId, accessContext.SessionId, accessContext, cancellationToken);
+        if (message.AcademicActivityPublicationId.HasValue) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "ویرایش کارت سیستمی از مسیر پیام کاربر مجاز نیست.");
         if (message.Kind is MessageKind.Poll or MessageKind.Checklist) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "محتوای تعاملی به مسیر اختصاصی تعریف نیاز دارد.");
         EnsureMutableConversation(conversation);
         await EnsureCanSendAdvancedAsync(conversation, participant, userId, accessContext, message.Kind, nowUtc, cancellationToken);
@@ -110,6 +111,7 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         EnsureMutableConversation(conversation);
         ApplyExpectedMessageVersion(message, expectedVersion);
+        if (message.AcademicActivityPublicationId.HasValue) throw new MessagingException(MessagingErrorCodes.MessageNotEditable, "حذف کارت سیستمی از مسیر پیام کاربر مجاز نیست.");
         var isSender = message.SenderUserId == userId;
         var canModerate = conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
                           conversation.Type is ConversationType.Group or ConversationType.Channel &&

@@ -9,7 +9,20 @@ public sealed record WorkspaceResult(
     Guid? MembershipId,
     OrganizationRole? Role,
     string DisplayName,
-    string Status);
+    string Status)
+{
+    public MembershipStatus? MembershipStatus { get; init; }
+    public RoleAssignmentStatus? RoleStatus { get; init; }
+    public OrganizationStatus? OrganizationStatus { get; init; }
+    public bool IsEffective { get; init; }
+    public bool CanEnter { get; init; } = true;
+    public bool? IsVisible { get; init; } = true;
+    public bool HasEffectiveEducationalRole { get; init; }
+}
+
+public sealed record WorkspaceSnapshotResult(string Version, bool HasEffectiveEducationalRole,
+    bool? PersonalWorkspaceVisible, string PersonalVisibilityDecision,
+    IReadOnlyCollection<WorkspaceResult> Workspaces);
 
 public sealed record SelectWorkspaceCommand(
     WorkspaceType WorkspaceType,
@@ -65,7 +78,18 @@ public sealed record OrganizationWorkspaceRecord(
     Guid OrganizationId,
     string OrganizationName,
     Guid MembershipId,
-    OrganizationRole Role);
+    OrganizationRole Role,
+    MembershipStatus MembershipStatus = MembershipStatus.Active,
+    RoleAssignmentStatus RoleStatus = RoleAssignmentStatus.Active,
+    OrganizationStatus OrganizationStatus = OrganizationStatus.Active,
+    DateTime? MembershipEndedAtUtc = null,
+    DateTime? RoleEndedAtUtc = null)
+{
+    public bool IsEffective => MembershipStatus == MembershipStatus.Active && MembershipEndedAtUtc is null &&
+        RoleStatus == RoleAssignmentStatus.Active && RoleEndedAtUtc is null && OrganizationStatus == OrganizationStatus.Active;
+    public bool HasUnresolvedVisibility => RoleStatus == RoleAssignmentStatus.Active && RoleEndedAtUtc is null &&
+        MembershipEndedAtUtc is null && (MembershipStatus == MembershipStatus.Suspended || OrganizationStatus == OrganizationStatus.Suspended);
+}
 
 public sealed record InvitationWithOrganization(
     Invitation Invitation,

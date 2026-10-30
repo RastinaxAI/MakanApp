@@ -31,7 +31,7 @@ public sealed partial class EfMessagingStore
             throw ConversationNotFound();
         }
 
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         var rows = await (
             from participant in dbContext.ConversationParticipants.AsNoTracking()
             join user in dbContext.Users.AsNoTracking() on participant.UserId equals user.Id
@@ -41,8 +41,7 @@ public sealed partial class EfMessagingStore
             from file in photos.DefaultIfEmpty()
             where participant.ConversationId == conversationId &&
                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == participant.UserId &&
-                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
+                   officialMembers.Any(m => m.UserId == participant.UserId && m.ConversationId == conversation.Id)) &&
                   participant.Status == ConversationParticipantStatus.Active &&
                   participant.EndedAtUtc == null &&
                   user.Username != null &&

@@ -1,4 +1,5 @@
 using MakanApp.Domain.Storage;
+using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Storage;
 
@@ -6,7 +7,8 @@ public sealed record UploadFileCommand(
     string OriginalFileName,
     string ContentType,
     long DeclaredSizeBytes,
-    Stream Content);
+    Stream Content,
+    WorkspaceType? WorkspaceScope = null);
 
 public sealed record FileAssetResult(
     Guid Id,

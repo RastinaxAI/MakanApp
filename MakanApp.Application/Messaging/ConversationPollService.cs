@@ -6,7 +6,7 @@ using MakanApp.Domain.Messaging;
 namespace MakanApp.Application.Messaging;
 
 public sealed class ConversationPollService(IAccessContextResolver contexts, IConversationPollStore polls,
-    IMessagingStore messages, IContentSafetyProvider safety, TimeProvider clock)
+    IMessagingStore messages, IContentSafetyProvider safety, TimeProvider clock, MessagingOperationContextResolver? operationContexts = null)
 {
     public async Task<MessageReceiptResult> CreateAsync(Guid userId, Guid sessionId, Guid conversationId, CreateConversationPollCommand command, CancellationToken ct)
     {
@@ -18,7 +18,7 @@ public sealed class ConversationPollService(IAccessContextResolver contexts, ICo
                 command.IsAnonymous.Value, command.IsQuiz, command.CorrectOptionNumber, command.Explanation);
         }
         catch (ArgumentException ex) { throw Invalid(ex); }
-        var context = await contexts.ResolveAsync(userId, sessionId, ct);
+        var context = await ResolveAsync(userId, sessionId, conversationId, ct);
         var hash = SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { definition.Question, definition.Options,
             definition.AllowsMultipleAnswers, definition.IsAnonymous, definition.IsQuiz, definition.CorrectOptionNumber, definition.Explanation, command.TopicId, command.IsSilent }));
         var message = new SendMessageStoreCommand(command.ClientMessageId, MessageKind.Poll, definition.Question, [], null, [], TopicId: command.TopicId, IsSilent: command.IsSilent);
@@ -34,20 +34,20 @@ public sealed class ConversationPollService(IAccessContextResolver contexts, ICo
         return MessagingService.ToReceipt(await polls.CreatePollAsync(userId, sessionId, conversationId, message, definition, hash, gate.Evaluated, context, ct));
     }
     public async Task<ConversationPollResult> GetAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, CancellationToken ct) =>
-        await polls.GetPollAsync(userId, conversationId, messageId, await contexts.ResolveAsync(userId, sessionId, ct), ct);
+        await polls.GetPollAsync(userId, conversationId, messageId, await ResolveAsync(userId, sessionId, conversationId, ct), ct);
     public async Task<ConversationPollResult> VoteAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, VoteConversationPollCommand command, CancellationToken ct)
     {
         if (command.OptionNumbers is null || command.OptionNumbers.Count is < 1 or > ConversationPollDefinition.MaximumOptions ||
             command.OptionNumbers.Any(n => n is < 1 or > ConversationPollDefinition.MaximumOptions) || command.OptionNumbers.Distinct().Count() != command.OptionNumbers.Count) throw Invalid();
         var version = Version(command.ExpectedVoteVersion, true);
-        return await polls.VotePollAsync(userId, sessionId, conversationId, messageId, command.OptionNumbers.Order().ToArray(), version, await contexts.ResolveAsync(userId, sessionId, ct), ct);
+        return await polls.VotePollAsync(userId, sessionId, conversationId, messageId, command.OptionNumbers.Order().ToArray(), version, await ResolveAsync(userId, sessionId, conversationId, ct), ct);
     }
     public async Task<ConversationPollResult> CloseAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, CloseConversationPollCommand command, string correlationId, CancellationToken ct) =>
-        await polls.ClosePollAsync(userId, sessionId, conversationId, messageId, Version(command.ExpectedVersion)!, await contexts.ResolveAsync(userId, sessionId, ct), correlationId, ct);
+        await polls.ClosePollAsync(userId, sessionId, conversationId, messageId, Version(command.ExpectedVersion)!, await ResolveAsync(userId, sessionId, conversationId, ct), correlationId, ct);
     public async Task<ConversationPollVoterPageResult> GetVotersAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, int? optionNumber, int page, int pageSize, CancellationToken ct)
     {
         if (optionNumber is < 1 or > ConversationPollDefinition.MaximumOptions || page is < 1 or > 100000 || pageSize is < 1 or > 100) throw Invalid();
-        return await polls.GetPollVotersAsync(userId, conversationId, messageId, optionNumber, (page - 1) * pageSize, pageSize, await contexts.ResolveAsync(userId, sessionId, ct), ct);
+        return await polls.GetPollVotersAsync(userId, conversationId, messageId, optionNumber, (page - 1) * pageSize, pageSize, await ResolveAsync(userId, sessionId, conversationId, ct), ct);
     }
     private static byte[]? Version(string? encoded, bool optional = false)
     {
@@ -57,4 +57,7 @@ public sealed class ConversationPollService(IAccessContextResolver contexts, ICo
         throw Invalid();
     }
     private static MessagingException Invalid(Exception? ex = null) => new(MessagingErrorCodes.PollInvalid, "درخواست نظرسنجی معتبر نیست.", ex);
+    private Task<AccessContext> ResolveAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct) =>
+        operationContexts is null ? contexts.ResolveAsync(userId, sessionId, ct)
+            : operationContexts.ConversationAsync(userId, sessionId, conversationId, ct);
 }

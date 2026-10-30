@@ -14,7 +14,8 @@ public sealed record SearchMessagesQuery(
     string? SavedLabel = null,
     bool? HasAttachment = null,
     bool? HasLinks = null,
-    Guid? TopicId = null);
+    Guid? TopicId = null,
+    ConversationScope? Scope = null);
 
 public sealed record MessageSearchItemResult(
     Guid MessageId,

@@ -14,6 +14,7 @@ internal static class MessengerRelationshipQuery
         public Guid OrganizationId { get; init; }
         public Guid ClassId { get; init; }
         public Guid UserId { get; init; }
+        public Guid ReasonId { get; init; }
         public bool IsTeacher { get; init; }
     }
 
@@ -35,7 +36,7 @@ internal static class MessengerRelationshipQuery
                 role.Role == OrganizationRole.Student && role.Status == RoleAssignmentStatus.Active && role.EndedAtUtc == null &&
                 academicClass.OrganizationId == enrollment.OrganizationId && academicClass.Status == ClassStatus.Active &&
                 organization.Status == OrganizationStatus.Active
-            select new ClassMember { OrganizationId = enrollment.OrganizationId, ClassId = enrollment.ClassId, UserId = user.Id, IsTeacher = false };
+            select new ClassMember { OrganizationId = enrollment.OrganizationId, ClassId = enrollment.ClassId, UserId = user.Id, ReasonId = enrollment.Id, IsTeacher = false };
         var teachers =
             from assignment in db.TeacherAssignments
             join membership in db.Memberships on assignment.TeacherMembershipId equals membership.Id
@@ -49,7 +50,7 @@ internal static class MessengerRelationshipQuery
                 role.Status == RoleAssignmentStatus.Active && role.EndedAtUtc == null &&
                 user.AccountStatus == UserAccountStatus.Active && academicClass.OrganizationId == assignment.OrganizationId &&
                 academicClass.Status == ClassStatus.Active && organization.Status == OrganizationStatus.Active
-            select new ClassMember { OrganizationId = assignment.OrganizationId, ClassId = assignment.ClassId, UserId = user.Id, IsTeacher = true };
+            select new ClassMember { OrganizationId = assignment.OrganizationId, ClassId = assignment.ClassId, UserId = user.Id, ReasonId = assignment.Id, IsTeacher = true };
         return students.Union(teachers);
     }
 

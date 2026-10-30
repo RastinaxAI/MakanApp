@@ -11,7 +11,8 @@ using AcademicClass = MakanApp.Domain.Academic.Class;
 
 namespace MakanApp.Infrastructure.Academic;
 
-public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IAcademicStore
+public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime,
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IAcademicStore
 {
     public async Task<IAcademicTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -251,6 +252,7 @@ public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastru
     {
         try
         {
+            if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
             await realtime.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }

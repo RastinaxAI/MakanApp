@@ -1,4 +1,5 @@
 using MakanApp.Application.Messaging;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Realtime;
 
@@ -32,7 +33,7 @@ public sealed record AccountChangePageResult(IReadOnlyList<AccountChangeResult> 
 
 public interface IRealtimeSyncService
 {
-    Task<AccountChangePageResult> ReadAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct);
+    Task<AccountChangePageResult> ReadAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct, ConversationScope? scope = null);
 }
 
 public interface IRealtimeCursorProtector

@@ -11,15 +11,20 @@ public sealed class MessagingService(
     IContentSafetyProvider contentSafetyProvider,
     MessagingOptions options,
     TimeProvider timeProvider,
-    IMessagingEphemeralState? ephemeralState = null) : IMessagingService
+    IMessagingEphemeralState? ephemeralState = null,
+    MessagingOperationContextResolver? operationContexts = null) : IMessagingService
 {
     private const string SavedConversationTitle = "پیام‌های ذخیره‌شده";
+
+    private Task<AccessContext> ResolveConversationContextAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct) =>
+        operationContexts is null ? accessContextResolver.ResolveAsync(userId, sessionId, ct)
+            : operationContexts.ConversationAsync(userId, sessionId, conversationId, ct);
 
     public async Task<ConversationPeerReadStateResult> GetPeerReadStateAsync(
         Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return await store.GetPeerReadStateAsync(userId, conversationId, context, UtcNow(), cancellationToken);
     }
 
@@ -28,7 +33,8 @@ public sealed class MessagingService(
         Guid sessionId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.PersonalAsync(userId, sessionId, cancellationToken);
         var result = await store.GetOrCreateSavedConversationAsync(
             userId,
             context,
@@ -56,7 +62,8 @@ public sealed class MessagingService(
                 "مخاطب موردنظر برای شروع گفتگو در دسترس نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.ScopeAsync(userId, sessionId, command.Scope, cancellationToken);
         var result = await store.StartOrGetDirectConversationAsync(
             userId,
             command.TargetUserId,
@@ -70,7 +77,7 @@ public sealed class MessagingService(
     public async Task<ConversationSummaryResult> GetConversationSummaryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var records = await store.GetMyConversationsAsync(userId, context, ConversationListFilter.All, 1, 1,
             null, cancellationToken, conversationId: conversationId);
         return records.Count == 1 ? Map(records.Single()) : throw Error(MessagingErrorCodes.ConversationNotFound, "گفتگوی مجاز یافت نشد.");
@@ -83,12 +90,17 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         if (!Enum.IsDefined(query.Filter) || query.Page is <= 0 or > 100_000 ||
-            query.PageSize is <= 0 or > 100 || query.Search?.Trim().Length > 100 || query.FolderId == Guid.Empty)
+            query.PageSize is <= 0 or > 100 || query.Search?.Trim().Length > 100 || query.FolderId == Guid.Empty ||
+            query.Scope.HasValue && !Enum.IsDefined(query.Scope.Value))
         {
             throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی فهرست گفتگو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = query.Scope == ConversationScope.Personal && operationContexts is not null
+            ? await operationContexts.PersonalAsync(userId, sessionId, cancellationToken)
+            : await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        if (query.Scope == ConversationScope.Organization && context.WorkspaceType != MakanApp.Domain.Organization.WorkspaceType.Organization)
+            throw Error(MessagingErrorCodes.MessagePageInvalid, "برای فهرست سازمانی، بافت سازمانی معتبر لازم است.");
         var records = await store.GetMyConversationsAsync(
             userId,
             context,
@@ -111,7 +123,7 @@ public sealed class MessagingService(
         ValidateConversationId(conversationId);
         var limit = ValidatePage(query.BeforeSequence, query.Limit);
         if (query.TopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var page = await store.GetConversationMessagesAsync(
             userId,
             conversationId,
@@ -134,7 +146,7 @@ public sealed class MessagingService(
     {
         ValidateConversationId(conversationId);
         var storeCommand = ValidateSend(command);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var payloadHash = HashSendPayload(conversationId, storeCommand);
         var safety = await ApplySafetyGateAsync(
             userId,
@@ -195,7 +207,7 @@ public sealed class MessagingService(
         }
 
         var expectedVersion = DecodeVersion(command.ExpectedVersion);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var safetyCommand = await store.PrepareEditMessageSafetyAsync(userId, conversationId, messageId,
             context, command.Text, expectedVersion, UtcNow(), cancellationToken);
         var safety = await ApplySafetyGateAsync(userId, conversationId, context, safetyCommand,
@@ -223,7 +235,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateMessageIds(conversationId, messageId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var message = await store.DeleteMessageAsync(
             userId,
             conversationId,
@@ -243,7 +255,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateMessageIds(conversationId, messageId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var result = await store.DeleteMessageForMeAsync(
             userId,
             conversationId,
@@ -308,7 +320,7 @@ public sealed class MessagingService(
             throw Error(MessagingErrorCodes.ConversationStateConflict, "زمان پایان بی‌صدا باید در آینده باشد.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.SetConversationMuteAsync(
             userId,
             conversationId,
@@ -326,7 +338,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.SetConversationMuteAsync(
             userId,
             conversationId,
@@ -344,7 +356,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.MarkConversationUnreadAsync(
             userId,
             conversationId,
@@ -360,7 +372,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.ClearConversationHistoryAsync(
             userId,
             conversationId,
@@ -384,7 +396,8 @@ public sealed class MessagingService(
             throw Error(MessagingErrorCodes.MessageClientIdRequired, "شناسه پایدار پیام کلاینت الزامی است.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.ForwardAsync(userId, sessionId, sourceConversationId, command.DestinationConversationId, cancellationToken);
         var storeCommand = await store.PrepareForwardMessageSafetyAsync(
             userId,
             sourceConversationId,
@@ -436,7 +449,7 @@ public sealed class MessagingService(
             throw Error(MessagingErrorCodes.ReactionNotAllowed, "واکنش انتخاب‌شده مجاز نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var reaction = await store.AddReactionAsync(
             userId,
             conversationId,
@@ -465,7 +478,7 @@ public sealed class MessagingService(
             throw Error(MessagingErrorCodes.ReactionNotAllowed, "واکنش انتخاب‌شده مجاز نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         await store.RemoveReactionAsync(
             userId,
             conversationId,
@@ -484,7 +497,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateMessageIds(conversationId, messageId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return ToPin(await store.PinMessageAsync(
             userId,
             conversationId,
@@ -502,7 +515,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateMessageIds(conversationId, messageId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var pin = await store.UnpinMessageAsync(
             userId,
             conversationId,
@@ -530,7 +543,7 @@ public sealed class MessagingService(
         }
 
         var limit = ValidatePage(query.BeforeSequence, query.Limit);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var page = await store.GetConversationMediaAsync(
             userId,
             conversationId,
@@ -572,7 +585,7 @@ public sealed class MessagingService(
                 $"تعداد تغییرات هر صفحه باید بین 1 و {options.MaximumChangeLimit} باشد.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         var page = await store.GetConversationChangesAsync(
             userId,
             conversationId,
@@ -606,7 +619,7 @@ public sealed class MessagingService(
     {
         ValidateConversationId(conversationId);
         ValidateCursorSequence(command.UpToMessageSequence, MessagingErrorCodes.ReadCursorInvalid);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.AdvanceReadCursorAsync(
             userId,
             conversationId,
@@ -625,7 +638,7 @@ public sealed class MessagingService(
     {
         ValidateConversationId(conversationId);
         ValidateCursorSequence(command.UpToMessageSequence, MessagingErrorCodes.DeliveryCursorInvalid);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.AdvanceDeliveryCursorAsync(
             userId,
             conversationId,
@@ -642,7 +655,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         await store.EnsureRealtimeAccessAsync(
             userId,
             conversationId,
@@ -773,7 +786,11 @@ public sealed class MessagingService(
             record.IsPinned,
             Convert.ToBase64String(message.RowVersion),
             message.TopicId,
-            !isDeleted && message.IsSilent);
+            !isDeleted && message.IsSilent)
+        {
+            OriginKind = message.AcademicActivityPublicationId.HasValue ? "System" : "User",
+            AcademicActivity = isDeleted ? null : record.AcademicActivity
+        };
     }
 
     private static MessageReplySummaryResult MapReply(MessageReplySummaryStoreRecord reply) =>
@@ -835,7 +852,7 @@ public sealed class MessagingService(
                 ? new ConversationOrganizationBadgeResult(
                     result.Conversation.OrganizationId.Value,
                     result.OrganizationName)
-                : null);
+                : null) { Official = OfficialSpaceMetadata.From(result.Conversation) };
 
     private async Task<ConversationUserStateResult> SetArchivedAsync(
         Guid userId,
@@ -845,7 +862,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.SetConversationArchivedAsync(
             userId,
             conversationId,
@@ -863,7 +880,7 @@ public sealed class MessagingService(
         CancellationToken cancellationToken)
     {
         ValidateConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.SetConversationPinnedAsync(
             userId,
             conversationId,

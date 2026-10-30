@@ -53,7 +53,10 @@ public sealed record ConversationMessageStoreRecord(
     IReadOnlyCollection<MessageReactionSummaryStoreRecord> Reactions,
     IReadOnlyCollection<SafeMessagingIdentityRecord> Mentions,
     IReadOnlyCollection<MessageAttachmentStoreRecord> Attachments,
-    bool IsPinned);
+    bool IsPinned)
+{
+    public AcademicActivityCardResult? AcademicActivity { get; init; }
+}
 
 public sealed record ConversationMessagePageStoreResult(
     IReadOnlyCollection<ConversationMessageStoreRecord> Messages,

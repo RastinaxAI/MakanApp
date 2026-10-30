@@ -374,9 +374,9 @@ public sealed partial class EfMessagingStore
     private async Task<bool> HasProtectedAudienceAsync(Conversation conversation, CancellationToken cancellationToken)
     {
         if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
-            return await (from member in MessengerRelationshipQuery.ClassMembers(dbContext)
+            return await (from member in OfficialSpaceAccessQuery.Conversations(dbContext)
                 join user in dbContext.Users on member.UserId equals user.Id
-                where member.ClassId == conversation.AcademicClassId && member.OrganizationId == conversation.OrganizationId &&
+                where member.ConversationId == conversation.Id &&
                     (user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
                      user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified)
                 select member.UserId).AnyAsync(cancellationToken);

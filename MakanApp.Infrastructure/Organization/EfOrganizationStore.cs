@@ -8,7 +8,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Organization;
 
-public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IOrganizationStore
+public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime,
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IOrganizationStore
 {
     public async Task<IOrganizationTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -28,18 +29,14 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanA
                 on membership.OrganizationId equals organization.Id
             join roleAssignment in dbContext.RoleAssignments
                 on membership.Id equals roleAssignment.MembershipId
-            where membership.UserId == userId &&
-                  membership.Status == MembershipStatus.Active &&
-                  membership.EndedAtUtc == null &&
-                  organization.Status == OrganizationStatus.Active &&
-                  roleAssignment.Status == RoleAssignmentStatus.Active &&
-                  roleAssignment.EndedAtUtc == null
+            where membership.UserId == userId
             orderby organization.Name, roleAssignment.Role
             select new OrganizationWorkspaceRecord(
                 organization.Id,
                 organization.Name,
                 membership.Id,
-                roleAssignment.Role))
+                roleAssignment.Role, membership.Status, roleAssignment.Status, organization.Status,
+                membership.EndedAtUtc, roleAssignment.EndedAtUtc))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
@@ -66,7 +63,8 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanA
                 organization.Id,
                 organization.Name,
                 membership.Id,
-                roleAssignment.Role))
+                roleAssignment.Role, membership.Status, roleAssignment.Status, organization.Status,
+                membership.EndedAtUtc, roleAssignment.EndedAtUtc))
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -157,6 +155,7 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanA
     {
         try
         {
+            if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
             await realtime.CaptureSchoolAsync(cancellationToken);
             await dbContext.SaveChangesAsync(cancellationToken);
         }

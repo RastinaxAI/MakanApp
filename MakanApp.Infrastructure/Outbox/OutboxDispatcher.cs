@@ -72,7 +72,8 @@ public sealed class OutboxProcessor(
     TimeProvider timeProvider,
     WorkerTelemetry telemetry,
     ILogger<OutboxProcessor> logger,
-    IRealtimeInvalidationNotifier? realtimeNotifier = null)
+    IRealtimeInvalidationNotifier? realtimeNotifier = null,
+    MakanApp.Application.Messaging.IOfficialSpacesWorkHandler? officialSpaces = null)
 {
     public const int BatchSize = 50;
     public const int MaximumAttempts = 10;
@@ -166,6 +167,14 @@ public sealed class OutboxProcessor(
         {
             var candidate = await dbContext.OutboxMessages.AsNoTracking().SingleOrDefaultAsync(m =>
                 m.Id == messageId && m.ClaimToken == claimToken && m.ProcessedAtUtc == null, cancellationToken);
+            if (candidate is not null && officialSpaces?.Handles(candidate.MessageType) == true)
+            {
+                if (candidate.ClaimedUntilUtc is not DateTime until || until <= timeProvider.GetUtcNow().UtcDateTime)
+                { telemetry.RecordOutcome(WorkerTelemetry.IntegrationOutbox, "LeaseLost"); return; }
+                await officialSpaces.HandleAsync(candidate.Id, candidate.MessageType, candidate.Payload, cancellationToken);
+                await CompleteInvalidationAsync(messageId, claimToken, cancellationToken);
+                return;
+            }
             if (candidate?.MessageType == RealtimeInvalidationWriter.MessageType)
             {
                 if (candidate.ClaimedUntilUtc is not DateTime validUntil || validUntil <= timeProvider.GetUtcNow().UtcDateTime)

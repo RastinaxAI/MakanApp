@@ -6,14 +6,14 @@ using MakanApp.Domain.Messaging;
 namespace MakanApp.Application.Messaging;
 
 public sealed class ConversationChecklistService(IAccessContextResolver contexts, IConversationChecklistStore checklists,
-    IMessagingStore messages, IContentSafetyProvider safety, TimeProvider clock)
+    IMessagingStore messages, IContentSafetyProvider safety, TimeProvider clock, MessagingOperationContextResolver? operationContexts = null)
 {
     public async Task<MessageReceiptResult> CreateAsync(Guid userId, Guid sessionId, Guid conversationId,
         CreateConversationChecklistCommand command, CancellationToken ct)
     {
         if (conversationId == Guid.Empty || command.ClientMessageId == Guid.Empty || command.TopicId == Guid.Empty) throw Invalid();
         var definition = Definition(command.Title, command.Mode, command.Items);
-        var context = await contexts.ResolveAsync(userId, sessionId, ct);
+        var context = await ResolveAsync(userId, sessionId, conversationId, ct);
         var hash = SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { definition.Title, definition.Mode, definition.Items, command.TopicId, command.IsSilent }));
         var message = new SendMessageStoreCommand(command.ClientMessageId, MessageKind.Checklist, definition.Title, [], null, [], TopicId: command.TopicId, IsSilent: command.IsSilent);
         var existing = await checklists.PrepareChecklistCreationAsync(userId, conversationId, message, hash, context, ct);
@@ -23,7 +23,7 @@ public sealed class ConversationChecklistService(IAccessContextResolver contexts
     }
 
     public async Task<ConversationChecklistResult> GetAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, CancellationToken ct) =>
-        await checklists.GetChecklistAsync(userId, conversationId, messageId, await contexts.ResolveAsync(userId, sessionId, ct), ct);
+        await checklists.GetChecklistAsync(userId, conversationId, messageId, await ResolveAsync(userId, sessionId, conversationId, ct), ct);
 
     public async Task<ConversationChecklistResult> SetItemAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId, Guid itemId,
         SetChecklistItemCommand command, CancellationToken ct)
@@ -32,7 +32,7 @@ public sealed class ConversationChecklistService(IAccessContextResolver contexts
         var definitionVersion = Version(command.ExpectedDefinitionVersion)!;
         var stateVersion = Version(command.ExpectedStateVersion, true);
         return await checklists.SetChecklistItemAsync(userId, sessionId, conversationId, messageId, itemId, command.IsChecked.Value,
-            definitionVersion, stateVersion, await contexts.ResolveAsync(userId, sessionId, ct), ct);
+            definitionVersion, stateVersion, await ResolveAsync(userId, sessionId, conversationId, ct), ct);
     }
 
     public async Task<ConversationChecklistResult> UpdateAsync(Guid userId, Guid sessionId, Guid conversationId, Guid messageId,
@@ -40,7 +40,7 @@ public sealed class ConversationChecklistService(IAccessContextResolver contexts
     {
         var definition = Definition(command.Title, command.Mode, command.Items);
         var version = Version(command.ExpectedVersion)!;
-        var context = await contexts.ResolveAsync(userId, sessionId, ct);
+        var context = await ResolveAsync(userId, sessionId, conversationId, ct);
         var topicId = await checklists.PrepareChecklistDefinitionAsync(userId, conversationId, messageId, definition, version, context, ct);
         var hash = SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { messageId, command.ExpectedVersion, definition.Title, definition.Mode, definition.Items }));
         var evaluated = await EvaluateAsync(userId, conversationId, context, messageId, definition, topicId, messageId, hash, ct);
@@ -75,4 +75,7 @@ public sealed class ConversationChecklistService(IAccessContextResolver contexts
         throw Invalid();
     }
     private static MessagingException Invalid(Exception? ex = null) => new(MessagingErrorCodes.ChecklistInvalid, "درخواست چک‌لیست معتبر نیست.", ex);
+    private Task<AccessContext> ResolveAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct) =>
+        operationContexts is null ? contexts.ResolveAsync(userId, sessionId, ct)
+            : operationContexts.ConversationAsync(userId, sessionId, conversationId, ct);
 }

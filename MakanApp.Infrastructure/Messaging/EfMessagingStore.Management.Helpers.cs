@@ -63,8 +63,8 @@ public sealed partial class EfMessagingStore
         CancellationToken cancellationToken)
     {
         if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic &&
-            (!conversation.AcademicClassId.HasValue || !await MessengerRelationshipQuery.ClassMembers(dbContext).AnyAsync(m =>
-                m.UserId == actorUserId && m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId, cancellationToken)))
+            !await OfficialSpaceAccessQuery.Conversations(dbContext).AnyAsync(m =>
+                m.UserId == actorUserId && m.ConversationId == conversation.Id, cancellationToken))
             return false;
         if (conversation.Scope == ConversationScope.Personal)
         {
@@ -178,12 +178,11 @@ public sealed partial class EfMessagingStore
         bool alreadyExisted,
         CancellationToken cancellationToken)
     {
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         var participants = await dbContext.ConversationParticipants
             .Where(participant => participant.ConversationId == conversation.Id &&
                                   (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-                                   conversation.AcademicClassId != null && officialMembers.Any(m => m.UserId == participant.UserId &&
-                                       m.ClassId == conversation.AcademicClassId && m.OrganizationId == conversation.OrganizationId)) &&
+                                   officialMembers.Any(m => m.UserId == participant.UserId && m.ConversationId == conversation.Id)) &&
                                   participant.Status == ConversationParticipantStatus.Active &&
                                   participant.EndedAtUtc == null)
             .OrderBy(participant => participant.Role)

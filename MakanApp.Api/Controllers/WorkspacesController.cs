@@ -48,4 +48,10 @@ public sealed class WorkspacesController(
             cancellationToken);
         return Ok(result);
     }
+
+    [HttpGet("snapshot")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType<WorkspaceSnapshotResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<WorkspaceSnapshotResult>> GetSnapshot(CancellationToken cancellationToken) =>
+        Ok(await organizationService.GetWorkspaceSnapshotAsync(AuthenticatedSession.GetUserId(User), cancellationToken));
 }

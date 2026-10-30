@@ -5,11 +5,13 @@ using MakanApp.Application.Organization;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Storage;
+using MakanApp.Application.Messaging;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Academic;
 
 public sealed class ClassLessonService(IAccessContextResolver access, ISchoolReadStore permissions,
-    IClassLessonStore store, IFileAssetStore files, TimeProvider clock)
+    IClassLessonStore store, IFileAssetStore files, TimeProvider clock, IAcademicActivityPublisher? activities = null)
 {
     public async Task<ClassLessonResult> CreateAsync(Guid userId, Guid sessionId, Guid classId, CreateClassLessonCommand command, CancellationToken ct)
     {
@@ -73,6 +75,9 @@ public sealed class ClassLessonService(IAccessContextResolver access, ISchoolRea
         Version(lesson.RowVersion, command.ExpectedVersion);
         await ValidateFilesAsync(context, lesson.Attachments.Select(x => x.FileAssetId).ToArray(), lesson.Attachments.Select(x => x.FileAssetId).ToArray(), ct);
         try { lesson.Publish(Now()); } catch (ArgumentException) { throw Invalid(); }
+        if (activities is not null)
+            await activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Lesson, lesson.OrganizationId,
+                lesson.ClassId, lesson.Id, lesson.RevisionNumber, userId, lesson.Title, Now()), ct);
         await store.SaveAsync(ct); await tx.CommitAsync(ct);
         return await store.ResultAsync(lesson, false, ct);
     }

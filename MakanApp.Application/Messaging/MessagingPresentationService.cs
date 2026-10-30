@@ -3,12 +3,13 @@ using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Messaging;
 
-public sealed class MessagingPresentationService(IAccessContextResolver contexts, IMessagingPresentationStore store)
+public sealed class MessagingPresentationService(IAccessContextResolver contexts, IMessagingPresentationStore store,
+    MessagingOperationContextResolver? operationContexts = null)
 {
     private const int MaximumRawPresentationTextLength = 1024;
     public async Task<IReadOnlyCollection<ChatFolderResult>> GetFoldersAsync(Guid userId, Guid sessionId, CancellationToken cancellationToken)
     {
-        await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        await ResolveAccountAsync(userId, sessionId, cancellationToken);
         return await store.GetFoldersAsync(userId, cancellationToken);
     }
 
@@ -26,20 +27,21 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
         }
         catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "پوشه معتبر نیست.", ex); }
         var expected = Version(command.ExpectedVersion);
-        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await contexts.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.FolderAsync(userId, sessionId, command.Overrides, cancellationToken);
         return await store.SaveFolderAsync(userId, folderId, command, expected, context, cancellationToken);
     }
 
     public async Task DeleteFolderAsync(Guid userId, Guid sessionId, Guid folderId, string expectedVersion, CancellationToken cancellationToken)
     {
         var version = Version(expectedVersion) ?? throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "نسخه الزامی است.");
-        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveAccountAsync(userId, sessionId, cancellationToken);
         await store.DeleteFolderAsync(userId, folderId, version, context, cancellationToken);
     }
 
     public async Task<SavedMessageLabelsResult> GetSavedLabelsAsync(Guid userId, Guid sessionId, Guid messageId, CancellationToken cancellationToken)
     {
-        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveAccountAsync(userId, sessionId, cancellationToken);
         return await store.GetSavedLabelsAsync(userId, messageId, context, cancellationToken);
     }
 
@@ -53,7 +55,7 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
             labels = command.Labels.Select(SavedMessageLabel.Normalize).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         }
         catch (ArgumentException ex) { throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "برچسب معتبر نیست.", ex); }
-        var context = await contexts.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveAccountAsync(userId, sessionId, cancellationToken);
         return await store.ReplaceSavedLabelsAsync(userId, messageId, labels, Version(command.ExpectedVersion), context, cancellationToken);
     }
 
@@ -64,4 +66,6 @@ public sealed class MessagingPresentationService(IAccessContextResolver contexts
         catch (FormatException) { }
         throw new MessagingException(MessagingErrorCodes.PresentationInvalid, "نسخه معتبر نیست.");
     }
+    private Task<AccessContext> ResolveAccountAsync(Guid userId, Guid sessionId, CancellationToken ct) =>
+        operationContexts is null ? contexts.ResolveAsync(userId, sessionId, ct) : operationContexts.PersonalAsync(userId, sessionId, ct);
 }

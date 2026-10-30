@@ -85,7 +85,8 @@ public sealed partial class MessagingEndpointsTests
         await SelectOrganizationAsync(studentClient, school.StudentMembershipId, OrganizationRole.Student);
         var receipt = await CreateP2ChecklistAsync(teacherClient, id); var checklist = await ReadP2ChecklistAsync(studentClient, id, receipt.MessageId);
         await SetP2ChecklistAsync(studentClient, checklist, checklist.Items.First().ItemId, true);
-        Assert.Equal(HttpStatusCode.NotFound, (await managerClient.GetAsync(P2ChecklistRoute(id, receipt.MessageId))).StatusCode);
+        var managerView = await ReadP2ChecklistAsync(managerClient, id, receipt.MessageId);
+        Assert.All(managerView.Items, item => Assert.False(item.IsChecked));
         await factory.EndEnrollmentAsync(school.EnrollmentId);
         Assert.Equal(HttpStatusCode.NotFound, (await SetP2ChecklistResponseAsync(studentClient, checklist, checklist.Items.Last().ItemId, true)).StatusCode);
     }

@@ -1,5 +1,6 @@
 using MakanApp.Api.Authentication;
 using MakanApp.Application.Storage;
+using MakanApp.Domain.Organization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -17,6 +18,7 @@ public sealed class FilesController(IStorageService storageService) : Controller
     [ProducesResponseType<FileAssetResult>(StatusCodes.Status201Created)]
     public async Task<ActionResult<FileAssetResult>> Upload(
         [FromForm] UploadFileRequest request,
+        [FromQuery] WorkspaceType? workspaceScope,
         CancellationToken cancellationToken)
     {
         await using var content = request.File.OpenReadStream();
@@ -27,7 +29,7 @@ public sealed class FilesController(IStorageService storageService) : Controller
                 request.File.FileName,
                 request.File.ContentType,
                 request.File.Length,
-                content),
+                content, workspaceScope),
             cancellationToken);
         return CreatedAtAction(nameof(GetMetadata), new { fileId = result.Id }, result);
     }

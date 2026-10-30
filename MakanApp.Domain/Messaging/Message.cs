@@ -40,6 +40,7 @@ public sealed class Message
     }
 
     public Guid Id { get; private set; }
+    public Guid? AcademicActivityPublicationId { get; private set; }
     public Guid ConversationId { get; private set; }
     public Guid SenderParticipantId { get; private set; }
     public Guid SenderUserId { get; private set; }
@@ -144,6 +145,16 @@ public sealed class Message
             null,
             maximumTextLength,
             sentAtUtc);
+
+    public static Message CreateAcademicActivity(Guid conversationId, Guid senderParticipantId, Guid initiatedByUserId,
+        Guid publicationId, long sequence, string safeTitle, DateTime now)
+    {
+        if (publicationId == Guid.Empty) throw new ArgumentException("شناسه انتشار الزامی است.");
+        var message = CreateText(conversationId, senderParticipantId, initiatedByUserId, publicationId, sequence,
+            safeTitle, StorageMaximumTextLength, now);
+        message.AcademicActivityPublicationId = publicationId;
+        return message;
+    }
 
     public void SetContactCardSnapshot(Guid userId, string username, string displayName)
     {

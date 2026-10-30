@@ -8,7 +8,8 @@ namespace MakanApp.Application.Messaging;
 public sealed class ConversationManagementService(
     IAccessContextResolver accessContextResolver,
     IConversationManagementStore store,
-    TimeProvider timeProvider) : IConversationManagementService
+    TimeProvider timeProvider,
+    MessagingOperationContextResolver? operationContexts = null) : IConversationManagementService
 {
     public Task<ManagedConversationResult> CreateGroupAsync(
         Guid userId,
@@ -31,7 +32,7 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.GetDetailsAsync(userId, conversationId, context, cancellationToken));
     }
 
@@ -49,7 +50,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.MessagePageInvalid, "صفحه‌بندی اعضای گفتگو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         var result = await store.GetMembersAsync(
             userId,
             conversationId,
@@ -72,7 +73,7 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationAndTarget(conversationId, command.UserId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.AddMemberAsync(
             userId,
             conversationId,
@@ -95,7 +96,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ConversationManagementNotAllowed, "برای خروج خودتان از endpoint خروج استفاده کنید.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.RemoveMemberAsync(
             userId,
             conversationId,
@@ -112,7 +113,7 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.LeaveAsync(
             userId,
             conversationId,
@@ -136,7 +137,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ConversationRoleInvalid, "نقش درخواستی برای این عملیات معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.ChangeMemberRoleAsync(
             userId,
             conversationId,
@@ -162,7 +163,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ConversationPermissionRequired, "مجموعه مجوزها معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.UpdateMemberPermissionsAsync(
             userId,
             conversationId,
@@ -188,7 +189,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ManagedConversationInvalid, "تنظیمات گفتگو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.UpdateSettingsAsync(
             userId,
             conversationId,
@@ -207,13 +208,17 @@ public sealed class ConversationManagementService(
         DiscoverConversationsQuery query,
         CancellationToken cancellationToken)
     {
-        if (query.Type is not null and not ConversationType.Group and not ConversationType.Channel ||
+        if (query.Scope.HasValue && !Enum.IsDefined(query.Scope.Value) || query.Type is not null and not ConversationType.Group and not ConversationType.Channel ||
             query.Page <= 0 || query.PageSize is <= 0 or > 100 || query.Query?.Length > 160)
         {
             throw Error(MessagingErrorCodes.MessagePageInvalid, "فیلتر یا صفحه‌بندی کشف گفتگو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is not null && query.Scope.HasValue
+            ? await operationContexts.ScopeAsync(userId, sessionId, query.Scope.Value, cancellationToken)
+            : await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        if (query.Scope == ConversationScope.Organization && context.WorkspaceType != MakanApp.Domain.Organization.WorkspaceType.Organization)
+            throw Error(MessagingErrorCodes.MessagePageInvalid, "برای کشف سازمانی، بافت سازمانی معتبر لازم است.");
         var page = await store.DiscoverAsync(
             userId,
             query.Type,
@@ -248,7 +253,8 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.EntryAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.JoinPublicAsync(
             userId,
             conversationId,
@@ -270,7 +276,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.OwnershipTransferConflict, "مالکیت باید به عضو دیگری منتقل شود.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.StartOwnershipTransferAsync(
             userId,
             conversationId,
@@ -315,7 +321,7 @@ public sealed class ConversationManagementService(
         CancellationToken cancellationToken)
     {
         EnsureConversationId(conversationId);
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         return Map(await store.ArchiveAsync(
             userId,
             conversationId,
@@ -369,7 +375,8 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.ManagedConversationInvalid, "تنظیمات گفتگو معتبر نیست.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = operationContexts is null ? await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken)
+            : await operationContexts.ScopeAsync(userId, sessionId, command.Scope, cancellationToken);
         var hash = CreatePayloadHash(
             type,
             command.Scope,
@@ -411,7 +418,7 @@ public sealed class ConversationManagementService(
             throw Error(MessagingErrorCodes.OwnershipTransferNotFound, "درخواست انتقال مالکیت یافت نشد.");
         }
 
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
+        var context = await ResolveConversationAsync(userId, sessionId, conversationId, cancellationToken);
         var result = accept
             ? await store.AcceptOwnershipTransferAsync(userId, conversationId, transferId, context, UtcNow(), cancellationToken)
             : await store.DeclineOwnershipTransferAsync(userId, conversationId, transferId, context, UtcNow(), cancellationToken);
@@ -542,4 +549,7 @@ public sealed class ConversationManagementService(
     private DateTime UtcNow() => timeProvider.GetUtcNow().UtcDateTime;
 
     private static MessagingException Error(string code, string message) => new(code, message);
+    private Task<AccessContext> ResolveConversationAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct) =>
+        operationContexts is null ? accessContextResolver.ResolveAsync(userId, sessionId, ct)
+            : operationContexts.ConversationAsync(userId, sessionId, conversationId, ct);
 }

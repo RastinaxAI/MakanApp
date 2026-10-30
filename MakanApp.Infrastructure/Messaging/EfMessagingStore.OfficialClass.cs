@@ -17,10 +17,10 @@ public sealed partial class EfMessagingStore
         var academicClass = await dbContext.Classes.FromSqlInterpolated($"SELECT * FROM [academic].[Classes] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={classId} AND [OrganizationId]={access.OrganizationId}")
             .SingleOrDefaultAsync(ct) ?? throw ConversationNotFound();
         if (academicClass.Status != ClassStatus.Active) throw ConversationNotFound();
-        var members = await MessengerRelationshipQuery.ClassMembers(dbContext).Where(m => m.OrganizationId == access.OrganizationId && m.ClassId == classId)
+        var members = await OfficialSpaceAccessQuery.SourceReasons(dbContext, access.OrganizationId.Value, classId)
             .Select(m => m.UserId).Distinct().ToArrayAsync(ct);
         if (access.ActiveRole != OrganizationRole.Manager && !members.Contains(actorId)) throw ConversationNotFound();
-        var conversation = await dbContext.Conversations.SingleOrDefaultAsync(c => c.AcademicClassId == classId && c.OrganizationId == access.OrganizationId, ct);
+        var conversation = await dbContext.Conversations.SingleOrDefaultAsync(c => c.AcademicClassId == classId && c.OrganizationId == access.OrganizationId && c.Type == ConversationType.Group, ct);
         if (conversation is null)
         {
             conversation = Conversation.CreateSystemManagedAcademic(ConversationType.Group, access.OrganizationId.Value, academicClass.Title, null, nowUtc);
@@ -37,7 +37,7 @@ public sealed partial class EfMessagingStore
     {
         var participants = await dbContext.ConversationParticipants.Where(p => p.ConversationId == conversation.Id &&
             p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null).ToArrayAsync(ct);
-        foreach (var old in participants.Where(p => !members.Contains(p.UserId))) old.Remove(actorId, nowUtc);
+        foreach (var old in participants.Where(p => !members.Contains(p.UserId))) old.EndSystemAccess(nowUtc);
         foreach (var memberId in members.Where(id => participants.All(p => p.UserId != id)))
             dbContext.ConversationParticipants.Add(ConversationParticipant.CreateActive(conversation.Id, memberId, nowUtc));
     }

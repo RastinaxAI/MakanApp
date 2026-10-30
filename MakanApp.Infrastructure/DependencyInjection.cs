@@ -180,6 +180,15 @@ public static class DependencyInjection
         services.AddScoped<IMessagingPrivacyResolver, EfMessagingPrivacyResolver>();
         services.AddScoped<IMessagingDirectoryStore, EfMessagingDirectoryStore>();
         services.AddScoped<IMessagingService, MessagingService>();
+        services.AddScoped<IMessagingOperationContextStore, EfMessagingOperationContextStore>();
+        services.AddScoped<MessagingOperationContextResolver>();
+        services.AddScoped<IAccountOperationContextResolver>(sp => sp.GetRequiredService<MessagingOperationContextResolver>());
+        services.AddScoped<OfficialSpaceEventWriter>();
+        services.AddScoped<IAcademicActivityPublisher>(sp => sp.GetRequiredService<OfficialSpaceEventWriter>());
+        services.AddScoped<EfOfficialSpacesStore>();
+        services.AddScoped<IOfficialSpacesStore>(sp => sp.GetRequiredService<EfOfficialSpacesStore>());
+        services.AddScoped<OfficialSpacesService>();
+        services.AddScoped<IOfficialSpacesWorkHandler, OfficialSpacesWorkHandler>();
         var ephemeralOptions = new MessagingEphemeralOptions
         {
             TypingTtl = TimeSpan.FromSeconds(ReadPositiveInt(configuration, "Messaging:Ephemeral:TypingTtlSeconds", 6)),
