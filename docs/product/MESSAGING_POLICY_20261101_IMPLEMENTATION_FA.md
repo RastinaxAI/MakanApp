@@ -52,7 +52,9 @@ Ordinary، Student، Parent، Teacher و Manager با حساب/نشست و هو�
 
 `ClientOperationId` و hash بدنهٔ موجود حفظ شدند: Retry یکسان همان گفتگو و Receipt را برمی‌گرداند؛ تغییر Payload با همان شناسه `CONVERSATION_CREATION_CONFLICT` است.
 
-در Personal، مخاطب اولیهٔ مجاز دعوت واقعی دریافت می‌کند و تا پذیرش احرازشده Participant فعال نیست. انقضای پیش‌فرض مصوب **۳۰ روز از زمان سرور** است. در Organization، افزودن مجاز طبق قواعد قبلی انجام می‌شود. نتیجهٔ هر مخاطب: `Added`، `InvitationPending` یا `NotAvailable`. نتیجهٔ عمومی NotAvailable، علت خصوصی یا وجود حساب غیرقابل‌کشف را افشا نمی‌کند؛ شناسهٔ ورودی فقط در Receipt خود سازنده بازتاب داده می‌شود.
+در Personal، مخاطب اولیهٔ مجاز دعوت واقعی دریافت می‌کند و تا پذیرش احرازشده Participant فعال نیست. طبق اصلاح مصوب `2026-11-02`، انقضای پیش‌فرض **۷ روز از زمان ایجاد دعوت در سرور** است. این Policy فقط متعلق به دعوت اولیهٔ Messaging است و با Guardian یا سایر Domainها مشترک نیست. در Organization، افزودن مجاز طبق قواعد قبلی انجام می‌شود. نتیجهٔ هر مخاطب: `Added`، `InvitationPending` یا `NotAvailable`. نتیجهٔ عمومی NotAvailable، علت خصوصی یا وجود حساب غیرقابل‌کشف را افشا نمی‌کند؛ شناسهٔ ورودی فقط در Receipt خود سازنده بازتاب داده می‌شود.
+
+DTO ساخت `ExpiresAtUtc` دریافت نمی‌کند. زمان محاسبه‌شده در Invitation و Receipt ذخیره می‌شود و `initialTargets[].invitationExpiresAtUtc` همان مقدار واقعی را برمی‌گرداند. Retry با همان `ClientOperationId` و Payload، قبل یا بعد از انقضا، Invitation جدید نمی‌سازد و زمان قبلی را تغییر نمی‌دهد. Accept دعوت Pending در `now >= ExpiresAtUtc` مجاز نیست؛ ایجاد عملیات جدید با شناسهٔ تازه از Retry جداست. دعوت‌های قبلی با مهلت ذخیره‌شدهٔ خود باقی می‌مانند؛ Migration یا Backfill لازم نیست. سقف مستقل دعوت صریح، همچنان ۳۰ روز است.
 
 Receipt اولیه فقط به سازنده نمایش داده می‌شود و Snapshot ایجاد است؛ پس از پذیرش، وضعیت جاری را از API دعوت/اعضا بخوانید. افزودن مستقیم عضو Personal نیازمند دعوت و پذیرش است و `CONVERSATION_INVITATION_REQUIRED` می‌دهد. Invite Link موجود، ورود اختیاری کاربر و Join Request قبلی حفظ شده‌اند. Retry پذیرش، عضو یا اثر دوم نمی‌سازد.
 

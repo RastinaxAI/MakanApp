@@ -94,17 +94,49 @@ public sealed class MessagingPolicyRevisionTests
     }
 
     [Fact]
-    public void InitialInvitationReceiptDoesNotClaimActiveMembershipAndUsesApprovedThirtyDays()
+    public void InitialInvitationReceiptDoesNotClaimActiveMembershipAndUsesApprovedSevenDays()
     {
         var conversation = Guid.NewGuid(); var target = Guid.NewGuid();
         var invitation = ConversationInvitation.Create(conversation, Guid.NewGuid(), target,
             Now.Add(ConversationInvitation.DefaultInitialLifetime), Now);
         var receipt = ConversationInitialTarget.Create(conversation, target, ConversationInitialTargetOutcome.InvitationPending, invitation);
         Assert.Equal(ConversationInvitationStatus.Pending, invitation.Status);
-        Assert.Equal(Now.AddDays(30), receipt.InvitationExpiresAtUtc);
+        Assert.Equal(Now.AddDays(7), receipt.InvitationExpiresAtUtc);
         Assert.Equal(invitation.Id, receipt.InvitationId);
         Assert.Throws<ArgumentException>(() => ConversationInitialTarget.Create(conversation, target, ConversationInitialTargetOutcome.Added, invitation));
         Assert.Throws<ArgumentException>(() => ConversationInitialTarget.Create(conversation, Guid.NewGuid(), ConversationInitialTargetOutcome.InvitationPending, invitation));
+    }
+
+    [Theory]
+    [InlineData(-1, true)]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    public void InitialInvitationAcceptanceUsesStoredExpirationBoundary(long offsetTicks, bool allowed)
+    {
+        var invitation = ConversationInvitation.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            Now.Add(ConversationInvitation.DefaultInitialLifetime), Now);
+        var attemptedAt = invitation.ExpiresAtUtc.AddTicks(offsetTicks);
+        if (allowed)
+        {
+            invitation.Complete(ConversationInvitationStatus.Accepted, attemptedAt);
+            Assert.Equal(ConversationInvitationStatus.Accepted, invitation.Status);
+        }
+        else
+        {
+            Assert.Throws<InvalidOperationException>(() => invitation.Complete(ConversationInvitationStatus.Accepted, attemptedAt));
+            Assert.Equal(ConversationInvitationStatus.Pending, invitation.Status);
+            Assert.Null(invitation.CompletedAtUtc);
+        }
+        Assert.Equal(Now.AddDays(7), invitation.ExpiresAtUtc);
+    }
+
+    [Fact]
+    public void InitialInvitationDefaultDoesNotRewriteExplicitStoredLifetime()
+    {
+        var invitation = ConversationInvitation.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Now.AddDays(30), Now);
+        invitation.Complete(ConversationInvitationStatus.Accepted, Now.AddDays(8));
+        Assert.Equal(Now.AddDays(30), invitation.ExpiresAtUtc);
+        Assert.Equal(ConversationInvitationStatus.Accepted, invitation.Status);
     }
 
     [Fact]

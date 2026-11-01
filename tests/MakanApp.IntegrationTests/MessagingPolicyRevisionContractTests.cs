@@ -109,7 +109,7 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(2, memberView.Participants.Count); Assert.Empty(memberView.InitialTargets);
         await using var scope = factory.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
         var persisted = await db.ConversationInvitations.SingleAsync(i => i.ConversationId == result.ConversationId);
-        Assert.Equal(TimeSpan.FromDays(30), persisted.ExpiresAtUtc - persisted.CreatedAtUtc);
+        Assert.Equal(TimeSpan.FromDays(7), persisted.ExpiresAtUtc - persisted.CreatedAtUtc);
         Assert.Equal(3, await db.ConversationInitialTargets.CountAsync(t => t.ConversationId == result.ConversationId));
         Assert.Equal(2, await db.ConversationParticipants.CountAsync(p => p.ConversationId == result.ConversationId && p.Status == ConversationParticipantStatus.Active));
     }

@@ -41,13 +41,17 @@ PrivacyAudience، Block، نشست، عضویت، TeacherAssignment، Enrollment
 }
 ```
 
-- `InvitationPending`: دعوت واقعی با مهلت پیش‌فرض **۳۰ روز از ساعت سرور**؛ عضو فعال نیست. UI موفقیت ساخت را از پذیرفته‌شدن عضو جدا نشان دهد.
+- `InvitationPending`: دعوت واقعی با مهلت پیش‌فرض **۷ روز از زمان ایجاد دعوت در سرور**؛ عضو فعال نیست. UI موفقیت ساخت را از پذیرفته‌شدن عضو جدا نشان دهد.
 - `Added`: عضویت سازمانی طبق قواعد مجاز موجود؛ برای Personal، عضویت جدید از پذیرش دعوت می‌آید.
 - `NotAvailable`: مخاطب ورودی برای این عمل در دسترس نیست. از آن وجود حساب، Block یا علت خصوصی را نتیجه نگیرید.
 
 این آرایه Snapshot اولیه و فقط برای سازنده است؛ Retry همان Snapshot را برمی‌گرداند. وضعیت جاری دعوت را از `GET /api/v1/messaging/invitations` و اعضا بخوانید. API پذیرش همان `POST /api/v1/messaging/invitations/{invitationId}/accept` با نشست خود مخاطب و بدون بدنه است. Decline/Revoke نیز همان مسیرهای موجودند. افزودن مستقیم Personal در `/members` جای رضایت نیست و 409 `CONVERSATION_INVITATION_REQUIRED` می‌دهد.
 
 ACK گم‌شده: همان `ClientOperationId` و Payload را دوباره بفرستید. Payload متفاوت با همان شناسه 409 `CONVERSATION_CREATION_CONFLICT` است؛ برای اصلاح عمدی Request شناسهٔ عملیات جدید بسازید. پذیرش دوباره، Participant دوم نمی‌سازد. Timestamp انقضا را از Response بخوانید.
+
+تصمیم مصوب `2026-11-02`: در درخواست ساخت Group/Channel، Frontend هیچ `ExpiresAtUtc` نمی‌فرستد؛ Policy داخلی `ConversationInvitation.DefaultInitialLifetime` زمان انقضا را از ساعت UTC سرور محاسبه و ذخیره می‌کند. مقدار واقعی در `initialTargets[].invitationExpiresAtUtc` برمی‌گردد. Retry همان عملیات، حتی پس از انقضا، همان InvitationId و زمان ذخیره‌شده را می‌دهد؛ دعوت تازه یا تمدید خودکار نداریم. در لحظهٔ انقضا و پس از آن، Accept دعوت Pending با `404 CONVERSATION_NOT_FOUND` رد می‌شود و دعوت در فهرست Pending معتبر نیست؛ Snapshot اولیه همچنان رسید تاریخی است.
+
+دعوت‌های قبلی بازنویسی نمی‌شوند. این ۷ روز فقط برای دعوت‌های Messaging ساخته‌شده از `initialParticipantUserIds` است؛ Guardian، Organization، Invite Link و API مستقل دعوت با انقضای صریح، Policy جدا دارند. عملیات جدید در API ساخت با `ClientOperationId` تازه، **گفتگوی جدید** می‌سازد؛ برای دعوت مجدد در همان گفتگو از مسیر مستقل دعوت موجود استفاده شود، نه Retry ساخت یا تغییر زمان رسید قبلی.
 
 ## قابلیت مؤثر و کاتالوگ
 
