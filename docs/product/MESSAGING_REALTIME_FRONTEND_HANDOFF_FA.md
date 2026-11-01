@@ -1,5 +1,7 @@
 # قرارداد اتصال Frontend به Backend Realtime جاری
 
+> افزودهٔ `2026-11-01`: [Replay و invalidation صندوق حساب](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). `ClientInvalidated` با کلید `messaging.account-inbox` و `/api/v1/realtime/account-inbox/changes` اضافه شده‌اند. Cursor/ContextRevision این نما با scoped و صفحه‌بندی فهرست قابل تعویض نیست. هیچ مجوزی از سن نتیجه نمی‌شود؛ Delivery/Replay مجوز جاری منبع را دوباره می‌سنجد.
+
 این سند Handoff قرارداد Backend تأییدشدهٔ بستهٔ مشترک Realtime و Academic Attachments است؛ شاهد استقرار روی سرور نیست. Frontend تغییر نکرده است. احراز موجود Bearer در Authorization و نشست معتبر لازم است؛ Token را در query، log یا اسناد قرار ندهید. API پایه /api/v1 و Hub همان /hubs/messaging است.
 
 ## Contact و Direct

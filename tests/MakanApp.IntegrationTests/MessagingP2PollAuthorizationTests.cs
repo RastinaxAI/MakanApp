@@ -15,14 +15,14 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2PollRevokedProtectedRelationshipStopsNewVoteWithoutErasingHistory(CommunicationAgeCategory age)
+    public async Task P2PollAgeRelationshipDoesNotGateAuthorizedVote(CommunicationAgeCategory age)
     {
         using var setup = await CreateAdvancedConversationSetupAsync(); await factory.SetCommunicationAgeCategoryAsync(setup.Second.UserId, age);
         await factory.AllowPersonalGroupInviteAsync(setup.First.UserId, setup.Second.UserId);
         var receipt = await CreateP2PollAsync(setup.FirstClient, setup.ConversationId);
         await factory.RemoveApprovedContactAsync(setup.Second.UserId, setup.First.UserId);
         var vote = await setup.SecondClient.PostAsJsonAsync(P2PollRoute(setup.ConversationId, receipt.MessageId) + "/vote", new VoteConversationPollCommand([1]), JsonOptions);
-        Assert.Equal(HttpStatusCode.Forbidden, vote.StatusCode); Assert.Equal(0, (await ReadP2PollAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId)).TotalVoters);
+        Assert.Equal(HttpStatusCode.OK, vote.StatusCode); Assert.Equal(1, (await ReadP2PollAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId)).TotalVoters);
     }
     [Fact]
     public async Task P2PollChannelSubscriberMayVoteButCannotPublishOrCloseOthers()
@@ -73,7 +73,7 @@ public sealed partial class MessagingEndpointsTests
         using var setup = await CreateP2ManagedSetupAsync("groups", initiallyMember: false); var id = setup.Conversation.ConversationId;
         (await setup.OwnerClient.PatchAsJsonAsync($"/api/v1/conversations/{id}/settings", new UpdateConversationSettingsCommand(ConversationVisibility.Private, GroupHistoryPolicy.FromJoin, GroupMemberCapability.LegacyMemberDefault, setup.Conversation.Version), JsonOptions)).EnsureSuccessStatusCode();
         var message = await CreateP2PollAsync(setup.OwnerClient, id); await VoteP2PollAsync(setup.OwnerClient, id, message.MessageId, [1]);
-        (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/members", new AddConversationMemberCommand(setup.Target.UserId), JsonOptions)).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(setup.OwnerClient, setup.TargetClient, id, setup.Target.UserId);
         Assert.Equal(HttpStatusCode.NotFound, (await setup.TargetClient.GetAsync(P2PollRoute(id, message.MessageId))).StatusCode);
         Assert.DoesNotContain((await GetChangesAsync(setup.TargetClient, id)).Changes, c => c.ResourceId == message.MessageId);
         (await setup.OwnerClient.PostAsync($"/api/v1/conversations/{id}/clear-history", null)).EnsureSuccessStatusCode();

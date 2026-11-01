@@ -21,6 +21,8 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken);
     public Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.Users.AnyAsync(user => user.ProfilePhotoFileAssetId == fileAssetId, cancellationToken);
+    public Task<bool> IsConversationPhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
+        dbContext.Conversations.AnyAsync(conversation => conversation.PhotoFileAssetId == fileAssetId, cancellationToken);
 
     public Task<bool> IsSchoolLessonBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken);
@@ -30,6 +32,7 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         CancellationToken cancellationToken) =>
         await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
+        await IsConversationPhotoBoundAsync(fileAssetId, cancellationToken) ||
         await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
         await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.AnswerRevisionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
@@ -48,6 +51,9 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         AccessContext accessContext,
         CancellationToken cancellationToken)
     {
+        if (await IsConversationPhotoBoundAsync(fileAsset.Id, cancellationToken))
+            return fileAsset.Status == FileAssetStatus.Ready && fileAsset.ContentType is ("image/jpeg" or "image/png") &&
+                await AccountInboxAccessQuery.Conversations(dbContext, accessContext.UserId).AnyAsync(c => c.PhotoFileAssetId == fileAsset.Id, cancellationToken);
         if (await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAsset.Id, cancellationToken))
             return await sources.CanReadFileAsync(fileAsset.Id, accessContext, cancellationToken);
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;

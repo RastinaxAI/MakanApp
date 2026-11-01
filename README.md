@@ -4,6 +4,8 @@
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
 
+اصلاح Messaging در `2026-11-01`: سن/DOB/تأیید سن دیگر مجوز عمومی نیست؛ Privacy/Block/Safety و مجوز جاری منبع حفظ شده‌اند. دعوت اولیهٔ Personal با انقضای مصوب ۳۰روزه نیازمند پذیرش است. صندوق و Replay یکپارچهٔ حساب، capability مؤثر، مدیریت محتوای رسمی Manager/Teacher، Receipt انتشار/جلسه و عکس گفتگو افزوده‌اند. [پیاده‌سازی و تست‌ها](docs/product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [قرارداد Frontend](docs/product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). OpenAPI محلی این Build شامل **۳۸۸ عملیات، ۳۴۲ مسیر و ۶۵۱ schema** و Source دارای **۵۹ Migration** است؛ آمار گزارش‌های قدیمی زیر تاریخی‌اند. این مرحله Publish/Deploy ندارد.
+
 آخرین بازبینی Consolidation در ۲۰۲۶-۱۰-۲۲: [گزارش نهایی Backend](docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md).
 نتیجهٔ Build/Regression محلی از پذیرش واقعی AI جداست؛ Parent Provider Timeout و Full-12 واقعی فعلاً Deferred هستند.
 

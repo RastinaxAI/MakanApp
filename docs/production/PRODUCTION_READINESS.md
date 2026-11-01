@@ -53,7 +53,7 @@ Backend AI شامل adapter و ۱۲ API است؛ پیش‌فرض غیرفعال 
 | Security headers | READY | nosniff، referrer، frame/CSP و permissions policy |
 | Rate limiting | READY_WITH_LIMITATION | policyهای local-process؛ چند instance به limiter مشترک نیاز دارد |
 | Payment | BLOCKED | provider واقعی وجود ندارد و موفقیت دستی ممنوع است |
-| Child Safety | COMPLETE_IN_CODE / OPS_PENDING | Policy v1 و Unknown=protected، رابطه/رضایت، current-state Send و provider داخلی واقعی؛ بدون ادعای ML یا تحلیل معنایی رسانه |
+| Content Safety / Messaging | LOCAL_VALIDATED / OPS_PENDING | سیاست مصوب ۲۰۲۶/۱۱/۰۱: سن مجوز عمومی نیست؛ رضایت، Privacy/Block، مجوز جاری Send/منبع و Provider داخلی واقعی حفظ‌اند؛ بدون ادعای ML یا تحلیل معنایی رسانه؛ [قرارداد جاری](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) |
 | Notifications | CODE_COMPLETE / DEVICE_RUNTIME_PENDING | Web Push/VAPID و FCM HTTP v1 واقعی؛ credential/device واقعی و دریافت روی دستگاه تأیید نشده؛ P1_PUSH_RUNTIME_PENDING |
 | Logging | CODE_VALIDATED / COLLECTOR_POLICY_PENDING | correlation واحد، metadata محدود، خطای امن و تست نشت؛ پاک‌سازی عمومی همهٔ loggerها/DiagnosticSource ادعا نمی‌شود |
 | Metrics | CODE_VALIDATED / EXPORTER_PENDING | meterهای vendor-neutral درخواست/worker/صف و snapshot stale-aware؛ collector یا endpoint metrics نصب‌شده نداریم |
@@ -85,7 +85,7 @@ adapter باید `CreatePayment`، callback/webhook authenticated، `Verify`، `
 
 ### Child Safety
 
-Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور محدود متن است؛ vendor بیرونی لازم یا پیاده‌شده فرض نمی‌شود. مسیر Minor/Unknown هنگام unavailable بودن fail-closed است؛ attachment/image unsupported نتیجهٔ ReviewRequired دارد، نه موفقیت ساختگی. هر ارتقای classifier/provider نیازمند scope و validation مستقل است؛ [Policy GAP-05](../architecture/GAP_05_MESSENGER_CHILD_SAFETY.md).
+Internal Makan تصمیم جاری مصوب و موتور قاعده‌محور محدود متن است؛ vendor بیرونی لازم یا پیاده‌شده فرض نمی‌شود. از سیاست ۲۰۲۶/۱۱/۰۱، همهٔ سن‌ها هنگام unavailable بودن fail-closed هستند؛ attachment/image unsupported نتیجهٔ ReviewRequired دارد و تحویل نمی‌شود. هر ارتقای classifier/provider نیازمند scope و validation مستقل است؛ شرط‌های سنی عمومی [گزارش GAP-05](../architecture/GAP_05_MESSENGER_CHILD_SAFETY.md) تاریخی‌اند.
 
 ## تصمیم Web client
 

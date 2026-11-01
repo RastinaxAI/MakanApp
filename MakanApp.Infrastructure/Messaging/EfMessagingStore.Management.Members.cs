@@ -93,7 +93,7 @@ public sealed partial class EfMessagingStore
             throw ConversationNotFound();
         }
 
-        return await LoadManagedResultAsync(conversation, false, cancellationToken);
+        return await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
     }
 
     public async Task<ManagedConversationStoreResult> AddMemberAsync(
@@ -139,7 +139,6 @@ public sealed partial class EfMessagingStore
             nowUtc,
             cancellationToken);
         await EnsureInstantAddIsSafeAsync(actorUserId, targetUserId, conversation.Scope, cancellationToken);
-        await EnsurePersonalAudienceSafetyAsync(conversation, targetUserId, nowUtc, cancellationToken);
         var added = ConversationParticipant.CreateActive(
                 conversation.Id,
                 targetUserId,
@@ -160,7 +159,7 @@ public sealed partial class EfMessagingStore
             actorUserId,
             null,
             cancellationToken);
-        var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+        var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
         await transaction.CommitAsync(cancellationToken);
         outboxWakeSignal.Signal();
         return result;
@@ -205,7 +204,7 @@ public sealed partial class EfMessagingStore
             actorUserId,
             null,
             cancellationToken);
-        var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+        var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
         await transaction.CommitAsync(cancellationToken);
         outboxWakeSignal.Signal();
         return result;
@@ -242,7 +241,7 @@ public sealed partial class EfMessagingStore
             actorUserId,
             null,
             cancellationToken);
-        var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+        var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
         await transaction.CommitAsync(cancellationToken);
         outboxWakeSignal.Signal();
         return result;
@@ -281,9 +280,6 @@ public sealed partial class EfMessagingStore
         target.ChangeRole(role, role == ConversationParticipantRole.Admin
             ? adminPermissions
             : ConversationAdminPermission.None);
-        if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
-            adminPermissions.HasFlag(ConversationAdminPermission.PublishMessages) && !await IsVerifiedAdultAsync(targetUserId, cancellationToken))
-            throw ManagementNotAllowed();
         await SaveManagementAsync(cancellationToken);
         await AppendChangeAsync(
             conversation,
@@ -294,7 +290,7 @@ public sealed partial class EfMessagingStore
             actorUserId,
             null,
             cancellationToken);
-        var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+        var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
         await transaction.CommitAsync(cancellationToken);
         outboxWakeSignal.Signal();
         return result;

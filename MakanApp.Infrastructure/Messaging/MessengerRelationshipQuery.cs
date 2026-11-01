@@ -79,15 +79,11 @@ internal static class MessengerRelationshipQuery
             select relation.GuardianUserId == actorId ? child.Id : relation.GuardianUserId;
         var related = classmates.Union(guardianPairs);
         if (organizationId.HasValue) return related;
-        // مخاطب باید رضایت شخص محافظت‌شده را نمایندگی کند؛ ذخیره یک‌طرفه توسط غریبه کافی نیست.
+        // رابطهٔ مخاطب متقابل مستقل از ردهٔ سنی است.
         var contacts = from target in db.Users
             where target.Id != actorId && target.AccountStatus == UserAccountStatus.Active &&
-                (target.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-                 target.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified ||
-                 db.UserContacts.Any(c => c.OwnerUserId == target.Id && c.ContactUserId == actorId)) &&
-                (db.Users.Any(a => a.Id == actorId && a.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-                    a.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified) ||
-                 db.UserContacts.Any(c => c.OwnerUserId == actorId && c.ContactUserId == target.Id))
+                db.UserContacts.Any(c => c.OwnerUserId == target.Id && c.ContactUserId == actorId) &&
+                db.UserContacts.Any(c => c.OwnerUserId == actorId && c.ContactUserId == target.Id)
             select target.Id;
         return related.Union(contacts);
     }
@@ -95,11 +91,13 @@ internal static class MessengerRelationshipQuery
     // همان مرز موجودِ پروفایل عمومی؛ کارت مخاطب نباید مسیر کشف تازه‌ای بسازد.
     public static IQueryable<User> DiscoverableAccounts(MakanDbContext db, Guid requesterId, DateTime nowUtc)
     {
-        var related = RelatedUsers(db, requesterId, nowUtc);
         var requester = db.Users.Where(u => u.Id == requesterId && u.AccountStatus == UserAccountStatus.Active && u.ProfileCompletedAtUtc != null && u.PersonId != null);
+        // این Query فقط هویت عمومی است؛ Discovery شماره در MessagingDirectoryService جداگانه PrivacyAudience را می‌سنجد.
+        // Block دوطرفه، حساب فعال و پروفایل معتبر مستقل از حذف شرط سنی باقی می‌مانند.
         return db.Users.AsNoTracking().Where(u => u.AccountStatus == UserAccountStatus.Active && requester.Any() &&
-            (u.Id == requesterId || u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-             u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified &&
-             requester.Any(a => a.CommunicationAgeCategory == CommunicationAgeCategory.Adult && a.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified) || related.Contains(u.Id)));
+            u.PersonId != null && u.Username != null && u.ProfileCompletedAtUtc != null &&
+            !db.UserBlocks.Any(b => b.Status == MakanApp.Domain.Messaging.UserBlockStatus.Active && b.EndedAtUtc == null &&
+                (b.BlockerUserId == requesterId && b.BlockedUserId == u.Id ||
+                 b.BlockerUserId == u.Id && b.BlockedUserId == requesterId)));
     }
 }

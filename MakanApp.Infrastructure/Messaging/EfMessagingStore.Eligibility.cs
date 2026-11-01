@@ -156,10 +156,7 @@ public sealed partial class EfMessagingStore
             targetHasEnrollment,
             hasTeacherStudentRelationship,
             hasTeacherParentRelationship,
-            (actor?.AgeCategory != CommunicationAgeCategory.Adult || target?.AgeCategory != CommunicationAgeCategory.Adult) &&
-            await MessengerRelationshipQuery.RelatedUsers(dbContext, actorUserId, nowUtc,
-                    scope == ConversationScope.Organization ? organizationId : null)
-                .ContainsAsync(targetUserId, cancellationToken));
+            false);
     }
 
     private async Task<SafeMessagingIdentityRecord> LoadSafeIdentityAsync(

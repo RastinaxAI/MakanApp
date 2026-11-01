@@ -1,6 +1,8 @@
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
+using MakanApp.Application.Messaging;
+using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Academic;
 
@@ -9,15 +11,18 @@ public sealed partial class AcademicSessionService : IAcademicSessionService
     private readonly IAccessContextResolver _accessContextResolver;
     private readonly IAcademicSessionStore _store;
     private readonly TimeProvider _timeProvider;
+    private readonly IAcademicActivityPublisher? _activities;
 
     public AcademicSessionService(
         IAccessContextResolver accessContextResolver,
         IAcademicSessionStore store,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
+        _activities = activities;
     }
 
     public async Task<SessionResult> CreateSessionAsync(
@@ -45,9 +50,10 @@ public sealed partial class AcademicSessionService : IAcademicSessionService
         await EnsureNoTimeConflictAsync(session, null, cancellationToken);
 
         _store.Add(session);
+        await RecordSessionActivityAsync(session, userId, SessionActivityAction.Scheduled, cancellationToken);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return ToResult(session, academicClass.Title);
+        return await WithSessionReceiptAsync(session, academicClass.Title, cancellationToken);
     }
 
     public async Task<SessionResult> UpdateSessionAsync(
@@ -65,6 +71,7 @@ public sealed partial class AcademicSessionService : IAcademicSessionService
             cancellationToken);
         await EnsureCanManageClassAsync(context, record.Session.ClassId, cancellationToken);
         _store.SetOriginalRowVersion(record.Session, DecodeRowVersion(command.ExpectedRowVersion));
+        var previousRevision = record.Session.ActivityRevision;
         try
         {
             record.Session.Update(
@@ -81,9 +88,11 @@ public sealed partial class AcademicSessionService : IAcademicSessionService
         }
 
         await EnsureNoTimeConflictAsync(record.Session, sessionId, cancellationToken);
+        if (record.Session.ActivityRevision != previousRevision)
+            await RecordSessionActivityAsync(record.Session, userId, SessionActivityAction.Rescheduled, cancellationToken);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return ToResult(record.Session, record.ClassTitle);
+        return await WithSessionReceiptAsync(record.Session, record.ClassTitle, cancellationToken);
     }
 
     public Task<SessionResult> CancelSessionAsync(
@@ -213,10 +222,21 @@ public sealed partial class AcademicSessionService : IAcademicSessionService
             throw new AcademicException(AcademicErrorCodes.SessionNotActive, exception.Message);
         }
 
+        await RecordSessionActivityAsync(record.Session, userId, complete ? SessionActivityAction.Completed : SessionActivityAction.Cancelled, cancellationToken);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return ToResult(record.Session, record.ClassTitle);
+        return await WithSessionReceiptAsync(record.Session, record.ClassTitle, cancellationToken);
     }
+
+    private Task RecordSessionActivityAsync(Session session, Guid userId, SessionActivityAction action, CancellationToken ct) =>
+        _activities is null ? Task.CompletedTask : _activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Session,
+            session.OrganizationId, session.ClassId, session.Id, session.ActivityRevision, userId, session.Title, UtcNow(),
+            availableFromUtc: DateTime.SpecifyKind(session.StartUtc, DateTimeKind.Utc),
+            availableUntilUtc: DateTime.SpecifyKind(session.EndUtc, DateTimeKind.Utc), sessionAction: action), ct);
+
+    private async Task<SessionResult> WithSessionReceiptAsync(Session session, string classTitle, CancellationToken ct) =>
+        ToResult(session, classTitle) with { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
+            session.OrganizationId, session.ClassId, AcademicActivityKind.Session, session.Id, session.ActivityRevision, ct) };
 
     private async Task EnsureNoTimeConflictAsync(
         Session session,

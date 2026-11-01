@@ -70,7 +70,7 @@ public sealed class ClassLessonService(IAccessContextResolver access, ISchoolRea
         DecodeVersion(command.ExpectedVersion);
         if (lesson.Status == LessonStatus.Published)
         {
-            await tx.CommitAsync(ct); return await store.ResultAsync(lesson, true, ct);
+            await tx.CommitAsync(ct); return await WithPublicationReceiptAsync(lesson, true, ct);
         }
         Version(lesson.RowVersion, command.ExpectedVersion);
         await ValidateFilesAsync(context, lesson.Attachments.Select(x => x.FileAssetId).ToArray(), lesson.Attachments.Select(x => x.FileAssetId).ToArray(), ct);
@@ -79,7 +79,14 @@ public sealed class ClassLessonService(IAccessContextResolver access, ISchoolRea
             await activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Lesson, lesson.OrganizationId,
                 lesson.ClassId, lesson.Id, lesson.RevisionNumber, userId, lesson.Title, Now()), ct);
         await store.SaveAsync(ct); await tx.CommitAsync(ct);
-        return await store.ResultAsync(lesson, false, ct);
+        return await WithPublicationReceiptAsync(lesson, false, ct);
+    }
+
+    private async Task<ClassLessonResult> WithPublicationReceiptAsync(ClassLesson lesson, bool replayed, CancellationToken ct)
+    {
+        var result = await store.ResultAsync(lesson, replayed, ct);
+        return result with { PublicationReceipt = activities is null ? null : await activities.ReadReceiptAsync(
+            lesson.OrganizationId, lesson.ClassId, AcademicActivityKind.Lesson, lesson.Id, lesson.RevisionNumber, ct) };
     }
 
     public async Task<ClassLessonResult> GetAsync(Guid userId, Guid sessionId, Guid id, CancellationToken ct)

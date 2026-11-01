@@ -21,6 +21,7 @@ public sealed class Conversation
     public Guid? SavedOwnerUserId { get; private set; }
     public string? Title { get; private set; }
     public string? Description { get; private set; }
+    public Guid? PhotoFileAssetId { get; private set; }
     public Guid? CreatedByUserId { get; private set; }
     public ConversationManagementPolicy ManagementPolicy { get; private set; }
     public ConversationVisibility Visibility { get; private set; }
@@ -270,6 +271,27 @@ public sealed class Conversation
             Type is not ConversationType.Group and not ConversationType.Channel)
             throw new InvalidOperationException("تغییر مشخصات این گفتگو مجاز نیست.");
         Title = NormalizeTitle(title); Description = NormalizeDescription(description);
+    }
+
+    public void UpdateOfficialDescription(string? description)
+    {
+        if (ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic || Status != ConversationStatus.Active)
+            throw new InvalidOperationException("تغییر توضیح فضای رسمی فعال لازم است.");
+        Description = NormalizeDescription(description);
+    }
+
+    public void SynchronizeOfficialTitle(string title)
+    {
+        if (ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic)
+            throw new InvalidOperationException("عنوان شخصی از مسیر همگام‌سازی رسمی تغییر نمی‌کند.");
+        Title = NormalizeTitle(title);
+    }
+
+    public void SetPhoto(Guid? fileAssetId)
+    {
+        if (Status != ConversationStatus.Active || Type is not ConversationType.Group and not ConversationType.Channel || fileAssetId == Guid.Empty)
+            throw new InvalidOperationException("عکس فقط برای گروه یا کانال فعال قابل تنظیم است.");
+        PhotoFileAssetId = fileAssetId;
     }
 
     public void UpdateBehaviorSettings(

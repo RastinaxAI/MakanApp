@@ -1,5 +1,7 @@
 # قرارداد Event و Replay حساب
 
+> افزودهٔ `2026-11-01`: [نمای مستقل AccountInbox](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) روی همان Outbox و Hub موجود است. `ClientInvalidated(key=messaging.account-inbox)` و Replay `/api/v1/realtime/account-inbox/changes` با Cursor/Revision مستقل اضافه‌اند. این قرارداد افزایشی است؛ scoped stream زیر حفظ می‌شود و سن دیگر gate عمومی Live/Replay نیست.
+
 وضعیت: قرارداد Backend تأییدشده برای نهایی‌سازی مشترک Realtime و Academic Attachments؛ نتیجهٔ Commit/Push از گزارش اجرای واقعی Git خوانده می‌شود و این سند شاهد استقرار نیست. /hubs/messaging، متدهای SubscribeConversation/UnsubscribeConversation/SetTyping/Heartbeat/SubscribePresence و ConversationChanged موجود حفظ شده‌اند. Client گروه مخاطب را انتخاب نمی‌کند.
 
 ## ConversationChanged موجود

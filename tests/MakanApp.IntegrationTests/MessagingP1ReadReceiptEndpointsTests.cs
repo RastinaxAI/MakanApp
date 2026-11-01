@@ -149,12 +149,22 @@ public sealed partial class MessagingEndpointsTests
         }
         var state = (await setup.FirstClient.GetFromJsonAsync<ConversationPeerReadStateResult>(
             $"/api/v1/conversations/{setup.ConversationId}/read-states", JsonOptions))!;
-        Assert.Equal(PeerReadVisibility.Hidden, state.Visibility);
-        Assert.Null(state.PeerReadThroughSequence);
-        Assert.Null(state.Version);
-        Assert.DoesNotContain((await GetChangesAsync(setup.FirstClient, setup.ConversationId, baseline.NextCursor)).Changes,
-            c => c.Type == MessagingChangeType.PeerReadStateChanged);
-        Assert.Empty(await ReplayP0NotificationAsync(setup.ConversationId, peerEvent));
+        if (mutation is "minor" or "unknown")
+        {
+            Assert.Equal(PeerReadVisibility.Visible, state.Visibility); Assert.Equal(sent.Sequence, state.PeerReadThroughSequence);
+            Assert.Contains((await GetChangesAsync(setup.FirstClient, setup.ConversationId, baseline.NextCursor)).Changes,
+                c => c.Type == MessagingChangeType.PeerReadStateChanged);
+            Assert.NotEmpty(await ReplayP0NotificationAsync(setup.ConversationId, peerEvent));
+        }
+        else
+        {
+            Assert.Equal(PeerReadVisibility.Hidden, state.Visibility);
+            Assert.Null(state.PeerReadThroughSequence);
+            Assert.Null(state.Version);
+            Assert.DoesNotContain((await GetChangesAsync(setup.FirstClient, setup.ConversationId, baseline.NextCursor)).Changes,
+                c => c.Type == MessagingChangeType.PeerReadStateChanged);
+            Assert.Empty(await ReplayP0NotificationAsync(setup.ConversationId, peerEvent));
+        }
     }
 
     [Theory]

@@ -104,8 +104,17 @@ public sealed partial class MessagingEndpointsTests
             do { item = await events.Reader.ReadAsync(timeout.Token); } while (item.ResourceId != sent.MessageId);
             Assert.Equal(personal.ContextRevision, item.ContextRevision);
         }
-        var page = (await receiverClient.GetFromJsonAsync<AccountChangePageResult>("/api/v1/realtime/changes?scope=Personal&cursor=" + Uri.EscapeDataString(personal.NextCursor), JsonOptions))!;
-        Assert.Contains(page.Changes, e => e.Conversation?.ResourceId == sent.MessageId);
+        var replayCursor = personal.NextCursor;
+        var replayed = new List<AccountChangeResult>();
+        for (var pageNumber = 0; pageNumber < 100; pageNumber++)
+        {
+            var page = (await receiverClient.GetFromJsonAsync<AccountChangePageResult>("/api/v1/realtime/changes?scope=Personal&cursor=" + Uri.EscapeDataString(replayCursor), JsonOptions))!;
+            replayed.AddRange(page.Changes); replayCursor = page.NextCursor;
+            if (!page.HasMore) break;
+            await Task.Delay(page.RetryAfterMilliseconds ?? 20);
+            Assert.True(pageNumber < 99);
+        }
+        Assert.Contains(replayed, e => e.Conversation?.ResourceId == sent.MessageId);
         Assert.DoesNotContain((await DrainAccountAsync(receiverClient, organization.NextCursor)).Values, e => e.Conversation?.ConversationId == direct.ConversationId);
         var personalInbox = (await receiverClient.GetFromJsonAsync<ConversationSummaryResult[]>("/api/v1/conversations?scope=Personal", JsonOptions))!;
         Assert.Contains(personalInbox, c => c.ConversationId == direct.ConversationId && c.OrganizationId == null);

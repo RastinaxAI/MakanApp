@@ -30,6 +30,7 @@ public sealed class Session
         TimeZoneId = timeZoneId;
         MeetingUrl = meetingUrl;
         Status = SessionStatus.Scheduled;
+        ActivityRevision = 1;
         CreatedAtUtc = createdAtUtc;
     }
 
@@ -48,6 +49,7 @@ public sealed class Session
     public DateTime? CancelledAtUtc { get; private set; }
     public DateTime? CompletedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public int ActivityRevision { get; private set; }
 
     public bool IsScheduled => Status == SessionStatus.Scheduled;
 
@@ -92,11 +94,17 @@ public sealed class Session
         }
 
         Validate(title, startUtc, endUtc, timeZoneId, meetingUrl);
-        Title = title.Trim();
+        var normalizedTitle = title.Trim();
+        var normalizedTimeZone = timeZoneId.Trim();
+        var normalizedMeetingUrl = NormalizeMeetingUrl(meetingUrl);
+        if (Title != normalizedTitle || StartUtc != startUtc || EndUtc != endUtc ||
+            TimeZoneId != normalizedTimeZone || MeetingUrl != normalizedMeetingUrl)
+            ActivityRevision = checked(ActivityRevision + 1);
+        Title = normalizedTitle;
         StartUtc = startUtc;
         EndUtc = endUtc;
-        TimeZoneId = timeZoneId.Trim();
-        MeetingUrl = NormalizeMeetingUrl(meetingUrl);
+        TimeZoneId = normalizedTimeZone;
+        MeetingUrl = normalizedMeetingUrl;
     }
 
     public void Cancel(DateTime cancelledAtUtc)
@@ -107,6 +115,7 @@ public sealed class Session
         }
 
         Status = SessionStatus.Cancelled;
+        ActivityRevision = checked(ActivityRevision + 1);
         CancelledAtUtc = cancelledAtUtc;
     }
 
@@ -118,6 +127,7 @@ public sealed class Session
         }
 
         Status = SessionStatus.Completed;
+        ActivityRevision = checked(ActivityRevision + 1);
         CompletedAtUtc = completedAtUtc;
     }
 

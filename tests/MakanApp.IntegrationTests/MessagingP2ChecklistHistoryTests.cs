@@ -83,7 +83,7 @@ public sealed partial class MessagingEndpointsTests
             GroupMemberCapability.LegacyMemberDefault, setup.Conversation.Version), JsonOptions)).EnsureSuccessStatusCode();
         var receipt = await CreateP2ChecklistAsync(setup.OwnerClient, id); var checklist = await ReadP2ChecklistAsync(setup.OwnerClient, id, receipt.MessageId);
         await SetP2ChecklistAsync(setup.OwnerClient, checklist, checklist.Items.First().ItemId, true);
-        (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/members", new AddConversationMemberCommand(setup.Target.UserId), JsonOptions)).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(setup.OwnerClient, setup.TargetClient, id, setup.Target.UserId);
         Assert.Equal(HttpStatusCode.NotFound, (await setup.TargetClient.GetAsync(P2ChecklistRoute(id, receipt.MessageId))).StatusCode);
         Assert.DoesNotContain((await GetChangesAsync(setup.TargetClient, id)).Changes, c => c.ResourceId == receipt.MessageId);
         (await setup.OwnerClient.PostAsync($"/api/v1/conversations/{id}/clear-history", null)).EnsureSuccessStatusCode();

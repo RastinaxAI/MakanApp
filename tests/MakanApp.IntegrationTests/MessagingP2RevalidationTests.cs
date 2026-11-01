@@ -16,17 +16,19 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2ContactCardCannotDiscloseProtectedProfileToUnrelatedViewer(CommunicationAgeCategory age)
+    public async Task P2ContactCardRechecksEveryViewersBlockIndependentOfAge(CommunicationAgeCategory age)
     {
         using var setup = await CreateAdvancedConversationSetupAsync(); using var subjectClient = factory.CreateClient();
         var subject = await CreateMessagingUserAsync(subjectClient); await factory.SetCommunicationAgeCategoryAsync(subject.UserId, age);
+        (await subjectClient.PostAsync($"/api/v1/messaging/blocks/{setup.First.UserId}", null)).EnsureSuccessStatusCode();
+        (await subjectClient.PostAsync($"/api/v1/messaging/blocks/{setup.Second.UserId}", null)).EnsureSuccessStatusCode();
         var command = new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Kind = MessageKind.ContactCard, ContactUserId = subject.UserId };
         Assert.Equal(HttpStatusCode.NotFound, (await setup.FirstClient.PostAsJsonAsync($"/api/v1/conversations/{setup.ConversationId}/messages", command, JsonOptions)).StatusCode);
-        await factory.AllowPersonalGroupInviteAsync(setup.First.UserId, subject.UserId);
+        (await subjectClient.DeleteAsync($"/api/v1/messaging/blocks/{setup.First.UserId}")).EnsureSuccessStatusCode();
         // رضایت نسبت به فرستنده، رضایت نسبت به همهٔ دریافت‌کنندگان کارت نیست.
         Assert.Equal(HttpStatusCode.NotFound, (await setup.FirstClient.PostAsJsonAsync($"/api/v1/conversations/{setup.ConversationId}/messages", command, JsonOptions)).StatusCode);
         Assert.Empty(await factory.GetMessagesAsync(setup.ConversationId));
-        await factory.AllowPersonalGroupInviteAsync(setup.Second.UserId, subject.UserId);
+        (await subjectClient.DeleteAsync($"/api/v1/messaging/blocks/{setup.Second.UserId}")).EnsureSuccessStatusCode();
         var sent = await SendAdvancedMessageAsync(setup.FirstClient, setup.ConversationId, command);
         var wire = await setup.SecondClient.GetStringAsync($"/api/v1/conversations/{setup.ConversationId}/messages");
         Assert.DoesNotContain(subject.PhoneNumber, wire, StringComparison.Ordinal);
@@ -41,7 +43,7 @@ public sealed partial class MessagingEndpointsTests
         var subject = await CreateMessagingUserAsync(subjectClient); await factory.SetCommunicationAgeCategoryAsync(subject.UserId, CommunicationAgeCategory.Minor);
         await factory.AllowPersonalGroupInviteAsync(setup.First.UserId, subject.UserId); await factory.AllowPersonalGroupInviteAsync(setup.Second.UserId, subject.UserId);
         var card = await SendAdvancedMessageAsync(setup.FirstClient, setup.ConversationId, new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Kind = MessageKind.ContactCard, ContactUserId = subject.UserId });
-        await factory.RemoveApprovedContactAsync(subject.UserId, setup.Second.UserId);
+        (await subjectClient.PostAsync($"/api/v1/messaging/blocks/{setup.Second.UserId}", null)).EnsureSuccessStatusCode();
         var forward = await setup.FirstClient.PostAsJsonAsync($"/api/v1/conversations/{setup.ConversationId}/messages/{card.MessageId}/forward", new ForwardMessageCommand(setup.ConversationId, Guid.NewGuid()), JsonOptions);
         Assert.Equal(HttpStatusCode.NotFound, forward.StatusCode); Assert.Single(await factory.GetMessagesAsync(setup.ConversationId));
         Assert.Equal(card.MessageId, Assert.Single((await setup.SecondClient.GetFromJsonAsync<ConversationMessagePageResult>($"/api/v1/conversations/{setup.ConversationId}/messages", JsonOptions))!.Messages).MessageId);
@@ -57,7 +59,7 @@ public sealed partial class MessagingEndpointsTests
         try
         {
             var task = await ScheduleP2Async(setup.FirstClient, setup.ConversationId, new(now.AddMinutes(1), new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Kind = MessageKind.ContactCard, ContactUserId = subject.UserId }));
-            await factory.RemoveApprovedContactAsync(subject.UserId, setup.Second.UserId); factory.Clock.SetUtcNow(now.AddMinutes(2)); await DispatchP2ScheduledAsync();
+            (await subjectClient.PostAsync($"/api/v1/messaging/blocks/{setup.Second.UserId}", null)).EnsureSuccessStatusCode(); factory.Clock.SetUtcNow(now.AddMinutes(2)); await DispatchP2ScheduledAsync();
             Assert.Empty(await factory.GetMessagesAsync(setup.ConversationId)); Assert.Equal(ScheduledMessageStatus.Failed, (await ReadP2ScheduleAsync(setup.FirstClient, setup.ConversationId, task.Id)).Status);
         }
         finally { await CleanupP2SchedulesAsync(setup.First.UserId); factory.Clock.UseSystemTime(); }
@@ -116,6 +118,7 @@ public sealed partial class MessagingEndpointsTests
             var person = await factory.CreateOrganizationPersonForUserAsync(school.OrganizationId, newStudent.UserId);
             await factory.CreateEnrollmentAsync(school.OrganizationId, school.ClassId, person);
         }
+        (await subjectClient.PostAsync($"/api/v1/messaging/blocks/{newStudent.UserId}", null)).EnsureSuccessStatusCode();
         var evaluated = false;
         if (enrollDuringSafety) factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed, beforeReturn: async () => { evaluated = true; await EnrollNewStudent(); });
         else await EnrollNewStudent();

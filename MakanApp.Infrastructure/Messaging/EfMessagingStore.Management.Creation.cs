@@ -74,12 +74,13 @@ public sealed partial class EfMessagingStore
             if (existing is not null)
             {
                 EnsureCreationRetryMatches(existing, creationPayloadHash);
-                var existingResult = await LoadManagedResultAsync(existing, true, cancellationToken);
+                var existingResult = await LoadManagedResultAsync(existing, true, cancellationToken, actorUserId);
                 await transaction.CommitAsync(cancellationToken);
                 return existingResult;
             }
 
             var actor = await LoadUserSnapshotAsync(actorUserId, cancellationToken);
+            await EnsureActorCanMessageAsync(actorUserId, nowUtc, cancellationToken);
             if (actor is null ||
                 !managementPolicy.CanCreate(scope, accessContext, actor.AgeCategory) ||
                 !await HasActiveActorContextAsync(actorUserId, scope, organizationId, accessContext, cancellationToken))
@@ -87,20 +88,6 @@ public sealed partial class EfMessagingStore
                 throw ManagementNotAllowed();
             }
 
-            foreach (var targetUserId in initialParticipantUserIds)
-            {
-                await EnsureEligibleTargetAsync(
-                    actorUserId,
-                    targetUserId,
-                    scope,
-                    organizationId,
-                    accessContext,
-                    nowUtc,
-                    cancellationToken);
-                await EnsureInstantAddIsSafeAsync(actorUserId, targetUserId, scope, cancellationToken);
-            }
-
-            await EnsurePersonalCreationSafetyAsync(actorUserId, scope, type, visibility, cancellationToken);
             var conversation = Conversation.CreateUserManaged(
                 type,
                 scope,
@@ -123,14 +110,31 @@ public sealed partial class EfMessagingStore
                     ConversationParticipantRole.Owner));
             foreach (var targetUserId in initialParticipantUserIds)
             {
-                dbContext.ConversationParticipants.Add(
-                    ConversationParticipant.CreateActive(
-                        conversation.Id,
-                        targetUserId,
-                        nowUtc,
-                        ConversationParticipantRole.Member));
+                var facts = await LoadEligibilityFactsAsync(actorUserId, targetUserId, scope, organizationId,
+                    accessContext, nowUtc, cancellationToken);
+                var available = eligibilityPolicy.CanInviteToManagedConversation(facts) &&
+                    !await HasEffectiveUserBlockAsync(actorUserId, targetUserId, cancellationToken);
+                ConversationInvitation? invitation = null;
+                var outcome = ConversationInitialTargetOutcome.NotAvailable;
+                if (available && scope == ConversationScope.Personal)
+                {
+                    invitation = ConversationInvitation.Create(conversation.Id, actorUserId, targetUserId,
+                        nowUtc.Add(ConversationInvitation.DefaultInitialLifetime), nowUtc);
+                    dbContext.ConversationInvitations.Add(invitation);
+                    await AuditInvitationAsync(actorUserId, accessContext.SessionId, invitation,
+                        System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"), nowUtc, cancellationToken);
+                    outcome = ConversationInitialTargetOutcome.InvitationPending;
+                }
+                else if (available)
+                {
+                    dbContext.ConversationParticipants.Add(ConversationParticipant.CreateActive(
+                        conversation.Id, targetUserId, nowUtc, ConversationParticipantRole.Member));
+                    outcome = ConversationInitialTargetOutcome.Added;
+                }
+                dbContext.ConversationInitialTargets.Add(ConversationInitialTarget.Create(conversation.Id, targetUserId, outcome, invitation));
             }
 
+            realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
             await AppendChangeAsync(
                 conversation,
@@ -141,7 +145,7 @@ public sealed partial class EfMessagingStore
                 actorUserId,
                 null,
                 cancellationToken);
-            var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+            var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
             await transaction.CommitAsync(cancellationToken);
             outboxWakeSignal.Signal();
             return result;
@@ -162,7 +166,7 @@ public sealed partial class EfMessagingStore
             }
 
             EnsureCreationRetryMatches(existing, creationPayloadHash);
-            return await LoadManagedResultAsync(existing, true, cancellationToken);
+            return await LoadManagedResultAsync(existing, true, cancellationToken, actorUserId);
         }
         catch (DbUpdateException exception) when (IsDeadlock(exception))
         {

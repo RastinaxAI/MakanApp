@@ -27,20 +27,22 @@ public sealed class PersonalMessagingStatusTests
     [InlineData(CommunicationAgeVerificationStatus.Conflict, CommunicationAgeCategory.Adult)]
     [InlineData(CommunicationAgeVerificationStatus.Verified, CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeVerificationStatus.Verified, CommunicationAgeCategory.Unknown)]
-    public void ProtectedStateNeverAdvertisesGlobalStrangerDiscoveryOrPersonalChannel(
+    [InlineData(CommunicationAgeVerificationStatus.Unverified, CommunicationAgeCategory.Unknown)]
+    [InlineData(CommunicationAgeVerificationStatus.Conflict, CommunicationAgeCategory.Minor)]
+    public void AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect(
         CommunicationAgeVerificationStatus status, CommunicationAgeCategory category)
     {
         var result = MessagingStatusPolicy.Evaluate(Adult with { VerificationStatus = status, AgeCategory = category }, Now);
         Assert.NotEqual(CommunicationAgeCategory.Adult, result.EffectiveAgeCategory);
-        Assert.DoesNotContain(PersonalMessagingAction.DiscoverUsers, result.AllowedActions);
-        Assert.DoesNotContain(PersonalMessagingAction.CreateDirect, result.AllowedActions);
-        Assert.DoesNotContain(PersonalMessagingAction.CreatePersonalChannel, result.AllowedActions);
-        Assert.Contains(PersonalMessagingAction.CreatePrivatePersonalGroup, result.AllowedActions);
-        Assert.Contains(PersonalMessagingAction.CreateDirectWithAuthorizedRelationship, result.AllowedActions);
-        Assert.Equal(status == CommunicationAgeVerificationStatus.Conflict
-            ? MessagingNextAction.VerificationConflictResolutionRequired
-            : status == CommunicationAgeVerificationStatus.Unverified ? MessagingNextAction.VerificationRequired : MessagingNextAction.None,
-            result.NextAction);
+        Assert.Contains(PersonalMessagingAction.DiscoverUsers, result.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreateDirect, result.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreatePersonalChannel, result.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreatePersonalGroup, result.AllowedActions);
+        Assert.DoesNotContain(PersonalMessagingAction.CreatePrivatePersonalGroup, result.AllowedActions);
+        Assert.DoesNotContain(PersonalMessagingAction.CreateDirectWithAuthorizedRelationship, result.AllowedActions);
+        Assert.Equal(MessagingNextAction.None, result.NextAction);
+        Assert.Equal(status, result.VerificationStatus);
+        Assert.StartsWith(MessagingStatusPolicy.PolicyVersion + ":", result.Version);
     }
 
     [Fact]
@@ -76,14 +78,15 @@ public sealed class PersonalMessagingStatusTests
     }
 
     [Fact]
-    public void OrganizationWorkspaceDoesNotAdvertisePersonalCreationOrGrantOrganizationPrivileges()
+    public void SelectedOrganizationDoesNotRemoveIndependentPersonalCapabilities()
     {
         var result = MessagingStatusPolicy.Evaluate(Adult with { PersonalWorkspaceSelected = false }, Now);
         Assert.Contains(PersonalMessagingAction.ReadExistingConversations, result.AllowedActions);
         Assert.Contains(PersonalMessagingAction.DiscoverUsers, result.AllowedActions);
-        Assert.DoesNotContain(PersonalMessagingAction.CreatePersonalGroup, result.AllowedActions);
-        Assert.DoesNotContain(PersonalMessagingAction.CreateDirect, result.AllowedActions);
-        Assert.Equal(MessagingNextAction.SelectPersonalWorkspace, result.NextAction);
+        Assert.Contains(PersonalMessagingAction.CreatePersonalGroup, result.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreatePersonalChannel, result.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreateDirect, result.AllowedActions);
+        Assert.Equal(MessagingNextAction.None, result.NextAction);
     }
 
     [Fact]

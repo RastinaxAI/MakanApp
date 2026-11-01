@@ -134,6 +134,7 @@ public sealed class EfExamAnswerStore(
         !await dbContext.Set<MakanApp.Domain.Messaging.ScheduledMessageAttachment>().AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
         !await dbContext.ModerationEvidenceAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
         !await dbContext.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileAssetId, ct) &&
+        !await dbContext.Conversations.AnyAsync(x => x.PhotoFileAssetId == fileAssetId, ct) &&
         !await dbContext.ReportExportJobs.AnyAsync(x => x.Id == fileAssetId || x.OutputFileAssetId == fileAssetId, ct);
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)

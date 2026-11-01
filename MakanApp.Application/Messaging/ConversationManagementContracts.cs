@@ -64,7 +64,15 @@ public sealed record ManagedConversationResult(
     DateTime? ArchivedAtUtc,
     string Version,
     IReadOnlyCollection<ConversationParticipantResult> Participants,
-    bool AlreadyExisted);
+    bool AlreadyExisted)
+{
+    public IReadOnlyList<ConversationInitialTargetResult> InitialTargets { get; init; } = [];
+    public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
+    public ConversationPhotoResult? Photo { get; init; }
+}
+
+public sealed record ConversationInitialTargetResult(Guid TargetUserId, ConversationInitialTargetOutcome Outcome,
+    Guid? InvitationId, DateTime? InvitationExpiresAtUtc);
 
 public sealed record DiscoverableConversationResult(
     Guid ConversationId,

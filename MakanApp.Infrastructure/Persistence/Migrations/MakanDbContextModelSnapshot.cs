@@ -625,6 +625,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("ActivityRevision")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CancelledAtUtc")
                         .HasColumnType("datetime2(7)");
 
@@ -692,6 +695,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("Sessions", "academic", t =>
                         {
+                            t.HasCheckConstraint("CK_Sessions_ActivityRevision", "[ActivityRevision]>=0");
+
                             t.HasCheckConstraint("CK_Sessions_Status", "[Status] IN (1, 2, 3)");
 
                             t.HasCheckConstraint("CK_Sessions_TimeRange", "[EndUtc] > [StartUtc]");
@@ -3594,6 +3599,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("SessionAction")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("SourceRevision")
                         .HasColumnType("int");
 
@@ -3620,17 +3631,23 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OrganizationId", "AssignmentVersionId");
 
-                    b.HasIndex("OrganizationId", "ClassId");
-
                     b.HasIndex("OrganizationId", "ExamVersionId");
 
                     b.HasIndex("OrganizationId", "LessonId");
+
+                    b.HasIndex("SessionId", "SourceRevision")
+                        .IsUnique()
+                        .HasFilter("[SessionId] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId", "ClassId", "SessionId");
 
                     b.ToTable("AcademicActivityPublications", "messaging", t =>
                         {
                             t.HasCheckConstraint("CK_AcademicActivityPublications_Revision", "[SourceRevision]>0");
 
-                            t.HasCheckConstraint("CK_AcademicActivityPublications_Source", "([Kind]=1 AND [LessonId] IS NOT NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL) OR ([Kind]=2 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NOT NULL AND [ExamVersionId] IS NULL) OR ([Kind]=3 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_AcademicActivityPublications_SessionAction", "([Kind]=4 AND [SessionAction] IS NOT NULL) OR ([Kind]<>4 AND [SessionAction] IS NULL)");
+
+                            t.HasCheckConstraint("CK_AcademicActivityPublications_Source", "([Kind]=1 AND [LessonId] IS NOT NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=2 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NOT NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=3 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NOT NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=4 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NOT NULL AND [SessionAction] IN (1,2,3,4))");
                         });
                 });
 
@@ -3742,6 +3759,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("PhotoFileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -3774,6 +3794,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("DirectUserLowId");
 
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("PhotoFileAssetId")
+                        .IsUnique()
+                        .HasFilter("[PhotoFileAssetId] IS NOT NULL");
 
                     b.HasIndex("SavedOwnerUserId")
                         .IsUnique()
@@ -3822,6 +3846,8 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_Conversations_NextMessageSequence", "[NextMessageSequence] > 0");
 
                             t.HasCheckConstraint("CK_Conversations_OfficialOrganization", "[IsOfficialOrganizationSpace]=0 OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [AcademicClassId] IS NULL)");
+
+                            t.HasCheckConstraint("CK_Conversations_PhotoType", "[PhotoFileAssetId] IS NULL OR [Type] IN (2,3)");
 
                             t.HasCheckConstraint("CK_Conversations_SavedShape", "([Type] = 4 AND [Scope] = 1 AND [OrganizationId] IS NULL AND [SavedOwnerUserId] IS NOT NULL AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] <> 4 AND [SavedOwnerUserId] IS NULL)");
 
@@ -3978,6 +4004,33 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("ConversationChecklistPersonalStates", "messaging", t =>
                         {
                             t.HasCheckConstraint("CK_ConversationChecklistPersonalStates_Mode", "[Mode]=1 AND [Revision]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInitialTarget", b =>
+                {
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TargetUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("InvitationExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("InvitationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Outcome")
+                        .HasColumnType("int");
+
+                    b.HasKey("ConversationId", "TargetUserId");
+
+                    b.HasIndex("InvitationId");
+
+                    b.ToTable("ConversationInitialTargets", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ConversationInitialTargets_Outcome", "([Outcome]=2 AND [InvitationId] IS NOT NULL AND [InvitationExpiresAtUtc] IS NOT NULL) OR ([Outcome] IN (1,3) AND [InvitationId] IS NULL AND [InvitationExpiresAtUtc] IS NULL)");
                         });
                 });
 
@@ -8573,6 +8626,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrganizationId", "LessonId")
                         .HasPrincipalKey("OrganizationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Academic.Session", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "ClassId", "SessionId")
+                        .HasPrincipalKey("OrganizationId", "ClassId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.ChatFolder", b =>
@@ -8604,6 +8663,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("PhotoFileAssetId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -8658,6 +8722,20 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasPrincipalKey("ChecklistId", "Id", "Mode")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInitialTarget", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.ConversationInvitation", null)
+                        .WithMany()
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Messaging.ConversationInvitation", b =>

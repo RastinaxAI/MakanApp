@@ -1,6 +1,7 @@
 namespace MakanApp.Domain.Messaging;
 
-public enum AcademicActivityKind { Lesson = 1, Assignment = 2, Exam = 3 }
+public enum AcademicActivityKind { Lesson = 1, Assignment = 2, Exam = 3, Session = 4 }
+public enum SessionActivityAction { Scheduled = 1, Rescheduled = 2, Cancelled = 3, Completed = 4 }
 
 public sealed class AcademicActivityPublication
 {
@@ -12,6 +13,8 @@ public sealed class AcademicActivityPublication
     public Guid? LessonId { get; private set; }
     public Guid? AssignmentVersionId { get; private set; }
     public Guid? ExamVersionId { get; private set; }
+    public Guid? SessionId { get; private set; }
+    public SessionActivityAction? SessionAction { get; private set; }
     public int SourceRevision { get; private set; }
     public Guid InitiatedByUserId { get; private set; }
     public string Title { get; private set; } = string.Empty;
@@ -22,16 +25,19 @@ public sealed class AcademicActivityPublication
 
     public static AcademicActivityPublication Create(AcademicActivityKind kind, Guid organizationId, Guid classId,
         Guid sourceVersionId, int sourceRevision, Guid actorId, string title, DateTime occurredAtUtc,
-        DateTime? dueAtUtc = null, DateTime? availableFromUtc = null, DateTime? availableUntilUtc = null)
+        DateTime? dueAtUtc = null, DateTime? availableFromUtc = null, DateTime? availableUntilUtc = null,
+        SessionActivityAction? sessionAction = null)
     {
         if (!Enum.IsDefined(kind) || organizationId == Guid.Empty || classId == Guid.Empty || sourceVersionId == Guid.Empty || actorId == Guid.Empty ||
             sourceRevision < 1 || string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200 || occurredAtUtc.Kind != DateTimeKind.Utc ||
-            new[] { dueAtUtc, availableFromUtc, availableUntilUtc }.Any(x => x.HasValue && x.Value.Kind != DateTimeKind.Utc))
+            new[] { dueAtUtc, availableFromUtc, availableUntilUtc }.Any(x => x.HasValue && x.Value.Kind != DateTimeKind.Utc) ||
+            (kind == AcademicActivityKind.Session) != sessionAction.HasValue || sessionAction.HasValue && !Enum.IsDefined(sessionAction.Value))
             throw new ArgumentException("مشخصات انتشار فعالیت معتبر نیست.");
         return new() { Id = Guid.NewGuid(), Kind = kind, OrganizationId = organizationId, ClassId = classId,
             LessonId = kind == AcademicActivityKind.Lesson ? sourceVersionId : null,
             AssignmentVersionId = kind == AcademicActivityKind.Assignment ? sourceVersionId : null,
             ExamVersionId = kind == AcademicActivityKind.Exam ? sourceVersionId : null,
+            SessionId = kind == AcademicActivityKind.Session ? sourceVersionId : null, SessionAction = sessionAction,
             SourceRevision = sourceRevision, InitiatedByUserId = actorId, Title = title.Trim(), OccurredAtUtc = occurredAtUtc,
             DueAtUtc = dueAtUtc, AvailableFromUtc = availableFromUtc, AvailableUntilUtc = availableUntilUtc };
     }

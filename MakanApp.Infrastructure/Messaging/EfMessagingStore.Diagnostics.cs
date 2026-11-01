@@ -21,8 +21,6 @@ public sealed partial class EfMessagingStore
         }
         else if (facts.Scope == ConversationScope.Personal && facts.AccessContext.WorkspaceType != WorkspaceType.Personal)
             category = "ContextMismatch";
-        else if ((facts.ActorAgeCategory != CommunicationAgeCategory.Adult || facts.TargetAgeCategory != CommunicationAgeCategory.Adult) && !facts.HasAuthorizedSafetyRelationship)
-            category = "AgeRestricted";
         else if (facts.Scope == ConversationScope.Personal && !facts.TargetAllowsPersonalDirect)
             category = "PrivacyDenied";
         else category = "RelationshipRequired";

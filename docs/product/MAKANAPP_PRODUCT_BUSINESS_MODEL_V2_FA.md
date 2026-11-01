@@ -1,5 +1,7 @@
 # MakanApp — مدل محصول، قواعد کسب‌وکار و جهت معماری نسخهٔ ۲
 
+> اولویت تصمیم جدید: [سیاست Messaging مصوب ۲۰۲۶/۱۱/۰۱](MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) بر محدودیت‌های سنیِ امکانات عمومی در این نسخه مقدم است. سایر قواعد کسب‌وکار این سند با این اصلاح بازنویسی نمی‌شوند؛ برای Student Plan آستانه/مدرک سن جدیدی حدس زده نشده است.
+
 بازبینی تکمیلی `2026-10-30` از `main@e11d4ec`: پروفایل، مدرسه، اشتراک Individual/Organization، دورهٔ ماهانه، reserve/settle و بنیاد PersonalClass در کد موجودند. replay حساب و پیوست آزمون هم افزوده شده‌اند. ممیزی baseline بخش۲۴ و طرح‌های۲۶..۳۳ مربوط به قبل از اجرا هستند؛ قسمت‌های تحقق‌یافتهٔ آن‌ها با قراردادهای [اشتراک](SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md)، [Realtime](REALTIME_EVENT_CONTRACT_FA.md) و [پیوست](ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) جایگزین می‌شوند. Learning Profile، Badge، Source lifecycle/RAG، AI Runtime شخصی و چرخهٔ کامل آموزشی PersonalClass همچنان خارج از قابلیت جاری‌اند؛ نام/قیمت/سقف پولی یا Refund نهایی از این سند استنتاج نشود.
 
 تاریخ ممیزی: `2026-10-28` — مخزن: `MakanApp-Backend` — شاخه: `main` — مبنای Git: `b87fbd89cef33f26315fddd4a1e57116b44cc781`.

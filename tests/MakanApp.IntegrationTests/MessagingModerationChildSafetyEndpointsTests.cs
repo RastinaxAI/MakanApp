@@ -583,7 +583,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task AdultTrafficBypassesProviderWhileUnknownAllowAndUnavailableFailClosedBehaveCorrectly()
+    public async Task AdultAndUnknownTrafficBothEvaluateSafetyAndFailClosedWhenUnavailable()
     {
         using var senderClient = factory.CreateClient();
         using var recipientClient = factory.CreateClient();
@@ -594,13 +594,10 @@ public sealed partial class MessagingEndpointsTests
         var direct = await StartDirectAndReadAsync(senderClient, recipient.UserId, ConversationScope.Personal);
 
         factory.ContentSafetyProvider.ConfigureUnavailable();
-        var adult = await SendMessageAndReadAsync(
-            senderClient,
-            direct.ConversationId,
-            Guid.NewGuid(),
-            "adult bypass 14d");
-        Assert.Equal(1, adult.Sequence);
-        Assert.Empty(factory.ContentSafetyProvider.Requests);
+        using var adult = await SendMessageAsync(senderClient, direct.ConversationId, Guid.NewGuid(), "Synthetic adult safety check");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, adult.StatusCode);
+        Assert.Single(factory.ContentSafetyProvider.Requests);
+        Assert.Empty(await factory.GetMessagesAsync(direct.ConversationId));
 
         await factory.SetCommunicationAgeCategoryAsync(recipient.UserId, CommunicationAgeCategory.Unknown);
         await factory.AllowPersonalGroupInviteAsync(sender.UserId, recipient.UserId);
@@ -611,7 +608,7 @@ public sealed partial class MessagingEndpointsTests
             direct.ConversationId,
             allowedId,
             "unknown allowed 14d");
-        Assert.Equal(2, allowed.Sequence);
+        Assert.Equal(1, allowed.Sequence);
         Assert.Single(factory.ContentSafetyProvider.Requests);
         Assert.Null(await factory.GetSafetyIncidentAsync(
             direct.ConversationId,
@@ -627,7 +624,7 @@ public sealed partial class MessagingEndpointsTests
             "provider unavailable 14d");
         Assert.Equal(HttpStatusCode.ServiceUnavailable, unavailable.StatusCode);
         Assert.Equal(MessagingErrorCodes.MessageSafetyUnavailable, await ReadProblemCodeAsync(unavailable));
-        Assert.Equal(2, (await factory.GetMessagesAsync(direct.ConversationId)).Length);
+        Assert.Single(await factory.GetMessagesAsync(direct.ConversationId));
         Assert.Null(await factory.GetSafetyIncidentAsync(
             direct.ConversationId,
             sender.UserId,
@@ -666,7 +663,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task GroupStopsUsingSafetyProviderAfterLastNonAdultParticipantLeaves()
+    public async Task GroupKeepsSafetyProviderAfterLastNonAdultParticipantLeaves()
     {
         using var ownerClient = factory.CreateClient();
         using var memberClient = factory.CreateClient();
@@ -693,14 +690,10 @@ public sealed partial class MessagingEndpointsTests
         factory.ContentSafetyProvider.ConfigureUnavailable();
         try
         {
-            var second = await SendMessageAndReadAsync(
-                ownerClient,
-                group.ConversationId,
-                Guid.NewGuid(),
-                "adult only after leave 14d");
-
-            Assert.Equal(2, second.Sequence);
-            Assert.Empty(factory.ContentSafetyProvider.Requests);
+            using var second = await SendMessageAsync(ownerClient, group.ConversationId, Guid.NewGuid(), "Synthetic adult only group safety check");
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, second.StatusCode);
+            Assert.Single(factory.ContentSafetyProvider.Requests);
+            Assert.Single(await factory.GetMessagesAsync(group.ConversationId));
         }
         finally
         {

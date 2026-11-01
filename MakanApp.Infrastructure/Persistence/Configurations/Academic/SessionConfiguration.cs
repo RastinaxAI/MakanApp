@@ -13,6 +13,7 @@ public sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
         {
             table.HasCheckConstraint("CK_Sessions_TimeRange", "[EndUtc] > [StartUtc]");
             table.HasCheckConstraint("CK_Sessions_Status", "[Status] IN (1, 2, 3)");
+            table.HasCheckConstraint("CK_Sessions_ActivityRevision", "[ActivityRevision]>=0");
         });
         builder.HasKey(session => session.Id);
         builder.HasAlternateKey(session => new

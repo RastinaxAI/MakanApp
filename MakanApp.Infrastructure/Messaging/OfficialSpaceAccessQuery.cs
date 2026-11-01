@@ -32,7 +32,7 @@ public static class OfficialSpaceAccessQuery
         var learnersAndTeachers = MessengerRelationshipQuery.ClassMembers(db).Where(m => m.OrganizationId == organizationId && m.ClassId == classId)
             .Select(m => new OfficialAccessReason { UserId = m.UserId, ReasonId = m.ReasonId,
                 Kind = m.IsTeacher ? OfficialAccessReasonKind.TeacherAssignment : OfficialAccessReasonKind.Enrollment,
-                CanManage = false, CanPublishChannel = m.IsTeacher });
+                CanManage = m.IsTeacher, CanPublishChannel = m.IsTeacher });
         return managers.Union(learnersAndTeachers);
     }
 
@@ -43,6 +43,7 @@ public static class OfficialSpaceAccessQuery
         public Guid? ClassId { get; init; }
         public Guid UserId { get; init; }
         public bool CanPublish { get; init; }
+        public bool CanManage { get; init; }
     }
 
     public static IQueryable<ConversationGrant> Conversations(MakanDbContext db)
@@ -57,13 +58,13 @@ public static class OfficialSpaceAccessQuery
                 (c.AcademicClassId == null || db.Classes.Any(k => k.Id == c.AcademicClassId && k.OrganizationId == organization.Id && k.Status == MakanApp.Domain.Academic.ClassStatus.Active)) &&
                 member.Status == MembershipStatus.Active && member.EndedAtUtc == null &&
                 role.Role == OrganizationRole.Manager && role.Status == RoleAssignmentStatus.Active && role.EndedAtUtc == null && user.AccountStatus == UserAccountStatus.Active
-            select new ConversationGrant { ConversationId = c.Id, OrganizationId = organization.Id, ClassId = c.AcademicClassId, UserId = user.Id, CanPublish = true };
+            select new ConversationGrant { ConversationId = c.Id, OrganizationId = organization.Id, ClassId = c.AcademicClassId, UserId = user.Id, CanPublish = true, CanManage = true };
         var members = from c in db.Conversations
             join member in MessengerRelationshipQuery.ClassMembers(db) on new { c.OrganizationId, c.AcademicClassId }
                 equals new { OrganizationId = (Guid?)member.OrganizationId, AcademicClassId = (Guid?)member.ClassId }
             where c.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic
             select new ConversationGrant { ConversationId = c.Id, OrganizationId = member.OrganizationId, ClassId = member.ClassId,
-                UserId = member.UserId, CanPublish = c.Type == ConversationType.Group || member.IsTeacher };
+                UserId = member.UserId, CanPublish = c.Type == ConversationType.Group || member.IsTeacher, CanManage = member.IsTeacher };
         return managers.Union(members);
     }
 }

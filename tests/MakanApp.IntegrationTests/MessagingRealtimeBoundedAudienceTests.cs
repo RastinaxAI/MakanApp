@@ -75,7 +75,7 @@ public sealed class SignalRBoundedAudienceTests
     {
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience);
-        await new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
+        await new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope(), new ScopedOnlyInbox())
             .NotifyConversationChangedAsync(Notification(), null, CancellationToken.None);
         Assert.Equal(new[] { 128, 128, 7 }, clients.Batches.Select(batch => batch.Length));
         Assert.Equal(new[] { 128, 256, 263 }, clients.EnumeratedAtSend);
@@ -88,7 +88,7 @@ public sealed class SignalRBoundedAudienceTests
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience, index =>
         { if (index == 2) throw new IOException("synthetic-private-hub-marker"); });
-        await Assert.ThrowsAsync<IOException>(() => new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
+        await Assert.ThrowsAsync<IOException>(() => new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope(), new ScopedOnlyInbox())
             .NotifyConversationChangedAsync(Notification(), null, CancellationToken.None));
         Assert.Equal(2, clients.Batches.Count);
         Assert.Equal(256, audience.Enumerated);
@@ -101,7 +101,7 @@ public sealed class SignalRBoundedAudienceTests
         var audience = new StreamingAudience(263);
         var clients = new BoundedHubClients(audience, _ => caller.Cancel());
         var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope())
+            new SignalRMessagingRealtimeNotifier(new BoundedHubContext(clients), audience, TimeProvider.System, new FixedSessionScope(), new ScopedOnlyInbox())
                 .NotifyConversationChangedAsync(Notification(), null, caller.Token));
         Assert.Equal(caller.Token, exception.CancellationToken);
         Assert.Single(clients.Batches);
@@ -117,6 +117,18 @@ public sealed class SignalRBoundedAudienceTests
         {
             ct.ThrowIfCancellationRequested();
             return Task.FromResult<string?>("synthetic-context");
+        }
+    }
+
+    // این تست‌ها فقط fanout قبلی ConversationChanged را می‌سنجند؛ نمای حساب در تست مستقل بررسی می‌شود.
+    private sealed class ScopedOnlyInbox : MakanApp.Application.Realtime.IAccountInboxRealtimeService
+    {
+        public Task<MakanApp.Application.Realtime.AccountChangePageResult> ReadAsync(Guid userId, Guid sessionId, string? cursor, int limit, CancellationToken ct) =>
+            throw new NotSupportedException();
+        public async IAsyncEnumerable<(Guid SessionId, MakanApp.Application.Realtime.RealtimeInvalidation Notification)> ResolveAsync(
+            MessagingRealtimeNotification notification, Guid? audienceUserId, [EnumeratorCancellation] CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested(); await Task.CompletedTask; yield break;
         }
     }
 

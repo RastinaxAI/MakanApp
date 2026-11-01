@@ -93,10 +93,9 @@ public sealed partial class EfMessagingStore : IConversationTopicStore
         if (conversation.Type != ConversationType.Group || conversation.Status != ConversationStatus.Active) return false;
         if (conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged)
             return actor.CanManage(ConversationAdminPermission.ManageTopics);
-        // اختیار معلم از assignment جاری کلاس است، نه ارتقای ساختگی participant به Admin.
-        return conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && context.ActiveRole == OrganizationRole.Teacher &&
-            await MessengerRelationshipQuery.ClassMembers(dbContext).AnyAsync(m => m.ClassId == conversation.AcademicClassId &&
-                m.OrganizationId == conversation.OrganizationId && m.UserId == userId && m.IsTeacher, ct);
+        // اختیار مدیر و معلم از رابطهٔ آموزشی جاری می‌آید؛ Participant به Admin تبدیل نمی‌شود.
+        return conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic &&
+            await OfficialSpaceAccessQuery.Conversations(dbContext).AnyAsync(m => m.ConversationId == conversation.Id && m.UserId == userId && m.CanManage, ct);
     }
 
     private async Task EnsureTopicManagementAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
@@ -105,9 +104,6 @@ public sealed partial class EfMessagingStore : IConversationTopicStore
         if (!await CanManageTopicsAsync(conversation, actor, userId, context, ct)) throw PermissionRequired();
         await EnsureActorCanMessageAsync(userId, now, ct);
         await EnsureNotBannedAsync(conversation.Id, userId, now, ct);
-        await EnsurePersonalAudienceSafetyAsync(conversation, userId, now, ct);
-        if (actor.Role == ConversationParticipantRole.Owner)
-            await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
     }
 
     private Task EnsureSafetyOperationAuthorizedAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context,

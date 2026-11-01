@@ -76,17 +76,22 @@ public sealed partial class MessagingEndpointsTests
         var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
         var id = AddOwnAccessEvent(scope.ServiceProvider, owner.UserId);
         await db.SaveChangesAsync();
-        var moved = false;
-        var expired = new CallbackInvalidationNotifier((_, _, _) =>
+        var moved = false; var ownDeliveries = 0;
+        var expired = new CallbackInvalidationNotifier((eventId, _, _) =>
         {
             Assert.Null(db.Database.CurrentTransaction);
-            if (!moved) { moved = true; factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(31)); }
+            if (eventId == id)
+            {
+                ownDeliveries++;
+                if (!moved) { moved = true; factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(31)); }
+            }
             return Task.CompletedTask;
         });
         try
         {
             // همان loop، claim منقضی را از token تازه بازیابی می‌کند؛ completion قدیمی پذیرفته نمی‌شود.
-            Assert.Equal(2, await ReplayProcessor(scope.ServiceProvider, expired).DispatchBatchAsync(default));
+            Assert.True(await ReplayProcessor(scope.ServiceProvider, expired).DispatchBatchAsync(default) >= 2);
+            Assert.Equal(2, ownDeliveries);
             var row = await db.OutboxMessages.AsNoTracking().SingleAsync(x => x.Id == id);
             Assert.NotNull(row.ProcessedAtUtc); Assert.Equal(2, row.AttemptCount);
         }

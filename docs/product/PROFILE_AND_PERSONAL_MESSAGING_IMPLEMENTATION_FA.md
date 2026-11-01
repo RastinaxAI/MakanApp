@@ -1,5 +1,7 @@
 # پیاده‌سازی Profile/DOB و پذیرش Personal Messaging مستقل از نقش
 
+> اصلاح سیاست `2026-11-01`: شرط‌های سنی گزارش تاریخی زیر superseded هستند؛ [قرارداد جاری](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). DOB و تأیید سن دادهٔ پروفایل‌اند، نه مجوز عمومی. هویت ضروری، Privacy، Block، نشست و مجوز منبع حفظ شده‌اند؛ آمار و Commitهای زیر مربوط به همان اجرای قدیمی‌اند.
+
 تاریخ: `2026-10-28` — مخزن اصلی: `D:\Project\MakanApp\MakanApp-Backend` — شاخه: `main`.
 
 HEAD مبنا: `b87fbd89cef33f26315fddd4a1e57116b44cc781`.

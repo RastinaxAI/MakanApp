@@ -33,13 +33,17 @@ public sealed class AcademicActivityPublicationConfiguration : IEntityTypeConfig
     {
         b.ToTable("AcademicActivityPublications", "messaging", t =>
         {
-            t.HasCheckConstraint("CK_AcademicActivityPublications_Source", "([Kind]=1 AND [LessonId] IS NOT NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL) OR ([Kind]=2 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NOT NULL AND [ExamVersionId] IS NULL) OR ([Kind]=3 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NOT NULL)");
+            t.HasCheckConstraint("CK_AcademicActivityPublications_Source", "([Kind]=1 AND [LessonId] IS NOT NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=2 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NOT NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=3 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NOT NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=4 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NOT NULL AND [SessionAction] IN (1,2,3,4))");
             t.HasCheckConstraint("CK_AcademicActivityPublications_Revision", "[SourceRevision]>0");
+            t.HasCheckConstraint("CK_AcademicActivityPublications_SessionAction", "([Kind]=4 AND [SessionAction] IS NOT NULL) OR ([Kind]<>4 AND [SessionAction] IS NULL)");
         });
         b.HasKey(x => x.Id); b.Property(x => x.Title).HasMaxLength(200).IsRequired();
         b.HasIndex(x => new { x.LessonId, x.SourceRevision }).IsUnique().HasFilter("[LessonId] IS NOT NULL");
         b.HasIndex(x => x.AssignmentVersionId).IsUnique().HasFilter("[AssignmentVersionId] IS NOT NULL");
         b.HasIndex(x => x.ExamVersionId).IsUnique().HasFilter("[ExamVersionId] IS NOT NULL");
+        b.HasIndex(x => new { x.SessionId, x.SourceRevision }).IsUnique().HasFilter("[SessionId] IS NOT NULL");
+        b.HasOne<Session>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.ClassId, x.SessionId })
+            .HasPrincipalKey(x => new { x.OrganizationId, x.ClassId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Class>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.ClassId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ClassLesson>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.LessonId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<AssignmentVersion>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.AssignmentVersionId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);

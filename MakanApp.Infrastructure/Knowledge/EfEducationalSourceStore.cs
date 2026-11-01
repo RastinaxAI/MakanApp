@@ -149,7 +149,8 @@ public sealed partial class EfEducationalSourceStore(MakanDbContext db, EfCommer
             await db.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
             await db.SubmissionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.AnswerRevisionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
             await db.MessageAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.ModerationEvidenceAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
-            await db.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileId, ct) || await db.ReportExportJobs.AnyAsync(x => x.OutputFileAssetId == fileId || x.Id == fileId, ct))
+            await db.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileId, ct) || await db.Conversations.AnyAsync(x => x.PhotoFileAssetId == fileId, ct) ||
+            await db.ReportExportJobs.AnyAsync(x => x.OutputFileAssetId == fileId || x.Id == fileId, ct))
             throw Error(SourceErrorCodes.NotAllowed);
         // نگهداری مرجع از حذف blob پس از Archive یا تعویض نسخه جلوگیری می‌کند.
         if (file.Status == FileAssetStatus.Ready) file.Retain(Now);

@@ -56,7 +56,7 @@ public sealed partial class MessagingEndpointsTests
             {
                 var client = factory.CreateClient(); clients.Add(client); var user = await CreateMessagingUserAsync(client);
                 await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, user.UserId);
-                (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/members", new AddConversationMemberCommand(user.UserId), JsonOptions)).EnsureSuccessStatusCode();
+                await InviteAndAcceptPersonalAsync(setup.OwnerClient, client, id, user.UserId);
             }
             var receipt = await CreateP2PollAsync(setup.OwnerClient, id, P2Poll(anonymous: false));
             var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

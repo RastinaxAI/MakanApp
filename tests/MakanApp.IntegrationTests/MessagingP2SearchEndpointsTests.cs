@@ -86,7 +86,7 @@ public sealed partial class MessagingEndpointsTests
         using var setup = await CreateP2ManagedSetupAsync("groups", initiallyMember: true); var id = setup.Conversation.ConversationId;
         await SendMessageAndReadAsync(setup.OwnerClient, id, Guid.NewGuid(), "p2-query-batch"); await SendMessageAndReadAsync(setup.TargetClient, id, Guid.NewGuid(), "p2-query-batch");
         using var third = factory.CreateClient(); var user = await CreateMessagingUserAsync(third); await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, user.UserId);
-        (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/members", new AddConversationMemberCommand(user.UserId), JsonOptions)).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(setup.OwnerClient, third, id, user.UserId);
         await SendMessageAndReadAsync(third, id, Guid.NewGuid(), "p2-query-batch");
         var counter = new P2IdentityQueryCounter();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>

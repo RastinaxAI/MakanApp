@@ -33,7 +33,10 @@ public sealed record SessionResult(
     SessionStatus Status,
     DateTime? CancelledAtUtc,
     DateTime? CompletedAtUtc,
-    string RowVersion);
+    string RowVersion)
+{
+    public MakanApp.Application.Messaging.AcademicPublicationReceipt? PublicationReceipt { get; init; }
+}
 
 public sealed record CreateScheduleRuleCommand(
     DayOfWeek LocalDayOfWeek,

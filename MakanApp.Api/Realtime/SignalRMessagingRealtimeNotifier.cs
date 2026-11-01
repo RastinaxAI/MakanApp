@@ -7,7 +7,8 @@ public sealed class SignalRMessagingRealtimeNotifier(
     IHubContext<MessagingHub, IMessagingHubClient> hubContext,
     IMessagingRealtimeAudienceResolver audienceResolver,
     TimeProvider timeProvider,
-    MakanApp.Application.Realtime.IRealtimeSessionScope sessionScope) : IMessagingRealtimeNotifier
+    MakanApp.Application.Realtime.IRealtimeSessionScope sessionScope,
+    MakanApp.Application.Realtime.IAccountInboxRealtimeService accountInbox) : IMessagingRealtimeNotifier
 {
     public const int MaximumGroupBatchSize = 128;
 
@@ -40,5 +41,7 @@ public sealed class SignalRMessagingRealtimeNotifier(
         }
         if (groups.Count > 0)
             await hubContext.Clients.Groups(groups.ToArray()).ConversationChanged(notification with { ContextRevision = groupRevision }).WaitAsync(cancellationToken);
+        await foreach (var (sessionId, invalidation) in accountInbox.ResolveAsync(notification, audienceUserId, cancellationToken))
+            await hubContext.Clients.Group(MessagingRealtimeGroups.Session(sessionId)).ClientInvalidated(invalidation).WaitAsync(cancellationToken);
     }
 }

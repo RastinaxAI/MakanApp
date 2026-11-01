@@ -1,5 +1,7 @@
 # قرارداد مصرف Messenger P0
 
+> اصلاح معنایی `2026-11-01`: [قرارداد جاری Messaging](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). شرط Adult/Verified برای Discovery/Direct و NextAction تأیید سن در این گزارش تاریخی superseded است. سن فقط Fact پروفایل است؛ Privacy/Block/Safety و مجوز واقعی منبع معتبر می‌مانند. فیلدهای قدیمی مجوز UI نیستند.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

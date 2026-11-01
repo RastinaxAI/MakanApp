@@ -76,6 +76,8 @@ public sealed record ConversationSummaryResult(
 {
     public OfficialSpaceMetadata? Official { get; init; }
     public bool IsOfficial => Official is not null;
+    public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
+    public ConversationPhotoResult? Photo { get; init; }
 }
 
 public sealed record GetConversationMessagesQuery(

@@ -442,7 +442,7 @@ public sealed class ConversationManagementService(
             MessagingWireTime.FromStoredUtc(result.Conversation.ArchivedAtUtc),
             Convert.ToBase64String(result.Conversation.RowVersion),
             result.Participants.Select(MapParticipant).ToArray(),
-            result.AlreadyExisted);
+            result.AlreadyExisted) { InitialTargets = result.InitialTargets, EffectiveCapabilities = result.EffectiveCapabilities, Photo = result.Photo };
 
     private static ConversationParticipantResult MapParticipant(
         ConversationParticipantStoreRecord item) =>

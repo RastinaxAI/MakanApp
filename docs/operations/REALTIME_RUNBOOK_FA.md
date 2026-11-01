@@ -62,7 +62,7 @@ TraceId producer HTTP در invalidation کمینه وجود دارد؛ برای 
 
 Role/Membership/Guardian/Enrollment و scope جاری قبل از payload آینده کنترل می‌شوند؛ گروه قدیمی دلیل مجوز نیست. Parent چت خصوصی کودک/roster کامل نمی‌گیرد و Manager مالی شخصی اعضا را نمی‌بیند. پایان رابطه history مجاز را خودکار حذف نمی‌کند.
 
-Ready فایل مجوز Safety/Attach/Download نیست. Minor/Unknown رسانه را ReviewRequired نگه می‌دارد؛ بستن Moderation مجوز ارسال نیست. retry ارسال ردشده Safety را دور نمی‌زند.
+Ready فایل مجوز Safety/Attach/Download نیست. از سیاست ۲۰۲۶/۱۱/۰۱، Safety مستقل از سن است و رسانهٔ پشتیبانی‌نشده برای همه ReviewRequired می‌ماند؛ بستن Moderation مجوز ارسال نیست. retry ارسال ردشده Safety را دور نمی‌زند. صندوق حساب و Replay افزایشی آن از [قرارداد جاری](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) خوانده شوند؛ Cursor آن با scoped قابل تعویض نیست.
 
 برای BE-01 ابتدا correlationId/traceId و safetyReference پاسخ 422 را به لاگ SafetyReference متصل کنید. Reason محدود UnsupportedMedia به موتور متن فعلی اشاره دارد؛ PolicyCodes/ProviderReference کامل فقط در Persistence خصوصی و با دسترسی مصوب بررسی شوند. پرونده/Attachment evidence را برای recipient grant تلقی نکنید و Status را با SQL دستی Allowed یا Ready نکنید. workflow تأیید رسانه هنوز PRODUCT_DECISION_BLOCKED است؛ [قرارداد وضعیت و محدودهٔ Audit](../messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
 

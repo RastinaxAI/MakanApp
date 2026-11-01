@@ -60,12 +60,8 @@ public sealed partial class NotificationDeliveryProcessor
             select new { message.SenderUserId, conversation.Type, conversation.Scope, conversation.OrganizationId }).SingleOrDefaultAsync(ct);
         if (source is null) return false;
         var users = await dbContext.Users.AsNoTracking().Where(u => u.Id == recipientId || u.Id == source.SenderUserId)
-            .Select(u => new { u.Id, u.AccountStatus, u.CommunicationAgeCategory, u.CommunicationAgeVerificationStatus }).ToArrayAsync(ct);
+            .Select(u => new { u.Id, u.AccountStatus }).ToArrayAsync(ct);
         if (users.Length != 2 || users.Any(u => u.AccountStatus != UserAccountStatus.Active)) return false;
-        if (users.Any(u => u.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
-                u.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified) &&
-            !await MessengerRelationshipQuery.RelatedUsers(dbContext, recipientId, nowUtc,
-                source.Scope == ConversationScope.Organization ? source.OrganizationId : null).ContainsAsync(source.SenderUserId, ct)) return false;
         if (source.Type != ConversationType.Direct) return true;
         if (await dbContext.UserBlocks.AnyAsync(b => b.Status == UserBlockStatus.Active && b.EndedAtUtc == null &&
                 (b.BlockerUserId == recipientId && b.BlockedUserId == source.SenderUserId ||

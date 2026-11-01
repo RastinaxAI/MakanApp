@@ -13,7 +13,10 @@ public sealed record OfficialSpaceMetadata(OfficialSourceKind SourceKind, Guid S
 }
 public sealed record OfficialSpaceCapabilities(bool CanRead, bool CanSend, bool CanManage);
 public sealed record OfficialSpaceEndpointResult(Guid? ConversationId, string State, OfficialSpaceCapabilities Capabilities,
-    OfficialSpaceMetadata? Official, int AttemptCount, string? LastFailureCategory);
+    OfficialSpaceMetadata? Official, int AttemptCount, string? LastFailureCategory)
+{
+    public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
+}
 public sealed record OfficialSpacesPairResult(OfficialSourceKind SourceKind, Guid SourceId, Guid OrganizationId,
     string Version, OfficialSpaceEndpointResult Group, OfficialSpaceEndpointResult Channel);
 public sealed record OfficialBackfillPlanRow(OfficialSourceKind SourceKind, Guid SourceId, Guid OrganizationId,
@@ -21,13 +24,21 @@ public sealed record OfficialBackfillPlanRow(OfficialSourceKind SourceKind, Guid
 public sealed record AcademicActivityCardResult(Guid EventId, AcademicActivityKind Kind, Guid SourceId, Guid SourceVersionId,
     int SourceRevision, Guid OrganizationId, Guid ClassId, Guid DestinationConversationId, ConversationType DestinationPurpose,
     string ActorKind, Guid InitiatedByUserId, DateTime OccurredAtUtc, string Title, DateTime? DueAtUtc,
-    DateTime? AvailableFromUtc, DateTime? AvailableUntilUtc, string State, bool IsActionable);
+    DateTime? AvailableFromUtc, DateTime? AvailableUntilUtc, string State, bool IsActionable)
+{
+    public SessionActivityAction? SessionAction { get; init; }
+}
 public sealed record AcademicActivityDeliveryResult(Guid EventId, ConversationType Purpose, AcademicActivityDeliveryState State,
     Guid? ConversationId, Guid? MessageId, int AttemptCount, string? LastFailureCategory);
+
+public sealed record AcademicPublicationReceipt(Guid EventId, AcademicActivityKind ActivityKind, Guid SourceId,
+    Guid SourceVersionId, int SourceRevision, string DeliveryState);
 
 public interface IAcademicActivityPublisher
 {
     Task RecordAsync(AcademicActivityPublication publication, CancellationToken ct);
+    Task<AcademicPublicationReceipt?> ReadReceiptAsync(Guid organizationId, Guid classId, AcademicActivityKind kind,
+        Guid sourceVersionId, int revision, CancellationToken ct);
 }
 
 public interface IOfficialSpacesStore

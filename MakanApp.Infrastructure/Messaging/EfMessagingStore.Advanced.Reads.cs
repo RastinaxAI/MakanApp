@@ -215,7 +215,7 @@ public sealed partial class EfMessagingStore
         var pinned = pinnedMessageIds.ToHashSet();
         var activities = new Dictionary<Guid, AcademicActivityCardResult?>();
         foreach (var message in messages.Where(m => m.AcademicActivityPublicationId.HasValue))
-            activities[message.Id] = await AcademicActivityProjection.CardAsync(dbContext, message, cancellationToken);
+            activities[message.Id] = await AcademicActivityProjection.CardAsync(dbContext, message, cancellationToken, timeProvider.GetUtcNow().UtcDateTime);
 
         return messages.Select(message => new ConversationMessageStoreRecord(
                 message,

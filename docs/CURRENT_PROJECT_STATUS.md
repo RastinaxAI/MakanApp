@@ -1,5 +1,7 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
+> اصلاح جاری `2026-11-01` بر مبنای `166a4aa`: [سیاست Messaging و پیاده‌سازی](product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md)، [Handoff جاری](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). OpenAPI واقعی محلی: ۳۸۸ عملیات، ۳۴۲ مسیر و ۶۵۱ schema؛ Source: ۵۹ Migration، آخرین `20261101202642_ExpandMessagingAccountPolicyAndMedia`. سن/DOB دیگر gate عمومی نیست؛ Safety/Privacy/Block باقی‌اند. صندوق/Replay حساب، قابلیت مدیریت محتوای رسمی و Photo/Receipt افزوده شده‌اند. آمار و وضعیت‌های زیر Snapshot تاریخی‌اند و این افزوده به معنی Deploy یا پذیرش سرور نیست.
+
 بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در63 Controller و322 مسیر؛608 schema،113 جدول و55 migration**. آخرین migration `20261030060025_AddExamAnswerAttachments` است. شمارش از OpenAPI/ApiExplorer و مدل طراحی EF بدون اتصال SQL، worker، SMS یا AI استخراج شده است؛ applied schema یا پذیرش سرور از آن معلوم نمی‌شود.
 
 ## تغییرات کد و بیزینس

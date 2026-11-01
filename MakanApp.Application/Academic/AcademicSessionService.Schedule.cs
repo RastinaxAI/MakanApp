@@ -25,6 +25,7 @@ public sealed partial class AcademicSessionService
         foreach (var session in sessions)
         {
             _store.Add(session);
+            await RecordSessionActivityAsync(session, userId, MakanApp.Domain.Messaging.SessionActivityAction.Scheduled, cancellationToken);
         }
 
         await _store.SaveChangesAsync(cancellationToken);
@@ -64,6 +65,7 @@ public sealed partial class AcademicSessionService
         foreach (var session in oldFutureSessions)
         {
             session.Cancel(UtcNow());
+            await RecordSessionActivityAsync(session, userId, MakanApp.Domain.Messaging.SessionActivityAction.Cancelled, cancellationToken);
         }
 
         try
@@ -88,6 +90,7 @@ public sealed partial class AcademicSessionService
         foreach (var session in newSessions)
         {
             _store.Add(session);
+            await RecordSessionActivityAsync(session, userId, MakanApp.Domain.Messaging.SessionActivityAction.Scheduled, cancellationToken);
         }
 
         await _store.SaveChangesAsync(cancellationToken);

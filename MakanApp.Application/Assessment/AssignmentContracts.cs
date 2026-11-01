@@ -46,7 +46,10 @@ public sealed record AssignmentResult(
 
 public sealed record PublishAssignmentResult(
     AssignmentResult Assignment,
-    int RecipientCount);
+    int RecipientCount)
+{
+    public MakanApp.Application.Messaging.AcademicPublicationReceipt? PublicationReceipt { get; init; }
+}
 
 public sealed record AssignmentWithVersionRecord(
     Assignment Assignment,

@@ -21,7 +21,7 @@ public sealed partial class MessagingEndpointsTests
         using var setup = await CreateP2ManagedSetupAsync("channels", initiallyMember: true);
         using var otherClient = factory.CreateClient(); var other = await CreateMessagingUserAsync(otherClient);
         await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, other.UserId);
-        (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{setup.Conversation.ConversationId}/members", new AddConversationMemberCommand(other.UserId), JsonOptions)).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(setup.OwnerClient, otherClient, setup.Conversation.ConversationId, other.UserId);
         var promoted = await PromoteP2AdminAsync(setup.OwnerClient, setup.Conversation.ConversationId, setup.Target.UserId, ConversationAdminPermission.ManageInvites);
         var link = await CreateP2LinkAsync(setup.TargetClient, setup.Conversation.ConversationId, P2LinkCommand()); Assert.NotNull(link.Token);
         Assert.Equal(HttpStatusCode.Forbidden, (await setup.TargetClient.PatchAsJsonAsync($"/api/v1/conversations/{setup.Conversation.ConversationId}/info",
@@ -115,7 +115,7 @@ public sealed partial class MessagingEndpointsTests
     {
         using var setup = await CreateP2ManagedSetupAsync("groups", initiallyMember: true); using var otherClient = factory.CreateClient(); var other = await CreateMessagingUserAsync(otherClient);
         await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, other.UserId);
-        (await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{setup.Conversation.ConversationId}/members", new AddConversationMemberCommand(other.UserId), JsonOptions)).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(setup.OwnerClient, otherClient, setup.Conversation.ConversationId, other.UserId);
         await PromoteP2AdminAsync(setup.OwnerClient, setup.Conversation.ConversationId, setup.Target.UserId, ConversationAdminPermission.BanMembers);
         await PromoteP2AdminAsync(setup.OwnerClient, setup.Conversation.ConversationId, other.UserId, ConversationAdminPermission.None);
         foreach (var targetId in new[] { setup.Owner.UserId, other.UserId, setup.Target.UserId })

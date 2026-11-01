@@ -1,5 +1,7 @@
 # GAP-05 — قرارداد مصوب ایمنی کودک پیام‌رسان، نسخه ۱
 
+> بخش‌های سنی این تصمیم، از سیاست مصوب `2026-11-01` به بعد **historical / superseded** هستند: [پیاده‌سازی جاری](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md). سن، Unverified/Conflict و رابطهٔ لازم صرفاً به علت Minor/Unknown دیگر gate عمومی Messaging نیستند. Privacy/Block، نشست، رابطهٔ آموزشی واقعی، محرمانگی Guardian/مدرسه، Moderation و Content Safety مستقل همچنان معتبرند؛ Safety اکنون برای همهٔ سن‌ها اجرا و در Unavailable بسته می‌ماند. ReviewRequired و نیاز به تصمیم محصول برای مسیر رسانه bypass نشده‌اند.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

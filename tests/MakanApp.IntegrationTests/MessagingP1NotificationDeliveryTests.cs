@@ -77,8 +77,9 @@ public sealed partial class MessagingEndpointsTests
             await db.SaveChangesAsync();
         }
         await factory.ProcessNotificationDeliveriesAsync();
-        Assert.Equal(NotificationDeliveryStatus.Suppressed, (await P1PushAttemptAsync(notificationId)).Status);
-        Assert.DoesNotContain(factory.NotificationDeliveryProvider.PushDeliveries, d => d.NotificationId == notificationId);
+        var ageFactOnly = mutation is "minor" or "unknown";
+        Assert.Equal(ageFactOnly ? NotificationDeliveryStatus.Delivered : NotificationDeliveryStatus.Suppressed, (await P1PushAttemptAsync(notificationId)).Status);
+        Assert.Equal(ageFactOnly, factory.NotificationDeliveryProvider.PushDeliveries.Any(d => d.NotificationId == notificationId));
         Assert.Equal(1, await factory.CountNotificationsAsync(sent.MessageId, setup.Second.UserId));
         Assert.Single(await factory.GetMessagesAsync(setup.ConversationId));
     }

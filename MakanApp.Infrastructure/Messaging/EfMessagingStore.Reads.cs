@@ -6,11 +6,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
 
-public sealed partial class EfMessagingStore
+public sealed partial class EfMessagingStore : IAccountInboxStore
 {
     private const int LastMessagePreviewLength = 120;
 
-    public async Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> GetMyConversationsAsync(
+    public Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> GetMyConversationsAsync(
+        Guid userId, AccessContext accessContext, ConversationListFilter filter, int page, int pageSize,
+        string? search, CancellationToken cancellationToken, Guid? folderId = null, Guid? conversationId = null) =>
+        ReadConversationsAsync(userId, accessContext, filter, page, pageSize, search, cancellationToken, folderId, conversationId);
+
+    public async Task<IReadOnlyList<ConversationSummaryStoreRecord>> ReadAccountInboxAsync(Guid userId,
+        ConversationListFilter filter, string? search, int limit, AccountInboxPosition? position, CancellationToken ct) =>
+        (await ReadConversationsAsync(userId,
+            new(userId, userId, Guid.Empty, WorkspaceType.Personal, null, null, null, null),
+            filter, 1, limit, search, ct, accountWide: true, position: position)).ToArray();
+
+    private async Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> ReadConversationsAsync(
         Guid userId,
         AccessContext accessContext,
         ConversationListFilter filter,
@@ -19,7 +30,9 @@ public sealed partial class EfMessagingStore
         string? search,
         CancellationToken cancellationToken,
         Guid? folderId = null,
-        Guid? conversationId = null)
+        Guid? conversationId = null,
+        bool accountWide = false,
+        AccountInboxPosition? position = null)
     {
         var workspaceType = accessContext.WorkspaceType;
         var organizationId = accessContext.OrganizationId;
@@ -27,6 +40,7 @@ public sealed partial class EfMessagingStore
         var savedTitleMatches = search is not null &&
             "پیام‌های ذخیره‌شده".Contains(search, StringComparison.OrdinalIgnoreCase);
         var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
+        var accountConversations = AccountInboxAccessQuery.Conversations(dbContext, userId);
         var query =
             from participant in dbContext.ConversationParticipants
             join conversation in dbContext.Conversations
@@ -83,7 +97,8 @@ public sealed partial class EfMessagingStore
                        message.DeletedAtUtc == null &&
                        !dbContext.MessageUserVisibilities.Any(hidden =>
                            hidden.MessageId == message.Id && hidden.UserId == userId))) &&
-                  (workspaceType == WorkspaceType.Personal &&
+                  (accountWide && accountConversations.Any(c => c.Id == conversation.Id) ||
+                   !accountWide && (workspaceType == WorkspaceType.Personal &&
                    conversation.Scope == ConversationScope.Personal ||
                    workspaceType == WorkspaceType.Organization &&
                    organizationId != null &&
@@ -95,7 +110,7 @@ public sealed partial class EfMessagingStore
                        membership.UserId == userId &&
                        membership.OrganizationId == organizationId &&
                        membership.Status == MembershipStatus.Active &&
-                       membership.EndedAtUtc == null))
+                       membership.EndedAtUtc == null)))
             let lastMessage = dbContext.Messages
                 .Where(message => message.ConversationId == conversation.Id &&
                                   message.Sequence >= participant.HistoryVisibleFromSequence &&
@@ -145,6 +160,16 @@ public sealed partial class EfMessagingStore
                 (!folder.UnreadOnly || row.UnreadCount > 0 || row.State != null && row.State.IsManuallyUnread));
         }
 
+        if (position is not null)
+        {
+            var pinned = position.Pinned; var activity = position.ActivityAtUtc; var id = position.ConversationId;
+            query = query.Where(item =>
+                pinned && (item.State == null || item.State.PinnedAtUtc == null) ||
+                (item.State != null && item.State.PinnedAtUtc != null) == pinned &&
+                ((item.LastMessage == null ? item.Conversation.CreatedAtUtc : item.LastMessage.SentAtUtc) < activity ||
+                 (item.LastMessage == null ? item.Conversation.CreatedAtUtc : item.LastMessage.SentAtUtc) == activity && item.Conversation.Id.CompareTo(id) < 0));
+        }
+
         var conversationRows = await query
             .AsNoTracking()
             .OrderBy(item => dbContext.FolderConversationOverrides.Where(o => o.FolderId == folderId && o.ConversationId == item.Conversation.Id)
@@ -164,6 +189,14 @@ public sealed partial class EfMessagingStore
             .Distinct()
             .ToArray();
         var identities = await LoadSafeIdentitiesAsync(directOtherUserIds, cancellationToken);
+        var capabilities = await ReadCapabilitiesBatchAsync(conversationRows.Select(row => row.Conversation).ToArray(),
+            conversationRows.Select(row => row.Participant).ToArray(), userId, cancellationToken);
+        var photoIds = conversationRows.Where(row => row.Conversation.PhotoFileAssetId.HasValue)
+            .Select(row => row.Conversation.PhotoFileAssetId!.Value).Distinct().ToArray();
+        var photos = photoIds.Length == 0 ? new Dictionary<Guid, ConversationPhotoResult>() :
+            await dbContext.FileAssets.AsNoTracking().Where(f => photoIds.Contains(f.Id) && f.Status == MakanApp.Domain.Storage.FileAssetStatus.Ready &&
+                (f.ContentType == "image/jpeg" || f.ContentType == "image/png"))
+                .ToDictionaryAsync(f => f.Id, f => new ConversationPhotoResult(f.Id, f.ContentType), cancellationToken);
         var results = new List<ConversationSummaryStoreRecord>(conversationRows.Length);
         foreach (var row in conversationRows)
         {
@@ -185,7 +218,8 @@ public sealed partial class EfMessagingStore
                 row.UnreadCount,
                 row.UnreadMentionCount,
                 row.State,
-                row.OrganizationName));
+                row.OrganizationName) { EffectiveCapabilities = capabilities.GetValueOrDefault(conversation.Id) ?? ConversationEffectiveCapabilities.None,
+                    Photo = conversation.PhotoFileAssetId.HasValue ? photos.GetValueOrDefault(conversation.PhotoFileAssetId.Value) : null });
         }
 
         return results;

@@ -169,6 +169,13 @@ public static class DependencyInjection
         services.AddSingleton<IReportExportQueueSignal, ReportExportQueueSignal>();
         services.AddHostedService<ReportExportDispatcher>();
         services.AddScoped<EfMessagingStore>();
+        services.AddScoped<IAccountInboxStore>(provider => provider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<AccountInboxService>();
+        services.AddScoped<IConversationPhotoStore>(provider => provider.GetRequiredService<EfMessagingStore>());
+        services.AddScoped<ConversationPhotoService>();
+        services.AddScoped<MakanApp.Infrastructure.Realtime.AccountInboxRealtimeService>();
+        services.AddScoped<MakanApp.Application.Realtime.IAccountInboxRealtimeService>(provider =>
+            provider.GetRequiredService<MakanApp.Infrastructure.Realtime.AccountInboxRealtimeService>());
         services.AddScoped<IMessagingStore>(serviceProvider =>
             serviceProvider.GetRequiredService<EfMessagingStore>());
         services.AddScoped<IConversationManagementStore>(serviceProvider =>

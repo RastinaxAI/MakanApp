@@ -1,5 +1,7 @@
 # پیاده‌سازی Backend Realtime پس از تأیید طرح محدود
 
+> این گزارش مرحله‌ای است؛ افزودهٔ AccountInbox و حذف gate سنی در [پیاده‌سازی ۲۰۲۶/۱۱/۰۱](MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) ثبت شده‌اند. زیرساخت محدود، همان دو Outbox و Hub و مجوز جاری حفظ شدند؛ آمار و scope اجرای قبلی زیر تاریخی‌اند.
+
 مرجع شروع `main@8084485477e0f83c1133728c82afe5653d23e916` است. این سند قرارداد Backend تأییدشده برای نهایی‌سازی مشترک Realtime و Academic Attachments را توصیف می‌کند؛ شاهد استقرار نیست. مجوز جدید، Commit/Push مشترک پس از validation کامل و تکرار Build/Test روی Commit را شامل می‌شود؛ Publish، Deploy و Migration روی MakanApp یا MakanApp_Test در این کار مجاز نیستند. دو PDF بیست و بیست‌وشش‌صفحه‌ای Issues/Product Realtime و تصمیم صریح مالک مبنا هستند؛ Matrix اولیه پیش از تغییر در artifact محفوظ است. سند Product رفتار هدف را بیان می‌کند و اثبات کد آماده نیست.
 
 ## تصمیم‌های تأییدشده

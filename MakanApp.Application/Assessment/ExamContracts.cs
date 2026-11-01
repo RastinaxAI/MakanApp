@@ -95,7 +95,10 @@ public sealed record ExamEditorDto(
     ExamRandomizationPolicy RandomizationPolicy,
     DateTime? PublishedAtUtc,
     string VersionRowVersion,
-    IReadOnlyCollection<ExamEditorQuestionDto> Questions);
+    IReadOnlyCollection<ExamEditorQuestionDto> Questions)
+{
+    public MakanApp.Application.Messaging.AcademicPublicationReceipt? PublicationReceipt { get; init; }
+}
 
 public sealed record StudentExamRules(
     DateTime AvailableFromUtc,

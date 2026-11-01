@@ -1,5 +1,7 @@
 # حساب شخصی و فضاهای رسمی سازمان/کلاس
 
+> اصلاح سیاست `2026-11-01`: [پیاده‌سازی جاری](MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [Handoff](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) بر محدودیت‌های سنی این گزارش تاریخی و مقدار قبلی CanManage مقدم‌اند. مدیریت محتوای رسمی اکنون برای Manager و Teacher Assignment معتبر است؛ Roster/مالکیت و محافظ‌های مستقل حفظ شده‌اند.
+
 > این سند گزارش پیاده‌سازی و پذیرش فاز نخست است؛ HEAD، شمارش ۲۵۵۱ و `COMMIT=false` در بخش گزارش تاریخی به همان فاز تعلق دارند. فاز نهایی‌سازی ساخت Commit/Push و بسته‌های خصوصی Test/Production را جداگانه اعتبارسنجی می‌کند؛ نتیجهٔ واقعی و SHA نهایی در `RELEASE_REPORT_FA.md` و `validation-summary.json` بستهٔ Release ثبت می‌شوند. این مجوز شامل Deploy یا Migration دیتابیس‌های عادی/سرور نیست.
 
 مبنای محصول: `MakanApp_Backend_Handoff_v2_Official_Spaces_FA.pdf` و تصمیم‌های صریح همین مرحله. مبنای کد هنگام شروع: `main / 9d70fa94eebcd59555e2872cb5fc921802583d27`؛ این HEAD یک Commit مستندات بعد از `e11d4ec` است. این سند اثبات استقرار روی سرور یا اجرای Frontend نیست.

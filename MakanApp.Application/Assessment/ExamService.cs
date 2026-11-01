@@ -294,7 +294,9 @@ public sealed partial class ExamService : IExamService
                 "یک آزمون جدید برای شما منتشر شده است.")).ToArray())));
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return ToEditor(record);
+        return ToEditor(record) with { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
+            record.Version.OrganizationId, record.Exam.ClassId, AcademicActivityKind.Exam,
+            record.Version.Id, record.Version.VersionNumber, cancellationToken) };
     }
 
     public async Task<ExamEditorDto> CreateNextVersionAsync(

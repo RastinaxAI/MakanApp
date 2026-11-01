@@ -1,5 +1,7 @@
 # تحویل قرارداد حساب شخصی و فضاهای رسمی
 
+> اصلاح `2026-11-01`: [قرارداد جاری](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). شرط‌های سن در این گزارش تاریخی superseded هستند. Manager و هر Teacher دارای Assignment جاری اکنون effective management محتوای رسمی دارند؛ Roster همچنان از آموزش است و Owner/Admin جعلی ساخته نمی‌شود. `effectiveCapabilities`، Receipt انتشار، فعالیت Session و عکس گفتگو را از قرارداد جدید بخوانید. Privacy/Block/Safety و محدودیت دسترسی Guardian پابرجا هستند.
+
 این سند فقط قرارداد Backend است؛ هیچ Frontend در این مرحله تغییر یا اجرا نشده است. پاسخ‌های role/context قبلی نباید پس از تغییر فضای منتخب روی state جدید اعمال شوند. کلاینت باید generation درخواست را نگه دارد و پاسخ دیررس نسل قبلی را کنار بگذارد.
 
 ## کارت Personal

@@ -319,7 +319,7 @@ public sealed partial class MessagingEndpointsTests
         var ready = (await client.GetFromJsonAsync<OfficialSpacesPairResult>("/api/v1/organization/official-spaces", JsonOptions))!;
         Assert.Equal("Ready", ready.Group.State); Assert.Equal("Ready", ready.Channel.State);
         Assert.NotEqual(ready.Group.ConversationId, ready.Channel.ConversationId);
-        Assert.False(ready.Group.Capabilities.CanManage);
+        Assert.True(ready.Group.Capabilities.CanManage);
     }
 
     [Fact]

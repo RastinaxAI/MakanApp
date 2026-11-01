@@ -4,6 +4,7 @@ public enum ConversationInvitationStatus { Pending = 1, Accepted = 2, Declined =
 
 public sealed class ConversationInvitation
 {
+    public static readonly TimeSpan DefaultInitialLifetime = TimeSpan.FromDays(30);
     private ConversationInvitation() { }
     public Guid Id { get; private set; }
     public Guid ConversationId { get; private set; }

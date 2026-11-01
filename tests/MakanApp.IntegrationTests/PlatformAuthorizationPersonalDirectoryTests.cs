@@ -92,7 +92,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ProtectedCallerCannotGloballyDiscoverUnrelatedAdult(bool verifiedMinor)
+    public async Task AgeClassificationDoesNotRestrictPublicUsernameDiscovery(bool verifiedMinor)
     {
         using var owner = _host.CreateClient();
         _ = await OwnerAsync(owner);
@@ -100,11 +100,11 @@ public sealed partial class PlatformAuthorizationRegressionTests
         using var adult = _host.CreateClient();
         var a = await CreateP0PersonalAccountAsync(child, verifiedMinor ? owner : null, 2015);
         var b = await CreateP0PersonalAccountAsync(adult, owner);
-        Assert.Empty((await child.GetFromJsonAsync<PeopleSearchPageResult>($"/api/v1/people/search?q={b.Username}", PolicyJson))!.Items);
+        Assert.Equal(b.UserId, Assert.Single((await child.GetFromJsonAsync<PeopleSearchPageResult>($"/api/v1/people/search?q={b.Username}", PolicyJson))!.Items).UserId);
         using var resolve = await child.PostAsJsonAsync("/api/v1/people/resolve", new ResolvePersonCommand(b.Username, null));
-        Assert.False((await resolve.Content.ReadFromJsonAsync<PeopleResolveResult>(PolicyJson))!.IsDiscoverable);
-        Assert.Equal(HttpStatusCode.NotFound, (await child.GetAsync($"/api/v1/people/{b.UserId}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await adult.GetAsync($"/api/v1/people/{a.UserId}")).StatusCode);
+        Assert.True((await resolve.Content.ReadFromJsonAsync<PeopleResolveResult>(PolicyJson))!.IsDiscoverable);
+        Assert.Equal(HttpStatusCode.OK, (await child.GetAsync($"/api/v1/people/{b.UserId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await adult.GetAsync($"/api/v1/people/{a.UserId}")).StatusCode);
     }
 
     [Fact]

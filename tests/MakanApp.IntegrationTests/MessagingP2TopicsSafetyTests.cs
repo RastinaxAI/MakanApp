@@ -33,11 +33,11 @@ public sealed partial class MessagingEndpointsTests
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed);
     }
     [Fact]
-    public async Task P2TopicsRelationshipRevokedDuringSafetyCannotPublishTitle()
+    public async Task P2TopicsSessionRevokedDuringSafetyCannotPublishTitle()
     {
         using var setup = await CreateP2ManagedSetupAsync("groups", initiallyMember: true); var id = setup.Conversation.ConversationId;
         await factory.SetCommunicationAgeCategoryAsync(setup.Target.UserId, CommunicationAgeCategory.Minor);
-        factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed, beforeReturn: () => factory.RemoveApprovedContactAsync(setup.Target.UserId, setup.Owner.UserId));
+        factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed, beforeReturn: () => factory.RevokeSessionByTokenAsync(setup.Owner.AccessToken));
         var denied = await setup.OwnerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/topics", new CreateConversationTopicCommand(Guid.NewGuid(), "نباید ذخیره شود"), JsonOptions);
         Assert.False(denied.IsSuccessStatusCode);
         await using var scope = factory.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
@@ -45,7 +45,7 @@ public sealed partial class MessagingEndpointsTests
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed);
     }
     [Fact]
-    public async Task P2TopicsOfficialClassAllowsManagerReadButRequiresCurrentTeacherForTopicWrites()
+    public async Task P2TopicsOfficialClassAllowsCurrentManagerAndTeacherButNotStudentWrites()
     {
         using var managerClient = factory.CreateClient(); using var studentClient = factory.CreateClient(); using var teacherClient = factory.CreateClient();
         var manager = await CreateMessagingUserAsync(managerClient); var student = await CreateMessagingUserAsync(studentClient); var teacher = await CreateMessagingUserAsync(teacherClient);
@@ -59,7 +59,7 @@ public sealed partial class MessagingEndpointsTests
         var topic = await CreateP2TopicAsync(teacherClient, id, new(Guid.NewGuid(), "درس"));
         Assert.Equal(HttpStatusCode.Forbidden, (await studentClient.PostAsJsonAsync($"/api/v1/conversations/{id}/topics", new CreateConversationTopicCommand(Guid.NewGuid(), "دانش‌آموز مدیر نیست"), JsonOptions)).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await managerClient.GetAsync($"/api/v1/conversations/{id}/topics")).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await managerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/topics", new CreateConversationTopicCommand(Guid.NewGuid(), "مجوز ساخت موضوع تغییر نکرده است"), JsonOptions)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await managerClient.PostAsJsonAsync($"/api/v1/conversations/{id}/topics", new CreateConversationTopicCommand(Guid.NewGuid(), "مجوز ساخت موضوع تغییر نکرده است"), JsonOptions)).StatusCode);
         Assert.All(await factory.GetConversationParticipantsAsync(id), p => Assert.Equal(ConversationParticipantRole.Member, p.Role));
         await factory.EndTeacherAssignmentAsync(assignment);
         Assert.Equal(HttpStatusCode.NotFound, (await teacherClient.PutAsJsonAsync($"/api/v1/conversations/{id}/topics/{topic.TopicId}", new UpdateConversationTopicCommand(topic.Title, ConversationTopicStatus.Closed, topic.Version), JsonOptions)).StatusCode);

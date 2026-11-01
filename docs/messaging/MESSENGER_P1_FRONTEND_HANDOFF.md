@@ -1,5 +1,7 @@
 # قرارداد مصرف Messenger P1
 
+> اصلاح معنایی `2026-11-01`: [قرارداد جاری Messaging](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). سن دیگر شرط Read Receipt، دریافت Notification یا امکانات عمومی نیست. Privacy/Block، وضعیت پیام و مجوز منبع همچنان بررسی می‌شوند؛ Push Runtime Pending این گزارش با تغییر Policy به PASS تبدیل نشده است.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

@@ -509,11 +509,6 @@ public sealed partial class EfMessagingStore
                     .Select(m => m.UserId).Distinct().ToArrayAsync(cancellationToken);
                 await SynchronizeOfficialParticipantsAsync(conversation, userId, members, nowUtc, cancellationToken);
             }
-            await EnsurePersonalAudienceSafetyAsync(conversation, userId, nowUtc, cancellationToken);
-            if (participant.Role == ConversationParticipantRole.Owner)
-                await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, cancellationToken);
-            if (conversation.Scope == ConversationScope.Personal && conversation.Type == ConversationType.Channel &&
-                !await IsVerifiedAdultAsync(userId, cancellationToken)) throw ManagementNotAllowed();
             var canPublish = conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic &&
                 await OfficialSpaceAccessQuery.Conversations(dbContext).AnyAsync(m =>
                     m.UserId == userId && m.ConversationId == conversation.Id && m.CanPublish, cancellationToken) ||

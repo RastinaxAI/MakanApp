@@ -239,7 +239,7 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2EphemeralGuardianRelationRevocationHidesPresenceAndRejectsTyping(CommunicationAgeCategory age)
+    public async Task P2EphemeralGuardianIsNotAgeGateButBlockHidesPresenceAndRejectsTyping(CommunicationAgeCategory age)
     {
         using var managerClient = factory.CreateClient(); using var childClient = factory.CreateClient(); using var parentClient = factory.CreateClient();
         var manager = await CreateMessagingUserAsync(managerClient); var child = await CreateMessagingUserAsync(childClient); var parent = await CreateMessagingUserAsync(parentClient);
@@ -254,6 +254,8 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(MessagingPresenceState.Online, (await P2PresenceAsync(parentClient, child.UserId)).State);
         await parentHub.InvokeAsync("SetTyping", direct.ConversationId, true);
         await factory.RevokeGuardianRelationAsync(relation);
+        Assert.Equal(MessagingPresenceState.Online, (await P2PresenceAsync(parentClient, child.UserId)).State);
+        (await childClient.PostAsync($"/api/v1/messaging/blocks/{parent.UserId}", null)).EnsureSuccessStatusCode();
         Assert.Equal(MessagingPresenceState.Hidden, (await P2PresenceAsync(parentClient, child.UserId)).State);
         await Assert.ThrowsAsync<HubException>(() => parentHub.InvokeAsync("SetTyping", direct.ConversationId, true));
         Assert.Equal(HttpStatusCode.OK, (await parentClient.GetAsync($"/api/v1/conversations/{direct.ConversationId}/messages")).StatusCode);

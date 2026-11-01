@@ -21,7 +21,6 @@ public sealed partial class EfMessagingStore
         RequireAdvancedPermission(actor, ConversationAdminPermission.ManageInvites);
         await EnsureCapabilityNotRestrictedAsync(conversationId, actorId, GroupMemberCapability.InviteMembers, nowUtc, ct);
         await EnsureActorCanMessageAsync(actorId, nowUtc, ct);
-        await EnsurePersonalCreationSafetyAsync(actorId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
         var existing = await dbContext.ConversationInviteLinks.SingleOrDefaultAsync(l => l.Id == command.ClientLinkId, ct);
         if (existing is not null)
         {
@@ -117,7 +116,6 @@ public sealed partial class EfMessagingStore
         try
         {
             await EnsureActorCanMessageAsync(link.CreatedByUserId, nowUtc, ct);
-            await EnsurePersonalCreationSafetyAsync(link.CreatedByUserId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
             await EnsureCapabilityNotRestrictedAsync(conversation.Id, link.CreatedByUserId, GroupMemberCapability.InviteMembers, nowUtc, ct);
             await EnsureNotBannedAsync(conversation.Id, joinerId, nowUtc, ct);
         }
@@ -129,7 +127,6 @@ public sealed partial class EfMessagingStore
         try
         {
             await EnsureEligibleTargetAsync(link.CreatedByUserId, targetUserId, conversation.Scope, conversation.OrganizationId, CreatorContext(conversation, link), nowUtc, ct);
-            await EnsurePersonalAudienceSafetyAsync(conversation, targetUserId, nowUtc, ct);
             await EnsureNotBannedAsync(conversation.Id, targetUserId, nowUtc, ct);
         }
         catch (MessagingException) { throw LinkUnavailable(); }

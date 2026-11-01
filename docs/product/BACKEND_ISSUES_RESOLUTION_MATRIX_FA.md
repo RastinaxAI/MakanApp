@@ -1,5 +1,7 @@
 # ماتریس مسائل Backend و وضعیت صریح BE-01
 
+> اصلاح `2026-11-01`: [سیاست جاری](MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) سن را از مجوز عمومی حذف و Safety را برای همه الزامی می‌کند. وضعیت تصمیم باز ReviewRequired/عدم تحویل رسانه و نبود Human Review تغییر نکرده است. صندوق/Replay حساب، Receipt و Photo جدید از Handoff جاری خوانده شوند؛ نتایج مرحله‌ای زیر تاریخچه‌اند.
+
 هر ۱۶۱ ردیف محفوظ است. PASS دامنهٔ Backend محلی و تست اجراشده است؛ UI/سرور/AI زنده از آن استنتاج نمی‌شوند. BLOCKED در BE-01 مربوط به Product workflow نهایی پیوست است، نه ناقص‌ماندن Contract/Observability یا توقف سایر اصلاحات Realtime.
 
 خلاصه: `{"total": 161, "qa80": {"PASS": 70, "DEFERRED": 10}, "product29": {"PASS": 29}, "realtime36": {"PASS": 16, "DEFERRED": 20}, "overall": {"PASS": 128, "BLOCKED": 1, "DEFERRED": 32}, "BE01_PRODUCT_DECISION_BLOCKED": true, "BE01_CONTRACT_OBSERVABILITY_IMPLEMENTED": true, "be01Evidence": "final full regression"}`

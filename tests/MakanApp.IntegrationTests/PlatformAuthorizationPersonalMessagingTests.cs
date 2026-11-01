@@ -31,7 +31,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
         var before = await personalClient.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/v1/me/messaging-status");
         Assert.Equal("Unverified", before.GetProperty("verificationStatus").GetString());
         Assert.Equal("Unknown", before.GetProperty("effectiveAgeCategory").GetString());
-        Assert.Equal("VerificationRequired", before.GetProperty("nextAction").GetString());
+        Assert.Equal("None", before.GetProperty("nextAction").GetString());
 
         var route = $"/api/admin/v1/users/{personal.User.Id}/communication-age";
         var state = (await ownerClient.GetFromJsonAsync<CommunicationAgeResult>(route, PolicyJson))!;
@@ -45,7 +45,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
         var after = await personalClient.GetFromJsonAsync<System.Text.Json.JsonElement>("/api/v1/me/messaging-status");
         Assert.Equal(category.ToString(), after.GetProperty("effectiveAgeCategory").GetString());
         Assert.Equal("Verified", after.GetProperty("verificationStatus").GetString());
-        Assert.Equal(result.Version, after.GetProperty("version").GetString());
+        Assert.Equal(MessagingStatusPolicy.PolicyVersion + ":" + result.Version, after.GetProperty("version").GetString());
         Assert.DoesNotContain("birthDate", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
 
         await using var scope = _host.Services.CreateAsyncScope();
@@ -143,7 +143,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
         response.EnsureSuccessStatusCode();
         var body = await response.Content.ReadAsStringAsync();
         var result = (await response.Content.ReadFromJsonAsync<MessagingStatusResult>(PolicyJson))!;
-        Assert.Equal(state, result.Version);
+        Assert.Equal(MessagingStatusPolicy.PolicyVersion + ":" + state, result.Version);
         Assert.Equal(CommunicationAgeVerificationStatus.Unverified, result.VerificationStatus);
         Assert.DoesNotContain(second.User.Id.ToString(), body);
         Assert.DoesNotContain(second.User.PhoneNumber, body);

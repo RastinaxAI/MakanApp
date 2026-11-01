@@ -153,7 +153,7 @@ public sealed class CommunicationEligibilityPolicyTests
     private readonly CommunicationEligibilityPolicy _policy = new();
 
     [Fact]
-    public void PersonalConversationUsesPrivacyAndRequiresRelationshipForProtectedAccounts()
+    public void PersonalConversationUsesPrivacyWithoutAgeDerivedRelationshipRequirements()
     {
         var allowed = CreateFacts(
             ConversationScope.Personal,
@@ -165,7 +165,7 @@ public sealed class CommunicationEligibilityPolicyTests
 
         Assert.True(_policy.CanStartOrSend(allowed, MessagingEligibilityOperation.Start));
         Assert.False(_policy.CanStartOrSend(privacyDenied, MessagingEligibilityOperation.Start));
-        Assert.False(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
+        Assert.True(_policy.CanStartOrSend(minor, MessagingEligibilityOperation.Start));
         Assert.True(_policy.CanStartOrSend(minor with { HasAuthorizedSafetyRelationship = true }, MessagingEligibilityOperation.Start));
     }
 

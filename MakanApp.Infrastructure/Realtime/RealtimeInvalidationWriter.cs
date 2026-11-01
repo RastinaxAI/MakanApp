@@ -107,6 +107,12 @@ public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbo
         var pending = new HashSet<InvalidationEnvelope>();
         foreach (var entry in db.ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted).ToArray())
         {
+            if (entry.Entity is ConversationInvitation invitation)
+            {
+                // فقط refetch حساب خود فرد؛ شناسهٔ مخاطب یا محتوای دعوت broadcast نمی‌شود.
+                pending.Add(new("access", TargetUserId: invitation.TargetUserId));
+                pending.Add(new("access", TargetUserId: invitation.InviterUserId));
+            }
             var owner = entry.Entity switch
             {
                 UserContact contact => (Guid?)contact.OwnerUserId,

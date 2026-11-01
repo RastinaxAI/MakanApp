@@ -12,16 +12,16 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2ManagementAdultCannotUseLinkToBypassExistingProtectedGroupAudience(CommunicationAgeCategory age)
+    public async Task P2ManagementConsentedLinkJoinDoesNotDependOnOtherMembersAge(CommunicationAgeCategory age)
     {
         using var setup = await CreateP2ManagedSetupAsync("groups"); using var strangerClient = factory.CreateClient(); var stranger = await CreateMessagingUserAsync(strangerClient);
         await factory.SetCommunicationAgeCategoryAsync(setup.Target.UserId, age);
         await InviteAndAcceptPersonalAsync(setup.OwnerClient, setup.TargetClient, setup.Conversation.ConversationId, setup.Target.UserId);
         await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, stranger.UserId);
         var link = await CreateP2LinkAsync(setup.OwnerClient, setup.Conversation.ConversationId, P2LinkCommand());
-        Assert.Equal(HttpStatusCode.NotFound, (await RedeemP2Async(strangerClient, link)).StatusCode);
-        Assert.DoesNotContain(await factory.GetConversationParticipantsAsync(setup.Conversation.ConversationId), p => p.UserId == stranger.UserId && p.Status == ConversationParticipantStatus.Active);
-        Assert.Equal(0, (await ReadP2LinkAsync(setup.OwnerClient, setup.Conversation.ConversationId, link.Link.Id)).UsedCount);
+        Assert.Equal(HttpStatusCode.OK, (await RedeemP2Async(strangerClient, link)).StatusCode);
+        Assert.Contains(await factory.GetConversationParticipantsAsync(setup.Conversation.ConversationId), p => p.UserId == stranger.UserId && p.Status == ConversationParticipantStatus.Active);
+        Assert.Equal(1, (await ReadP2LinkAsync(setup.OwnerClient, setup.Conversation.ConversationId, link.Link.Id)).UsedCount);
     }
 
     [Fact]

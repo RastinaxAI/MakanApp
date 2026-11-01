@@ -127,7 +127,7 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2ManagementProtectedJoinRequiresRelationAndRechecksItAtApproval(CommunicationAgeCategory age)
+    public async Task P2ManagementJoinRechecksCurrentPrivacyAtApprovalRegardlessOfAge(CommunicationAgeCategory age)
     {
         using var setup = await CreateP2ManagedSetupAsync("groups"); await factory.SetCommunicationAgeCategoryAsync(setup.Target.UserId, age);
         await factory.RemoveApprovedContactAsync(setup.Target.UserId, setup.Owner.UserId);
@@ -135,10 +135,10 @@ public sealed partial class MessagingEndpointsTests
         (await setup.TargetClient.PutAsJsonAsync("/api/v1/messaging/privacy", new UpdateMessagingPrivacyCommand(privacy.DirectMessagesAudience,
             privacy.PhoneNumberVisibilityAudience, privacy.PhoneNumberDiscoveryAudience, PrivacyAudience.Everyone, privacy.Version), JsonOptions)).EnsureSuccessStatusCode();
         var link = await CreateP2LinkAsync(setup.OwnerClient, setup.Conversation.ConversationId, P2LinkCommand() with { RequiresApproval = true });
-        Assert.Equal(HttpStatusCode.NotFound, (await RedeemP2Async(setup.TargetClient, link)).StatusCode);
-        await factory.AllowPersonalGroupInviteAsync(setup.Owner.UserId, setup.Target.UserId);
         var request = (await ReadP2RedemptionAsync(setup.TargetClient, link)).JoinRequest!;
-        await factory.RemoveApprovedContactAsync(setup.Target.UserId, setup.Owner.UserId);
+        privacy = (await setup.TargetClient.GetFromJsonAsync<MessagingPrivacySettingsResult>("/api/v1/messaging/privacy", JsonOptions))!;
+        (await setup.TargetClient.PutAsJsonAsync("/api/v1/messaging/privacy", new UpdateMessagingPrivacyCommand(privacy.DirectMessagesAudience,
+            privacy.PhoneNumberVisibilityAudience, privacy.PhoneNumberDiscoveryAudience, PrivacyAudience.Nobody, privacy.Version), JsonOptions)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.NotFound, (await CompleteP2RequestAsync(setup.OwnerClient, request, "approve")).StatusCode);
         Assert.DoesNotContain(await factory.GetConversationParticipantsAsync(setup.Conversation.ConversationId), p => p.UserId == setup.Target.UserId && p.Status == ConversationParticipantStatus.Active);
     }

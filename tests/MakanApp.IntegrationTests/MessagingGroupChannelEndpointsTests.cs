@@ -11,7 +11,7 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class MessagingEndpointsTests
 {
     [Fact]
-    public async Task GroupCreationIsIdempotentAndReturnsOwnerAndInitialMember()
+    public async Task GroupCreationIsIdempotentAndReturnsOwnerAndPendingInitialInvitation()
     {
         using var ownerClient = factory.CreateClient();
         using var memberClient = factory.CreateClient();
@@ -49,9 +49,10 @@ public sealed partial class MessagingEndpointsTests
         Assert.Equal(
             ConversationParticipantRole.Owner,
             created.Participants.Single(item => item.User.UserId == owner.UserId).Role);
-        Assert.Equal(
-            ConversationParticipantRole.Member,
-            created.Participants.Single(item => item.User.UserId == member.UserId).Role);
+        Assert.DoesNotContain(created.Participants, item => item.User.UserId == member.UserId);
+        var pending = Assert.Single(created.InitialTargets);
+        Assert.Equal(ConversationInitialTargetOutcome.InvitationPending, pending.Outcome);
+        Assert.Equal(created.InitialTargets.ToArray(), retried.InitialTargets.ToArray());
         Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
         Assert.Equal(
             MessagingErrorCodes.ConversationCreationConflict,
@@ -257,7 +258,8 @@ public sealed partial class MessagingEndpointsTests
         using var removeMember = await adminClient.DeleteAsync(
             $"/api/v1/conversations/{group.ConversationId}/members/{member.UserId}");
 
-        Assert.Equal(HttpStatusCode.OK, add.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, add.StatusCode);
+        await InviteAndAcceptPersonalAsync(adminClient, newMemberClient, group.ConversationId, newMember.UserId);
         Assert.Equal(HttpStatusCode.Forbidden, removeOwner.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, changeRole.StatusCode);
         Assert.Equal(HttpStatusCode.OK, removeMember.StatusCode);
@@ -269,7 +271,8 @@ public sealed partial class MessagingEndpointsTests
             $"/api/v1/conversations/{group.ConversationId}/members",
             new AddConversationMemberCommand(member.UserId),
             JsonOptions);
-        readd.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.Conflict, readd.StatusCode);
+        await InviteAndAcceptPersonalAsync(ownerClient, memberClient, group.ConversationId, member.UserId);
         var rows = (await factory.GetConversationParticipantsAsync(group.ConversationId))
             .Where(item => item.UserId == member.UserId)
             .ToArray();
@@ -379,7 +382,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task ConcurrentMemberAddsProduceExactlyOneActiveMembership()
+    public async Task ConcurrentPersonalAddsRequireConsentAndAcceptsCreateOneActiveMembership()
     {
         using var ownerClient = factory.CreateClient();
         using var targetClient = factory.CreateClient();
@@ -409,10 +412,15 @@ public sealed partial class MessagingEndpointsTests
                 JsonOptions)));
             try
             {
-                Assert.Single(responses, response => response.StatusCode == HttpStatusCode.OK);
-                Assert.All(
-                    responses.Where(response => response.StatusCode != HttpStatusCode.OK),
-                    response => Assert.Equal(HttpStatusCode.Conflict, response.StatusCode));
+                Assert.All(responses, response => Assert.Equal(HttpStatusCode.Conflict, response.StatusCode));
+                Assert.DoesNotContain(await factory.GetConversationParticipantsAsync(group.ConversationId), p => p.UserId == target.UserId);
+                using var invited = await ownerClient.PostAsJsonAsync($"/api/v1/conversations/{group.ConversationId}/invitations",
+                    new CreateConversationInvitationCommand(target.UserId, DateTime.UtcNow.AddDays(1)), JsonOptions);
+                invited.EnsureSuccessStatusCode();
+                var invitation = (await invited.Content.ReadFromJsonAsync<ConversationInvitationResult>(JsonOptions))!;
+                var accepts = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => targetClient.PostAsync($"/api/v1/messaging/invitations/{invitation.Id}/accept", null)));
+                try { Assert.All(accepts, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode)); }
+                finally { foreach (var response in accepts) response.Dispose(); }
             }
             finally
             {
@@ -533,7 +541,10 @@ public sealed partial class MessagingEndpointsTests
                 null,
                 new[] { outsider.UserId }),
             JsonOptions);
-        Assert.Equal(HttpStatusCode.NotFound, crossOrganization.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, crossOrganization.StatusCode);
+        var partial = (await crossOrganization.Content.ReadFromJsonAsync<ManagedConversationResult>(JsonOptions))!;
+        Assert.Equal(ConversationInitialTargetOutcome.NotAvailable, Assert.Single(partial.InitialTargets).Outcome);
+        Assert.DoesNotContain(partial.Participants, p => p.User.UserId == outsider.UserId);
 
         await SelectOrganizationAsync(
             studentClient,
@@ -613,6 +624,19 @@ public sealed partial class MessagingEndpointsTests
             command,
             JsonOptions);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ManagedConversationResult>(JsonOptions))!;
+        var result = (await response.Content.ReadFromJsonAsync<ManagedConversationResult>(JsonOptions))!;
+        // Arrange تست‌های قدیمی به عضو فعال نیاز دارد؛ پذیرش واقعی با نشست همان کاربر اجرا می‌شود.
+        foreach (var target in result.InitialTargets.Where(item => item.Outcome == ConversationInitialTargetOutcome.InvitationPending))
+        {
+            if (!MessagingTestTokens.TryGetValue(target.TargetUserId, out var token))
+                throw new InvalidOperationException("نشست تستِ مخاطب برای پذیرش صریح دعوت موجود نیست.");
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/messaging/invitations/{target.InvitationId}/accept");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            using var accepted = await client.SendAsync(request); accepted.EnsureSuccessStatusCode();
+        }
+        if (result.InitialTargets.Any(item => item.Outcome == ConversationInitialTargetOutcome.InvitationPending))
+            return (await client.GetFromJsonAsync<ManagedConversationResult>($"/api/v1/conversations/{result.ConversationId}", JsonOptions))!
+                with { AlreadyExisted = result.AlreadyExisted };
+        return result;
     }
 }

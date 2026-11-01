@@ -825,34 +825,7 @@ public sealed class MessagingService(
             MessagingWireTime.FromStoredUtc(result.Conversation.CreatedAtUtc),
             result.AlreadyExisted);
 
-    private ConversationSummaryResult Map(ConversationSummaryStoreRecord result) =>
-        new(
-            result.Conversation.Id,
-            result.Conversation.Type,
-            result.Conversation.Scope,
-            result.Conversation.OrganizationId,
-            result.Conversation.Type == ConversationType.Saved
-                ? SavedConversationTitle
-                : result.Conversation.Title,
-            result.OtherParticipant is null ? null : Map(result.OtherParticipant),
-            result.LastMessagePreview,
-            MessagingWireTime.FromStoredUtc(result.LastMessageAtUtc),
-            result.LastMessageSequence,
-            result.Participant.LastDeliveredMessageSequence,
-            result.Participant.LastReadMessageSequence,
-            result.UnreadCount,
-            result.UnreadMentionCount,
-            result.State?.IsArchived ?? false,
-            result.State?.IsMutedAt(UtcNow()) ?? false,
-            result.State?.MuteMode ?? ConversationMuteMode.None,
-            MessagingWireTime.FromStoredUtc(result.State?.MutedUntilUtc),
-            result.State?.IsPinned ?? false,
-            result.State?.IsManuallyUnread ?? false,
-            result.Conversation.OrganizationId.HasValue && result.OrganizationName is not null
-                ? new ConversationOrganizationBadgeResult(
-                    result.Conversation.OrganizationId.Value,
-                    result.OrganizationName)
-                : null) { Official = OfficialSpaceMetadata.From(result.Conversation) };
+    private ConversationSummaryResult Map(ConversationSummaryStoreRecord result) => ConversationSummaryMapping.Map(result, UtcNow());
 
     private async Task<ConversationUserStateResult> SetArchivedAsync(
         Guid userId,

@@ -132,7 +132,7 @@ public sealed partial class EfMessagingStore
                 null,
                 cancellationToken);
         }
-        var result = await LoadManagedResultAsync(conversation, false, cancellationToken);
+        var result = await LoadManagedResultAsync(conversation, false, cancellationToken, actorUserId);
         await transaction.CommitAsync(cancellationToken);
         if (changed)
         {
@@ -164,8 +164,6 @@ public sealed partial class EfMessagingStore
         {
             throw OwnershipTransferNotFound();
         }
-        if (accept)
-            await EnsurePersonalCreationSafetyAsync(actorUserId, conversation.Scope, conversation.Type, conversation.Visibility, cancellationToken);
 
         if ((accept && transfer.Status == OwnershipTransferStatus.Accepted) ||
             (!accept && transfer.Status == OwnershipTransferStatus.Declined))

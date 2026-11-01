@@ -286,7 +286,8 @@ public sealed class MessagingDirectoryService(
         bool includePhoneNumber = true)
     {
         var requesterIsTarget = requesterUserId == record.UserId;
-        var phoneVisible = includePhoneNumber && (!record.IsProtectedAccount || requesterIsTarget) && MessagingPrivacyPolicy.Allows(
+        // IsProtectedAccount فقط Fact قدیمیِ سن است؛ PrivacyAudience و رضایت Contacts مرجع نمایش شماره‌اند.
+        var phoneVisible = includePhoneNumber && MessagingPrivacyPolicy.Allows(
             record.PhoneNumberVisibilityAudience,
             record.TargetHasSavedRequester,
             requesterIsTarget);

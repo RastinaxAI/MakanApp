@@ -16,6 +16,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
             table.HasCheckConstraint("CK_Conversations_AcademicClass", "[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [IsOfficialOrganizationSpace]=0)");
             table.HasCheckConstraint("CK_Conversations_OfficialOrganization", "[IsOfficialOrganizationSpace]=0 OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [AcademicClassId] IS NULL)");
             table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3, 4)");
+            table.HasCheckConstraint("CK_Conversations_PhotoType", "[PhotoFileAssetId] IS NULL OR [Type] IN (2,3)");
             table.HasCheckConstraint("CK_Conversations_Scope", "[Scope] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_Status", "[Status] IN (1, 2)");
             table.HasCheckConstraint("CK_Conversations_ManagementPolicy", "[ManagementPolicy] IN (0, 1, 2)");
@@ -52,6 +53,8 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
                 "[ManagementPolicy] <> 2 OR [Visibility] = 1");
         });
         builder.HasKey(conversation => conversation.Id);
+        builder.HasIndex(conversation => conversation.PhotoFileAssetId).IsUnique().HasFilter("[PhotoFileAssetId] IS NOT NULL");
+        builder.HasOne<MakanApp.Domain.Storage.FileAsset>().WithMany().HasForeignKey(conversation => conversation.PhotoFileAssetId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(c => c.OrganizationId);
         builder.HasIndex(c => new { c.OrganizationId, c.AcademicClassId, c.Type }).IsUnique().HasFilter("[AcademicClassId] IS NOT NULL");
         builder.HasIndex(c => new { c.OrganizationId, c.Type }).IsUnique().HasFilter("[IsOfficialOrganizationSpace]=1");

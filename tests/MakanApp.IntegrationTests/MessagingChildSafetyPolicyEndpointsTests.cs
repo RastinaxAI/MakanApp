@@ -25,7 +25,7 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task ApprovedPolicyProtectedAccountCannotBeGloballyDiscoveredOrContactedByStranger(CommunicationAgeCategory age)
+    public async Task CurrentPolicyAllowsDiscoveryAndDirectIndependentOfAge(CommunicationAgeCategory age)
     {
         using var actorClient = factory.CreateClient(); using var targetClient = factory.CreateClient();
         var actor = await CreateMessagingUserAsync(actorClient); var target = await CreateMessagingUserAsync(targetClient);
@@ -35,17 +35,16 @@ public sealed partial class MessagingEndpointsTests
         var resolve = await actorClient.PostAsJsonAsync("/api/v1/people/resolve", new ResolvePersonCommand(target.Username, null), JsonOptions);
         var result = await resolve.Content.ReadFromJsonAsync<PeopleResolveResult>(JsonOptions);
         using var direct = await StartDirectAsync(actorClient, target.UserId, ConversationScope.Personal);
-        Assert.Equal(HttpStatusCode.NotFound, profile.StatusCode); Assert.Empty(search!.Items);
-        Assert.False(result!.IsDiscoverable); Assert.Null(result.Profile);
-        Assert.Equal(HttpStatusCode.NotFound, direct.StatusCode);
-        Assert.Equal(MessagingErrorCodes.DirectRecipientNotAvailable, await ReadProblemCodeAsync(direct));
+        Assert.Equal(HttpStatusCode.OK, profile.StatusCode); Assert.Contains(search!.Items, item => item.UserId == target.UserId);
+        Assert.True(result!.IsDiscoverable); Assert.NotNull(result.Profile);
+        Assert.Equal(HttpStatusCode.Created, direct.StatusCode);
         Assert.DoesNotContain(age.ToString(), await direct.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task ApprovedContactAllowsScopedProfileAndDirectButRevocationStopsFutureSendNotHistory(CommunicationAgeCategory age)
+    public async Task ContactPrivacyRevocationStopsFutureSendNotHistoryRegardlessOfAge(CommunicationAgeCategory age)
     {
         using var actorClient = factory.CreateClient(); using var childClient = factory.CreateClient();
         var actor = await CreateMessagingUserAsync(actorClient); var child = await CreateMessagingUserAsync(childClient);
@@ -53,6 +52,10 @@ public sealed partial class MessagingEndpointsTests
         await factory.AllowPersonalGroupInviteAsync(actor.UserId, child.UserId);
         var profile = await actorClient.GetFromJsonAsync<MessagingPublicProfileResult>($"/api/v1/people/{child.UserId}", JsonOptions);
         Assert.Null(profile!.PhoneNumber); Assert.True(profile.CanStartDirect);
+        var privacy = (await childClient.GetFromJsonAsync<MessagingPrivacySettingsResult>("/api/v1/messaging/privacy", JsonOptions))!;
+        (await childClient.PutAsJsonAsync("/api/v1/messaging/privacy", new UpdateMessagingPrivacyCommand(
+            PrivacyAudience.Contacts, privacy.PhoneNumberVisibilityAudience, privacy.PhoneNumberDiscoveryAudience,
+            privacy.GroupInvitesAudience, privacy.Version), JsonOptions)).EnsureSuccessStatusCode();
         var direct = await StartDirectAndReadAsync(actorClient, child.UserId, ConversationScope.Personal);
         factory.ContentSafetyProvider.Configure(ContentSafetyDecision.Allowed);
         await SendMessageAndReadAsync(actorClient, direct.ConversationId, Guid.NewGuid(), "پیام مجاز");
@@ -67,7 +70,7 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)]
     [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task ProtectedAccountCanCreatePrivateGroupButNotPublicGroupOrPersonalChannel(CommunicationAgeCategory age)
+    public async Task AgeDoesNotBlockPrivatePublicGroupOrPersonalChannel(CommunicationAgeCategory age)
     {
         using var client = factory.CreateClient(); var user = await CreateMessagingUserAsync(client);
         await factory.SetCommunicationAgeCategoryAsync(user.UserId, age);
@@ -75,12 +78,12 @@ public sealed partial class MessagingEndpointsTests
         using var publicGroup = await CreateManagedAsync(client, "groups", PersonalCommand("عمومی ممنوع") with { Visibility = ConversationVisibility.Public });
         using var channel = await CreateManagedAsync(client, "channels", PersonalCommand("کانال ممنوع"));
         Assert.Equal(HttpStatusCode.Created, privateGroup.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, publicGroup.StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, channel.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, publicGroup.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, channel.StatusCode);
     }
 
     [Fact]
-    public async Task ProtectedGroupMembershipRequiresConsentAndCurrentRelationship()
+    public async Task PersonalGroupMembershipRequiresConsentIndependentOfAge()
     {
         using var ownerClient = factory.CreateClient(); using var childClient = factory.CreateClient(); using var hostileClient = factory.CreateClient();
         var owner = await CreateMessagingUserAsync(ownerClient); var child = await CreateMessagingUserAsync(childClient);
@@ -108,11 +111,11 @@ public sealed partial class MessagingEndpointsTests
         Assert.Single(await factory.GetConversationParticipantsAsync(group.ConversationId), p => p.UserId == child.UserId && p.Status == ConversationParticipantStatus.Active);
         await factory.RemoveApprovedContactAsync(child.UserId, owner.UserId);
         using var send = await SendMessageAsync(ownerClient, group.ConversationId, Guid.NewGuid(), "گروه راه دور زدن نیست");
-        Assert.Equal(HttpStatusCode.Forbidden, send.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, send.StatusCode);
     }
 
     [Fact]
-    public async Task AgeChangeReevaluatesOldDirectWithoutDeletingCommittedHistory()
+    public async Task AgeChangeDoesNotRevokeOldDirectOrDeleteCommittedHistory()
     {
         using var firstClient = factory.CreateClient(); using var secondClient = factory.CreateClient();
         var first = await CreateMessagingUserAsync(firstClient); var second = await CreateMessagingUserAsync(secondClient);
@@ -120,10 +123,10 @@ public sealed partial class MessagingEndpointsTests
         await SendMessageAndReadAsync(firstClient, direct.ConversationId, Guid.NewGuid(), "قبل از تغییر");
         await factory.SetCommunicationAgeCategoryAsync(second.UserId, CommunicationAgeCategory.Minor);
         using var send = await SendMessageAsync(firstClient, direct.ConversationId, Guid.NewGuid(), "بعد از تغییر");
-        Assert.Equal(HttpStatusCode.Forbidden, send.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, send.StatusCode);
         using var read = await firstClient.GetAsync($"/api/v1/conversations/{direct.ConversationId}/messages");
         Assert.Equal(HttpStatusCode.OK, read.StatusCode);
-        Assert.Single(await factory.GetMessagesAsync(direct.ConversationId));
+        Assert.Equal(2, (await factory.GetMessagesAsync(direct.ConversationId)).Length);
     }
 
     [Theory]
@@ -164,15 +167,15 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData("groups", ConversationVisibility.Public)]
     [InlineData("channels", ConversationVisibility.Private)]
-    public async Task AgeChangeReevaluatesExistingPublicGroupAndChannelPublicationWithoutDeletingHistory(string resource, ConversationVisibility visibility)
+    public async Task AgeChangeDoesNotRevokePublicGroupAndChannelPublication(string resource, ConversationVisibility visibility)
     {
         using var client = factory.CreateClient(); var owner = await CreateMessagingUserAsync(client);
         var conversation = await CreateManagedAndReadAsync(client, resource, PersonalCommand("تغییر سن مالک") with { Visibility = visibility });
         await SendMessageAndReadAsync(client, conversation.ConversationId, Guid.NewGuid(), "تاریخچه معتبر قبلی");
         await factory.SetCommunicationAgeCategoryAsync(owner.UserId, CommunicationAgeCategory.Unknown);
         using var denied = await SendMessageAsync(client, conversation.ConversationId, Guid.NewGuid(), "اختیار قبلی دائمی نیست");
-        Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, denied.StatusCode);
         using var history = await client.GetAsync($"/api/v1/conversations/{conversation.ConversationId}/messages");
-        Assert.Equal(HttpStatusCode.OK, history.StatusCode); Assert.Single(await factory.GetMessagesAsync(conversation.ConversationId));
+        Assert.Equal(HttpStatusCode.OK, history.StatusCode); Assert.Equal(2, (await factory.GetMessagesAsync(conversation.ConversationId)).Length);
     }
 }

@@ -1,5 +1,7 @@
 # وضعیت جاری Messenger: P0، P1، P2 و مرز P3
 
+> سیاست جاری عمومی `2026-11-01`: [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [Handoff](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع سنیِ عمومی گزارش‌های P0/P1/P2 تاریخی/superseded است؛ Safety/Privacy/Block و مجوز واقعی منبع باقی‌اند. AccountInbox/Replay، capability رسمی، دعوت ۳۰روزه، Photo و Receipt افزوده‌اند. این تغییر شاهد اجرای Media/P3، Push واقعی یا پذیرش سرور نیست.
+
 افزودهٔ جاری `2026-10-30` / `main@e11d4ec`: replay حساب با GET /api/v1/realtime/changes و ClientInvalidated، ContextRevision، bootstrap پیش از Snapshot و resync/backoff موجودند. مجوز read فعلی، نه گروه قدیمی Hub، مخاطب را تعیین می‌کند. Direct/Saved از summary خوانده می‌شود. [Handoff جاری](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md).
 
 BE-01 همچنان PRODUCT_DECISION_BLOCKED است: رسانهٔ Minor/Unknown با ReviewRequired پیام یا binding تازه نمی‌سازد؛422 قرارداد امن NotApplied/KEEP_DRAFT_NO_AUTO_RETRY دارد. پیوست آموزشی مسیر جدا دارد و Safety پیام‌رسان را Approved نمی‌کند. [قرارداد و ردیابی](BE01_REVIEW_REQUIRED_CONTRACT_FA.md).

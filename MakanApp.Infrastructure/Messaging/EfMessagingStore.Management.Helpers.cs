@@ -16,13 +16,14 @@ public sealed partial class EfMessagingStore
         Guid actorUserId,
         Guid conversationId,
         AccessContext accessContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowOfficialContent = false)
     {
         var conversation = await LockConversationAsync(conversationId, cancellationToken)
             ?? throw ConversationNotFound();
         var actor = await LoadActiveParticipantAsync(conversationId, actorUserId, cancellationToken)
             ?? throw ConversationNotFound();
-        await EnsureManagedContextAsync(conversation, actorUserId, accessContext, true, cancellationToken);
+        await EnsureManagedContextAsync(conversation, actorUserId, accessContext, true, cancellationToken, allowOfficialContent);
         return (conversation, actor);
     }
 
@@ -31,14 +32,16 @@ public sealed partial class EfMessagingStore
         Guid actorUserId,
         AccessContext accessContext,
         bool requireActive,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowOfficialContent = false)
     {
         if (conversation.Type is not ConversationType.Group and not ConversationType.Channel)
         {
             throw ConversationNotFound();
         }
 
-        if (conversation.ManagementPolicy != ConversationManagementPolicy.UserManaged)
+        if (conversation.ManagementPolicy != ConversationManagementPolicy.UserManaged &&
+            !(allowOfficialContent && conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic))
         {
             throw ManagementNotAllowed();
         }
@@ -125,6 +128,8 @@ public sealed partial class EfMessagingStore
         DateTime nowUtc,
         CancellationToken cancellationToken)
     {
+        if (await HasEffectiveUserBlockAsync(actorUserId, targetUserId, cancellationToken))
+            throw RecipientNotAvailable();
         var facts = await LoadEligibilityFactsAsync(
             actorUserId,
             targetUserId,
@@ -176,7 +181,8 @@ public sealed partial class EfMessagingStore
     private async Task<ManagedConversationStoreResult> LoadManagedResultAsync(
         Conversation conversation,
         bool alreadyExisted,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? actorUserId = null)
     {
         var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         var participants = await dbContext.ConversationParticipants
@@ -197,7 +203,18 @@ public sealed partial class EfMessagingStore
                 await LoadSafeIdentityAsync(participant.UserId, cancellationToken)));
         }
 
-        return new ManagedConversationStoreResult(conversation, result, alreadyExisted);
+        var initialTargets = await dbContext.ConversationInitialTargets.AsNoTracking()
+            .Where(item => item.ConversationId == conversation.Id && conversation.CreatedByUserId == actorUserId).OrderBy(item => item.TargetUserId)
+            .Select(item => new ConversationInitialTargetResult(item.TargetUserId, item.Outcome,
+                item.InvitationId, item.InvitationExpiresAtUtc)).ToArrayAsync(cancellationToken);
+        return new ManagedConversationStoreResult(conversation, result, alreadyExisted)
+        {
+            InitialTargets = initialTargets,
+            Photo = await ReadConversationPhotoAsync(conversation, cancellationToken),
+            EffectiveCapabilities = actorUserId.HasValue
+                ? await ReadCapabilitiesAsync(conversation, actorUserId.Value, cancellationToken)
+                : ConversationEffectiveCapabilities.None
+        };
     }
 
     private static void EnsureCreationRetryMatches(Conversation existing, byte[] creationPayloadHash)

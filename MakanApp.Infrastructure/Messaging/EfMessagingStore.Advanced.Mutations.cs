@@ -118,6 +118,8 @@ public sealed partial class EfMessagingStore
                           (participant.Role == ConversationParticipantRole.Owner ||
                            participant.Role == ConversationParticipantRole.Admin &&
                            participant.AdminPermissions.HasFlag(ConversationAdminPermission.DeleteMessages));
+        if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
+            canModerate = (await ReadCapabilitiesAsync(conversation, userId, cancellationToken)).CanManageMessages;
         if (!isSender && !canModerate)
         {
             throw new MessagingException(
@@ -267,7 +269,7 @@ public sealed partial class EfMessagingStore
             messageId,
             accessContext,
             cancellationToken);
-        EnsurePinAllowed(conversation, participant);
+        await EnsurePinAllowedAsync(conversation, participant, userId, nowUtc, cancellationToken);
         if (message.IsDeleted)
         {
             throw new MessagingException(
@@ -316,7 +318,7 @@ public sealed partial class EfMessagingStore
             messageId,
             accessContext,
             cancellationToken);
-        EnsurePinAllowed(conversation, participant);
+        await EnsurePinAllowedAsync(conversation, participant, userId, nowUtc, cancellationToken);
         var pin = await LockActivePinAsync(conversationId, messageId, cancellationToken);
         if (pin is not null)
         {
@@ -396,16 +398,21 @@ public sealed partial class EfMessagingStore
         }
     }
 
-    private static void EnsurePinAllowed(
+    private async Task EnsurePinAllowedAsync(
         Conversation conversation,
-        ConversationParticipant participant)
+        ConversationParticipant participant,
+        Guid userId, DateTime nowUtc, CancellationToken ct)
     {
         EnsureMutableConversation(conversation);
+        await EnsureActorCanMessageAsync(userId, nowUtc, ct);
+        await EnsureNotBannedAsync(conversation.Id, userId, nowUtc, ct);
         var allowed = conversation.Type is ConversationType.Direct or ConversationType.Saved ||
             conversation.ManagementPolicy == ConversationManagementPolicy.UserManaged &&
             (participant.Role == ConversationParticipantRole.Owner ||
              participant.Role == ConversationParticipantRole.Admin &&
              participant.AdminPermissions.HasFlag(ConversationAdminPermission.PinMessages));
+        if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
+            allowed = (await ReadCapabilitiesAsync(conversation, userId, ct)).CanManageMessages;
         if (!allowed)
         {
             throw new MessagingException(

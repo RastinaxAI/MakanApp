@@ -12,8 +12,23 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/conversations")]
 public sealed class ConversationsController(
     IMessagingService messagingService,
-    IConversationManagementService managementService) : ControllerBase
+    IConversationManagementService managementService,
+    AccountInboxService accountInbox) : ControllerBase
 {
+    /// <summary>صندوق یکپارچهٔ حساب با ترتیب سراسری، مجوز جاری و Cursor مختص حساب/نشست/فیلتر.</summary>
+    [HttpGet("account")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType<AccountInboxPageResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AccountInboxPageResult>> Account([FromQuery] AccountInboxQuery query, CancellationToken cancellationToken) =>
+        Ok(await accountInbox.ReadAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), query, cancellationToken));
+
+    /// <summary>کاتالوگ مجوزها و حدود تفویض؛ مجوز مؤثر هر گفتگو جداگانه محاسبه می‌شود.</summary>
+    [HttpGet("permissions")]
+    [ProducesResponseType<IReadOnlyList<ConversationPermissionDescriptor>>(StatusCodes.Status200OK)]
+    public ActionResult<IReadOnlyList<ConversationPermissionDescriptor>> GetPermissions() => Ok(ConversationPermissionCatalog.Get());
+
     [HttpGet("{conversationId:guid}/read-states")]
     [ProducesResponseType<ConversationPeerReadStateResult>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

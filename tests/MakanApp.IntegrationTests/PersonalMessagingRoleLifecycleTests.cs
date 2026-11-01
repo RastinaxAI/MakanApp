@@ -213,7 +213,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task SelfDeclaredAdultBirthDateDoesNotBypassProtectedRolelessMessaging(bool verifiedMinor)
+    public async Task DeclaredBirthDateDoesNotChangeVerifiedFactsOrAuthorizeMessaging(bool verifiedMinor)
     {
         using var owner = _host.CreateClient();
         _ = await OwnerAsync(owner);
@@ -226,16 +226,17 @@ public sealed partial class PlatformAuthorizationRegressionTests
         declaration.EnsureSuccessStatusCode();
         using var denied = await child.PostAsJsonAsync("/api/v1/conversations/direct",
             new StartDirectConversationCommand(b.UserId, ConversationScope.Personal), PolicyJson);
-        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, denied.StatusCode);
         var command = new CreateManagedConversationCommand(Guid.NewGuid(), ConversationScope.Personal,
             "گروه شخصی محافظت‌شده", null, []);
         using var channel = await child.PostAsJsonAsync("/api/v1/conversations/channels", command, PolicyJson);
-        Assert.Equal(HttpStatusCode.Forbidden, channel.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, channel.StatusCode);
         _ = await CreateEpicPersonalManagedAsync(child, "groups");
         var status = (await child.GetFromJsonAsync<MessagingStatusResult>("/api/v1/me/messaging-status", PolicyJson))!;
         Assert.Equal(verifiedMinor ? CommunicationAgeCategory.Minor : CommunicationAgeCategory.Unknown, status.EffectiveAgeCategory);
-        Assert.DoesNotContain(PersonalMessagingAction.CreateDirect, status.AllowedActions);
-        Assert.Contains(PersonalMessagingAction.CreateDirectWithAuthorizedRelationship, status.AllowedActions);
+        Assert.Contains(PersonalMessagingAction.CreateDirect, status.AllowedActions);
+        Assert.DoesNotContain(PersonalMessagingAction.CreateDirectWithAuthorizedRelationship, status.AllowedActions);
+        Assert.Equal(MessagingNextAction.None, status.NextAction);
     }
 
     [Fact]

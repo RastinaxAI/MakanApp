@@ -245,7 +245,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task ProfilePhotoDoesNotExposeUnknownOrMinorToStranger(bool verifiedMinor)
+    public async Task ProfilePhotoPublicDiscoveryDoesNotDependOnAge(bool verifiedMinor)
     {
         using var owner = CreateAvatarClient(); _ = await OwnerAsync(owner);
         using var child = CreateAvatarClient(); using var viewer = CreateAvatarClient();
@@ -253,11 +253,11 @@ public sealed partial class PlatformAuthorizationRegressionTests
         _ = await CreateP0PersonalAccountAsync(viewer, owner);
         var file = await UploadAvatarImageAsync(child); var photo = await SetAvatarAsync(child, file.Id);
         var found = (await viewer.GetFromJsonAsync<PeopleSearchPageResult>($"/api/v1/people/search?q={target.Username}", PolicyJson))!;
-        Assert.Empty(found.Items);
+        Assert.Equal(target.UserId, Assert.Single(found.Items).UserId);
         using var denied = await viewer.GetAsync(photo.DownloadUrl);
-        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, denied.StatusCode);
         using var direct = await viewer.PostAsJsonAsync("/api/v1/conversations/direct", new StartDirectConversationCommand(target.UserId, ConversationScope.Personal), PolicyJson);
-        Assert.Equal(HttpStatusCode.NotFound, direct.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, direct.StatusCode);
         Assert.Equal(file.Id, (await child.GetFromJsonAsync<CurrentUserResult>("/api/v1/me"))!.ProfilePhoto!.FileAssetId);
     }
 
@@ -379,12 +379,16 @@ public sealed partial class PlatformAuthorizationRegressionTests
             HttpStatusCode.Forbidden, MessagingErrorCodes.MessageNotAllowed);
         // هویت موجود در سیاست جاری ممکن است قابل نمایش بماند؛ Avatar مجوز Send یا افشای تلفن نمی‌سازد.
         var people = (await first.GetFromJsonAsync<PeopleSearchPageResult>($"/api/v1/people/search?q={b.Username}", PolicyJson))!;
-        var profile = Assert.Single(people.Items); Assert.False(profile.CanStartDirect); Assert.Null(profile.PhoneNumber);
-        Assert.Equal(file.Id, profile.ProfilePhoto!.FileAssetId);
+        if (block) Assert.Empty(people.Items);
+        else
+        {
+            var profile = Assert.Single(people.Items); Assert.False(profile.CanStartDirect); Assert.Null(profile.PhoneNumber);
+            Assert.Equal(file.Id, profile.ProfilePhoto!.FileAssetId);
+        }
     }
 
     [Fact]
-    public async Task ProfilePhotoHistoricalIdentityRequiresAnActuallyReadableConversation()
+    public async Task AgeChangeKeepsPublicPhotoWithoutOpeningPrivateConversationHistory()
     {
         using var owner = CreateAvatarClient(); _ = await OwnerAsync(owner);
         using var first = CreateAvatarClient(); using var second = CreateAvatarClient(); using var stranger = CreateAvatarClient();
@@ -400,7 +404,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
             (await db.Users.SingleAsync(u => u.Id == b.UserId)).SetCommunicationAgeCategory(CommunicationAgeCategory.Unknown, Now);
             await db.SaveChangesAsync();
         }
-        using (var denied = await stranger.GetAsync(photo.DownloadUrl)) Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+        using (var publicPhoto = await stranger.GetAsync(photo.DownloadUrl)) Assert.Equal(HttpStatusCode.OK, publicPhoto.StatusCode);
         using (var history = await first.GetAsync($"/api/v1/conversations/{direct.ConversationId}/messages")) history.EnsureSuccessStatusCode();
         using (var allowed = await first.GetAsync(photo.DownloadUrl)) Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
         using (var denied = await stranger.GetAsync($"/api/v1/conversations/{direct.ConversationId}/messages")) Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);

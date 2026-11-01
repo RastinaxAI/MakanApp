@@ -508,7 +508,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task GroupInviteUsesTargetContactsButBlockStillDoesNotAffectGroup()
+    public async Task GroupInitialTargetsRespectContactsBlockAndExplicitAcceptance()
     {
         using var ownerClient = factory.CreateClient();
         using var memberClient = factory.CreateClient();
@@ -534,14 +534,19 @@ public sealed partial class MessagingEndpointsTests
             ownerClient,
             "groups",
             deniedCommand with { ClientOperationId = Guid.NewGuid(), Title = "گروه مجاز" });
+        Assert.Equal(ConversationInitialTargetOutcome.NotAvailable, Assert.Single(allowed.InitialTargets).Outcome);
+        Assert.DoesNotContain(allowed.Participants, p => p.User.UserId == member.UserId);
+        (await ownerClient.DeleteAsync($"/api/v1/messaging/blocks/{member.UserId}")).EnsureSuccessStatusCode();
+        await InviteAndAcceptPersonalAsync(ownerClient, memberClient, allowed.ConversationId, member.UserId);
         var message = await SendMessageAndReadAsync(
             memberClient,
             allowed.ConversationId,
             Guid.NewGuid(),
             "Block روی Group اعمال نمی‌شود");
 
-        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
-        Assert.Equal(MessagingErrorCodes.DirectRecipientNotAvailable, await ReadProblemCodeAsync(denied));
+        Assert.Equal(HttpStatusCode.Created, denied.StatusCode);
+        var deniedResult = (await denied.Content.ReadFromJsonAsync<ManagedConversationResult>(JsonOptions))!;
+        Assert.Equal(ConversationInitialTargetOutcome.NotAvailable, Assert.Single(deniedResult.InitialTargets).Outcome);
         Assert.Equal(1, message.Sequence);
     }
 

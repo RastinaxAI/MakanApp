@@ -151,6 +151,7 @@ public sealed class StorageService(
 
         if (fileAsset.RetainedAtUtc.HasValue || await boundAccessResolver.IsEducationalSourceBoundAsync(fileAsset.Id, cancellationToken) ||
             await boundAccessResolver.IsProfilePhotoBoundAsync(fileAsset.Id, cancellationToken) ||
+            await boundAccessResolver.IsConversationPhotoBoundAsync(fileAsset.Id, cancellationToken) ||
             await boundAccessResolver.IsSchoolLessonBoundAsync(fileAsset.Id, cancellationToken))
         {
             throw Error(StorageErrorCodes.FileInUse, "فایل بخشی از یک سابقه رسمی است و قابل حذف نیست.");
@@ -187,6 +188,8 @@ public sealed class StorageService(
         if (accountContexts is null) return await accessContextResolver.ResolveAsync(userId, sessionId, ct);
         var account = await accountContexts.PersonalAsync(userId, sessionId, ct);
         var file = await store.GetAsync(fileId, ct) ?? throw NotFound();
+        // عکس گفتگو فقط از ACL جاری همان گفتگو خوانده می‌شود، مستقل از Workspace انتخاب‌شده.
+        if (await boundAccessResolver.IsConversationPhotoBoundAsync(fileId, ct)) return account;
         // فقط نوع بافت از رکورد سرور گرفته می‌شود؛ ACL مالک/پیام/درس/ارزیابی بعداً بدون تغییر اجرا می‌شود.
         if (file.OrganizationId is null) return account;
         try { return await accessContextResolver.ResolveAsync(userId, sessionId, ct); }

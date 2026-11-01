@@ -1,8 +1,10 @@
 # BE-01 — قرارداد وضعیت ReviewRequired و ردیابی ایمنی
 
+> اصلاح `2026-11-01`: [Policy جاری](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) Safety را مستقل از سن برای همه اجرا می‌کند. عبارت «مخاطب محافظت‌شده» در Scope تاریخی زیر دیگر معافیت Adult نمی‌سازد. ReviewRequired، Retention، منع تحویل و نبود workflow تأیید رسانه همچنان معتبرند؛ هیچ Safety bypass اضافه نشده است.
+
 ## تصمیم محصول و علت واقعی
 
-`PRODUCT_DECISION_BLOCKED=true`. علت شناسایی‌شده، خرابی Upload یا تأییدشدن فایل نیست: `InternalMakanContentSafetyProvider` موتور قواعد متن است و بایت رسانه را اسکن نمی‌کند. برای عملیات دارای مخاطب محافظت‌شده، رسانه با دلیل داخلی `Other.UnsupportedMedia` و نسخهٔ `makan-child-safety-v1-rules-1`، تصمیم `ReviewRequired` می‌گیرد. این علت داخلی به Client افشا نمی‌شود.
+`PRODUCT_DECISION_BLOCKED=true`. علت شناسایی‌شده، خرابی Upload یا تأییدشدن فایل نیست: `InternalMakanContentSafetyProvider` موتور قواعد متن است و بایت رسانه را اسکن نمی‌کند. اکنون مستقل از سن، رسانه با دلیل داخلی `Other.UnsupportedMedia` و نسخهٔ `makan-child-safety-v1-rules-1`، تصمیم `ReviewRequired` می‌گیرد. این علت داخلی به Client افشا نمی‌شود.
 
 Product هنوز انتخاب نکرده که این فایل‌ها با انسان بررسی شوند، به موتور async دیگری بروند یا برای Messaging رد شوند. هیچ‌یک از این سه گزینه در این مرحله پیاده‌سازی یا قطعی نشده است. وجود `SafetyIncident` و پروندهٔ خصوصی Moderation از قبل، به معنی وجود صف تأیید رسانه، SLA یا حق release نیست. مسیر فعلی و همهٔ Safety/Authorization checkها حفظ شده‌اند.
 

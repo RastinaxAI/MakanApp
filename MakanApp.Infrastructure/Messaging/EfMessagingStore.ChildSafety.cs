@@ -103,11 +103,10 @@ public sealed partial class EfMessagingStore
             userId,
             command,
             cancellationToken);
-        var requiresEvaluation = await HasProtectedAudienceAsync(conversation, cancellationToken);
         return new MessageSafetyPreparationStoreResult(
             null,
             null,
-            requiresEvaluation,
+            true,
             files.Select(file => new ContentSafetyAttachment(
                 file.Id,
                 file.ContentType,
@@ -352,44 +351,20 @@ public sealed partial class EfMessagingStore
         return files;
     }
 
-    private async Task EnsureSafetyGateSatisfiedAsync(
+    private static Task EnsureSafetyGateSatisfiedAsync(
         Conversation conversation,
         bool safetyEvaluated,
         CancellationToken cancellationToken)
     {
-        if (safetyEvaluated)
-        {
-            return;
-        }
-
-        var hasNonAdultParticipant = await HasProtectedAudienceAsync(conversation, cancellationToken);
-        if (hasNonAdultParticipant)
+        cancellationToken.ThrowIfCancellationRequested();
+        // نتیجهٔ واقعی Safety برای همهٔ حساب‌ها لازم است؛ سن معافیت ایجاد نمی‌کند.
+        if (!safetyEvaluated)
         {
             throw new MessagingException(
                 MessagingErrorCodes.MessageSafetyUnavailable,
                 "بررسی ایمنی پیام موقتاً ممکن نیست؛ دوباره تلاش کنید.");
         }
-    }
-
-    private async Task<bool> HasProtectedAudienceAsync(Conversation conversation, CancellationToken cancellationToken)
-    {
-        if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
-            return await (from member in OfficialSpaceAccessQuery.Conversations(dbContext)
-                join user in dbContext.Users on member.UserId equals user.Id
-                where member.ConversationId == conversation.Id &&
-                    (user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
-                     user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified)
-                select member.UserId).AnyAsync(cancellationToken);
-        return await (
-            from candidate in dbContext.ConversationParticipants
-            join account in dbContext.Users on candidate.UserId equals account.Id
-            where candidate.ConversationId == conversation.Id &&
-                  candidate.Status == ConversationParticipantStatus.Active &&
-                  candidate.EndedAtUtc == null &&
-                  (account.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
-                   account.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified)
-            select candidate.Id)
-            .AnyAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
     private static void EnsureSafetyRetryMatches(

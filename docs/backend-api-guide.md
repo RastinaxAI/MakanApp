@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> اصلاح جاری Messaging، `2026-11-01`: [پیاده‌سازی و مسیر مطالعه](product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [قرارداد Endpoint/DTO/Realtime](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع مبتنی بر سنِ گزارش‌های قدیمی زیر superseded است؛ وضعیت سن دادهٔ پروفایل است. Privacy، Block، Safety و مجوز واقعی منبع باقی‌اند. `/conversations/account` و `/realtime/account-inbox/changes` نماهای افزایشی‌اند و رفتار مسیرهای scoped قبلی را جایگزین نمی‌کنند. آمار `e11d4ec` در متن زیر متعلق به همان Snapshot تاریخی است.
+
 این راهنما برای تحویل پروژه به توسعه‌دهنده بک‌اند است. بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در 63 Controller و 322 مسیر؛ 608 schema، 113 جدول و 55 migration**. منبع جاری شامل پروفایل/مدرسه، بنیاد اشتراک فردی و سازمانی، PersonalClass، replay حساب و پیوست پاسخ آزمون است؛ گزارش‌های مرحله‌ای شواهد همان اجرا هستند و پذیرش سرور محسوب نمی‌شوند. [شاخص پروژه](CURRENT_PROJECT_STATUS.md).
 
 ## وضعیت جاری و تغییرات مؤثر بر مطالعه

@@ -41,36 +41,34 @@ public sealed record MessagingStatusResult(
 
 public static class MessagingStatusPolicy
 {
+    public const string PolicyVersion = "messaging-20261101";
+
     public static MessagingStatusResult Evaluate(MessagingStatusSnapshot state, DateTime nowUtc)
     {
         var verified = state.VerificationStatus == CommunicationAgeVerificationStatus.Verified;
         var effectiveAge = verified && Enum.IsDefined(state.AgeCategory) ? state.AgeCategory : CommunicationAgeCategory.Unknown;
-        var adult = effectiveAge == CommunicationAgeCategory.Adult;
         // پروفایل ناقص مجوز تازه‌ای نمی‌سازد؛ دسترسی خواندن همچنان برای هر گفتگو بررسی می‌شود.
         var actions = new List<PersonalMessagingAction>
         {
             PersonalMessagingAction.ReadExistingConversations
         };
-        var nextAction = state.VerificationStatus == CommunicationAgeVerificationStatus.Conflict
-            ? MessagingNextAction.VerificationConflictResolutionRequired
-            : !verified ? MessagingNextAction.VerificationRequired
-            : MessagingNextAction.None;
+        // تأیید سن واقعیت پروفایل است؛ سایر مجوزها همچنان در منبع بررسی می‌شوند.
+        var nextAction = MessagingNextAction.None;
+        var version = $"{PolicyVersion}:{state.Version}";
         if (!state.ProfileComplete)
-            return new(state.VerificationStatus, effectiveAge, actions, MessagingNextAction.ProfileCompletionRequired, state.Version);
+            return new(state.VerificationStatus, effectiveAge, actions, MessagingNextAction.ProfileCompletionRequired, version);
 
         // این فهرست راهنمای self است؛ مجوز مقصد/منبع در هر عملیات دوباره محاسبه می‌شود.
-        actions.Add(adult ? PersonalMessagingAction.DiscoverUsers : PersonalMessagingAction.DiscoverRelatedUsers);
-        if (state.PersonalWorkspaceSelected)
+        actions.Add(PersonalMessagingAction.DiscoverUsers);
+        // عملیات صریح Personal از قبل مستقل از Workspace انتخاب‌شده اجرا می‌شود؛ این فهرست مجوز سازمانی نمی‌دهد.
+        if (state.MessagingRestrictedUntilUtc is null || state.MessagingRestrictedUntilUtc <= nowUtc)
         {
-            actions.Add(adult ? PersonalMessagingAction.CreatePersonalGroup : PersonalMessagingAction.CreatePrivatePersonalGroup);
-            if (adult) actions.Add(PersonalMessagingAction.CreatePersonalChannel);
-            if (state.MessagingRestrictedUntilUtc is null || state.MessagingRestrictedUntilUtc <= nowUtc)
-                actions.Add(adult ? PersonalMessagingAction.CreateDirect : PersonalMessagingAction.CreateDirectWithAuthorizedRelationship);
+            actions.Add(PersonalMessagingAction.CreatePersonalGroup);
+            actions.Add(PersonalMessagingAction.CreatePersonalChannel);
+            actions.Add(PersonalMessagingAction.CreateDirect);
         }
-        else if (nextAction == MessagingNextAction.None)
-            nextAction = MessagingNextAction.SelectPersonalWorkspace;
         if (state.MessagingRestrictedUntilUtc > nowUtc)
             nextAction = MessagingNextAction.MessagingRestrictionActive;
-        return new(state.VerificationStatus, effectiveAge, actions, nextAction, state.Version);
+        return new(state.VerificationStatus, effectiveAge, actions, nextAction, version);
     }
 }

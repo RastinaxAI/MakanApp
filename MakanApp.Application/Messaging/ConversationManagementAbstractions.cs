@@ -10,7 +10,12 @@ public sealed record ConversationParticipantStoreRecord(
 public sealed record ManagedConversationStoreResult(
     Conversation Conversation,
     IReadOnlyCollection<ConversationParticipantStoreRecord> Participants,
-    bool AlreadyExisted);
+    bool AlreadyExisted)
+{
+    public IReadOnlyList<ConversationInitialTargetResult> InitialTargets { get; init; } = [];
+    public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
+    public ConversationPhotoResult? Photo { get; init; }
+}
 
 public sealed record OwnershipTransferStoreResult(
     ConversationOwnershipTransfer Transfer,

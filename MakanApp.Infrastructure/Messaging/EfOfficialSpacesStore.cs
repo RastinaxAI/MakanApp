@@ -28,6 +28,12 @@ public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, Tim
         var conversationIds = conversations.Select(c => c.Id).ToArray();
         var participants = await db.ConversationParticipants.AsNoTracking().Where(p => conversationIds.Contains(p.ConversationId) &&
             p.UserId == userId && p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null).ToArrayAsync(ct);
+        var now = clock.GetUtcNow().UtcDateTime;
+        var actorAvailable = await db.Users.AnyAsync(u => u.Id == userId && u.AccountStatus == MakanApp.Domain.Identity.UserAccountStatus.Active &&
+            u.ProfileCompletedAtUtc != null && u.PersonId != null && u.Username != null &&
+            (u.MessagingRestrictedUntilUtc == null || u.MessagingRestrictedUntilUtc <= now), ct);
+        var restrictions = await db.ConversationMemberRestrictions.AsNoTracking().Where(r => conversationIds.Contains(r.ConversationId) &&
+            r.UserId == userId && (r.UntilUtc == null || r.UntilUtc > now)).ToDictionaryAsync(r => r.ConversationId, ct);
         OfficialSpaceEndpointResult Endpoint(ConversationType purpose)
         {
             var conversation = conversations.SingleOrDefault(c => c.Type == purpose);
@@ -36,12 +42,22 @@ public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, Tim
             var hasAccess = ready && participants.Any(p => p.ConversationId == conversation!.Id);
             var state = ready ? "Ready" : conversation is not null ? "RepairRequired"
                 : provision?.State == OfficialSpaceState.Ready ? "Pending" : provision?.State.ToString() ?? "Missing";
+            var actor = participants.SingleOrDefault(p => p.ConversationId == conversation?.Id);
+            var restriction = conversation is null ? null : restrictions.GetValueOrDefault(conversation.Id);
+            var effective = conversation is null || actor is null ? ConversationEffectiveCapabilities.None :
+                ConversationCapabilityPolicy.Evaluate(new(conversation.Type, conversation.ManagementPolicy, conversation.Status,
+                    hasAccess, actor.Role, actor.AdminPermissions, conversation.MemberCapabilities, reasons.Any(r => r.CanManage),
+                    purpose == ConversationType.Group || reasons.Any(r => r.CanPublishChannel), !actorAvailable,
+                    restriction?.IsBanned == true, restriction?.DeniedCapabilities ?? GroupMemberCapability.None));
             return new(conversation?.Id, state,
-                new(hasAccess, hasAccess && (purpose == ConversationType.Group || reasons.Any(r => r.CanPublishChannel)), false),
-                conversation is null ? null : Metadata(conversation), provision?.AttemptCount ?? 0, provision?.LastFailureCategory);
+                new(hasAccess, effective.CanPublish, effective.CanManageMessages),
+                conversation is null ? null : Metadata(conversation), provision?.AttemptCount ?? 0, provision?.LastFailureCategory)
+                { EffectiveCapabilities = effective };
         }
         var revisions = conversations.Select(c => Convert.ToBase64String(c.RowVersion)).Concat(provisions.Select(p => Convert.ToBase64String(p.RowVersion)))
             .Concat(participants.Select(p => Convert.ToBase64String(p.RowVersion)))
+            .Append($"{MessagingStatusPolicy.PolicyVersion};actorAvailable:{actorAvailable}")
+            .Concat(restrictions.Values.Select(r => Convert.ToBase64String(r.RowVersion)))
             .Concat(reasons.Select(r => $"{userId:N}:{r.ReasonId:N}:{r.Kind}:{r.CanManage}:{r.CanPublishChannel}")).Order();
         return new(classId.HasValue ? OfficialSourceKind.Class : OfficialSourceKind.Organization, classId ?? org, org,
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('|', revisions)))), Endpoint(ConversationType.Group), Endpoint(ConversationType.Channel));
@@ -64,7 +80,8 @@ public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, Tim
             .Where(p => p.OrganizationId == org && p.ClassId == classId && p.Kind == kind && p.SourceRevision == revision &&
                 (kind == AcademicActivityKind.Lesson && p.LessonId == sourceVersionId ||
                  kind == AcademicActivityKind.Assignment && p.AssignmentVersionId == sourceVersionId ||
-                 kind == AcademicActivityKind.Exam && p.ExamVersionId == sourceVersionId))
+                 kind == AcademicActivityKind.Exam && p.ExamVersionId == sourceVersionId ||
+                 kind == AcademicActivityKind.Session && p.SessionId == sourceVersionId))
             .Select(p => (Guid?)p.Id).SingleOrDefaultAsync(ct) ?? throw NotFound();
         return await ReadDeliveryAsync(userId, context, classId, eventId, ct);
     }
@@ -106,15 +123,20 @@ public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, Tim
             logger.LogWarning("آماده‌سازی فضای رسمی نیازمند بررسی است. OrganizationId={OrganizationId}; ClassId={ClassId}; Purpose={Purpose}; Category={Category}", org, classId, purpose, !active ? "SourceUnavailable" : "BindingConflict");
             return false;
         }
+        var readinessChanged = conversation is not null && provision.State != OfficialSpaceState.Ready;
         if (conversation is null)
         {
-            var display = title[..Math.Min(title.Length, 120)] + (purpose == ConversationType.Group ? " — گروه رسمی" : " — کانال رسمی");
+            var display = DisplayTitle(title, purpose);
             conversation = classId.HasValue ? Conversation.CreateSystemManagedAcademic(purpose, org, display, null, clock.GetUtcNow().UtcDateTime)
                 : Conversation.CreateOfficialOrganization(purpose, org, display, clock.GetUtcNow().UtcDateTime);
             if (classId.HasValue) conversation.BindAcademicClass(classId.Value);
             db.Conversations.Add(conversation);
         }
         await SynchronizeAsync(conversation, ct); provision.Ready();
+        // تعمیر Binding موجود هم باید Ready شدن را پس از Commit به مخاطبان فعلی اعلام کند.
+        if (readinessChanged)
+            foreach (var userId in await OfficialSpaceAccessQuery.SourceReasons(db, org, classId).Select(r => r.UserId).Distinct().ToArrayAsync(ct))
+                Invalidate(userId, clock.GetUtcNow().UtcDateTime);
         await db.SaveChangesAsync(ct); await tx.CommitAsync(ct); db.ChangeTracker.Clear();
         logger.LogInformation("فضای رسمی آماده شد. OrganizationId={OrganizationId}; ClassId={ClassId}; Purpose={Purpose}; State={State}", org, classId, purpose, "Ready");
         return true;
@@ -145,17 +167,24 @@ public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, Tim
 
     private async Task SynchronizeAsync(Conversation conversation, CancellationToken ct)
     {
-        var sourceActive = conversation.AcademicClassId is null || await db.Classes.AnyAsync(c => c.Id == conversation.AcademicClassId && c.Status == ClassStatus.Active, ct);
+        var (sourceTitle, sourceActive) = await LockSourceAsync(conversation.OrganizationId!.Value, conversation.AcademicClassId, ct);
+        var title = DisplayTitle(sourceTitle, conversation.Type);
+        var renamed = !string.Equals(conversation.Title, title, StringComparison.Ordinal);
+        if (renamed) conversation.SynchronizeOfficialTitle(title);
         var users = sourceActive ? await OfficialSpaceAccessQuery.SourceReasons(db, conversation.OrganizationId!.Value, conversation.AcademicClassId)
             .Select(r => r.UserId).Distinct().ToArrayAsync(ct) : [];
         var participants = await db.ConversationParticipants.Where(p => p.ConversationId == conversation.Id && p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null).ToArrayAsync(ct);
         var now = clock.GetUtcNow().UtcDateTime;
+        if (renamed) foreach (var userId in users) Invalidate(userId, now);
         foreach (var old in participants.Where(p => !users.Contains(p.UserId))) { old.EndSystemAccess(now); Invalidate(old.UserId, now); }
         foreach (var userId in users.Where(id => participants.All(p => p.UserId != id)))
         {
             db.ConversationParticipants.Add(ConversationParticipant.CreateActive(conversation.Id, userId, now)); Invalidate(userId, now);
         }
     }
+
+    private static string DisplayTitle(string title, ConversationType purpose) =>
+        title[..Math.Min(title.Length, 120)] + (purpose == ConversationType.Group ? " — گروه رسمی" : " — کانال رسمی");
 
     private void Invalidate(Guid userId, DateTime now) => outbox.Enqueue(new(Guid.NewGuid(), RealtimeInvalidationWriter.MessageType,
         JsonSerializer.Serialize(new InvalidationEnvelope("access", TargetUserId: userId, TraceId: Activity.Current?.TraceId.ToString())), now));

@@ -1,5 +1,7 @@
 # قرارداد تحویل Backend پیام‌رسان P2
 
+> اصلاح معنایی `2026-11-01`: [قرارداد جاری Messaging](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). gate سنی در Presence/Typing، مدیریت، دعوت، Poll/Checklist و Scheduled superseded است؛ Privacy/Block/Safety، Consent و مجوز جاری حفظ شده‌اند. صندوق و Replay حساب نماهای افزایشی مستقل‌اند؛ قرارداد scoped قبلی پابرجاست. Unknown/Minor به‌تنهایی علت Hidden یا Denied نیستند.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

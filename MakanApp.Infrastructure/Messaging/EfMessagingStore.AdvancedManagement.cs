@@ -20,8 +20,8 @@ public sealed partial class EfMessagingStore : IConversationAdvancedManagementSt
         var conversation = await dbContext.Conversations.AsNoTracking().SingleOrDefaultAsync(c => c.Id == conversationId, ct) ?? throw ConversationNotFound();
         var actor = await dbContext.ConversationParticipants.AsNoTracking().SingleOrDefaultAsync(p => p.ConversationId == conversationId &&
             p.UserId == userId && p.Status == ConversationParticipantStatus.Active && p.EndedAtUtc == null, ct) ?? throw ConversationNotFound();
-        await EnsureManagedContextAsync(conversation, userId, context, false, ct);
-        RequireAdvancedPermission(actor, permission);
+        await EnsureManagedContextAsync(conversation, userId, context, false, ct, allowOfficialContent: true);
+        await RequireContentManagementAsync(conversation, actor, userId, permission, ct);
         return (conversation, actor);
     }
 
@@ -56,26 +56,29 @@ public sealed partial class EfMessagingStore : IConversationAdvancedManagementSt
 
     private async Task EnsureInfoManagementAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
     {
-        await EnsureManagedContextAsync(conversation, userId, context, true, ct);
-        RequireAdvancedPermission(actor, ConversationAdminPermission.ChangeInfo);
+        await EnsureManagedContextAsync(conversation, userId, context, true, ct, allowOfficialContent: true);
+        await RequireContentManagementAsync(conversation, actor, userId, ConversationAdminPermission.ChangeInfo, ct);
         await EnsureActorCanMessageAsync(userId, now, ct);
         await EnsureNotBannedAsync(conversation.Id, userId, now, ct);
-        await EnsurePersonalAudienceSafetyAsync(conversation, userId, now, ct);
-        if (actor.Role == ConversationParticipantRole.Owner)
-            await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
     }
 
     public async Task<ConversationInfoResult> UpdateInfoAsync(Guid actorId, Guid sessionId, Guid conversationId,
         UpdateConversationInfoCommand command, byte[] expectedVersion, bool safetyEvaluated, AccessContext context, string correlationId, DateTime nowUtc, CancellationToken ct)
     {
         await using var transaction = await BeginManagementTransactionAsync(ct);
-        var (conversation, actor) = await LoadManagedForMutationAsync(actorId, conversationId, context, ct);
+        var (conversation, actor) = await LoadManagedForMutationAsync(actorId, conversationId, context, ct, allowOfficialContent: true);
         nowUtc = await EnsureAdvancedSessionAsync(actorId, sessionId, context, ct);
         await EnsureInfoManagementAsync(conversation, actor, actorId, context, nowUtc, ct);
         if (!conversation.RowVersion.SequenceEqual(expectedVersion)) throw StateConflict();
         await EnsureSafetyGateSatisfiedAsync(conversation, safetyEvaluated, ct);
         dbContext.Entry(conversation).Property(c => c.RowVersion).OriginalValue = expectedVersion;
-        conversation.UpdateInformation(command.Title, command.Description);
+        if (conversation.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic)
+        {
+            if (!string.Equals(conversation.Title, command.Title, StringComparison.Ordinal))
+                throw new MessagingException(MessagingErrorCodes.ConversationManagementNotAllowed, "عنوان فضای رسمی از نام کلاس یا آموزشگاه همگام می‌شود؛ فقط توضیح قابل ویرایش است.");
+            conversation.UpdateOfficialDescription(command.Description);
+        }
+        else conversation.UpdateInformation(command.Title, command.Description);
         await AuditAdvancedAsync(actorId, sessionId, "messaging.conversation.info", "Conversation", conversation.Id.ToString("D"),
             "تغییر مشخصات گفتگو", correlationId, nowUtc, ct);
         await SaveManagementAsync(ct);

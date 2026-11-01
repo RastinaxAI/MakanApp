@@ -66,10 +66,6 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
             return false;
         }
 
-        if ((facts.ActorAgeCategory != CommunicationAgeCategory.Adult ||
-             facts.TargetAgeCategory != CommunicationAgeCategory.Adult) && !facts.HasAuthorizedSafetyRelationship)
-            return false;
-
         return facts.Scope switch
         {
             ConversationScope.Personal => CanUsePersonal(facts, operation),
@@ -88,10 +84,6 @@ public sealed class CommunicationEligibilityPolicy : ICommunicationEligibilityPo
         {
             return false;
         }
-
-        if ((facts.ActorAgeCategory != CommunicationAgeCategory.Adult ||
-             facts.TargetAgeCategory != CommunicationAgeCategory.Adult) && !facts.HasAuthorizedSafetyRelationship)
-            return false;
 
         return facts.Scope switch
         {

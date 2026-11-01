@@ -25,22 +25,32 @@ internal static class AcademicActivityProjection
                 v.OrganizationId == p.OrganizationId && v.AssignmentId == version.AssignmentId && v.PublishedAtUtc != null && v.VersionNumber > p.SourceRevision, ct);
             return (version.AssignmentId, version.Id, current);
         }
+        if (p.SessionId is Guid sessionId)
+        {
+            var current = active && await db.AcademicSessions.AnyAsync(s => s.Id == sessionId && s.OrganizationId == p.OrganizationId &&
+                s.ClassId == p.ClassId && s.ActivityRevision == p.SourceRevision, ct);
+            return (sessionId, sessionId, current);
+        }
         var examVersion = await db.ExamVersions.AsNoTracking().SingleAsync(v => v.Id == p.ExamVersionId && v.OrganizationId == p.OrganizationId, ct);
         var examCurrent = active && examVersion.IsPublished && examVersion.VersionNumber == p.SourceRevision && await db.Exams.AnyAsync(e => e.Id == examVersion.ExamId && e.ClassId == p.ClassId && e.OrganizationId == p.OrganizationId, ct)
             && !await db.ExamVersions.AnyAsync(v => v.ExamId == examVersion.ExamId && v.OrganizationId == p.OrganizationId && v.PublishedAtUtc != null && v.VersionNumber > p.SourceRevision, ct);
         return (examVersion.ExamId, examVersion.Id, examCurrent);
     }
 
-    public static async Task<AcademicActivityCardResult?> CardAsync(MakanDbContext db, Message message, CancellationToken ct)
+    public static async Task<AcademicActivityCardResult?> CardAsync(MakanDbContext db, Message message, CancellationToken ct, DateTime nowUtc)
     {
         if (message.AcademicActivityPublicationId is not Guid id || message.IsDeleted) return null;
         var p = await db.AcademicActivityPublications.AsNoTracking().SingleAsync(p => p.Id == id, ct);
         var c = await db.Conversations.AsNoTracking().SingleAsync(c => c.Id == message.ConversationId, ct);
         if (c.OrganizationId != p.OrganizationId || c.AcademicClassId != p.ClassId || c.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic) return null;
         var current = await ResolveAsync(db, p, ct);
+        var expired = p.DueAtUtc <= nowUtc || p.AvailableUntilUtc <= nowUtc;
+        var closed = p.SessionAction is SessionActivityAction.Cancelled or SessionActivityAction.Completed;
+        var actionable = current.Current && !expired && !closed;
+        var state = !current.Current ? "Superseded" : closed ? p.SessionAction!.Value.ToString() : expired ? "Expired" : "Published";
         return new(p.Id, p.Kind, current.SourceId, current.VersionId, p.SourceRevision, p.OrganizationId, p.ClassId, c.Id, c.Type,
             "System", p.InitiatedByUserId, DateTime.SpecifyKind(p.OccurredAtUtc, DateTimeKind.Utc), p.Title,
-            Utc(p.DueAtUtc), Utc(p.AvailableFromUtc), Utc(p.AvailableUntilUtc), current.Current ? "Published" : "Superseded", current.Current);
+            Utc(p.DueAtUtc), Utc(p.AvailableFromUtc), Utc(p.AvailableUntilUtc), state, actionable) { SessionAction = p.SessionAction };
     }
     private static DateTime? Utc(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
 }

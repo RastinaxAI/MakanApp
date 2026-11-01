@@ -57,14 +57,14 @@ public sealed partial class MessagingEndpointsTests
 
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor)] [InlineData(CommunicationAgeCategory.Unknown)]
-    public async Task P2ChecklistProtectedRelationshipAndBlockAreReevaluatedWithoutErasingHistory(CommunicationAgeCategory age)
+    public async Task P2ChecklistAgeRelationshipDoesNotGateInteractionButBlockStillDoes(CommunicationAgeCategory age)
     {
         using var setup = await CreateAdvancedConversationSetupAsync(); await factory.SetCommunicationAgeCategoryAsync(setup.Second.UserId, age);
         await factory.AllowPersonalGroupInviteAsync(setup.First.UserId, setup.Second.UserId);
         var receipt = await CreateP2ChecklistAsync(setup.FirstClient, setup.ConversationId); var checklist = await ReadP2ChecklistAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId);
         await factory.RemoveApprovedContactAsync(setup.Second.UserId, setup.First.UserId);
-        Assert.Equal(HttpStatusCode.Forbidden, (await SetP2ChecklistResponseAsync(setup.SecondClient, checklist, checklist.Items.First().ItemId, true)).StatusCode);
-        Assert.All((await ReadP2ChecklistAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId)).Items, i => Assert.False(i.IsChecked));
+        Assert.Equal(HttpStatusCode.OK, (await SetP2ChecklistResponseAsync(setup.SecondClient, checklist, checklist.Items.First().ItemId, true)).StatusCode);
+        Assert.True((await ReadP2ChecklistAsync(setup.SecondClient, setup.ConversationId, receipt.MessageId)).Items.First().IsChecked);
         await factory.AllowPersonalGroupInviteAsync(setup.First.UserId, setup.Second.UserId);
         (await setup.FirstClient.PostAsync($"/api/v1/messaging/blocks/{setup.Second.UserId}", null)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.Forbidden, (await SetP2ChecklistResponseAsync(setup.SecondClient, checklist, checklist.Items.First().ItemId, true)).StatusCode);

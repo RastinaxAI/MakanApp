@@ -30,7 +30,11 @@ public sealed record ConversationSummaryStoreRecord(
     int UnreadCount,
     int UnreadMentionCount,
     ConversationUserState? State,
-    string? OrganizationName);
+    string? OrganizationName)
+{
+    public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
+    public ConversationPhotoResult? Photo { get; init; }
+}
 
 public sealed record MessageReplySummaryStoreRecord(
     Guid MessageId,

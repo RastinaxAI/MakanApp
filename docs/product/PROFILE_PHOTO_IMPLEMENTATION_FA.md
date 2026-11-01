@@ -1,5 +1,7 @@
 # پیاده‌سازی عکس پروفایل شخصی MakanApp
 
+> اصلاح `2026-11-01`: [قرارداد جاری Messaging](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) جای شرط‌های سنی Discovery/نمایش هویت در این گزارش تاریخی را می‌گیرد. Avatar مجوز پیام یا دسترسی به تاریخچهٔ خصوصی نمی‌سازد؛ Block/Privacy و ACL فایل حفظ‌اند. عکس Conversation قرارداد جداگانه‌ای روی FileAsset موجود دارد.
+
 تاریخ: `2026-10-28`؛ شاخهٔ مبنا `main`؛ HEAD شروع: `2bc18af08e6789186bcb9fd17b5dcbd2b1b0ac86`.
 
 این سند قابلیت جدید Working Tree را شرح می‌دهد؛ در این مأموریت Commit، Push، Publish، Deploy، Migration دیتابیس عادی/سرور یا فراخوانی واقعی AI انجام نمی‌شود. بسته‌های Release قبلی شامل این قابلیت جدید نیستند.

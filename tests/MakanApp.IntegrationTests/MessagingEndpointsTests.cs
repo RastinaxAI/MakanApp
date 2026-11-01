@@ -18,6 +18,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
 {
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 81_000_000;
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, string> MessagingTestTokens = new();
 
     [Fact]
     public async Task ValidAccountsCreateOneCanonicalPersonalConversationWithoutPhoneDisclosure()
@@ -57,7 +58,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
     }
 
     [Fact]
-    public async Task PersonalConversationRejectsUnrelatedMinorWithoutCreatingGrantOrConversation()
+    public async Task PersonalConversationDoesNotNeedAgeRelationshipOrCreateSyntheticGrant()
     {
         using var firstClient = factory.CreateClient();
         using var secondClient = factory.CreateClient();
@@ -72,7 +73,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
             second.UserId,
             ConversationScope.Personal);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.Equal(0, await factory.CountActivePersonalCommunicationGrantsAsync(
             first.UserId,
             second.UserId));
@@ -525,6 +526,7 @@ public sealed partial class MessagingEndpointsTests(MakanAppWebApplicationFactor
         await factory.SetCommunicationAgeCategoryAsync(
             verified.User.Id,
             CommunicationAgeCategory.Adult);
+        MessagingTestTokens[verified.User.Id] = verified.AccessToken;
         return new MessagingUser(
             verified.User.Id,
             verified.AccessToken,

@@ -184,7 +184,9 @@ public sealed partial class AssignmentService : IAssignmentService
         await transaction.CommitAsync(cancellationToken);
         return new PublishAssignmentResult(
             ToResult(record.Assignment, record.Version, record.ClassTitle),
-            recipients.Length);
+            recipients.Length) { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
+                record.Version.OrganizationId, record.Version.ClassId, AcademicActivityKind.Assignment,
+                record.Version.Id, record.Version.VersionNumber, cancellationToken) };
     }
 
     private AssignmentVersion CreateVersion(

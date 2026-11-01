@@ -1,5 +1,7 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
+> اصلاح جاری `2026-11-01`: [قرارداد Messaging](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) بر توضیح‌های سنی این Snapshot مقدم است. فیلدهای سن فقط داده‌اند؛ منع عمومی Unknown/Minor/Unverified superseded است و Privacy/Block/Safety/مجوز منبع حفظ شده‌اند. پنج عملیات افزایشی، Capability، Receipt و Photo را از Handoff و OpenAPI زنده بخوانید؛ جدول‌های تولیدشدهٔ قبلی زیر کاتالوگ کامل Build جدید نیستند.
+
 بازبینی `2026-10-30` با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
 پوشش: **365 عملیات HTTP، 322 مسیر متمایز، 63 Controller و 608 schema**. Health، Swagger و Hub در این شمارش نیستند.

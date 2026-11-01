@@ -155,8 +155,6 @@ public sealed partial class EfMessagingStore : IConversationPollStore
         {
             // رأی subscriber کانال، Publish نیست؛ بااین‌حال ممنوعیت و رابطهٔ جاری معتبرند.
             await EnsureCapabilityNotRestrictedAsync(conversation.Id, userId, GroupMemberCapability.SendMessages, now, ct);
-            await EnsurePersonalAudienceSafetyAsync(conversation, userId, now, ct);
-            if (actor.Role == ConversationParticipantRole.Owner) await EnsurePersonalCreationSafetyAsync(userId, conversation.Scope, conversation.Type, conversation.Visibility, ct);
         }
     }
 

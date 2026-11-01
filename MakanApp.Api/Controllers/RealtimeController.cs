@@ -11,8 +11,21 @@ namespace MakanApp.Api.Controllers;
 [Authorize]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/v1/realtime")]
-public sealed class RealtimeController(IRealtimeSyncService sync) : ControllerBase
+public sealed class RealtimeController(IRealtimeSyncService sync, IAccountInboxRealtimeService accountInbox) : ControllerBase
 {
+    /// <summary>Replay مستقل صندوق حساب؛ Cursor با نمای scoped قابل جابه‌جایی نیست.</summary>
+    [HttpGet("account-inbox/changes")]
+    [EnableRateLimiting("realtime-replay")]
+    [ProducesResponseType<AccountChangePageResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<AccountChangePageResult>> AccountInboxChanges([FromQuery] string? cursor = null,
+        [FromQuery] int limit = 100, CancellationToken cancellationToken = default) =>
+        Ok(await accountInbox.ReadAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), cursor, limit, cancellationToken));
+
     /// <summary>بازیابی مجاز حساب؛ بدون cursor ابتدا مرز Snapshot دریافت می‌شود.</summary>
     [HttpGet("changes")]
     [EnableRateLimiting("realtime-replay")]

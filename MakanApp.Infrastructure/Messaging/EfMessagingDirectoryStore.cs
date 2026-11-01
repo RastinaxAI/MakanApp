@@ -430,16 +430,10 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 : block.BlockerUserId)
             .ToHashSetAsync(cancellationToken);
 
-        var requesterIsAdult = await dbContext.Users.AnyAsync(u => u.Id == requesterUserId &&
-            u.CommunicationAgeCategory == CommunicationAgeCategory.Adult &&
-            u.CommunicationAgeVerificationStatus == CommunicationAgeVerificationStatus.Verified, cancellationToken);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var requesterCanMessage = await dbContext.Users.AnyAsync(u => u.Id == requesterUserId &&
             u.AccountStatus == UserAccountStatus.Active &&
             (u.MessagingRestrictedUntilUtc == null || u.MessagingRestrictedUntilUtc <= nowUtc), cancellationToken);
-        var relatedIds = requesterIsAdult && identities.All(i => !i.IsProtected) ? [] :
-            await MessengerRelationshipQuery.RelatedUsers(dbContext, requesterUserId, clock.GetUtcNow().UtcDateTime)
-                .Where(id => validUserIds.Contains(id)).ToHashSetAsync(cancellationToken);
         var result = new Dictionary<Guid, MessagingProfileStoreRecord>(identities.Length);
         foreach (var identity in identities)
         {
@@ -458,7 +452,7 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 contact?.IsFavorite ?? false,
                 blockedUserIds.Contains(identity.UserId),
                 identity.IsProtected,
-                requesterCanMessage && (requesterIsAdult && !identity.IsProtected || relatedIds.Contains(identity.UserId)),
+                requesterCanMessage,
                 identity.ProfilePhoto);
         }
 

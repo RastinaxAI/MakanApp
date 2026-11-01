@@ -11,7 +11,10 @@ public sealed record LessonAttachmentResult(Guid FileAssetId, string FileName, s
     FileAssetStatus Status, bool IsAvailable, string? DownloadUrl);
 public sealed record ClassLessonResult(Guid Id, Guid OrganizationId, Guid ClassId, Guid CourseId, string Title, string Body, int DisplayOrder,
     LessonStatus Status, int RevisionNumber, string Version, Guid CreatedByUserId, DateTime CreatedAtUtc,
-    DateTime? UpdatedAtUtc, DateTime? PublishedAtUtc, IReadOnlyCollection<LessonAttachmentResult> Attachments, bool Replayed = false);
+    DateTime? UpdatedAtUtc, DateTime? PublishedAtUtc, IReadOnlyCollection<LessonAttachmentResult> Attachments, bool Replayed = false)
+{
+    public MakanApp.Application.Messaging.AcademicPublicationReceipt? PublicationReceipt { get; init; }
+}
 
 public interface IClassLessonStore
 {
