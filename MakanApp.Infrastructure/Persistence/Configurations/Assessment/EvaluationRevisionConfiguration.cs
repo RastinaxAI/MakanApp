@@ -23,7 +23,7 @@ public sealed class EvaluationRevisionConfiguration : IEntityTypeConfiguration<E
         builder.HasKey(evaluation => evaluation.Id);
         builder.HasAlternateKey(evaluation => new
         {
-            evaluation.OrganizationId,
+            evaluation.ContextKind, evaluation.ContextId,
             evaluation.SubmissionAttemptId,
             evaluation.Id
         }).HasName("UQ_EvaluationRevisions_Organization_Attempt_Id");
@@ -42,7 +42,7 @@ public sealed class EvaluationRevisionConfiguration : IEntityTypeConfiguration<E
 
         builder.HasIndex(evaluation => new
         {
-            evaluation.OrganizationId,
+            evaluation.ContextKind, evaluation.ContextId,
             evaluation.SubmissionAttemptId,
             evaluation.RevisionNumber
         })
@@ -50,7 +50,7 @@ public sealed class EvaluationRevisionConfiguration : IEntityTypeConfiguration<E
             .HasDatabaseName("UX_EvaluationRevisions_Attempt_RevisionNumber");
         builder.HasIndex(evaluation => new
         {
-            evaluation.OrganizationId,
+            evaluation.ContextKind, evaluation.ContextId,
             evaluation.SubmissionAttemptId,
             evaluation.Status
         })
@@ -62,22 +62,22 @@ public sealed class EvaluationRevisionConfiguration : IEntityTypeConfiguration<E
             .WithMany()
             .HasForeignKey(evaluation => new
             {
-                evaluation.OrganizationId,
+                evaluation.ContextKind, evaluation.ContextId,
                 evaluation.SubmissionAttemptId
             })
-            .HasPrincipalKey(attempt => new { attempt.OrganizationId, attempt.Id })
+            .HasPrincipalKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<EvaluationRevision>()
             .WithMany()
             .HasForeignKey(evaluation => new
             {
-                evaluation.OrganizationId,
+                evaluation.ContextKind, evaluation.ContextId,
                 evaluation.SubmissionAttemptId,
                 evaluation.SupersedesEvaluationRevisionId
             })
             .HasPrincipalKey(evaluation => new
             {
-                evaluation.OrganizationId,
+                evaluation.ContextKind, evaluation.ContextId,
                 evaluation.SubmissionAttemptId,
                 evaluation.Id
             })
@@ -91,5 +91,6 @@ public sealed class EvaluationRevisionConfiguration : IEntityTypeConfiguration<E
             })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

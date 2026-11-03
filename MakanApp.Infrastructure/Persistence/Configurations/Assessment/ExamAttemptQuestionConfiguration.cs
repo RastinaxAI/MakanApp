@@ -13,7 +13,7 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
         builder.HasKey(mapping => mapping.Id);
         builder.HasAlternateKey(mapping => new
         {
-            mapping.OrganizationId,
+            mapping.ContextKind, mapping.ContextId,
             mapping.ExamAttemptId,
             mapping.Id,
             mapping.QuestionVersionId
@@ -21,7 +21,7 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
         builder.Property(mapping => mapping.RowVersion).IsRowVersion();
         builder.HasIndex(mapping => new
         {
-            mapping.OrganizationId,
+            mapping.ContextKind, mapping.ContextId,
             mapping.ExamAttemptId,
             mapping.DisplayOrder
         })
@@ -29,7 +29,7 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
             .HasDatabaseName("UX_ExamAttemptQuestions_Organization_Attempt_DisplayOrder");
         builder.HasIndex(mapping => new
         {
-            mapping.OrganizationId,
+            mapping.ContextKind, mapping.ContextId,
             mapping.ExamAttemptId,
             mapping.QuestionVersionId
         })
@@ -40,13 +40,13 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(mapping => new
             {
-                mapping.OrganizationId,
+                mapping.ContextKind, mapping.ContextId,
                 mapping.ExamVersionId,
                 mapping.ExamAttemptId
             })
             .HasPrincipalKey(attempt => new
             {
-                attempt.OrganizationId,
+                attempt.ContextKind, attempt.ContextId,
                 attempt.ExamVersionId,
                 attempt.Id
             })
@@ -55,13 +55,13 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(mapping => new
             {
-                mapping.OrganizationId,
+                mapping.ContextKind, mapping.ContextId,
                 mapping.ExamVersionId,
                 mapping.QuestionVersionId
             })
             .HasPrincipalKey(question => new
             {
-                question.OrganizationId,
+                question.ContextKind, question.ContextId,
                 question.ExamVersionId,
                 question.Id
             })
@@ -70,18 +70,19 @@ public sealed class ExamAttemptQuestionConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(mapping => new
             {
-                mapping.OrganizationId,
+                mapping.ContextKind, mapping.ContextId,
                 mapping.ExamAttemptId,
                 ExamAttemptQuestionId = mapping.Id,
                 mapping.CurrentAnswerRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.ExamAttemptQuestionId,
                 Id = (Guid?)revision.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

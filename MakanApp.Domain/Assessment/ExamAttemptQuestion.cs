@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamAttemptQuestion
+public sealed class ExamAttemptQuestion : IAcademicScoped
 {
     private ExamAttemptQuestion()
     {
@@ -8,14 +8,17 @@ public sealed class ExamAttemptQuestion
 
     private ExamAttemptQuestion(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid examVersionId,
         Guid questionVersionId,
         int displayOrder)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         ExamVersionId = examVersionId;
         QuestionVersionId = questionVersionId;
@@ -23,7 +26,11 @@ public sealed class ExamAttemptQuestion
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public Guid ExamVersionId { get; private set; }
     public Guid QuestionVersionId { get; private set; }
@@ -48,7 +55,7 @@ public sealed class ExamAttemptQuestion
 
         return new ExamAttemptQuestion(
             Guid.NewGuid(),
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.Id,
             attempt.ExamVersionId,
             questionVersionId,
@@ -57,7 +64,7 @@ public sealed class ExamAttemptQuestion
 
     public void AcceptAnswerRevision(AnswerRevision revision)
     {
-        if (revision.OrganizationId != OrganizationId ||
+        if (revision.Scope != Scope ||
             revision.ExamAttemptId != ExamAttemptId ||
             revision.ExamAttemptQuestionId != Id ||
             revision.SupersedesAnswerRevisionId != CurrentAnswerRevisionId)

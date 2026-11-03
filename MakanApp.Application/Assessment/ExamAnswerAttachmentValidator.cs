@@ -20,6 +20,8 @@ internal static class ExamAnswerAttachmentValidator
         {
             var file = await fileStore.GetForUpdateAsync(id, ct) ?? throw FileDenied();
             if (file.UploadedByUserId != access.UserId || file.OrganizationId != attempt.OrganizationId ||
+                file.PersonalClassId != attempt.PersonalClassId ||
+                attempt.PersonalClassId.HasValue && file.PersonalClassMembershipId != attempt.PersonalClassMembershipId ||
                 !await store.IsFileUsableForAttemptAsync(id, attempt.Id, ct)) throw FileDenied();
             if (file.Status != FileAssetStatus.Ready || string.IsNullOrEmpty(file.Sha256Hash) ||
                 (!existing.Contains(id) && file.RetainedAtUtc is null && file.UnattachedExpiresAtUtc <= now)) throw FileNotReady();

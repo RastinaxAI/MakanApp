@@ -35,43 +35,43 @@ public interface IExamAttemptStore
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamStartContextRecord?> GetStartContextForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid userId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ExamAttempt>> GetAttemptsForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid enrollmentId,
         CancellationToken cancellationToken);
 
     Task<ExamAttempt?> GetByClientOperationForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid enrollmentId,
         Guid clientOperationId,
         CancellationToken cancellationToken);
 
     Task<ExamAttemptRecord?> GetByIdAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
 
     Task<ExamAttemptRecord?> GetOwnedByIdAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken);
 
     Task<ExamAttemptRecord?> GetOwnedActiveAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid userId,
         DateTime nowUtc,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ExamAttemptRecord>> GetOwnedAttemptsAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid userId,
         CancellationToken cancellationToken);

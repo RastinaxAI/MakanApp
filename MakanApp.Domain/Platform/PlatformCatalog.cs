@@ -51,6 +51,7 @@ public static class PlatformPermissionKeys
     public const string AiRead = "platform.ai.read";
     public const string PersonalClassesRead = "platform.personal_classes.read";
     public const string PersonalClassesReview = "platform.personal_classes.review";
+    public const string PersonalClassesAcademicPermissions = "platform.personal_classes.academic_permissions.manage";
     public const string LibrarySourcesManage = "platform.library.sources.manage";
 
     public static readonly IReadOnlyCollection<string> Step15A =
@@ -87,7 +88,8 @@ public static class PlatformPermissionKeys
         AiRead,
         LibrarySourcesManage,
         PersonalClassesRead,
-        PersonalClassesReview
+        PersonalClassesReview,
+        PersonalClassesAcademicPermissions
     ];
 }
 
@@ -128,5 +130,6 @@ public static class PlatformCatalogIds
     public static readonly Guid AiReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000025");
     public static readonly Guid PersonalClassesReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000027");
     public static readonly Guid PersonalClassesReviewPermission = Guid.Parse("20000000-0000-0000-0000-000000000028");
+    public static readonly Guid PersonalClassesAcademicPermissionsPermission = Guid.Parse("20000000-0000-0000-0000-000000000029");
     public static readonly Guid LibrarySourcesManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000026");
 }

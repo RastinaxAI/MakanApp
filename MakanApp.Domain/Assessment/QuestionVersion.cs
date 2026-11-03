@@ -2,7 +2,7 @@ namespace MakanApp.Domain.Assessment;
 
 public sealed record ExamQuestionOptionDefinition(int Order, string Text, bool IsCorrect);
 
-public sealed class QuestionVersion
+public sealed class QuestionVersion : IAcademicScoped
 {
     public const int MaximumPromptLength = 20_000;
 
@@ -14,7 +14,7 @@ public sealed class QuestionVersion
 
     private QuestionVersion(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examVersionId,
         int order,
         ExamQuestionType type,
@@ -23,7 +23,10 @@ public sealed class QuestionVersion
         DateTime createdAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamVersionId = examVersionId;
         Order = order;
         Type = type;
@@ -33,7 +36,11 @@ public sealed class QuestionVersion
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamVersionId { get; private set; }
     public int Order { get; private set; }
     public ExamQuestionType Type { get; private set; }
@@ -52,7 +59,7 @@ public sealed class QuestionVersion
         AllowedAnswerContentTypes!.Split(','));
 
     public static QuestionVersion CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examVersionId,
         int order,
         ExamQuestionType type,
@@ -62,11 +69,11 @@ public sealed class QuestionVersion
         DateTime createdAtUtc,
         ExamAnswerAttachmentPolicy? attachmentPolicy = null)
     {
-        ValidateValues(organizationId, examVersionId, order, type, prompt, score, createdAtUtc);
+        ValidateValues(scope, examVersionId, order, type, prompt, score, createdAtUtc);
         ValidateAttachmentPolicy(type, attachmentPolicy);
         var question = new QuestionVersion(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             examVersionId,
             order,
             type,
@@ -81,7 +88,7 @@ public sealed class QuestionVersion
 
     public QuestionVersion CopyTo(Guid examVersionId, DateTime createdAtUtc) =>
         CreateDraft(
-            OrganizationId,
+            Scope,
             examVersionId,
             Order,
             Type,
@@ -107,12 +114,12 @@ public sealed class QuestionVersion
     {
         if (!examVersion.IsDraft ||
             examVersion.Id != ExamVersionId ||
-            examVersion.OrganizationId != OrganizationId)
+            examVersion.Scope != Scope)
         {
             throw new InvalidOperationException("سؤال نسخه منتشرشده قابل ویرایش نیست.");
         }
 
-        ValidateValues(OrganizationId, ExamVersionId, order, type, prompt, score, updatedAtUtc);
+        ValidateValues(Scope, ExamVersionId, order, type, prompt, score, updatedAtUtc);
         var policy = replaceAttachmentPolicy ? attachmentPolicy : AttachmentPolicy;
         ValidateAttachmentPolicy(type, policy);
         Order = order;
@@ -155,7 +162,7 @@ public sealed class QuestionVersion
 
         foreach (var definition in definitions)
         {
-            _options.Add(QuestionOption.Create(OrganizationId, Id, definition));
+            _options.Add(QuestionOption.Create(Scope, Id, definition));
         }
     }
 
@@ -175,7 +182,7 @@ public sealed class QuestionVersion
     }
 
     private static void ValidateValues(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examVersionId,
         int order,
         ExamQuestionType type,
@@ -183,7 +190,7 @@ public sealed class QuestionVersion
         decimal score,
         DateTime timestampUtc)
     {
-        if (organizationId == Guid.Empty || examVersionId == Guid.Empty)
+        if (scope.Id == Guid.Empty || examVersionId == Guid.Empty)
         {
             throw new ArgumentException("شناسه‌های سؤال الزامی هستند.");
         }

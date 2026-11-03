@@ -16,12 +16,12 @@ public sealed class ExamGradingsController(IExamGradingService gradingService) :
         Guid examId,
         [FromQuery] Guid? classId,
         [FromQuery] ExamGradingQueueStatus? status,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken, [FromQuery] int? page = null, [FromQuery] int? pageSize = null) =>
         Ok(await gradingService.GetQueueAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
             examId,
-            new ExamGradingQueueQuery(classId, status),
+            new ExamGradingQueueQuery(classId, status, page, pageSize),
             cancellationToken));
 
     [HttpGet("exam-attempts/{attemptId:guid}/grading")]

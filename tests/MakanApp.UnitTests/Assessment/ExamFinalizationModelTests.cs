@@ -150,7 +150,7 @@ public sealed class ExamFinalizationModelTests
         var nowUtc = UtcNow();
         var attempt = Start(nowUtc);
         var question = QuestionVersion.CreateDraft(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.ExamVersionId,
             1,
             ExamQuestionType.ObjectiveSingleChoice,
@@ -184,7 +184,7 @@ public sealed class ExamFinalizationModelTests
         var nowUtc = UtcNow();
         var attempt = Start(nowUtc);
         var question = QuestionVersion.CreateDraft(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.ExamVersionId,
             1,
             ExamQuestionType.Descriptive,

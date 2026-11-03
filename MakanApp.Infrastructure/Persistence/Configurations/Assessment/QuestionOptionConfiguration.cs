@@ -15,7 +15,7 @@ public sealed class QuestionOptionConfiguration : IEntityTypeConfiguration<Quest
         builder.HasKey(option => option.Id);
         builder.HasAlternateKey(option => new
         {
-            option.OrganizationId,
+            option.ContextKind, option.ContextId,
             option.QuestionVersionId,
             option.Id
         }).HasName("UQ_QuestionOptions_Organization_QuestionVersion_Id");
@@ -24,11 +24,12 @@ public sealed class QuestionOptionConfiguration : IEntityTypeConfiguration<Quest
             .IsRequired();
         builder.HasIndex(option => new
         {
-            option.OrganizationId,
+            option.ContextKind, option.ContextId,
             option.QuestionVersionId,
             option.Order
         })
             .IsUnique()
             .HasDatabaseName("UX_QuestionOptions_Organization_Question_Order");
+        builder.ConfigureScope();
     }
 }

@@ -71,7 +71,7 @@ public sealed partial class EfDetailedReportReadService
         var organizationId = context.OrganizationId!.Value;
         var rows =
             from recipient in _dbContext.AssignmentRecipients
-            join enrollment in _dbContext.Enrollments on new { recipient.OrganizationId, Id = recipient.EnrollmentId } equals new { enrollment.OrganizationId, enrollment.Id }
+            join enrollment in _dbContext.Enrollments on new { recipient.OrganizationId, Id = recipient.EnrollmentId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join organizationPerson in _dbContext.OrganizationPersons on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId } equals new { organizationPerson.OrganizationId, organizationPerson.Id }
             join person in _dbContext.Persons on organizationPerson.PersonId equals person.Id
             join assignment in _dbContext.Assignments on new { recipient.OrganizationId, Id = recipient.AssignmentId } equals new { assignment.OrganizationId, assignment.Id }
@@ -122,7 +122,7 @@ public sealed partial class EfDetailedReportReadService
         var rows =
             from exam in _dbContext.Exams
             join version in _dbContext.ExamVersions on new { exam.OrganizationId, ExamId = exam.Id } equals new { version.OrganizationId, version.ExamId }
-            join enrollment in _dbContext.Enrollments on new { exam.OrganizationId, Id = exam.ClassId } equals new { enrollment.OrganizationId, Id = enrollment.ClassId }
+            join enrollment in _dbContext.Enrollments on new { exam.OrganizationId, Id = exam.ClassId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = enrollment.ClassId }
             join organizationPerson in _dbContext.OrganizationPersons on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId } equals new { organizationPerson.OrganizationId, organizationPerson.Id }
             join person in _dbContext.Persons on organizationPerson.PersonId equals person.Id
             let latestAttempt = _dbContext.ExamAttempts.Where(attempt => attempt.OrganizationId == organizationId && attempt.ExamVersionId == version.Id && attempt.EnrollmentId == enrollment.Id).OrderByDescending(attempt => attempt.AttemptNumber).FirstOrDefault()

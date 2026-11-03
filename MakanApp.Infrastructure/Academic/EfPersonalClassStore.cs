@@ -32,7 +32,7 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
     public async Task<PersonalClassDto> GetAsync(Guid userId, Guid classId, CancellationToken ct)
     {
         if (!await commerce.CanAccessPersonalClassAsync(userId, classId, ct)) throw NotFound();
-        return Map(await db.PersonalClasses.AsNoTracking().SingleAsync(c => c.Id == classId, ct), userId);
+        return await MapAsync(await db.PersonalClasses.AsNoTracking().SingleAsync(c => c.Id == classId, ct), userId, ct);
     }
 
     // قراردادهای قدیمیِ بدون نسخه، مجوز mutation تازه ایجاد نمی‌کنند.
@@ -76,7 +76,7 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
         if (invitation.AcceptedAtUtc.HasValue || invitation.ClosureReason == "MembershipEstablished")
         {
             if (member is null) throw Error(AcademicErrorCodes.PersonalClassMembershipInactive, "عضویت پایان یافته است.");
-            await tx.CommitAsync(ct); return Map(entity, userId);
+            await tx.CommitAsync(ct); return await MapAsync(entity, userId, ct);
         }
         if (invitation.StatusAt(now) != "Pending") throw Conflict();
         RequireAdmissions(entity);
@@ -89,7 +89,7 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
         }
         else invitation.Accept(userId, now);
         await CloseAdmissionIntents(entity.Id, userId, member.Id, invitation.Id, now, ct, member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner));
-        await SaveClass(entity, now, ct); await tx.CommitAsync(ct); return Map(entity, userId);
+        await SaveClass(entity, now, ct); await tx.CommitAsync(ct); return await MapAsync(entity, userId, ct);
     }
 
     public async Task<IReadOnlyList<PersonalClassParticipantDto>> ParticipantsAsync(Guid userId, Guid classId, CancellationToken ct) =>
@@ -97,7 +97,10 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
 
     private async Task<PersonalClass> LockClass(Guid classId, CancellationToken ct)
     {
-        var host = await db.PersonalClasses.AsNoTracking().Where(c => c.Id == classId).Select(c => (Guid?)c.HostUserId).SingleOrDefaultAsync(ct) ?? throw NotFound();
+        // این lookup فقط میزبانِ ثابت را پیدا می‌کند؛ نگه‌داشتن S روی کلاس پیش از قفل میزبان، ترتیب قفل را معکوس می‌کند.
+        // مجوز و وضعیت کلاس پس از گرفتن UPDLOCK در همان تراکنش Serializable بررسی می‌شوند.
+        var host = await db.PersonalClasses.FromSqlInterpolated($"SELECT * FROM [academic].[PersonalClasses] WITH (READCOMMITTED) WHERE [Id]={classId}")
+            .AsNoTracking().Select(c => (Guid?)c.HostUserId).SingleOrDefaultAsync(ct) ?? throw NotFound();
         await commerce.LockOwnerAsync(SubscriptionOwner.Individual(host), ct, requireActive: false);
         return await db.PersonalClasses.FromSqlInterpolated($"SELECT * FROM [academic].[PersonalClasses] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={classId}")
             .SingleAsync(ct);
@@ -158,6 +161,27 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
         Capabilities = new(c.ManagerUserId == actor && c.State == PersonalClassState.Active, c.ManagerUserId == actor && c.State != PersonalClassState.Archived,
             c.ManagerUserId == actor && c.State != PersonalClassState.Archived, false, false, false, c.ManagerUserId == actor && c.State != PersonalClassState.Archived, false)
     };
+    private async Task<PersonalClassDto> MapAsync(PersonalClass c, Guid actor, CancellationToken ct)
+    {
+        var dto = Map(c, actor);
+        var member = await ActiveMembers(c.Id).AsNoTracking().SingleOrDefaultAsync(m => m.StudentUserId == actor, ct);
+        if (member is null) return dto with { Capabilities = new(false, false, false, false, false, false, false, false) };
+        var granted = await PersonalClassAcademicAccessQuery.Effective(db, c.Id).Where(g => g.MembershipId == member.Id)
+            .Select(g => (PersonalClassAcademicCapabilities?)g.Capabilities).SingleOrDefaultAsync(ct) ?? PersonalClassAcademicCapabilities.None;
+        var authorAssignments = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.AuthorAssignments);
+        var authorExams = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.AuthorExams);
+        return dto with
+        {
+            CanCreateEducationalContent = authorAssignments || authorExams,
+            EducationalWorkflowStatus = "Available",
+            Capabilities = dto.Capabilities with
+            {
+                CanAuthorAssignments = authorAssignments, CanAuthorExams = authorExams,
+                CanGrade = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.Grade),
+                CanViewOwnResults = member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner)
+            }
+        };
+    }
     private static PersonalClassInvitationDto Invitation(PersonalClassInvitation i, DateTime now) => new(i.Id, i.PersonalClassId, i.DestinationUserId, i.ExpiresAtUtc, i.AcceptedAtUtc.HasValue)
         { Status = i.StatusAt(now), Version = Convert.ToBase64String(i.RowVersion), LocalRoles = i.LocalRoles, DelegatedCapabilities = i.DelegatedCapabilities };
     private static PersonalClassMembershipDto Member(PersonalClassParticipant m) => new(m.Id, m.StudentUserId, m.LocalRoles, m.DelegatedCapabilities,

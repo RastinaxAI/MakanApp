@@ -11,7 +11,7 @@ public interface IAssignmentService
         Guid sessionId,
         Guid classId,
         CreateAssignmentDraftCommand command,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass);
 
     Task<AssignmentResult> UpdateDraftAsync(
         Guid userId,
@@ -37,7 +37,7 @@ public interface IAssignmentService
         Guid userId,
         Guid sessionId,
         Guid classId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass);
 }
 
 public interface IAssessmentTransaction : IAsyncDisposable
@@ -48,23 +48,25 @@ public interface IAssessmentTransaction : IAsyncDisposable
 public interface IAssignmentStore
 {
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
-    Task<AcademicClass?> GetClassAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<AcademicClass?> GetClassForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<bool> HasActiveTeacherAssignmentAsync(Guid organizationId, Guid classId, Guid membershipId, CancellationToken cancellationToken);
-    Task<AssignmentWithVersionRecord?> GetAssignmentAsync(Guid organizationId, Guid assignmentId, CancellationToken cancellationToken);
-    Task<AssignmentWithVersionRecord?> GetAssignmentForUpdateAsync(Guid organizationId, Guid assignmentId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<Guid>> GetActiveEnrollmentIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<bool> IsRecipientForStudentAsync(Guid organizationId, Guid assignmentVersionId, Guid userId, CancellationToken cancellationToken);
-    Task<bool> IsRecipientForLearnerAsync(Guid organizationId, Guid assignmentVersionId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForManagerAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForTeacherAsync(Guid organizationId, Guid classId, Guid membershipId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForStudentAsync(Guid organizationId, Guid classId, Guid userId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForLearnerAsync(Guid organizationId, Guid classId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
+    Task<AcademicClassRecord?> GetClassAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<AcademicClassRecord?> GetClassForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<bool> HasActiveTeacherAssignmentAsync(AcademicScope scope, Guid classId, Guid membershipId, CancellationToken cancellationToken);
+    Task<AssignmentWithVersionRecord?> GetAssignmentAsync(AcademicScope scope, Guid assignmentId, CancellationToken cancellationToken);
+    Task<AssignmentWithVersionRecord?> GetAssignmentForUpdateAsync(AcademicScope scope, Guid assignmentId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveParticipantIdsForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<bool> IsRecipientForStudentAsync(AcademicScope scope, Guid assignmentVersionId, Guid userId, CancellationToken cancellationToken);
+    Task<bool> IsRecipientForLearnerAsync(AcademicScope scope, Guid assignmentVersionId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForManagerAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForTeacherAsync(AcademicScope scope, Guid classId, Guid membershipId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForStudentAsync(AcademicScope scope, Guid classId, Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForLearnerAsync(AcademicScope scope, Guid classId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
     void SetOriginalRowVersion(Assignment assignment, byte[] rowVersion);
     void SetOriginalRowVersion(AssignmentVersion version, byte[] rowVersion);
     void Add(Assignment assignment);
     void Add(AssignmentVersion version);
     void AddRange(IEnumerable<AssignmentRecipient> recipients);
     Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task<bool> IsFileAvailableForAssignmentAsync(Guid fileId, Guid assignmentId, CancellationToken ct);
+    Task<int> CountRecipientsAsync(Guid versionId, CancellationToken ct);
 }

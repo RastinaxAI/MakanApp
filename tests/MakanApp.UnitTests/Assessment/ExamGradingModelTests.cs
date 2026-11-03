@@ -74,7 +74,7 @@ public sealed class ExamGradingModelTests
     {
         var model = CreateObjectiveModel(selectCorrect: true);
         var revision = ExamGradeRevision.CreateDraft(
-            model.Attempt.OrganizationId,
+            model.Attempt.Scope,
             model.Attempt.Id,
             Guid.NewGuid(),
             model.NowUtc);
@@ -99,7 +99,7 @@ public sealed class ExamGradingModelTests
     {
         var model = CreateDescriptiveModel();
         var revision = ExamGradeRevision.CreateDraft(
-            model.Attempt.OrganizationId,
+            model.Attempt.Scope,
             model.Attempt.Id,
             Guid.NewGuid(),
             model.NowUtc);
@@ -220,7 +220,7 @@ public sealed class ExamGradingModelTests
     private static ExamQuestionGrade CreateQuestionGrade(GradingModel model)
     {
         var revision = ExamGradeRevision.CreateDraft(
-            model.Attempt.OrganizationId,
+            model.Attempt.Scope,
             model.Attempt.Id,
             Guid.NewGuid(),
             model.NowUtc);
@@ -240,7 +240,7 @@ public sealed class ExamGradingModelTests
     {
         var model = CreateDescriptiveModel();
         var revision = ExamGradeRevision.CreateDraft(
-            model.Attempt.OrganizationId,
+            model.Attempt.Scope,
             model.Attempt.Id,
             Guid.NewGuid(),
             model.NowUtc);
@@ -269,7 +269,7 @@ public sealed class ExamGradingModelTests
         var nowUtc = UtcNow();
         var attempt = Start(nowUtc);
         var question = QuestionVersion.CreateDraft(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.ExamVersionId,
             1,
             ExamQuestionType.ObjectiveSingleChoice,
@@ -302,7 +302,7 @@ public sealed class ExamGradingModelTests
         var nowUtc = UtcNow();
         var attempt = Start(nowUtc);
         var question = QuestionVersion.CreateDraft(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.ExamVersionId,
             1,
             ExamQuestionType.Descriptive,

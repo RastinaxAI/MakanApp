@@ -22,8 +22,8 @@ public sealed class ExamQuestionGradeConfiguration : IEntityTypeConfiguration<Ex
                 "[AwardedScore] >= 0 AND [AwardedScore] <= [MaximumScore]");
             table.HasCheckConstraint(
                 "CK_ExamQuestionGrades_ReviewState",
-                "([IsReviewed] = 0 AND [ReviewedByMembershipId] IS NULL AND [ReviewedAtUtc] IS NULL) OR " +
-                "([IsReviewed] = 1 AND [ReviewedByMembershipId] IS NOT NULL AND [ReviewedAtUtc] IS NOT NULL)");
+                "([IsReviewed] = 0 AND COALESCE([ReviewedByMembershipId], [ReviewedByPersonalMembershipId]) IS NULL AND [ReviewedAtUtc] IS NULL) OR " +
+                "([IsReviewed] = 1 AND COALESCE([ReviewedByMembershipId], [ReviewedByPersonalMembershipId]) IS NOT NULL AND [ReviewedAtUtc] IS NOT NULL)");
             table.HasCheckConstraint(
                 "CK_ExamQuestionGrades_ObjectiveReviewed",
                 "[GradingMode] <> 1 OR [IsReviewed] = 1");
@@ -38,7 +38,7 @@ public sealed class ExamQuestionGradeConfiguration : IEntityTypeConfiguration<Ex
         builder.Property(grade => grade.ReviewedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(grade => new
         {
-            grade.OrganizationId,
+            grade.ContextKind, grade.ContextId,
             grade.ExamAttemptId,
             grade.ExamGradeRevisionId,
             grade.ExamAttemptQuestionId
@@ -50,13 +50,13 @@ public sealed class ExamQuestionGradeConfiguration : IEntityTypeConfiguration<Ex
             .WithMany()
             .HasForeignKey(grade => new
             {
-                grade.OrganizationId,
+                grade.ContextKind, grade.ContextId,
                 grade.ExamAttemptId,
                 Id = grade.ExamGradeRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.Id
             })
@@ -65,14 +65,14 @@ public sealed class ExamQuestionGradeConfiguration : IEntityTypeConfiguration<Ex
             .WithMany()
             .HasForeignKey(grade => new
             {
-                grade.OrganizationId,
+                grade.ContextKind, grade.ContextId,
                 grade.ExamAttemptId,
                 Id = grade.ExamAttemptQuestionId,
                 grade.QuestionVersionId
             })
             .HasPrincipalKey(question => new
             {
-                question.OrganizationId,
+                question.ContextKind, question.ContextId,
                 question.ExamAttemptId,
                 question.Id,
                 question.QuestionVersionId
@@ -91,5 +91,6 @@ public sealed class ExamQuestionGradeConfiguration : IEntityTypeConfiguration<Ex
                 Id = (Guid?)membership.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

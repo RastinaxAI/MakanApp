@@ -22,11 +22,11 @@ public sealed class QuestionVersionConfiguration : IEntityTypeConfiguration<Ques
         builder.Property(question => question.AttachmentsAllowed).HasDefaultValue(false);
         builder.Property(question => question.AnswerTextRequired).HasDefaultValue(false);
         builder.Property(question => question.AllowedAnswerContentTypes).HasMaxLength(2048);
-        builder.HasAlternateKey(question => new { question.OrganizationId, question.Id })
+        builder.HasAlternateKey(question => new { question.ContextKind, question.ContextId, question.Id })
             .HasName("UQ_QuestionVersions_OrganizationId_Id");
         builder.HasAlternateKey(question => new
         {
-            question.OrganizationId,
+            question.ContextKind, question.ContextId,
             question.ExamVersionId,
             question.Id
         }).HasName("UQ_QuestionVersions_Organization_ExamVersion_Id");
@@ -38,7 +38,7 @@ public sealed class QuestionVersionConfiguration : IEntityTypeConfiguration<Ques
         builder.Property(question => question.RowVersion).IsRowVersion();
         builder.HasIndex(question => new
         {
-            question.OrganizationId,
+            question.ContextKind, question.ContextId,
             question.ExamVersionId,
             question.Order
         })
@@ -47,15 +47,16 @@ public sealed class QuestionVersionConfiguration : IEntityTypeConfiguration<Ques
 
         builder.HasOne<ExamVersion>()
             .WithMany()
-            .HasForeignKey(question => new { question.OrganizationId, question.ExamVersionId })
-            .HasPrincipalKey(version => new { version.OrganizationId, version.Id })
+            .HasForeignKey(question => new { question.ContextKind, question.ContextId, question.ExamVersionId })
+            .HasPrincipalKey(version => new { version.ContextKind, version.ContextId, version.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(question => question.Options)
             .WithOne()
-            .HasForeignKey(option => new { option.OrganizationId, option.QuestionVersionId })
-            .HasPrincipalKey(question => new { question.OrganizationId, question.Id })
+            .HasForeignKey(option => new { option.ContextKind, option.ContextId, option.QuestionVersionId })
+            .HasPrincipalKey(question => new { question.ContextKind, question.ContextId, question.Id })
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(question => question.Options)
             .UsePropertyAccessMode(Microsoft.EntityFrameworkCore.PropertyAccessMode.Field);
+        builder.ConfigureScope();
     }
 }

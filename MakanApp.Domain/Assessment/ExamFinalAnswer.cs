@@ -1,26 +1,33 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamFinalAnswer
+public sealed class ExamFinalAnswer : IAcademicScoped
 {
     private ExamFinalAnswer()
     {
     }
 
     private ExamFinalAnswer(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid examAttemptQuestionId,
         Guid questionVersionId,
         Guid answerRevisionId)
     {
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         ExamAttemptQuestionId = examAttemptQuestionId;
         QuestionVersionId = questionVersionId;
         AnswerRevisionId = answerRevisionId;
     }
 
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public Guid ExamAttemptQuestionId { get; private set; }
     public Guid QuestionVersionId { get; private set; }
@@ -32,9 +39,9 @@ public sealed class ExamFinalAnswer
         AnswerRevision revision)
     {
         if (!attempt.IsInProgress ||
-            attemptQuestion.OrganizationId != attempt.OrganizationId ||
+            attemptQuestion.Scope != attempt.Scope ||
             attemptQuestion.ExamAttemptId != attempt.Id ||
-            revision.OrganizationId != attempt.OrganizationId ||
+            revision.Scope != attempt.Scope ||
             revision.ExamAttemptId != attempt.Id ||
             revision.ExamAttemptQuestionId != attemptQuestion.Id ||
             revision.QuestionVersionId != attemptQuestion.QuestionVersionId ||
@@ -44,7 +51,7 @@ public sealed class ExamFinalAnswer
         }
 
         return new ExamFinalAnswer(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.Id,
             attemptQuestion.Id,
             attemptQuestion.QuestionVersionId,

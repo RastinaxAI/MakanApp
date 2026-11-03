@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class Assignment
+public sealed class Assignment : IAcademicScoped
 {
     private Assignment()
     {
@@ -8,15 +8,20 @@ public sealed class Assignment
 
     private Assignment(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid createdByMembershipId,
         DateTime createdAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
+        scope.EnsureClass(classId);
         ClassId = classId;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CurrentVersionNumber = 1;
         Status = AssignmentStatus.Draft;
         CreatedAtUtc = createdAtUtc;
@@ -24,9 +29,15 @@ public sealed class Assignment
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ClassId { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public AcademicClassRef ClassRef => new(Scope, ClassId);
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public int CurrentVersionNumber { get; private set; }
     public AssignmentStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
@@ -38,13 +49,13 @@ public sealed class Assignment
     public bool IsRecipientVisible => Status is AssignmentStatus.Published or AssignmentStatus.Closed;
 
     public static Assignment CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid createdByMembershipId,
         DateTime createdAtUtc) =>
         new(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             classId,
             createdByMembershipId,
             createdAtUtc);

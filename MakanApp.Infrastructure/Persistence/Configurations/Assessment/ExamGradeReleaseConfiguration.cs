@@ -21,14 +21,14 @@ public sealed class ExamGradeReleaseConfiguration : IEntityTypeConfiguration<Exa
         builder.Property(release => release.ReleasedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(release => new
         {
-            release.OrganizationId,
+            release.ContextKind, release.ContextId,
             release.ExamGradeRevisionId
         })
             .IsUnique()
             .HasDatabaseName("UX_ExamGradeReleases_Organization_Revision");
         builder.HasIndex(release => new
         {
-            release.OrganizationId,
+            release.ContextKind, release.ContextId,
             release.ExamAttemptId,
             release.ClientOperationId
         })
@@ -36,7 +36,7 @@ public sealed class ExamGradeReleaseConfiguration : IEntityTypeConfiguration<Exa
             .HasDatabaseName("UX_ExamGradeReleases_Attempt_ClientOperation");
         builder.HasIndex(release => new
         {
-            release.OrganizationId,
+            release.ContextKind, release.ContextId,
             release.ExamAttemptId,
             release.ReleasedAtUtc
         }).HasDatabaseName("IX_ExamGradeReleases_Attempt_ReleasedAtUtc");
@@ -45,13 +45,13 @@ public sealed class ExamGradeReleaseConfiguration : IEntityTypeConfiguration<Exa
             .WithMany()
             .HasForeignKey(release => new
             {
-                release.OrganizationId,
+                release.ContextKind, release.ContextId,
                 release.ExamAttemptId,
                 Id = release.ExamGradeRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.Id
             })
@@ -69,5 +69,6 @@ public sealed class ExamGradeReleaseConfiguration : IEntityTypeConfiguration<Exa
                 membership.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

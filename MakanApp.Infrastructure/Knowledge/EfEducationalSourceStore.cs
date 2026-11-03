@@ -140,13 +140,14 @@ public sealed partial class EfEducationalSourceStore(MakanDbContext db, EfCommer
     private async Task<FileAsset> ValidateFile(SourceActor actor, EducationalSource source, Guid fileId, CancellationToken ct)
     {
         var file = await db.FileAssets.FromSqlInterpolated($"SELECT * FROM [storage].[FileAssets] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={fileId}").SingleOrDefaultAsync(ct);
-        if (file is null || file.UploadedByUserId != actor.UserId || file.OrganizationId != source.OrganizationId ||
+        if (file is null || file.PersonalClassId.HasValue || file.UploadedByUserId != actor.UserId || file.OrganizationId != source.OrganizationId ||
             file.Status is FileAssetStatus.Deleted or FileAssetStatus.Rejected ||
             file.ContentType is not ("application/pdf" or "image/jpeg" or "image/png" or "text/plain")) throw Error(SourceErrorCodes.NotAllowed);
         if (await db.EducationalSourceVersions.AnyAsync(v => v.FileAssetId == fileId && v.SourceId != source.Id, ct) ||
             await db.EducationalSourceVersions.AnyAsync(v => v.FileAssetId == fileId &&
                 (v.SafetyStatus == SourceSafetyStatus.ReviewRequired || v.SafetyStatus == SourceSafetyStatus.Rejected), ct) ||
             await db.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
+            await db.AssignmentVersionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
             await db.SubmissionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.AnswerRevisionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
             await db.MessageAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.ModerationEvidenceAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
             await db.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileId, ct) || await db.Conversations.AnyAsync(x => x.PhotoFileAssetId == fileId, ct) ||

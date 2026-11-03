@@ -2,6 +2,7 @@ namespace MakanApp.Application.Assessment;
 
 public static class AssessmentErrorCodes
 {
+    public const string AcademicQueryInvalid = "ACADEMIC_QUERY_INVALID";
     public const string ExamAttachmentNotAllowed = "EXAM_ATTACHMENT_NOT_ALLOWED";
     public const string ExamAttachmentLimitExceeded = "EXAM_ATTACHMENT_LIMIT_EXCEEDED";
     public const string AssignmentNotFound = "ASSIGNMENT_NOT_FOUND";

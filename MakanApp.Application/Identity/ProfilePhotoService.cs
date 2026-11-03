@@ -22,7 +22,7 @@ public sealed class ProfilePhotoService(
         await using var transaction = await identityStore.BeginSerializableTransactionAsync(ct);
         var user = await GetActiveUserAsync(userId, ct);
         var file = await fileStore.GetForUpdateAsync(command.FileAssetId, ct) ?? throw NotFound();
-        if (file.UploadedByUserId != userId || file.OrganizationId is not null) throw NotFound();
+        if (file.UploadedByUserId != userId || file.OrganizationId is not null || file.PersonalClassId is not null) throw NotFound();
         if (file.Status != FileAssetStatus.Ready)
             throw new StorageException(StorageErrorCodes.FileNotReady, "عکس پروفایل باید فایل آماده باشد.");
         if (file.ContentType is not ("image/jpeg" or "image/png"))

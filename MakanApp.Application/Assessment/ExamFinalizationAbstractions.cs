@@ -24,7 +24,7 @@ public interface IExamFinalizationStore
         CancellationToken cancellationToken);
 
     Task<ExamAttempt?> GetOwnedAttemptForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken);
@@ -36,12 +36,12 @@ public interface IExamFinalizationStore
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ExamFinalizationQuestionRecord>> GetQuestionsForFinalizationAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
 
     Task<ExamFinalizationRecord?> GetOwnedFinalizationAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken);

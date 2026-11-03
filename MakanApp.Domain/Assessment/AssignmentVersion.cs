@@ -1,7 +1,9 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class AssignmentVersion
+public sealed class AssignmentVersion : IAcademicScoped
 {
+    private readonly List<AssignmentVersionAttachment> _attachments = [];
+    public IReadOnlyCollection<AssignmentVersionAttachment> Attachments => _attachments.AsReadOnly();
     public const int MaximumTitleLength = 200;
     public const int MaximumDescriptionLength = 10_000;
     public const decimal MaximumScoreValue = 9_999_999.99m;
@@ -12,7 +14,7 @@ public sealed class AssignmentVersion
 
     private AssignmentVersion(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid assignmentId,
         int versionNumber,
@@ -26,7 +28,11 @@ public sealed class AssignmentVersion
         DateTime createdAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
+        scope.EnsureClass(classId);
         ClassId = classId;
         AssignmentId = assignmentId;
         VersionNumber = versionNumber;
@@ -36,13 +42,19 @@ public sealed class AssignmentVersion
         AllowLateSubmission = allowLateSubmission;
         MaxAttempts = maxAttempts;
         MaxScore = maxScore;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CreatedAtUtc = createdAtUtc;
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ClassId { get; private set; }
+    public AcademicClassRef ClassRef => new(Scope, ClassId);
     public Guid AssignmentId { get; private set; }
     public int VersionNumber { get; private set; }
     public string Title { get; private set; } = string.Empty;
@@ -51,7 +63,8 @@ public sealed class AssignmentVersion
     public bool AllowLateSubmission { get; private set; }
     public int MaxAttempts { get; private set; }
     public decimal MaxScore { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
@@ -59,7 +72,7 @@ public sealed class AssignmentVersion
     public bool IsPublished => PublishedAtUtc.HasValue;
 
     public static AssignmentVersion CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid assignmentId,
         int versionNumber,
@@ -75,7 +88,7 @@ public sealed class AssignmentVersion
         Validate(title, description, dueAtUtc, maxAttempts, maxScore, createdAtUtc);
         return new AssignmentVersion(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             classId,
             assignmentId,
             versionNumber,
@@ -125,6 +138,16 @@ public sealed class AssignmentVersion
         }
 
         PublishedAtUtc = publishedAtUtc;
+    }
+
+    public void ReplaceAttachments(IReadOnlyCollection<Guid> fileIds, DateTime now)
+    {
+        if (IsPublished) throw new InvalidOperationException("پیوست نسخهٔ منتشرشده ثابت است.");
+        if (fileIds.Count > 20 || fileIds.Contains(Guid.Empty) || fileIds.Distinct().Count() != fileIds.Count)
+            throw new ArgumentException("فهرست پیوست‌ها معتبر نیست.", nameof(fileIds));
+        _attachments.RemoveAll(a => !fileIds.Contains(a.FileAssetId));
+        foreach (var id in fileIds.Where(id => _attachments.All(a => a.FileAssetId != id)))
+            _attachments.Add(new AssignmentVersionAttachment(this, id, now));
     }
 
     private static void Validate(

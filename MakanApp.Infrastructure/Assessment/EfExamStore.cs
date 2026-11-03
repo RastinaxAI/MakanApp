@@ -25,22 +25,19 @@ public sealed class EfExamStore(
         return new EfExamTransaction(transaction);
     }
 
-    public Task<AcademicClass?> GetClassForUpdateAsync(
-        Guid organizationId,
+    public Task<AcademicClassRecord?> GetClassForUpdateAsync(
+        AcademicScope scope,
         Guid classId,
         CancellationToken cancellationToken) =>
-        dbContext.Classes
-            .FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Classes] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {classId}")
-            .SingleOrDefaultAsync(cancellationToken);
+        AcademicContextQuery.ClassAsync(dbContext, scope, classId, true, cancellationToken);
 
     public Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken) =>
         dbContext.TeacherAssignments.AnyAsync(
-            assignment => assignment.OrganizationId == organizationId &&
+            assignment => assignment.OrganizationId == scope.OrganizationId &&
                           assignment.ClassId == classId &&
                           assignment.TeacherMembershipId == membershipId &&
                           assignment.Status == TeacherAssignmentStatus.Active &&
@@ -48,51 +45,42 @@ public sealed class EfExamStore(
             cancellationToken);
 
     public Task<ExamAggregateRecord?> GetCurrentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         CancellationToken cancellationToken) =>
-        GetAggregateAsync(organizationId, examId, published: false, forUpdate: false, cancellationToken);
+        GetAggregateAsync(scope, examId, published: false, forUpdate: false, cancellationToken);
 
     public Task<ExamAggregateRecord?> GetCurrentForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         CancellationToken cancellationToken) =>
-        GetAggregateAsync(organizationId, examId, published: false, forUpdate: true, cancellationToken);
+        GetAggregateAsync(scope, examId, published: false, forUpdate: true, cancellationToken);
 
     public Task<ExamAggregateRecord?> GetLatestPublishedAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         CancellationToken cancellationToken) =>
-        GetAggregateAsync(organizationId, examId, published: true, forUpdate: false, cancellationToken);
+        GetAggregateAsync(scope, examId, published: true, forUpdate: false, cancellationToken);
 
     public Task<bool> IsStudentActivelyEnrolledAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid userId,
         CancellationToken cancellationToken) =>
-        (
-            from enrollment in dbContext.Enrollments
-            join organizationPerson in dbContext.OrganizationPersons
-                on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where enrollment.OrganizationId == organizationId &&
-                  enrollment.ClassId == classId &&
-                  enrollment.Status == EnrollmentStatus.Active &&
-                  enrollment.EndedAtUtc == null &&
-                  organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null &&
-                  user.Id == userId
-            select enrollment.Id)
-            .AnyAsync(cancellationToken);
+        AcademicContextQuery.Participants(dbContext, scope).AnyAsync(p => p.ContextKind == scope.Kind && p.ContextId == scope.Id &&
+            p.ClassId == classId && p.IsActive && p.UserId == userId, cancellationToken);
 
     public async Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
-        CancellationToken cancellationToken) =>
-        await (
+        CancellationToken cancellationToken)
+    {
+        if (scope.Kind == AcademicClassKind.PersonalClass)
+            return await AcademicContextQuery.Participants(dbContext, scope).Where(p => p.ContextKind == scope.Kind && p.ContextId == scope.Id &&
+                p.ClassId == classId && p.IsActive && p.UserId.HasValue).Select(p => p.UserId!.Value).Distinct().ToArrayAsync(cancellationToken);
+        return await (
             from enrollment in dbContext.Enrollments.FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
+                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {scope.Id} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
             join organizationPerson in dbContext.OrganizationPersons
                 on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
                 equals new { organizationPerson.OrganizationId, organizationPerson.Id }
@@ -102,16 +90,17 @@ public sealed class EfExamStore(
             select user.Id)
             .Distinct()
             .ToArrayAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyCollection<ExamSummaryRecord>> GetForManagerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         CancellationToken cancellationToken) =>
-        await CreateCurrentSummaryQuery(organizationId)
+        await CreateCurrentSummaryQuery(scope)
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<ExamSummaryRecord>> GetForTeacherAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid membershipId,
         CancellationToken cancellationToken) =>
         await (
@@ -131,11 +120,11 @@ public sealed class EfExamStore(
                 }
             join academicClass in dbContext.Classes
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join assignment in dbContext.TeacherAssignments
                 on new { exam.OrganizationId, exam.ClassId }
-                equals new { assignment.OrganizationId, assignment.ClassId }
-            where exam.OrganizationId == organizationId &&
+                equals new { OrganizationId = (Guid?)assignment.OrganizationId, assignment.ClassId }
+            where scope.Kind == AcademicClassKind.OrganizationClass && exam.OrganizationId == scope.OrganizationId &&
                   assignment.TeacherMembershipId == membershipId &&
                   assignment.Status == TeacherAssignmentStatus.Active &&
                   assignment.EndedAtUtc == null
@@ -145,7 +134,7 @@ public sealed class EfExamStore(
             .ToArrayAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<ExamSummaryRecord>> GetForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid userId,
         CancellationToken cancellationToken) =>
         await (
@@ -153,45 +142,33 @@ public sealed class EfExamStore(
             join version in dbContext.ExamVersions
                 on new
                 {
-                    exam.OrganizationId,
+                    exam.ContextKind, exam.ContextId,
                     ExamId = exam.Id,
                     VersionNumber = exam.LatestPublishedVersionNumber
                 }
                 equals new
                 {
-                    version.OrganizationId,
+                    version.ContextKind, version.ContextId,
                     version.ExamId,
                     VersionNumber = (int?)version.VersionNumber
                 }
-            join academicClass in dbContext.Classes
-                on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
-            join enrollment in dbContext.Enrollments
-                on new { exam.OrganizationId, exam.ClassId }
-                equals new { enrollment.OrganizationId, enrollment.ClassId }
-            join organizationPerson in dbContext.OrganizationPersons
-                on new
-                {
-                    enrollment.OrganizationId,
-                    Id = enrollment.LearnerOrganizationPersonId
-                }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where exam.OrganizationId == organizationId &&
+            join academicClass in AcademicContextQuery.Classes(dbContext, scope)
+                on new { exam.ContextKind, exam.ContextId, exam.ClassId }
+                equals new { academicClass.ContextKind, academicClass.ContextId, academicClass.ClassId }
+            join participant in AcademicContextQuery.Participants(dbContext, scope)
+                on new { exam.ContextKind, exam.ContextId, exam.ClassId }
+                equals new { participant.ContextKind, participant.ContextId, participant.ClassId }
+            where exam.ContextKind == scope.Kind && exam.ContextId == scope.Id &&
                   exam.Status == ExamStatus.Published &&
                   version.Status == ExamVersionStatus.Published &&
-                  enrollment.Status == EnrollmentStatus.Active &&
-                  enrollment.EndedAtUtc == null &&
-                  organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null &&
-                  user.Id == userId
+                  participant.IsActive && participant.UserId == userId
             orderby version.AvailableFromUtc, exam.Id
             select new ExamSummaryRecord(exam, version, academicClass.Title))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<ExamSummaryRecord>> GetForLearnerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid learnerOrganizationPersonId,
         CancellationToken cancellationToken) =>
         await (
@@ -211,11 +188,11 @@ public sealed class EfExamStore(
                 }
             join academicClass in dbContext.Classes
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join enrollment in dbContext.Enrollments
                 on new { exam.OrganizationId, exam.ClassId }
-                equals new { enrollment.OrganizationId, enrollment.ClassId }
-            where exam.OrganizationId == organizationId &&
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, enrollment.ClassId }
+            where scope.Kind == AcademicClassKind.OrganizationClass && exam.OrganizationId == scope.OrganizationId &&
                   exam.Status == ExamStatus.Published &&
                   version.Status == ExamVersionStatus.Published &&
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId &&
@@ -301,7 +278,7 @@ public sealed class EfExamStore(
     }
 
     private async Task<ExamAggregateRecord?> GetAggregateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         bool published,
         bool forUpdate,
@@ -312,7 +289,7 @@ public sealed class EfExamStore(
         {
             exam = await dbContext.Exams
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [assessment].[Exams] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {examId}")
+                    $"SELECT * FROM [assessment].[Exams] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {examId}")
                 .SingleOrDefaultAsync(cancellationToken);
         }
         else
@@ -320,7 +297,7 @@ public sealed class EfExamStore(
             exam = await dbContext.Exams
                 .AsNoTracking()
                 .SingleOrDefaultAsync(
-                    item => item.OrganizationId == organizationId && item.Id == examId,
+                    item => item.ContextKind == scope.Kind && item.ContextId == scope.Id && item.Id == examId,
                     cancellationToken);
         }
 
@@ -335,7 +312,7 @@ public sealed class EfExamStore(
         {
             version = await dbContext.ExamVersions
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [assessment].[ExamVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ExamId] = {examId} AND [VersionNumber] = {versionNumber.Value}")
+                    $"SELECT * FROM [assessment].[ExamVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [ExamId] = {examId} AND [VersionNumber] = {versionNumber.Value}")
                 .SingleOrDefaultAsync(cancellationToken);
         }
         else
@@ -343,7 +320,7 @@ public sealed class EfExamStore(
             version = await dbContext.ExamVersions
                 .AsNoTracking()
                 .SingleOrDefaultAsync(
-                    item => item.OrganizationId == organizationId &&
+                    item => item.ContextKind == scope.Kind && item.ContextId == scope.Id &&
                             item.ExamId == examId &&
                             item.VersionNumber == versionNumber.Value,
                     cancellationToken);
@@ -356,44 +333,36 @@ public sealed class EfExamStore(
 
         var questionQuery = dbContext.QuestionVersions
             .Include(question => question.Options)
-            .Where(question => question.OrganizationId == organizationId &&
+            .Where(question => question.ContextKind == scope.Kind && question.ContextId == scope.Id &&
                                question.ExamVersionId == version.Id)
             .OrderBy(question => question.Order);
         var questions = forUpdate
             ? await questionQuery.ToArrayAsync(cancellationToken)
             : await questionQuery.AsNoTracking().ToArrayAsync(cancellationToken);
-        var classData = await dbContext.Classes
-            .AsNoTracking()
-            .Where(academicClass => academicClass.OrganizationId == organizationId &&
-                                    academicClass.Id == exam.ClassId)
-            .Select(academicClass => new
-            {
-                academicClass.Title,
-                IsActive = academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null
-            })
-            .SingleAsync(cancellationToken);
+        var classData = await AcademicContextQuery.ClassAsync(dbContext, scope, exam.ClassId, false, cancellationToken)
+            ?? throw new AssessmentException(AssessmentErrorCodes.ExamNotFound, "کلاس آزمون پیدا نشد.");
         return new ExamAggregateRecord(exam, version, classData.Title, classData.IsActive, questions);
     }
 
-    private IQueryable<ExamSummaryRecord> CreateCurrentSummaryQuery(Guid organizationId) =>
+    private IQueryable<ExamSummaryRecord> CreateCurrentSummaryQuery(AcademicScope scope) =>
         from exam in dbContext.Exams
         join version in dbContext.ExamVersions
             on new
             {
-                exam.OrganizationId,
+                exam.ContextKind, exam.ContextId,
                 ExamId = exam.Id,
                 VersionNumber = exam.CurrentVersionNumber
             }
             equals new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.ExamId,
                 version.VersionNumber
             }
-        join academicClass in dbContext.Classes
-            on new { exam.OrganizationId, Id = exam.ClassId }
-            equals new { academicClass.OrganizationId, academicClass.Id }
-        where exam.OrganizationId == organizationId
+        join academicClass in AcademicContextQuery.Classes(dbContext, scope)
+            on new { exam.ContextKind, exam.ContextId, exam.ClassId }
+            equals new { academicClass.ContextKind, academicClass.ContextId, academicClass.ClassId }
+        where exam.ContextKind == scope.Kind && exam.ContextId == scope.Id
         orderby version.AvailableFromUtc, exam.Id
         select new ExamSummaryRecord(exam, version, academicClass.Title);
 

@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamVersion
+public sealed class ExamVersion : IAcademicScoped
 {
     public const int MaximumTitleLength = 200;
     public const int MaximumDescriptionLength = 10_000;
@@ -12,7 +12,7 @@ public sealed class ExamVersion
 
     private ExamVersion(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         int versionNumber,
         string title,
@@ -27,7 +27,10 @@ public sealed class ExamVersion
         DateTime createdAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamId = examId;
         VersionNumber = versionNumber;
         Title = title;
@@ -39,13 +42,18 @@ public sealed class ExamVersion
         MaxScore = maxScore;
         RandomizationPolicy = randomizationPolicy;
         Status = ExamVersionStatus.Draft;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CreatedAtUtc = createdAtUtc;
         UpdatedAtUtc = createdAtUtc;
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamId { get; private set; }
     public int VersionNumber { get; private set; }
     public string Title { get; private set; } = string.Empty;
@@ -58,7 +66,8 @@ public sealed class ExamVersion
     public ExamRandomizationPolicy RandomizationPolicy { get; private set; }
     public ExamVersionStatus Status { get; private set; }
     public DateTime? PublishedAtUtc { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
@@ -67,7 +76,7 @@ public sealed class ExamVersion
     public bool IsPublished => Status == ExamVersionStatus.Published && PublishedAtUtc.HasValue;
 
     public static ExamVersion CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         int versionNumber,
         string title,
@@ -81,7 +90,7 @@ public sealed class ExamVersion
         Guid createdByMembershipId,
         DateTime createdAtUtc)
     {
-        ValidateIdentity(organizationId, examId, createdByMembershipId, versionNumber);
+        ValidateIdentity(scope, examId, createdByMembershipId, versionNumber);
         ValidateValues(
             title,
             description,
@@ -95,7 +104,7 @@ public sealed class ExamVersion
 
         return new ExamVersion(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             examId,
             versionNumber,
             title.Trim(),
@@ -121,7 +130,7 @@ public sealed class ExamVersion
         }
 
         return CreateDraft(
-            OrganizationId,
+            Scope,
             ExamId,
             versionNumber,
             Title,
@@ -188,7 +197,7 @@ public sealed class ExamVersion
 
         foreach (var question in questions)
         {
-            if (question.OrganizationId != OrganizationId || question.ExamVersionId != Id)
+            if (question.Scope != Scope || question.ExamVersionId != Id)
             {
                 throw new InvalidOperationException("سؤال متعلق به نسخه جاری آزمون نیست.");
             }
@@ -207,12 +216,12 @@ public sealed class ExamVersion
     }
 
     private static void ValidateIdentity(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid createdByMembershipId,
         int versionNumber)
     {
-        if (organizationId == Guid.Empty || examId == Guid.Empty || createdByMembershipId == Guid.Empty)
+        if (scope.Id == Guid.Empty || examId == Guid.Empty || createdByMembershipId == Guid.Empty)
         {
             throw new ArgumentException("شناسه‌های نسخه آزمون الزامی هستند.");
         }

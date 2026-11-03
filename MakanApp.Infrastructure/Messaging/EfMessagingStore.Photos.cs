@@ -30,7 +30,7 @@ public sealed partial class EfMessagingStore : IConversationPhotoStore
         {
             file = await dbContext.FileAssets.FromSqlInterpolated(
                 $"SELECT * FROM [storage].[FileAssets] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={fileAssetId.Value}").SingleOrDefaultAsync(ct);
-            if (file is null || file.UploadedByUserId != actorId ||
+            if (file is null || file.PersonalClassId.HasValue || file.UploadedByUserId != actorId ||
                 file.OrganizationId.HasValue && file.OrganizationId != conversation.OrganizationId) throw PhotoUnavailable();
             if (file.Status != FileAssetStatus.Ready)
                 throw new StorageException(StorageErrorCodes.FileNotReady, "عکس گفتگو باید فایل آماده باشد.");
@@ -56,6 +56,7 @@ public sealed partial class EfMessagingStore : IConversationPhotoStore
         await dbContext.EducationalSourceVersions.AnyAsync(v => v.FileAssetId == id, ct) ||
         await dbContext.ClassLessonAttachments.AnyAsync(a => a.FileAssetId == id, ct) ||
         await dbContext.SubmissionAttachments.AnyAsync(a => a.FileAssetId == id, ct) ||
+        await dbContext.AssignmentVersionAttachments.AnyAsync(a => a.FileAssetId == id, ct) ||
         await dbContext.AnswerRevisionAttachments.AnyAsync(a => a.FileAssetId == id, ct) ||
         await dbContext.MessageAttachments.AnyAsync(a => a.FileAssetId == id, ct) ||
         await dbContext.Set<ScheduledMessageAttachment>().AnyAsync(a => a.FileAssetId == id, ct) ||

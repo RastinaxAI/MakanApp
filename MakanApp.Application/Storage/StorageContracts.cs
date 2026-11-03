@@ -8,7 +8,8 @@ public sealed record UploadFileCommand(
     string ContentType,
     long DeclaredSizeBytes,
     Stream Content,
-    WorkspaceType? WorkspaceScope = null);
+    WorkspaceType? WorkspaceScope = null,
+    Guid? PersonalClassId = null);
 
 public sealed record FileAssetResult(
     Guid Id,
@@ -24,7 +25,11 @@ public sealed record FileAssetResult(
     DateTime? DeletedAtUtc,
     DateTime? RetainedAtUtc,
     DateTime UnattachedExpiresAtUtc,
-    string RowVersion);
+    string RowVersion)
+{
+    public Guid? PersonalClassId { get; init; }
+    public Guid? PersonalClassMembershipId { get; init; }
+}
 
 public sealed record FileDownloadResult(
     Stream Content,

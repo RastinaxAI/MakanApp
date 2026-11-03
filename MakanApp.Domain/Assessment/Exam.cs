@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class Exam
+public sealed class Exam : IAcademicScoped
 {
     private Exam()
     {
@@ -8,24 +8,35 @@ public sealed class Exam
 
     private Exam(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid createdByMembershipId,
         DateTime createdAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
+        scope.EnsureClass(classId);
         ClassId = classId;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CurrentVersionNumber = 1;
         Status = ExamStatus.Draft;
         CreatedAtUtc = EnsureUtc(createdAtUtc, nameof(createdAtUtc));
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ClassId { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public AcademicClassRef ClassRef => new(Scope, ClassId);
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public int CurrentVersionNumber { get; private set; }
     public int? LatestPublishedVersionNumber { get; private set; }
     public ExamStatus Status { get; private set; }
@@ -33,19 +44,19 @@ public sealed class Exam
     public byte[] RowVersion { get; private set; } = [];
 
     public static Exam CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid createdByMembershipId,
         DateTime createdAtUtc)
     {
-        if (organizationId == Guid.Empty || classId == Guid.Empty || createdByMembershipId == Guid.Empty)
+        if (scope.Id == Guid.Empty || classId == Guid.Empty || createdByMembershipId == Guid.Empty)
         {
             throw new ArgumentException("شناسه‌های آزمون الزامی هستند.");
         }
 
         return new Exam(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             classId,
             createdByMembershipId,
             createdAtUtc);

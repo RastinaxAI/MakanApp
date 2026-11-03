@@ -14,7 +14,7 @@ public sealed class SubmissionAttachmentConfiguration : IEntityTypeConfiguration
         builder.Property(attachment => attachment.AttachedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(attachment => new
         {
-            attachment.OrganizationId,
+            attachment.ContextKind, attachment.ContextId,
             attachment.SubmissionAttemptId,
             attachment.FileAssetId
         })
@@ -25,14 +25,15 @@ public sealed class SubmissionAttachmentConfiguration : IEntityTypeConfiguration
             .WithMany()
             .HasForeignKey(attachment => new
             {
-                attachment.OrganizationId,
+                attachment.ContextKind, attachment.ContextId,
                 attachment.SubmissionAttemptId
             })
-            .HasPrincipalKey(attempt => new { attempt.OrganizationId, attempt.Id })
+            .HasPrincipalKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<FileAsset>()
             .WithMany()
             .HasForeignKey(attachment => attachment.FileAssetId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

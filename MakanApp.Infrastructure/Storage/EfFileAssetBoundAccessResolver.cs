@@ -14,7 +14,7 @@ namespace MakanApp.Infrastructure.Storage;
 
 public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess,
     ISubmissionService submissions, ISubmissionStore submissionStore, IExamAttemptService examAttempts, IExamGradingStore grading,
-    MakanApp.Application.Knowledge.IEducationalSourceStore sources)
+    MakanApp.Application.Knowledge.IEducationalSourceStore sources, IAcademicContextResolver academicContexts)
     : IFileAssetBoundAccessResolver
 {
     public Task<bool> IsEducationalSourceBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
@@ -31,6 +31,7 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         Guid fileAssetId,
         CancellationToken cancellationToken) =>
         await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
+        await dbContext.AssignmentVersionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
         await IsConversationPhotoBoundAsync(fileAssetId, cancellationToken) ||
         await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
@@ -59,6 +60,9 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;
         // استثنای مرجع شخصی فقط برای Avatar است؛ scope قبلی همهٔ مصرف‌کننده‌های دیگر حفظ می‌شود.
         if (!FileAccessPolicy.IsCurrentScope(fileAsset, accessContext)) return false;
+        if (await dbContext.AssignmentVersionAttachments.AnyAsync(a => a.FileAssetId == fileAsset.Id, cancellationToken))
+            return await CanReadAssignmentAttachmentAsync(fileAsset, accessContext, cancellationToken);
+        if (fileAsset.PersonalClassId.HasValue) return await CanReadPersonalAcademicAnswerAsync(fileAsset, accessContext, cancellationToken);
         if (await CanReadAcademicAnswerAsync(fileAsset, accessContext, cancellationToken)) return true;
         var lessons = await (from a in dbContext.ClassLessonAttachments
                              join lesson in dbContext.ClassLessons on a.LessonId equals lesson.Id

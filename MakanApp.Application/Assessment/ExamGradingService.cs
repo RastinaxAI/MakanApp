@@ -9,7 +9,7 @@ using MakanApp.Domain.Notification;
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamGradingService(
-    IAccessContextResolver accessContextResolver,
+    IAcademicContextResolver accessContextResolver,
     IExamGradingStore store,
     TimeProvider timeProvider,
     IOutbox outbox) : IExamGradingService
@@ -20,8 +20,9 @@ public sealed partial class ExamGradingService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -38,9 +39,9 @@ public sealed partial class ExamGradingService(
 
         var nowUtc = UtcNow();
         var gradeRevision = ExamGradeRevision.CreateDraft(
-            aggregate.Source.Attempt.OrganizationId,
+            aggregate.Source.Attempt.Scope,
             aggregate.Source.Attempt.Id,
-            context.MembershipId!.Value,
+            context.ActorMembershipId,
             nowUtc);
         var questionGrades = aggregate.Source.Questions
             .Select(question => ExamQuestionGrade.Create(
@@ -50,7 +51,7 @@ public sealed partial class ExamGradingService(
                 question.Question,
                 question.FinalAnswer,
                 question.FinalRevision,
-                context.MembershipId.Value,
+                context.ActorMembershipId,
                 nowUtc))
             .ToArray();
         gradeRevision.Recalculate(questionGrades, aggregate.Source.Version.MaxScore, nowUtc);
@@ -69,8 +70,9 @@ public sealed partial class ExamGradingService(
         GradeExamQuestionCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -85,7 +87,7 @@ public sealed partial class ExamGradingService(
                 command.AwardedScore,
                 command.LearnerFeedback,
                 command.EvaluatorPrivateNote,
-                context.MembershipId!.Value,
+                context.ActorMembershipId,
                 nowUtc);
             revision.Recalculate(
                 aggregate.LatestQuestionGrades,
@@ -109,8 +111,9 @@ public sealed partial class ExamGradingService(
         CompleteExamGradeCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -154,8 +157,9 @@ public sealed partial class ExamGradingService(
             throw ReleaseIdempotencyConflict();
         }
 
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -217,15 +221,14 @@ public sealed partial class ExamGradingService(
 
         var release = ExamGradeRelease.Create(
             revision,
-            context.MembershipId!.Value,
+            context.ActorMembershipId,
             command.ClientOperationId,
             requestHash,
             nowUtc);
-        var guardianUserIds = await store.GetActiveGuardianUserIdsAsync(
-            aggregate.Source.Attempt.OrganizationId,
-            aggregate.Source.Enrollment.LearnerOrganizationPersonId,
-            nowUtc,
-            cancellationToken);
+        IReadOnlyCollection<Guid> guardianUserIds = aggregate.Source.Participation.LearnerOrganizationPersonId is Guid learnerId
+            ? await store.GetActiveGuardianUserIdsAsync(aggregate.Source.Attempt.Scope, learnerId, nowUtc, cancellationToken)
+            : [];
+
         store.Add(release);
         var recipients = new List<NotificationRecipientIntent>
         {
@@ -259,8 +262,9 @@ public sealed partial class ExamGradingService(
         CorrectReleasedExamGradeCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -276,7 +280,7 @@ public sealed partial class ExamGradingService(
         {
             correction = ExamGradeRevision.CreateCorrection(
                 released,
-                context.MembershipId!.Value,
+                context.ActorMembershipId,
                 command.CorrectionReason,
                 UtcNow());
         }

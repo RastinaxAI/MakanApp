@@ -112,7 +112,12 @@ public static class DependencyInjection
         services.AddScoped<IAcademicSessionStore, EfAcademicSessionStore>();
         services.AddScoped<IAcademicSessionService, AcademicSessionService>();
         services.AddScoped<IAssignmentStore, EfAssignmentStore>();
+        services.AddScoped<IAcademicContextResolver, AcademicContextResolver>();
+        services.AddScoped<IPersonalClassAcademicPermissionStore, EfPersonalClassAcademicPermissionStore>();
+        services.AddScoped<PersonalClassAcademicPermissionService>();
         services.AddScoped<IAssignmentService, AssignmentService>();
+        services.AddScoped<IPersonalAcademicReadStore, EfPersonalAcademicReadStore>();
+        services.AddScoped<PersonalAcademicReadService>();
         services.AddScoped<ISubmissionStore, EfSubmissionStore>();
         services.AddScoped<ISubmissionService, SubmissionService>();
         services.AddScoped<IEvaluationStore, EfEvaluationStore>();
@@ -126,6 +131,12 @@ public static class DependencyInjection
         services.AddScoped<IExamAnswerService, ExamAnswerService>();
         services.AddScoped<IExamFinalizationStore, EfExamFinalizationStore>();
         services.AddScoped<IExamFinalizationService, ExamFinalizationService>();
+        services.AddScoped<IExamDeadlineFinalizer, ExamDeadlineFinalizer>();
+        services.AddOptions<ExamDeadlineOptions>().Bind(configuration.GetSection("Academic:ExamDeadline"))
+            .Validate(o => o.IntervalSeconds is >= 1 and <= 3600 && o.BatchSize is >= 1 and <= 500,
+                "تنظیمات پردازش مهلت آزمون معتبر نیست.").ValidateOnStart();
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<ExamDeadlineOptions>>().Value);
+        services.AddHostedService<ExamDeadlineDispatcher>();
         services.AddScoped<IExamGradingStore, EfExamGradingStore>();
         services.AddScoped<IExamGradingService, ExamGradingService>();
         services.AddScoped<ICommerceStore, EfCommerceStore>();

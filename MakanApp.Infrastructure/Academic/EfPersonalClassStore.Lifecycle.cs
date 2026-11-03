@@ -16,14 +16,14 @@ public sealed partial class EfPersonalClassStore
         Version(c.RowVersion, command.ExpectedVersion);
         var count = await ActiveMembers(id).CountAsync(m => (m.LocalRoles & PersonalClassLocalRoles.Learner) != 0, ct);
         try { c.Configure(command.Capacity, command.AcceptingJoinRequests, count); } catch (InvalidOperationException) { throw Conflict(); }
-        Audit(actor, id, "Configured", command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Map(c, actor.UserId);
+        Audit(actor, id, "Configured", command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return await MapAsync(c, actor.UserId, ct);
     }
 
     public async Task<PersonalClassDto> StateAsync(PersonalClassActor actor, Guid id, PersonalClassReasonCommand command, PersonalClassState state, DateTime now, CancellationToken ct)
     {
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var c = await LockClass(id, ct); await actors.EnsureAsync(actor.UserId, actor.SessionId, ct); await RequireManager(actor.UserId, c, ct);
-        if (c.State == state) { await tx.CommitAsync(ct); return Map(c, actor.UserId); }
+        if (c.State == state) { await tx.CommitAsync(ct); return await MapAsync(c, actor.UserId, ct); }
         Version(c.RowVersion, command.ExpectedVersion);
         try
         {
@@ -38,7 +38,7 @@ public sealed partial class EfPersonalClassStore
             else throw Conflict();
         }
         catch (InvalidOperationException) { throw Error(AcademicErrorCodes.PersonalClassNotReady, "گذار وضعیت با آمادگی کلاس سازگار نیست."); }
-        Audit(actor, id, state.ToString(), command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Map(c, actor.UserId);
+        Audit(actor, id, state.ToString(), command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return await MapAsync(c, actor.UserId, ct);
     }
 
     public async Task<PersonalClassMembershipDto> RolesAsync(PersonalClassActor actor, Guid id, Guid memberId, ChangePersonalClassRolesCommand command, DateTime now, CancellationToken ct)
@@ -53,7 +53,9 @@ public sealed partial class EfPersonalClassStore
             throw Error(AcademicErrorCodes.PersonalClassLastManagerRequired, "تغییر مدیر از مسیر پذیرش انتقال مسئولیت انجام می‌شود.");
         if (!member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner) && command.Roles.HasFlag(PersonalClassLocalRoles.Learner))
             await RequireLearnerSeat(c, member.StudentUserId, now, ct);
+        var lostEducationalRole = (member.LocalRoles & (PersonalClassLocalRoles.Manager | PersonalClassLocalRoles.Teacher) & ~command.Roles) != 0;
         try { member.ChangeRoles(command.Roles, command.DelegatedCapabilities); } catch (InvalidOperationException) { throw Conflict(); }
+        if (lostEducationalRole) await RevokeAcademicGrantsAsync(member.Id, now, ct);
         Audit(actor, id, "LocalRolesChanged", command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Member(member);
     }
 
@@ -68,6 +70,7 @@ public sealed partial class EfPersonalClassStore
         if (member.LocalRoles.HasFlag(PersonalClassLocalRoles.Manager) && c.State != PersonalClassState.Archived)
             throw Error(AcademicErrorCodes.PersonalClassLastManagerRequired, "مدیر مسئول ابتدا باید انتقال معتبر یا بایگانی انجام دهد.");
         member.End(now, command.Reason); Audit(actor, id, "MembershipEnded", command.Reason, now);
+        await RevokeAcademicGrantsAsync(member.Id, now, ct);
         await SaveClass(c, now, ct); await tx.CommitAsync(ct);
     }
 
@@ -100,5 +103,14 @@ public sealed partial class EfPersonalClassStore
             spaces.PersonalClassChanged(id, now);
         }
         Audit(actor, id, "SpacesRepairRequested", command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct);
+    }
+
+    private async Task RevokeAcademicGrantsAsync(Guid membershipId, DateTime now, CancellationToken ct)
+    {
+        var grants = await db.PersonalClassAcademicGrants.Where(g => g.MembershipId == membershipId && g.RevokedAtUtc == null).ToArrayAsync(ct);
+        var ids = grants.Select(g => g.Id).ToArray();
+        foreach (var grant in grants) grant.Revoke(now);
+        foreach (var child in await db.PersonalClassAcademicGrants.Where(g => g.ParentGrantId.HasValue && ids.Contains(g.ParentGrantId.Value) && g.RevokedAtUtc == null).ToArrayAsync(ct))
+            child.Revoke(now);
     }
 }

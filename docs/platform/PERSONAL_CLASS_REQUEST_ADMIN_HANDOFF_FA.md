@@ -22,3 +22,17 @@ Progress حالت هر مقصد و کلاس را نشان می‌دهد. Provisi
 Audit موجود `AdminAuditLog` برای تصمیم، انتقال، نقش، پایان عضویت، Archive و Repair reuse شده است. محتوای خصوصی چت، شماره یا token در evidence قرار نمی‌گیرد. مشاهدهٔ این صف مجوز browse چت خصوصی یا Guardian access ایجاد نمی‌کند.
 
 تست‌های مرز شامل درخواست حساب عادی/نقش‌های مدرسه، رد SchoolManager بدون permission، NeedsChanges/Resubmit، Reject بدون کلاس، تأیید هم‌زمان و پذیرش صریح مدیر منتخب هستند. سن در تشکیل/بررسی/عضویت دخیل نیست.
+
+
+## اختیار آموزشی PersonalClass v2 Academic — ۲۰۲۶-۱۱-۰۳
+
+تأیید تشکیل کلاس یا نقش Manager، اختیار آموزشی خودکار نمی‌دهد. permission مستقل `platform.personal_classes.academic_permissions.manage` لازم است.
+
+- `GET /api/admin/v1/personal-classes/{classId}/academic-permissions?page=1&pageSize=30`: تاریخچهٔ Grantها و وضعیت مؤثر.
+- `PUT /api/admin/v1/personal-classes/{classId}/academic-permissions/{membershipId}`: `capabilities`, `clientOperationId`, `expectedMembershipVersion`, `expectedGrantVersion?`, `reason`. مقصد باید دورهٔ عضویت مدیر جاری همان کلاس باشد. `None` به معنی لغو است.
+- سه اختیار مستقل: `AuthorAssignments`, `AuthorExams`, `Grade`. Grant جاری با RowVersion تغییر می‌کند؛ عملیات تکراری با payload متفاوت Conflict است.
+- مدیر فقط اختیارات مؤثر خودش را از مسیر `/api/v1/personal-classes/{classId}/academic-permissions/{membershipId}` به Teacher تفویض می‌کند.
+- انتقال مدیریت، پایان عضویت یا لغو منبع، اختیار را به مدیر بعدی منتقل نمی‌کند و Grant فرزند را بی‌اثر می‌کند.
+- Audit عامل/نشست/دلیل/correlation ثبت می‌شود. این permission دسترسی محتوایی به پاسخ، یادداشت خصوصی یا نمرهٔ هنرجو ایجاد نمی‌کند. محافظ‌های Platform session/MFA موجود همچنان برقرارند.
+
+قرارداد کامل: [راهنمای آموزشی کلاینت](../product/PERSONAL_CLASS_V2_ACADEMIC_FRONTEND_HANDOFF_FA.md).

@@ -455,7 +455,7 @@ public sealed partial class EfMessagingStore
                 "فایل پیوست هنوز آماده استفاده نیست.");
         }
 
-        if (file.OrganizationId != conversation.OrganizationId ||
+        if (file.PersonalClassId.HasValue || file.OrganizationId != conversation.OrganizationId ||
             !allowSourceAttachment && file.UploadedByUserId != userId)
         {
             throw AttachmentNotAllowed();

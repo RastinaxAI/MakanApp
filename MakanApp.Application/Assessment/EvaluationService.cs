@@ -8,13 +8,13 @@ namespace MakanApp.Application.Assessment;
 
 public sealed partial class EvaluationService : IEvaluationService
 {
-    private readonly IAccessContextResolver _accessContextResolver;
+    private readonly IAcademicContextResolver _accessContextResolver;
     private readonly IEvaluationStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
 
     public EvaluationService(
-        IAccessContextResolver accessContextResolver,
+        IAcademicContextResolver accessContextResolver,
         IEvaluationStore store,
         TimeProvider timeProvider,
         IOutbox outbox)
@@ -32,8 +32,9 @@ public sealed partial class EvaluationService : IEvaluationService
         SaveEvaluationDraftCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanEvaluateAsync(context, aggregate.Submission, cancellationToken);
         EnsureSubmitted(aggregate.Submission.Attempt);
@@ -50,7 +51,7 @@ public sealed partial class EvaluationService : IEvaluationService
             try
             {
                 evaluation = EvaluationRevision.CreateDraft(
-                    aggregate.Submission.Attempt.OrganizationId,
+                    aggregate.Submission.Attempt.Scope,
                     aggregate.Submission.Attempt.Id,
                     1,
                     command.Score,
@@ -58,7 +59,7 @@ public sealed partial class EvaluationService : IEvaluationService
                     command.LearnerFeedback,
                     command.GuardianVisibleFeedback,
                     command.TeacherPrivateNote,
-                    context.MembershipId!.Value,
+                    context.ActorMembershipId,
                     nowUtc);
             }
             catch (ArgumentException exception)
@@ -105,8 +106,9 @@ public sealed partial class EvaluationService : IEvaluationService
         ReleaseEvaluationCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanEvaluateAsync(context, aggregate.Submission, cancellationToken);
         EnsureSubmitted(aggregate.Submission.Attempt);
@@ -159,16 +161,15 @@ public sealed partial class EvaluationService : IEvaluationService
 
         evaluation.Release(nowUtc);
         var gradeRelease = GradeRelease.Create(
-            evaluation.OrganizationId,
+            evaluation.Scope,
             evaluation.SubmissionAttemptId,
             evaluation.Id,
-            context.MembershipId!.Value,
+            context.ActorMembershipId,
             nowUtc);
-        var guardianUserIds = await _store.GetActiveGuardianUserIdsAsync(
-            evaluation.OrganizationId,
-            aggregate.Submission.Enrollment.LearnerOrganizationPersonId,
-            nowUtc,
-            cancellationToken);
+        IReadOnlyCollection<Guid> guardianUserIds = aggregate.Submission.Participation.LearnerOrganizationPersonId is Guid learnerId
+            ? await _store.GetActiveGuardianUserIdsAsync(evaluation.Scope, learnerId, nowUtc, cancellationToken)
+            : [];
+
         _store.Add(gradeRelease);
         var recipients = new List<NotificationRecipientIntent>
         {
@@ -202,8 +203,9 @@ public sealed partial class EvaluationService : IEvaluationService
         CorrectReleasedEvaluationCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, AcademicOperation.Grade, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var aggregate = await GetAggregateForUpdateAsync(context, attemptId, cancellationToken);
         await EnsureCanEvaluateAsync(context, aggregate.Submission, cancellationToken);
         EnsureSubmitted(aggregate.Submission.Attempt);
@@ -223,7 +225,7 @@ public sealed partial class EvaluationService : IEvaluationService
         try
         {
             correction = EvaluationRevision.CreateCorrection(
-                aggregate.Submission.Attempt.OrganizationId,
+                aggregate.Submission.Attempt.Scope,
                 aggregate.Submission.Attempt.Id,
                 released.RevisionNumber + 1,
                 command.Score,
@@ -231,7 +233,7 @@ public sealed partial class EvaluationService : IEvaluationService
                 command.LearnerFeedback,
                 command.GuardianVisibleFeedback,
                 command.TeacherPrivateNote,
-                context.MembershipId!.Value,
+                context.ActorMembershipId,
                 UtcNow(),
                 released.Id,
                 command.CorrectionReason);

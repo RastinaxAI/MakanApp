@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamGradeRelease
+public sealed class ExamGradeRelease : IAcademicScoped
 {
     public const int RequestHashLength = 64;
 
@@ -10,7 +10,7 @@ public sealed class ExamGradeRelease
 
     private ExamGradeRelease(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid examGradeRevisionId,
         Guid releasedByMembershipId,
@@ -19,20 +19,29 @@ public sealed class ExamGradeRelease
         DateTime releasedAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         ExamGradeRevisionId = examGradeRevisionId;
-        ReleasedByMembershipId = releasedByMembershipId;
+        ReleasedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? releasedByMembershipId : null;
+        ReleasedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? releasedByMembershipId : null;
         ClientOperationId = clientOperationId;
         RequestHash = requestHash;
         ReleasedAtUtc = releasedAtUtc;
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public Guid ExamGradeRevisionId { get; private set; }
-    public Guid ReleasedByMembershipId { get; private set; }
+    public Guid? ReleasedByMembershipId { get; private set; }
+    public Guid? ReleasedByPersonalMembershipId { get; private set; }
     public Guid ClientOperationId { get; private set; }
     public string RequestHash { get; private set; } = string.Empty;
     public DateTime ReleasedAtUtc { get; private set; }
@@ -63,7 +72,7 @@ public sealed class ExamGradeRelease
 
         return new ExamGradeRelease(
             Guid.NewGuid(),
-            gradeRevision.OrganizationId,
+            gradeRevision.Scope,
             gradeRevision.ExamAttemptId,
             gradeRevision.Id,
             releasedByMembershipId,

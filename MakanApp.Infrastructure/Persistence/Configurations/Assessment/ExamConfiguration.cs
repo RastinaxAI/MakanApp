@@ -22,13 +22,13 @@ public sealed class ExamConfiguration : IEntityTypeConfiguration<Exam>
                 "[LatestPublishedVersionNumber] IS NULL OR ([LatestPublishedVersionNumber] > 0 AND [LatestPublishedVersionNumber] <= [CurrentVersionNumber])");
         });
         builder.HasKey(exam => exam.Id);
-        builder.HasAlternateKey(exam => new { exam.OrganizationId, exam.Id })
+        builder.HasAlternateKey(exam => new { exam.ContextKind, exam.ContextId, exam.Id })
             .HasName("UQ_Exams_OrganizationId_Id");
-        builder.HasAlternateKey(exam => new { exam.OrganizationId, exam.ClassId, exam.Id })
+        builder.HasAlternateKey(exam => new { exam.ContextKind, exam.ContextId, exam.ClassId, exam.Id })
             .HasName("UQ_Exams_Organization_Class_Id");
         builder.Property(exam => exam.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(exam => exam.RowVersion).IsRowVersion();
-        builder.HasIndex(exam => new { exam.OrganizationId, exam.ClassId, exam.Status })
+        builder.HasIndex(exam => new { exam.ContextKind, exam.ContextId, exam.ClassId, exam.Status })
             .HasDatabaseName("IX_Exams_Organization_Class_Status");
 
         builder.HasOne<AcademicClass>()
@@ -41,5 +41,6 @@ public sealed class ExamConfiguration : IEntityTypeConfiguration<Exam>
             .HasForeignKey(exam => new { exam.OrganizationId, exam.CreatedByMembershipId })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

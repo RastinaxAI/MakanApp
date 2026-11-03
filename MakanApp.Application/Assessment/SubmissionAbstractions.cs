@@ -60,50 +60,51 @@ public interface ISubmissionService
 
 public interface ISubmissionStore
 {
+    Task<bool> IsFileAvailableForAttemptAsync(Guid fileId, Guid attemptId, CancellationToken ct);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
     Task<SubmissionEligibilityRecord?> GetEligibilityForStudentForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken);
     Task<SubmissionEligibilityRecord?> GetEligibilityForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken);
     Task<Assignment?> GetAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken);
     Task<SubmissionAttemptRecord?> GetAttemptForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
     Task<SubmissionAttemptRecord?> GetAttemptAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
     Task<SubmissionAttempt?> GetDraftForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentRecipientId,
         Guid assignmentVersionId,
         CancellationToken cancellationToken);
     Task<int> CountSubmittedAttemptsForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentRecipientId,
         Guid assignmentVersionId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<SubmissionAttemptRecord>> GetAttemptsForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<SubmissionAttemptRecord>> GetSubmittedAttemptsAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken);
     Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken);

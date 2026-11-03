@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class EvaluationRevision
+public sealed class EvaluationRevision : IAcademicScoped
 {
     public const int MaximumFeedbackLength = 10_000;
     public const int MaximumPrivateNoteLength = 10_000;
@@ -12,7 +12,7 @@ public sealed class EvaluationRevision
 
     private EvaluationRevision(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         int revisionNumber,
         decimal score,
@@ -25,7 +25,10 @@ public sealed class EvaluationRevision
         string? correctionReason)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         SubmissionAttemptId = submissionAttemptId;
         RevisionNumber = revisionNumber;
         Score = score;
@@ -33,7 +36,8 @@ public sealed class EvaluationRevision
         GuardianVisibleFeedback = guardianVisibleFeedback;
         TeacherPrivateNote = teacherPrivateNote;
         Status = EvaluationRevisionStatus.Draft;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CreatedAtUtc = createdAtUtc;
         UpdatedAtUtc = createdAtUtc;
         SupersedesEvaluationRevisionId = supersedesEvaluationRevisionId;
@@ -41,7 +45,11 @@ public sealed class EvaluationRevision
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid SubmissionAttemptId { get; private set; }
     public int RevisionNumber { get; private set; }
     public decimal Score { get; private set; }
@@ -49,7 +57,8 @@ public sealed class EvaluationRevision
     public string? GuardianVisibleFeedback { get; private set; }
     public string? TeacherPrivateNote { get; private set; }
     public EvaluationRevisionStatus Status { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
     public Guid? SupersedesEvaluationRevisionId { get; private set; }
@@ -60,7 +69,7 @@ public sealed class EvaluationRevision
     public bool IsReleased => Status == EvaluationRevisionStatus.Released;
 
     public static EvaluationRevision CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         int revisionNumber,
         decimal score,
@@ -71,7 +80,7 @@ public sealed class EvaluationRevision
         Guid createdByMembershipId,
         DateTime createdAtUtc)
     {
-        ValidateIdentity(organizationId, submissionAttemptId, createdByMembershipId, revisionNumber);
+        ValidateIdentity(scope, submissionAttemptId, createdByMembershipId, revisionNumber);
         ValidateValues(
             score,
             maxScore,
@@ -82,7 +91,7 @@ public sealed class EvaluationRevision
 
         return new EvaluationRevision(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             submissionAttemptId,
             revisionNumber,
             score,
@@ -96,7 +105,7 @@ public sealed class EvaluationRevision
     }
 
     public static EvaluationRevision CreateCorrection(
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         int revisionNumber,
         decimal score,
@@ -109,7 +118,7 @@ public sealed class EvaluationRevision
         Guid supersedesEvaluationRevisionId,
         string correctionReason)
     {
-        ValidateIdentity(organizationId, submissionAttemptId, createdByMembershipId, revisionNumber);
+        ValidateIdentity(scope, submissionAttemptId, createdByMembershipId, revisionNumber);
         if (supersedesEvaluationRevisionId == Guid.Empty)
         {
             throw new ArgumentException("شناسه ارزیابی قبلی الزامی است.", nameof(supersedesEvaluationRevisionId));
@@ -131,7 +140,7 @@ public sealed class EvaluationRevision
 
         return new EvaluationRevision(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             submissionAttemptId,
             revisionNumber,
             score,
@@ -204,12 +213,12 @@ public sealed class EvaluationRevision
     }
 
     private static void ValidateIdentity(
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         Guid createdByMembershipId,
         int revisionNumber)
     {
-        if (organizationId == Guid.Empty ||
+        if (scope.Id == Guid.Empty ||
             submissionAttemptId == Guid.Empty ||
             createdByMembershipId == Guid.Empty)
         {

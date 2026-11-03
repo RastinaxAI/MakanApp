@@ -1,36 +1,20 @@
 using MakanApp.Application.Academic;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamService
 {
-    private async Task<AccessContext> GetOrganizationContextAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            !context.ActiveRole.HasValue)
-        {
-            throw NotAllowed();
-        }
-
-        return context;
-    }
-
     private async Task<ExamAggregateRecord> GetCurrentForUpdateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid examId,
         CancellationToken cancellationToken)
     {
         var record = await _store.GetCurrentForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             examId,
             cancellationToken) ?? throw ExamNotFound();
         await EnsureCanManageClassAsync(context, record.Exam.ClassId, cancellationToken);
@@ -38,10 +22,15 @@ public sealed partial class ExamService
     }
 
     private async Task EnsureCanManageClassAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid classId,
         CancellationToken cancellationToken)
     {
+        if (context.IsPersonal)
+        {
+            if (context.ClassId == classId && context.Has(PersonalClassAcademicCapabilities.AuthorExams)) return;
+            throw NotAllowed();
+        }
         if (context.ActiveRole == OrganizationRole.Manager)
         {
             return;
@@ -187,9 +176,9 @@ public sealed partial class ExamService
                         .ToArray(),
                     Convert.ToBase64String(question.RowVersion))
                 { AttachmentPolicy = ExamQuestionAttachmentPolicyDto.From(question) })
-                .ToArray());
+                .ToArray()) { ClassRef = record.Exam.ClassRef };
 
-    private static StudentExamSummary ToSummary(ExamSummaryRecord record) =>
+    internal static StudentExamSummary ToSummary(ExamSummaryRecord record) =>
         new(
             record.Exam.Id,
             record.Version.Id,
@@ -205,7 +194,7 @@ public sealed partial class ExamService
                 record.Version.DurationMinutes,
                 record.Version.MaxAttempts,
                 record.Version.MaxScore,
-                record.Version.RandomizationPolicy));
+                record.Version.RandomizationPolicy)) { ClassRef = record.Exam.ClassRef };
 
     private static StudentSafeExamPreview ToStudentSafePreview(ExamAggregateRecord record) =>
         new(

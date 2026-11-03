@@ -99,7 +99,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
             from recipient in _dbContext.AssignmentRecipients
             join enrollment in _dbContext.Enrollments
                 on new { recipient.OrganizationId, Id = recipient.EnrollmentId }
-                equals new { enrollment.OrganizationId, enrollment.Id }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join assignment in _dbContext.Assignments
                 on new { recipient.OrganizationId, Id = recipient.AssignmentId }
                 equals new { assignment.OrganizationId, assignment.Id }
@@ -108,7 +108,7 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 equals new { version.OrganizationId, version.Id }
             join academicClass in _dbContext.Classes
                 on new { recipient.OrganizationId, Id = recipient.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             let isGraded = _dbContext.GradeReleases.Any(release =>
                 release.OrganizationId == organizationId &&
                 _dbContext.SubmissionAttempts.Any(attempt =>
@@ -226,10 +226,10 @@ public sealed partial class EfDashboardReadService : IDashboardReadService
                 }
             join academicClass in _dbContext.Classes
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join enrollment in _dbContext.Enrollments
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { enrollment.OrganizationId, Id = enrollment.ClassId }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = enrollment.ClassId }
             let latestAttemptStatus = _dbContext.ExamAttempts
                 .Where(attempt =>
                     attempt.OrganizationId == organizationId &&

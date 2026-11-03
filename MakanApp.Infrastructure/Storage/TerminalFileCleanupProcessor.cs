@@ -132,6 +132,7 @@ public sealed class TerminalFileCleanupProcessor(
         await dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.AnswerRevisionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
+        await dbContext.AssignmentVersionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.MessageAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.ModerationEvidenceAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.Set<ScheduledMessageAttachment>().AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||

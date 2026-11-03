@@ -25,17 +25,17 @@ public sealed class EfExamAnswerStore(
     }
 
     public async Task<ExamAttempt?> GetOwnedAttemptForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken)
     {
         var attempt = await dbContext.ExamAttempts
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[ExamAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {attemptId}")
+                $"SELECT * FROM [assessment].[ExamAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {attemptId}")
             .SingleOrDefaultAsync(cancellationToken);
         if (attempt is null ||
-            !await IsOwnedAsync(organizationId, attemptId, userId, cancellationToken))
+            !await IsOwnedAsync(scope, attemptId, userId, cancellationToken))
         {
             return null;
         }
@@ -44,12 +44,12 @@ public sealed class EfExamAnswerStore(
     }
 
     public async Task<ExamAnswersRecord?> GetOwnedAnswersAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken)
     {
-        if (!await IsOwnedAsync(organizationId, attemptId, userId, cancellationToken))
+        if (!await IsOwnedAsync(scope, attemptId, userId, cancellationToken))
         {
             return null;
         }
@@ -57,7 +57,7 @@ public sealed class EfExamAnswerStore(
         var attempt = await dbContext.ExamAttempts
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                item => item.OrganizationId == organizationId && item.Id == attemptId,
+                item => item.ContextKind == scope.Kind && item.ContextId == scope.Id && item.Id == attemptId,
                 cancellationToken);
         if (attempt is null)
         {
@@ -66,7 +66,7 @@ public sealed class EfExamAnswerStore(
 
         var mappings = await dbContext.ExamAttemptQuestions
             .AsNoTracking()
-            .Where(question => question.OrganizationId == organizationId &&
+            .Where(question => question.ContextKind == scope.Kind && question.ContextId == scope.Id &&
                                question.ExamAttemptId == attemptId)
             .OrderBy(question => question.DisplayOrder)
             .ToArrayAsync(cancellationToken);
@@ -76,14 +76,14 @@ public sealed class EfExamAnswerStore(
     }
 
     public async Task<ExamAnswerQuestionRecord?> GetQuestionForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid attemptQuestionId,
         CancellationToken cancellationToken)
     {
         var attemptQuestion = await dbContext.ExamAttemptQuestions
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[ExamAttemptQuestions] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ExamAttemptId] = {attemptId} AND [Id] = {attemptQuestionId}")
+                $"SELECT * FROM [assessment].[ExamAttemptQuestions] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [ExamAttemptId] = {attemptId} AND [Id] = {attemptQuestionId}")
             .SingleOrDefaultAsync(cancellationToken);
         if (attemptQuestion is null)
         {
@@ -94,7 +94,7 @@ public sealed class EfExamAnswerStore(
             .AsNoTracking()
             .Include(item => item.Options)
             .SingleAsync(
-                item => item.OrganizationId == organizationId &&
+                item => item.ContextKind == scope.Kind && item.ContextId == scope.Id &&
                         item.Id == attemptQuestion.QuestionVersionId,
                 cancellationToken);
         AnswerRevision? currentRevision = null;
@@ -104,7 +104,7 @@ public sealed class EfExamAnswerStore(
                 .AsNoTracking()
                 .Include(revision => revision.Attachments)
                 .SingleAsync(
-                    revision => revision.OrganizationId == organizationId &&
+                    revision => revision.ContextKind == scope.Kind && revision.ContextId == scope.Id &&
                                 revision.Id == attemptQuestion.CurrentAnswerRevisionId.Value,
                     cancellationToken);
         }
@@ -115,18 +115,20 @@ public sealed class EfExamAnswerStore(
     }
 
     public Task<AnswerRevision?> GetByClientOperationForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid clientOperationId,
         CancellationToken cancellationToken) =>
         dbContext.AnswerRevisions
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[AnswerRevisions] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ExamAttemptId] = {attemptId} AND [ClientOperationId] = {clientOperationId}")
+                $"SELECT * FROM [assessment].[AnswerRevisions] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [ExamAttemptId] = {attemptId} AND [ClientOperationId] = {clientOperationId}")
             .SingleOrDefaultAsync(cancellationToken);
 
     public void Add(AnswerRevision revision) => dbContext.AnswerRevisions.Add(revision);
 
     public async Task<bool> IsFileUsableForAttemptAsync(Guid fileAssetId, Guid attemptId, CancellationToken ct) =>
+        !await dbContext.AssignmentVersionAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
+        !await dbContext.EducationalSourceVersions.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
         !await dbContext.AnswerRevisionAttachments.AnyAsync(x => x.FileAssetId == fileAssetId && x.ExamAttemptId != attemptId, ct) &&
         !await dbContext.SubmissionAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
         !await dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, ct) &&
@@ -165,26 +167,17 @@ public sealed class EfExamAnswerStore(
     }
 
     private Task<bool> IsOwnedAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken) =>
         (
             from attempt in dbContext.ExamAttempts
-            join enrollment in dbContext.Enrollments
-                on new { attempt.OrganizationId, attempt.ClassId, Id = attempt.EnrollmentId }
-                equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-            join organizationPerson in dbContext.OrganizationPersons
-                on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where attempt.OrganizationId == organizationId &&
-                  attempt.Id == attemptId &&
-                  enrollment.Status == EnrollmentStatus.Active &&
-                  enrollment.EndedAtUtc == null &&
-                  organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null &&
-                  user.Id == userId
+            join participant in AcademicContextQuery.Participants(dbContext, scope)
+                on new { attempt.ContextKind, attempt.ContextId, attempt.ClassId, attempt.ParticipantId }
+                equals new { participant.ContextKind, participant.ContextId, participant.ClassId, participant.ParticipantId }
+            where attempt.ContextKind == scope.Kind && attempt.ContextId == scope.Id &&
+                  attempt.Id == attemptId && participant.IsActive && participant.UserId == userId
             select attempt.Id)
             .AnyAsync(cancellationToken);
 

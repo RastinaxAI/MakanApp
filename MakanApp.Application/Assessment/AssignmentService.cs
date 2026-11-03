@@ -7,22 +7,28 @@ using MakanApp.Domain.Notification;
 using MakanApp.Domain.Organization;
 using MakanApp.Application.Messaging;
 using MakanApp.Domain.Messaging;
+using MakanApp.Application.Storage;
+using MakanApp.Domain.Storage;
 
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class AssignmentService : IAssignmentService
 {
-    private readonly IAccessContextResolver _accessContextResolver;
+    private readonly IAcademicContextResolver _accessContextResolver;
     private readonly IAssignmentStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
     private readonly IAcademicActivityPublisher? _activities;
+    private readonly IFileAssetStore _files;
+    private readonly StorageOptions _storageOptions;
 
     public AssignmentService(
-        IAccessContextResolver accessContextResolver,
+        IAcademicContextResolver accessContextResolver,
         IAssignmentStore store,
         TimeProvider timeProvider,
         IOutbox outbox,
+        IFileAssetStore files,
+        StorageOptions storageOptions,
         IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
@@ -30,6 +36,8 @@ public sealed partial class AssignmentService : IAssignmentService
         _timeProvider = timeProvider;
         _outbox = outbox;
         _activities = activities;
+        _files = files;
+        _storageOptions = storageOptions;
     }
 
     public async Task<AssignmentResult> CreateDraftAsync(
@@ -37,23 +45,27 @@ public sealed partial class AssignmentService : IAssignmentService
         Guid sessionId,
         Guid classId,
         CreateAssignmentDraftCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
+            classKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.OrganizationClass,
+            classId, AcademicOperation.AuthorAssignment, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var academicClass = await GetActiveClassForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             classId,
             cancellationToken);
         await EnsureCanManageClassAsync(context, classId, cancellationToken);
 
         var nowUtc = UtcNow();
         var assignment = Assignment.CreateDraft(
-            context.OrganizationId.Value,
+            context.Scope,
             classId,
-            context.MembershipId!.Value,
+            context.ActorMembershipId,
             nowUtc);
-        var version = CreateVersion(assignment, context.MembershipId.Value, command, nowUtc);
+        var version = CreateVersion(assignment, context.ActorMembershipId, command, nowUtc);
+        await SetAttachmentsAsync(context, version, command.AttachmentFileIds ?? [], cancellationToken);
 
         _store.Add(assignment);
         _store.Add(version);
@@ -69,10 +81,11 @@ public sealed partial class AssignmentService : IAssignmentService
         UpdateAssignmentDraftCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Assignment, assignmentId, AcademicOperation.AuthorAssignment, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetAssignmentForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             cancellationToken);
         await EnsureCanManageClassAsync(context, record.Assignment.ClassId, cancellationToken);
@@ -103,6 +116,8 @@ public sealed partial class AssignmentService : IAssignmentService
             throw MapValidationException(exception);
         }
 
+        if (command.AttachmentFileIds is not null)
+            await SetAttachmentsAsync(context, record.Version, command.AttachmentFileIds, cancellationToken);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToResult(record.Assignment, record.Version, record.ClassTitle);
@@ -115,15 +130,25 @@ public sealed partial class AssignmentService : IAssignmentService
         PublishAssignmentCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Assignment, assignmentId, AcademicOperation.AuthorAssignment, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetAssignmentForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             cancellationToken);
         await EnsureCanManageClassAsync(context, record.Assignment.ClassId, cancellationToken);
         EnsureClassActive(record);
+        if (context.IsPersonal && record.Version.IsPublished)
+        {
+            var replay = new PublishAssignmentResult(ToResult(record.Assignment, record.Version, record.ClassTitle),
+                await _store.CountRecipientsAsync(record.Version.Id, cancellationToken))
+            { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(record.Version.Scope,
+                record.Version.ClassId, AcademicActivityKind.Assignment, record.Version.Id, record.Version.VersionNumber, cancellationToken) };
+            await transaction.CommitAsync(cancellationToken); return replay;
+        }
         EnsureDraft(record);
+        await ValidateAttachmentsAsync(context, record.Version, record.Version.Attachments.Select(a => a.FileAssetId).ToArray(), cancellationToken);
         _store.SetOriginalRowVersion(
             record.Assignment,
             DecodeRowVersion(command.ExpectedAssignmentRowVersion));
@@ -132,22 +157,22 @@ public sealed partial class AssignmentService : IAssignmentService
             DecodeRowVersion(command.ExpectedVersionRowVersion));
 
         var nowUtc = UtcNow();
-        var enrollmentIds = await _store.GetActiveEnrollmentIdsForUpdateAsync(
-            record.Assignment.OrganizationId,
+        var participantIds = await _store.GetActiveParticipantIdsForUpdateAsync(
+            record.Assignment.Scope,
             record.Assignment.ClassId,
             cancellationToken);
         var recipientUserIds = await _store.GetActiveLearnerUserIdsForUpdateAsync(
-            record.Assignment.OrganizationId,
+            record.Assignment.Scope,
             record.Assignment.ClassId,
             cancellationToken);
-        var recipients = enrollmentIds
+        var recipients = participantIds
             .Distinct()
-            .Select(enrollmentId => AssignmentRecipient.Create(
-                record.Assignment.OrganizationId,
+            .Select(participantId => AssignmentRecipient.Create(
+                record.Assignment.Scope,
                 record.Assignment.ClassId,
                 record.Assignment.Id,
                 record.Version.Id,
-                enrollmentId,
+                new AcademicParticipantRef(record.Assignment.ContextKind, participantId),
                 nowUtc))
             .ToArray();
 
@@ -166,7 +191,7 @@ public sealed partial class AssignmentService : IAssignmentService
         _store.AddRange(recipients);
         if (_activities is not null)
             await _activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Assignment,
-                record.Version.OrganizationId, record.Version.ClassId, record.Version.Id, record.Version.VersionNumber,
+                record.Version.Scope, record.Version.ClassId, record.Version.Id, record.Version.VersionNumber,
                 userId, record.Version.Title, nowUtc, dueAtUtc: DateTime.SpecifyKind(record.Version.DueAtUtc, DateTimeKind.Utc)), cancellationToken);
         _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
             Guid.NewGuid(),
@@ -185,7 +210,7 @@ public sealed partial class AssignmentService : IAssignmentService
         return new PublishAssignmentResult(
             ToResult(record.Assignment, record.Version, record.ClassTitle),
             recipients.Length) { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
-                record.Version.OrganizationId, record.Version.ClassId, AcademicActivityKind.Assignment,
+                record.Version.Scope, record.Version.ClassId, AcademicActivityKind.Assignment,
                 record.Version.Id, record.Version.VersionNumber, cancellationToken) };
     }
 
@@ -198,7 +223,7 @@ public sealed partial class AssignmentService : IAssignmentService
         try
         {
             return AssignmentVersion.CreateDraft(
-                assignment.OrganizationId,
+                assignment.Scope,
                 assignment.ClassId,
                 assignment.Id,
                 assignment.CurrentVersionNumber,
@@ -214,6 +239,32 @@ public sealed partial class AssignmentService : IAssignmentService
         catch (Exception exception) when (IsDomainValidationException(exception))
         {
             throw MapValidationException(exception);
+        }
+    }
+
+    private async Task SetAttachmentsAsync(AcademicAccessContext context, AssignmentVersion version, IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        if (ids.Count > 20 || ids.Contains(Guid.Empty) || ids.Distinct().Count() != ids.Count)
+            throw new AssessmentException(AssessmentErrorCodes.SubmissionFileNotAllowed, "فهرست پیوست تکلیف معتبر نیست.");
+        await ValidateAttachmentsAsync(context, version, ids, ct);
+        version.ReplaceAttachments(ids, UtcNow());
+    }
+
+    private async Task ValidateAttachmentsAsync(AcademicAccessContext context, AssignmentVersion version, IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        foreach (var id in ids.Order())
+        {
+            var file = await _files.GetForUpdateAsync(id, ct);
+            var retained = version.Attachments.Any(a => a.FileAssetId == id);
+            if (file is null || file.Status != FileAssetStatus.Ready || file.OrganizationId != context.OrganizationId ||
+                file.PersonalClassId != context.Scope.PersonalClassId || !retained && (file.UploadedByUserId != context.UserId ||
+                    context.IsPersonal && file.PersonalClassMembershipId != context.PersonalMembershipId) ||
+                file.ContentType is not ("image/jpeg" or "image/png" or "application/pdf") ||
+                !_storageOptions.AllowedContentTypes.Contains(file.ContentType) || file.SizeBytes > _storageOptions.MaxFileSizeBytes ||
+                !retained && file.RetainedAtUtc is null && file.UnattachedExpiresAtUtc <= UtcNow() ||
+                !await _store.IsFileAvailableForAssignmentAsync(id, version.AssignmentId, ct))
+                throw new AssessmentException(AssessmentErrorCodes.SubmissionFileNotAllowed, "پیوست تکلیف قابل استفاده نیست.");
+            file.Retain(UtcNow());
         }
     }
 

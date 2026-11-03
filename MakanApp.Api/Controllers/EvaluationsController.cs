@@ -17,11 +17,13 @@ public sealed class EvaluationsController(IEvaluationService evaluationService) 
         [FromQuery] Guid? classId,
         [FromQuery] EvaluationReviewStatus? reviewStatus,
         [FromQuery] bool? isLate,
-        CancellationToken cancellationToken) =>
+        CancellationToken cancellationToken,
+        [FromQuery] MakanApp.Domain.Assessment.AcademicClassKind classKind = MakanApp.Domain.Assessment.AcademicClassKind.OrganizationClass,
+        [FromQuery] int? page = null, [FromQuery] int? pageSize = null) =>
         Ok(await evaluationService.GetQueueAsync(
             AuthenticatedSession.GetUserId(User),
             AuthenticatedSession.GetSessionId(User),
-            new EvaluationQueueQuery(assignmentId, classId, reviewStatus, isLate),
+            new EvaluationQueueQuery(assignmentId, classId, reviewStatus, isLate, classKind, page, pageSize),
             cancellationToken));
 
     [HttpGet("submission-attempts/{attemptId:guid}/evaluation/submission")]

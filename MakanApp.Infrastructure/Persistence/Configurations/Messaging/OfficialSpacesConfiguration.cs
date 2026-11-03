@@ -2,6 +2,7 @@ using MakanApp.Domain.Academic;
 using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
+using MakanApp.Infrastructure.Persistence.Configurations.Assessment;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -49,9 +50,11 @@ public sealed class AcademicActivityPublicationConfiguration : IEntityTypeConfig
             .HasPrincipalKey(x => new { x.OrganizationId, x.ClassId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Class>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.ClassId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<ClassLesson>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.LessonId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne<AssignmentVersion>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.AssignmentVersionId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
-        b.HasOne<ExamVersion>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.ExamVersionId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<AssignmentVersion>().WithMany().HasForeignKey(x => new { x.ContextKind, x.ContextId, x.AssignmentVersionId }).HasPrincipalKey(x => new { x.ContextKind, x.ContextId, x.Id }).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<ExamVersion>().WithMany().HasForeignKey(x => new { x.ContextKind, x.ContextId, x.ExamVersionId }).HasPrincipalKey(x => new { x.ContextKind, x.ContextId, x.Id }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<User>().WithMany().HasForeignKey(x => x.InitiatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        b.ConfigureScope();
+        b.ToTable("AcademicActivityPublications", "messaging", t => t.HasCheckConstraint("CK_AcademicActivityPublications_PersonalKind", "[ContextKind] <> 2 OR [Kind] IN (2,3)"));
     }
 }
 

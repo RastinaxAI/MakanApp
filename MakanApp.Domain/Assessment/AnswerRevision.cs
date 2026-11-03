@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class AnswerRevision
+public sealed class AnswerRevision : IAcademicScoped
 {
     private readonly List<AnswerRevisionAttachment> _attachments = [];
     public const int MaximumTextAnswerLength = 20_000;
@@ -12,7 +12,7 @@ public sealed class AnswerRevision
 
     private AnswerRevision(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid examAttemptQuestionId,
         Guid questionVersionId,
@@ -29,7 +29,10 @@ public sealed class AnswerRevision
         DateTime acceptedAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         ExamAttemptQuestionId = examAttemptQuestionId;
         QuestionVersionId = questionVersionId;
@@ -47,7 +50,11 @@ public sealed class AnswerRevision
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public Guid ExamAttemptQuestionId { get; private set; }
     public Guid QuestionVersionId { get; private set; }
@@ -195,7 +202,7 @@ public sealed class AnswerRevision
             throw new ExamAnswerTypeInvalidException();
         var revision = new AnswerRevision(
             Guid.NewGuid(),
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.Id,
             attemptQuestion.Id,
             question.Id,
@@ -219,11 +226,11 @@ public sealed class AnswerRevision
         ExamAttemptQuestion attemptQuestion,
         QuestionVersion question)
     {
-        if (attemptQuestion.OrganizationId != attempt.OrganizationId ||
+        if (attemptQuestion.Scope != attempt.Scope ||
             attemptQuestion.ExamAttemptId != attempt.Id ||
             attemptQuestion.ExamVersionId != attempt.ExamVersionId ||
             attemptQuestion.QuestionVersionId != question.Id ||
-            question.OrganizationId != attempt.OrganizationId ||
+            question.Scope != attempt.Scope ||
             question.ExamVersionId != attempt.ExamVersionId)
         {
             throw new InvalidOperationException("سؤال برای این تلاش آزمون تثبیت نشده است.");

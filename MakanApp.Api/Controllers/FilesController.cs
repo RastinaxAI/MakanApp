@@ -29,7 +29,7 @@ public sealed class FilesController(IStorageService storageService) : Controller
                 request.File.FileName,
                 request.File.ContentType,
                 request.File.Length,
-                content, workspaceScope),
+                content, workspaceScope, request.PersonalClassId),
             cancellationToken);
         return CreatedAtAction(nameof(GetMetadata), new { fileId = result.Id }, result);
     }
@@ -84,4 +84,5 @@ public sealed class FilesController(IStorageService storageService) : Controller
 public sealed class UploadFileRequest
 {
     public required IFormFile File { get; init; }
+    public Guid? PersonalClassId { get; init; }
 }

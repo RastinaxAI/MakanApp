@@ -41,25 +41,25 @@ public interface IExamAnswerStore
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamAttempt?> GetOwnedAttemptForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken);
 
     Task<ExamAnswersRecord?> GetOwnedAnswersAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken);
 
     Task<ExamAnswerQuestionRecord?> GetQuestionForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid attemptQuestionId,
         CancellationToken cancellationToken);
 
     Task<AnswerRevision?> GetByClientOperationForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         Guid clientOperationId,
         CancellationToken cancellationToken);

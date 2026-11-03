@@ -1,5 +1,6 @@
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Academic;
+using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
@@ -12,9 +13,10 @@ public sealed partial class AssignmentService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Assignment,
+            assignmentId, AcademicOperation.Read, false, cancellationToken);
         var record = await _store.GetAssignmentAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             cancellationToken);
         if (record is null || !await CanReadAsync(context, record, cancellationToken))
@@ -29,16 +31,22 @@ public sealed partial class AssignmentService
         Guid userId,
         Guid sessionId,
         Guid classId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
-        var organizationId = context.OrganizationId!.Value;
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
+            classKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.OrganizationClass,
+            classId, AcademicOperation.Read, false, cancellationToken);
+        var organizationId = context.Scope;
         if (await _store.GetClassAsync(organizationId, classId, cancellationToken) is null)
         {
             throw AssignmentNotFound();
         }
 
-        IReadOnlyCollection<AssignmentWithVersionRecord> records = context.ActiveRole switch
+        IReadOnlyCollection<AssignmentWithVersionRecord> records = context.IsPersonal
+            ? context.Has(PersonalClassAcademicCapabilities.AuthorAssignments) || context.Has(PersonalClassAcademicCapabilities.Grade)
+                ? await _store.GetForManagerAsync(context.Scope, classId, cancellationToken)
+                : context.IsLocalLearner ? await _store.GetForStudentAsync(context.Scope, classId, userId, cancellationToken) : throw NotAllowed()
+            : context.ActiveRole switch
         {
             OrganizationRole.Manager => await _store.GetForManagerAsync(
                 organizationId,
@@ -68,7 +76,7 @@ public sealed partial class AssignmentService
     }
 
     private async Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForTeacherAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid classId,
         CancellationToken cancellationToken)
     {
@@ -81,20 +89,24 @@ public sealed partial class AssignmentService
     }
 
     private async Task<bool> CanReadAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         AssignmentWithVersionRecord record,
         CancellationToken cancellationToken) =>
-        context.ActiveRole switch
+        context.IsPersonal
+            ? context.Has(PersonalClassAcademicCapabilities.AuthorAssignments) || context.Has(PersonalClassAcademicCapabilities.Grade) ||
+                context.IsLocalLearner && record.Assignment.IsRecipientVisible &&
+                await _store.IsRecipientForStudentAsync(context.Scope, record.Version.Id, context.UserId, cancellationToken)
+            : context.ActiveRole switch
         {
             OrganizationRole.Manager => true,
             OrganizationRole.Teacher => await _store.HasActiveTeacherAssignmentAsync(
-                record.Assignment.OrganizationId,
+                record.Assignment.Scope,
                 record.Assignment.ClassId,
                 context.MembershipId!.Value,
                 cancellationToken),
             OrganizationRole.Student when record.Assignment.IsRecipientVisible =>
                 await _store.IsRecipientForStudentAsync(
-                    record.Assignment.OrganizationId,
+                    record.Assignment.Scope,
                     record.Version.Id,
                     context.UserId,
                     cancellationToken),
@@ -102,7 +114,7 @@ public sealed partial class AssignmentService
                 record.Assignment.IsRecipientVisible &&
                 context.SubjectOrganizationPersonId.HasValue =>
                 await _store.IsRecipientForLearnerAsync(
-                    record.Assignment.OrganizationId,
+                    record.Assignment.Scope,
                     record.Version.Id,
                     context.SubjectOrganizationPersonId.Value,
                     cancellationToken),

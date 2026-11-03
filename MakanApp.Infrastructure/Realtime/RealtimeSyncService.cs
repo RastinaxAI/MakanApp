@@ -170,7 +170,7 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
                 var fresh = scope.ServiceProvider.GetRequiredService<RealtimeSyncService>();
                 Binding? binding = null;
                 try { binding = await fresh.BindAsync(session.UserId, session.Id, ct,
-                    envelope.Key == "knowledge.source" && envelope.TargetUserId.HasValue ? ConversationScope.Personal : null); }
+                    envelope.PersonalClassId.HasValue || envelope.Key == "knowledge.source" && envelope.TargetUserId.HasValue ? ConversationScope.Personal : null); }
                 catch (IdentityException) { }
                 if (binding is not null && await fresh.AllowsAsync(binding, envelope, ct))
                     yield return (session.Id, Notification(binding, envelope, eventId, Convert.ToHexString(row.RowVersion), row.OccurredAtUtc));
@@ -218,7 +218,9 @@ public sealed class RealtimeSyncService(MakanDbContext db, IAccessContextResolve
         var c = binding.Context;
         if (c is null) return false;
         if (item.Key.StartsWith("assessment.", StringComparison.Ordinal))
-            return c.WorkspaceType == WorkspaceType.Organization && c.OrganizationId == item.OrganizationId &&
+            return (item.PersonalClassId.HasValue
+                    ? c.WorkspaceType == WorkspaceType.Personal && item.OrganizationId is null && item.TargetUserId == binding.UserId
+                    : c.WorkspaceType == WorkspaceType.Organization && c.OrganizationId == item.OrganizationId) &&
                 (!item.TargetUserId.HasValue || item.TargetUserId == binding.UserId) && await assessment.AllowsAsync(c, item, ct);
         if (item.TargetUserId is Guid owner)
             return owner == binding.UserId && c.WorkspaceType == WorkspaceType.Personal && item.OrganizationId is null && item.Key == "commerce";

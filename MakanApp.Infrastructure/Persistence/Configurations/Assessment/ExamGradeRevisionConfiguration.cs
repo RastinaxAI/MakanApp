@@ -31,7 +31,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
         builder.HasKey(revision => revision.Id);
         builder.HasAlternateKey(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.Id
         }).HasName("UQ_ExamGradeRevisions_Organization_Attempt_Id");
@@ -50,7 +50,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
 
         builder.HasIndex(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.RevisionNumber
         })
@@ -58,7 +58,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
             .HasDatabaseName("UX_ExamGradeRevisions_Attempt_RevisionNumber");
         builder.HasIndex(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId
         })
             .IsUnique()
@@ -66,7 +66,7 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
             .HasDatabaseName("UX_ExamGradeRevisions_OneMutable");
         builder.HasIndex(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.Status
         })
@@ -78,22 +78,22 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
             .WithMany()
             .HasForeignKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId
             })
-            .HasPrincipalKey(attempt => new { attempt.OrganizationId, attempt.Id })
+            .HasPrincipalKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ExamGradeRevision>()
             .WithMany()
             .HasForeignKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.SupersedesExamGradeRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 Id = (Guid?)revision.Id
             })
@@ -107,5 +107,6 @@ public sealed class ExamGradeRevisionConfiguration : IEntityTypeConfiguration<Ex
             })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

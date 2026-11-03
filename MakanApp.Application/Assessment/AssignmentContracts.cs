@@ -8,7 +8,8 @@ public sealed record CreateAssignmentDraftCommand(
     DateTime DueAtUtc,
     bool AllowLateSubmission,
     int MaxAttempts,
-    decimal MaxScore);
+    decimal MaxScore,
+    IReadOnlyCollection<Guid>? AttachmentFileIds = null);
 
 public sealed record UpdateAssignmentDraftCommand(
     string Title,
@@ -18,7 +19,8 @@ public sealed record UpdateAssignmentDraftCommand(
     int MaxAttempts,
     decimal MaxScore,
     string ExpectedAssignmentRowVersion,
-    string ExpectedVersionRowVersion);
+    string ExpectedVersionRowVersion,
+    IReadOnlyCollection<Guid>? AttachmentFileIds = null);
 
 public sealed record PublishAssignmentCommand(
     string ExpectedAssignmentRowVersion,
@@ -26,7 +28,7 @@ public sealed record PublishAssignmentCommand(
 
 public sealed record AssignmentResult(
     Guid Id,
-    Guid OrganizationId,
+    Guid? OrganizationId,
     Guid ClassId,
     string ClassTitle,
     AssignmentStatus Status,
@@ -42,7 +44,11 @@ public sealed record AssignmentResult(
     int MaxAttempts,
     decimal MaxScore,
     string AssignmentRowVersion,
-    string VersionRowVersion);
+    string VersionRowVersion)
+{
+    public AcademicClassRefDto? ClassRef { get; init; }
+    public IReadOnlyCollection<Guid> AttachmentFileIds { get; init; } = [];
+}
 
 public sealed record PublishAssignmentResult(
     AssignmentResult Assignment,

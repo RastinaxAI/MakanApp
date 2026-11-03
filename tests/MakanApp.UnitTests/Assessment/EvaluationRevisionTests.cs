@@ -79,7 +79,7 @@ public sealed class EvaluationRevisionTests
         released.Release(UtcNow());
 
         Assert.Throws<ArgumentException>(() => EvaluationRevision.CreateCorrection(
-            released.OrganizationId,
+            released.Scope,
             released.SubmissionAttemptId,
             2,
             17m,
@@ -93,7 +93,7 @@ public sealed class EvaluationRevisionTests
             " "));
 
         var correction = EvaluationRevision.CreateCorrection(
-            released.OrganizationId,
+            released.Scope,
             released.SubmissionAttemptId,
             2,
             17m,

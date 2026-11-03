@@ -12,7 +12,7 @@ namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamService : IExamService
 {
-    private readonly IAccessContextResolver _accessContextResolver;
+    private readonly IAcademicContextResolver _accessContextResolver;
     private readonly IExamStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
@@ -20,7 +20,7 @@ public sealed partial class ExamService : IExamService
     private readonly IAcademicActivityPublisher? _activities;
 
     public ExamService(
-        IAccessContextResolver accessContextResolver,
+        IAcademicContextResolver accessContextResolver,
         IExamStore store,
         TimeProvider timeProvider,
         IOutbox outbox,
@@ -40,12 +40,15 @@ public sealed partial class ExamService : IExamService
         Guid sessionId,
         Guid classId,
         CreateExamDraftCommand command,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
+            classKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.OrganizationClass,
+            classId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var academicClass = await _store.GetClassForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             classId,
             cancellationToken) ?? throw ExamNotFound();
         EnsureClassActive(academicClass.IsActive);
@@ -53,15 +56,15 @@ public sealed partial class ExamService : IExamService
 
         var nowUtc = UtcNow();
         var exam = Exam.CreateDraft(
-            context.OrganizationId.Value,
+            context.Scope,
             classId,
-            context.MembershipId!.Value,
+            context.ActorMembershipId,
             nowUtc);
         ExamVersion version;
         try
         {
             version = ExamVersion.CreateDraft(
-                exam.OrganizationId,
+                exam.Scope,
                 exam.Id,
                 exam.CurrentVersionNumber,
                 command.Title,
@@ -72,7 +75,7 @@ public sealed partial class ExamService : IExamService
                 command.MaxAttempts,
                 command.MaxScore,
                 command.RandomizationPolicy,
-                context.MembershipId.Value,
+                context.ActorMembershipId,
                 nowUtc);
         }
         catch (Exception exception) when (IsDomainValidationException(exception))
@@ -94,8 +97,9 @@ public sealed partial class ExamService : IExamService
         UpdateExamDraftCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         EnsureDraft(record.Version);
@@ -131,8 +135,9 @@ public sealed partial class ExamService : IExamService
         AddExamQuestionCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         EnsureDraft(record.Version);
@@ -143,7 +148,7 @@ public sealed partial class ExamService : IExamService
         {
             var nowUtc = UtcNow();
             question = QuestionVersion.CreateDraft(
-                record.Exam.OrganizationId,
+                record.Exam.Scope,
                 record.Version.Id,
                 command.Order,
                 command.Type,
@@ -173,8 +178,9 @@ public sealed partial class ExamService : IExamService
         UpdateExamQuestionCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         EnsureDraft(record.Version);
@@ -218,8 +224,9 @@ public sealed partial class ExamService : IExamService
         DeleteExamQuestionCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         EnsureDraft(record.Version);
@@ -240,12 +247,19 @@ public sealed partial class ExamService : IExamService
         PublishExamCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         if (record.Version.IsPublished)
         {
+            if (context.IsPersonal)
+            {
+                var replay = ToEditor(record) with { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
+                    record.Version.Scope, record.Exam.ClassId, AcademicActivityKind.Exam, record.Version.Id, record.Version.VersionNumber, cancellationToken) };
+                await transaction.CommitAsync(cancellationToken); return replay;
+            }
             throw new AssessmentException(
                 AssessmentErrorCodes.ExamAlreadyPublished,
                 "نسخه جاری آزمون قبلاً منتشر شده است.");
@@ -255,7 +269,7 @@ public sealed partial class ExamService : IExamService
         _store.SetOriginalRowVersion(record.Version, DecodeRowVersion(command.ExpectedVersionRowVersion));
         var nowUtc = UtcNow();
         var recipientUserIds = await _store.GetActiveLearnerUserIdsForUpdateAsync(
-            record.Exam.OrganizationId,
+            record.Exam.Scope,
             record.Exam.ClassId,
             cancellationToken);
         if (record.Version.AvailableUntilUtc <= nowUtc)
@@ -277,7 +291,7 @@ public sealed partial class ExamService : IExamService
 
         if (_activities is not null)
             await _activities.RecordAsync(AcademicActivityPublication.Create(AcademicActivityKind.Exam,
-                record.Version.OrganizationId, record.Exam.ClassId, record.Version.Id, record.Version.VersionNumber,
+                record.Version.Scope, record.Exam.ClassId, record.Version.Id, record.Version.VersionNumber,
                 userId, record.Version.Title, nowUtc, availableFromUtc: DateTime.SpecifyKind(record.Version.AvailableFromUtc, DateTimeKind.Utc),
                 availableUntilUtc: DateTime.SpecifyKind(record.Version.AvailableUntilUtc, DateTimeKind.Utc)), cancellationToken);
         _outbox.EnqueueRange(NotificationOutboxContract.Create(new NotificationIntent(
@@ -295,7 +309,7 @@ public sealed partial class ExamService : IExamService
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToEditor(record) with { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(
-            record.Version.OrganizationId, record.Exam.ClassId, AcademicActivityKind.Exam,
+            record.Version.Scope, record.Exam.ClassId, AcademicActivityKind.Exam,
             record.Version.Id, record.Version.VersionNumber, cancellationToken) };
     }
 
@@ -306,8 +320,9 @@ public sealed partial class ExamService : IExamService
         CreateNextExamVersionCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam, examId, AcademicOperation.AuthorExam, false, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetCurrentForUpdateAsync(context, examId, cancellationToken);
         EnsureClassActive(record.ClassIsActive);
         if (!record.Version.IsPublished)
@@ -330,7 +345,7 @@ public sealed partial class ExamService : IExamService
             var nextVersionNumber = record.Exam.StartNextDraft(record.Version.VersionNumber);
             nextVersion = record.Version.CreateNextDraft(
                 nextVersionNumber,
-                context.MembershipId!.Value,
+                context.ActorMembershipId,
                 nowUtc);
             copiedQuestions = record.Questions
                 .OrderBy(question => question.Order)

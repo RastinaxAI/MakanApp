@@ -7,13 +7,13 @@ namespace MakanApp.Application.Assessment;
 
 public sealed partial class SubmissionService : ISubmissionService
 {
-    private readonly IAccessContextResolver _accessContextResolver;
+    private readonly IAcademicContextResolver _accessContextResolver;
     private readonly ISubmissionStore _store;
     private readonly IFileAssetStore _fileAssetStore;
     private readonly TimeProvider _timeProvider;
 
     public SubmissionService(
-        IAccessContextResolver accessContextResolver,
+        IAcademicContextResolver accessContextResolver,
         ISubmissionStore store,
         IFileAssetStore fileAssetStore,
         TimeProvider timeProvider)
@@ -30,10 +30,11 @@ public sealed partial class SubmissionService : ISubmissionService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Assignment, assignmentId, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var eligibility = await _store.GetEligibilityForStudentForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             context.UserId,
             cancellationToken) ?? throw RecipientNotFound();
@@ -41,14 +42,14 @@ public sealed partial class SubmissionService : ISubmissionService
         EnsureDeadlineAllowsDraft(eligibility.Version, UtcNow());
 
         var existingDraft = await _store.GetDraftForUpdateAsync(
-            eligibility.Recipient.OrganizationId,
+            eligibility.Recipient.Scope,
             eligibility.Recipient.Id,
             eligibility.Version.Id,
             cancellationToken);
         if (existingDraft is not null)
         {
             var existingRecord = await _store.GetAttemptForUpdateAsync(
-                eligibility.Recipient.OrganizationId,
+                eligibility.Recipient.Scope,
                 existingDraft.Id,
                 cancellationToken) ?? throw SubmissionNotFound();
             await transaction.CommitAsync(cancellationToken);
@@ -56,7 +57,7 @@ public sealed partial class SubmissionService : ISubmissionService
         }
 
         var submittedCount = await _store.CountSubmittedAttemptsForUpdateAsync(
-            eligibility.Recipient.OrganizationId,
+            eligibility.Recipient.Scope,
             eligibility.Recipient.Id,
             eligibility.Version.Id,
             cancellationToken);
@@ -68,11 +69,11 @@ public sealed partial class SubmissionService : ISubmissionService
         }
 
         var attempt = SubmissionAttempt.CreateDraft(
-            eligibility.Recipient.OrganizationId,
+            eligibility.Recipient.Scope,
             eligibility.Assignment.Id,
             eligibility.Version.Id,
             eligibility.Recipient.Id,
-            eligibility.Enrollment.Id,
+            eligibility.Participation.Reference,
             submittedCount + 1,
             UtcNow());
         _store.Add(attempt);
@@ -88,8 +89,9 @@ public sealed partial class SubmissionService : ISubmissionService
         SaveSubmissionDraftCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
@@ -117,8 +119,9 @@ public sealed partial class SubmissionService : ISubmissionService
         AttachSubmissionFileCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
@@ -135,9 +138,10 @@ public sealed partial class SubmissionService : ISubmissionService
             command.FileAssetId,
             cancellationToken) ?? throw FileNotAllowed();
         EnsureFileCanBeAttached(fileAsset, context);
+        if (!await _store.IsFileAvailableForAttemptAsync(fileAsset.Id, record.Attempt.Id, cancellationToken)) throw FileNotAllowed();
 
         var attachment = SubmissionAttachment.Create(
-            record.Attempt.OrganizationId,
+            record.Attempt.Scope,
             record.Attempt.Id,
             fileAsset.Id,
             UtcNow());
@@ -160,8 +164,9 @@ public sealed partial class SubmissionService : ISubmissionService
         string expectedRowVersion,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
@@ -190,8 +195,9 @@ public sealed partial class SubmissionService : ISubmissionService
         FinalSubmitAssignmentCommand command,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt, attemptId, cancellationToken);
         await using var transaction = await _store.BeginSerializableTransactionAsync(cancellationToken);
+        context = await _accessContextResolver.RevalidateAsync(context, cancellationToken);
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         if (record.Attempt.Status == SubmissionAttemptStatus.Submitted)
         {
@@ -202,7 +208,7 @@ public sealed partial class SubmissionService : ISubmissionService
         EnsureEligibleForMutation(record);
         ApplyExpectedRowVersion(record.Attempt, command.ExpectedRowVersion);
         var submittedCount = await _store.CountSubmittedAttemptsForUpdateAsync(
-            record.Attempt.OrganizationId,
+            record.Attempt.Scope,
             record.Attempt.AssignmentRecipientId,
             record.Attempt.AssignmentVersionId,
             cancellationToken);

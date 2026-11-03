@@ -5,10 +5,10 @@ using MakanApp.Domain.Organization;
 namespace MakanApp.Application.Assessment;
 
 public sealed class ExamAttemptService(
-    IAccessContextResolver accessContextResolver,
+    IAcademicContextResolver accessContextResolver,
     IExamAttemptStore store,
     IExamQuestionOrderRandomizer questionOrderRandomizer,
-    TimeProvider timeProvider) : IExamAttemptService
+    TimeProvider timeProvider, IExamDeadlineFinalizer deadlines) : IExamAttemptService
 {
     public async Task<StudentExamAttemptDto> StartAsync(
         Guid userId,
@@ -24,24 +24,26 @@ public sealed class ExamAttemptService(
                 "شناسه عملیات شروع آزمون الزامی است.");
         }
 
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
-        var organizationId = access.OrganizationId!.Value;
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Exam, examId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueForExamAsync(examId, userId, cancellationToken);
+        var organizationId = access.Scope;
         var nowUtc = UtcNow();
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        access = await accessContextResolver.RevalidateAsync(access, cancellationToken);
         var context = await store.GetStartContextForUpdateAsync(
             organizationId,
             examId,
             userId,
             cancellationToken) ?? throw ExamNotFound();
 
-        if (context.Enrollment is null)
+        if (context.Participation is null)
         {
             throw AttemptNotAllowed();
         }
 
         var operationAttempt = await store.GetByClientOperationForUpdateAsync(
             organizationId,
-            context.Enrollment.Id,
+            context.Participation.Id,
             command.ClientOperationId,
             cancellationToken);
         if (operationAttempt is not null && operationAttempt.ExamId != examId)
@@ -54,7 +56,7 @@ public sealed class ExamAttemptService(
         var attempts = await store.GetAttemptsForUpdateAsync(
             organizationId,
             examId,
-            context.Enrollment.Id,
+            context.Participation.Id,
             cancellationToken);
         var idempotentAttempt = operationAttempt;
         if (idempotentAttempt is not null)
@@ -70,7 +72,7 @@ public sealed class ExamAttemptService(
         }
 
         var activeAttempt = attempts.SingleOrDefault(attempt => attempt.IsInProgress);
-        if (activeAttempt is not null && activeAttempt.EffectiveDeadlineUtc <= nowUtc)
+        if (activeAttempt is not null && activeAttempt.ContextKind == AcademicClassKind.OrganizationClass && activeAttempt.EffectiveDeadlineUtc <= nowUtc)
         {
             activeAttempt.MarkExpired(nowUtc);
             activeAttempt = null;
@@ -103,7 +105,7 @@ public sealed class ExamAttemptService(
                 examId,
                 version.Id,
                 context.Exam.ClassId,
-                context.Enrollment.Id,
+                context.Participation.Reference,
                 command.ClientOperationId,
                 attemptNumber,
                 version.MaxAttempts,
@@ -126,7 +128,7 @@ public sealed class ExamAttemptService(
         }
 
         if (context.Questions.Count == 0 || context.Questions.Any(
-                question => question.OrganizationId != organizationId ||
+                question => question.Scope != organizationId ||
                             question.ExamVersionId != version.Id))
         {
             throw Error(
@@ -166,10 +168,11 @@ public sealed class ExamAttemptService(
         Guid examId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Exam, examId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueForExamAsync(examId, userId, cancellationToken);
         var nowUtc = UtcNow();
         var record = await store.GetOwnedActiveAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             examId,
             userId,
             nowUtc,
@@ -183,10 +186,11 @@ public sealed class ExamAttemptService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueAttemptAsync(attemptId, cancellationToken);
         var nowUtc = UtcNow();
         var record = await store.GetOwnedByIdAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
@@ -199,10 +203,11 @@ public sealed class ExamAttemptService(
         Guid examId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Exam, examId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueForExamAsync(examId, userId, cancellationToken);
         var nowUtc = UtcNow();
         var records = await store.GetOwnedAttemptsAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             examId,
             userId,
             cancellationToken);
@@ -212,16 +217,15 @@ public sealed class ExamAttemptService(
             .ToArray();
     }
 
-    private async Task<AccessContext> GetStudentContextAsync(
+    private async Task<AcademicAccessContext> GetStudentContextAsync(
         Guid userId,
         Guid sessionId,
+        AcademicResourceKind kind,
+        Guid resourceId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            context.ActiveRole != OrganizationRole.Student)
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, kind, resourceId, AcademicOperation.Learn, false, cancellationToken);
+        if (!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student)
         {
             throw AttemptNotAllowed();
         }
@@ -231,7 +235,7 @@ public sealed class ExamAttemptService(
 
     private static void ExpireIfNeeded(ExamAttempt attempt, DateTime nowUtc)
     {
-        if (attempt.IsInProgress && attempt.EffectiveDeadlineUtc <= nowUtc)
+        if (attempt.ContextKind == AcademicClassKind.OrganizationClass && attempt.IsInProgress && attempt.EffectiveDeadlineUtc <= nowUtc)
         {
             attempt.MarkExpired(nowUtc);
         }
@@ -277,7 +281,7 @@ public sealed class ExamAttemptService(
             EffectiveStatus(attempt, serverNowUtc));
 
     private static ExamAttemptStatus EffectiveStatus(ExamAttempt attempt, DateTime nowUtc) =>
-        attempt.IsInProgress && attempt.EffectiveDeadlineUtc <= nowUtc
+        attempt.ContextKind == AcademicClassKind.OrganizationClass && attempt.IsInProgress && attempt.EffectiveDeadlineUtc <= nowUtc
             ? ExamAttemptStatus.Expired
             : attempt.Status;
 

@@ -264,6 +264,7 @@ builder.Services.AddOpenApi(options =>
     options.AddOperationTransformer<SchoolOperationTransformer>();
     options.AddOperationTransformer<FileAndMessagingOperationTransformer>();
     options.AddOperationTransformer<AiInvocationOperationTransformer>();
+    options.AddOperationTransformer<PersonalAcademicOperationTransformer>();
 });
 builder.Services.AddProblemDetails(options =>
 {

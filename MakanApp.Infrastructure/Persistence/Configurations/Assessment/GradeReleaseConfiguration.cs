@@ -14,14 +14,14 @@ public sealed class GradeReleaseConfiguration : IEntityTypeConfiguration<GradeRe
         builder.Property(release => release.ReleasedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(release => new
         {
-            release.OrganizationId,
+            release.ContextKind, release.ContextId,
             release.EvaluationRevisionId
         })
             .IsUnique()
             .HasDatabaseName("UX_GradeReleases_Organization_EvaluationRevision");
         builder.HasIndex(release => new
         {
-            release.OrganizationId,
+            release.ContextKind, release.ContextId,
             release.SubmissionAttemptId,
             release.ReleasedAtUtc
         }).HasDatabaseName("IX_GradeReleases_Attempt_ReleasedAtUtc");
@@ -30,13 +30,13 @@ public sealed class GradeReleaseConfiguration : IEntityTypeConfiguration<GradeRe
             .WithMany()
             .HasForeignKey(release => new
             {
-                release.OrganizationId,
+                release.ContextKind, release.ContextId,
                 release.SubmissionAttemptId,
                 release.EvaluationRevisionId
             })
             .HasPrincipalKey(evaluation => new
             {
-                evaluation.OrganizationId,
+                evaluation.ContextKind, evaluation.ContextId,
                 evaluation.SubmissionAttemptId,
                 evaluation.Id
             })
@@ -50,5 +50,6 @@ public sealed class GradeReleaseConfiguration : IEntityTypeConfiguration<GradeRe
             })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

@@ -7,30 +7,15 @@ namespace MakanApp.Application.Assessment;
 
 public sealed partial class SubmissionService
 {
-    private async Task<AccessContext> GetOrganizationContextAsync(
+    private async Task<AcademicAccessContext> GetStudentContextAsync(
         Guid userId,
         Guid sessionId,
+        AcademicResourceKind kind,
+        Guid resourceId,
         CancellationToken cancellationToken)
     {
-        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            !context.ActiveRole.HasValue)
-        {
-            throw SubmissionNotAllowed();
-        }
-
-        return context;
-    }
-
-    private async Task<AccessContext> GetStudentContextAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
-        if (context.ActiveRole != OrganizationRole.Student ||
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, kind, resourceId, AcademicOperation.Learn, false, cancellationToken);
+        if ((!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student) ||
             context.SubjectOrganizationPersonId.HasValue)
         {
             throw SubmissionNotAllowed();
@@ -40,15 +25,15 @@ public sealed partial class SubmissionService
     }
 
     private async Task<SubmissionAttemptRecord> GetOwnedAttemptForUpdateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid attemptId,
         CancellationToken cancellationToken)
     {
         var record = await _store.GetAttemptForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw SubmissionNotFound();
-        if (record.StudentUserId != context.UserId)
+        if (record.StudentUserId != context.UserId || context.IsPersonal && record.Attempt.PersonalClassMembershipId != context.PersonalMembershipId)
         {
             throw SubmissionNotFound();
         }
@@ -58,7 +43,7 @@ public sealed partial class SubmissionService
 
     private static void EnsureEligibleForMutation(SubmissionEligibilityRecord record)
     {
-        if (!record.Enrollment.IsActive || !record.OrganizationPersonIsActive)
+        if (!record.Participation.IsActive || !record.OrganizationPersonIsActive)
         {
             throw SubmissionNotAllowed();
         }
@@ -67,12 +52,12 @@ public sealed partial class SubmissionService
             record.Assignment,
             record.Version,
             record.Recipient,
-            record.Enrollment.Id);
+            record.Participation.Id);
     }
 
     private static void EnsureEligibleForMutation(SubmissionAttemptRecord record)
     {
-        if (!record.Enrollment.IsActive || !record.OrganizationPersonIsActive)
+        if (!record.Participation.IsActive || !record.OrganizationPersonIsActive)
         {
             throw SubmissionNotAllowed();
         }
@@ -81,7 +66,7 @@ public sealed partial class SubmissionService
             record.Assignment,
             record.Version,
             record.Recipient,
-            record.Attempt.EnrollmentId);
+            record.Attempt.ParticipantId);
         if (record.Attempt.AssignmentId != record.Assignment.Id ||
             record.Attempt.AssignmentVersionId != record.Version.Id ||
             record.Attempt.AssignmentRecipientId != record.Recipient.Id)
@@ -108,9 +93,9 @@ public sealed partial class SubmissionService
         if (version.AssignmentId != assignment.Id ||
             recipient.AssignmentId != assignment.Id ||
             recipient.AssignmentVersionId != version.Id ||
-            recipient.EnrollmentId != enrollmentId ||
-            version.OrganizationId != assignment.OrganizationId ||
-            recipient.OrganizationId != assignment.OrganizationId)
+            recipient.ParticipantId != enrollmentId ||
+            version.Scope != assignment.Scope ||
+            recipient.Scope != assignment.Scope)
         {
             throw Error(
                 AssessmentErrorCodes.SubmissionVersionMismatch,
@@ -138,10 +123,11 @@ public sealed partial class SubmissionService
         }
     }
 
-    private static void EnsureFileCanBeAttached(FileAsset fileAsset, AccessContext context)
+    private static void EnsureFileCanBeAttached(FileAsset fileAsset, AcademicAccessContext context)
     {
         if (fileAsset.UploadedByUserId != context.UserId ||
-            fileAsset.OrganizationId != context.OrganizationId)
+            fileAsset.OrganizationId != context.OrganizationId || fileAsset.PersonalClassId != context.Scope.PersonalClassId ||
+            context.IsPersonal && fileAsset.PersonalClassMembershipId != context.PersonalMembershipId)
         {
             throw FileNotAllowed();
         }
@@ -152,10 +138,11 @@ public sealed partial class SubmissionService
         }
     }
 
-    private static void EnsureFileCanBeFinalized(FileAsset fileAsset, AccessContext context)
+    private static void EnsureFileCanBeFinalized(FileAsset fileAsset, AcademicAccessContext context)
     {
         if (fileAsset.UploadedByUserId != context.UserId ||
-            fileAsset.OrganizationId != context.OrganizationId)
+            fileAsset.OrganizationId != context.OrganizationId || fileAsset.PersonalClassId != context.Scope.PersonalClassId ||
+            context.IsPersonal && fileAsset.PersonalClassMembershipId != context.PersonalMembershipId)
         {
             throw FileNotAllowed();
         }
@@ -204,7 +191,7 @@ public sealed partial class SubmissionService
             eligibility.Assignment,
             eligibility.Version,
             eligibility.Recipient,
-            eligibility.Enrollment,
+            eligibility.Participation,
             eligibility.StudentUserId,
             eligibility.OrganizationPersonIsActive,
             []);
@@ -230,7 +217,8 @@ public sealed partial class SubmissionService
             record.Attempt.LastSavedAtUtc,
             record.Attempt.SubmittedAtUtc,
             record.Attempt.IsLate,
-            Convert.ToBase64String(record.Attempt.RowVersion));
+            Convert.ToBase64String(record.Attempt.RowVersion))
+        { ClassRef = record.Assignment.ClassRef, PersonalClassMembershipId = record.Attempt.PersonalClassMembershipId };
 
     private static SubmissionAttachmentResult ToAttachmentResult(
         SubmissionAttachmentWithFileRecord record) =>

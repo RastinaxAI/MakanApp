@@ -120,6 +120,9 @@ public sealed partial class MakanAppWebApplicationFactory :
             var terminalCleanupDispatcher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(TerminalFileCleanupDispatcher));
             if (terminalCleanupDispatcher is not null) services.Remove(terminalCleanupDispatcher);
+            var examDeadlineDispatcher = services.FirstOrDefault(descriptor => descriptor.ServiceType == typeof(IHostedService) &&
+                descriptor.ImplementationType == typeof(MakanApp.Infrastructure.Assessment.ExamDeadlineDispatcher));
+            if (examDeadlineDispatcher is not null) services.Remove(examDeadlineDispatcher);
             services.AddSingleton<MessagingEphemeralTestControl>();
             services.RemoveAll<IMessagingEphemeralNotifier>();
             services.AddScoped<IMessagingEphemeralNotifier>(provider => new RecordingMessagingEphemeralNotifier(

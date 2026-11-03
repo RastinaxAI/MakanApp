@@ -8,7 +8,7 @@ using MakanApp.Domain.Organization;
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamAnswerService(
-    IAccessContextResolver accessContextResolver,
+    IAcademicContextResolver accessContextResolver,
     IExamAnswerStore store,
     TimeProvider timeProvider,
     IFileAssetStore fileStore,
@@ -20,11 +20,12 @@ public sealed partial class ExamAnswerService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
         var nowUtc = UtcNow();
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        access = await accessContextResolver.RevalidateAsync(access, cancellationToken);
         var attempt = await store.GetOwnedAttemptForUpdateAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
@@ -48,11 +49,12 @@ public sealed partial class ExamAnswerService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
         var nowUtc = UtcNow();
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        access = await accessContextResolver.RevalidateAsync(access, cancellationToken);
         var attempt = await store.GetOwnedAttemptForUpdateAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
@@ -85,18 +87,19 @@ public sealed partial class ExamAnswerService(
                 "شناسه عملیات ذخیره پاسخ الزامی است.");
         }
 
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
-        var organizationId = access.OrganizationId!.Value;
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
+        var organizationId = access.Scope;
         var nowUtc = UtcNow();
         var requestHash = ComputeRequestHash(attemptId, attemptQuestionId, command);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        access = await accessContextResolver.RevalidateAsync(access, cancellationToken);
         var attempt = await store.GetOwnedAttemptForUpdateAsync(
             organizationId,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
         nowUtc = UtcNow();
-        _ = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        _ = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
         var idempotentRevision = await store.GetByClientOperationForUpdateAsync(
             organizationId,
             attemptId,
@@ -180,10 +183,10 @@ public sealed partial class ExamAnswerService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
         var nowUtc = UtcNow();
         var record = await store.GetOwnedAnswersAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
@@ -198,16 +201,15 @@ public sealed partial class ExamAnswerService(
                 .ToArray());
     }
 
-    private async Task<AccessContext> GetStudentContextAsync(
+    private async Task<AcademicAccessContext> GetStudentContextAsync(
         Guid userId,
         Guid sessionId,
+        AcademicResourceKind kind,
+        Guid resourceId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            context.ActiveRole != OrganizationRole.Student)
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, kind, resourceId, AcademicOperation.Learn, false, cancellationToken);
+        if (!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student)
         {
             throw AttemptNotAllowed();
         }

@@ -1,5 +1,6 @@
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
@@ -12,9 +13,9 @@ public sealed partial class SubmissionService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var context = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Assignment, assignmentId, cancellationToken);
         var eligibility = await _store.GetEligibilityForStudentAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             context.UserId,
             cancellationToken);
@@ -24,7 +25,7 @@ public sealed partial class SubmissionService
         }
 
         var attempts = await _store.GetAttemptsForStudentAsync(
-            context.OrganizationId.Value,
+            context.Scope,
             assignmentId,
             context.UserId,
             cancellationToken);
@@ -37,23 +38,28 @@ public sealed partial class SubmissionService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt,
+            attemptId, AcademicOperation.Read, false, cancellationToken);
         var record = await _store.GetAttemptAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw SubmissionNotFound();
 
-        var includeContent = context.ActiveRole switch
+        var includeContent = context.IsPersonal
+            ? context.IsLocalLearner && record.StudentUserId == userId ||
+                context.Has(PersonalClassAcademicCapabilities.Grade) && record.Attempt.Status == SubmissionAttemptStatus.Submitted
+                ? true : throw SubmissionNotFound()
+            : context.ActiveRole switch
         {
             OrganizationRole.Student when record.StudentUserId == context.UserId => true,
             OrganizationRole.Parent when
                 record.Attempt.Status == SubmissionAttemptStatus.Submitted &&
-                context.SubjectOrganizationPersonId == record.Enrollment.LearnerOrganizationPersonId => false,
+                context.SubjectOrganizationPersonId == record.Participation.LearnerOrganizationPersonId => false,
             OrganizationRole.Manager when record.Attempt.Status == SubmissionAttemptStatus.Submitted => true,
             OrganizationRole.Teacher when
                 record.Attempt.Status == SubmissionAttemptStatus.Submitted &&
                 await _store.HasActiveTeacherAssignmentAsync(
-                    record.Attempt.OrganizationId,
+                    record.Attempt.Scope,
                     record.Assignment.ClassId,
                     context.MembershipId!.Value,
                     cancellationToken) => true,
@@ -69,17 +75,18 @@ public sealed partial class SubmissionService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Assignment,
+            assignmentId, AcademicOperation.Grade, false, cancellationToken);
         var assignment = await _store.GetAssignmentAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             assignmentId,
             cancellationToken) ?? throw SubmissionNotFound();
 
-        var allowed = context.ActiveRole switch
+        var allowed = context.IsPersonal ? context.Has(PersonalClassAcademicCapabilities.Grade) : context.ActiveRole switch
         {
             OrganizationRole.Manager => true,
             OrganizationRole.Teacher => await _store.HasActiveTeacherAssignmentAsync(
-                assignment.OrganizationId,
+                assignment.Scope,
                 assignment.ClassId,
                 context.MembershipId!.Value,
                 cancellationToken),
@@ -91,7 +98,7 @@ public sealed partial class SubmissionService
         }
 
         var attempts = await _store.GetSubmittedAttemptsAsync(
-            context.OrganizationId.Value,
+            context.Scope,
             assignmentId,
             cancellationToken);
         return attempts.Select(attempt => ToResult(attempt, true)).ToArray();

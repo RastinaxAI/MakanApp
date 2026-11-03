@@ -3,6 +3,7 @@ using System.Text.Json;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Outbox;
 using MakanApp.Domain.Academic;
+using MakanApp.Domain.Assessment;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
@@ -18,11 +19,11 @@ public sealed class OfficialSpaceEventWriter(MakanDbContext db, IOutbox outbox, 
     public const string SyncType = "messaging.official-spaces.sync.v1";
     public const string PublicationType = "messaging.academic-activity.published.v1";
 
-    public async Task<AcademicPublicationReceipt?> ReadReceiptAsync(Guid organizationId, Guid classId, AcademicActivityKind kind,
+    public async Task<AcademicPublicationReceipt?> ReadReceiptAsync(AcademicScope scope, Guid classId, AcademicActivityKind kind,
         Guid sourceVersionId, int revision, CancellationToken ct)
     {
         var publication = await db.AcademicActivityPublications.AsNoTracking().SingleOrDefaultAsync(p =>
-            p.OrganizationId == organizationId && p.ClassId == classId && p.Kind == kind && p.SourceRevision == revision &&
+            p.ContextKind == scope.Kind && p.ContextId == scope.Id && p.ClassId == classId && p.Kind == kind && p.SourceRevision == revision &&
             (p.LessonId == sourceVersionId || p.AssignmentVersionId == sourceVersionId || p.ExamVersionId == sourceVersionId || p.SessionId == sourceVersionId), ct);
         if (publication is null) return null;
         var source = await AcademicActivityProjection.ResolveAsync(db, publication, ct);
@@ -37,7 +38,7 @@ public sealed class OfficialSpaceEventWriter(MakanDbContext db, IOutbox outbox, 
         if (db.Database.CurrentTransaction is null) throw new InvalidOperationException("ثبت فعالیت باید در تراکنش انتشار منبع باشد.");
         if (db.AcademicActivityPublications.Local.Any(p => p.Kind == publication.Kind && p.SourceRevision == publication.SourceRevision &&
             p.LessonId == publication.LessonId && p.AssignmentVersionId == publication.AssignmentVersionId && p.ExamVersionId == publication.ExamVersionId && p.SessionId == publication.SessionId) ||
-            await db.AcademicActivityPublications.AnyAsync(p => p.OrganizationId == publication.OrganizationId && p.ClassId == publication.ClassId &&
+            await db.AcademicActivityPublications.AnyAsync(p => p.ContextKind == publication.ContextKind && p.ContextId == publication.ContextId && p.ClassId == publication.ClassId &&
                 p.Kind == publication.Kind && p.SourceRevision == publication.SourceRevision && p.LessonId == publication.LessonId &&
                 p.AssignmentVersionId == publication.AssignmentVersionId && p.ExamVersionId == publication.ExamVersionId && p.SessionId == publication.SessionId, ct)) return;
         db.AcademicActivityPublications.Add(publication);

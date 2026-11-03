@@ -41,7 +41,7 @@ public sealed partial class MakanAppWebApplicationFactory
         var dbContext = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
         return await dbContext.AssignmentRecipients
             .Where(recipient => recipient.AssignmentVersionId == assignmentVersionId)
-            .Select(recipient => recipient.EnrollmentId)
+            .Select(recipient => recipient.EnrollmentId!.Value)
             .ToArrayAsync();
     }
 
@@ -53,11 +53,11 @@ public sealed partial class MakanAppWebApplicationFactory
             .AsNoTracking()
             .FirstAsync(recipient => recipient.AssignmentVersionId == assignmentVersionId);
         dbContext.AssignmentRecipients.Add(AssignmentRecipient.Create(
-            existing.OrganizationId,
+            existing.Scope,
             existing.ClassId,
             existing.AssignmentId,
             existing.AssignmentVersionId,
-            existing.EnrollmentId,
+            existing.Participation,
             DateTime.UtcNow));
         try
         {
@@ -80,7 +80,7 @@ public sealed partial class MakanAppWebApplicationFactory
             .AsNoTracking()
             .SingleAsync(item => item.Id == assignmentVersionId);
         dbContext.AssignmentRecipients.Add(AssignmentRecipient.Create(
-            version.OrganizationId,
+            version.Scope,
             version.ClassId,
             version.AssignmentId,
             version.Id,

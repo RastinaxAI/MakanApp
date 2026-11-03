@@ -1,4 +1,7 @@
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Academic;
+using MakanApp.Domain.Identity;
+using MakanApp.Infrastructure.Academic;
 using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Realtime;
@@ -14,7 +17,9 @@ public sealed partial class RealtimeInvalidationWriter
             switch (entry.Entity)
             {
                 case AssignmentVersion version:
-                    pending.Add(new("assessment.assignment", version.OrganizationId, version.ClassId, version.AssignmentId, StaffOnly: !version.IsPublished)); break;
+                    if (version.PersonalClassId.HasValue) await PersonalAsync(version.PersonalClassId.Value, "assessment.assignment", version.AssignmentId, !version.IsPublished);
+                    else pending.Add(new("assessment.assignment", version.OrganizationId, version.ClassId, version.AssignmentId, StaffOnly: !version.IsPublished));
+                    break;
                 case ExamVersion version:
                     await ExamAsync(version, !version.IsPublished); break;
                 case QuestionVersion question:
@@ -39,7 +44,10 @@ public sealed partial class RealtimeInvalidationWriter
                     if (released is not null) await SubmissionAsync(released, "assessment.grade", false, false);
                     break;
                 case ExamAttempt attempt:
-                    await AttemptAsync(attempt, "assessment.exam-attempt", false, true); break;
+                    await AttemptAsync(attempt, "assessment.exam-attempt", false, true);
+                    if (attempt.PersonalClassId.HasValue && attempt.Status == ExamAttemptStatus.Finalized)
+                        await AttemptAsync(attempt, "assessment.exam-grade", true, false);
+                    break;
                 case ExamGradeRevision grade:
                     var graded = await AttemptAsyncById(grade.ExamAttemptId);
                     if (graded is not null) await AttemptAsync(graded, "assessment.exam-grade", true, false);
@@ -68,20 +76,26 @@ public sealed partial class RealtimeInvalidationWriter
         {
             var exam = db.Exams.Local.SingleOrDefault(e => e.Id == version.ExamId)
                 ?? await db.Exams.AsNoTracking().SingleOrDefaultAsync(e => e.Id == version.ExamId, ct);
-            if (exam is not null) pending.Add(new("assessment.exam", version.OrganizationId, exam.ClassId, exam.Id, StaffOnly: staffOnly));
+            if (exam is null) return;
+            if (exam.PersonalClassId.HasValue) await PersonalAsync(exam.PersonalClassId.Value, "assessment.exam", exam.Id, staffOnly);
+            else pending.Add(new("assessment.exam", version.OrganizationId, exam.ClassId, exam.Id, StaffOnly: staffOnly));
         }
         async Task SubmissionAsync(SubmissionAttempt attempt, string key, bool staffOnly, bool ownerOnly)
         {
+            if (attempt.PersonalClassId is Guid personalClassId)
+            { await PersonalAsync(personalClassId, key, attempt.Id, staffOnly, attempt.PersonalClassMembershipId, ownerOnly); return; }
             var assignment = db.Assignments.Local.SingleOrDefault(a => a.Id == attempt.AssignmentId)
                 ?? await db.Assignments.AsNoTracking().SingleAsync(a => a.Id == attempt.AssignmentId, ct);
-            var (learner, owner) = await LearnerAsync(attempt.EnrollmentId);
+            var (learner, owner) = await LearnerAsync(attempt.EnrollmentId!.Value);
             if (ownerOnly && owner is null) return;
             pending.Add(new(key, attempt.OrganizationId, assignment.ClassId, attempt.Id, ownerOnly ? owner : null,
                 staffOnly, LearnerOrganizationPersonId: learner));
         }
         async Task AttemptAsync(ExamAttempt attempt, string key, bool staffOnly, bool ownerOnly)
         {
-            var (learner, owner) = await LearnerAsync(attempt.EnrollmentId);
+            if (attempt.PersonalClassId is Guid personalClassId)
+            { await PersonalAsync(personalClassId, key, attempt.Id, staffOnly, attempt.PersonalClassMembershipId, ownerOnly); return; }
+            var (learner, owner) = await LearnerAsync(attempt.EnrollmentId!.Value);
             if (ownerOnly && owner is null) return;
             pending.Add(new(key, attempt.OrganizationId, attempt.ClassId, attempt.Id, ownerOnly ? owner : null,
                 staffOnly, LearnerOrganizationPersonId: learner));
@@ -93,6 +107,20 @@ public sealed partial class RealtimeInvalidationWriter
             var owner = await (from p in db.OrganizationPersons join u in db.Users on p.PersonId equals u.PersonId
                 where p.Id == enrollment.LearnerOrganizationPersonId && p.OrganizationId == enrollment.OrganizationId select (Guid?)u.Id).SingleOrDefaultAsync(ct);
             return (enrollment.LearnerOrganizationPersonId, owner);
+        }
+        async Task PersonalAsync(Guid classId, string key, Guid resourceId, bool staffOnly, Guid? ownerMembershipId = null, bool ownerOnly = false)
+        {
+            var required = key == "assessment.assignment" ? PersonalClassAcademicCapabilities.AuthorAssignments :
+                key == "assessment.exam" ? PersonalClassAcademicCapabilities.AuthorExams : PersonalClassAcademicCapabilities.Grade;
+            var grants = PersonalClassAcademicAccessQuery.Effective(db, classId);
+            var audience = await db.PersonalClassParticipants.Where(m => m.PersonalClassId == classId && m.EndedAtUtc == null &&
+                db.Users.Any(u => u.Id == m.StudentUserId && u.AccountStatus == UserAccountStatus.Active) &&
+                ((!staffOnly && (m.LocalRoles & PersonalClassLocalRoles.Learner) != 0 && (!ownerMembershipId.HasValue || m.Id == ownerMembershipId)) ||
+                 !ownerOnly && grants.Any(g => g.MembershipId == m.Id && (g.Capabilities & required) != 0)))
+                .Select(m => new { m.Id, m.StudentUserId }).ToArrayAsync(ct);
+            foreach (var member in audience)
+                pending.Add(new(key, ClassId: classId, ResourceId: resourceId, TargetUserId: member.StudentUserId,
+                    StaffOnly: staffOnly, PersonalClassId: classId, PersonalMembershipId: member.Id));
         }
         async Task<SubmissionAttempt?> SubmissionAsyncById(Guid id) => db.SubmissionAttempts.Local.SingleOrDefault(a => a.Id == id)
             ?? await db.SubmissionAttempts.AsNoTracking().SingleOrDefaultAsync(a => a.Id == id, ct);

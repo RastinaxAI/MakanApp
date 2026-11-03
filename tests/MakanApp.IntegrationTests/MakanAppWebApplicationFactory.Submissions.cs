@@ -17,11 +17,11 @@ public sealed partial class MakanAppWebApplicationFactory
             .Where(attempt => attempt.Id == attemptId)
             .Select(attempt => new SubmissionDatabaseRecord(
                 attempt.Id,
-                attempt.OrganizationId,
+                attempt.OrganizationId!.Value,
                 attempt.AssignmentId,
                 attempt.AssignmentVersionId,
                 attempt.AssignmentRecipientId,
-                attempt.EnrollmentId,
+                attempt.EnrollmentId!.Value,
                 attempt.AttemptNumber,
                 attempt.Status,
                 attempt.AnswerText,
@@ -115,11 +115,11 @@ public sealed partial class MakanAppWebApplicationFactory
             .AsNoTracking()
             .SingleAsync(attempt => attempt.Id == attemptId);
         dbContext.SubmissionAttempts.Add(SubmissionAttempt.CreateDraft(
-            existing.OrganizationId,
+            existing.Scope,
             existing.AssignmentId,
             existing.AssignmentVersionId,
             existing.AssignmentRecipientId,
-            existing.EnrollmentId,
+            existing.Participation,
             existing.AttemptNumber + 1,
             DateTime.UtcNow));
         try

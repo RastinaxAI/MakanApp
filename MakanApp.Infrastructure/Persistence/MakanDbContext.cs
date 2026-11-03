@@ -41,6 +41,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<QuestionVersion> QuestionVersions => Set<QuestionVersion>();
     public DbSet<QuestionOption> QuestionOptions => Set<QuestionOption>();
     public DbSet<ExamAttempt> ExamAttempts => Set<ExamAttempt>();
+    public DbSet<AssignmentVersionAttachment> AssignmentVersionAttachments => Set<AssignmentVersionAttachment>();
     public DbSet<ExamAttemptQuestion> ExamAttemptQuestions => Set<ExamAttemptQuestion>();
     public DbSet<AnswerRevision> AnswerRevisions => Set<AnswerRevision>();
     public DbSet<AnswerRevisionAttachment> AnswerRevisionAttachments => Set<AnswerRevisionAttachment>();
@@ -55,6 +56,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<PersonalClass> PersonalClasses => Set<PersonalClass>();
     public DbSet<PersonalClassInvitation> PersonalClassInvitations => Set<PersonalClassInvitation>();
     public DbSet<PersonalClassParticipant> PersonalClassParticipants => Set<PersonalClassParticipant>();
+    public DbSet<PersonalClassAcademicGrant> PersonalClassAcademicGrants => Set<PersonalClassAcademicGrant>();
     public DbSet<UsageReservation> UsageReservations => Set<UsageReservation>();
     public DbSet<SubscriptionAmendment> SubscriptionAmendments => Set<SubscriptionAmendment>();
     public DbSet<PlanVersion> PlanVersions => Set<PlanVersion>();
@@ -150,7 +152,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
             value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType.Namespace == "MakanApp.Domain.Commerce"
-            || t.ClrType == typeof(PersonalClassRequest) || t.ClrType == typeof(PersonalClassJoinRequest) || t.ClrType == typeof(PersonalClassManagerTransfer) || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
+            || t.ClrType == typeof(PersonalClassAcademicGrant) || t.ClrType == typeof(PersonalClassRequest) || t.ClrType == typeof(PersonalClassJoinRequest) || t.ClrType == typeof(PersonalClassManagerTransfer) || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
             foreach (var property in entity.GetProperties().Where(p => (p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)) && p.Name.EndsWith("Utc", StringComparison.Ordinal)))
                 property.SetValueConverter(utcConverter);
     }

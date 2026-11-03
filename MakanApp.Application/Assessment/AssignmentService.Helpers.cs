@@ -9,30 +9,13 @@ namespace MakanApp.Application.Assessment;
 
 public sealed partial class AssignmentService
 {
-    private async Task<AccessContext> GetOrganizationContextAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            !context.ActiveRole.HasValue)
-        {
-            throw NotAllowed();
-        }
-
-        return context;
-    }
-
-    private async Task<AcademicClass> GetActiveClassForUpdateAsync(
-        Guid organizationId,
+    private async Task<AcademicClassRecord> GetActiveClassForUpdateAsync(
+        AcademicScope scope,
         Guid classId,
         CancellationToken cancellationToken)
     {
         var academicClass = await _store.GetClassForUpdateAsync(
-            organizationId,
+            scope,
             classId,
             cancellationToken);
         if (academicClass is null)
@@ -51,10 +34,15 @@ public sealed partial class AssignmentService
     }
 
     private async Task EnsureCanManageClassAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid classId,
         CancellationToken cancellationToken)
     {
+        if (context.IsPersonal)
+        {
+            if (context.ClassId == classId && context.Has(PersonalClassAcademicCapabilities.AuthorAssignments)) return;
+            throw NotAllowed();
+        }
         if (context.ActiveRole == OrganizationRole.Manager)
         {
             return;
@@ -80,11 +68,11 @@ public sealed partial class AssignmentService
     }
 
     private async Task<AssignmentWithVersionRecord> GetAssignmentForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken) =>
         await _store.GetAssignmentForUpdateAsync(
-            organizationId,
+            scope,
             assignmentId,
             cancellationToken) ?? throw AssignmentNotFound();
 
@@ -134,7 +122,7 @@ public sealed partial class AssignmentService
     private static AssessmentException NotAllowed() =>
         new(AssessmentErrorCodes.AssignmentNotAllowed, "دسترسی به این تکلیف مجاز نیست.");
 
-    private static AssignmentResult ToResult(
+    internal static AssignmentResult ToResult(
         Assignment assignment,
         AssignmentVersion version,
         string classTitle) =>
@@ -156,5 +144,6 @@ public sealed partial class AssignmentService
             version.MaxAttempts,
             version.MaxScore,
             Convert.ToBase64String(assignment.RowVersion),
-            Convert.ToBase64String(version.RowVersion));
+            Convert.ToBase64String(version.RowVersion))
+        { ClassRef = assignment.ClassRef, AttachmentFileIds = version.Attachments.Select(a => a.FileAssetId).Order().ToArray() };
 }

@@ -2,6 +2,7 @@ using MakanApp.Application.Organization;
 using MakanApp.Domain.Storage;
 using MakanApp.Domain.Organization;
 using MakanApp.Application.Guardian;
+using MakanApp.Application.Assessment;
 
 namespace MakanApp.Application.Storage;
 
@@ -14,7 +15,8 @@ public sealed class StorageService(
     FileUploadPolicy uploadPolicy,
     StorageOptions options,
     TimeProvider timeProvider,
-    IAccountOperationContextResolver? accountContexts = null) : IStorageService
+    IAccountOperationContextResolver? accountContexts = null,
+    IAcademicContextResolver? academicContexts = null) : IStorageService
 {
     public async Task<FileAssetResult> UploadFileAsync(
         Guid userId,
@@ -24,7 +26,15 @@ public sealed class StorageService(
     {
         if (command.WorkspaceScope.HasValue && !Enum.IsDefined(command.WorkspaceScope.Value))
             throw Error(StorageErrorCodes.FileNotAllowed, "بافت بارگذاری معتبر نیست.");
-        var context = command.WorkspaceScope == WorkspaceType.Personal && accountContexts is not null
+        AcademicAccessContext? academic = null;
+        if (command.PersonalClassId is Guid classId)
+        {
+            if (academicContexts is null || classId == Guid.Empty || command.WorkspaceScope == WorkspaceType.Organization)
+                throw Error(StorageErrorCodes.FileNotAllowed, "بافت کلاس مستقل معتبر نیست.");
+            academic = await academicContexts.ResolveAsync(userId, sessionId, AcademicResourceKind.PersonalClass, classId,
+                AcademicOperation.Upload, false, cancellationToken);
+        }
+        var context = academic is not null ? academic.Account : command.WorkspaceScope == WorkspaceType.Personal && accountContexts is not null
             ? await accountContexts.PersonalAsync(userId, sessionId, cancellationToken)
             : await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
         if (command.WorkspaceScope == WorkspaceType.Organization && context.WorkspaceType != WorkspaceType.Organization)
@@ -45,6 +55,7 @@ public sealed class StorageService(
             validated.ContentType,
             nowUtc,
             nowUtc.Add(options.UnattachedLifetime));
+        if (academic is not null) fileAsset.BindPersonalClass(academic.ClassId!.Value, academic.PersonalMembershipId!.Value);
 
         store.Add(fileAsset);
         await store.SaveChangesAsync(cancellationToken);
@@ -63,6 +74,12 @@ public sealed class StorageService(
                     "اندازه واقعی فایل با اندازه اعلام‌شده یکسان نیست.");
             }
 
+            if (academic is not null)
+            {
+                var current = await academicContexts!.ResolveAsync(userId, sessionId, AcademicResourceKind.PersonalClass,
+                    academic.ClassId!.Value, AcademicOperation.Upload, false, cancellationToken);
+                if (current.PersonalMembershipId != fileAsset.PersonalClassMembershipId) throw NotFound();
+            }
             fileAsset.MarkReady(stored.SizeBytes, stored.Sha256Hash, UtcNow());
             await store.SaveChangesAsync(cancellationToken);
             return ToResult(fileAsset);
@@ -143,6 +160,7 @@ public sealed class StorageService(
         var context = await ResolveFileContextAsync(userId, sessionId, fileAssetId, cancellationToken);
         var fileAsset = await store.GetForUpdateAsync(fileAssetId, cancellationToken) ?? throw NotFound();
         EnsureUploaderAuthorized(fileAsset, context);
+        await EnsurePersonalClassFileOwnerAsync(fileAsset, context, cancellationToken);
 
         if (fileAsset.Status == FileAssetStatus.Deleted)
         {
@@ -214,6 +232,7 @@ public sealed class StorageService(
         else if (FileAccessPolicy.IsUploader(fileAsset, context))
         {
             EnsureCurrentScope(fileAsset, context);
+            await EnsurePersonalClassFileOwnerAsync(fileAsset, context, cancellationToken);
         }
         else
         {
@@ -235,6 +254,19 @@ public sealed class StorageService(
         }
 
         EnsureCurrentScope(fileAsset, context);
+    }
+
+    private async Task EnsurePersonalClassFileOwnerAsync(FileAsset file, AccessContext context, CancellationToken ct)
+    {
+        if (file.PersonalClassId is not Guid classId) return;
+        if (academicContexts is null) throw NotFound();
+        try
+        {
+            var current = await academicContexts.ResolveAsync(context.UserId, context.SessionId, AcademicResourceKind.PersonalClass,
+                classId, AcademicOperation.Read, false, ct);
+            if (file.PersonalClassMembershipId != current.PersonalMembershipId) throw NotFound();
+        }
+        catch (AssessmentException) { throw NotFound(); }
     }
 
     private static void EnsureCurrentScope(FileAsset fileAsset, AccessContext context)
@@ -302,5 +334,6 @@ public sealed class StorageService(
             fileAsset.DeletedAtUtc,
             fileAsset.RetainedAtUtc,
             fileAsset.UnattachedExpiresAtUtc,
-            Convert.ToBase64String(fileAsset.RowVersion));
+            Convert.ToBase64String(fileAsset.RowVersion))
+        { PersonalClassId = fileAsset.PersonalClassId, PersonalClassMembershipId = fileAsset.PersonalClassMembershipId };
 }

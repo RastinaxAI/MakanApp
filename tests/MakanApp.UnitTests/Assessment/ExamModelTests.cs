@@ -55,7 +55,7 @@ public sealed class ExamModelTests
         var version = CreateVersion();
 
         Assert.Throws<ExamAnswerKeyInvalidException>(() => QuestionVersion.CreateDraft(
-            version.OrganizationId,
+            version.Scope,
             version.Id,
             1,
             ExamQuestionType.ObjectiveSingleChoice,
@@ -74,7 +74,7 @@ public sealed class ExamModelTests
         var version = CreateVersion();
 
         Assert.Throws<ExamAnswerKeyInvalidException>(() => QuestionVersion.CreateDraft(
-            version.OrganizationId,
+            version.Scope,
             version.Id,
             1,
             ExamQuestionType.ObjectiveSingleChoice,
@@ -93,7 +93,7 @@ public sealed class ExamModelTests
         var version = CreateVersion();
 
         Assert.Throws<ExamAnswerKeyInvalidException>(() => QuestionVersion.CreateDraft(
-            version.OrganizationId,
+            version.Scope,
             version.Id,
             1,
             ExamQuestionType.Descriptive,
@@ -155,7 +155,7 @@ public sealed class ExamModelTests
         var exam = Exam.CreateDraft(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), UtcNow());
         var firstVersion = CreateVersion(exam.OrganizationId, exam.Id, maxScore: 20m);
         var firstQuestion = QuestionVersion.CreateDraft(
-            exam.OrganizationId,
+            exam.Scope,
             firstVersion.Id,
             1,
             ExamQuestionType.ObjectiveSingleChoice,
@@ -217,7 +217,7 @@ public sealed class ExamModelTests
 
     private static QuestionVersion CreateDescriptiveQuestion(ExamVersion version, decimal score) =>
         QuestionVersion.CreateDraft(
-            version.OrganizationId,
+            version.Scope,
             version.Id,
             1,
             ExamQuestionType.Descriptive,

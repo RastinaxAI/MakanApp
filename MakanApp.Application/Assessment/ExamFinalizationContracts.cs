@@ -17,7 +17,10 @@ public sealed record ExamFinalReceiptDto(
     long FinalizedAnswerSetVersion,
     int AnsweredQuestionCount,
     int TotalQuestionCount,
-    ExamAttemptStatus Status);
+    ExamAttemptStatus Status)
+{
+    public string FinalizationMode { get; init; } = "Manual";
+}
 
 public sealed record ExamFinalizationQuestionRecord(
     ExamAttemptQuestion AttemptQuestion,

@@ -1,3 +1,4 @@
+using MakanApp.Domain.Assessment;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Messaging;
 
@@ -30,11 +31,12 @@ public sealed record PersonalClassBackfillPlanRow(Guid ClassId, Guid HostUserId,
     public string PlanSha256 { get; init; } = string.Empty;
 }
 public sealed record AcademicActivityCardResult(Guid EventId, AcademicActivityKind Kind, Guid SourceId, Guid SourceVersionId,
-    int SourceRevision, Guid OrganizationId, Guid ClassId, Guid DestinationConversationId, ConversationType DestinationPurpose,
+    int SourceRevision, Guid? OrganizationId, Guid ClassId, Guid DestinationConversationId, ConversationType DestinationPurpose,
     string ActorKind, Guid InitiatedByUserId, DateTime OccurredAtUtc, string Title, DateTime? DueAtUtc,
     DateTime? AvailableFromUtc, DateTime? AvailableUntilUtc, string State, bool IsActionable)
 {
     public SessionActivityAction? SessionAction { get; init; }
+    public MakanApp.Application.Assessment.AcademicClassRefDto? ClassRef { get; init; }
 }
 public sealed record AcademicActivityDeliveryResult(Guid EventId, ConversationType Purpose, AcademicActivityDeliveryState State,
     Guid? ConversationId, Guid? MessageId, int AttemptCount, string? LastFailureCategory);
@@ -45,7 +47,7 @@ public sealed record AcademicPublicationReceipt(Guid EventId, AcademicActivityKi
 public interface IAcademicActivityPublisher
 {
     Task RecordAsync(AcademicActivityPublication publication, CancellationToken ct);
-    Task<AcademicPublicationReceipt?> ReadReceiptAsync(Guid organizationId, Guid classId, AcademicActivityKind kind,
+    Task<AcademicPublicationReceipt?> ReadReceiptAsync(AcademicScope scope, Guid classId, AcademicActivityKind kind,
         Guid sourceVersionId, int revision, CancellationToken ct);
 }
 

@@ -11,7 +11,7 @@ public sealed class ExamFinalAnswerConfiguration : IEntityTypeConfiguration<Exam
         builder.ToTable("ExamFinalAnswers", "assessment");
         builder.HasKey(finalAnswer => new
         {
-            finalAnswer.OrganizationId,
+            finalAnswer.ContextKind, finalAnswer.ContextId,
             finalAnswer.ExamAttemptId,
             finalAnswer.ExamAttemptQuestionId
         });
@@ -20,23 +20,23 @@ public sealed class ExamFinalAnswerConfiguration : IEntityTypeConfiguration<Exam
             .WithMany()
             .HasForeignKey(finalAnswer => new
             {
-                finalAnswer.OrganizationId,
+                finalAnswer.ContextKind, finalAnswer.ContextId,
                 finalAnswer.ExamAttemptId
             })
-            .HasPrincipalKey(attempt => new { attempt.OrganizationId, attempt.Id })
+            .HasPrincipalKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ExamAttemptQuestion>()
             .WithMany()
             .HasForeignKey(finalAnswer => new
             {
-                finalAnswer.OrganizationId,
+                finalAnswer.ContextKind, finalAnswer.ContextId,
                 finalAnswer.ExamAttemptId,
                 finalAnswer.ExamAttemptQuestionId,
                 finalAnswer.QuestionVersionId
             })
             .HasPrincipalKey(question => new
             {
-                question.OrganizationId,
+                question.ContextKind, question.ContextId,
                 question.ExamAttemptId,
                 Id = question.Id,
                 question.QuestionVersionId
@@ -46,18 +46,19 @@ public sealed class ExamFinalAnswerConfiguration : IEntityTypeConfiguration<Exam
             .WithMany()
             .HasForeignKey(finalAnswer => new
             {
-                finalAnswer.OrganizationId,
+                finalAnswer.ContextKind, finalAnswer.ContextId,
                 finalAnswer.ExamAttemptId,
                 finalAnswer.ExamAttemptQuestionId,
                 finalAnswer.AnswerRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.ExamAttemptQuestionId,
                 Id = revision.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

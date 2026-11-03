@@ -1,4 +1,6 @@
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Academic;
+using MakanApp.Domain.Assessment;
 
 namespace MakanApp.Application.Assessment;
 
@@ -10,15 +12,23 @@ public sealed partial class EvaluationService
         EvaluationQueueQuery query,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
-        IReadOnlyCollection<EvaluationQueueRecord> records = context.ActiveRole switch
+        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
+        if (query.ReviewStatus.HasValue && !Enum.IsDefined(query.ReviewStatus.Value))
+            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
+        if (!Enum.IsDefined(query.ClassKind) || query.ClassKind == AcademicClassKind.PersonalClass && !query.ClassId.HasValue) throw EvaluationNotAllowed();
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
+            query.ClassKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.Organization,
+            query.ClassId ?? Guid.Empty, AcademicOperation.Grade, false, cancellationToken);
+        IReadOnlyCollection<EvaluationQueueRecord> records = context.IsPersonal
+            ? await _store.GetQueueForManagerAsync(context.Scope, query, cancellationToken)
+            : context.ActiveRole switch
         {
             OrganizationRole.Manager => await _store.GetQueueForManagerAsync(
-                context.OrganizationId!.Value,
+                context.Scope,
                 query,
                 cancellationToken),
             OrganizationRole.Teacher => await _store.GetQueueForTeacherAsync(
-                context.OrganizationId!.Value,
+                context.Scope,
                 context.MembershipId!.Value,
                 query,
                 cancellationToken),
@@ -37,7 +47,8 @@ public sealed partial class EvaluationService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt,
+            attemptId, AcademicOperation.Grade, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
         await EnsureCanEvaluateAsync(context, aggregate.Submission, cancellationToken);
         EnsureSubmitted(aggregate.Submission.Attempt);
@@ -50,7 +61,8 @@ public sealed partial class EvaluationService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt,
+            attemptId, AcademicOperation.Grade, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
         await EnsureCanEvaluateAsync(context, aggregate.Submission, cancellationToken);
         EnsureSubmitted(aggregate.Submission.Attempt);
@@ -67,9 +79,10 @@ public sealed partial class EvaluationService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt,
+            attemptId, AcademicOperation.OwnResult, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
-        if (context.ActiveRole != OrganizationRole.Student ||
+        if ((!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student) ||
             context.SubjectOrganizationPersonId.HasValue ||
             aggregate.Submission.StudentUserId != context.UserId)
         {
@@ -95,11 +108,12 @@ public sealed partial class EvaluationService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.SubmissionAttempt,
+            attemptId, AcademicOperation.Read, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
         if (context.ActiveRole != OrganizationRole.Parent ||
             !context.SubjectOrganizationPersonId.HasValue ||
-            context.SubjectOrganizationPersonId.Value != aggregate.Submission.Enrollment.LearnerOrganizationPersonId)
+            context.SubjectOrganizationPersonId.Value != aggregate.Submission.Participation.LearnerOrganizationPersonId)
         {
             throw EvaluationNotFound();
         }

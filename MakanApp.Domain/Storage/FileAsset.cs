@@ -45,6 +45,8 @@ public sealed class FileAsset
 
     public Guid Id { get; private set; }
     public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public Guid? PersonalClassMembershipId { get; private set; }
     public Guid UploadedByUserId { get; private set; }
     public string OriginalFileName { get; private set; } = string.Empty;
     public string StorageKey { get; private set; } = string.Empty;
@@ -78,6 +80,15 @@ public sealed class FileAsset
             contentType,
             createdAtUtc,
             unattachedExpiresAtUtc);
+
+    public void BindPersonalClass(Guid classId, Guid membershipId)
+    {
+        if (Status != FileAssetStatus.Pending || OrganizationId.HasValue || PersonalClassId.HasValue ||
+            classId == Guid.Empty || membershipId == Guid.Empty)
+            throw new InvalidOperationException("فایل فقط در آغاز بارگذاری به دورهٔ عضویت کلاس مستقل متصل می‌شود.");
+        PersonalClassId = classId;
+        PersonalClassMembershipId = membershipId;
+    }
 
     public void MarkReady(long sizeBytes, string sha256Hash, DateTime completedAtUtc)
     {

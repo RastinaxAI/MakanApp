@@ -12,6 +12,8 @@ namespace MakanApp.Infrastructure.Assessment;
 
 public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : ISubmissionStore
 {
+    public Task<bool> IsFileAvailableForAttemptAsync(Guid fileId, Guid attemptId, CancellationToken ct) =>
+        AcademicFileBindingQuery.IsAvailableAsync(dbContext, fileId, null, attemptId, null, ct);
     public async Task<IAssessmentTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
     {
@@ -22,12 +24,12 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     public async Task<SubmissionEligibilityRecord?> GetEligibilityForStudentForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken)
     {
-        var candidate = await CreateEligibilityQuery(organizationId, assignmentId, studentUserId)
+        var candidate = await CreateEligibilityQuery(scope, assignmentId, studentUserId)
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
         if (candidate is null)
@@ -37,62 +39,55 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
 
         var assignment = await dbContext.Assignments
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[Assignments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {assignmentId}")
+                $"SELECT * FROM [assessment].[Assignments] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {assignmentId}")
             .SingleAsync(cancellationToken);
         var version = await dbContext.AssignmentVersions
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[AssignmentVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {candidate.Version.Id}")
+                $"SELECT * FROM [assessment].[AssignmentVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {candidate.Version.Id}")
             .SingleAsync(cancellationToken);
         var recipient = await dbContext.AssignmentRecipients
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[AssignmentRecipients] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {candidate.Recipient.Id}")
+                $"SELECT * FROM [assessment].[AssignmentRecipients] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {candidate.Recipient.Id}")
             .SingleAsync(cancellationToken);
-        var enrollment = await dbContext.Enrollments
-            .FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {candidate.Enrollment.Id}")
-            .SingleAsync(cancellationToken);
-        var organizationPerson = await dbContext.OrganizationPersons
-            .FromSqlInterpolated(
-                $"SELECT * FROM [organization].[OrganizationPersons] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {enrollment.LearnerOrganizationPersonId}")
-            .SingleAsync(cancellationToken);
+        var participant = await AcademicContextQuery.LockParticipantAsync(dbContext, scope, candidate.Participation.Id, cancellationToken);
 
         return new SubmissionEligibilityRecord(
             assignment,
             version,
             recipient,
-            enrollment,
+            AcademicContextQuery.Participation(participant),
             studentUserId,
-            organizationPerson.IsActive);
+            participant.OrganizationPersonIsActive);
     }
 
     public Task<SubmissionEligibilityRecord?> GetEligibilityForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken) =>
-        CreateEligibilityQuery(organizationId, assignmentId, studentUserId)
+        CreateEligibilityQuery(scope, assignmentId, studentUserId)
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
 
     public Task<Assignment?> GetAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken) =>
         dbContext.Assignments
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                assignment => assignment.OrganizationId == organizationId &&
+                assignment => assignment.ContextKind == scope.Kind && assignment.ContextId == scope.Id &&
                               assignment.Id == assignmentId,
                 cancellationToken);
 
     public async Task<SubmissionAttemptRecord?> GetAttemptForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken)
     {
         var attempt = await dbContext.SubmissionAttempts
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {attemptId}")
+                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {attemptId}")
             .SingleOrDefaultAsync(cancellationToken);
         return attempt is null
             ? null
@@ -100,14 +95,14 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     public async Task<SubmissionAttemptRecord?> GetAttemptAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken)
     {
         var attempt = await dbContext.SubmissionAttempts
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                item => item.OrganizationId == organizationId && item.Id == attemptId,
+                item => item.ContextKind == scope.Kind && item.ContextId == scope.Id && item.Id == attemptId,
                 cancellationToken);
         return attempt is null
             ? null
@@ -115,47 +110,39 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     public Task<SubmissionAttempt?> GetDraftForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentRecipientId,
         Guid assignmentVersionId,
         CancellationToken cancellationToken) =>
         dbContext.SubmissionAttempts
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [AssignmentRecipientId] = {assignmentRecipientId} AND [AssignmentVersionId] = {assignmentVersionId} AND [Status] = 1")
+                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [AssignmentRecipientId] = {assignmentRecipientId} AND [AssignmentVersionId] = {assignmentVersionId} AND [Status] = 1")
             .SingleOrDefaultAsync(cancellationToken);
 
     public Task<int> CountSubmittedAttemptsForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentRecipientId,
         Guid assignmentVersionId,
         CancellationToken cancellationToken) =>
         dbContext.SubmissionAttempts
             .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [AssignmentRecipientId] = {assignmentRecipientId} AND [AssignmentVersionId] = {assignmentVersionId} AND [Status] = 2")
+                $"SELECT * FROM [assessment].[SubmissionAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [AssignmentRecipientId] = {assignmentRecipientId} AND [AssignmentVersionId] = {assignmentVersionId} AND [Status] = 2")
             .CountAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<SubmissionAttemptRecord>> GetAttemptsForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId,
         CancellationToken cancellationToken)
     {
         var attempts = await (
             from attempt in dbContext.SubmissionAttempts
-            join enrollment in dbContext.Enrollments
-                on new { attempt.OrganizationId, Id = attempt.EnrollmentId }
-                equals new { enrollment.OrganizationId, enrollment.Id }
-            join organizationPerson in dbContext.OrganizationPersons
-                on new
-                {
-                    enrollment.OrganizationId,
-                    Id = enrollment.LearnerOrganizationPersonId
-                }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where attempt.OrganizationId == organizationId &&
+            join participant in AcademicContextQuery.Participants(dbContext, scope)
+                on new { attempt.ContextKind, attempt.ContextId, attempt.ParticipantId }
+                equals new { participant.ContextKind, participant.ContextId, participant.ParticipantId }
+            where attempt.ContextKind == scope.Kind && attempt.ContextId == scope.Id &&
                   attempt.AssignmentId == assignmentId &&
-                  user.Id == studentUserId
+                  participant.UserId == studentUserId && (scope.Kind == AcademicClassKind.OrganizationClass || participant.IsActive)
             orderby attempt.AttemptNumber
             select attempt)
             .AsNoTracking()
@@ -164,12 +151,12 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     public async Task<IReadOnlyCollection<SubmissionAttemptRecord>> GetSubmittedAttemptsAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
         var attempts = await dbContext.SubmissionAttempts
-            .Where(attempt => attempt.OrganizationId == organizationId &&
+            .Where(attempt => attempt.ContextKind == scope.Kind && attempt.ContextId == scope.Id &&
                               attempt.AssignmentId == assignmentId &&
                               attempt.Status == SubmissionAttemptStatus.Submitted)
             .OrderBy(attempt => attempt.SubmittedAtUtc)
@@ -180,12 +167,12 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     public Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken) =>
         dbContext.TeacherAssignments.AnyAsync(
-            assignment => assignment.OrganizationId == organizationId &&
+            assignment => assignment.OrganizationId == scope.OrganizationId &&
                           assignment.ClassId == classId &&
                           assignment.TeacherMembershipId == membershipId &&
                           assignment.Status == TeacherAssignmentStatus.Active &&
@@ -224,61 +211,48 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
     }
 
     private IQueryable<SubmissionEligibilityRecord> CreateEligibilityQuery(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         Guid studentUserId) =>
         from assignment in dbContext.Assignments
         join version in dbContext.AssignmentVersions
             on new
             {
-                assignment.OrganizationId,
+                assignment.ContextKind, assignment.ContextId,
                 AssignmentId = assignment.Id,
                 VersionNumber = assignment.CurrentVersionNumber
             }
             equals new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.AssignmentId,
                 version.VersionNumber
             }
         join recipient in dbContext.AssignmentRecipients
             on new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 AssignmentVersionId = version.Id
             }
             equals new
             {
-                recipient.OrganizationId,
+                recipient.ContextKind, recipient.ContextId,
                 recipient.AssignmentVersionId
             }
-        join enrollment in dbContext.Enrollments
-            on new
-            {
-                recipient.OrganizationId,
-                recipient.ClassId,
-                Id = recipient.EnrollmentId
-            }
-            equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-        join organizationPerson in dbContext.OrganizationPersons
-            on new
-            {
-                enrollment.OrganizationId,
-                Id = enrollment.LearnerOrganizationPersonId
-            }
-            equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-        join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-        where assignment.OrganizationId == organizationId &&
+        join participant in AcademicContextQuery.Participants(dbContext, scope)
+            on new { recipient.ContextKind, recipient.ContextId, recipient.ClassId, recipient.ParticipantId }
+            equals new { participant.ContextKind, participant.ContextId, participant.ClassId, participant.ParticipantId }
+        where assignment.ContextKind == scope.Kind && assignment.ContextId == scope.Id &&
               assignment.Id == assignmentId &&
-              user.Id == studentUserId
+              participant.UserId == studentUserId && (scope.Kind == AcademicClassKind.OrganizationClass || participant.IsActive)
         select new SubmissionEligibilityRecord(
             assignment,
             version,
             recipient,
-            enrollment,
-            user.Id,
-            organizationPerson.Status == OrganizationPersonStatus.Active &&
-            organizationPerson.EndedAtUtc == null);
+            new AcademicParticipationRecord(new AcademicParticipantRef(participant.ContextKind, participant.ParticipantId),
+                participant.IsActive, participant.LearnerOrganizationPersonId),
+            participant.UserId!.Value,
+            participant.OrganizationPersonIsActive);
 
     private async Task<IReadOnlyCollection<SubmissionAttemptRecord>> LoadAttemptRecordsAsync(
         IEnumerable<SubmissionAttempt> attempts,
@@ -299,42 +273,27 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
         CancellationToken cancellationToken)
     {
         var assignmentQuery = dbContext.Assignments.Where(item =>
-            item.OrganizationId == attempt.OrganizationId && item.Id == attempt.AssignmentId);
+            item.ContextKind == attempt.ContextKind && item.ContextId == attempt.ContextId && item.Id == attempt.AssignmentId);
         var versionQuery = dbContext.AssignmentVersions.Where(item =>
-            item.OrganizationId == attempt.OrganizationId && item.Id == attempt.AssignmentVersionId);
+            item.ContextKind == attempt.ContextKind && item.ContextId == attempt.ContextId && item.Id == attempt.AssignmentVersionId);
         var recipientQuery = dbContext.AssignmentRecipients.Where(item =>
-            item.OrganizationId == attempt.OrganizationId && item.Id == attempt.AssignmentRecipientId);
-        var enrollmentQuery = dbContext.Enrollments.Where(item =>
-            item.OrganizationId == attempt.OrganizationId && item.Id == attempt.EnrollmentId);
+            item.ContextKind == attempt.ContextKind && item.ContextId == attempt.ContextId && item.Id == attempt.AssignmentRecipientId);
         if (asNoTracking)
         {
             assignmentQuery = assignmentQuery.AsNoTracking();
             versionQuery = versionQuery.AsNoTracking();
             recipientQuery = recipientQuery.AsNoTracking();
-            enrollmentQuery = enrollmentQuery.AsNoTracking();
         }
 
         var assignment = await assignmentQuery.SingleAsync(cancellationToken);
         var version = await versionQuery.SingleAsync(cancellationToken);
         var recipient = await recipientQuery.SingleAsync(cancellationToken);
-        var enrollment = await enrollmentQuery.SingleAsync(cancellationToken);
-        var personData = await (
-            from organizationPerson in dbContext.OrganizationPersons
-            join user in dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where organizationPerson.OrganizationId == attempt.OrganizationId &&
-                  organizationPerson.Id == enrollment.LearnerOrganizationPersonId
-            select new
-            {
-                StudentUserId = user.Id,
-                IsActive = organizationPerson.Status == OrganizationPersonStatus.Active &&
-                           organizationPerson.EndedAtUtc == null
-            })
-            .AsNoTracking()
-            .SingleAsync(cancellationToken);
+        var participant = await AcademicContextQuery.Participants(dbContext, attempt.Scope).SingleAsync(p =>
+            p.ContextKind == attempt.ContextKind && p.ContextId == attempt.ContextId && p.ParticipantId == attempt.ParticipantId, cancellationToken);
         var attachments = await (
             from attachment in dbContext.SubmissionAttachments
             join fileAsset in dbContext.FileAssets on attachment.FileAssetId equals fileAsset.Id
-            where attachment.OrganizationId == attempt.OrganizationId &&
+            where attachment.ContextKind == attempt.ContextKind && attachment.ContextId == attempt.ContextId &&
                   attachment.SubmissionAttemptId == attempt.Id
             orderby attachment.AttachedAtUtc, attachment.Id
             select new SubmissionAttachmentWithFileRecord(attachment, fileAsset))
@@ -346,9 +305,9 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
             assignment,
             version,
             recipient,
-            enrollment,
-            personData.StudentUserId,
-            personData.IsActive,
+            AcademicContextQuery.Participation(participant),
+            participant.UserId ?? throw new AssessmentException(AssessmentErrorCodes.SubmissionNotFound, "مالک تلاش پیدا نشد."),
+            participant.OrganizationPersonIsActive,
             attachments);
     }
 

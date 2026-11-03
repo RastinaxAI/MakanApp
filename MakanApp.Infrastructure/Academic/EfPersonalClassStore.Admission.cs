@@ -93,6 +93,7 @@ public sealed partial class EfPersonalClassStore
             var previous = await ActiveMembers(classId).SingleOrDefaultAsync(m => m.StudentUserId == c.ManagerUserId, ct);
             if (previous is not null)
             {
+                await RevokeAcademicGrantsAsync(previous.Id, now, ct);
                 var remaining = previous.LocalRoles & ~PersonalClassLocalRoles.Manager;
                 if (remaining == PersonalClassLocalRoles.None) previous.End(now, "ManagementTransferred");
                 else previous.ChangeRoles(remaining, previous.DelegatedCapabilities);
@@ -102,7 +103,11 @@ public sealed partial class EfPersonalClassStore
             }
             var target = await ActiveMembers(classId).SingleOrDefaultAsync(m => m.StudentUserId == actor.UserId, ct);
             if (target is null) db.PersonalClassParticipants.Add(PersonalClassParticipant.Admit(classId, actor.UserId, PersonalClassLocalRoles.Manager, now));
-            else target.ChangeRoles(target.LocalRoles | PersonalClassLocalRoles.Manager, target.DelegatedCapabilities);
+            else
+            {
+                await RevokeAcademicGrantsAsync(target.Id, now, ct);
+                target.ChangeRoles(target.LocalRoles | PersonalClassLocalRoles.Manager, target.DelegatedCapabilities);
+            }
             c.SetManager(actor.UserId);
         }
         Audit(actor, classId, "ManagerTransfer" + command.Decision, transfer.Reason, now);

@@ -191,7 +191,7 @@ public sealed partial class ExamEndpointsTests
                 Assert.False(db.Database.HasPendingModelChanges());
                 Assert.Contains((await db.Database.GetAppliedMigrationsAsync()), id => id.EndsWith("_AddExamAnswerAttachments", StringComparison.Ordinal));
                 var exception = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(async () =>
-                    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [assessment].[AnswerRevisionAttachments] ([AnswerRevisionId],[FileAssetId],[OrganizationId],[ExamAttemptId],[ExamAttemptQuestionId],[AttachedAtUtc]) VALUES ({revision.AnswerRevisionId},{unbound.Id},{Guid.NewGuid()},{s.Attempt.ExamAttemptId},{s.Question.AttemptQuestionId},{DateTime.UtcNow})"));
+                    await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [assessment].[AnswerRevisionAttachments] ([AnswerRevisionId],[FileAssetId],[OrganizationId],[ContextKind],[ContextId],[ExamAttemptId],[ExamAttemptQuestionId],[AttachedAtUtc]) VALUES ({revision.AnswerRevisionId},{unbound.Id},{Guid.NewGuid()},1,{s.Manager.OrganizationId},{s.Attempt.ExamAttemptId},{s.Question.AttemptQuestionId},{DateTime.UtcNow})"));
                 Assert.Equal(547, exception.Number);
                 var invalidPolicy = await Assert.ThrowsAsync<Microsoft.Data.SqlClient.SqlException>(async () =>
                     await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE [assessment].[QuestionVersions] SET [MaximumAnswerAttachmentCount] = NULL WHERE [Id] = {s.Question.QuestionVersionId}"));

@@ -39,7 +39,8 @@ public sealed class ProfilePhotoMigrationTests(MakanAppWebApplicationFactory fac
                 VALUES ({firstId},{person.Id},{now},1,0,0),({secondId},NULL,{now},1,0,0)
                 """);
             var file = FileAsset.CreatePending(Guid.NewGuid(), null, firstId, "legacy.png", Guid.NewGuid().ToString("N"), "image/png", now, now.AddHours(1));
-            file.MarkReady(100, new string('a', 64), now); db.FileAssets.Add(file); await db.SaveChangesAsync();
+            file.MarkReady(100, new string('a', 64), now);
+            await LegacyAcademicMigrationFixture.InsertAsync(db, file);
             await migrator.MigrateAsync(); await migrator.MigrateAsync();
             Assert.Contains(migration, await db.Database.GetAppliedMigrationsAsync());
             Assert.Empty(await db.Database.GetPendingMigrationsAsync()); Assert.False(db.Database.HasPendingModelChanges());

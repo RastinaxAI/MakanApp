@@ -176,7 +176,7 @@ public sealed class ExamAnswerModelTests
             }
             : null;
         var question = QuestionVersion.CreateDraft(
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.ExamVersionId,
             1,
             type,

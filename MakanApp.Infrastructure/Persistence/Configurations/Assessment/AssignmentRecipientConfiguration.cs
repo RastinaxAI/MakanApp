@@ -13,18 +13,18 @@ public sealed class AssignmentRecipientConfiguration : IEntityTypeConfiguration<
         builder.HasKey(recipient => recipient.Id);
         builder.HasAlternateKey(recipient => new
         {
-            recipient.OrganizationId,
+            recipient.ContextKind, recipient.ContextId,
             recipient.AssignmentId,
             recipient.AssignmentVersionId,
-            recipient.EnrollmentId,
+            recipient.ParticipantId,
             recipient.Id
         }).HasName("UQ_AssignmentRecipients_SubmissionScope_Id");
         builder.Property(recipient => recipient.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.HasIndex(recipient => new
         {
-            recipient.OrganizationId,
+            recipient.ContextKind, recipient.ContextId,
             recipient.AssignmentVersionId,
-            recipient.EnrollmentId
+            recipient.ParticipantId
         })
             .IsUnique()
             .HasDatabaseName("UX_AssignmentRecipients_Organization_Version_Enrollment");
@@ -33,14 +33,14 @@ public sealed class AssignmentRecipientConfiguration : IEntityTypeConfiguration<
             .WithMany()
             .HasForeignKey(recipient => new
             {
-                recipient.OrganizationId,
+                recipient.ContextKind, recipient.ContextId,
                 recipient.ClassId,
                 recipient.AssignmentId,
                 recipient.AssignmentVersionId
             })
             .HasPrincipalKey(version => new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.ClassId,
                 version.AssignmentId,
                 version.Id
@@ -61,5 +61,6 @@ public sealed class AssignmentRecipientConfiguration : IEntityTypeConfiguration<
                 enrollment.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

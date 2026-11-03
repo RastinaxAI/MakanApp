@@ -9,7 +9,7 @@ namespace MakanApp.Infrastructure.Assessment;
 public sealed partial class EfAssignmentStore
 {
     public Task<AssignmentWithVersionRecord?> GetAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken) =>
         (
@@ -17,63 +17,48 @@ public sealed partial class EfAssignmentStore
             join version in _dbContext.AssignmentVersions
                 on new
                 {
-                    assignment.OrganizationId,
+                    assignment.ContextKind, assignment.ContextId,
                     AssignmentId = assignment.Id,
                     VersionNumber = assignment.CurrentVersionNumber
                 }
                 equals new
                 {
-                    version.OrganizationId,
+                    version.ContextKind, version.ContextId,
                     version.AssignmentId,
                     version.VersionNumber
                 }
-            join academicClass in _dbContext.Classes
-                on new { assignment.OrganizationId, Id = assignment.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
-            where assignment.OrganizationId == organizationId &&
+            join academicClass in AcademicContextQuery.Classes(_dbContext, scope)
+                on new { assignment.ContextKind, assignment.ContextId, assignment.ClassId }
+                equals new { academicClass.ContextKind, academicClass.ContextId, academicClass.ClassId }
+            where assignment.ContextKind == scope.Kind && assignment.ContextId == scope.Id &&
                   assignment.Id == assignmentId
             select new AssignmentWithVersionRecord(
                 assignment,
                 version,
                 academicClass.Title,
-                academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null))
+                academicClass.IsActive))
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
 
     public Task<bool> IsRecipientForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentVersionId,
         Guid userId,
         CancellationToken cancellationToken) =>
         (
             from recipient in _dbContext.AssignmentRecipients
-            join enrollment in _dbContext.Enrollments
-                on new
-                {
-                    recipient.OrganizationId,
-                    recipient.ClassId,
-                    Id = recipient.EnrollmentId
-                }
-                equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-            join organizationPerson in _dbContext.OrganizationPersons
-                on new
-                {
-                    enrollment.OrganizationId,
-                    Id = enrollment.LearnerOrganizationPersonId
-                }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in _dbContext.Users
-                on organizationPerson.PersonId equals user.PersonId
-            where recipient.OrganizationId == organizationId &&
+            join participant in AcademicContextQuery.Participants(_dbContext, scope)
+                on new { recipient.ContextKind, recipient.ContextId, recipient.ClassId, recipient.ParticipantId }
+                equals new { participant.ContextKind, participant.ContextId, participant.ClassId, participant.ParticipantId }
+            where recipient.ContextKind == scope.Kind && recipient.ContextId == scope.Id &&
                   recipient.AssignmentVersionId == assignmentVersionId &&
-                  user.Id == userId &&
-                  organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null
+                  participant.UserId == userId && participant.OrganizationPersonIsActive &&
+                  (scope.Kind == AcademicClassKind.OrganizationClass || participant.IsActive)
             select recipient.Id)
             .AnyAsync(cancellationToken);
 
     public Task<bool> IsRecipientForLearnerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid assignmentVersionId,
         Guid learnerOrganizationPersonId,
         CancellationToken cancellationToken) =>
@@ -86,29 +71,29 @@ public sealed partial class EfAssignmentStore
                     recipient.ClassId,
                     Id = recipient.EnrollmentId
                 }
-                equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-            where recipient.OrganizationId == organizationId &&
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, enrollment.ClassId, Id = (Guid?)enrollment.Id }
+            where scope.Kind == AcademicClassKind.OrganizationClass && recipient.OrganizationId == scope.OrganizationId &&
                   recipient.AssignmentVersionId == assignmentVersionId &&
                   enrollment.LearnerOrganizationPersonId == learnerOrganizationPersonId
             select recipient.Id)
             .AnyAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForManagerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         CancellationToken cancellationToken) =>
-        await CreateClassQuery(organizationId, classId)
+        await CreateClassQuery(scope, classId)
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForTeacherAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken)
     {
         if (!await HasActiveTeacherAssignmentAsync(
-                organizationId,
+                scope,
                 classId,
                 membershipId,
                 cancellationToken))
@@ -116,13 +101,13 @@ public sealed partial class EfAssignmentStore
             return [];
         }
 
-        return await CreateClassQuery(organizationId, classId)
+        return await CreateClassQuery(scope, classId)
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForStudentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid userId,
         CancellationToken cancellationToken) =>
@@ -131,64 +116,50 @@ public sealed partial class EfAssignmentStore
             join version in _dbContext.AssignmentVersions
                 on new
                 {
-                    assignment.OrganizationId,
+                    assignment.ContextKind, assignment.ContextId,
                     AssignmentId = assignment.Id,
                     VersionNumber = assignment.CurrentVersionNumber
                 }
                 equals new
                 {
-                    version.OrganizationId,
+                    version.ContextKind, version.ContextId,
                     version.AssignmentId,
                     version.VersionNumber
                 }
-            join academicClass in _dbContext.Classes
-                on new { assignment.OrganizationId, Id = assignment.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in AcademicContextQuery.Classes(_dbContext, scope)
+                on new { assignment.ContextKind, assignment.ContextId, assignment.ClassId }
+                equals new { academicClass.ContextKind, academicClass.ContextId, academicClass.ClassId }
             join recipient in _dbContext.AssignmentRecipients
                 on new
                 {
-                    version.OrganizationId,
+                    version.ContextKind, version.ContextId,
                     AssignmentVersionId = version.Id
                 }
                 equals new
                 {
-                    recipient.OrganizationId,
+                    recipient.ContextKind, recipient.ContextId,
                     recipient.AssignmentVersionId
                 }
-            join enrollment in _dbContext.Enrollments
-                on new
-                {
-                    recipient.OrganizationId,
-                    recipient.ClassId,
-                    Id = recipient.EnrollmentId
-                }
-                equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-            join organizationPerson in _dbContext.OrganizationPersons
-                on new
-                {
-                    enrollment.OrganizationId,
-                    Id = enrollment.LearnerOrganizationPersonId
-                }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in _dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where assignment.OrganizationId == organizationId &&
+            join participant in AcademicContextQuery.Participants(_dbContext, scope)
+                on new { recipient.ContextKind, recipient.ContextId, recipient.ClassId, recipient.ParticipantId }
+                equals new { participant.ContextKind, participant.ContextId, participant.ClassId, participant.ParticipantId }
+            where assignment.ContextKind == scope.Kind && assignment.ContextId == scope.Id &&
                   assignment.ClassId == classId &&
                   (assignment.Status == AssignmentStatus.Published ||
                    assignment.Status == AssignmentStatus.Closed) &&
-                  user.Id == userId &&
-                  organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null
+                  participant.UserId == userId && participant.OrganizationPersonIsActive &&
+                  (scope.Kind == AcademicClassKind.OrganizationClass || participant.IsActive)
             orderby version.DueAtUtc, assignment.Id
             select new AssignmentWithVersionRecord(
                 assignment,
                 version,
                 academicClass.Title,
-                academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null))
+                academicClass.IsActive))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForLearnerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid learnerOrganizationPersonId,
         CancellationToken cancellationToken) =>
@@ -209,7 +180,7 @@ public sealed partial class EfAssignmentStore
                 }
             join academicClass in _dbContext.Classes
                 on new { assignment.OrganizationId, Id = assignment.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join recipient in _dbContext.AssignmentRecipients
                 on new
                 {
@@ -228,8 +199,8 @@ public sealed partial class EfAssignmentStore
                     recipient.ClassId,
                     Id = recipient.EnrollmentId
                 }
-                equals new { enrollment.OrganizationId, enrollment.ClassId, enrollment.Id }
-            where assignment.OrganizationId == organizationId &&
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, enrollment.ClassId, Id = (Guid?)enrollment.Id }
+            where scope.Kind == AcademicClassKind.OrganizationClass && assignment.OrganizationId == scope.OrganizationId &&
                   assignment.ClassId == classId &&
                   (assignment.Status == AssignmentStatus.Published ||
                    assignment.Status == AssignmentStatus.Closed) &&
@@ -244,30 +215,30 @@ public sealed partial class EfAssignmentStore
             .ToArrayAsync(cancellationToken);
 
     private IQueryable<AssignmentWithVersionRecord> CreateClassQuery(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId) =>
         from assignment in _dbContext.Assignments
         join version in _dbContext.AssignmentVersions
             on new
             {
-                assignment.OrganizationId,
+                assignment.ContextKind, assignment.ContextId,
                 AssignmentId = assignment.Id,
                 VersionNumber = assignment.CurrentVersionNumber
             }
             equals new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.AssignmentId,
                 version.VersionNumber
             }
-        join academicClass in _dbContext.Classes
-            on new { assignment.OrganizationId, Id = assignment.ClassId }
-            equals new { academicClass.OrganizationId, academicClass.Id }
-        where assignment.OrganizationId == organizationId && assignment.ClassId == classId
+        join academicClass in AcademicContextQuery.Classes(_dbContext, scope)
+            on new { assignment.ContextKind, assignment.ContextId, assignment.ClassId }
+            equals new { academicClass.ContextKind, academicClass.ContextId, academicClass.ClassId }
+        where assignment.ContextKind == scope.Kind && assignment.ContextId == scope.Id && assignment.ClassId == classId
         orderby assignment.UpdatedAtUtc descending, assignment.Id
         select new AssignmentWithVersionRecord(
             assignment,
             version,
             academicClass.Title,
-            academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null);
+            academicClass.IsActive);
 }

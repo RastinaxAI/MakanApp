@@ -1,33 +1,22 @@
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class EvaluationService
 {
-    private async Task<AccessContext> GetOrganizationContextAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var context = await _accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            !context.ActiveRole.HasValue)
-        {
-            throw EvaluationNotAllowed();
-        }
-
-        return context;
-    }
-
     private async Task EnsureCanEvaluateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         EvaluationSubmissionRecord submission,
         CancellationToken cancellationToken)
     {
+        if (context.IsPersonal)
+        {
+            if (context.ClassId == submission.Assignment.ClassId && context.Has(PersonalClassAcademicCapabilities.Grade)) return;
+            throw EvaluationNotAllowed();
+        }
         if (context.ActiveRole == OrganizationRole.Manager)
         {
             return;
@@ -36,7 +25,7 @@ public sealed partial class EvaluationService
         if (context.ActiveRole == OrganizationRole.Teacher)
         {
             if (await _store.HasActiveTeacherAssignmentAsync(
-                submission.Attempt.OrganizationId,
+                submission.Attempt.Scope,
                 submission.Assignment.ClassId,
                 context.MembershipId!.Value,
                 cancellationToken))
@@ -63,20 +52,20 @@ public sealed partial class EvaluationService
     }
 
     private async Task<EvaluationAggregateRecord> GetAggregateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid attemptId,
         CancellationToken cancellationToken) =>
         await _store.GetAggregateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw EvaluationNotFound();
 
     private async Task<EvaluationAggregateRecord> GetAggregateForUpdateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid attemptId,
         CancellationToken cancellationToken) =>
         await _store.GetAggregateForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw EvaluationNotFound();
 
@@ -190,7 +179,7 @@ public sealed partial class EvaluationService
             evaluation.SupersedesEvaluationRevisionId,
             evaluation.CorrectionReason,
             gradeRelease?.ReleasedAtUtc,
-            Convert.ToBase64String(evaluation.RowVersion));
+            Convert.ToBase64String(evaluation.RowVersion)) { CreatedByPersonalMembershipId = evaluation.CreatedByPersonalMembershipId };
 
     private static GradeReleaseResult ToReleaseResult(
         GradeRelease gradeRelease,
@@ -203,7 +192,7 @@ public sealed partial class EvaluationService
             evaluation.Score,
             gradeRelease.ReleasedAtUtc,
             gradeRelease.ReleasedByMembershipId,
-            Convert.ToBase64String(evaluation.RowVersion));
+            Convert.ToBase64String(evaluation.RowVersion)) { ReleasedByPersonalMembershipId = gradeRelease.ReleasedByPersonalMembershipId };
 
     private DateTime UtcNow() => _timeProvider.GetUtcNow().UtcDateTime;
 

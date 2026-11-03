@@ -70,35 +70,35 @@ public interface IExamGradingStore
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamGradeAggregateRecord?> GetAggregateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
 
     Task<ExamGradeAggregateRecord?> GetAggregateForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ExamGradingQueueRecord>> GetQueueForManagerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         ExamGradingQueueQuery query,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<ExamGradingQueueRecord>> GetQueueForTeacherAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid membershipId,
         Guid examId,
         ExamGradingQueueQuery query,
         CancellationToken cancellationToken);
 
     Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<Guid>> GetActiveGuardianUserIdsAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid learnerOrganizationPersonId,
         DateTime nowUtc,
         CancellationToken cancellationToken);

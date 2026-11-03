@@ -21,7 +21,7 @@ public enum ExamResultReleaseStatus
 
 public sealed record ExamGradingQueueQuery(
     Guid? ClassId,
-    ExamGradingQueueStatus? Status);
+    ExamGradingQueueStatus? Status, int? Page = null, int? PageSize = null);
 
 public sealed record ExamGradingQueueItemDto(
     Guid ExamAttemptId,
@@ -75,6 +75,7 @@ public sealed record ExamQuestionGradeDto(
     Guid? ReviewedByMembershipId,
     DateTime? ReviewedAtUtc)
 {
+    public Guid? ReviewedByPersonalMembershipId { get; init; }
     public IReadOnlyCollection<AcademicAnswerAttachmentDto> Attachments { get; init; } = [];
 }
 
@@ -95,14 +96,17 @@ public sealed record ExamGradeDto(
     string? LearnerFeedback,
     string? GuardianVisibleFeedback,
     string? EvaluatorPrivateNote,
-    Guid CreatedByMembershipId,
+    Guid? CreatedByMembershipId,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
     Guid? SupersedesExamGradeRevisionId,
     string? CorrectionReason,
     DateTime? ReleasedAtUtc,
     string RowVersion,
-    IReadOnlyCollection<ExamQuestionGradeDto> Questions);
+    IReadOnlyCollection<ExamQuestionGradeDto> Questions)
+{
+    public Guid? CreatedByPersonalMembershipId { get; init; }
+}
 
 public sealed record ExamGradeReleaseDto(
     Guid ExamGradeReleaseId,
@@ -112,8 +116,11 @@ public sealed record ExamGradeReleaseDto(
     decimal TotalScore,
     decimal MaximumScore,
     DateTime ReleasedAtUtc,
-    Guid ReleasedByMembershipId,
-    string GradeRowVersion);
+    Guid? ReleasedByMembershipId,
+    string GradeRowVersion)
+{
+    public Guid? ReleasedByPersonalMembershipId { get; init; }
+}
 
 public sealed record StudentExamResultDto(
     Guid ExamAttemptId,
@@ -152,7 +159,7 @@ public sealed record ExamGradingSourceRecord(
     ExamAttempt Attempt,
     Exam Exam,
     ExamVersion Version,
-    Enrollment Enrollment,
+    AcademicParticipationRecord Participation,
     Guid StudentUserId,
     string StudentDisplayName,
     IReadOnlyCollection<ExamGradingQuestionSourceRecord> Questions);

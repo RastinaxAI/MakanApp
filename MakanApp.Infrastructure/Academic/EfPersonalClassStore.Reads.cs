@@ -11,7 +11,9 @@ public sealed partial class EfPersonalClassStore
         var query = db.PersonalClasses.AsNoTracking().Where(c => db.PersonalClassParticipants.Any(m => m.PersonalClassId == c.Id && m.StudentUserId == actor && m.EndedAtUtc == null));
         var total = await query.CountAsync(ct);
         var rows = await query.OrderByDescending(c => c.CreatedAtUtc).ThenBy(c => c.Id).Skip((page - 1) * size).Take(size).ToArrayAsync(ct);
-        return new(rows.Select(c => Map(c, actor)).ToArray(), page, size, total);
+        var results = new List<PersonalClassDto>(rows.Length);
+        foreach (var row in rows) results.Add(await MapAsync(row, actor, ct));
+        return new(results, page, size, total);
     }
     public async Task<PersonalClassPage<PersonalClassMembershipDto>> MembersAsync(Guid actor, Guid id, int page, int size, CancellationToken ct)
     {

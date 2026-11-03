@@ -13,10 +13,11 @@ public sealed class AnswerRevisionAttachmentConfiguration : IEntityTypeConfigura
         builder.HasKey(item => new { item.AnswerRevisionId, item.FileAssetId });
         builder.Property(item => item.AttachedAtUtc).HasColumnType("datetime2(7)");
         builder.HasOne<AnswerRevision>().WithMany(revision => revision.Attachments)
-            .HasForeignKey(item => new { item.OrganizationId, item.ExamAttemptId, item.ExamAttemptQuestionId, item.AnswerRevisionId })
-            .HasPrincipalKey(revision => new { revision.OrganizationId, revision.ExamAttemptId, revision.ExamAttemptQuestionId, revision.Id })
+            .HasForeignKey(item => new { item.ContextKind, item.ContextId, item.ExamAttemptId, item.ExamAttemptQuestionId, item.AnswerRevisionId })
+            .HasPrincipalKey(revision => new { revision.ContextKind, revision.ContextId, revision.ExamAttemptId, revision.ExamAttemptQuestionId, revision.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<FileAsset>().WithMany().HasForeignKey(item => item.FileAssetId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasIndex(item => new { item.OrganizationId, item.ExamAttemptId, item.FileAssetId });
+        builder.HasIndex(item => new { item.ContextKind, item.ContextId, item.ExamAttemptId, item.FileAssetId });
+        builder.ConfigureScope();
     }
 }

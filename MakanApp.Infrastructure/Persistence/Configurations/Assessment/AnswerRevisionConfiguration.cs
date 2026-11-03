@@ -28,7 +28,7 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
         builder.Navigation(revision => revision.Attachments).UsePropertyAccessMode(PropertyAccessMode.Field);
         builder.HasAlternateKey(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.ExamAttemptQuestionId,
             revision.Id
@@ -43,7 +43,7 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
 
         builder.HasIndex(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.ExamAttemptQuestionId,
             revision.RevisionNumber
@@ -52,7 +52,7 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
             .HasDatabaseName("UX_AnswerRevisions_Organization_AttemptQuestion_Revision");
         builder.HasIndex(revision => new
         {
-            revision.OrganizationId,
+            revision.ContextKind, revision.ContextId,
             revision.ExamAttemptId,
             revision.ClientOperationId
         })
@@ -61,21 +61,21 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
 
         builder.HasOne<ExamAttempt>()
             .WithMany()
-            .HasForeignKey(revision => new { revision.OrganizationId, revision.ExamAttemptId })
-            .HasPrincipalKey(attempt => new { attempt.OrganizationId, attempt.Id })
+            .HasForeignKey(revision => new { revision.ContextKind, revision.ContextId, revision.ExamAttemptId })
+            .HasPrincipalKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ExamAttemptQuestion>()
             .WithMany()
             .HasForeignKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.ExamAttemptQuestionId,
                 revision.QuestionVersionId
             })
             .HasPrincipalKey(question => new
             {
-                question.OrganizationId,
+                question.ContextKind, question.ContextId,
                 question.ExamAttemptId,
                 question.Id,
                 question.QuestionVersionId
@@ -85,13 +85,13 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
             .WithMany()
             .HasForeignKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.QuestionVersionId,
                 revision.SelectedOptionId
             })
             .HasPrincipalKey(option => new
             {
-                option.OrganizationId,
+                option.ContextKind, option.ContextId,
                 option.QuestionVersionId,
                 Id = (Guid?)option.Id
             })
@@ -104,18 +104,19 @@ public sealed class AnswerRevisionConfiguration : IEntityTypeConfiguration<Answe
             .WithMany()
             .HasForeignKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.ExamAttemptQuestionId,
                 revision.SupersedesAnswerRevisionId
             })
             .HasPrincipalKey(revision => new
             {
-                revision.OrganizationId,
+                revision.ContextKind, revision.ContextId,
                 revision.ExamAttemptId,
                 revision.ExamAttemptQuestionId,
                 Id = (Guid?)revision.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

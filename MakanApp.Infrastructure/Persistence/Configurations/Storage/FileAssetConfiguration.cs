@@ -31,6 +31,12 @@ public sealed class FileAssetConfiguration : IEntityTypeConfiguration<FileAsset>
         });
 
         builder.HasKey(fileAsset => fileAsset.Id);
+        builder.HasOne<MakanApp.Domain.Academic.PersonalClassParticipant>().WithMany()
+            .HasForeignKey(f => new { f.PersonalClassId, f.PersonalClassMembershipId })
+            .HasPrincipalKey(m => new { m.PersonalClassId, PersonalClassMembershipId = m.Id }).OnDelete(DeleteBehavior.Restrict);
+        builder.ToTable("FileAssets", "storage", t => t.HasCheckConstraint("CK_FileAssets_PersonalClassBinding",
+            "([PersonalClassId] IS NULL AND [PersonalClassMembershipId] IS NULL) OR " +
+            "([OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [PersonalClassMembershipId] IS NOT NULL)"));
         builder.Property(fileAsset => fileAsset.OriginalFileName).HasMaxLength(255).IsRequired();
         builder.Property(fileAsset => fileAsset.StorageKey).HasMaxLength(180).IsRequired();
         builder.Property(fileAsset => fileAsset.ContentType).HasMaxLength(127).IsRequired();

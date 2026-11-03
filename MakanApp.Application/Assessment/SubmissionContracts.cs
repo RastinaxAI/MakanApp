@@ -23,11 +23,11 @@ public sealed record SubmissionAttachmentResult(
 
 public sealed record SubmissionAttemptResult(
     Guid Id,
-    Guid OrganizationId,
+    Guid? OrganizationId,
     Guid AssignmentId,
     Guid AssignmentVersionId,
     Guid AssignmentRecipientId,
-    Guid EnrollmentId,
+    Guid? EnrollmentId,
     int AttemptNumber,
     SubmissionAttemptStatus Status,
     bool ContentVisible,
@@ -37,7 +37,11 @@ public sealed record SubmissionAttemptResult(
     DateTime? LastSavedAtUtc,
     DateTime? SubmittedAtUtc,
     bool IsLate,
-    string RowVersion);
+    string RowVersion)
+{
+    public AcademicClassRefDto? ClassRef { get; init; }
+    public Guid? PersonalClassMembershipId { get; init; }
+}
 
 public sealed record SubmissionReceipt(
     Guid SubmissionAttemptId,
@@ -53,7 +57,7 @@ public sealed record SubmissionEligibilityRecord(
     Assignment Assignment,
     AssignmentVersion Version,
     AssignmentRecipient Recipient,
-    MakanApp.Domain.Academic.Enrollment Enrollment,
+    AcademicParticipationRecord Participation,
     Guid StudentUserId,
     bool OrganizationPersonIsActive);
 
@@ -62,7 +66,7 @@ public sealed record SubmissionAttemptRecord(
     Assignment Assignment,
     AssignmentVersion Version,
     AssignmentRecipient Recipient,
-    MakanApp.Domain.Academic.Enrollment Enrollment,
+    AcademicParticipationRecord Participation,
     Guid StudentUserId,
     bool OrganizationPersonIsActive,
     IReadOnlyCollection<SubmissionAttachmentWithFileRecord> Attachments);

@@ -2,34 +2,23 @@ using System.Security.Cryptography;
 using System.Text;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Assessment;
+using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Assessment;
 
 public sealed partial class ExamGradingService
 {
-    private async Task<AccessContext> GetOrganizationContextAsync(
-        Guid userId,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            !context.ActiveRole.HasValue)
-        {
-            throw GradeNotAllowed();
-        }
-
-        return context;
-    }
-
     private async Task EnsureCanGradeAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         ExamGradingSourceRecord source,
         CancellationToken cancellationToken)
     {
+        if (context.IsPersonal)
+        {
+            if (context.ClassId == source.Exam.ClassId && context.Has(PersonalClassAcademicCapabilities.Grade)) return;
+            throw GradeNotAllowed();
+        }
         if (context.ActiveRole == OrganizationRole.Manager)
         {
             return;
@@ -38,7 +27,7 @@ public sealed partial class ExamGradingService
         if (context.ActiveRole == OrganizationRole.Teacher)
         {
             if (await store.HasActiveTeacherAssignmentAsync(
-                source.Attempt.OrganizationId,
+                source.Attempt.Scope,
                 source.Exam.ClassId,
                 context.MembershipId!.Value,
                 cancellationToken))
@@ -67,20 +56,20 @@ public sealed partial class ExamGradingService
     }
 
     private async Task<ExamGradeAggregateRecord> GetAggregateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid attemptId,
         CancellationToken cancellationToken) =>
         await store.GetAggregateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw GradeNotFound();
 
     private async Task<ExamGradeAggregateRecord> GetAggregateForUpdateAsync(
-        AccessContext context,
+        AcademicAccessContext context,
         Guid attemptId,
         CancellationToken cancellationToken) =>
         await store.GetAggregateForUpdateAsync(
-            context.OrganizationId!.Value,
+            context.Scope,
             attemptId,
             cancellationToken) ?? throw GradeNotFound();
 
@@ -181,7 +170,8 @@ public sealed partial class ExamGradingService
                     grade.EvaluatorPrivateNote,
                     grade.ReviewedByMembershipId,
                     grade.ReviewedAtUtc)
-                { Attachments = source.AttachmentFiles?.Select(item => AcademicAnswerAttachmentDto.From(item.FileAsset)).ToArray() ?? [] };
+                { ReviewedByPersonalMembershipId = grade.ReviewedByPersonalMembershipId,
+                    Attachments = source.AttachmentFiles?.Select(item => AcademicAnswerAttachmentDto.From(item.FileAsset)).ToArray() ?? [] };
             })
             .ToArray();
         var release = aggregate.Releases.SingleOrDefault(
@@ -210,7 +200,7 @@ public sealed partial class ExamGradingService
             revision.CorrectionReason,
             release?.ReleasedAtUtc,
             Convert.ToBase64String(revision.RowVersion),
-            questionDtos);
+            questionDtos) { CreatedByPersonalMembershipId = revision.CreatedByPersonalMembershipId };
     }
 
     private static ExamGradeReleaseDto ToReleaseDto(
@@ -226,7 +216,7 @@ public sealed partial class ExamGradingService
             maximumScore,
             release.ReleasedAtUtc,
             release.ReleasedByMembershipId,
-            Convert.ToBase64String(revision.RowVersion));
+            Convert.ToBase64String(revision.RowVersion)) { ReleasedByPersonalMembershipId = release.ReleasedByPersonalMembershipId };
 
     private DateTime UtcNow() => timeProvider.GetUtcNow().UtcDateTime;
 

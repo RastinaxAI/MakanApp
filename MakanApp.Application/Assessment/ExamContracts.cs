@@ -76,7 +76,7 @@ public sealed record ExamEditorQuestionDto(
 
 public sealed record ExamEditorDto(
     Guid Id,
-    Guid OrganizationId,
+    Guid? OrganizationId,
     Guid ClassId,
     string ClassTitle,
     ExamStatus Status,
@@ -97,6 +97,7 @@ public sealed record ExamEditorDto(
     string VersionRowVersion,
     IReadOnlyCollection<ExamEditorQuestionDto> Questions)
 {
+    public AcademicClassRefDto? ClassRef { get; init; }
     public MakanApp.Application.Messaging.AcademicPublicationReceipt? PublicationReceipt { get; init; }
 }
 
@@ -117,7 +118,10 @@ public sealed record StudentExamSummary(
     string Title,
     string? Description,
     ExamVersionStatus PublicationState,
-    StudentExamRules Rules);
+    StudentExamRules Rules)
+{
+    public AcademicClassRefDto? ClassRef { get; init; }
+}
 
 public sealed record StudentSafeExamOption(
     Guid Id,

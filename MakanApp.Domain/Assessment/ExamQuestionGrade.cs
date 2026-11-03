@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamQuestionGrade
+public sealed class ExamQuestionGrade : IAcademicScoped
 {
     public const int MaximumFeedbackLength = 10_000;
     public const int MaximumPrivateNoteLength = 10_000;
@@ -11,7 +11,7 @@ public sealed class ExamQuestionGrade
 
     private ExamQuestionGrade(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid examGradeRevisionId,
         Guid examAttemptQuestionId,
@@ -27,7 +27,10 @@ public sealed class ExamQuestionGrade
         DateTime? reviewedAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         ExamGradeRevisionId = examGradeRevisionId;
         ExamAttemptQuestionId = examAttemptQuestionId;
@@ -39,12 +42,17 @@ public sealed class ExamQuestionGrade
         IsReviewed = isReviewed;
         LearnerFeedback = learnerFeedback;
         EvaluatorPrivateNote = evaluatorPrivateNote;
-        ReviewedByMembershipId = reviewedByMembershipId;
+        ReviewedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? reviewedByMembershipId : null;
+        ReviewedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? reviewedByMembershipId : null;
         ReviewedAtUtc = reviewedAtUtc;
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public Guid ExamGradeRevisionId { get; private set; }
     public Guid ExamAttemptQuestionId { get; private set; }
@@ -57,6 +65,7 @@ public sealed class ExamQuestionGrade
     public string? LearnerFeedback { get; private set; }
     public string? EvaluatorPrivateNote { get; private set; }
     public Guid? ReviewedByMembershipId { get; private set; }
+    public Guid? ReviewedByPersonalMembershipId { get; private set; }
     public DateTime? ReviewedAtUtc { get; private set; }
 
     public static ExamQuestionGrade Create(
@@ -85,7 +94,7 @@ public sealed class ExamQuestionGrade
                 : 0;
             return new ExamQuestionGrade(
                 Guid.NewGuid(),
-                attempt.OrganizationId,
+                attempt.Scope,
                 attempt.Id,
                 gradeRevision.Id,
                 attemptQuestion.Id,
@@ -103,7 +112,7 @@ public sealed class ExamQuestionGrade
 
         return new ExamQuestionGrade(
             Guid.NewGuid(),
-            attempt.OrganizationId,
+            attempt.Scope,
             attempt.Id,
             gradeRevision.Id,
             attemptQuestion.Id,
@@ -121,7 +130,7 @@ public sealed class ExamQuestionGrade
 
     public ExamQuestionGrade CopyTo(ExamGradeRevision correction)
     {
-        if (correction.OrganizationId != OrganizationId ||
+        if (correction.Scope != Scope ||
             correction.ExamAttemptId != ExamAttemptId ||
             correction.SupersedesExamGradeRevisionId != ExamGradeRevisionId)
         {
@@ -130,7 +139,7 @@ public sealed class ExamQuestionGrade
 
         return new ExamQuestionGrade(
             Guid.NewGuid(),
-            OrganizationId,
+            Scope,
             ExamAttemptId,
             correction.Id,
             ExamAttemptQuestionId,
@@ -142,7 +151,7 @@ public sealed class ExamQuestionGrade
             IsReviewed,
             LearnerFeedback,
             EvaluatorPrivateNote,
-            ReviewedByMembershipId,
+            ReviewedByMembershipId ?? ReviewedByPersonalMembershipId,
             ReviewedAtUtc);
     }
 
@@ -169,7 +178,8 @@ public sealed class ExamQuestionGrade
         AwardedScore = awardedScore;
         LearnerFeedback = Normalize(learnerFeedback);
         EvaluatorPrivateNote = Normalize(evaluatorPrivateNote);
-        ReviewedByMembershipId = reviewedByMembershipId;
+        ReviewedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? reviewedByMembershipId : null;
+        ReviewedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? reviewedByMembershipId : null;
         ReviewedAtUtc = EnsureUtc(reviewedAtUtc, nameof(reviewedAtUtc));
         IsReviewed = true;
     }
@@ -195,22 +205,22 @@ public sealed class ExamQuestionGrade
         AnswerRevision? finalRevision)
     {
         if (attempt.Status != ExamAttemptStatus.Finalized ||
-            gradeRevision.OrganizationId != attempt.OrganizationId ||
+            gradeRevision.Scope != attempt.Scope ||
             gradeRevision.ExamAttemptId != attempt.Id ||
-            attemptQuestion.OrganizationId != attempt.OrganizationId ||
+            attemptQuestion.Scope != attempt.Scope ||
             attemptQuestion.ExamAttemptId != attempt.Id ||
-            question.OrganizationId != attempt.OrganizationId ||
+            question.Scope != attempt.Scope ||
             attemptQuestion.QuestionVersionId != question.Id ||
             question.ExamVersionId != attempt.ExamVersionId ||
             (finalAnswer is null) != (finalRevision is null) ||
             (finalAnswer is not null &&
-             (finalAnswer.OrganizationId != attempt.OrganizationId ||
+             (finalAnswer.Scope != attempt.Scope ||
               finalAnswer.ExamAttemptId != attempt.Id ||
               finalAnswer.ExamAttemptQuestionId != attemptQuestion.Id ||
               finalAnswer.QuestionVersionId != question.Id ||
               finalAnswer.AnswerRevisionId != finalRevision!.Id)) ||
             (finalRevision is not null &&
-             (finalRevision.OrganizationId != attempt.OrganizationId ||
+             (finalRevision.Scope != attempt.Scope ||
               finalRevision.ExamAttemptId != attempt.Id ||
               finalRevision.ExamAttemptQuestionId != attemptQuestion.Id ||
               finalRevision.QuestionVersionId != question.Id)))

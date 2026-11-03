@@ -10,7 +10,7 @@ public interface IExamService
         Guid sessionId,
         Guid classId,
         CreateExamDraftCommand command,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, AcademicClassKind classKind = AcademicClassKind.OrganizationClass);
 
     Task<ExamEditorDto> GetEditorAsync(
         Guid userId,
@@ -77,23 +77,23 @@ public interface IExamService
     Task<IReadOnlyCollection<StudentExamSummary>> GetMyExamsAsync(
         Guid userId,
         Guid sessionId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, Guid? personalClassId = null);
 }
 
 public interface IExamStore
 {
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
-    Task<AcademicClass?> GetClassForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<bool> HasActiveTeacherAssignmentAsync(Guid organizationId, Guid classId, Guid membershipId, CancellationToken cancellationToken);
-    Task<ExamAggregateRecord?> GetCurrentAsync(Guid organizationId, Guid examId, CancellationToken cancellationToken);
-    Task<ExamAggregateRecord?> GetCurrentForUpdateAsync(Guid organizationId, Guid examId, CancellationToken cancellationToken);
-    Task<ExamAggregateRecord?> GetLatestPublishedAsync(Guid organizationId, Guid examId, CancellationToken cancellationToken);
-    Task<bool> IsStudentActivelyEnrolledAsync(Guid organizationId, Guid classId, Guid userId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(Guid organizationId, Guid classId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForManagerAsync(Guid organizationId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForTeacherAsync(Guid organizationId, Guid membershipId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForStudentAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForLearnerAsync(Guid organizationId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
+    Task<AcademicClassRecord?> GetClassForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<bool> HasActiveTeacherAssignmentAsync(AcademicScope scope, Guid classId, Guid membershipId, CancellationToken cancellationToken);
+    Task<ExamAggregateRecord?> GetCurrentAsync(AcademicScope scope, Guid examId, CancellationToken cancellationToken);
+    Task<ExamAggregateRecord?> GetCurrentForUpdateAsync(AcademicScope scope, Guid examId, CancellationToken cancellationToken);
+    Task<ExamAggregateRecord?> GetLatestPublishedAsync(AcademicScope scope, Guid examId, CancellationToken cancellationToken);
+    Task<bool> IsStudentActivelyEnrolledAsync(AcademicScope scope, Guid classId, Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForManagerAsync(AcademicScope scope, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForTeacherAsync(AcademicScope scope, Guid membershipId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForStudentAsync(AcademicScope scope, Guid userId, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ExamSummaryRecord>> GetForLearnerAsync(AcademicScope scope, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
     void SetOriginalRowVersion(Exam exam, byte[] rowVersion);
     void SetOriginalRowVersion(ExamVersion version, byte[] rowVersion);
     void SetOriginalRowVersion(QuestionVersion question, byte[] rowVersion);

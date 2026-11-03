@@ -204,7 +204,7 @@ public sealed partial class EfDashboardReadService
                 equals new { attempt.OrganizationId, SubmissionAttemptId = attempt.Id }
             join enrollment in _dbContext.Enrollments
                 on new { attempt.OrganizationId, attempt.EnrollmentId }
-                equals new { enrollment.OrganizationId, EnrollmentId = enrollment.Id }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, EnrollmentId = (Guid?)enrollment.Id }
             join version in _dbContext.AssignmentVersions
                 on new { attempt.OrganizationId, AssignmentVersionId = attempt.AssignmentVersionId }
                 equals new { version.OrganizationId, AssignmentVersionId = version.Id }
@@ -239,7 +239,7 @@ public sealed partial class EfDashboardReadService
                 equals new { attempt.OrganizationId, SubmissionAttemptId = attempt.Id }
             join enrollment in _dbContext.Enrollments
                 on new { attempt.OrganizationId, attempt.EnrollmentId }
-                equals new { enrollment.OrganizationId, EnrollmentId = enrollment.Id }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, EnrollmentId = (Guid?)enrollment.Id }
             join version in _dbContext.AssignmentVersions
                 on new { attempt.OrganizationId, AssignmentVersionId = attempt.AssignmentVersionId }
                 equals new { version.OrganizationId, AssignmentVersionId = version.Id }

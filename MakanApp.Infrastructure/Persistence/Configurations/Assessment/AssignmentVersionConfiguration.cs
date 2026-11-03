@@ -22,14 +22,14 @@ public sealed class AssignmentVersionConfiguration : IEntityTypeConfiguration<As
         builder.HasKey(version => version.Id);
         builder.HasAlternateKey(version => new
         {
-            version.OrganizationId,
+            version.ContextKind, version.ContextId,
             version.ClassId,
             version.AssignmentId,
             version.Id
         }).HasName("UQ_AssignmentVersions_Organization_Class_Assignment_Id");
         builder.HasAlternateKey(version => new
         {
-            version.OrganizationId,
+            version.ContextKind, version.ContextId,
             version.AssignmentId,
             version.Id
         }).HasName("UQ_AssignmentVersions_Organization_Assignment_Id");
@@ -46,7 +46,7 @@ public sealed class AssignmentVersionConfiguration : IEntityTypeConfiguration<As
         builder.Property(version => version.RowVersion).IsRowVersion();
         builder.HasIndex(version => new
         {
-            version.OrganizationId,
+            version.ContextKind, version.ContextId,
             version.AssignmentId,
             version.VersionNumber
         })
@@ -57,13 +57,13 @@ public sealed class AssignmentVersionConfiguration : IEntityTypeConfiguration<As
             .WithMany()
             .HasForeignKey(version => new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.ClassId,
                 version.AssignmentId
             })
             .HasPrincipalKey(assignment => new
             {
-                assignment.OrganizationId,
+                assignment.ContextKind, assignment.ContextId,
                 assignment.ClassId,
                 assignment.Id
             })
@@ -77,5 +77,7 @@ public sealed class AssignmentVersionConfiguration : IEntityTypeConfiguration<As
             })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
+        builder.Navigation(v => v.Attachments).AutoInclude().UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

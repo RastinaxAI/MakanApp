@@ -8,12 +8,12 @@ using MakanApp.Domain.Organization;
 namespace MakanApp.Application.Assessment;
 
 public sealed class ExamFinalizationService(
-    IAccessContextResolver accessContextResolver,
+    IAcademicContextResolver accessContextResolver,
     IExamFinalizationStore store,
     TimeProvider timeProvider,
     IFileAssetStore fileStore,
     IExamAnswerStore answerStore,
-    StorageOptions storageOptions) : IExamFinalizationService
+    StorageOptions storageOptions, IExamDeadlineFinalizer deadlines) : IExamFinalizationService
 {
     public async Task<ExamFinalReceiptDto> FinalizeAsync(
         Guid userId,
@@ -29,18 +29,20 @@ public sealed class ExamFinalizationService(
                 "شناسه عملیات نهایی‌سازی آزمون الزامی است.");
         }
 
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
-        var organizationId = access.OrganizationId!.Value;
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueAttemptAsync(attemptId, cancellationToken);
+        var organizationId = access.Scope;
         var nowUtc = UtcNow();
         var requestHash = ComputeRequestHash(attemptId, command);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        access = await accessContextResolver.RevalidateAsync(access, cancellationToken);
         var attempt = await store.GetOwnedAttemptForUpdateAsync(
             organizationId,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
         nowUtc = UtcNow();
-        access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
         if (!await store.IsSessionActiveForUpdateAsync(
                 sessionId,
                 userId,
@@ -69,6 +71,7 @@ public sealed class ExamFinalizationService(
 
         if (attempt.IsInProgress && nowUtc >= attempt.EffectiveDeadlineUtc)
         {
+            if (access.IsPersonal) throw DeadlinePassed();
             attempt.MarkExpired(nowUtc);
             await store.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -100,7 +103,7 @@ public sealed class ExamFinalizationService(
             if (question.Question.AnswerTextRequired && string.IsNullOrWhiteSpace(question.CurrentRevision?.TextAnswer))
                 throw Error(AssessmentErrorCodes.ExamAnswerTypeInvalid, "متن پاسخ طبق سیاست ثابت سؤال الزامی است.");
             var files = question.CurrentRevision?.Attachments.Select(item => item.FileAssetId).ToArray() ?? [];
-            await ExamAnswerAttachmentValidator.ValidateAsync(fileStore, answerStore, storageOptions, access, attempt,
+            await ExamAnswerAttachmentValidator.ValidateAsync(fileStore, answerStore, storageOptions, access.Account, attempt,
                 question.Question, files, files.ToHashSet(), UtcNow(), cancellationToken);
         }
         nowUtc = UtcNow();
@@ -142,9 +145,10 @@ public sealed class ExamFinalizationService(
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var access = await GetStudentContextAsync(userId, sessionId, cancellationToken);
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.ExamAttempt, attemptId, cancellationToken);
+        if (access.IsPersonal) await deadlines.FinalizeDueAttemptAsync(attemptId, cancellationToken);
         var record = await store.GetOwnedFinalizationAsync(
-            access.OrganizationId!.Value,
+            access.Scope,
             attemptId,
             userId,
             cancellationToken) ?? throw AttemptNotFound();
@@ -158,16 +162,15 @@ public sealed class ExamFinalizationService(
         return ToReceipt(record);
     }
 
-    private async Task<AccessContext> GetStudentContextAsync(
+    private async Task<AcademicAccessContext> GetStudentContextAsync(
         Guid userId,
         Guid sessionId,
+        AcademicResourceKind kind,
+        Guid resourceId,
         CancellationToken cancellationToken)
     {
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, cancellationToken);
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            context.ActiveRole != OrganizationRole.Student)
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, kind, resourceId, AcademicOperation.Learn, false, cancellationToken);
+        if (!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student)
         {
             throw AttemptNotAllowed();
         }
@@ -176,7 +179,7 @@ public sealed class ExamFinalizationService(
     }
 
     private async Task<ExamFinalizationRecord> GetFinalizationRecordAsync(
-        Guid organizationId,
+        AcademicScope organizationId,
         Guid attemptId,
         Guid userId,
         CancellationToken cancellationToken) =>
@@ -191,6 +194,7 @@ public sealed class ExamFinalizationService(
         FinalizeExamCommand command,
         string requestHash)
     {
+        if (attempt.AutoFinalizedAtUtc.HasValue) return;
         if (attempt.FinalizeClientOperationId == command.ClientOperationId)
         {
             if (!string.Equals(attempt.FinalizeRequestHash, requestHash, StringComparison.Ordinal))
@@ -234,7 +238,7 @@ public sealed class ExamFinalizationService(
             attempt.FinalizedAnswerSetVersion ?? throw new InvalidOperationException("نسخه نهایی پاسخ‌ها ذخیره نشده است."),
             answeredQuestionCount,
             totalQuestionCount,
-            attempt.Status);
+            attempt.Status) { FinalizationMode = attempt.AutoFinalizedAtUtc.HasValue ? "Deadline" : "Manual" };
 
     private static string ComputeRequestHash(Guid attemptId, FinalizeExamCommand command)
     {

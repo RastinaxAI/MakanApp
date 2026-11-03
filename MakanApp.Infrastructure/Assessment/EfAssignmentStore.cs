@@ -7,12 +7,15 @@ using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using AcademicClass = MakanApp.Domain.Academic.Class;
 
 namespace MakanApp.Infrastructure.Assessment;
 
 public sealed partial class EfAssignmentStore : IAssignmentStore
 {
+    public Task<bool> IsFileAvailableForAssignmentAsync(Guid fileId, Guid assignmentId, CancellationToken ct) =>
+        AcademicFileBindingQuery.IsAvailableAsync(_dbContext, fileId, assignmentId, null, null, ct);
+    public Task<int> CountRecipientsAsync(Guid versionId, CancellationToken ct) =>
+        _dbContext.AssignmentRecipients.CountAsync(r => r.AssignmentVersionId == versionId, ct);
     private readonly MakanDbContext _dbContext;
     private readonly MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter _realtime;
 
@@ -31,99 +34,42 @@ public sealed partial class EfAssignmentStore : IAssignmentStore
         return new EfAssessmentTransaction(transaction);
     }
 
-    public Task<AcademicClass?> GetClassAsync(
-        Guid organizationId,
-        Guid classId,
-        CancellationToken cancellationToken) =>
-        _dbContext.Classes
-            .AsNoTracking()
-            .SingleOrDefaultAsync(
-                academicClass => academicClass.OrganizationId == organizationId &&
-                                 academicClass.Id == classId,
-                cancellationToken);
+    public Task<AcademicClassRecord?> GetClassAsync(AcademicScope scope, Guid classId, CancellationToken ct) =>
+        AcademicContextQuery.ClassAsync(_dbContext, scope, classId, false, ct);
 
-    public Task<AcademicClass?> GetClassForUpdateAsync(
-        Guid organizationId,
-        Guid classId,
-        CancellationToken cancellationToken) =>
-        _dbContext.Classes
-            .FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Classes] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {classId}")
-            .SingleOrDefaultAsync(cancellationToken);
+    public Task<AcademicClassRecord?> GetClassForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken ct) =>
+        AcademicContextQuery.ClassAsync(_dbContext, scope, classId, true, ct);
 
-    public Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
-        Guid classId,
-        Guid membershipId,
-        CancellationToken cancellationToken) =>
-        _dbContext.TeacherAssignments.AnyAsync(
-            assignment => assignment.OrganizationId == organizationId &&
-                          assignment.ClassId == classId &&
-                          assignment.TeacherMembershipId == membershipId &&
-                          assignment.Status == TeacherAssignmentStatus.Active &&
-                          assignment.EndedAtUtc == null,
-            cancellationToken);
+    public Task<bool> HasActiveTeacherAssignmentAsync(AcademicScope scope, Guid classId, Guid membershipId, CancellationToken ct) =>
+        _dbContext.TeacherAssignments.AnyAsync(a => a.OrganizationId == scope.OrganizationId && a.ClassId == classId &&
+            a.TeacherMembershipId == membershipId && a.Status == TeacherAssignmentStatus.Active && a.EndedAtUtc == null, ct);
 
-    public async Task<AssignmentWithVersionRecord?> GetAssignmentForUpdateAsync(
-        Guid organizationId,
-        Guid assignmentId,
-        CancellationToken cancellationToken)
+    public async Task<AssignmentWithVersionRecord?> GetAssignmentForUpdateAsync(AcademicScope scope, Guid assignmentId, CancellationToken ct)
     {
-        var assignment = await _dbContext.Assignments
-            .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[Assignments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {assignmentId}")
-            .SingleOrDefaultAsync(cancellationToken);
-        if (assignment is null)
-        {
-            return null;
-        }
-
-        var version = await _dbContext.AssignmentVersions
-            .FromSqlInterpolated(
-                $"SELECT * FROM [assessment].[AssignmentVersions] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [AssignmentId] = {assignmentId} AND [VersionNumber] = {assignment.CurrentVersionNumber}")
-            .SingleAsync(cancellationToken);
-        var classData = await _dbContext.Classes
-            .Where(academicClass => academicClass.OrganizationId == organizationId &&
-                                    academicClass.Id == assignment.ClassId)
-            .Select(academicClass => new
-            {
-                academicClass.Title,
-                IsActive = academicClass.Status == ClassStatus.Active && academicClass.EndedAtUtc == null
-            })
-            .SingleAsync(cancellationToken);
-        return new AssignmentWithVersionRecord(
-            assignment,
-            version,
-            classData.Title,
-            classData.IsActive);
+        var assignment = await _dbContext.Assignments.FromSqlInterpolated(
+            $"SELECT * FROM [assessment].[Assignments] WITH (UPDLOCK,HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [Id] = {assignmentId}").SingleOrDefaultAsync(ct);
+        if (assignment is null) return null;
+        var version = await _dbContext.AssignmentVersions.FromSqlInterpolated(
+            $"SELECT * FROM [assessment].[AssignmentVersions] WITH (UPDLOCK,HOLDLOCK) WHERE [ContextKind] = {(int)scope.Kind} AND [ContextId] = {scope.Id} AND [AssignmentId] = {assignmentId} AND [VersionNumber] = {assignment.CurrentVersionNumber}").SingleAsync(ct);
+        var classroom = await AcademicContextQuery.ClassAsync(_dbContext, scope, assignment.ClassId, false, ct)
+            ?? throw new AssessmentException(AssessmentErrorCodes.AssignmentNotFound, "کلاس تکلیف پیدا نشد.");
+        return new(assignment, version, classroom.Title, classroom.IsActive);
     }
 
-    public async Task<IReadOnlyCollection<Guid>> GetActiveEnrollmentIdsForUpdateAsync(
-        Guid organizationId,
-        Guid classId,
-        CancellationToken cancellationToken) =>
-        await _dbContext.Enrollments
-            .FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
-            .Select(enrollment => enrollment.Id)
-            .ToArrayAsync(cancellationToken);
+    public async Task<IReadOnlyCollection<Guid>> GetActiveParticipantIdsForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken ct)
+    {
+        if (scope.Kind == AcademicClassKind.OrganizationClass)
+            return await _dbContext.Enrollments.FromSqlInterpolated(
+                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK,HOLDLOCK) WHERE [OrganizationId] = {scope.Id} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
+                .Select(e => e.Id).ToArrayAsync(ct);
+        return await _dbContext.PersonalClassParticipants.FromSqlInterpolated(
+            $"SELECT * FROM [academic].[PersonalClassParticipants] WITH (UPDLOCK,HOLDLOCK) WHERE [PersonalClassId] = {scope.Id} AND [PersonalClassId] = {classId} AND [EndedAtUtc] IS NULL AND ([LocalRoles] & 1) = 1")
+            .Select(m => m.Id).ToArrayAsync(ct);
+    }
 
-    public async Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(
-        Guid organizationId,
-        Guid classId,
-        CancellationToken cancellationToken) =>
-        await (
-            from enrollment in _dbContext.Enrollments.FromSqlInterpolated(
-                $"SELECT * FROM [academic].[Enrollments] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [ClassId] = {classId} AND [Status] = 1 AND [EndedAtUtc] IS NULL")
-            join organizationPerson in _dbContext.OrganizationPersons
-                on new { enrollment.OrganizationId, Id = enrollment.LearnerOrganizationPersonId }
-                equals new { organizationPerson.OrganizationId, organizationPerson.Id }
-            join user in _dbContext.Users on organizationPerson.PersonId equals user.PersonId
-            where organizationPerson.Status == OrganizationPersonStatus.Active &&
-                  organizationPerson.EndedAtUtc == null
-            select user.Id)
-            .Distinct()
-            .ToArrayAsync(cancellationToken);
+    public async Task<IReadOnlyCollection<Guid>> GetActiveLearnerUserIdsForUpdateAsync(AcademicScope scope, Guid classId, CancellationToken ct) =>
+        await AcademicContextQuery.Participants(_dbContext, scope).Where(p => p.ContextKind == scope.Kind && p.ContextId == scope.Id &&
+            p.ClassId == classId && p.IsActive && p.UserId.HasValue).Select(p => p.UserId!.Value).Distinct().ToArrayAsync(ct);
 
     public void SetOriginalRowVersion(Assignment assignment, byte[] rowVersion) =>
         _dbContext.Entry(assignment).Property(item => item.RowVersion).OriginalValue = rowVersion;

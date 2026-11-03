@@ -60,29 +60,29 @@ public interface IEvaluationStore
 {
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
     Task<EvaluationAggregateRecord?> GetAggregateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
     Task<EvaluationAggregateRecord?> GetAggregateForUpdateAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid attemptId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<EvaluationQueueRecord>> GetQueueForManagerAsync(
-        Guid organizationId,
+        AcademicScope scope,
         EvaluationQueueQuery query,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<EvaluationQueueRecord>> GetQueueForTeacherAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid membershipId,
         EvaluationQueueQuery query,
         CancellationToken cancellationToken);
     Task<bool> HasActiveTeacherAssignmentAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid classId,
         Guid membershipId,
         CancellationToken cancellationToken);
     Task<IReadOnlyCollection<Guid>> GetActiveGuardianUserIdsAsync(
-        Guid organizationId,
+        AcademicScope scope,
         Guid learnerOrganizationPersonId,
         DateTime nowUtc,
         CancellationToken cancellationToken);

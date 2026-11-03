@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamAttempt
+public sealed class ExamAttempt : IAcademicScoped
 {
     public const int FinalizeRequestHashLength = 64;
 
@@ -10,22 +10,29 @@ public sealed class ExamAttempt
 
     private ExamAttempt(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid examVersionId,
         Guid classId,
-        Guid enrollmentId,
+        AcademicParticipantRef participation,
         Guid clientOperationId,
         int attemptNumber,
         DateTime startedAtUtc,
         DateTime effectiveDeadlineUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamId = examId;
         ExamVersionId = examVersionId;
+        scope.EnsureClass(classId);
         ClassId = classId;
-        EnrollmentId = enrollmentId;
+        participation.EnsureScope(scope);
+        EnrollmentId = participation.EnrollmentId;
+        PersonalClassMembershipId = participation.PersonalClassMembershipId;
+        ParticipantId = participation.Id;
         ClientOperationId = clientOperationId;
         AttemptNumber = attemptNumber;
         Status = ExamAttemptStatus.InProgress;
@@ -35,11 +42,19 @@ public sealed class ExamAttempt
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamId { get; private set; }
     public Guid ExamVersionId { get; private set; }
     public Guid ClassId { get; private set; }
-    public Guid EnrollmentId { get; private set; }
+    public AcademicClassRef ClassRef => new(Scope, ClassId);
+    public Guid? EnrollmentId { get; private set; }
+    public Guid? PersonalClassMembershipId { get; private set; }
+    public Guid ParticipantId { get; private set; }
+    public AcademicParticipantRef Participation => new(ContextKind, ParticipantId);
     public Guid ClientOperationId { get; private set; }
     public int AttemptNumber { get; private set; }
     public ExamAttemptStatus Status { get; private set; }
@@ -52,6 +67,7 @@ public sealed class ExamAttempt
     public DateTime? WriteLeaseAcquiredAtUtc { get; private set; }
     public long AnswerSetVersion { get; private set; }
     public DateTime? FinalizedAtUtc { get; private set; }
+    public DateTime? AutoFinalizedAtUtc { get; private set; }
     public long? FinalizedAnswerSetVersion { get; private set; }
     public Guid? FinalizeClientOperationId { get; private set; }
     public string? FinalizeRequestHash { get; private set; }
@@ -61,11 +77,11 @@ public sealed class ExamAttempt
     public bool IsInProgress => Status == ExamAttemptStatus.InProgress;
 
     public static ExamAttempt Start(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examId,
         Guid examVersionId,
         Guid classId,
-        Guid enrollmentId,
+        AcademicParticipantRef participation,
         Guid clientOperationId,
         int attemptNumber,
         int maxAttempts,
@@ -75,11 +91,11 @@ public sealed class ExamAttempt
         DateTime startedAtUtc)
     {
         ValidateIdentifiers(
-            organizationId,
+            scope.Id,
             examId,
             examVersionId,
             classId,
-            enrollmentId,
+            participation.Id,
             clientOperationId);
         startedAtUtc = EnsureUtc(startedAtUtc, nameof(startedAtUtc));
         availableFromUtc = EnsureUtc(availableFromUtc, nameof(availableFromUtc));
@@ -112,11 +128,11 @@ public sealed class ExamAttempt
 
         return new ExamAttempt(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             examId,
             examVersionId,
             classId,
-            enrollmentId,
+            participation,
             clientOperationId,
             attemptNumber,
             startedAtUtc,
@@ -230,6 +246,18 @@ public sealed class ExamAttempt
         {
             throw new ExamAttemptDeadlinePassedException();
         }
+    }
+
+    public void FinalizeAtDeadline(DateTime processedAtUtc)
+    {
+        processedAtUtc = EnsureUtc(processedAtUtc, nameof(processedAtUtc));
+        if (ContextKind != AcademicClassKind.PersonalClass || !IsInProgress || processedAtUtc < EffectiveDeadlineUtc)
+            throw new InvalidOperationException("فقط تلاش کلاس مستقل پس از مهلت سرور نهایی می‌شود.");
+        Status = ExamAttemptStatus.Finalized;
+        FinalizedAtUtc = EffectiveDeadlineUtc;
+        AutoFinalizedAtUtc = processedAtUtc;
+        FinalizedAnswerSetVersion = AnswerSetVersion;
+        // عملیات سروری، شناسهٔ درخواست یا نشست جعلی کاربر ندارد.
     }
 
     private void SetWriter(Guid sessionId, DateTime acquiredAtUtc)

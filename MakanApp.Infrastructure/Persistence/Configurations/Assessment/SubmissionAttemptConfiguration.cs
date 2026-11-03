@@ -21,7 +21,7 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
         });
 
         builder.HasKey(attempt => attempt.Id);
-        builder.HasAlternateKey(attempt => new { attempt.OrganizationId, attempt.Id })
+        builder.HasAlternateKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .HasName("UQ_SubmissionAttempts_Organization_Id");
         builder.Property(attempt => attempt.AnswerText)
             .HasMaxLength(SubmissionAttempt.MaximumAnswerLength);
@@ -32,7 +32,7 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
 
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.AssignmentRecipientId,
             attempt.AssignmentVersionId,
             attempt.AttemptNumber
@@ -41,7 +41,7 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
             .HasDatabaseName("UX_SubmissionAttempts_Recipient_Version_Number");
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.AssignmentRecipientId,
             attempt.AssignmentVersionId
         })
@@ -50,7 +50,7 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
             .HasDatabaseName("UX_SubmissionAttempts_OneDraft");
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.AssignmentId,
             attempt.Status,
             attempt.SubmittedAtUtc
@@ -60,13 +60,13 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
             .WithMany()
             .HasForeignKey(attempt => new
             {
-                attempt.OrganizationId,
+                attempt.ContextKind, attempt.ContextId,
                 attempt.AssignmentId,
                 attempt.AssignmentVersionId
             })
             .HasPrincipalKey(version => new
             {
-                version.OrganizationId,
+                version.ContextKind, version.ContextId,
                 version.AssignmentId,
                 version.Id
             })
@@ -75,20 +75,21 @@ public sealed class SubmissionAttemptConfiguration : IEntityTypeConfiguration<Su
             .WithMany()
             .HasForeignKey(attempt => new
             {
-                attempt.OrganizationId,
+                attempt.ContextKind, attempt.ContextId,
                 attempt.AssignmentId,
                 attempt.AssignmentVersionId,
-                attempt.EnrollmentId,
+                attempt.ParticipantId,
                 attempt.AssignmentRecipientId
             })
             .HasPrincipalKey(recipient => new
             {
-                recipient.OrganizationId,
+                recipient.ContextKind, recipient.ContextId,
                 recipient.AssignmentId,
                 recipient.AssignmentVersionId,
-                recipient.EnrollmentId,
+                recipient.ParticipantId,
                 recipient.Id
             })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

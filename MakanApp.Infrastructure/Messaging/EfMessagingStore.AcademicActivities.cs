@@ -10,7 +10,10 @@ public sealed partial class EfMessagingStore
     {
         await using var tx = await BeginManagementTransactionAsync(ct);
         var publication = await dbContext.AcademicActivityPublications.AsNoTracking().SingleAsync(p => p.Id == publicationId, ct);
-        _ = await dbContext.Classes.FromSqlInterpolated($"SELECT * FROM [academic].[Classes] WITH (UPDLOCK,HOLDLOCK) WHERE [OrganizationId]={publication.OrganizationId} AND [Id]={publication.ClassId}").SingleAsync(ct);
+        if (publication.PersonalClassId.HasValue)
+            _ = await dbContext.PersonalClasses.FromSqlInterpolated($"SELECT * FROM [academic].[PersonalClasses] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={publication.PersonalClassId}").SingleAsync(ct);
+        else
+            _ = await dbContext.Classes.FromSqlInterpolated($"SELECT * FROM [academic].[Classes] WITH (UPDLOCK,HOLDLOCK) WHERE [OrganizationId]={publication.OrganizationId} AND [Id]={publication.ClassId}").SingleAsync(ct);
         var delivery = await dbContext.AcademicActivityDeliveries.FromSqlInterpolated($"SELECT * FROM [messaging].[AcademicActivityDeliveries] WITH (UPDLOCK,HOLDLOCK) WHERE [PublicationId]={publicationId} AND [Purpose]={(int)purpose}").SingleAsync(ct);
         if (delivery.State != AcademicActivityDeliveryState.Pending)
         { await tx.CommitAsync(ct); dbContext.ChangeTracker.Clear(); return true; }
@@ -19,7 +22,8 @@ public sealed partial class EfMessagingStore
         var source = await AcademicActivityProjection.ResolveAsync(dbContext, publication, ct);
         if (!source.Current)
         { delivery.Supersede(); await dbContext.SaveChangesAsync(ct); await tx.CommitAsync(ct); dbContext.ChangeTracker.Clear(); return true; }
-        var destination = await dbContext.Conversations.Where(c => c.OrganizationId == publication.OrganizationId && c.AcademicClassId == publication.ClassId &&
+        var destination = await dbContext.Conversations.Where(c => c.OrganizationId == publication.OrganizationId &&
+            (publication.PersonalClassId.HasValue ? c.PersonalClassId == publication.PersonalClassId : c.AcademicClassId == publication.ClassId && c.PersonalClassId == null) &&
             c.Type == purpose && c.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && c.Status == ConversationStatus.Active).Select(c => (Guid?)c.Id).SingleOrDefaultAsync(ct);
         if (destination is null)
         { delivery.WaitForSpace(); await dbContext.SaveChangesAsync(ct); await tx.CommitAsync(ct); dbContext.ChangeTracker.Clear(); return false; }

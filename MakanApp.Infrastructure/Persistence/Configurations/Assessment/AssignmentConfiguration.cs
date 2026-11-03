@@ -22,7 +22,7 @@ public sealed class AssignmentConfiguration : IEntityTypeConfiguration<Assignmen
         builder.HasKey(assignment => assignment.Id);
         builder.HasAlternateKey(assignment => new
         {
-            assignment.OrganizationId,
+            assignment.ContextKind, assignment.ContextId,
             assignment.ClassId,
             assignment.Id
         }).HasName("UQ_Assignments_OrganizationId_ClassId_Id");
@@ -32,7 +32,7 @@ public sealed class AssignmentConfiguration : IEntityTypeConfiguration<Assignmen
         builder.Property(assignment => assignment.RowVersion).IsRowVersion();
         builder.HasIndex(assignment => new
         {
-            assignment.OrganizationId,
+            assignment.ContextKind, assignment.ContextId,
             assignment.ClassId,
             assignment.Status,
             assignment.UpdatedAtUtc
@@ -52,5 +52,6 @@ public sealed class AssignmentConfiguration : IEntityTypeConfiguration<Assignmen
             })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

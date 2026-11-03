@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class ExamGradeRevision
+public sealed class ExamGradeRevision : IAcademicScoped
 {
     public const int MaximumFeedbackLength = 10_000;
     public const int MaximumPrivateNoteLength = 10_000;
@@ -12,7 +12,7 @@ public sealed class ExamGradeRevision
 
     private ExamGradeRevision(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         int revisionNumber,
         decimal totalScore,
@@ -25,12 +25,16 @@ public sealed class ExamGradeRevision
         string? evaluatorPrivateNote)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         ExamAttemptId = examAttemptId;
         RevisionNumber = revisionNumber;
         TotalScore = totalScore;
         Status = ExamGradeRevisionStatus.Draft;
-        CreatedByMembershipId = createdByMembershipId;
+        CreatedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? createdByMembershipId : null;
+        CreatedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? createdByMembershipId : null;
         CreatedAtUtc = createdAtUtc;
         UpdatedAtUtc = createdAtUtc;
         SupersedesExamGradeRevisionId = supersedesExamGradeRevisionId;
@@ -41,7 +45,11 @@ public sealed class ExamGradeRevision
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid ExamAttemptId { get; private set; }
     public int RevisionNumber { get; private set; }
     public decimal TotalScore { get; private set; }
@@ -49,7 +57,8 @@ public sealed class ExamGradeRevision
     public string? LearnerFeedback { get; private set; }
     public string? GuardianVisibleFeedback { get; private set; }
     public string? EvaluatorPrivateNote { get; private set; }
-    public Guid CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByMembershipId { get; private set; }
+    public Guid? CreatedByPersonalMembershipId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime UpdatedAtUtc { get; private set; }
     public Guid? SupersedesExamGradeRevisionId { get; private set; }
@@ -60,12 +69,12 @@ public sealed class ExamGradeRevision
     public bool IsReleased => Status == ExamGradeRevisionStatus.Released;
 
     public static ExamGradeRevision CreateDraft(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         Guid createdByMembershipId,
         DateTime createdAtUtc) =>
         Create(
-            organizationId,
+            scope,
             examAttemptId,
             1,
             0,
@@ -97,7 +106,7 @@ public sealed class ExamGradeRevision
         }
 
         return Create(
-            releasedRevision.OrganizationId,
+            releasedRevision.Scope,
             releasedRevision.ExamAttemptId,
             checked(releasedRevision.RevisionNumber + 1),
             releasedRevision.TotalScore,
@@ -175,7 +184,7 @@ public sealed class ExamGradeRevision
     }
 
     private static ExamGradeRevision Create(
-        Guid organizationId,
+        AcademicScope scope,
         Guid examAttemptId,
         int revisionNumber,
         decimal totalScore,
@@ -187,7 +196,7 @@ public sealed class ExamGradeRevision
         string? guardianVisibleFeedback,
         string? evaluatorPrivateNote)
     {
-        if (organizationId == Guid.Empty ||
+        if (scope.Id == Guid.Empty ||
             examAttemptId == Guid.Empty ||
             createdByMembershipId == Guid.Empty)
         {
@@ -202,7 +211,7 @@ public sealed class ExamGradeRevision
         ValidateScore(totalScore, ExamVersion.MaximumScoreValue, nameof(totalScore));
         return new ExamGradeRevision(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             examAttemptId,
             revisionNumber,
             totalScore,
@@ -223,7 +232,7 @@ public sealed class ExamGradeRevision
         ValidateScore(examMaximumScore, ExamVersion.MaximumScoreValue, nameof(examMaximumScore));
         if (questionGrades.Count == 0 ||
             questionGrades.Any(grade =>
-                grade.OrganizationId != OrganizationId ||
+                grade.Scope != Scope ||
                 grade.ExamAttemptId != ExamAttemptId ||
                 grade.ExamGradeRevisionId != Id))
         {

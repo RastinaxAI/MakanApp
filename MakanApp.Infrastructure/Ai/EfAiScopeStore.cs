@@ -32,7 +32,7 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
             from recipient in dbContext.AssignmentRecipients
             join enrollment in dbContext.Enrollments
                 on new { recipient.OrganizationId, Id = recipient.EnrollmentId }
-                equals new { enrollment.OrganizationId, enrollment.Id }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join assignment in dbContext.Assignments
                 on new { recipient.OrganizationId, Id = recipient.AssignmentId }
                 equals new { assignment.OrganizationId, assignment.Id }
@@ -84,7 +84,7 @@ public sealed class EfAiScopeStore(MakanDbContext dbContext) : IAiScopeStore
                 }
             join enrollment in dbContext.Enrollments
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { enrollment.OrganizationId, Id = enrollment.ClassId }
+                equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = enrollment.ClassId }
             where exam.OrganizationId == organizationId &&
                   exam.Id == examId &&
                   exam.Status == ExamStatus.Published &&

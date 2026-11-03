@@ -14,7 +14,9 @@ public sealed record EvaluationQueueQuery(
     Guid? AssignmentId,
     Guid? ClassId,
     EvaluationReviewStatus? ReviewStatus,
-    bool? IsLate);
+    bool? IsLate,
+    AcademicClassKind ClassKind = AcademicClassKind.OrganizationClass,
+    int? Page = null, int? PageSize = null);
 
 public sealed record EvaluationQueueItemResult(
     Guid SubmissionAttemptId,
@@ -72,13 +74,16 @@ public sealed record EvaluatorEvaluationResult(
     string? GuardianVisibleFeedback,
     string? TeacherPrivateNote,
     EvaluationRevisionStatus Status,
-    Guid CreatedByMembershipId,
+    Guid? CreatedByMembershipId,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
     Guid? SupersedesEvaluationRevisionId,
     string? CorrectionReason,
     DateTime? ReleasedAtUtc,
-    string RowVersion);
+    string RowVersion)
+{
+    public Guid? CreatedByPersonalMembershipId { get; init; }
+}
 
 public sealed record GradeReleaseResult(
     Guid GradeReleaseId,
@@ -87,8 +92,11 @@ public sealed record GradeReleaseResult(
     int RevisionNumber,
     decimal Score,
     DateTime ReleasedAtUtc,
-    Guid ReleasedByMembershipId,
-    string EvaluationRowVersion);
+    Guid? ReleasedByMembershipId,
+    string EvaluationRowVersion)
+{
+    public Guid? ReleasedByPersonalMembershipId { get; init; }
+}
 
 public sealed record StudentReleasedResult(
     Guid SubmissionAttemptId,
@@ -114,7 +122,7 @@ public sealed record EvaluationSubmissionRecord(
     SubmissionAttempt Attempt,
     Assignment Assignment,
     AssignmentVersion Version,
-    MakanApp.Domain.Academic.Enrollment Enrollment,
+    AcademicParticipationRecord Participation,
     Guid StudentUserId,
     string StudentDisplayName,
     IReadOnlyCollection<SubmissionAttachmentWithFileRecord> Attachments);

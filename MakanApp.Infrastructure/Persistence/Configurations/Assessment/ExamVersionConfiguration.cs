@@ -24,11 +24,11 @@ public sealed class ExamVersionConfiguration : IEntityTypeConfiguration<ExamVers
                 "([Status] = 1 AND [PublishedAtUtc] IS NULL) OR ([Status] = 2 AND [PublishedAtUtc] IS NOT NULL)");
         });
         builder.HasKey(version => version.Id);
-        builder.HasAlternateKey(version => new { version.OrganizationId, version.Id })
+        builder.HasAlternateKey(version => new { version.ContextKind, version.ContextId, version.Id })
             .HasName("UQ_ExamVersions_OrganizationId_Id");
         builder.HasAlternateKey(version => new
         {
-            version.OrganizationId,
+            version.ContextKind, version.ContextId,
             version.ExamId,
             version.Id
         }).HasName("UQ_ExamVersions_Organization_Exam_Id");
@@ -46,26 +46,27 @@ public sealed class ExamVersionConfiguration : IEntityTypeConfiguration<ExamVers
         builder.Property(version => version.RowVersion).IsRowVersion();
         builder.HasIndex(version => new
         {
-            version.OrganizationId,
+            version.ContextKind, version.ContextId,
             version.ExamId,
             version.VersionNumber
         })
             .IsUnique()
             .HasDatabaseName("UX_ExamVersions_Organization_Exam_VersionNumber");
-        builder.HasIndex(version => new { version.OrganizationId, version.ExamId })
+        builder.HasIndex(version => new { version.ContextKind, version.ContextId, version.ExamId })
             .IsUnique()
             .HasFilter("[Status] = 1")
             .HasDatabaseName("UX_ExamVersions_Organization_Exam_ActiveDraft");
 
         builder.HasOne<Exam>()
             .WithMany()
-            .HasForeignKey(version => new { version.OrganizationId, version.ExamId })
-            .HasPrincipalKey(exam => new { exam.OrganizationId, exam.Id })
+            .HasForeignKey(version => new { version.ContextKind, version.ContextId, version.ExamId })
+            .HasPrincipalKey(exam => new { exam.ContextKind, exam.ContextId, exam.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Membership>()
             .WithMany()
             .HasForeignKey(version => new { version.OrganizationId, version.CreatedByMembershipId })
             .HasPrincipalKey(membership => new { membership.OrganizationId, membership.Id })
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

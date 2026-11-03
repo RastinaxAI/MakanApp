@@ -1,6 +1,6 @@
 namespace MakanApp.Domain.Assessment;
 
-public sealed class GradeRelease
+public sealed class GradeRelease : IAcademicScoped
 {
     private GradeRelease()
     {
@@ -8,35 +8,44 @@ public sealed class GradeRelease
 
     private GradeRelease(
         Guid id,
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         Guid evaluationRevisionId,
         Guid releasedByMembershipId,
         DateTime releasedAtUtc)
     {
         Id = id;
-        OrganizationId = organizationId;
+        OrganizationId = scope.OrganizationId;
+        PersonalClassId = scope.PersonalClassId;
+        ContextKind = scope.Kind;
+        ContextId = scope.Id;
         SubmissionAttemptId = submissionAttemptId;
         EvaluationRevisionId = evaluationRevisionId;
-        ReleasedByMembershipId = releasedByMembershipId;
+        ReleasedByMembershipId = Scope.Kind == AcademicClassKind.OrganizationClass ? releasedByMembershipId : null;
+        ReleasedByPersonalMembershipId = Scope.Kind == AcademicClassKind.PersonalClass ? releasedByMembershipId : null;
         ReleasedAtUtc = releasedAtUtc;
     }
 
     public Guid Id { get; private set; }
-    public Guid OrganizationId { get; private set; }
+    public Guid? OrganizationId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
+    public AcademicClassKind ContextKind { get; private set; }
+    public Guid ContextId { get; private set; }
+    public AcademicScope Scope => new(ContextKind, ContextId);
     public Guid SubmissionAttemptId { get; private set; }
     public Guid EvaluationRevisionId { get; private set; }
-    public Guid ReleasedByMembershipId { get; private set; }
+    public Guid? ReleasedByMembershipId { get; private set; }
+    public Guid? ReleasedByPersonalMembershipId { get; private set; }
     public DateTime ReleasedAtUtc { get; private set; }
 
     public static GradeRelease Create(
-        Guid organizationId,
+        AcademicScope scope,
         Guid submissionAttemptId,
         Guid evaluationRevisionId,
         Guid releasedByMembershipId,
         DateTime releasedAtUtc)
     {
-        if (organizationId == Guid.Empty ||
+        if (scope.Id == Guid.Empty ||
             submissionAttemptId == Guid.Empty ||
             evaluationRevisionId == Guid.Empty ||
             releasedByMembershipId == Guid.Empty)
@@ -51,7 +60,7 @@ public sealed class GradeRelease
 
         return new GradeRelease(
             Guid.NewGuid(),
-            organizationId,
+            scope,
             submissionAttemptId,
             evaluationRevisionId,
             releasedByMembershipId,

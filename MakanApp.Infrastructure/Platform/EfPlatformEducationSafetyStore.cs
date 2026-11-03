@@ -341,7 +341,7 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
             from assignment in dbContext.Assignments.AsNoTracking()
             join academicClass in dbContext.Classes.AsNoTracking()
                 on new { assignment.OrganizationId, Id = assignment.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join organization in dbContext.Organizations.AsNoTracking()
                 on assignment.OrganizationId equals organization.Id
             join currentVersion in dbContext.AssignmentVersions.AsNoTracking()
@@ -396,7 +396,7 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
             from exam in dbContext.Exams.AsNoTracking()
             join academicClass in dbContext.Classes.AsNoTracking()
                 on new { exam.OrganizationId, Id = exam.ClassId }
-                equals new { academicClass.OrganizationId, academicClass.Id }
+                equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join organization in dbContext.Organizations.AsNoTracking()
                 on exam.OrganizationId equals organization.Id
             join currentVersion in dbContext.ExamVersions.AsNoTracking()

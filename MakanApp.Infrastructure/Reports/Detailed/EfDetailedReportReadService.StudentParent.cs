@@ -123,10 +123,10 @@ public sealed partial class EfDetailedReportReadService
     {
         var rows =
             from recipient in _dbContext.AssignmentRecipients
-            join enrollment in _dbContext.Enrollments on new { recipient.OrganizationId, Id = recipient.EnrollmentId } equals new { enrollment.OrganizationId, enrollment.Id }
+            join enrollment in _dbContext.Enrollments on new { recipient.OrganizationId, Id = recipient.EnrollmentId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join assignment in _dbContext.Assignments on new { recipient.OrganizationId, Id = recipient.AssignmentId } equals new { assignment.OrganizationId, assignment.Id }
             join version in _dbContext.AssignmentVersions on new { recipient.OrganizationId, Id = recipient.AssignmentVersionId } equals new { version.OrganizationId, version.Id }
-            join academicClass in _dbContext.Classes on new { recipient.OrganizationId, Id = recipient.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in _dbContext.Classes on new { recipient.OrganizationId, Id = recipient.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             let latestAttempt = _dbContext.SubmissionAttempts.Where(attempt => attempt.OrganizationId == organizationId && attempt.AssignmentRecipientId == recipient.Id).OrderByDescending(attempt => attempt.AttemptNumber).FirstOrDefault()
             let releaseRow = (
                 from release in _dbContext.GradeReleases
@@ -203,8 +203,8 @@ public sealed partial class EfDetailedReportReadService
         var rows =
             from exam in _dbContext.Exams
             join version in _dbContext.ExamVersions on new { exam.OrganizationId, ExamId = exam.Id } equals new { version.OrganizationId, version.ExamId }
-            join academicClass in _dbContext.Classes on new { exam.OrganizationId, Id = exam.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
-            join enrollment in _dbContext.Enrollments on new { exam.OrganizationId, Id = exam.ClassId } equals new { enrollment.OrganizationId, Id = enrollment.ClassId }
+            join academicClass in _dbContext.Classes on new { exam.OrganizationId, Id = exam.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
+            join enrollment in _dbContext.Enrollments on new { exam.OrganizationId, Id = exam.ClassId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = enrollment.ClassId }
             let latestAttempt = _dbContext.ExamAttempts.Where(attempt => attempt.OrganizationId == organizationId && attempt.ExamVersionId == version.Id && attempt.EnrollmentId == enrollment.Id).OrderByDescending(attempt => attempt.AttemptNumber).FirstOrDefault()
             let attemptCount = _dbContext.ExamAttempts.Count(attempt => attempt.OrganizationId == organizationId && attempt.ExamVersionId == version.Id && attempt.EnrollmentId == enrollment.Id)
             let releaseRow = (
@@ -267,9 +267,9 @@ public sealed partial class EfDetailedReportReadService
             from release in _dbContext.GradeReleases
             join evaluation in _dbContext.EvaluationRevisions on new { release.OrganizationId, Id = release.EvaluationRevisionId } equals new { evaluation.OrganizationId, evaluation.Id }
             join attempt in _dbContext.SubmissionAttempts on new { release.OrganizationId, Id = release.SubmissionAttemptId } equals new { attempt.OrganizationId, attempt.Id }
-            join enrollment in _dbContext.Enrollments on new { attempt.OrganizationId, Id = attempt.EnrollmentId } equals new { enrollment.OrganizationId, enrollment.Id }
+            join enrollment in _dbContext.Enrollments on new { attempt.OrganizationId, Id = attempt.EnrollmentId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join version in _dbContext.AssignmentVersions on new { attempt.OrganizationId, Id = attempt.AssignmentVersionId } equals new { version.OrganizationId, version.Id }
-            join academicClass in _dbContext.Classes on new { attempt.OrganizationId, Id = version.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in _dbContext.Classes on new { attempt.OrganizationId, Id = version.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             where release.OrganizationId == organizationId && enrollment.LearnerOrganizationPersonId == learnerId && evaluation.Status == EvaluationRevisionStatus.Released && (!query.ClassId.HasValue || version.ClassId == query.ClassId.Value) && (!query.FromUtc.HasValue || release.ReleasedAtUtc >= query.FromUtc.Value) && (!query.ToUtc.HasValue || release.ReleasedAtUtc <= query.ToUtc.Value)
             select new GradeRow { Kind = DetailedReportGradeKind.Assignment, AssessmentId = version.AssignmentId, ClassId = version.ClassId, ClassTitle = academicClass.Title, Title = version.Title, Score = evaluation.Score, MaximumScore = version.MaxScore, ReleasedAtUtc = release.ReleasedAtUtc };
 
@@ -277,9 +277,9 @@ public sealed partial class EfDetailedReportReadService
             from release in _dbContext.ExamGradeReleases
             join grade in _dbContext.ExamGradeRevisions on new { release.OrganizationId, Id = release.ExamGradeRevisionId } equals new { grade.OrganizationId, grade.Id }
             join attempt in _dbContext.ExamAttempts on new { release.OrganizationId, Id = release.ExamAttemptId } equals new { attempt.OrganizationId, attempt.Id }
-            join enrollment in _dbContext.Enrollments on new { attempt.OrganizationId, Id = attempt.EnrollmentId } equals new { enrollment.OrganizationId, enrollment.Id }
+            join enrollment in _dbContext.Enrollments on new { attempt.OrganizationId, Id = attempt.EnrollmentId } equals new { OrganizationId = (Guid?)enrollment.OrganizationId, Id = (Guid?)enrollment.Id }
             join version in _dbContext.ExamVersions on new { attempt.OrganizationId, Id = attempt.ExamVersionId } equals new { version.OrganizationId, version.Id }
-            join academicClass in _dbContext.Classes on new { attempt.OrganizationId, Id = attempt.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in _dbContext.Classes on new { attempt.OrganizationId, Id = attempt.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             where release.OrganizationId == organizationId && enrollment.LearnerOrganizationPersonId == learnerId && grade.Status == ExamGradeRevisionStatus.Released && (!query.ClassId.HasValue || attempt.ClassId == query.ClassId.Value) && (!query.FromUtc.HasValue || release.ReleasedAtUtc >= query.FromUtc.Value) && (!query.ToUtc.HasValue || release.ReleasedAtUtc <= query.ToUtc.Value)
             select new GradeRow { Kind = DetailedReportGradeKind.Exam, AssessmentId = attempt.ExamId, ClassId = attempt.ClassId, ClassTitle = academicClass.Title, Title = version.Title, Score = grade.TotalScore, MaximumScore = version.MaxScore, ReleasedAtUtc = release.ReleasedAtUtc };
 

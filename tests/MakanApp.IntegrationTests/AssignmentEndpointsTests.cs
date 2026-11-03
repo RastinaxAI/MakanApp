@@ -392,7 +392,7 @@ public sealed partial class AssignmentEndpointsTests
         return await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SingleAsync(
             dbContext.Assignments
                 .Where(assignment => assignment.Id == assignmentId)
-                .Select(assignment => assignment.CreatedByMembershipId));
+                .Select(assignment => assignment.CreatedByMembershipId!.Value));
     }
 
     private async Task<ManagerContext> CreateManagerAsync(HttpClient client)

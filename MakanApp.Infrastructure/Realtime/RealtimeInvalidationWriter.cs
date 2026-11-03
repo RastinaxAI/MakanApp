@@ -15,7 +15,7 @@ namespace MakanApp.Infrastructure.Realtime;
 
 internal sealed record InvalidationEnvelope(string Key, Guid? OrganizationId = null, Guid? ClassId = null,
     Guid? ResourceId = null, Guid? TargetUserId = null, bool StaffOnly = false, string? TraceId = null,
-    Guid? LearnerOrganizationPersonId = null);
+    Guid? LearnerOrganizationPersonId = null, Guid? PersonalClassId = null, Guid? PersonalMembershipId = null);
 
 public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock)
 {
@@ -176,6 +176,7 @@ public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbo
                 PersonalClassInvitation invitation => invitation.PersonalClassId,
                 PersonalClassJoinRequest join => join.PersonalClassId,
                 PersonalClassManagerTransfer transfer => transfer.PersonalClassId,
+                PersonalClassAcademicGrant grant => grant.PersonalClassId,
                 _ => null
             };
             if (!classId.HasValue) continue;
@@ -188,7 +189,7 @@ public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbo
             if (entry.Entity is PersonalClassInvitation invite) pending.Add(new("access", TargetUserId: invite.DestinationUserId));
             if (entry.Entity is PersonalClassJoinRequest joinRequest) pending.Add(new("access", TargetUserId: joinRequest.UserId));
             if (entry.Entity is PersonalClassManagerTransfer managerTransfer) pending.Add(new("access", TargetUserId: managerTransfer.TargetUserId));
-            if (entry.Entity is PersonalClass)
+            if (entry.Entity is PersonalClass or PersonalClassAcademicGrant)
             {
                 var learners = await db.PersonalClassParticipants.Where(p => p.PersonalClassId == classId && p.EndedAtUtc == null).Select(p => p.StudentUserId).Distinct().ToArrayAsync(ct);
                 foreach (var learner in learners) pending.Add(new("access", TargetUserId: learner));

@@ -12,16 +12,22 @@ public sealed partial class ExamGradingService
         ExamGradingQueueQuery query,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
-        IReadOnlyCollection<ExamGradingQueueRecord> records = context.ActiveRole switch
+        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
+        if (query.Status.HasValue && !Enum.IsDefined(query.Status.Value))
+            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam,
+            examId, AcademicOperation.Grade, false, cancellationToken);
+        IReadOnlyCollection<ExamGradingQueueRecord> records = context.IsPersonal
+            ? await store.GetQueueForManagerAsync(context.Scope, examId, query, cancellationToken)
+            : context.ActiveRole switch
         {
             OrganizationRole.Manager => await store.GetQueueForManagerAsync(
-                context.OrganizationId!.Value,
+                context.Scope,
                 examId,
                 query,
                 cancellationToken),
             OrganizationRole.Teacher => await store.GetQueueForTeacherAsync(
-                context.OrganizationId!.Value,
+                context.Scope,
                 context.MembershipId!.Value,
                 examId,
                 query,
@@ -41,7 +47,8 @@ public sealed partial class ExamGradingService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt,
+            attemptId, AcademicOperation.Grade, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
         await EnsureCanGradeAsync(context, aggregate.Source, cancellationToken);
         EnsureFinalized(aggregate.Source.Attempt);
@@ -55,9 +62,10 @@ public sealed partial class ExamGradingService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt,
+            attemptId, AcademicOperation.OwnResult, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
-        if (context.ActiveRole != OrganizationRole.Student ||
+        if ((!context.IsLocalLearner && context.ActiveRole != OrganizationRole.Student) ||
             context.SubjectOrganizationPersonId.HasValue ||
             aggregate.Source.StudentUserId != context.UserId)
         {
@@ -88,12 +96,13 @@ public sealed partial class ExamGradingService
         Guid attemptId,
         CancellationToken cancellationToken)
     {
-        var context = await GetOrganizationContextAsync(userId, sessionId, cancellationToken);
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.ExamAttempt,
+            attemptId, AcademicOperation.Read, false, cancellationToken);
         var aggregate = await GetAggregateAsync(context, attemptId, cancellationToken);
         if (context.ActiveRole != OrganizationRole.Parent ||
             !context.SubjectOrganizationPersonId.HasValue ||
             context.SubjectOrganizationPersonId.Value !=
-            aggregate.Source.Enrollment.LearnerOrganizationPersonId)
+            aggregate.Source.Participation.LearnerOrganizationPersonId)
         {
             throw GradeNotFound();
         }

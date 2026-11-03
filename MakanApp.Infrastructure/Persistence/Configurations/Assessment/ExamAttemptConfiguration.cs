@@ -27,13 +27,13 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
                 "([Status] IN (1, 3) AND [ExpiredAtUtc] IS NULL) OR ([Status] = 2 AND [ExpiredAtUtc] IS NOT NULL)");
             table.HasCheckConstraint(
                 "CK_ExamAttempts_FinalizationState",
-                "([Status] = 3 AND [FinalizedAtUtc] IS NOT NULL AND [FinalizedAnswerSetVersion] IS NOT NULL AND [FinalizeClientOperationId] IS NOT NULL AND [FinalizeRequestHash] IS NOT NULL AND [FinalizedBySessionId] IS NOT NULL) OR ([Status] <> 3 AND [FinalizedAtUtc] IS NULL AND [FinalizedAnswerSetVersion] IS NULL AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL)");
+                "([Status] = 3 AND [FinalizedAtUtc] IS NOT NULL AND [FinalizedAnswerSetVersion] IS NOT NULL AND (([AutoFinalizedAtUtc] IS NULL AND [FinalizeClientOperationId] IS NOT NULL AND [FinalizeRequestHash] IS NOT NULL AND [FinalizedBySessionId] IS NOT NULL) OR ([AutoFinalizedAtUtc] IS NOT NULL AND [ContextKind] = 2 AND [AutoFinalizedAtUtc] >= [EffectiveDeadlineUtc] AND [FinalizedAtUtc] = [EffectiveDeadlineUtc] AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL))) OR ([Status] <> 3 AND [FinalizedAtUtc] IS NULL AND [AutoFinalizedAtUtc] IS NULL AND [FinalizedAnswerSetVersion] IS NULL AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL)");
             table.HasCheckConstraint(
                 "CK_ExamAttempts_FinalizedAnswerSetVersion",
                 "[FinalizedAnswerSetVersion] IS NULL OR ([FinalizedAnswerSetVersion] >= 0 AND [FinalizedAnswerSetVersion] = [AnswerSetVersion])");
             table.HasCheckConstraint(
                 "CK_ExamAttempts_FinalizedBeforeDeadline",
-                "[FinalizedAtUtc] IS NULL OR [FinalizedAtUtc] < [EffectiveDeadlineUtc]");
+                "[FinalizedAtUtc] IS NULL OR ([AutoFinalizedAtUtc] IS NULL AND [FinalizedAtUtc] < [EffectiveDeadlineUtc]) OR ([AutoFinalizedAtUtc] IS NOT NULL AND [FinalizedAtUtc] = [EffectiveDeadlineUtc])");
             table.HasCheckConstraint(
                 "CK_ExamAttempts_FinalizeRequestHash",
                 $"[FinalizeRequestHash] IS NULL OR LEN([FinalizeRequestHash]) = {ExamAttempt.FinalizeRequestHashLength}");
@@ -41,11 +41,11 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
         builder.HasKey(attempt => attempt.Id);
         builder.HasAlternateKey(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.ExamVersionId,
             attempt.Id
         }).HasName("UQ_ExamAttempts_Organization_ExamVersion_Id");
-        builder.HasAlternateKey(attempt => new { attempt.OrganizationId, attempt.Id })
+        builder.HasAlternateKey(attempt => new { attempt.ContextKind, attempt.ContextId, attempt.Id })
             .HasName("UQ_ExamAttempts_Organization_Id");
         builder.Property(attempt => attempt.StartedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(attempt => attempt.EffectiveDeadlineUtc).HasColumnType("datetime2(7)");
@@ -53,6 +53,8 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
         builder.Property(attempt => attempt.ExpiredAtUtc).HasColumnType("datetime2(7)");
         builder.Property(attempt => attempt.WriteLeaseAcquiredAtUtc).HasColumnType("datetime2(7)");
         builder.Property(attempt => attempt.FinalizedAtUtc).HasColumnType("datetime2(7)");
+        builder.Property(attempt => attempt.AutoFinalizedAtUtc).HasColumnType("datetime2(7)");
+        builder.HasIndex(attempt => new { attempt.ContextKind, attempt.Status, attempt.EffectiveDeadlineUtc });
         builder.Property(attempt => attempt.FinalizeRequestHash)
             .HasMaxLength(ExamAttempt.FinalizeRequestHashLength)
             .IsUnicode(false);
@@ -60,26 +62,26 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
 
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.ExamId,
-            attempt.EnrollmentId,
+            attempt.ParticipantId,
             attempt.AttemptNumber
         })
             .IsUnique()
             .HasDatabaseName("UX_ExamAttempts_Organization_Exam_Enrollment_Number");
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
+            attempt.ContextKind, attempt.ContextId,
             attempt.ExamId,
-            attempt.EnrollmentId
+            attempt.ParticipantId
         })
             .IsUnique()
             .HasFilter("[Status] = 1")
             .HasDatabaseName("UX_ExamAttempts_Organization_Exam_Enrollment_Active");
         builder.HasIndex(attempt => new
         {
-            attempt.OrganizationId,
-            attempt.EnrollmentId,
+            attempt.ContextKind, attempt.ContextId,
+            attempt.ParticipantId,
             attempt.ClientOperationId
         })
             .IsUnique()
@@ -89,21 +91,21 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
             .WithMany()
             .HasForeignKey(attempt => new
             {
-                attempt.OrganizationId,
+                attempt.ContextKind, attempt.ContextId,
                 attempt.ClassId,
                 attempt.ExamId
             })
-            .HasPrincipalKey(exam => new { exam.OrganizationId, exam.ClassId, exam.Id })
+            .HasPrincipalKey(exam => new { exam.ContextKind, exam.ContextId, exam.ClassId, exam.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ExamVersion>()
             .WithMany()
             .HasForeignKey(attempt => new
             {
-                attempt.OrganizationId,
+                attempt.ContextKind, attempt.ContextId,
                 attempt.ExamId,
                 attempt.ExamVersionId
             })
-            .HasPrincipalKey(version => new { version.OrganizationId, version.ExamId, version.Id })
+            .HasPrincipalKey(version => new { version.ContextKind, version.ContextId, version.ExamId, version.Id })
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Enrollment>()
             .WithMany()
@@ -128,5 +130,6 @@ public sealed class ExamAttemptConfiguration : IEntityTypeConfiguration<ExamAtte
             .WithMany()
             .HasForeignKey(attempt => attempt.FinalizedBySessionId)
             .OnDelete(DeleteBehavior.Restrict);
+        builder.ConfigureScope();
     }
 }

@@ -43,7 +43,7 @@ public sealed record StudentExamAttemptSummaryDto(
 
 public sealed record ExamStartContextRecord(
     Exam Exam,
-    MakanApp.Domain.Academic.Enrollment? Enrollment,
+    AcademicParticipationRecord? Participation,
     ExamVersion? Version,
     IReadOnlyCollection<QuestionVersion> Questions);
 

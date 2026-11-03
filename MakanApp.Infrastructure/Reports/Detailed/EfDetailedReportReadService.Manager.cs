@@ -99,7 +99,7 @@ public sealed partial class EfDetailedReportReadService
         var assignments =
             from assignment in _dbContext.Assignments
             join version in _dbContext.AssignmentVersions on new { assignment.OrganizationId, AssignmentId = assignment.Id, VersionNumber = assignment.CurrentVersionNumber } equals new { version.OrganizationId, version.AssignmentId, version.VersionNumber }
-            join academicClass in _dbContext.Classes on new { assignment.OrganizationId, Id = assignment.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in _dbContext.Classes on new { assignment.OrganizationId, Id = assignment.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join course in _dbContext.Courses on new { academicClass.OrganizationId, Id = academicClass.CourseId } equals new { course.OrganizationId, course.Id }
             where assignment.OrganizationId == organizationId && (assignment.Status == AssignmentStatus.Published || assignment.Status == AssignmentStatus.Closed) && version.PublishedAtUtc != null && (!filters.ClassId.HasValue || academicClass.Id == filters.ClassId.Value) && (!filters.CourseId.HasValue || course.Id == filters.CourseId.Value) && (!filters.AcademicPeriodId.HasValue || academicClass.AcademicPeriodId == filters.AcademicPeriodId.Value) && (!query.FromUtc.HasValue || version.DueAtUtc >= query.FromUtc.Value) && (!query.ToUtc.HasValue || version.DueAtUtc <= query.ToUtc.Value)
             let recipients = _dbContext.AssignmentRecipients.Count(recipient => recipient.OrganizationId == organizationId && recipient.AssignmentVersionId == version.Id)
@@ -110,7 +110,7 @@ public sealed partial class EfDetailedReportReadService
         var exams =
             from exam in _dbContext.Exams
             join version in _dbContext.ExamVersions on new { exam.OrganizationId, ExamId = exam.Id } equals new { version.OrganizationId, version.ExamId }
-            join academicClass in _dbContext.Classes on new { exam.OrganizationId, Id = exam.ClassId } equals new { academicClass.OrganizationId, academicClass.Id }
+            join academicClass in _dbContext.Classes on new { exam.OrganizationId, Id = exam.ClassId } equals new { OrganizationId = (Guid?)academicClass.OrganizationId, academicClass.Id }
             join course in _dbContext.Courses on new { academicClass.OrganizationId, Id = academicClass.CourseId } equals new { course.OrganizationId, course.Id }
             where exam.OrganizationId == organizationId && exam.Status == ExamStatus.Published && version.Status == ExamVersionStatus.Published && (!filters.ClassId.HasValue || academicClass.Id == filters.ClassId.Value) && (!filters.CourseId.HasValue || course.Id == filters.CourseId.Value) && (!filters.AcademicPeriodId.HasValue || academicClass.AcademicPeriodId == filters.AcademicPeriodId.Value) && (!query.FromUtc.HasValue || version.AvailableUntilUtc >= query.FromUtc.Value) && (!query.ToUtc.HasValue || version.AvailableUntilUtc <= query.ToUtc.Value)
             let recipients = _dbContext.Enrollments.Count(enrollment => enrollment.OrganizationId == organizationId && enrollment.ClassId == exam.ClassId && enrollment.EnrolledAtUtc <= version.AvailableUntilUtc && (enrollment.EndedAtUtc == null || enrollment.EndedAtUtc >= version.AvailableFromUtc))
