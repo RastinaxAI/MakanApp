@@ -31,6 +31,7 @@ public sealed class PersonalClassesController(PersonalClassService service, Pers
     public async Task<ActionResult<IReadOnlyList<PersonalClassParticipantDto>>> Participants(Guid classId, CancellationToken ct) =>
         Ok(await service.ParticipantsAsync(Actor, Session, classId, ct));
     [HttpDelete("{classId:guid}/participants/{participantId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> End(Guid classId, Guid participantId, [FromBody] PersonalClassReasonCommand command, CancellationToken ct)
     { await lifecycle.EndAsync(new(Actor, Session, HttpContext.TraceIdentifier), classId, participantId, command, ct); return NoContent(); }
 }

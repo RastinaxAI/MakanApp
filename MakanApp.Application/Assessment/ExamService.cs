@@ -18,6 +18,7 @@ public sealed partial class ExamService : IExamService
     private readonly IOutbox _outbox;
     private readonly StorageOptions _storageOptions;
     private readonly IAcademicActivityPublisher? _activities;
+    private readonly IAcademicAuditWriter _audit;
 
     public ExamService(
         IAcademicContextResolver accessContextResolver,
@@ -25,10 +26,12 @@ public sealed partial class ExamService : IExamService
         TimeProvider timeProvider,
         IOutbox outbox,
         StorageOptions storageOptions,
+        IAcademicAuditWriter audit,
         IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
         _storageOptions = storageOptions;
+        _audit = audit;
         _store = store;
         _timeProvider = timeProvider;
         _outbox = outbox;
@@ -306,6 +309,8 @@ public sealed partial class ExamService : IExamService
                 recipientUserId,
                 "آزمون جدید منتشر شد",
                 "یک آزمون جدید برای شما منتشر شده است.")).ToArray())));
+        _audit.Record(context, AcademicAuditAction.ExamPublished, record.Exam.Id,
+            record.Version.Id, record.Version.VersionNumber, nowUtc);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToEditor(record) with { PublicationReceipt = _activities is null ? null : await _activities.ReadReceiptAsync(

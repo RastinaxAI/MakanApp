@@ -10,6 +10,16 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/academic")]
 public sealed class SubmissionsController(ISubmissionService submissionService) : ControllerBase
 {
+    [HttpGet("assignments/{assignmentId:guid}/attempts/me/page")]
+    public async Task<ActionResult<AcademicPage<SubmissionAttemptResult>>> MyAttemptsPage(Guid assignmentId,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default) =>
+        Ok(await submissionService.GetMyAttemptsPageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), assignmentId, page, pageSize, ct));
+
+    [HttpGet("assignments/{assignmentId:guid}/submitted-attempts/page")]
+    public async Task<ActionResult<AcademicPage<SubmissionAttemptResult>>> SubmittedAttemptsPage(Guid assignmentId,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default) =>
+        Ok(await submissionService.GetSubmittedAttemptsPageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), assignmentId, page, pageSize, ct));
+
     [HttpPost("assignments/{assignmentId:guid}/attempts")]
     [ProducesResponseType<SubmissionAttemptResult>(StatusCodes.Status201Created)]
     public async Task<ActionResult<SubmissionAttemptResult>> CreateOrResumeDraft(

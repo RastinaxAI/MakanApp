@@ -18,12 +18,14 @@ public sealed partial class CommercialSubscriptionEndpointsTests
     private sealed record PersonalAcademicScenario(TestActor Manager, TestActor Admin, TestActor Learner,
         TestActor Peer, PersonalClassDto Class, PersonalClassAcademicPermissionDto Grant);
 
-    private async Task<PersonalAcademicScenario> PersonalAcademicAsync()
+    private async Task<PersonalAcademicScenario> PersonalAcademicAsync(bool preserveReviewAudit = false)
     {
         var manager = await ActorAsync();
         await SubscribeAsync(SubscriptionOwner.Individual(manager.UserId), await PlanAsync(SubscriptionOwnerType.Individual, hosting: true));
-        var classroom = await ApprovedClassAsync(manager, "کلاس پذیرش آموزشی");
-        var admin = await AdminAsync();
+        // تست Audit نباید با ResetPlatformIam تاریخچهٔ approval همین سناریو را پاک کند.
+        TestActor? admin = preserveReviewAudit ? await AdminAsync() : null;
+        var classroom = await ApprovedClassAsync(manager, "کلاس پذیرش آموزشی", reviewer: admin);
+        admin ??= await AdminAsync();
         var grant = await GrantAcademicAsync(admin, classroom.Id, manager, AllAcademic);
         var learner = await ActorAsync(); var peer = await ActorAsync();
         await JoinAcademicAsync(manager, learner, classroom.Id, PersonalClassLocalRoles.Learner);
@@ -128,7 +130,14 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         Assert.Equal(17.25m, (await GetAsync<StudentReleasedResult>(s.Learner.Client, route + "/result")).Score);
         await PostAsync<GradeReleaseResult>(s.Manager.Client, route + "/evaluation/release", new ReleaseEvaluationCommand(correction.RowVersion));
         Assert.Equal(18m, (await GetAsync<StudentReleasedResult>(s.Learner.Client, route + "/result")).Score);
-        await WithDb(async db => Assert.Equal(2, await db.EvaluationRevisions.CountAsync(r => r.SubmissionAttemptId == attempt.Id)));
+        await WithDb(async db =>
+        {
+            Assert.Equal(2, await db.EvaluationRevisions.CountAsync(r => r.SubmissionAttemptId == attempt.Id));
+            var audits = await db.AdminAuditLogs.Where(a => a.TargetId == attempt.Id.ToString() && a.TargetType == "PersonalClassSubmission").ToArrayAsync();
+            Assert.Single(audits, a => a.Action == "personal_class.academic.AssignmentResultReleased");
+            Assert.Single(audits, a => a.Action == "personal_class.academic.AssignmentResultCorrected");
+            Assert.All(audits, a => { Assert.DoesNotContain("PRIVATE-", a.AfterSummary ?? ""); Assert.DoesNotContain("PRIVATE-", a.Reason); });
+        });
         await EndAcademicMemberAsync(s, s.Learner);
         using (var removedFile = await s.Learner.Client.GetAsync($"/api/v1/files/{file.Id}/content")) Assert.Equal(HttpStatusCode.NotFound, removedFile.StatusCode);
         await JoinAcademicAsync(s.Manager, s.Learner, s.Class.Id, PersonalClassLocalRoles.Learner);

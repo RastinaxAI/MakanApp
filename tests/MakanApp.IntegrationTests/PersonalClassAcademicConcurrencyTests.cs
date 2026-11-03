@@ -72,6 +72,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         {
             Assert.Equal(2, await db.Messages.CountAsync(m => m.AcademicActivityPublicationId == eventId));
             Assert.Equal(1, await db.AcademicActivityPublications.CountAsync(p => p.AssignmentVersionId == draft.VersionId));
+            Assert.Equal(1, await db.AdminAuditLogs.CountAsync(a => a.TargetId == draft.Id.ToString() && a.Action == "personal_class.academic.AssignmentPublished"));
             Assert.Equal(2, await db.AssignmentRecipients.CountAsync(r => r.AssignmentVersionId == draft.VersionId));
         });
     }

@@ -126,9 +126,9 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         return await PostAsync<MakanApp.Application.Academic.PersonalClassRequestDto>(actor.Client, $"/api/v1/personal-class-requests/{draft.Id}/submit",
             new MakanApp.Application.Academic.PersonalClassVersionCommand(draft.Version));
     }
-    private async Task<MakanApp.Application.Academic.PersonalClassDto> ApprovedClassAsync(TestActor actor, string title, int capacity = 10)
+    private async Task<MakanApp.Application.Academic.PersonalClassDto> ApprovedClassAsync(TestActor actor, string title, int capacity = 10, TestActor? reviewer = null)
     {
-        var request = await SubmittedClassRequestAsync(actor, title, capacity); var admin = await AdminAsync();
+        var request = await SubmittedClassRequestAsync(actor, title, capacity); var admin = reviewer ?? await AdminAsync();
         var approved = await PostAsync<MakanApp.Application.Academic.PersonalClassRequestDto>(admin.Client, $"/api/admin/v1/personal-class-requests/{request.Id}/review",
             new MakanApp.Application.Academic.ReviewPersonalClassRequestCommand(request.Version, MakanApp.Domain.Academic.PersonalClassRequestStatus.Approved, "تأیید آزمون"));
         await using (var scope = factory.Services.CreateAsyncScope())

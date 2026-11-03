@@ -135,7 +135,12 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
         Guid studentUserId,
         CancellationToken cancellationToken)
     {
-        var attempts = await (
+        var attempts = await StudentAttemptsQuery(scope, assignmentId, studentUserId)
+            .AsNoTracking().ToArrayAsync(cancellationToken);
+        return await LoadAttemptRecordsAsync(attempts, cancellationToken);
+    }
+
+    private IQueryable<SubmissionAttempt> StudentAttemptsQuery(AcademicScope scope, Guid assignmentId, Guid studentUserId) => (
             from attempt in dbContext.SubmissionAttempts
             join participant in AcademicContextQuery.Participants(dbContext, scope)
                 on new { attempt.ContextKind, attempt.ContextId, attempt.ParticipantId }
@@ -143,27 +148,32 @@ public sealed class EfSubmissionStore(MakanDbContext dbContext, MakanApp.Infrast
             where attempt.ContextKind == scope.Kind && attempt.ContextId == scope.Id &&
                   attempt.AssignmentId == assignmentId &&
                   participant.UserId == studentUserId && (scope.Kind == AcademicClassKind.OrganizationClass || participant.IsActive)
-            orderby attempt.AttemptNumber
-            select attempt)
-            .AsNoTracking()
-            .ToArrayAsync(cancellationToken);
-        return await LoadAttemptRecordsAsync(attempts, cancellationToken);
-    }
+            orderby attempt.AttemptNumber, attempt.Id
+            select attempt);
 
     public async Task<IReadOnlyCollection<SubmissionAttemptRecord>> GetSubmittedAttemptsAsync(
         AcademicScope scope,
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
-        var attempts = await dbContext.SubmissionAttempts
+        var attempts = await SubmittedAttemptsQuery(scope, assignmentId).AsNoTracking().ToArrayAsync(cancellationToken);
+        return await LoadAttemptRecordsAsync(attempts, cancellationToken);
+    }
+
+    private IQueryable<SubmissionAttempt> SubmittedAttemptsQuery(AcademicScope scope, Guid assignmentId) => dbContext.SubmissionAttempts
             .Where(attempt => attempt.ContextKind == scope.Kind && attempt.ContextId == scope.Id &&
                               attempt.AssignmentId == assignmentId &&
                               attempt.Status == SubmissionAttemptStatus.Submitted)
             .OrderBy(attempt => attempt.SubmittedAtUtc)
-            .ThenBy(attempt => attempt.Id)
-            .AsNoTracking()
-            .ToArrayAsync(cancellationToken);
-        return await LoadAttemptRecordsAsync(attempts, cancellationToken);
+            .ThenBy(attempt => attempt.Id);
+
+    public async Task<AcademicPage<SubmissionAttemptRecord>> GetAttemptsPageAsync(AcademicScope scope, Guid assignmentId,
+        Guid? studentUserId, int page, int pageSize, CancellationToken ct)
+    {
+        var query = studentUserId.HasValue ? StudentAttemptsQuery(scope, assignmentId, studentUserId.Value) : SubmittedAttemptsQuery(scope, assignmentId);
+        var total = await query.CountAsync(ct);
+        var attempts = await query.AsNoTracking().Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(ct);
+        return new(await LoadAttemptRecordsAsync(attempts, ct), page, pageSize, total);
     }
 
     public Task<bool> HasActiveTeacherAssignmentAsync(

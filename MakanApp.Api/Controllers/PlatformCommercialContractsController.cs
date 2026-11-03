@@ -19,6 +19,7 @@ public sealed class PlatformCommercialContractsController(CommercialAdminService
     public async Task<ActionResult<CommercialSummaryDto>> OrganizationSummary(Guid ownerId, CancellationToken ct) =>
         Ok(await service.SummaryAsync(Actor, Session, SubscriptionOwnerType.Organization, ownerId, ct));
     [HttpPut("plans/{planId:guid}/availability"), Authorize(Policy = PlatformPermissionKeys.CommerceManage)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Availability(Guid planId, CommercialAvailabilityCommand command, CancellationToken ct)
     { await service.SetAvailabilityAsync(Actor, Session, planId, command, ct); return NoContent(); }
     [HttpPut("plan-versions/{versionId:guid}/draft"), Authorize(Policy = PlatformPermissionKeys.CommerceManage)]

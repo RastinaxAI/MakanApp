@@ -147,7 +147,28 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext, MakanApp.Infras
         ExamGradingQueueQuery query,
         CancellationToken cancellationToken)
     {
-        IQueryable<ExamAttempt> attemptsQuery = (
+        var attemptsQuery = QueueQuery(scope, teacherMembershipId, examId, query);
+        if (scope.Kind == AcademicClassKind.PersonalClass || query.Page.HasValue || query.PageSize.HasValue)
+            attemptsQuery = attemptsQuery.Skip(((query.Page ?? 1) - 1) * (query.PageSize ?? 25)).Take(query.PageSize ?? 25);
+        var attempts = await attemptsQuery.AsNoTracking().ToArrayAsync(cancellationToken);
+        var results = new List<ExamGradingQueueRecord>(attempts.Length);
+        foreach (var attempt in attempts)
+        {
+            var aggregate = await LoadAggregateAsync(attempt, asNoTracking: true, cancellationToken);
+            results.Add(new ExamGradingQueueRecord(aggregate.Source, aggregate.LatestRevision, aggregate.CurrentReleasedRevision));
+        }
+        return results;
+    }
+
+    public async Task<AcademicPage<ExamGradingQueueRecord>> GetQueuePageAsync(AcademicScope scope, Guid? teacherMembershipId,
+        Guid examId, ExamGradingQueueQuery query, CancellationToken ct)
+    {
+        query = query with { Page = query.Page ?? 1, PageSize = query.PageSize ?? 25 };
+        var total = await QueueQuery(scope, teacherMembershipId, examId, query).CountAsync(ct);
+        return new(await GetQueueAsync(scope, teacherMembershipId, examId, query, ct), query.Page.Value, query.PageSize.Value, total);
+    }
+
+    private IQueryable<ExamAttempt> QueueQuery(AcademicScope scope, Guid? teacherMembershipId, Guid examId, ExamGradingQueueQuery query) => (
             from attempt in dbContext.ExamAttempts
             join exam in dbContext.Exams
                 on new { attempt.ContextKind, attempt.ContextId, attempt.ExamId }
@@ -170,21 +191,6 @@ public sealed class EfExamGradingStore(MakanDbContext dbContext, MakanApp.Infras
                       assignment.EndedAtUtc == null))
             orderby attempt.FinalizedAtUtc, attempt.Id
             select attempt);
-        if (scope.Kind == AcademicClassKind.PersonalClass || query.Page.HasValue || query.PageSize.HasValue)
-            attemptsQuery = attemptsQuery.Skip(((query.Page ?? 1) - 1) * (query.PageSize ?? 25)).Take(query.PageSize ?? 25);
-        var attempts = await attemptsQuery.AsNoTracking().ToArrayAsync(cancellationToken);
-        var results = new List<ExamGradingQueueRecord>(attempts.Length);
-        foreach (var attempt in attempts)
-        {
-            var aggregate = await LoadAggregateAsync(attempt, asNoTracking: true, cancellationToken);
-            results.Add(new ExamGradingQueueRecord(
-                aggregate.Source,
-                aggregate.LatestRevision,
-                aggregate.CurrentReleasedRevision));
-        }
-
-        return results;
-    }
 
     private async Task<ExamGradeAggregateRecord> LoadAggregateAsync(
         ExamAttempt attempt,

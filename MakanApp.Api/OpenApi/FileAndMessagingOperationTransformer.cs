@@ -88,7 +88,7 @@ public sealed class FileAndMessagingOperationTransformer : IOpenApiOperationTran
         Type = "boolean", Enum = [new Microsoft.OpenApi.Any.OpenApiBoolean(false)]
     };
 
-    private static OpenApiResponse Binary(string description) => new()
+    internal static OpenApiResponse Binary(string description) => new()
     {
         Description = description,
         Content = new Dictionary<string, OpenApiMediaType>

@@ -4,6 +4,10 @@ namespace MakanApp.Application.Assessment;
 
 public interface ISubmissionService
 {
+    Task<AcademicPage<SubmissionAttemptResult>> GetMyAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid assignmentId, int page, int pageSize, CancellationToken cancellationToken);
+    Task<AcademicPage<SubmissionAttemptResult>> GetSubmittedAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid assignmentId, int page, int pageSize, CancellationToken cancellationToken);
     Task<SubmissionAttemptResult> CreateOrResumeDraftAsync(
         Guid userId,
         Guid sessionId,
@@ -60,6 +64,8 @@ public interface ISubmissionService
 
 public interface ISubmissionStore
 {
+    Task<AcademicPage<SubmissionAttemptRecord>> GetAttemptsPageAsync(AcademicScope scope, Guid assignmentId,
+        Guid? studentUserId, int page, int pageSize, CancellationToken cancellationToken);
     Task<bool> IsFileAvailableForAttemptAsync(Guid fileId, Guid attemptId, CancellationToken ct);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
     Task<SubmissionEligibilityRecord?> GetEligibilityForStudentForUpdateAsync(

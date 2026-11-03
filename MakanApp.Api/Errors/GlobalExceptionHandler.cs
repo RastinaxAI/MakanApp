@@ -145,7 +145,7 @@ public sealed class GlobalExceptionHandler(
         return true;
     }
 
-    private static int? GetKnownStatusCode(string code) =>
+    internal static int? GetKnownStatusCode(string code) =>
         code switch
         {
             MakanApp.Application.Knowledge.SourceErrorCodes.NotFound => StatusCodes.Status404NotFound,

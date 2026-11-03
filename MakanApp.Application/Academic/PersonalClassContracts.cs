@@ -33,9 +33,9 @@ public interface IPersonalClassStore
     Task<PersonalClassDto> GetAsync(Guid userId, Guid classId, CancellationToken cancellationToken);
     Task<PersonalClassDto> ArchiveAsync(Guid userId, Guid classId, DateTime utcNow, CancellationToken cancellationToken);
     Task<PersonalClassInvitationDto> InviteAsync(Guid hostUserId, Guid classId, InvitePersonalClassStudentCommand command,
-        DateTime utcNow, CancellationToken cancellationToken);
+        DateTime utcNow, CancellationToken cancellationToken, Guid? actorSessionId = null);
     Task<IReadOnlyList<PersonalClassInvitationDto>> InvitationsAsync(Guid userId, CancellationToken cancellationToken);
-    Task<PersonalClassDto> AcceptAsync(Guid userId, Guid invitationId, DateTime utcNow, CancellationToken cancellationToken);
+    Task<PersonalClassDto> AcceptAsync(Guid userId, Guid invitationId, DateTime utcNow, CancellationToken cancellationToken, Guid? actorSessionId = null);
     Task<IReadOnlyList<PersonalClassParticipantDto>> ParticipantsAsync(Guid userId, Guid classId, CancellationToken cancellationToken);
     Task EndParticipantAsync(Guid userId, Guid classId, Guid participantId, DateTime utcNow, CancellationToken cancellationToken);
 }

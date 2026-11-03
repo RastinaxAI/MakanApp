@@ -2,7 +2,11 @@ using MakanApp.Domain.Academic;
 
 namespace MakanApp.Application.Assessment;
 
-public sealed record AcademicPage<T>(IReadOnlyCollection<T> Items, int Page, int PageSize, int Total);
+public sealed record AcademicPage<T>(IReadOnlyCollection<T> Items, int Page, int PageSize, int Total)
+{
+    // نام قبلی برای مصرف‌کنندگان فعلی حفظ می‌شود؛ قرارداد مشترک جدید از TotalCount استفاده می‌کند.
+    public int TotalCount => Total;
+}
 public sealed record AcademicListQuery(int Page = 1, int PageSize = 25, string? Search = null, bool? Published = null);
 
 public interface IPersonalAcademicReadStore

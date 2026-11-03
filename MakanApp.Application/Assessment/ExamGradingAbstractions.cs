@@ -4,6 +4,8 @@ namespace MakanApp.Application.Assessment;
 
 public interface IExamGradingService
 {
+    Task<AcademicPage<ExamGradingQueueItemDto>> GetQueuePageAsync(Guid userId, Guid sessionId, Guid examId,
+        ExamGradingQueueQuery query, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ExamGradingQueueItemDto>> GetQueueAsync(
         Guid userId,
         Guid sessionId,
@@ -67,6 +69,8 @@ public interface IExamGradingService
 
 public interface IExamGradingStore
 {
+    Task<AcademicPage<ExamGradingQueueRecord>> GetQueuePageAsync(AcademicScope scope, Guid? teacherMembershipId,
+        Guid examId, ExamGradingQueueQuery query, CancellationToken cancellationToken);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamGradeAggregateRecord?> GetAggregateAsync(

@@ -4,6 +4,8 @@ namespace MakanApp.Application.Assessment;
 
 public interface IExamAttemptService
 {
+    Task<AcademicPage<StudentExamAttemptSummaryDto>> GetMyAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid examId, int page, int pageSize, CancellationToken cancellationToken);
     Task<StudentExamAttemptDto> StartAsync(
         Guid userId,
         Guid sessionId,
@@ -32,6 +34,8 @@ public interface IExamAttemptService
 
 public interface IExamAttemptStore
 {
+    Task<AcademicPage<ExamAttempt>> GetOwnedAttemptsPageAsync(AcademicScope scope, Guid examId,
+        Guid userId, int page, int pageSize, CancellationToken cancellationToken);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
 
     Task<ExamStartContextRecord?> GetStartContextForUpdateAsync(

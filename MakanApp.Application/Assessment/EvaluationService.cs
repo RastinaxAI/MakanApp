@@ -12,17 +12,20 @@ public sealed partial class EvaluationService : IEvaluationService
     private readonly IEvaluationStore _store;
     private readonly TimeProvider _timeProvider;
     private readonly IOutbox _outbox;
+    private readonly IAcademicAuditWriter _audit;
 
     public EvaluationService(
         IAcademicContextResolver accessContextResolver,
         IEvaluationStore store,
         TimeProvider timeProvider,
-        IOutbox outbox)
+        IOutbox outbox,
+        IAcademicAuditWriter audit)
     {
         _accessContextResolver = accessContextResolver;
         _store = store;
         _timeProvider = timeProvider;
         _outbox = outbox;
+        _audit = audit;
     }
 
     public async Task<EvaluatorEvaluationResult> CreateOrUpdateDraftAsync(
@@ -191,6 +194,9 @@ public sealed partial class EvaluationService : IEvaluationService
             evaluation.SubmissionAttemptId,
             nowUtc,
             recipients)));
+        _audit.Record(context, evaluation.SupersedesEvaluationRevisionId.HasValue
+                ? AcademicAuditAction.AssignmentResultCorrected : AcademicAuditAction.AssignmentResultReleased,
+            evaluation.SubmissionAttemptId, evaluation.Id, evaluation.RevisionNumber, nowUtc);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToReleaseResult(gradeRelease, evaluation);

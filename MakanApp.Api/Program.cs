@@ -261,15 +261,20 @@ builder.Services.AddHsts(options =>
 builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer<StringEnumSchemaTransformer>();
+    options.AddSchemaTransformer<PersonalClassInputSchemaTransformer>();
     options.AddOperationTransformer<SchoolOperationTransformer>();
     options.AddOperationTransformer<FileAndMessagingOperationTransformer>();
     options.AddOperationTransformer<AiInvocationOperationTransformer>();
     options.AddOperationTransformer<PersonalAcademicOperationTransformer>();
+    options.AddOperationTransformer<ApiContractOperationTransformer>();
+    options.AddDocumentTransformer<ApiContractDocumentTransformer>();
 });
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
     {
+        if (context.ProblemDetails is ValidationProblemDetails)
+            context.ProblemDetails.Extensions.TryAdd("code", ApiErrorCodes.InvalidRequest);
         context.ProblemDetails.Extensions.TryAdd(
             "traceId",
             Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
@@ -366,6 +371,7 @@ if (!app.Environment.IsEnvironment("Testing") &&
 }
 
 app.UseRouting();
+app.UseMiddleware<OpenApiDocumentCultureMiddleware>();
 app.UseCors();
 app.UseAuthentication();
 app.UseRateLimiter();

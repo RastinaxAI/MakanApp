@@ -10,6 +10,11 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/academic")]
 public sealed class EvaluationsController(IEvaluationService evaluationService) : ControllerBase
 {
+    [HttpGet("evaluations/queue/page")]
+    public async Task<ActionResult<AcademicPage<EvaluationQueueItemResult>>> GetQueuePage(
+        [FromQuery] EvaluationQueueQuery query, CancellationToken ct) =>
+        Ok(await evaluationService.GetQueuePageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), query, ct));
+
     [HttpGet("evaluations/queue")]
     [ProducesResponseType<IReadOnlyCollection<EvaluationQueueItemResult>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<EvaluationQueueItemResult>>> GetQueue(

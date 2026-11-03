@@ -12,13 +12,7 @@ public sealed partial class EvaluationService
         EvaluationQueueQuery query,
         CancellationToken cancellationToken)
     {
-        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
-        if (query.ReviewStatus.HasValue && !Enum.IsDefined(query.ReviewStatus.Value))
-            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
-        if (!Enum.IsDefined(query.ClassKind) || query.ClassKind == AcademicClassKind.PersonalClass && !query.ClassId.HasValue) throw EvaluationNotAllowed();
-        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
-            query.ClassKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.Organization,
-            query.ClassId ?? Guid.Empty, AcademicOperation.Grade, false, cancellationToken);
+        var context = await QueueAccessAsync(userId, sessionId, query, cancellationToken);
         IReadOnlyCollection<EvaluationQueueRecord> records = context.IsPersonal
             ? await _store.GetQueueForManagerAsync(context.Scope, query, cancellationToken)
             : context.ActiveRole switch
@@ -39,6 +33,28 @@ public sealed partial class EvaluationService
             .Select(ToQueueResult)
             .Where(item => !query.ReviewStatus.HasValue || item.ReviewStatus == query.ReviewStatus.Value)
             .ToArray();
+    }
+
+    public async Task<AcademicPage<EvaluationQueueItemResult>> GetQueuePageAsync(Guid userId, Guid sessionId,
+        EvaluationQueueQuery query, CancellationToken ct)
+    {
+        var context = await QueueAccessAsync(userId, sessionId, query, ct);
+        var page = await _store.GetQueuePageAsync(context.Scope,
+            !context.IsPersonal && context.ActiveRole == OrganizationRole.Teacher ? context.MembershipId : null, query, ct);
+        return new(page.Items.Select(ToQueueResult).ToArray(), page.Page, page.PageSize, page.Total);
+    }
+
+    private async Task<AcademicAccessContext> QueueAccessAsync(Guid userId, Guid sessionId, EvaluationQueueQuery query, CancellationToken ct)
+    {
+        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
+        if (query.ReviewStatus.HasValue && !Enum.IsDefined(query.ReviewStatus.Value))
+            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
+        if (!Enum.IsDefined(query.ClassKind) || query.ClassKind == AcademicClassKind.PersonalClass && !query.ClassId.HasValue) throw EvaluationNotAllowed();
+        var context = await _accessContextResolver.ResolveAsync(userId, sessionId,
+            query.ClassKind == AcademicClassKind.PersonalClass ? AcademicResourceKind.PersonalClass : AcademicResourceKind.Organization,
+            query.ClassId ?? Guid.Empty, AcademicOperation.Grade, false, ct);
+        if (!context.IsPersonal && context.ActiveRole is not (OrganizationRole.Manager or OrganizationRole.Teacher)) throw EvaluationNotAllowed();
+        return context;
     }
 
     public async Task<SubmissionForEvaluationResult> GetSubmissionForEvaluationAsync(

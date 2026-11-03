@@ -21,6 +21,7 @@ public sealed partial class AssignmentService : IAssignmentService
     private readonly IAcademicActivityPublisher? _activities;
     private readonly IFileAssetStore _files;
     private readonly StorageOptions _storageOptions;
+    private readonly IAcademicAuditWriter _audit;
 
     public AssignmentService(
         IAcademicContextResolver accessContextResolver,
@@ -29,6 +30,7 @@ public sealed partial class AssignmentService : IAssignmentService
         IOutbox outbox,
         IFileAssetStore files,
         StorageOptions storageOptions,
+        IAcademicAuditWriter audit,
         IAcademicActivityPublisher? activities = null)
     {
         _accessContextResolver = accessContextResolver;
@@ -38,6 +40,7 @@ public sealed partial class AssignmentService : IAssignmentService
         _activities = activities;
         _files = files;
         _storageOptions = storageOptions;
+        _audit = audit;
     }
 
     public async Task<AssignmentResult> CreateDraftAsync(
@@ -205,6 +208,8 @@ public sealed partial class AssignmentService : IAssignmentService
                 recipientUserId,
                 "تکلیف جدید منتشر شد",
                 "یک تکلیف جدید برای شما منتشر شده است.")).ToArray())));
+        _audit.Record(context, AcademicAuditAction.AssignmentPublished, record.Assignment.Id,
+            record.Version.Id, record.Version.VersionNumber, nowUtc);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PublishAssignmentResult(

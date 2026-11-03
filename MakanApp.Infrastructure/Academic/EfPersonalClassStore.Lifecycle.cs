@@ -54,9 +54,12 @@ public sealed partial class EfPersonalClassStore
         if (!member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner) && command.Roles.HasFlag(PersonalClassLocalRoles.Learner))
             await RequireLearnerSeat(c, member.StudentUserId, now, ct);
         var lostEducationalRole = (member.LocalRoles & (PersonalClassLocalRoles.Manager | PersonalClassLocalRoles.Teacher) & ~command.Roles) != 0;
+        var previousRoles = member.LocalRoles; var previousCapabilities = member.DelegatedCapabilities;
         try { member.ChangeRoles(command.Roles, command.DelegatedCapabilities); } catch (InvalidOperationException) { throw Conflict(); }
         if (lostEducationalRole) await RevokeAcademicGrantsAsync(member.Id, now, ct);
-        Audit(actor, id, "LocalRolesChanged", command.Reason, now); await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Member(member);
+        Audit(actor, id, "LocalRolesChanged", command.Reason, now, System.Text.Json.JsonSerializer.Serialize(new
+            { membershipId = member.Id, previousRoles, previousCapabilities, roles = member.LocalRoles, capabilities = member.DelegatedCapabilities }));
+        await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Member(member);
     }
 
     public async Task EndAsync(PersonalClassActor actor, Guid id, Guid memberId, PersonalClassReasonCommand command, DateTime now, CancellationToken ct)
@@ -69,7 +72,8 @@ public sealed partial class EfPersonalClassStore
         Version(member.RowVersion, command.ExpectedVersion);
         if (member.LocalRoles.HasFlag(PersonalClassLocalRoles.Manager) && c.State != PersonalClassState.Archived)
             throw Error(AcademicErrorCodes.PersonalClassLastManagerRequired, "مدیر مسئول ابتدا باید انتقال معتبر یا بایگانی انجام دهد.");
-        member.End(now, command.Reason); Audit(actor, id, "MembershipEnded", command.Reason, now);
+        member.End(now, command.Reason); Audit(actor, id, "MembershipEnded", command.Reason, now,
+            System.Text.Json.JsonSerializer.Serialize(new { membershipId = member.Id }));
         await RevokeAcademicGrantsAsync(member.Id, now, ct);
         await SaveClass(c, now, ct); await tx.CommitAsync(ct);
     }

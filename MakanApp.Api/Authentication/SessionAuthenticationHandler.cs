@@ -48,21 +48,37 @@ public sealed class SessionAuthenticationHandler(
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
     {
-        Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        await WriteFailureAsync(new ProblemDetails
         {
-            HttpContext = Context,
-            ProblemDetails = new ProblemDetails
+            Status = StatusCodes.Status401Unauthorized,
+            Title = "Authentication required",
+            Detail = "برای ادامه باید وارد شوید.",
+            Type = "urn:makan:problem:auth-required",
+            Extensions =
             {
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "Authentication required",
-                Detail = "برای ادامه باید وارد شوید.",
-                Type = "urn:makan:problem:auth-required",
-                Extensions =
-                {
-                    ["code"] = IdentityErrorCodes.AuthRequired
-                }
+                ["code"] = IdentityErrorCodes.AuthRequired
             }
         });
+    }
+
+    protected override async Task HandleForbiddenAsync(AuthenticationProperties properties)
+    {
+        await WriteFailureAsync(new ProblemDetails
+        {
+            Status = StatusCodes.Status403Forbidden, Title = "Access denied",
+            Detail = "مجوز جاری این عملیات را ندارید.", Type = "urn:makan:problem:auth-forbidden",
+            Extensions = { ["code"] = MakanApp.Api.Errors.ApiErrorCodes.Forbidden }
+        });
+    }
+
+    private async Task WriteFailureAsync(ProblemDetails problem)
+    {
+        Response.StatusCode = problem.Status!.Value;
+        if (await problemDetailsService.TryWriteAsync(new ProblemDetailsContext { HttpContext = Context, ProblemDetails = problem })) return;
+        // Accept فایل نباید code/correlation خطای ورود یا مجوز را حذف کند.
+        problem.Extensions.TryAdd("traceId", System.Diagnostics.Activity.Current?.Id ?? Context.TraceIdentifier);
+        problem.Extensions.TryAdd("correlationId", Context.TraceIdentifier);
+        await Response.WriteAsJsonAsync(problem, options: (System.Text.Json.JsonSerializerOptions?)null,
+            contentType: "application/problem+json", cancellationToken: Context.RequestAborted);
     }
 }

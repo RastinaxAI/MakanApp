@@ -10,6 +10,11 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/academic")]
 public sealed class ExamGradingsController(IExamGradingService gradingService) : ControllerBase
 {
+    [HttpGet("exams/{examId:guid}/grading/page")]
+    public async Task<ActionResult<AcademicPage<ExamGradingQueueItemDto>>> GetQueuePage(Guid examId,
+        [FromQuery] ExamGradingQueueQuery query, CancellationToken ct) =>
+        Ok(await gradingService.GetQueuePageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), examId, query, ct));
+
     [HttpGet("exams/{examId:guid}/grading")]
     [ProducesResponseType<IReadOnlyCollection<ExamGradingQueueItemDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<ExamGradingQueueItemDto>>> GetQueue(

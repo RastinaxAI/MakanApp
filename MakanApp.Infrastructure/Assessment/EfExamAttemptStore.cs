@@ -170,6 +170,16 @@ public sealed class EfExamAttemptStore(
 
     public void Add(ExamAttempt attempt) => dbContext.ExamAttempts.Add(attempt);
 
+    public async Task<AcademicPage<ExamAttempt>> GetOwnedAttemptsPageAsync(AcademicScope scope, Guid examId,
+        Guid userId, int page, int pageSize, CancellationToken ct)
+    {
+        var query = CreateOwnedAttemptQuery(scope, userId).Where(a => a.ExamId == examId);
+        var total = await query.CountAsync(ct);
+        var rows = await query.OrderBy(a => a.AttemptNumber).ThenBy(a => a.Id)
+            .Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(ct);
+        return new(rows, page, pageSize, total);
+    }
+
     public void AddRange(IEnumerable<ExamAttemptQuestion> questions) =>
         dbContext.ExamAttemptQuestions.AddRange(questions);
 

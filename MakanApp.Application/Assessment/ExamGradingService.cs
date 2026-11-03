@@ -12,7 +12,8 @@ public sealed partial class ExamGradingService(
     IAcademicContextResolver accessContextResolver,
     IExamGradingStore store,
     TimeProvider timeProvider,
-    IOutbox outbox) : IExamGradingService
+    IOutbox outbox,
+    IAcademicAuditWriter audit) : IExamGradingService
 {
     public async Task<ExamGradeDto> CreateOrGetDraftAsync(
         Guid userId,
@@ -250,6 +251,9 @@ public sealed partial class ExamGradingService(
             aggregate.Source.Attempt.Id,
             nowUtc,
             recipients)));
+        audit.Record(context, revision.SupersedesExamGradeRevisionId.HasValue
+                ? AcademicAuditAction.ExamResultCorrected : AcademicAuditAction.ExamResultReleased,
+            attemptId, revision.Id, revision.RevisionNumber, nowUtc);
         await store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return ToReleaseDto(release, revision, aggregate.Source.Version.MaxScore);

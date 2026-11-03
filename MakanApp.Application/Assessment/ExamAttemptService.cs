@@ -217,6 +217,17 @@ public sealed class ExamAttemptService(
             .ToArray();
     }
 
+    public async Task<AcademicPage<StudentExamAttemptSummaryDto>> GetMyAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid examId, int page, int pageSize, CancellationToken ct)
+    {
+        PersonalAcademicReadService.Validate(new(page, pageSize));
+        var access = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Exam, examId, ct);
+        if (access.IsPersonal) await deadlines.FinalizeDueForExamAsync(examId, userId, ct);
+        var rows = await store.GetOwnedAttemptsPageAsync(access.Scope, examId, userId, page, pageSize, ct);
+        var now = UtcNow();
+        return new(rows.Items.Select(a => ToSummary(a, now)).ToArray(), page, pageSize, rows.Total);
+    }
+
     private async Task<AcademicAccessContext> GetStudentContextAsync(
         Guid userId,
         Guid sessionId,

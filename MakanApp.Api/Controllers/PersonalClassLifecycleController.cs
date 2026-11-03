@@ -29,6 +29,7 @@ public sealed class PersonalClassLifecycleController(PersonalClassLifecycleServi
     [HttpPut("{id:guid}/memberships/{memberId:guid}/roles")]
     public async Task<ActionResult<PersonalClassMembershipDto>> Roles(Guid id, Guid memberId, ChangePersonalClassRolesCommand command, CancellationToken ct) => Ok(await service.RolesAsync(Actor, id, memberId, command, ct));
     [HttpDelete("{id:guid}/memberships/{memberId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> End(Guid id, Guid memberId, [FromBody] PersonalClassReasonCommand command, CancellationToken ct)
     { await service.EndAsync(Actor, id, memberId, command, ct); return NoContent(); }
     [HttpPost("invitations/{id:guid}/decline")]
@@ -52,6 +53,7 @@ public sealed class PersonalClassLifecycleController(PersonalClassLifecycleServi
     [HttpGet("{id:guid}/spaces")]
     public async Task<ActionResult<OfficialSpacesPairResult>> Spaces(Guid id, CancellationToken ct) => Ok(await service.SpacesAsync(Actor, id, ct));
     [HttpPost("{id:guid}/spaces/repair")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
     public async Task<IActionResult> Repair(Guid id, RepairPersonalClassSpacesCommand command, CancellationToken ct)
     { await service.RepairAsync(Actor, id, command, ct); return Accepted(); }
     [HttpGet("{id:guid}/spaces/backfill-plan")]

@@ -95,6 +95,10 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         await WithDb(async db =>
         {
             Assert.Equal(2, await db.ExamGradeRevisions.CountAsync(g => g.ExamAttemptId == attempt.ExamAttemptId));
+            var audits = await db.AdminAuditLogs.Where(a => a.TargetId == attempt.ExamAttemptId.ToString() && a.TargetType == "PersonalClassExamAttempt").ToArrayAsync();
+            Assert.Single(audits, a => a.Action == "personal_class.academic.ExamResultReleased");
+            Assert.Single(audits, a => a.Action == "personal_class.academic.ExamResultCorrected");
+            Assert.All(audits, a => { Assert.DoesNotContain("PRIVATE-", a.AfterSummary ?? ""); Assert.DoesNotContain("PRIVATE-", a.Reason); });
             var stored = await db.ExamAttempts.SingleAsync(a => a.Id == attempt.ExamAttemptId);
             Assert.Null(stored.OrganizationId); Assert.Null(stored.EnrollmentId); Assert.NotNull(stored.PersonalClassMembershipId);
         });

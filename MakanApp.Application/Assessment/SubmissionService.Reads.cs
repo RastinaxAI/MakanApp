@@ -13,6 +13,22 @@ public sealed partial class SubmissionService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
+        var context = await MyAttemptsAccessAsync(userId, sessionId, assignmentId, cancellationToken);
+        var attempts = await _store.GetAttemptsForStudentAsync(context.Scope, assignmentId, context.UserId, cancellationToken);
+        return attempts.Select(attempt => ToResult(attempt, true)).ToArray();
+    }
+
+    public async Task<AcademicPage<SubmissionAttemptResult>> GetMyAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid assignmentId, int page, int pageSize, CancellationToken ct)
+    {
+        PersonalAcademicReadService.Validate(new(page, pageSize));
+        var context = await MyAttemptsAccessAsync(userId, sessionId, assignmentId, ct);
+        var result = await _store.GetAttemptsPageAsync(context.Scope, assignmentId, userId, page, pageSize, ct);
+        return new(result.Items.Select(a => ToResult(a, true)).ToArray(), page, pageSize, result.Total);
+    }
+
+    private async Task<AcademicAccessContext> MyAttemptsAccessAsync(Guid userId, Guid sessionId, Guid assignmentId, CancellationToken cancellationToken)
+    {
         var context = await GetStudentContextAsync(userId, sessionId, AcademicResourceKind.Assignment, assignmentId, cancellationToken);
         var eligibility = await _store.GetEligibilityForStudentAsync(
             context.Scope,
@@ -24,12 +40,7 @@ public sealed partial class SubmissionService
             throw RecipientNotFound();
         }
 
-        var attempts = await _store.GetAttemptsForStudentAsync(
-            context.Scope,
-            assignmentId,
-            context.UserId,
-            cancellationToken);
-        return attempts.Select(attempt => ToResult(attempt, true)).ToArray();
+        return context;
     }
 
     public async Task<SubmissionAttemptResult> GetAttemptAsync(
@@ -75,6 +86,22 @@ public sealed partial class SubmissionService
         Guid assignmentId,
         CancellationToken cancellationToken)
     {
+        var context = await SubmittedAccessAsync(userId, sessionId, assignmentId, cancellationToken);
+        var attempts = await _store.GetSubmittedAttemptsAsync(context.Scope, assignmentId, cancellationToken);
+        return attempts.Select(attempt => ToResult(attempt, true)).ToArray();
+    }
+
+    public async Task<AcademicPage<SubmissionAttemptResult>> GetSubmittedAttemptsPageAsync(Guid userId, Guid sessionId,
+        Guid assignmentId, int page, int pageSize, CancellationToken ct)
+    {
+        PersonalAcademicReadService.Validate(new(page, pageSize));
+        var context = await SubmittedAccessAsync(userId, sessionId, assignmentId, ct);
+        var result = await _store.GetAttemptsPageAsync(context.Scope, assignmentId, null, page, pageSize, ct);
+        return new(result.Items.Select(a => ToResult(a, true)).ToArray(), page, pageSize, result.Total);
+    }
+
+    private async Task<AcademicAccessContext> SubmittedAccessAsync(Guid userId, Guid sessionId, Guid assignmentId, CancellationToken cancellationToken)
+    {
         var context = await _accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Assignment,
             assignmentId, AcademicOperation.Grade, false, cancellationToken);
         var assignment = await _store.GetAssignmentAsync(
@@ -97,10 +124,6 @@ public sealed partial class SubmissionService
             throw SubmissionNotFound();
         }
 
-        var attempts = await _store.GetSubmittedAttemptsAsync(
-            context.Scope,
-            assignmentId,
-            cancellationToken);
-        return attempts.Select(attempt => ToResult(attempt, true)).ToArray();
+        return context;
     }
 }

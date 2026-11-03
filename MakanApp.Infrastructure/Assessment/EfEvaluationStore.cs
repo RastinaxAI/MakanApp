@@ -136,7 +136,28 @@ public sealed class EfEvaluationStore(MakanDbContext dbContext, MakanApp.Infrast
         EvaluationQueueQuery query,
         CancellationToken cancellationToken)
     {
-        IQueryable<SubmissionAttempt> attemptsQuery =
+        var attemptsQuery = QueueQuery(scope, teacherMembershipId, query);
+        if (scope.Kind == AcademicClassKind.PersonalClass || query.Page.HasValue || query.PageSize.HasValue)
+            attemptsQuery = attemptsQuery.Skip(((query.Page ?? 1) - 1) * (query.PageSize ?? 25)).Take(query.PageSize ?? 25);
+        var attempts = await attemptsQuery.AsNoTracking().ToArrayAsync(cancellationToken);
+        var results = new List<EvaluationQueueRecord>(attempts.Length);
+        foreach (var attempt in attempts)
+        {
+            var aggregate = await LoadAggregateAsync(attempt, asNoTracking: true, cancellationToken);
+            results.Add(new EvaluationQueueRecord(aggregate.Submission, aggregate.LatestEvaluation, aggregate.CurrentReleasedEvaluation));
+        }
+        return results;
+    }
+
+    public async Task<AcademicPage<EvaluationQueueRecord>> GetQueuePageAsync(AcademicScope scope, Guid? teacherMembershipId,
+        EvaluationQueueQuery query, CancellationToken ct)
+    {
+        query = query with { Page = query.Page ?? 1, PageSize = query.PageSize ?? 25 };
+        var total = await QueueQuery(scope, teacherMembershipId, query).CountAsync(ct);
+        return new(await GetQueueAsync(scope, teacherMembershipId, query, ct), query.Page.Value, query.PageSize.Value, total);
+    }
+
+    private IQueryable<SubmissionAttempt> QueueQuery(AcademicScope scope, Guid? teacherMembershipId, EvaluationQueueQuery query) =>
             from attempt in dbContext.SubmissionAttempts
             join assignment in dbContext.Assignments
                 on new { attempt.ContextKind, attempt.ContextId, Id = attempt.AssignmentId }
@@ -159,22 +180,6 @@ public sealed class EfEvaluationStore(MakanDbContext dbContext, MakanApp.Infrast
                       teacher.EndedAtUtc == null))
             orderby attempt.SubmittedAtUtc, attempt.Id
             select attempt;
-
-        if (scope.Kind == AcademicClassKind.PersonalClass || query.Page.HasValue || query.PageSize.HasValue)
-            attemptsQuery = attemptsQuery.Skip(((query.Page ?? 1) - 1) * (query.PageSize ?? 25)).Take(query.PageSize ?? 25);
-        var attempts = await attemptsQuery.AsNoTracking().ToArrayAsync(cancellationToken);
-        var results = new List<EvaluationQueueRecord>(attempts.Length);
-        foreach (var attempt in attempts)
-        {
-            var aggregate = await LoadAggregateAsync(attempt, asNoTracking: true, cancellationToken);
-            results.Add(new EvaluationQueueRecord(
-                aggregate.Submission,
-                aggregate.LatestEvaluation,
-                aggregate.CurrentReleasedEvaluation));
-        }
-
-        return results;
-    }
 
     private async Task<EvaluationAggregateRecord> LoadAggregateAsync(
         SubmissionAttempt attempt,

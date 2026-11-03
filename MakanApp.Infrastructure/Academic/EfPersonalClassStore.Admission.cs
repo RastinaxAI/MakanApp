@@ -73,7 +73,8 @@ public sealed partial class EfPersonalClassStore
         if (c.State == PersonalClassState.Archived || await db.PersonalClassManagerTransfers.AnyAsync(t => t.PersonalClassId == id && t.Status == PersonalClassManagerTransferStatus.Pending, ct)) throw Conflict();
         if (!await db.Users.AnyAsync(u => u.Id == command.TargetUserId && u.AccountStatus == UserAccountStatus.Active, ct)) throw NotFound();
         var transfer = PersonalClassManagerTransfer.Create(id, actor.UserId, c.ManagerUserId, command.TargetUserId, command.ClientOperationId, command.Reason, now);
-        db.PersonalClassManagerTransfers.Add(transfer); Audit(actor, id, "ManagerTransferRequested", command.Reason, now);
+        db.PersonalClassManagerTransfers.Add(transfer); Audit(actor, id, "ManagerTransferRequested", command.Reason, now,
+            System.Text.Json.JsonSerializer.Serialize(new { transferId = transfer.Id, transfer.PreviousManagerUserId, transfer.TargetUserId }));
         await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Transfer(transfer);
     }
 
@@ -110,7 +111,8 @@ public sealed partial class EfPersonalClassStore
             }
             c.SetManager(actor.UserId);
         }
-        Audit(actor, classId, "ManagerTransfer" + command.Decision, transfer.Reason, now);
+        Audit(actor, classId, "ManagerTransfer" + command.Decision, transfer.Reason, now,
+            System.Text.Json.JsonSerializer.Serialize(new { transferId = transfer.Id, transfer.PreviousManagerUserId, transfer.TargetUserId }));
         await SaveClass(c, now, ct); await tx.CommitAsync(ct); return Transfer(transfer);
     }
 }

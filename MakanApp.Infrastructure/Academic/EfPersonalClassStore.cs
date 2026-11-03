@@ -41,10 +41,11 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
     public Task EndParticipantAsync(Guid userId, Guid classId, Guid participantId, DateTime now, CancellationToken ct) =>
         throw Error(AcademicErrorCodes.PersonalClassVersionConflict, "نسخه و دلیل پایان عضویت لازم است.");
 
-    public async Task<PersonalClassInvitationDto> InviteAsync(Guid actor, Guid classId, InvitePersonalClassStudentCommand command, DateTime now, CancellationToken ct)
+    public async Task<PersonalClassInvitationDto> InviteAsync(Guid actor, Guid classId, InvitePersonalClassStudentCommand command, DateTime now, CancellationToken ct, Guid? actorSessionId = null)
     {
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var entity = await LockClass(classId, ct); await RequireManager(actor, entity, ct);
+        if (actorSessionId.HasValue) await actors.EnsureAsync(actor, actorSessionId.Value, ct);
         var existing = await db.PersonalClassInvitations.SingleOrDefaultAsync(i => i.PersonalClassId == classId && i.ClientOperationId == command.ClientOperationId, ct);
         if (existing is not null)
         {
@@ -59,18 +60,21 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
             i.AcceptedAtUtc == null && i.DeclinedAtUtc == null && i.RevokedAtUtc == null && i.ExpiresAtUtc > now, ct);
         if (pending is not null) throw Conflict();
         var invitation = PersonalClassInvitation.Create(classId, command.DestinationUserId, command.ClientOperationId, now, now.AddHours(options.Value.InvitationLifetimeHours), command.LocalRoles, command.DelegatedCapabilities);
-        db.PersonalClassInvitations.Add(invitation); await SaveClass(entity, now, ct); await tx.CommitAsync(ct); return Invitation(invitation, now);
+        db.PersonalClassInvitations.Add(invitation);
+        AuditAdmission(actor, actorSessionId, classId, "InvitationCreated", invitation.Id, now);
+        await SaveClass(entity, now, ct); await tx.CommitAsync(ct); return Invitation(invitation, now);
     }
 
     public async Task<IReadOnlyList<PersonalClassInvitationDto>> InvitationsAsync(Guid userId, CancellationToken ct) =>
         (await InvitationsPageAsync(userId, 1, 100, ct)).Items;
 
-    public async Task<PersonalClassDto> AcceptAsync(Guid userId, Guid invitationId, DateTime now, CancellationToken ct)
+    public async Task<PersonalClassDto> AcceptAsync(Guid userId, Guid invitationId, DateTime now, CancellationToken ct, Guid? actorSessionId = null)
     {
         var classId = await db.PersonalClassInvitations.AsNoTracking().Where(i => i.Id == invitationId && i.DestinationUserId == userId)
             .Select(i => (Guid?)i.PersonalClassId).SingleOrDefaultAsync(ct) ?? throw NotFound();
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var entity = await LockClass(classId, ct);
+        if (actorSessionId.HasValue) await actors.EnsureAsync(userId, actorSessionId.Value, ct);
         var invitation = await db.PersonalClassInvitations.SingleAsync(i => i.Id == invitationId, ct);
         var member = await ActiveMembers(classId).SingleOrDefaultAsync(m => m.StudentUserId == userId, ct);
         if (invitation.AcceptedAtUtc.HasValue || invitation.ClosureReason == "MembershipEstablished")
@@ -89,6 +93,7 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
         }
         else invitation.Accept(userId, now);
         await CloseAdmissionIntents(entity.Id, userId, member.Id, invitation.Id, now, ct, member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner));
+        AuditAdmission(userId, actorSessionId, classId, "MembershipAccepted", member.Id, now);
         await SaveClass(entity, now, ct); await tx.CommitAsync(ct); return await MapAsync(entity, userId, ct);
     }
 
@@ -151,9 +156,15 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
             spaces.PersonalClassChanged(c.Id, now);
         await db.SaveChangesAsync(ct);
     }
-    private void Audit(PersonalClassActor actor, Guid classId, string action, string reason, DateTime now) => db.AdminAuditLogs.Add(AdminAuditLog.Create(
+    private void Audit(PersonalClassActor actor, Guid classId, string action, string reason, DateTime now, string? afterSummary = null) => db.AdminAuditLogs.Add(AdminAuditLog.Create(
         actor.UserId, null, actor.SessionId, "personal_class." + action, "PersonalClass", classId.ToString(), null, reason, now,
-        actor.CorrelationId, AdminAuditResult.Succeeded, null, null));
+        actor.CorrelationId, AdminAuditResult.Succeeded, null, afterSummary));
+    private void AuditAdmission(Guid actor, Guid? sessionId, Guid classId, string action, Guid referenceId, DateTime now) =>
+        db.AdminAuditLogs.Add(AdminAuditLog.Create(actor, null, sessionId, "personal_class." + action,
+            "PersonalClass", classId.ToString(), null, "ثبت معتبر دعوت یا پذیرش عضویت محلی", now,
+            System.Diagnostics.Activity.Current?.GetTagItem("makan.correlation_id") as string ??
+                System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"),
+            AdminAuditResult.Succeeded, null, System.Text.Json.JsonSerializer.Serialize(new { referenceId })));
     private static PersonalClassDto Map(PersonalClass c, Guid actor) => new(c.Id, c.HostUserId, c.Title, c.ArchivedAtUtc.HasValue, c.HostUserId == actor, false, "NotAvailable", c.CreatedAtUtc)
     {
         ManagerUserId = c.ManagerUserId, Capacity = c.Capacity, AcceptingJoinRequests = c.AcceptingJoinRequests, State = c.State.ToString(),

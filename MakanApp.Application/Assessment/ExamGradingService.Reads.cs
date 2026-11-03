@@ -12,11 +12,7 @@ public sealed partial class ExamGradingService
         ExamGradingQueueQuery query,
         CancellationToken cancellationToken)
     {
-        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
-        if (query.Status.HasValue && !Enum.IsDefined(query.Status.Value))
-            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
-        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam,
-            examId, AcademicOperation.Grade, false, cancellationToken);
+        var context = await QueueAccessAsync(userId, sessionId, examId, query, cancellationToken);
         IReadOnlyCollection<ExamGradingQueueRecord> records = context.IsPersonal
             ? await store.GetQueueForManagerAsync(context.Scope, examId, query, cancellationToken)
             : context.ActiveRole switch
@@ -39,6 +35,26 @@ public sealed partial class ExamGradingService
             .Select(ToQueueItem)
             .Where(item => !query.Status.HasValue || item.Status == query.Status.Value)
             .ToArray();
+    }
+
+    public async Task<AcademicPage<ExamGradingQueueItemDto>> GetQueuePageAsync(Guid userId, Guid sessionId, Guid examId,
+        ExamGradingQueueQuery query, CancellationToken ct)
+    {
+        var context = await QueueAccessAsync(userId, sessionId, examId, query, ct);
+        var page = await store.GetQueuePageAsync(context.Scope,
+            !context.IsPersonal && context.ActiveRole == OrganizationRole.Teacher ? context.MembershipId : null, examId, query, ct);
+        return new(page.Items.Select(ToQueueItem).ToArray(), page.Page, page.PageSize, page.Total);
+    }
+
+    private async Task<AcademicAccessContext> QueueAccessAsync(Guid userId, Guid sessionId, Guid examId, ExamGradingQueueQuery query, CancellationToken ct)
+    {
+        PersonalAcademicReadService.Validate(new(query.Page ?? 1, query.PageSize ?? 25));
+        if (query.Status.HasValue && !Enum.IsDefined(query.Status.Value))
+            throw new AssessmentException(AssessmentErrorCodes.AcademicQueryInvalid, "فیلتر وضعیت معتبر نیست.");
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, AcademicResourceKind.Exam,
+            examId, AcademicOperation.Grade, false, ct);
+        if (!context.IsPersonal && context.ActiveRole is not (OrganizationRole.Manager or OrganizationRole.Teacher)) throw GradeNotAllowed();
+        return context;
     }
 
     public async Task<ExamGradeDto> GetForGradingAsync(

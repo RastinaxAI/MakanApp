@@ -27,12 +27,12 @@ public sealed class PersonalClassService(CommercialActorAccess actors, IPersonal
             (command.DelegatedCapabilities & ~(MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.PublishCommunication | MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.ManageCommunication)) != 0 ||
             command.DelegatedCapabilities != MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.None && !command.LocalRoles.HasFlag(MakanApp.Domain.Academic.PersonalClassLocalRoles.Teacher))
             throw PersonalClassFormationService.Invalid();
-        return await store.InviteAsync(userId, classId, command, Now(), ct);
+        return await store.InviteAsync(userId, classId, command, Now(), ct, sessionId);
     }
     public async Task<IReadOnlyList<PersonalClassInvitationDto>> InvitationsAsync(Guid userId, Guid sessionId, CancellationToken ct)
     { await Actor(userId, sessionId, ct); return await store.InvitationsAsync(userId, ct); }
     public async Task<PersonalClassDto> AcceptAsync(Guid userId, Guid sessionId, Guid invitationId, CancellationToken ct)
-    { await Actor(userId, sessionId, ct); return await store.AcceptAsync(userId, invitationId, Now(), ct); }
+    { await Actor(userId, sessionId, ct); return await store.AcceptAsync(userId, invitationId, Now(), ct, sessionId); }
     public async Task<IReadOnlyList<PersonalClassParticipantDto>> ParticipantsAsync(Guid userId, Guid sessionId, Guid classId, CancellationToken ct)
     { await Actor(userId, sessionId, ct); return await store.ParticipantsAsync(userId, classId, ct); }
     public async Task EndParticipantAsync(Guid userId, Guid sessionId, Guid classId, Guid participantId, CancellationToken ct)

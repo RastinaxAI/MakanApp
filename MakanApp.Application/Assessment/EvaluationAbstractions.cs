@@ -4,6 +4,8 @@ namespace MakanApp.Application.Assessment;
 
 public interface IEvaluationService
 {
+    Task<AcademicPage<EvaluationQueueItemResult>> GetQueuePageAsync(Guid userId, Guid sessionId,
+        EvaluationQueueQuery query, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<EvaluationQueueItemResult>> GetQueueAsync(
         Guid userId,
         Guid sessionId,
@@ -58,6 +60,8 @@ public interface IEvaluationService
 
 public interface IEvaluationStore
 {
+    Task<AcademicPage<EvaluationQueueRecord>> GetQueuePageAsync(AcademicScope scope, Guid? teacherMembershipId,
+        EvaluationQueueQuery query, CancellationToken cancellationToken);
     Task<IAssessmentTransaction> BeginSerializableTransactionAsync(CancellationToken cancellationToken);
     Task<EvaluationAggregateRecord?> GetAggregateAsync(
         AcademicScope scope,

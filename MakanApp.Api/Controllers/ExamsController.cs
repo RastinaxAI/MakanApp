@@ -201,6 +201,11 @@ public sealed class ExamsController(
             attemptId,
             cancellationToken));
 
+    [HttpGet("exams/{examId:guid}/attempts/me/page")]
+    public async Task<ActionResult<AcademicPage<StudentExamAttemptSummaryDto>>> MyAttemptsPage(Guid examId,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default) =>
+        Ok(await examAttemptService.GetMyAttemptsPageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), examId, page, pageSize, ct));
+
     [HttpGet("exams/{examId:guid}/attempts/me")]
     [ProducesResponseType<IReadOnlyCollection<StudentExamAttemptSummaryDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<StudentExamAttemptSummaryDto>>> GetMyAttempts(
