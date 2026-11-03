@@ -82,8 +82,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
     }
 
     public Task<bool> CanAccessPersonalClassAsync(Guid userId, Guid classId, CancellationToken ct) => db.PersonalClasses.AsNoTracking()
-        .AnyAsync(c => c.Id == classId && (c.HostUserId == userId || db.PersonalClassParticipants.Any(p => p.PersonalClassId == c.Id
-            && p.StudentUserId == userId && p.EndedAtUtc == null)), ct);
+        .AnyAsync(c => c.Id == classId && db.PersonalClassParticipants.Any(p => p.PersonalClassId == c.Id
+            && p.StudentUserId == userId && p.EndedAtUtc == null), ct);
 
     public async Task<Subscription?> CurrentAsync(SubscriptionOwner owner, DateTime utcNow, CancellationToken ct) =>
         await db.Subscriptions.AsNoTracking().Where(s => s.OwnerType == owner.Type && s.OwnerId == owner.Id
@@ -151,7 +151,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
                 QuotaKey.ActiveClasses => await db.PersonalClasses.LongCountAsync(c => c.HostUserId == owner.Id && c.ArchivedAtUtc == null, ct),
                 QuotaKey.SourceCount => await db.EducationalSources.LongCountAsync(s => s.OwnerUserId == owner.Id && s.Scope == MakanApp.Domain.Knowledge.EducationalSourceScope.Personal, ct),
                 QuotaKey.ActiveLearners => await (from p in db.PersonalClassParticipants join c in db.PersonalClasses on p.PersonalClassId equals c.Id
-                    where c.HostUserId == owner.Id && c.ArchivedAtUtc == null && p.EndedAtUtc == null select p.StudentUserId).Distinct().LongCountAsync(ct),
+                    where c.HostUserId == owner.Id && c.ArchivedAtUtc == null && p.EndedAtUtc == null &&
+                        (p.LocalRoles & PersonalClassLocalRoles.Learner) != 0 select p.StudentUserId).Distinct().LongCountAsync(ct),
                 _ => 0
             };
         return key switch

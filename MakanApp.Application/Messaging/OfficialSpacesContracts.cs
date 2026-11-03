@@ -3,10 +3,12 @@ using MakanApp.Domain.Messaging;
 
 namespace MakanApp.Application.Messaging;
 
-public sealed record OfficialSpaceMetadata(OfficialSourceKind SourceKind, Guid SourceId, Guid OrganizationId,
+public sealed record OfficialSpaceMetadata(OfficialSourceKind SourceKind, Guid SourceId, Guid? OrganizationId,
     ConversationType Purpose, string DisplayLabel, string Version)
 {
-    public static OfficialSpaceMetadata? From(Conversation c) => c.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
+    public static OfficialSpaceMetadata? From(Conversation c) => c.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && c.PersonalClassId.HasValue ?
+        new(OfficialSourceKind.PersonalClass, c.PersonalClassId.Value, null, c.Type, c.Title ?? string.Empty, Convert.ToBase64String(c.RowVersion)) :
+        c.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
         c.OrganizationId is null || c.AcademicClassId is null && !c.IsOfficialOrganizationSpace ? null :
         new(c.AcademicClassId.HasValue ? OfficialSourceKind.Class : OfficialSourceKind.Organization, c.AcademicClassId ?? c.OrganizationId.Value,
             c.OrganizationId.Value, c.Type, c.Title ?? string.Empty, Convert.ToBase64String(c.RowVersion));
@@ -17,10 +19,16 @@ public sealed record OfficialSpaceEndpointResult(Guid? ConversationId, string St
 {
     public ConversationEffectiveCapabilities EffectiveCapabilities { get; init; } = ConversationEffectiveCapabilities.None;
 }
-public sealed record OfficialSpacesPairResult(OfficialSourceKind SourceKind, Guid SourceId, Guid OrganizationId,
+public sealed record OfficialSpacesPairResult(OfficialSourceKind SourceKind, Guid SourceId, Guid? OrganizationId,
     string Version, OfficialSpaceEndpointResult Group, OfficialSpaceEndpointResult Channel);
 public sealed record OfficialBackfillPlanRow(OfficialSourceKind SourceKind, Guid SourceId, Guid OrganizationId,
     Guid? GroupCandidateId, Guid? ChannelCandidateId, bool MissingGroup, bool MissingChannel, string Action, bool Conflict);
+public sealed record PersonalClassBackfillPlanRow(Guid ClassId, Guid HostUserId, Guid? ManagerUserId, string MigrationState,
+    int ActiveMemberships, Guid? GroupCandidateId, Guid? ChannelCandidateId, IReadOnlyList<Guid> UnboundCandidates,
+    string GroupAction, string ChannelAction, bool Conflict, string? ManualDecision)
+{
+    public string PlanSha256 { get; init; } = string.Empty;
+}
 public sealed record AcademicActivityCardResult(Guid EventId, AcademicActivityKind Kind, Guid SourceId, Guid SourceVersionId,
     int SourceRevision, Guid OrganizationId, Guid ClassId, Guid DestinationConversationId, ConversationType DestinationPurpose,
     string ActorKind, Guid InitiatedByUserId, DateTime OccurredAtUtc, string Title, DateTime? DueAtUtc,

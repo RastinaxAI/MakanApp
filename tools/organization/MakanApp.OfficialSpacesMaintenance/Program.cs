@@ -15,12 +15,16 @@ Console.CancelKeyPress += (_, eventArgs) => { eventArgs.Cancel = true; cancellat
 try
 {
     var apply = false; var explicitDryRun = false; Guid? organizationId = null; string? approvedHash = null; string? output = null;
+    var personalClasses = false; Guid? personalClassId = null;
     for (var index = 0; index < args.Length; index++)
     {
         switch (args[index])
         {
             case "--dry-run": explicitDryRun = true; break;
             case "--apply": apply = true; break;
+            case "--personal-classes": personalClasses = true; break;
+            case "--personal-class-id" when index + 1 < args.Length && Guid.TryParse(args[++index], out var personalId) && personalId != Guid.Empty:
+                personalClasses = true; personalClassId = personalId; break;
             case "--organization-id" when index + 1 < args.Length && Guid.TryParse(args[++index], out var id) && id != Guid.Empty:
                 organizationId = id; break;
             case "--approved-plan-sha256" when index + 1 < args.Length: approvedHash = args[++index]; break;
@@ -29,7 +33,7 @@ try
         }
     }
     // مجوز SQL و تأیید طرح، مسئولیت اپراتور است؛ ابزار عمومی HTTP یا مسیر دورزدن مجوز کاربر نیست.
-    if (apply && (explicitDryRun || !organizationId.HasValue || approvedHash is null || approvedHash.Length != 64 || !approvedHash.All(Uri.IsHexDigit)))
+    if (personalClasses && organizationId.HasValue || apply && (explicitDryRun || (!organizationId.HasValue && !personalClassId.HasValue) || approvedHash is null || approvedHash.Length != 64 || !approvedHash.All(Uri.IsHexDigit)))
         throw new InvalidOperationException();
     var connection = Environment.GetEnvironmentVariable("ConnectionStrings__MakanDatabase");
     if (string.IsNullOrWhiteSpace(connection)) throw new InvalidOperationException();
@@ -39,6 +43,26 @@ try
     const string requiredMigration = "20261030093927_AddOfficialOrganizationAndClassSpaces";
     if (!(await db.Database.GetAppliedMigrationsAsync(cancellation.Token)).Contains(requiredMigration)) throw new InvalidOperationException();
     var store = new EfOfficialSpacesStore(db, new EfOutbox(db), TimeProvider.System, NullLogger<EfOfficialSpacesStore>.Instance);
+    if (personalClasses)
+    {
+        const string personalMigration = "20261103073219_AddReviewedPersonalClassLifecycle";
+        if (!(await db.Database.GetAppliedMigrationsAsync(cancellation.Token)).Contains(personalMigration)) throw new InvalidOperationException();
+        var personalPlan = await store.PlanPersonalClassesAsync(personalClassId, cancellation.Token);
+        if (personalClassId.HasValue && personalPlan.Count == 0) throw new InvalidOperationException();
+        var personalHash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(personalPlan, json)));
+        if (apply)
+        {
+            if (!string.Equals(personalHash, approvedHash, StringComparison.OrdinalIgnoreCase) || personalPlan.Any(p => p.Conflict)) throw new InvalidOperationException();
+            foreach (var row in personalPlan.Where(p => p.GroupAction == "CreateMissing" || p.ChannelAction == "CreateMissing"))
+                if (!await store.EnsurePersonalClassPairAsync(row.ClassId, cancellation.Token, approvedLegacyBackfill: true)) throw new InvalidOperationException();
+        }
+        var personalReport = new { passed = true, mode = apply ? "Apply" : "DryRun", schemaVersion = 1, requiredMigration = personalMigration,
+            planSha256 = personalHash, scannedResources = personalPlan.Count, conflicts = personalPlan.Count(p => p.Conflict),
+            wouldCreate = personalPlan.Sum(p => (p.GroupAction == "CreateMissing" ? 1 : 0) + (p.ChannelAction == "CreateMissing" ? 1 : 0)), resources = personalPlan };
+        if (destination is not null) await JsonSerializer.SerializeAsync(destination, personalReport, json, cancellation.Token);
+        Console.WriteLine(JsonSerializer.Serialize(personalReport, json));
+        return 0;
+    }
     var plan = await store.PlanAsync(cancellation.Token, organizationId);
     if (organizationId.HasValue && plan.Count == 0) throw new InvalidOperationException();
     var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(plan, json)));

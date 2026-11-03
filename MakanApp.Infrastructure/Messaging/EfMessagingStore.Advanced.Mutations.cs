@@ -363,6 +363,7 @@ public sealed partial class EfMessagingStore
             cancellationToken);
         var message = await LockMessageAsync(conversationId, messageId, cancellationToken)
             ?? throw MessageNotFound();
+        await EnsurePersonalClassWritableAsync(conversation, cancellationToken);
         var visibleFromSequence = await GetVisibleFromSequenceAsync(
             conversationId,
             userId,

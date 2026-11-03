@@ -103,7 +103,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         var host = await ActorAsync(); var currentVersion = await PlanAsync(SubscriptionOwnerType.Individual, hosting: true, classes: 3);
         var low = await PlanAsync(SubscriptionOwnerType.Individual, hosting: true, classes: 1);
         var id = await SubscribeAsync(SubscriptionOwner.Individual(host.UserId), currentVersion);
-        for (var i = 0; i < 2; i++) await PostAsync<PersonalClassDto>(host.Client, "/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس " + i, Guid.NewGuid()));
+        for (var i = 0; i < 2; i++) await ApprovedClassAsync(host, "کلاس " + i);
         var current = await GetAsync<CommercialSummaryDto>(host.Client, "/api/v1/commerce/personal/subscription");
         var scheduled = await PostAsync<CommercialSummaryDto>(host.Client, "/api/v1/commerce/personal/subscription/downgrade",
             new ScheduleDowngradeCommand(low, current.Version!, "کاهش آزمایشی برای دورهٔ بعد"));
@@ -121,11 +121,14 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         Assert.Equal(low, next.PlanVersionId); Assert.Equal(1, next.Quotas.Single(q => q.Key == QuotaKey.ActiveClasses).Limit);
         Assert.Equal(2, next.Quotas.Single(q => q.Key == QuotaKey.ActiveClasses).Consumed);
         Assert.Equal(2, (await GetAsync<List<PersonalClassDto>>(host.Client, "/api/v1/personal-classes")).Count);
-        using var denied = await host.Client.PostAsJsonAsync("/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس مازاد", Guid.NewGuid()), Json);
+        var extraRequest = await SubmittedClassRequestAsync(host, "کلاس مازاد");
+        var reviewer = await AdminAsync();
+        using var denied = await reviewer.Client.PostAsJsonAsync($"/api/admin/v1/personal-class-requests/{extraRequest.Id}/review",
+            new ReviewPersonalClassRequestCommand(extraRequest.Version, MakanApp.Domain.Academic.PersonalClassRequestStatus.Approved, "بررسی سهمیه"), Json);
         Assert.Equal(HttpStatusCode.Conflict, denied.StatusCode);
         Assert.Equal(CommerceErrorCodes.QuotaExceeded, await ProblemAsync(denied));
         var existing = await GetAsync<List<PersonalClassDto>>(host.Client, "/api/v1/personal-classes");
-        await PostAsync<PersonalClassDto>(host.Client, $"/api/v1/personal-classes/{existing[0].Id}/archive", null);
+        await PostAsync<PersonalClassDto>(host.Client, $"/api/v1/personal-classes/{existing[0].Id}/archive", new PersonalClassReasonCommand(existing[0].Version, "بایگانی آزمون"));
         Assert.Equal(1, (await GetAsync<CommercialSummaryDto>(host.Client, "/api/v1/commerce/personal/subscription")).Quotas.Single(q => q.Key == QuotaKey.ActiveClasses).Consumed);
     }
 

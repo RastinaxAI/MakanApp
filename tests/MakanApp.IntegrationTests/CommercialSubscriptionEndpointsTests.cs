@@ -59,7 +59,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests(MakanAppWebAppl
         var host = await ActorAsync(); var student = await ActorAsync(); var outsider = await ActorAsync();
         var versionId = await PlanAsync(SubscriptionOwnerType.Individual, ai: 10, hosting: true);
         await SubscribeAsync(SubscriptionOwner.Individual(host.UserId), versionId);
-        var classroom = await PostAsync<PersonalClassDto>(host.Client, "/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس مستقل آزمون", Guid.NewGuid()));
+        var classroom = await ApprovedClassAsync(host, "کلاس مستقل آزمون");
         var invitation = await PostAsync<PersonalClassInvitationDto>(host.Client, $"/api/v1/personal-classes/{classroom.Id}/invitations",
             new InvitePersonalClassStudentCommand(student.UserId, Guid.NewGuid()));
         using var denied = await outsider.Client.PostAsync($"/api/v1/personal-classes/invitations/{invitation.Id}/accept", null);
@@ -82,8 +82,8 @@ public sealed partial class CommercialSubscriptionEndpointsTests(MakanAppWebAppl
     {
         var host = await ActorAsync(); var first = await ActorAsync(); var second = await ActorAsync();
         await SubscribeAsync(SubscriptionOwner.Individual(host.UserId), await PlanAsync(SubscriptionOwnerType.Individual, hosting: true, learners: 1));
-        var a = await PostAsync<PersonalClassDto>(host.Client, "/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس یک", Guid.NewGuid()));
-        var b = await PostAsync<PersonalClassDto>(host.Client, "/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس دو", Guid.NewGuid()));
+        var a = await ApprovedClassAsync(host, "کلاس یک");
+        var b = await ApprovedClassAsync(host, "کلاس دو");
         var ia = await InviteAsync(host, first, a.Id); var ib = await InviteAsync(host, second, b.Id);
         var results = await Task.WhenAll(first.Client.PostAsync($"/api/v1/personal-classes/invitations/{ia.Id}/accept", null),
             second.Client.PostAsync($"/api/v1/personal-classes/invitations/{ib.Id}/accept", null));

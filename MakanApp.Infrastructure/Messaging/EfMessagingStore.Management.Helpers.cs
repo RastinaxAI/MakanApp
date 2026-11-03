@@ -159,13 +159,25 @@ public sealed partial class EfMessagingStore
                 """)
             .SingleOrDefaultAsync(cancellationToken);
 
-    private Task<Conversation?> LockConversationAsync(
+    private async Task<Conversation?> LockConversationAsync(
         Guid conversationId,
-        CancellationToken cancellationToken) =>
-        dbContext.Conversations
+        CancellationToken cancellationToken)
+    {
+        await LockPersonalClassSourcesAsync([conversationId], cancellationToken);
+        return await dbContext.Conversations
             .FromSqlInterpolated(
                 $"SELECT * FROM [messaging].[Conversations] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {conversationId}")
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task LockPersonalClassSourcesAsync(Guid[] conversationIds, CancellationToken ct)
+    {
+        var ids = await dbContext.Conversations.AsNoTracking().Where(c => conversationIds.Contains(c.Id) && c.PersonalClassId != null)
+            .Select(c => c.PersonalClassId!.Value).Distinct().OrderBy(id => id).ToArrayAsync(ct);
+        foreach (var id in ids)
+            await dbContext.PersonalClasses.FromSqlInterpolated($"SELECT * FROM [academic].[PersonalClasses] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={id}")
+                .AsNoTracking().SingleAsync(ct);
+    }
 
     private Task<ConversationParticipant?> LoadActiveParticipantAsync(
         Guid conversationId,

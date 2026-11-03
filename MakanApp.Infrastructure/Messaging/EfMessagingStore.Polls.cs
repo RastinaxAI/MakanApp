@@ -147,6 +147,7 @@ public sealed partial class EfMessagingStore : IConversationPollStore
 
     private async Task EnsureInteractiveMessageInteractionAsync(Conversation conversation, ConversationParticipant actor, Guid userId, AccessContext context, DateTime now, CancellationToken ct)
     {
+        await EnsurePersonalClassWritableAsync(conversation, ct);
         await EnsureActorCanMessageAsync(userId, now, ct);
         if (conversation.Status != ConversationStatus.Active) throw new MessagingException(MessagingErrorCodes.ConversationArchived, "گفتگوی بایگانی‌شده تعامل تازه نمی‌پذیرد.");
         if (conversation.Type == ConversationType.Direct)

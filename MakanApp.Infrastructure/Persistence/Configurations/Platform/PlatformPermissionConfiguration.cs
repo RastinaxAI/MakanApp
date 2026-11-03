@@ -42,6 +42,8 @@ public sealed class PlatformPermissionConfiguration : IEntityTypeConfiguration<P
             Permission(PlatformCatalogIds.OperationsManagePermission, PlatformPermissionKeys.OperationsManage, "Manage approved system operations"),
             Permission(PlatformCatalogIds.NotificationsReadPermission, PlatformPermissionKeys.NotificationsRead, "Read safe notification delivery operations"),
             Permission(PlatformCatalogIds.AiReadPermission, PlatformPermissionKeys.AiRead, "Read backend-owned AI operational state when integrated"),
+            Permission(PlatformCatalogIds.PersonalClassesReadPermission, PlatformPermissionKeys.PersonalClassesRead, "مشاهده درخواست کلاس مستقل"),
+            Permission(PlatformCatalogIds.PersonalClassesReviewPermission, PlatformPermissionKeys.PersonalClassesReview, "بررسی درخواست کلاس مستقل"),
             Permission(PlatformCatalogIds.LibrarySourcesManagePermission, PlatformPermissionKeys.LibrarySourcesManage, "مدیریت منابع کتابخانهٔ ماکان"));
     }
 

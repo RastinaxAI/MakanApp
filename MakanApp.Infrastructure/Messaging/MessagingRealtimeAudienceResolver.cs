@@ -70,6 +70,7 @@ public sealed class MessagingRealtimeAudienceResolver(MakanDbContext dbContext, 
                 join session in dbContext.UserSessions.AsNoTracking() on participant.UserId equals session.UserId
                 join user in dbContext.Users.AsNoTracking() on session.UserId equals user.Id
                 where participant.ConversationId == conversation.Id && participant.Status == ConversationParticipantStatus.Active && participant.EndedAtUtc == null &&
+                    (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic || officialMembers.Any(m => m.UserId == session.UserId && m.ConversationId == conversation.Id)) &&
                     user.AccountStatus == UserAccountStatus.Active && session.RevokedAtUtc == null && session.ExpiresAtUtc > nowUtc && session.AbsoluteExpiresAtUtc > nowUtc &&
                     (!audienceUserId.HasValue || participant.UserId == audienceUserId.Value)
                 select new { session.Id, session.UserId };

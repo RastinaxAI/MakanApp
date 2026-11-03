@@ -68,8 +68,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         });
         var personal = await GetAsync<CommercialSummaryDto>(actor.Client, "/api/v1/commerce/personal/subscription");
         Assert.Equal(subscription, personal.SubscriptionId); Assert.Equal(actor.UserId, personal.OwnerId);
-        var classroom = await PostAsync<MakanApp.Application.Academic.PersonalClassDto>(actor.Client, "/api/v1/personal-classes",
-            new MakanApp.Application.Academic.CreatePersonalClassCommand("کلاس مستقل پس از پایان نقش", Guid.NewGuid()));
+        var classroom = await ApprovedClassAsync(actor, "کلاس مستقل پس از پایان نقش");
         Assert.Equal(actor.UserId, classroom.HostUserId);
         using var organization = await actor.Client.GetAsync("/api/v1/commerce/organization/subscription");
         Assert.Equal(HttpStatusCode.Forbidden, organization.StatusCode);

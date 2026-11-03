@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MakanApp.Api.Controllers;
 
 [ApiController, Authorize, Route("api/v1/personal-classes")]
-public sealed class PersonalClassesController(PersonalClassService service) : ControllerBase
+public sealed class PersonalClassesController(PersonalClassService service, PersonalClassLifecycleService lifecycle) : ControllerBase
 {
     private Guid Actor => AuthenticatedSession.GetUserId(User);
     private Guid Session => AuthenticatedSession.GetSessionId(User);
@@ -18,7 +18,8 @@ public sealed class PersonalClassesController(PersonalClassService service) : Co
     [HttpGet("{classId:guid}")]
     public async Task<ActionResult<PersonalClassDto>> Get(Guid classId, CancellationToken ct) => Ok(await service.GetAsync(Actor, Session, classId, ct));
     [HttpPost("{classId:guid}/archive")]
-    public async Task<ActionResult<PersonalClassDto>> Archive(Guid classId, CancellationToken ct) => Ok(await service.ArchiveAsync(Actor, Session, classId, ct));
+    public async Task<ActionResult<PersonalClassDto>> Archive(Guid classId, PersonalClassReasonCommand command, CancellationToken ct) =>
+        Ok(await lifecycle.StateAsync(new(Actor, Session, HttpContext.TraceIdentifier), classId, command, MakanApp.Domain.Academic.PersonalClassState.Archived, ct));
     [HttpPost("{classId:guid}/invitations")]
     public async Task<ActionResult<PersonalClassInvitationDto>> Invite(Guid classId, InvitePersonalClassStudentCommand command, CancellationToken ct) =>
         StatusCode(201, await service.InviteAsync(Actor, Session, classId, command, ct));
@@ -30,6 +31,6 @@ public sealed class PersonalClassesController(PersonalClassService service) : Co
     public async Task<ActionResult<IReadOnlyList<PersonalClassParticipantDto>>> Participants(Guid classId, CancellationToken ct) =>
         Ok(await service.ParticipantsAsync(Actor, Session, classId, ct));
     [HttpDelete("{classId:guid}/participants/{participantId:guid}")]
-    public async Task<IActionResult> End(Guid classId, Guid participantId, CancellationToken ct)
-    { await service.EndParticipantAsync(Actor, Session, classId, participantId, ct); return NoContent(); }
+    public async Task<IActionResult> End(Guid classId, Guid participantId, [FromBody] PersonalClassReasonCommand command, CancellationToken ct)
+    { await lifecycle.EndAsync(new(Actor, Session, HttpContext.TraceIdentifier), classId, participantId, command, ct); return NoContent(); }
 }

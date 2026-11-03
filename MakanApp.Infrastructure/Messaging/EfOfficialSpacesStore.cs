@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Messaging;
 
-public sealed class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, TimeProvider clock, ILogger<EfOfficialSpacesStore> logger) : IOfficialSpacesStore
+public sealed partial class EfOfficialSpacesStore(MakanDbContext db, IOutbox outbox, TimeProvider clock, ILogger<EfOfficialSpacesStore> logger) : IOfficialSpacesStore
 {
     public async Task<OfficialSpacesPairResult> ReadAsync(Guid userId, AccessContext context, Guid? classId, CancellationToken ct)
     {

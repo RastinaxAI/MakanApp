@@ -139,6 +139,10 @@ public static class DependencyInjection
             .Validate(o => o.QuoteLifetimeMinutes is > 0 and <= 1440, "اعتبار پیش‌فاکتور معتبر نیست.").ValidateOnStart();
         services.AddScoped<IPersonalClassStore, EfPersonalClassStore>();
         services.AddScoped<PersonalClassService>();
+        services.AddScoped<IPersonalClassLifecycleStore, EfPersonalClassStore>();
+        services.AddScoped<PersonalClassLifecycleService>();
+        services.AddScoped<IPersonalClassFormationStore, EfPersonalClassFormationStore>();
+        services.AddScoped<PersonalClassFormationService>();
         services.AddOptions<PersonalClassOptions>().Bind(configuration.GetSection("PersonalClasses"))
             .Validate(o => o.InvitationLifetimeHours is > 0 and <= 8760, "مدت اعتبار دعوت کلاس مستقل معتبر نیست.").ValidateOnStart();
         services.AddScoped<CommerceService>();

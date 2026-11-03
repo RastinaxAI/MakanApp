@@ -10,6 +10,7 @@ using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace MakanApp.IntegrationTests;
 
@@ -118,6 +119,25 @@ public sealed partial class CommercialSubscriptionEndpointsTests
     private Task<MakanApp.Application.Academic.PersonalClassInvitationDto> InviteAsync(TestActor host, TestActor student, Guid classId) =>
         PostAsync<MakanApp.Application.Academic.PersonalClassInvitationDto>(host.Client, $"/api/v1/personal-classes/{classId}/invitations",
             new MakanApp.Application.Academic.InvitePersonalClassStudentCommand(student.UserId, Guid.NewGuid()));
+    private async Task<MakanApp.Application.Academic.PersonalClassRequestDto> SubmittedClassRequestAsync(TestActor actor, string title, int capacity = 10)
+    {
+        var draft = await PostAsync<MakanApp.Application.Academic.PersonalClassRequestDto>(actor.Client, "/api/v1/personal-class-requests",
+            new MakanApp.Application.Academic.CreatePersonalClassRequestCommand(Guid.NewGuid(), new(title, "فعالیت مستقل آزمون", null, capacity, null, null)));
+        return await PostAsync<MakanApp.Application.Academic.PersonalClassRequestDto>(actor.Client, $"/api/v1/personal-class-requests/{draft.Id}/submit",
+            new MakanApp.Application.Academic.PersonalClassVersionCommand(draft.Version));
+    }
+    private async Task<MakanApp.Application.Academic.PersonalClassDto> ApprovedClassAsync(TestActor actor, string title, int capacity = 10)
+    {
+        var request = await SubmittedClassRequestAsync(actor, title, capacity); var admin = await AdminAsync();
+        var approved = await PostAsync<MakanApp.Application.Academic.PersonalClassRequestDto>(admin.Client, $"/api/admin/v1/personal-class-requests/{request.Id}/review",
+            new MakanApp.Application.Academic.ReviewPersonalClassRequestCommand(request.Version, MakanApp.Domain.Academic.PersonalClassRequestStatus.Approved, "تأیید آزمون"));
+        await using (var scope = factory.Services.CreateAsyncScope())
+            Assert.True(await scope.ServiceProvider.GetRequiredService<MakanApp.Infrastructure.Messaging.EfOfficialSpacesStore>()
+                .EnsurePersonalClassPairAsync(approved.CreatedClassId!.Value, default));
+        var c = await GetAsync<MakanApp.Application.Academic.PersonalClassDto>(actor.Client, $"/api/v1/personal-classes/{approved.CreatedClassId}");
+        return await PostAsync<MakanApp.Application.Academic.PersonalClassDto>(actor.Client, $"/api/v1/personal-classes/{c.Id}/activate",
+            new MakanApp.Application.Academic.PersonalClassReasonCommand(c.Version, "آغاز کلاس آزمون"));
+    }
     private Task<InitiatePaymentResult> InitiateAsync(TestActor actor, Guid orderId) =>
         PostAsync<InitiatePaymentResult>(actor.Client, $"/api/v1/commerce/personal/orders/{orderId}/payments", new InitiatePaymentCommand(Guid.NewGuid()));
     private async Task<PaymentAttemptDto> PayAsync(TestActor actor, Guid orderId) => (await InitiateAsync(actor, orderId)).PaymentAttempt;

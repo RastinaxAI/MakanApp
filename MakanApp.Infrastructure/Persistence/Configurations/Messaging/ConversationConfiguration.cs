@@ -13,6 +13,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
     {
         builder.ToTable("Conversations", "messaging", table =>
         {
+            table.HasCheckConstraint("CK_Conversations_PersonalClass", "[PersonalClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=1 AND [OrganizationId] IS NULL AND [AcademicClassId] IS NULL AND [IsOfficialOrganizationSpace]=0)");
             table.HasCheckConstraint("CK_Conversations_AcademicClass", "[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [IsOfficialOrganizationSpace]=0)");
             table.HasCheckConstraint("CK_Conversations_OfficialOrganization", "[IsOfficialOrganizationSpace]=0 OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [AcademicClassId] IS NULL)");
             table.HasCheckConstraint("CK_Conversations_Type", "[Type] IN (1, 2, 3, 4)");
@@ -40,7 +41,7 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
                 "([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)");
             table.HasCheckConstraint(
                 "CK_Conversations_SystemManagedAcademic",
-                "([ManagementPolicy] <> 2) OR ([Scope] = 2 AND [CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationPayloadHash] IS NULL)");
+                "([ManagementPolicy] <> 2) OR (([Scope] = 2 OR ([Scope]=1 AND [PersonalClassId] IS NOT NULL)) AND [CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationPayloadHash] IS NULL)");
             table.HasCheckConstraint("CK_Conversations_NextMessageSequence", "[NextMessageSequence] > 0");
             table.HasCheckConstraint("CK_Conversations_NextChangeSequence", "[NextChangeSequence] > 0");
             table.HasCheckConstraint(
@@ -56,6 +57,8 @@ public sealed class ConversationConfiguration : IEntityTypeConfiguration<Convers
         builder.HasIndex(conversation => conversation.PhotoFileAssetId).IsUnique().HasFilter("[PhotoFileAssetId] IS NOT NULL");
         builder.HasOne<MakanApp.Domain.Storage.FileAsset>().WithMany().HasForeignKey(conversation => conversation.PhotoFileAssetId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(c => c.OrganizationId);
+        builder.HasIndex(c => new { c.PersonalClassId, c.Type }).IsUnique().HasFilter("[PersonalClassId] IS NOT NULL");
+        builder.HasOne<MakanApp.Domain.Academic.PersonalClass>().WithMany().HasForeignKey(c => c.PersonalClassId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(c => new { c.OrganizationId, c.AcademicClassId, c.Type }).IsUnique().HasFilter("[AcademicClassId] IS NOT NULL");
         builder.HasIndex(c => new { c.OrganizationId, c.Type }).IsUnique().HasFilter("[IsOfficialOrganizationSpace]=1");
         builder.HasOne<MakanApp.Domain.Academic.Class>().WithMany()

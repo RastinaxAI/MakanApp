@@ -2,6 +2,16 @@ namespace MakanApp.Application.Academic;
 
 public static class AcademicErrorCodes
 {
+    public const string PersonalClassRequestInvalid = "PERSONAL_CLASS_REQUEST_INVALID";
+    public const string PersonalClassRequestConflict = "PERSONAL_CLASS_REQUEST_CONFLICT";
+    public const string PersonalClassReviewRequired = "PERSONAL_CLASS_REVIEW_REQUIRED";
+    public const string PersonalClassNotReady = "PERSONAL_CLASS_NOT_READY";
+    public const string PersonalClassCapacityReached = "PERSONAL_CLASS_CAPACITY_REACHED";
+    public const string PersonalClassMembershipInactive = "PERSONAL_CLASS_MEMBERSHIP_INACTIVE";
+    public const string PersonalClassLastManagerRequired = "PERSONAL_CLASS_LAST_MANAGER_REQUIRED";
+    public const string PersonalClassProvisioningFailed = "PERSONAL_CLASS_PROVISIONING_FAILED";
+    public const string PersonalClassVersionConflict = "PERSONAL_CLASS_VERSION_CONFLICT";
+    public const string PersonalClassNotFound = "PERSONAL_CLASS_NOT_FOUND";
     public const string AcademicPeriodInvalid = "ACADEMIC_PERIOD_INVALID";
     public const string AcademicPeriodNotFound = "ACADEMIC_PERIOD_NOT_FOUND";
     public const string CourseInvalid = "COURSE_INVALID";

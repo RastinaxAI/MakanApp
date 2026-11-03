@@ -121,26 +121,24 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
                    where vote.UserId == owner.Id && !poll.IsAnonymous && readableMessages.Any(message => message.Id == poll.Id)
                    select vote.UserId).AnyAsync(ct)) return true;
         var actors = ReadableActors(context);
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         return await (from actor in actors
                       join member in dbContext.ConversationParticipants on actor.ConversationId equals member.ConversationId
                       join conversation in dbContext.Conversations on actor.ConversationId equals conversation.Id
                       where member.UserId == owner.Id && member.Status == ConversationParticipantStatus.Active && member.EndedAtUtc == null &&
                           (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-                           conversation.AcademicClassId != null && officialMembers.Any(item => item.UserId == owner.Id &&
-                               item.ClassId == conversation.AcademicClassId && item.OrganizationId == conversation.OrganizationId))
+                           officialMembers.Any(item => item.UserId == owner.Id && item.ConversationId == conversation.Id))
                       select member.Id).AnyAsync(ct);
     }
 
     private IQueryable<ConversationParticipant> ReadableActors(AccessContext context)
     {
-        var officialMembers = MessengerRelationshipQuery.ClassMembers(dbContext);
+        var officialMembers = OfficialSpaceAccessQuery.Conversations(dbContext);
         return from participant in dbContext.ConversationParticipants
                join conversation in dbContext.Conversations on participant.ConversationId equals conversation.Id
                where participant.UserId == context.UserId && participant.Status == ConversationParticipantStatus.Active && participant.EndedAtUtc == null &&
                    (conversation.ManagementPolicy != ConversationManagementPolicy.SystemManagedAcademic ||
-                    conversation.AcademicClassId != null && officialMembers.Any(item => item.UserId == context.UserId &&
-                        item.ClassId == conversation.AcademicClassId && item.OrganizationId == conversation.OrganizationId)) &&
+                    officialMembers.Any(item => item.UserId == context.UserId && item.ConversationId == conversation.Id)) &&
                    (conversation.Scope == ConversationScope.Personal && context.WorkspaceType == WorkspaceType.Personal && context.OrganizationId == null ||
                     conversation.Scope == ConversationScope.Organization && context.WorkspaceType == WorkspaceType.Organization &&
                     conversation.OrganizationId == context.OrganizationId && context.MembershipId != null &&

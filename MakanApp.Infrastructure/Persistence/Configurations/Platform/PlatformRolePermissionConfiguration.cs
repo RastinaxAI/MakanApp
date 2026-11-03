@@ -46,6 +46,8 @@ public sealed class PlatformRolePermissionConfiguration : IEntityTypeConfigurati
             Owner(PlatformCatalogIds.NotificationsReadPermission),
             Owner(PlatformCatalogIds.AiReadPermission),
             Owner(PlatformCatalogIds.LibrarySourcesManagePermission),
+            Owner(PlatformCatalogIds.PersonalClassesReadPermission),
+            Owner(PlatformCatalogIds.PersonalClassesReviewPermission),
             Mapping(PlatformCatalogIds.OperationsRole, PlatformCatalogIds.AccessPermission),
             Mapping(PlatformCatalogIds.OperationsRole, PlatformCatalogIds.OrganizationsReadPermission),
             Mapping(PlatformCatalogIds.OperationsRole, PlatformCatalogIds.OrganizationsManagePermission),

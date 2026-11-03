@@ -38,6 +38,7 @@ public sealed partial class EfMessagingStore
             accessContext,
             cancellationToken);
         await EnsureActorCanMessageAsync(userId, nowUtc, cancellationToken);
+        await EnsurePersonalClassWritableAsync(conversation, cancellationToken);
         var existing = await dbContext.Messages
             .FromSqlInterpolated($"SELECT * FROM [messaging].[Messages] WITH (UPDLOCK, HOLDLOCK) WHERE [ConversationId] = {conversation.Id} AND [SenderUserId] = {userId} AND [ClientMessageId] = {command.ClientMessageId}")
             .SingleOrDefaultAsync(cancellationToken);
@@ -589,6 +590,13 @@ public sealed partial class EfMessagingStore
         }
     }
 
+    private async Task EnsurePersonalClassWritableAsync(Conversation conversation, CancellationToken ct)
+    {
+        if (conversation.PersonalClassId is Guid classId && !await dbContext.PersonalClasses.AnyAsync(c => c.Id == classId &&
+            c.State == MakanApp.Domain.Academic.PersonalClassState.Active, ct))
+            throw new MessagingException(MessagingErrorCodes.MessagePublishNotAllowed, "کلاس مستقل در وضعیت پذیرش تغییر تازه نیست.");
+    }
+
     private Task<Message?> LockMessageAsync(
         Guid conversationId,
         Guid messageId,
@@ -612,6 +620,7 @@ public sealed partial class EfMessagingStore
             ? firstConversationId
             : secondConversationId;
         var high = low == firstConversationId ? secondConversationId : firstConversationId;
+        await LockPersonalClassSourcesAsync([low, high], cancellationToken);
         return await dbContext.Conversations
             .FromSqlInterpolated($"SELECT * FROM [messaging].[Conversations] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {low} OR [Id] = {high} ORDER BY [Id]")
             .ToArrayAsync(cancellationToken);

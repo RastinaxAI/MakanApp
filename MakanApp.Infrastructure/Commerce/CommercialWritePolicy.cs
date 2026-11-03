@@ -17,7 +17,7 @@ internal static class CommercialWritePolicy
         && (e.Entity.GetType().Namespace is "MakanApp.Domain.Academic" or "MakanApp.Domain.Assessment" or "MakanApp.Domain.Knowledge"
             || e.Entity is Membership or RoleAssignment or GuardianRelation or OrganizationPerson or Invitation
             || e.Entity is Person && e.State == EntityState.Modified)
-        && e.Entity is not (PersonalClass or PersonalClassParticipant or PersonalClassInvitation);
+        && e.Entity is not (PersonalClass or PersonalClassParticipant or PersonalClassInvitation or PersonalClassRequest or PersonalClassJoinRequest or PersonalClassManagerTransfer);
 
     public static async Task EnsureAsync(MakanDbContext db, DateTime now, CancellationToken ct)
     {

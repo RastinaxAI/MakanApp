@@ -18,13 +18,20 @@ public sealed class OfficialSpacesWorkHandler(EfOfficialSpacesStore spaces, EfMe
             return;
         }
         var work = JsonSerializer.Deserialize<OfficialSpaceWork>(payload) ?? throw new JsonException("منبع عملیات رسمی مشخص نیست.");
+        if (work.PersonalClassId is Guid personalClassId)
+        {
+            if (work.OrganizationId.HasValue || work.ClassId.HasValue) throw new JsonException("منبع مستقل با سازمان مخلوط شده است.");
+            if (!await spaces.EnsurePersonalClassPairAsync(personalClassId, ct)) throw new InvalidOperationException("فضای مستقل نیازمند بررسی است.");
+            return;
+        }
+        var organizationId = work.OrganizationId ?? throw new JsonException("شناسهٔ سازمان لازم است.");
         if (messageType == OfficialSpaceEventWriter.EnsureType)
         {
-            if (!await spaces.EnsurePairAsync(work.OrganizationId, work.ClassId, ct))
+            if (!await spaces.EnsurePairAsync(organizationId, work.ClassId, ct))
                 throw new InvalidOperationException("فضای رسمی نیازمند بررسی است.");
         }
         else if (messageType == OfficialSpaceEventWriter.SyncType)
-            await spaces.SynchronizeExistingAsync(work.OrganizationId, work.ClassId, ct);
+            await spaces.SynchronizeExistingAsync(organizationId, work.ClassId, ct);
         else throw new InvalidOperationException("نوع عملیات رسمی معتبر نیست.");
     }
 }

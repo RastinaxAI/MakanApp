@@ -49,6 +49,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<ExamQuestionGrade> ExamQuestionGrades => Set<ExamQuestionGrade>();
     public DbSet<ExamGradeRelease> ExamGradeReleases => Set<ExamGradeRelease>();
     public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<PersonalClassRequest> PersonalClassRequests => Set<PersonalClassRequest>();
+    public DbSet<PersonalClassJoinRequest> PersonalClassJoinRequests => Set<PersonalClassJoinRequest>();
+    public DbSet<PersonalClassManagerTransfer> PersonalClassManagerTransfers => Set<PersonalClassManagerTransfer>();
     public DbSet<PersonalClass> PersonalClasses => Set<PersonalClass>();
     public DbSet<PersonalClassInvitation> PersonalClassInvitations => Set<PersonalClassInvitation>();
     public DbSet<PersonalClassParticipant> PersonalClassParticipants => Set<PersonalClassParticipant>();
@@ -147,7 +150,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
             value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType.Namespace == "MakanApp.Domain.Commerce"
-            || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
+            || t.ClrType == typeof(PersonalClassRequest) || t.ClrType == typeof(PersonalClassJoinRequest) || t.ClrType == typeof(PersonalClassManagerTransfer) || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
             foreach (var property in entity.GetProperties().Where(p => (p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)) && p.Name.EndsWith("Utc", StringComparison.Ordinal)))
                 property.SetValueConverter(utcConverter);
     }

@@ -1,4 +1,5 @@
 using MakanApp.Domain.Identity;
+using MakanApp.Domain.Academic;
 using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Organization;
 using MakanApp.Infrastructure.Persistence;
@@ -39,7 +40,7 @@ public static class OfficialSpaceAccessQuery
     public sealed class ConversationGrant
     {
         public Guid ConversationId { get; init; }
-        public Guid OrganizationId { get; init; }
+        public Guid? OrganizationId { get; init; }
         public Guid? ClassId { get; init; }
         public Guid UserId { get; init; }
         public bool CanPublish { get; init; }
@@ -65,6 +66,21 @@ public static class OfficialSpaceAccessQuery
             where c.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic
             select new ConversationGrant { ConversationId = c.Id, OrganizationId = member.OrganizationId, ClassId = member.ClassId,
                 UserId = member.UserId, CanPublish = c.Type == ConversationType.Group || member.IsTeacher, CanManage = member.IsTeacher };
-        return managers.Union(members);
+        var personal = from c in db.Conversations
+            join classroom in db.PersonalClasses on c.PersonalClassId equals classroom.Id
+            join member in db.PersonalClassParticipants on classroom.Id equals member.PersonalClassId
+            join user in db.Users on member.StudentUserId equals user.Id
+            where c.ManagementPolicy == ConversationManagementPolicy.SystemManagedAcademic && c.Scope == ConversationScope.Personal &&
+                c.OrganizationId == null && member.EndedAtUtc == null && user.AccountStatus == UserAccountStatus.Active
+            select new ConversationGrant
+            {
+                ConversationId = c.Id, OrganizationId = null, ClassId = null, UserId = user.Id,
+                CanPublish = classroom.State == PersonalClassState.Active && (c.Type == ConversationType.Group ||
+                    (member.LocalRoles & PersonalClassLocalRoles.Manager) != 0 ||
+                    (member.DelegatedCapabilities & PersonalClassDelegatedCapabilities.PublishCommunication) != 0),
+                CanManage = classroom.State == PersonalClassState.Active && ((member.LocalRoles & PersonalClassLocalRoles.Manager) != 0 ||
+                    (member.DelegatedCapabilities & PersonalClassDelegatedCapabilities.ManageCommunication) != 0)
+            };
+        return managers.Union(members).Union(personal);
     }
 }

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Messaging;
 
-internal sealed record OfficialSpaceWork(Guid OrganizationId, Guid? ClassId, string? TraceId = null);
+internal sealed record OfficialSpaceWork(Guid? OrganizationId, Guid? ClassId, string? TraceId = null, Guid? PersonalClassId = null);
 
 public sealed class OfficialSpaceEventWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock) : IAcademicActivityPublisher
 {
@@ -53,6 +53,16 @@ public sealed class OfficialSpaceEventWriter(MakanDbContext db, IOutbox outbox, 
             db.OfficialSpaceProvisions.Add(OfficialSpaceProvision.Request(organizationId, classId, purpose, now));
         Enqueue(EnsureType, organizationId, classId, now);
     }
+
+    public void RequestPersonalClassPair(Guid classId, DateTime now)
+    {
+        foreach (var purpose in new[] { ConversationType.Group, ConversationType.Channel })
+            db.OfficialSpaceProvisions.Add(OfficialSpaceProvision.RequestPersonalClass(classId, purpose, now));
+        PersonalClassChanged(classId, now);
+    }
+
+    public void PersonalClassChanged(Guid classId, DateTime now) => outbox.Enqueue(new(Guid.NewGuid(), EnsureType,
+        JsonSerializer.Serialize(new OfficialSpaceWork(null, null, Activity.Current?.TraceId.ToString(), classId)), now));
 
     // فقط Storeهای دامنهٔ مدرسه/سازمان این capture را در تراکنش موجود اجرا می‌کنند؛ hook سراسری DbContext نیست.
     public async Task CaptureSchoolAsync(CancellationToken ct)

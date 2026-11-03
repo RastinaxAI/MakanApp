@@ -154,11 +154,28 @@ public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbo
         var pending = new HashSet<InvalidationEnvelope>();
         foreach (var entry in db.ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified).ToArray())
         {
+            if (entry.Entity is PersonalClassRequest request)
+            {
+                pending.Add(new("access", TargetUserId: request.RequesterUserId));
+                if (request.FinalManagerUserId.HasValue) pending.Add(new("access", TargetUserId: request.FinalManagerUserId));
+                if (request.Status != PersonalClassRequestStatus.Draft)
+                {
+                    var reviewers = await (from assignment in db.PlatformRoleAssignments
+                        join mapping in db.PlatformRolePermissions on assignment.RoleId equals mapping.RoleId
+                        join permission in db.PlatformPermissions on mapping.PermissionId equals permission.Id
+                        where assignment.Status == MakanApp.Domain.Platform.PlatformRoleAssignmentStatus.Active && assignment.EndedAtUtc == null &&
+                            permission.Key == MakanApp.Domain.Platform.PlatformPermissionKeys.PersonalClassesRead
+                        select assignment.UserId).Distinct().ToArrayAsync(ct);
+                    foreach (var reviewer in reviewers) pending.Add(new("access", TargetUserId: reviewer));
+                }
+            }
             Guid? classId = entry.Entity switch
             {
                 PersonalClass classroom => classroom.Id,
                 PersonalClassParticipant participant => participant.PersonalClassId,
                 PersonalClassInvitation invitation => invitation.PersonalClassId,
+                PersonalClassJoinRequest join => join.PersonalClassId,
+                PersonalClassManagerTransfer transfer => transfer.PersonalClassId,
                 _ => null
             };
             if (!classId.HasValue) continue;
@@ -166,9 +183,12 @@ public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbo
                 ?? await db.PersonalClasses.AsNoTracking().SingleAsync(c => c.Id == classId, ct);
             pending.Add(Commerce(SubscriptionOwnerType.Individual, entity.HostUserId));
             pending.Add(new("access", TargetUserId: entity.HostUserId));
+            if (entity.ManagerUserId.HasValue) pending.Add(new("access", TargetUserId: entity.ManagerUserId));
             if (entry.Entity is PersonalClassParticipant member) pending.Add(new("access", TargetUserId: member.StudentUserId));
             if (entry.Entity is PersonalClassInvitation invite) pending.Add(new("access", TargetUserId: invite.DestinationUserId));
-            if (entry.Entity is PersonalClass { ArchivedAtUtc: not null })
+            if (entry.Entity is PersonalClassJoinRequest joinRequest) pending.Add(new("access", TargetUserId: joinRequest.UserId));
+            if (entry.Entity is PersonalClassManagerTransfer managerTransfer) pending.Add(new("access", TargetUserId: managerTransfer.TargetUserId));
+            if (entry.Entity is PersonalClass)
             {
                 var learners = await db.PersonalClassParticipants.Where(p => p.PersonalClassId == classId && p.EndedAtUtc == null).Select(p => p.StudentUserId).Distinct().ToArrayAsync(ct);
                 foreach (var learner in learners) pending.Add(new("access", TargetUserId: learner));

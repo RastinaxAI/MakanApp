@@ -16,9 +16,12 @@ public sealed class OfficialSpaceProvisionConfiguration : IEntityTypeConfigurati
             t.HasCheckConstraint("CK_OfficialSpaceProvisions_State", "[State] IN (1,2,3)");
             t.HasCheckConstraint("CK_OfficialSpaceProvisions_Purpose", "[Purpose] IN (2,3)");
             t.HasCheckConstraint("CK_OfficialSpaceProvisions_Attempt", "[AttemptCount]>=0");
+            t.HasCheckConstraint("CK_OfficialSpaceProvisions_Source", "([PersonalClassId] IS NULL AND [OrganizationId] IS NOT NULL) OR ([PersonalClassId] IS NOT NULL AND [OrganizationId] IS NULL AND [ClassId] IS NULL)");
         });
         b.HasKey(x => x.Id);
-        b.HasIndex(x => new { x.OrganizationId, x.Purpose }).IsUnique().HasFilter("[ClassId] IS NULL");
+        b.HasIndex(x => new { x.OrganizationId, x.Purpose }).IsUnique().HasFilter("[ClassId] IS NULL AND [OrganizationId] IS NOT NULL");
+        b.HasIndex(x => new { x.PersonalClassId, x.Purpose }).IsUnique().HasFilter("[PersonalClassId] IS NOT NULL");
+        b.HasOne<PersonalClass>().WithMany().HasForeignKey(x => x.PersonalClassId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => new { x.OrganizationId, x.ClassId, x.Purpose }).IsUnique().HasFilter("[ClassId] IS NOT NULL");
         b.HasOne<MakanApp.Domain.Organization.Organization>().WithMany().HasForeignKey(x => x.OrganizationId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Class>().WithMany().HasForeignKey(x => new { x.OrganizationId, x.ClassId }).HasPrincipalKey(x => new { x.OrganizationId, x.Id }).OnDelete(DeleteBehavior.Restrict);

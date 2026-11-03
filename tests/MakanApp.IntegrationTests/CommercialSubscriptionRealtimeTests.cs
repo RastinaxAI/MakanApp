@@ -16,7 +16,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         await SubscribeAsync(SubscriptionOwner.Individual(host.UserId), await PlanAsync(SubscriptionOwnerType.Individual, hosting: true));
         var hostCursor = (await GetAsync<AccountChangePageResult>(host.Client, "/api/v1/realtime/changes")).NextCursor;
         var studentCursor = (await GetAsync<AccountChangePageResult>(student.Client, "/api/v1/realtime/changes")).NextCursor;
-        var classroom = await PostAsync<PersonalClassDto>(host.Client, "/api/v1/personal-classes", new CreatePersonalClassCommand("کلاس ایزولهٔ ظرفیت", Guid.NewGuid()));
+        var classroom = await ApprovedClassAsync(host, "کلاس ایزولهٔ ظرفیت");
         var invitation = await PostAsync<PersonalClassInvitationDto>(host.Client, $"/api/v1/personal-classes/{classroom.Id}/invitations", new InvitePersonalClassStudentCommand(student.UserId, Guid.NewGuid()));
         using var accepted = await student.Client.PostAsync($"/api/v1/personal-classes/invitations/{invitation.Id}/accept", null);
         accepted.EnsureSuccessStatusCode();

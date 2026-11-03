@@ -15,6 +15,7 @@ public sealed class Conversation
     public ConversationScope Scope { get; private set; }
     public Guid? OrganizationId { get; private set; }
     public Guid? AcademicClassId { get; private set; }
+    public Guid? PersonalClassId { get; private set; }
     public bool IsOfficialOrganizationSpace { get; private set; }
     public Guid? DirectUserLowId { get; private set; }
     public Guid? DirectUserHighId { get; private set; }
@@ -206,6 +207,20 @@ public sealed class Conversation
         }
 
         return new DirectUserPair(DirectUserLowId.Value, DirectUserHighId.Value);
+    }
+
+    public static Conversation CreatePersonalClassSpace(ConversationType purpose, Guid classId, string title, DateTime now)
+    {
+        ValidateManagedType(purpose); ValidateUtc(now, nameof(now));
+        if (classId == Guid.Empty) throw new ArgumentException("شناسه کلاس مستقل لازم است.");
+        return new Conversation
+        {
+            Id = Guid.NewGuid(), Type = purpose, Scope = ConversationScope.Personal, PersonalClassId = classId,
+            Title = NormalizeTitle(title), ManagementPolicy = ConversationManagementPolicy.SystemManagedAcademic,
+            Visibility = ConversationVisibility.Private, GroupHistoryPolicy = GroupHistoryPolicy.FullHistory,
+            MemberCapabilities = GroupMemberCapability.None, NextMessageSequence = 1, NextChangeSequence = 1,
+            Status = ConversationStatus.Active, CreatedAtUtc = now
+        };
     }
 
     public void BindAcademicClass(Guid classId)

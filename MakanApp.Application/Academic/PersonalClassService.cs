@@ -23,6 +23,10 @@ public sealed class PersonalClassService(CommercialActorAccess actors, IPersonal
         await Actor(userId, sessionId, ct);
         if (command.DestinationUserId == Guid.Empty || command.ClientOperationId == Guid.Empty || command.DestinationUserId == userId)
             throw CommercialSubscriptionService.Invalid();
+        if ((int)command.LocalRoles is < 1 or > 3 ||
+            (command.DelegatedCapabilities & ~(MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.PublishCommunication | MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.ManageCommunication)) != 0 ||
+            command.DelegatedCapabilities != MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities.None && !command.LocalRoles.HasFlag(MakanApp.Domain.Academic.PersonalClassLocalRoles.Teacher))
+            throw PersonalClassFormationService.Invalid();
         return await store.InviteAsync(userId, classId, command, Now(), ct);
     }
     public async Task<IReadOnlyList<PersonalClassInvitationDto>> InvitationsAsync(Guid userId, Guid sessionId, CancellationToken ct)
