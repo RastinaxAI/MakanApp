@@ -25,7 +25,7 @@ public sealed partial class MessagingEndpointsTests
         var notifications = new ConcurrentQueue<RealtimeInvalidation>();
         var firstReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var retryReceived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        Guid eventId = Guid.Empty;
+        Guid eventId = Guid.Empty; Guid unrelatedEventId;
         live.On<RealtimeInvalidation>("ClientInvalidated", item =>
         {
             if (item.EventId != eventId) return;
@@ -36,25 +36,39 @@ public sealed partial class MessagingEndpointsTests
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             eventId = AddOwnAccessEvent(scope.ServiceProvider, owner.UserId);
+            unrelatedEventId = AddOwnAccessEvent(scope.ServiceProvider, owner.UserId);
             await scope.ServiceProvider.GetRequiredService<MakanDbContext>().SaveChangesAsync();
         }
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
-            var crashing = new CallbackInvalidationNotifier(async (id, payload, ct) =>
-            {
-                Assert.Null(db.Database.CurrentTransaction);
-                await scope.ServiceProvider.GetRequiredService<IRealtimeInvalidationNotifier>().NotifyAsync(id, payload, ct);
-                throw new InvalidOperationException("خرابی آزمایشی پس از تحویل و قبل از completion");
-            });
-            Assert.Equal(1, await ReplayProcessor(scope.ServiceProvider, crashing).DispatchBatchAsync(default));
-            var pending = await db.OutboxMessages.AsNoTracking().SingleAsync(x => x.Id == eventId);
-            Assert.Null(pending.ProcessedAtUtc); Assert.NotNull(pending.NextAttemptAtUtc);
-        }
-        await firstReceived.Task.WaitAsync(TimeSpan.FromSeconds(10));
-        factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(3));
+        // زمان واقعیِ یک batch ممکن است از backoff دوثانیه‌ای عبور کند؛ ساعت تست باید تحت کنترل باشد.
+        factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime);
         try
         {
+            await using (var crashScope = factory.Services.CreateAsyncScope())
+            {
+                var db = crashScope.ServiceProvider.GetRequiredService<MakanDbContext>();
+                var targetCrashes = 0;
+                var crashing = new CallbackInvalidationNotifier(async (id, payload, ct) =>
+                {
+                    Assert.Null(db.Database.CurrentTransaction);
+                    await crashScope.ServiceProvider.GetRequiredService<IRealtimeInvalidationNotifier>().NotifyAsync(id, payload, ct);
+                    if (id == eventId)
+                    {
+                        targetCrashes++;
+                        throw new InvalidOperationException("خرابی آزمایشی پس از تحویل و قبل از completion");
+                    }
+                });
+                // تعداد کل batch متعلق به این event نیست؛ پیام مستقل باید بدون خرابی پردازش شود.
+                Assert.True(await ReplayProcessor(crashScope.ServiceProvider, crashing).DispatchBatchAsync(default) >= 2);
+                Assert.Equal(1, targetCrashes);
+                var pending = await db.OutboxMessages.AsNoTracking().SingleAsync(x => x.Id == eventId);
+                Assert.Null(pending.ProcessedAtUtc); Assert.NotNull(pending.NextAttemptAtUtc);
+                Assert.Equal(1, pending.AttemptCount);
+                Assert.True(pending.NextAttemptAtUtc > factory.Clock.GetUtcNow().UtcDateTime);
+                var unrelated = await db.OutboxMessages.AsNoTracking().SingleAsync(x => x.Id == unrelatedEventId);
+                Assert.NotNull(unrelated.ProcessedAtUtc); Assert.Equal(1, unrelated.AttemptCount);
+            }
+            await firstReceived.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(3));
             await FlushReplayOutboxAsync();
             await retryReceived.Task.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Single(notifications.Select(x => x.EventId).Distinct());
