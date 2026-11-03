@@ -84,7 +84,7 @@ Audit و Outbox هم‌مرز عملیات معتبر باقی می‌مانند
 | Route | ورودی | پاسخ | مجوز / خطای مهم |
 |---|---|---|---|
 | `/api/v1/personal-classes/{classId}/history` | page، pageSize | PersonalClassPage<PersonalClassHistoryItem> | مدیر جاری؛ 404 برای دیگران؛ 400 query |
-| `/api/admin/v1/personal-classes/{classId}/history` | page، pageSize | همان projection امن | platform.personal_classes.read؛ 403/MFA و 404 |
+| `/api/admin/v1/personal-classes/{classId}/history` | page، pageSize | همان projection امن | platform.personal_classes.read؛ 403 مجوز جاری ناکافی و 404 |
 | `/api/v1/academic/evaluations/queue/page` | EvaluationQueueQuery | AcademicPage<EvaluationQueueItemResult> | Grade/authority context؛ classKind=PersonalClass صریح |
 | `/api/v1/academic/exams/{examId}/grading/page` | ExamGradingQueueQuery | AcademicPage<ExamGradingQueueItemDto> | Grade مؤثر/TeacherAssignment مربوط برای سازمان |
 | `/api/v1/academic/assignments/{assignmentId}/attempts/me/page` | page، pageSize | AcademicPage<SubmissionAttemptResult> | مالک و دورهٔ عضویت مجاز |

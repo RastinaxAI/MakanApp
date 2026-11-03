@@ -35,7 +35,7 @@ FileCleanup=Enabled/Disabled فقط تنظیم را نشان می‌دهد و ن
 
 ## ورود و bootstrap UI
 
-Backoffice از همان Bearer session احرازشده‌ی Identity استفاده می‌کند. پس از ورود:
+Backoffice از همان Bearer session احرازشده‌ی Identity با فرمت Opaque استفاده می‌کند. پس از ورود:
 
 1. `GET /api/admin/v1/me` را فراخوانی کنید.
 2. در `401` کاربر را به ورود برگردانید.
@@ -116,7 +116,6 @@ UI همچنان خلاصهٔ اثر، target صریح و Reason را نشان م
 کدهای مهم Backoffice:
 
 - `PLATFORM_ACCESS_DENIED`
-- `PLATFORM_STEP_UP_REQUIRED`
 - `PLATFORM_REASON_REQUIRED`
 - `PLATFORM_QUERY_INVALID`
 - `PLATFORM_LAST_OWNER_REQUIRED`

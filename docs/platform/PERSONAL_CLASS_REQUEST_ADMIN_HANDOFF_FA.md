@@ -33,6 +33,6 @@ Audit موجود `AdminAuditLog` برای تصمیم، انتقال، نقش، �
 - سه اختیار مستقل: `AuthorAssignments`, `AuthorExams`, `Grade`. Grant جاری با RowVersion تغییر می‌کند؛ عملیات تکراری با payload متفاوت Conflict است.
 - مدیر فقط اختیارات مؤثر خودش را از مسیر `/api/v1/personal-classes/{classId}/academic-permissions/{membershipId}` به Teacher تفویض می‌کند.
 - انتقال مدیریت، پایان عضویت یا لغو منبع، اختیار را به مدیر بعدی منتقل نمی‌کند و Grant فرزند را بی‌اثر می‌کند.
-- Audit عامل/نشست/دلیل/correlation ثبت می‌شود. این permission دسترسی محتوایی به پاسخ، یادداشت خصوصی یا نمرهٔ هنرجو ایجاد نمی‌کند. محافظ‌های Platform session/MFA موجود همچنان برقرارند.
+- Audit عامل/نشست/دلیل/correlation ثبت می‌شود. این permission دسترسی محتوایی به پاسخ، یادداشت خصوصی یا نمرهٔ هنرجو ایجاد نمی‌کند. نشست معتبر Backend و permission جاری Platform همچنان سمت سرور بررسی می‌شوند.
 
 قرارداد کامل: [راهنمای آموزشی کلاینت](../product/PERSONAL_CLASS_V2_ACADEMIC_FRONTEND_HANDOFF_FA.md).

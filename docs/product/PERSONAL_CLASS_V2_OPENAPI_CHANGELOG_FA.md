@@ -22,7 +22,7 @@
 - scheme برابر `type=http`، `scheme=bearer` و **`bearerFormat=Opaque`** است. توکن نشست فعلی JWT نیست؛ آن را decode نکنید.
 - `/api/v1/auth/otp/challenges`، `/otp/verify` و `/refresh` طبق مدل credential فعلی anonymous هستند. سند برای anonymous از `security: [{}]` استفاده می‌کند؛ این requirement خالی در OpenAPI به معنی عدم الزام Bearer است.
 - endpointهای protected، `security: [{"Bearer": []}]` دارند. `x-authentication` نیز anonymous یا bearer-session را مشخص می‌کند.
-- `x-platform-permissions` از metadata واقعی `[Authorize(Policy=...)]` استخراج می‌شود. نشست معتبر، permission پلتفرم را ایجاد نمی‌کند. MFA و step-up موجود حفظ شده‌اند.
+- `x-platform-permissions` از metadata واقعی `[Authorize(Policy=...)]` استخراج می‌شود. نشست معتبر Backend به‌تنهایی permission پلتفرم ایجاد نمی‌کند؛ مجوز جاری Platform در هر درخواست سمت سرور بررسی می‌شود.
 - این تغییرات مجوز تجاری جدید، نقش جدید یا استثنای Authentication ایجاد نمی‌کنند.
 
 ## operationId
@@ -44,7 +44,7 @@ schema مشترک `MakanProblemDetails` شامل `status`, `code`, `traceId`, `c
 |---|---|
 | 400 | ورودی یا JSON نامعتبر؛ model validation دارای `REQUEST_INVALID` |
 | 401 | نشست لازم/نامعتبر؛ `AUTH_REQUIRED` |
-| 403 | permission ناکافی؛ challenge پلتفرم از قرارداد واقعی MFA پیروی می‌کند؛ منع عمومی `AUTH_FORBIDDEN` |
+| 403 | permission یا authorization جاری کافی نیست؛ منع عمومی `AUTH_FORBIDDEN` |
 | 404 | نبودن منبع یا پنهان‌سازی دسترسی نامجاز |
 | 409 | state، ظرفیت، idempotency و نسخهٔ کهنهٔ **Core** |
 | 412 | precondition/version در مسیرهای Academic که واقعاً از این وضعیت استفاده می‌کنند |

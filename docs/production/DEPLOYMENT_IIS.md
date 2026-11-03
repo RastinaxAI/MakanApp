@@ -52,7 +52,6 @@ Sms__Provider
 Sms__MeliPayamakOtp__ServiceToken          # فقط اگر MeliPayamakOtp انتخاب شده باشد
 Payments__Provider=Unavailable             # تا زمان adapter تأییدشده
 Messaging__ContentSafetyProvider=Internal
-BackofficeSecurity__KeyRingPath=C:\ProgramData\MakanApp\BackofficeMfaKeys
 Notifications__PushProvider=Unavailable
 Notifications__SmsProvider=Unavailable
 ```

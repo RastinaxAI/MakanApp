@@ -11,7 +11,7 @@
 | `platform.personal_classes.academic_permissions.manage` | اعطا/لغو سه اختیار آموزشی به membership مدیر مشخص | دسترسی خود Admin به تصحیح/پاسخ |
 | `platform.audit.read` | خواندن Audit مدیریتی با فیلترهای موجود | مجوز endpointهای آموزشی خصوصی |
 
-Bearer مستقل از permission است؛ MFA/step-up و Data Protection موجود reuse می‌شوند. School Manager نقش Platform نیست. مجوز کلی review را به مرور arbitrary learner answer تبدیل نکنید.
+Bearer از نوع Opaque، نشست معتبر Backend را معرفی می‌کند و به‌تنهایی permission ایجاد نمی‌کند. جریان ورود: نشست موجود → `GET /api/admin/v1/me` → نقش‌ها و permissionهای جاری. منبع دسترسی، assignment فعال Platform IAM است و هر endpoint permission را سمت سرور دوباره بررسی می‌کند؛ مخفی‌کردن UI امنیت ایجاد نمی‌کند. School Manager نقش Platform نیست. مجوز کلی review را به مرور arbitrary learner answer تبدیل نکنید.
 
 ## Queue، review و تشکیل
 
@@ -79,7 +79,7 @@ GET /api/admin/v1/audit-logs?targetType=PersonalClass&targetId=<classId>
 
 Admin account stream همان Hub و replay موجود است. برای reviewerهای دارای read، تغییر درخواست غیردرفت `access` ایجاد می‌کند؛ UI Queue/detail/history را refetch کند. [کاتالوگ نسخهٔ 1](../product/PERSONAL_CLASS_V2_EVENT_CATALOG_FA.md) رفتار at-least-once، cursor و resync را توضیح می‌دهد.
 
-401 نشست؛ 403 permission/MFA؛ 404 concealment؛ 409 نسخه/state/capacity؛ 429 limiter؛ 503 وابستگی موقت. متن نمایشی را از code پایدار جدا کنید؛ exception خام/توکن/اطلاعات خصوصی در ticket پشتیبانی قرار ندهید.
+401 نشست؛ 403 permission یا authorization جاری ناکافی؛ 404 concealment؛ 409 نسخه/state/capacity؛ 429 limiter؛ 503 وابستگی موقت. متن نمایشی را از code پایدار جدا کنید؛ exception خام/توکن/اطلاعات خصوصی در ticket پشتیبانی قرار ندهید.
 
 ## محدودیت‌ها
 

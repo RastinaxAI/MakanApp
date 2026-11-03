@@ -35,7 +35,7 @@ public sealed class ApiContractOperationTransformer(StorageOptions storage) : IO
         {
             var values = new OpenApiArray(); foreach (var permission in permissions) values.Add(new OpenApiString(permission));
             operation.Extensions["x-platform-permissions"] = values;
-            operation.Description = (operation.Description ?? "") + "\nمجوزهای مستقل و جاری Platform لازم‌اند: " + string.Join(", ", permissions) + ". Bearer به‌تنهایی کافی نیست؛ محافظ MFA/step-up موجود نیز برقرار است.";
+            operation.Description = (operation.Description ?? "") + "\nنشست معتبر Backend و مجوزهای مستقل و جاری Platform لازم‌اند: " + string.Join(", ", permissions) + ". نشست معتبر به‌تنهایی مجوز Platform ایجاد نمی‌کند؛ permission جاری در هر درخواست دوباره سمت سرور بررسی می‌شود.";
         }
         if (!anonymous)
         {

@@ -6,6 +6,8 @@
 
 همهٔ مسیرهای این راهنما، جز public Auth، نشست Bearer از نوع **Opaque** لازم دارند. نقش سازمانی یا selector ارسالی اثبات دسترسی نیست. PersonalClass در context شخصی قرار دارد؛ `organizationId=null` و `classRef.kind=PersonalClass` را با OrganizationClass مخلوط نکنید.
 
+ورود Platform نیز از نشست موجود Backend استفاده می‌کند: login → نشست معتبر → `GET /api/admin/v1/me` → permissionهای جاری. منبع دسترسی، assignment فعال Platform IAM است؛ Organization Manager به معنی Platform Admin نیست. مخفی‌کردن UI امنیت ایجاد نمی‌کند و هر endpoint مجوز جاری را سمت سرور دوباره بررسی می‌کند.
+
 | بازیگر | اختیار واقعی |
 |---|---|
 | حساب فعال | تشکیل draft درخواست؛ ایجاد عضویت یا کلاس با دانستن شناسه مجاز نمی‌شود |
@@ -128,7 +130,7 @@ raw-arrayهای قدیمی باقی‌اند. `GET C`، `C/invitations` و parti
 
 - همان قصد: همان ClientOperationId و payload؛ payload متفاوت با همان شناسه conflict است. receipt را از پاسخ server نگه دارید؛ پس از قطع شبکه عملیات جدید نسازید.
 - expectedVersion در Core رشتهٔ Base64 rowversion است. **نسخهٔ کهنه Core برابر 409** است؛ در Academic وضعیت 412 در مسیرهای مربوط برقرار است. refetch و تصمیم مجدد لازم است؛ overwrite کور انجام ندهید.
-- 401: refresh طبق contract یا ورود مجدد؛ 403: capability/MFA/permission؛ 404: پیام عمومی «در دسترس نیست»، بدون افشای وجود منبع.
+- 401: refresh طبق contract یا ورود مجدد؛ 403: capability، permission یا authorization جاری کافی نیست؛ 404: پیام عمومی «در دسترس نیست»، بدون افشای وجود منبع.
 - 400: خطای فیلد/فرمت؛ 409: state/capacity/idempotency؛ 422: policy واقعی؛ 429: رعایت Retry-After؛ 503: وابستگی موقت و retry کنترل‌شده با همان شناسهٔ قصد.
 - loading را از empty مجاز جدا کنید؛ `items=[]` با totalCount=0 خطا نیست. provisioning Pending/Failed را Ready نمایش ندهید. نتیجهٔ منتشرنشده «صفر» نیست؛ score غایب/مخفی را «هنوز منتشر نشده» نمایش دهید.
 - ProblemDetails را با `code` تفسیر کنید؛ traceId/correlationId فقط برای پشتیبانی، بدون توکن یا پاسخ خصوصی، نگه داشته شوند.
