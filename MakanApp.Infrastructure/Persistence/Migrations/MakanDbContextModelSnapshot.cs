@@ -7096,6 +7096,61 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Organization.OrganizationMembershipOperation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CompletedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("MembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid?>("ResultRoleAssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ResultRoleAssignmentId");
+
+                    b.HasIndex("OrganizationId", "MembershipId");
+
+                    b.HasIndex("OrganizationId", "ActorUserId", "ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MembershipManagementOperations_Intent");
+
+                    b.ToTable("MembershipManagementOperations", "organization", t =>
+                        {
+                            t.HasCheckConstraint("CK_MembershipManagementOperations_Hash", "LEN([RequestHash]) = 64");
+
+                            t.HasCheckConstraint("CK_MembershipManagementOperations_Kind", "[Kind] IN (1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_MembershipManagementOperations_Result", "([Kind] = 4 AND [ResultRoleAssignmentId] IS NULL) OR ([Kind] IN (1, 2, 3) AND [ResultRoleAssignmentId] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Organization.OrganizationPerson", b =>
                 {
                     b.Property<Guid>("Id")
@@ -10677,6 +10732,27 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.OrganizationMembershipOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.RoleAssignment", null)
+                        .WithMany()
+                        .HasForeignKey("ResultRoleAssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId", "MembershipId")
+                        .HasPrincipalKey("OrganizationId", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

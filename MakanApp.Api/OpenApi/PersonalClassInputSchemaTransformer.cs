@@ -23,7 +23,9 @@ public sealed class PersonalClassInputSchemaTransformer : IOpenApiSchemaTransfor
         var school = type == typeof(MakanApp.Application.Academic.UpdateClassSettingsCommand) ||
             type == typeof(MakanApp.Application.Academic.CreateClassCommand) || type == typeof(MakanApp.Application.Academic.EndEnrollmentCommand) ||
             type == typeof(MakanApp.Application.Academic.EndTeacherAssignmentCommand);
-        if ((!personal && !assessment && !school) || !(type.Name.EndsWith("Command", StringComparison.Ordinal) || type.Name.EndsWith("Input", StringComparison.Ordinal) || type.Name.EndsWith("Query", StringComparison.Ordinal))) return Task.CompletedTask;
+        var schoolMembership = type.Namespace == "MakanApp.Application.Organization" && type.Name is
+            "GrantSchoolRoleCommand" or "ChangeSchoolRoleCommand" or "EndSchoolRoleCommand" or "EndSchoolMembershipCommand";
+        if ((!personal && !assessment && !school && !schoolMembership) || !(type.Name.EndsWith("Command", StringComparison.Ordinal) || type.Name.EndsWith("Input", StringComparison.Ordinal) || type.Name.EndsWith("Query", StringComparison.Ordinal))) return Task.CompletedTask;
         foreach (var (name, field) in schema.Properties)
         {
             switch (name)
@@ -59,6 +61,10 @@ public sealed class PersonalClassInputSchemaTransformer : IOpenApiSchemaTransfor
         }
         Required(schema, type.Name switch
         {
+            "GrantSchoolRoleCommand" => ["role", "clientOperationId", "expectedMembershipVersion", "reason"],
+            "ChangeSchoolRoleCommand" => ["toRole", "clientOperationId", "expectedMembershipVersion", "expectedRoleVersion", "reason"],
+            "EndSchoolRoleCommand" => ["clientOperationId", "expectedMembershipVersion", "expectedRoleVersion", "reason"],
+            "EndSchoolMembershipCommand" => ["clientOperationId", "expectedVersion", "reason"],
             "UpdateClassSettingsCommand" => ["title", "capacity", "expectedVersion", "reason"],
             "CreateClassCommand" => ["academicPeriodId", "courseId", "title", "capacity", "activateImmediately", "clientOperationId"],
             "EndTeacherAssignmentCommand" => ["expectedVersion"],

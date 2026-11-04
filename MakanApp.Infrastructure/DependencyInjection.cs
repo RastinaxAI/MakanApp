@@ -123,6 +123,8 @@ public static class DependencyInjection
         services.AddScoped<PersonalClassAdminMembershipService>();
         services.AddScoped<ISchoolInvitationReadStore, EfSchoolInvitationReadStore>();
         services.AddScoped<SchoolInvitationReadService>();
+        services.AddScoped<ISchoolMembershipManagementStore, EfSchoolMembershipManagementStore>();
+        services.AddScoped<SchoolMembershipManagementService>();
         services.AddScoped<ISchoolAcademicDiscoveryStore, EfSchoolAcademicDiscoveryStore>();
         services.AddScoped<SchoolAcademicDiscoveryService>();
         services.AddScoped<IPersonalAcademicReadStore, EfPersonalAcademicReadStore>();

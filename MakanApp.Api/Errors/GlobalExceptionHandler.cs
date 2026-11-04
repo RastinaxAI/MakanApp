@@ -148,6 +148,8 @@ public sealed class GlobalExceptionHandler(
     internal static int? GetKnownStatusCode(string code) =>
         code switch
         {
+            SchoolMembershipErrorCodes.NotFound or SchoolMembershipErrorCodes.RoleNotFound => StatusCodes.Status404NotFound,
+            SchoolMembershipErrorCodes.Conflict or SchoolMembershipErrorCodes.OperationConflict or SchoolMembershipErrorCodes.LastManagerRequired => StatusCodes.Status409Conflict,
             MakanApp.Application.Knowledge.SourceErrorCodes.NotFound => StatusCodes.Status404NotFound,
             MakanApp.Application.Knowledge.SourceErrorCodes.NotAllowed => StatusCodes.Status403Forbidden,
             MakanApp.Application.Knowledge.SourceErrorCodes.Invalid => StatusCodes.Status400BadRequest,

@@ -79,9 +79,9 @@ Connection فقط از محیط امن فرایند با `ConnectionStrings__Mak
 
 هر Item: `invitationId/invitationType/organizationId/destinationUserId/targetDisplayName/targetUsername/organizationPersonId/learnerOrganizationPersonId/role/status/createdAtUtc/expiresAtUtc/version/allowedActions`. شماره و credential برگردانده نمی‌شود. `Revoke` فقط برای دعوت Pending با مسیر revoke موجود PersonLink/GuardianLink پیشنهاد می‌شود. read مجوز تازهٔ Accept یا عضویت ایجاد نمی‌کند. برای Accept همچنان نشست حساب مقصد و consent قبلی لازم است؛ قفل و رفتار race قبلی حفظ شده‌اند. دعوت Membership مسیر revoke تازهٔ ساختگی ندارد و Action آن خالی است.
 
-## مدیریت نقش سازمانی — تصمیم بازِ Phase 6
+## مدیریت نقش سازمانی — تصمیم Phase 6 تکمیل شد
 
-`PRODUCT DECISION REQUIRED`: محدودهٔ اختیار Manager برای تغییر نقش Manager دیگر هنوز در این Task تعیین نشده است. پیشنهادِ مطرح‌شده: مدیریت Teacher/Student/Parent فقط در عضویت جاری همان سازمان، بدون ایجاد عضویت برای حساب تازه و با حفظ workflow دعوت؛ مدیریت نقش Manager از مسیر Platform موجود. تا پاسخ مالک، هیچ مجوز یا Endpoint نوشتن جدید برای این بخش اضافه نشده است. این توقف فقط همین Phase را تحت تأثیر قرار می‌دهد؛ وجود APIهای Platform به معنی پوشش workflow School نیست.
+تصمیم صریح مالک در `2026-11-05`: Manager نقش Manager دیگر را هم مدیریت کند و محافظ آخرین مدیر لازم است. [قرارداد اجرایی Phase 6](ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md) چهار مسیر سازمانی Grant/Change/EndRole/EndMembership، نسخه‌های مستقل، رسید Retry و قفل مشترک Platform/School را شرح می‌دهد. عضویت تازه همچنان دعوت/پذیرش می‌خواهد؛ حساب و رابطه‌های آموزشی حذف نمی‌شوند. بستهٔ `ddccf20` متعلق به پیش از این تکمیل است؛ برای انتشار این قابلیت از بسته و SQL جدید آن استفاده کنید.
 
 ## سخت‌سازی Class سازمانی
 
@@ -153,7 +153,7 @@ provider فعلی Test/Production `Unavailable` است. template هر دو مح�
 
 ۴. Official Spaces: وضعیت Missing را ثبت→Dry-run→بازبینی Hash→Apply مجاز→Ready هر دو مقصد→Dry-run/Apply دوباره→همان شناسه‌ها و بدون duplicate. سپس Assignment تازه Publish→Receipt واقعی→Activity با/بدون revision→وضعیت مستقل Group/Channel. source نامجاز نباید اطلاعات بدهد.
 
-۵. دعوت: Manager ارسال کند→Reload/ورود مجدد به همان Workspace→فیلتر نوع/status→خواندن نسخهٔ جاری→Accept/Revocation از مسیر نوع مربوط→خواندن state جدید؛ Manager سازمان دیگر داده را نبیند. Phase مدیریت نقش هنوز تا تصمیم مستقل بسته نشده است.
+۵. دعوت: Manager ارسال کند→Reload/ورود مجدد به همان Workspace→فیلتر نوع/status→خواندن نسخهٔ جاری→Accept/Revocation از مسیر نوع مربوط→خواندن state جدید؛ Manager سازمان دیگر داده را نبیند. برای مدیریت نقش، قرارداد Phase 6 افزودهٔ `2026-11-05` و دو نسخهٔ مستقل Membership/Role را رعایت کنید؛ محافظ آخرین مدیر را از هر دو مسیر Platform/School بررسی کنید.
 
 ۶. Class: یک clientOperationId→Create→Retry→همان Id→قصد متفاوت Conflict؛ GET نسخه→PATCH معتبر→نسخهٔ کهنه Conflict؛ ظرفیت کمتر از اعضای فعال رد→End Teacher/Enrollment با نسخهٔ همان رابطه→حفظ User و history؛ Cross-organization رد.
 
@@ -165,4 +165,4 @@ Restore موفق؛ Build نهایی Debug با صفر Warning و Error موفق 
 
 Migration کامل و ارتقای ۶۲→۶۳، هر کدام دو بار روی دو LocalDB موقت اجرا شدند؛ اجرای دوم NOOP، schema/history دو مسیر برابر و هر دو دیتابیس پاک شدند. pending model changes وجود ندارد. هیچ Migration روی `MakanApp`، `MakanApp_Test` یا سرور اجرا نشد.
 
-اسکن Diff و Hash فایل‌های محافظت‌شده موفق بود. سه فایل AI از قبل Untracked، چهار appsettings خصوصی و User Secrets دست‌نخورده باقی ماندند. گزارش Commit/Push، پذیرش خود ZIP، OpenAPI نهایی و راهنمای استقرار در گزارش انتشار همراه بسته ثبت می‌شوند؛ پذیرش سرور بر عهدهٔ مالک و وضعیت Phase 6 همچنان تصمیم باز است.
+اسکن Diff و Hash فایل‌های محافظت‌شده موفق بود. سه فایل AI از قبل Untracked، چهار appsettings خصوصی و User Secrets دست‌نخورده باقی ماندند. این شمارنده‌ها مربوط به انتشار `2026-11-04` هستند؛ Phase 6 در افزودهٔ `2026-11-05` ادامه یافته و گزارش اعتبارسنجی/Commit/بستهٔ خودش را دارد. پذیرش سرور بر عهدهٔ مالک است.

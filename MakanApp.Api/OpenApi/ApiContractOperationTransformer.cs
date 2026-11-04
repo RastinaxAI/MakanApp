@@ -62,6 +62,27 @@ public sealed class ApiContractOperationTransformer(StorageOptions storage) : IO
         }
         if (route.StartsWith("api/admin/v1/", StringComparison.Ordinal) && method is not ("GET" or "HEAD" or "OPTIONS"))
             Error(operation, "429", [ApiErrorCodes.RateLimited]);
+        if (route.StartsWith("api/v1/organization/members/{membershipId}", StringComparison.Ordinal))
+        {
+            operation.Summary = method switch
+            {
+                "POST" => "اعطای نقش به عضویت موجود همان سازمان",
+                "PUT" => "پایان دورهٔ نقش فعلی و ایجاد یا استفاده از نقش مقصد",
+                _ => route.EndsWith("{roleAssignmentId}", StringComparison.Ordinal) ? "پایان دورهٔ نقش عضویت" : "پایان عضویت و نقش‌های فعال آن"
+            };
+            operation.Description = "Manager جاری سازمان می‌تواند Teacher/Student/Parent/Manager را مدیریت کند؛ حذف یا تغییر آخرین مدیر فعال ممنوع است. " +
+                "عضویت تازه از این مسیر ساخته نمی‌شود. نسخهٔ membership و دورهٔ role مستقل‌اند. ClientOperationId در scope سازمان+عامل یکتاست؛ " +
+                "Retry همان payload رسید قبلی و وضعیت جاری را بدون mutation تکراری می‌دهد. Replay نیز مجوز جاری می‌خواهد. " +
+                "تاریخچه، User، Enrollment، TeacherAssignment و فایل شخصی حذف نمی‌شوند؛ دسترسی آینده با رابطه و نقش جاری بازبینی می‌شود.";
+            Error(operation, "400", [ApiErrorCodes.InvalidRequest, MakanApp.Application.Organization.SchoolOnboardingErrorCodes.Invalid]);
+            Error(operation, "403", [MakanApp.Application.Organization.OrganizationErrorCodes.WorkspaceNotAllowed]);
+            Error(operation, "403", [CommerceErrorCodes.FeatureNotEntitled]);
+            Error(operation, "404", [MakanApp.Application.Organization.SchoolMembershipErrorCodes.NotFound, MakanApp.Application.Organization.SchoolMembershipErrorCodes.RoleNotFound]);
+            Error(operation, "409", [MakanApp.Application.Organization.SchoolMembershipErrorCodes.Conflict, MakanApp.Application.Organization.SchoolMembershipErrorCodes.OperationConflict,
+                MakanApp.Application.Organization.SchoolMembershipErrorCodes.LastManagerRequired]);
+            Error(operation, "412", [MakanApp.Application.Organization.OrganizationErrorCodes.ConcurrencyConflict]);
+            Error(operation, "409", [CommerceErrorCodes.CommercialLocked, CommerceErrorCodes.QuotaExceeded]);
+        }
         var gapRead = route is "api/admin/v1/provisioning" or "api/admin/v1/personal-classes/{classId}/memberships" or
             "api/v1/organization/invitations" or "api/v1/organization/teacher-content-activities" or "api/v1/academic/exams/discovery";
         if (gapRead && method == "GET")

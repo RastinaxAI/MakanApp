@@ -1,5 +1,7 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
+> افزودهٔ `2026-11-05`: [قرارداد مدیریت نقش سازمانی](../product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). از GET اعضای موجود membershipId/Version و roleAssignmentId/Version را جدا بخوانید؛ Grant/Change/EndRole/EndMembership مسیر School دارند. Manager دیگر قابل مدیریت است؛ حذف آخرین مدیر، تغییر scope و بازپخش بدون مجوز جاری ممنوع است.
+
 > افزودهٔ قرارداد `2026-11-04`: [رفع Gapهای Backend](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md) مرجع تغییرات Class/دعوت/Guardian/Activity/Exam Discovery/Quote این مرحله است. ساخت Class اکنون `clientOperationId` الزامی می‌خواهد؛ Endهای Teacher/Enrollment نسخهٔ افزایشی دارند و کلاینت جدید باید نسخهٔ همان رابطه را ارسال کند. HTML/PDF زیر Snapshot تاریخی‌اند؛ OpenAPI بستهٔ جدید و این افزوده بر آن‌ها مقدم‌اند.
 
 > قرارداد جاری Messaging از سیاست `2026-11-01` پیروی می‌کند: [تحویل Frontend](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) و [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md). سن/DOB/تأیید سن مجوز امکانات عمومی نیستند؛ Privacy/Block/Safety/مجوز منبع پابرجا هستند. صندوق حساب و Replay آن، invitation receipt، capability و عکس گفتگو افزوده‌اند. اعداد و HTML/PDF زیر Snapshot تاریخی `e11d4ec` هستند؛ جایگزین این اصلاح معنایی یا OpenAPI زنده نیستند. هیچ کد Frontend تغییر نکرده است.

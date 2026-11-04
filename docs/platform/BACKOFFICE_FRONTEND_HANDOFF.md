@@ -1,5 +1,7 @@
 # قرارداد تحویل Backoffice به Frontend
 
+> افزودهٔ `2026-11-05`: [مدیریت نقش سازمانی School](../product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md) به API مستقل School افزوده شده است. مسیرها و permissionهای Platform تغییر نکرده‌اند؛ هر دو مسیر با قفل مشترک سازمان، آخرین مدیر فعال را حفظ می‌کنند. سیاست Grant آموزشی PersonalClass همچنان Platform → Manager → Teacher است.
+
 > افزودهٔ `2026-11-04`: [B01/B02، B04 و قرارداد جاری رفع Gap](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md). Platform با PersonalClassesRead فهرست Membership و نسخهٔ همان دوره را می‌گیرد؛ Grant مستقیم فقط Manager، تفویض Teacher توسط Manager. Provisioning یک فیلتر string اختیاری `clientOperationId` دارد و unknown صفحهٔ خالی ۲۰۰ می‌دهد. `activeLearners` همان PlatformClassPerson نام‌دار است.
 
 ## قرارداد تجاری افزودهٔ Admin — ۲۰۲۶-۱۰-۳۰

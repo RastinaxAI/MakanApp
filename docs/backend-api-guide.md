@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> افزودهٔ `2026-11-05`: [مدیریت نقش سازمانی Phase 6](product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). Manager، مدیر دیگر همان سازمان را هم با محافظ آخرین مدیر مدیریت می‌کند؛ چهار mutation با نسخه‌های مستقل و رسید Retry اضافه شده‌اند. مرز تصمیم بازِ یادداشت قبلی با این قرارداد جایگزین شده است.
+
 > افزودهٔ `2026-11-04`: [قرارداد رفع Gapهای Backend و Manual Acceptance](product/BACKEND_GAP_RESOLUTION_20261104_FA.md). خواندن Membership مستقل Platform، lookup قصد Provisioning، Activity با revision اختیاری، دعوت‌های ارسالی سازمان، Class نسخه‌دار، SafeIdentity و discovery آزمون تشریح شده‌اند. مدیریت نقش سازمانی هنوز منتظر تصمیم محدودهٔ اختیار است؛ وجود بسته به معنی پذیرش سرور نیست.
 
 > اصلاح جاری Messaging، `2026-11-01`: [پیاده‌سازی و مسیر مطالعه](product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [قرارداد Endpoint/DTO/Realtime](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع مبتنی بر سنِ گزارش‌های قدیمی زیر superseded است؛ وضعیت سن دادهٔ پروفایل است. Privacy، Block، Safety و مجوز واقعی منبع باقی‌اند. `/conversations/account` و `/realtime/account-inbox/changes` نماهای افزایشی‌اند و رفتار مسیرهای scoped قبلی را جایگزین نمی‌کنند. آمار `e11d4ec` در متن زیر متعلق به همان Snapshot تاریخی است.

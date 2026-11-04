@@ -1,5 +1,7 @@
 # قرارداد مدیریت آموزشگاه و محتوای کلاس
 
+> افزودهٔ `2026-11-05`: [چهار mutation مدیریت نقش سازمانی](ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). تصمیم مالک اجازهٔ مدیریت Manager دیگر را با محافظ آخرین مدیر می‌دهد؛ Grant/Change/EndRole/EndMembership از Workspace سازمانی جاری و دو نسخهٔ مستقل استفاده می‌کنند. مرز تصمیم بازِ یادداشت قبلی جایگزین شده است؛ دعوت/consent عضویت تازه محفوظ است.
+
 > افزودهٔ `2026-11-04`: [قرارداد رفع Gapهای مدرسه](BACKEND_GAP_RESOLUTION_20261104_FA.md) شامل Sent Invitations، Class clientOperationId/PATCH/version، هویت Guardian، گزارش انتشار محتوا و کشف صفحه‌بندی‌شدهٔ Draft آزمون است. هیچ نیاز به تماس School Manager با Platform API برای این Readها وجود ندارد؛ مدیریت نوشتن نقش در این مرحله منتظر تصمیم محدودهٔ اختیار است.
 
 > افزودهٔ `2026-11-01`: [قرارداد جاری Messaging](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). Manager و Teacher منتسب، مدیریت محتوای فضای رسمی را با `effectiveCapabilities` دارند؛ Roster از آموزش اداره می‌شود و Parent صرف رابطهٔ Guardian عضو کلاس نمی‌شود. Publishهای آموزشی Receipt و Sessionها Activity دارند. سن مجوز عمومی نیست؛ ACL جاری مدرسه/منبع حفظ شده است.

@@ -128,6 +128,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<OrganizationPerson> OrganizationPersons => Set<OrganizationPerson>();
     public DbSet<Membership> Memberships => Set<Membership>();
     public DbSet<RoleAssignment> RoleAssignments => Set<RoleAssignment>();
+    public DbSet<OrganizationMembershipOperation> OrganizationMembershipOperations => Set<OrganizationMembershipOperation>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<PlatformRole> PlatformRoles => Set<PlatformRole>();
     public DbSet<PlatformPermission> PlatformPermissions => Set<PlatformPermission>();
@@ -179,6 +180,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries<OrganizationMembershipOperation>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("رسید مدیریت عضویت فقط قابل افزودن است.");
         if (ChangeTracker.Entries().Any(e => e.Entity is MakanApp.Domain.Knowledge.AiSourceSelectionOperation or MakanApp.Domain.Knowledge.AiSourceSelectionPin
             && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("سابقهٔ انتخاب نسخهٔ منبع فقط قابل افزودن است.");
