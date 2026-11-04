@@ -29,7 +29,7 @@ public sealed class OfficialSpacesController(OfficialSpacesService service) : Co
     [HttpGet("classes/{classId:guid}/official-spaces/activities")]
     [ProducesResponseType<IReadOnlyList<AcademicActivityDeliveryResult>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AcademicActivityDeliveryResult>>> SourceDelivery(Guid classId,
-        [FromQuery] AcademicActivityKind kind, [FromQuery] Guid sourceVersionId, [FromQuery] int revision, CancellationToken ct) =>
+        [FromQuery] AcademicActivityKind kind, [FromQuery] Guid sourceVersionId, [FromQuery] int? revision, CancellationToken ct) =>
         Ok(await service.ReadSourceDeliveryAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User),
             classId, kind, sourceVersionId, revision, ct));
 }

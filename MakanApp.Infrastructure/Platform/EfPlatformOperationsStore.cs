@@ -85,6 +85,11 @@ public sealed class EfPlatformOperationsStore(
         CancellationToken cancellationToken)
     {
         var requests = dbContext.PlatformProvisioningRequests.AsNoTracking();
+        if (query.ClientOperationId is not null)
+        {
+            // برابری روی کلید یکتای موجود پیش از Count/Page اعمال می‌شود؛ شکل کلید همان POST است.
+            requests = requests.Where(item => item.ClientOperationId == query.ClientOperationId);
+        }
         if (query.Status.HasValue)
         {
             requests = requests.Where(item => item.Status == query.Status.Value);

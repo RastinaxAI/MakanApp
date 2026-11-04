@@ -43,7 +43,7 @@ public sealed class AcademicExamAttachmentMigrationTests(MakanAppWebApplicationF
             db.Memberships.Add(membership); db.OrganizationPersons.Add(learner); db.AcademicPeriods.Add(period); db.Courses.Add(course);
             await db.SaveChangesAsync();
             var classroom = AcademicClass.CreateDraft(org.Id, period.Id, course.Id, "کلاس", 10, now); classroom.Activate(now);
-            db.Classes.Add(classroom); await db.SaveChangesAsync();
+            await LegacyAcademicMigrationFixture.InsertAsync(db, classroom);
             var enrollment = Enrollment.CreateActive(org.Id, classroom.Id, learner.Id, now);
             var exam = Exam.CreateDraft(org.Id, classroom.Id, membership.Id, now);
             var version = ExamVersion.CreateDraft(org.Id, exam.Id, 1, "آزمون قدیمی", null, now.AddMinutes(-1), now.AddHours(1), 30, 1, 10m, ExamRandomizationPolicy.None, membership.Id, now);
@@ -94,6 +94,8 @@ public sealed class AcademicExamAttachmentMigrationTests(MakanAppWebApplicationF
             Assert.DoesNotContain("DEFAULT 3", sql, StringComparison.OrdinalIgnoreCase);
             await migrator.MigrateAsync(); await migrator.MigrateAsync(); db.ChangeTracker.Clear();
             Assert.False(db.Database.HasPendingModelChanges()); Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+            var migratedClass = await db.Classes.SingleAsync();
+            Assert.Null(migratedClass.ClientOperationId); Assert.Null(migratedClass.CreatedByUserId); Assert.Null(migratedClass.CreationRequestHash);
             var savedQuestion = await db.QuestionVersions.SingleAsync();
             Assert.Equal(question.Id, savedQuestion.Id); Assert.False(savedQuestion.AttachmentsAllowed);
             Assert.Null(savedQuestion.AttachmentPolicy); Assert.Null(savedQuestion.MaximumAnswerAttachmentCount);

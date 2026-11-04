@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using MakanApp.Application.Organization;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Organization;
@@ -68,6 +70,25 @@ public sealed class AcademicService(
     {
         var context = await GetManagerContextAsync(userId, sessionId, cancellationToken);
         var organizationId = context.OrganizationId!.Value;
+        if (string.IsNullOrWhiteSpace(command.Title) || command.Title.Trim().Length > 200)
+            throw new AcademicException(AcademicErrorCodes.ClassInvalid, "عنوان کلاس معتبر نیست.");
+        var title = command.Title.Trim();
+        if (command.ClientOperationId == Guid.Empty)
+            throw new AcademicException(AcademicErrorCodes.ClassInvalid, "شناسهٔ عملیات ایجاد کلاس معتبر نیست.");
+        await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        await store.EnsureManagerForUpdateAsync(context, cancellationToken);
+        var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+            { command.AcademicPeriodId, command.CourseId, Title = title, command.Capacity, command.ActivateImmediately })));
+        var previous = await store.FindCreationIntentAsync(organizationId, userId, command.ClientOperationId, cancellationToken);
+        if (previous is not null)
+        {
+            if (previous.CreationRequestHash != hash)
+                throw new AcademicException(AcademicErrorCodes.ClassCreationConflict, "شناسهٔ عملیات قبلاً برای قصد متفاوت استفاده شده است.");
+            var previousPeriod = await store.GetAcademicPeriodAsync(organizationId, previous.AcademicPeriodId, cancellationToken);
+            var previousCourse = await store.GetCourseAsync(organizationId, previous.CourseId, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return ToResult(previous, previousPeriod!.Title, previousCourse!.Title);
+        }
         var period = await store.GetAcademicPeriodAsync(
             organizationId,
             command.AcademicPeriodId,
@@ -90,7 +111,7 @@ public sealed class AcademicService(
                 organizationId,
                 period.Id,
                 course.Id,
-                command.Title,
+                title,
                 command.Capacity,
                 UtcNow());
         }
@@ -105,8 +126,30 @@ public sealed class AcademicService(
         }
 
         store.Add(academicClass);
+        academicClass.RecordCreationIntent(userId, command.ClientOperationId, hash);
         await store.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return ToResult(academicClass, period.Title, course.Title);
+    }
+
+    public async Task<ClassResult> UpdateClassSettingsAsync(Guid userId, Guid sessionId, Guid classId,
+        UpdateClassSettingsCommand command, CancellationToken cancellationToken)
+    {
+        var context = await GetManagerContextAsync(userId, sessionId, cancellationToken);
+        var reason = SchoolOnboardingValidation.Reason(command.Reason);
+        await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
+        var classroom = await store.GetClassForUpdateAsync(context.OrganizationId!.Value, classId, cancellationToken) ?? throw ClassNotFound();
+        await store.EnsureManagerForUpdateAsync(context, cancellationToken);
+        CheckVersion(classroom.RowVersion, command.ExpectedVersion);
+        var learners = await store.CountActiveEnrollmentsAsync(context.OrganizationId.Value, classId, cancellationToken);
+        try { classroom.UpdateSettings(command.Title, command.Capacity, learners); }
+        catch (ArgumentException e) { throw new AcademicException(AcademicErrorCodes.ClassInvalid, e.Message); }
+        catch (InvalidOperationException e) { throw new AcademicException(AcademicErrorCodes.ClassSettingsConflict, e.Message); }
+        await store.AuditClassSettingsAsync(context, classroom, reason, UtcNow(), cancellationToken);
+        await store.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken);
+        var period = await store.GetAcademicPeriodAsync(context.OrganizationId.Value, classroom.AcademicPeriodId, cancellationToken);
+        var course = await store.GetCourseAsync(context.OrganizationId.Value, classroom.CourseId, cancellationToken);
+        return ToResult(classroom, period!.Title, course!.Title);
     }
 
     public async Task<EnrollmentResult> EnrollLearnerAsync(
@@ -209,6 +252,8 @@ public sealed class AcademicService(
             classId,
             enrollmentId,
             cancellationToken);
+        if (enrollment is not null && command.ExpectedVersion is not null) CheckVersion(enrollment.RowVersion, command.ExpectedVersion);
+        await store.EnsureManagerForUpdateAsync(context, cancellationToken);
         if (enrollment is null || !enrollment.IsActive)
         {
             throw new AcademicException(
@@ -287,7 +332,7 @@ public sealed class AcademicService(
         Guid sessionId,
         Guid classId,
         Guid teacherAssignmentId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, string? expectedVersion = null)
     {
         var context = await GetManagerContextAsync(userId, sessionId, cancellationToken);
         await using var transaction = await store.BeginSerializableTransactionAsync(cancellationToken);
@@ -305,6 +350,8 @@ public sealed class AcademicService(
             classId,
             teacherAssignmentId,
             cancellationToken);
+        if (assignment is not null && expectedVersion is not null) CheckVersion(assignment.RowVersion, expectedVersion);
+        await store.EnsureManagerForUpdateAsync(context, cancellationToken);
         if (assignment is null || !assignment.IsActive)
         {
             throw new AcademicException(
@@ -407,7 +454,7 @@ public sealed class AcademicService(
             courseTitle,
             academicClass.Title,
             academicClass.Capacity,
-            academicClass.Status);
+            academicClass.Status, Convert.ToBase64String(academicClass.RowVersion));
 
     private static ClassResult ToResult(AcademicClassRecord record) =>
         new(
@@ -419,7 +466,7 @@ public sealed class AcademicService(
             record.CourseTitle,
             record.Title,
             record.Capacity,
-            record.Status);
+            record.Status, Convert.ToBase64String(record.RowVersion ?? []));
 
     private static EnrollmentResult ToResult(Enrollment enrollment) =>
         new(
@@ -429,7 +476,7 @@ public sealed class AcademicService(
             enrollment.LearnerOrganizationPersonId,
             enrollment.Status,
             enrollment.EnrolledAtUtc,
-            enrollment.EndedAtUtc);
+            enrollment.EndedAtUtc, Convert.ToBase64String(enrollment.RowVersion));
 
     private static TeacherAssignmentResult ToResult(TeacherAssignment assignment) =>
         new(
@@ -439,5 +486,14 @@ public sealed class AcademicService(
             assignment.TeacherMembershipId,
             assignment.Status,
             assignment.AssignedAtUtc,
-            assignment.EndedAtUtc);
+            assignment.EndedAtUtc, Convert.ToBase64String(assignment.RowVersion));
+
+    private static void CheckVersion(byte[] current, string expected)
+    {
+        byte[] value;
+        try { value = Convert.FromBase64String(expected ?? string.Empty); }
+        catch (FormatException) { throw new AcademicException(AcademicErrorCodes.ClassInvalid, "نسخهٔ رکورد معتبر نیست."); }
+        if (value.Length != 8) throw new AcademicException(AcademicErrorCodes.ClassInvalid, "نسخهٔ رکورد معتبر نیست.");
+        if (!current.SequenceEqual(value)) throw new AcademicException(AcademicErrorCodes.ConcurrencyConflict, "نسخهٔ رکورد تغییر کرده؛ دوباره بخوانید.");
+    }
 }

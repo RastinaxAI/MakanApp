@@ -59,6 +59,8 @@ public sealed record CommercialQuoteDto(CommercialOrderPurpose Purpose, Guid Pla
     decimal PriceToman, string DisplayCurrency, DateTime EffectiveAtUtc, DateTime PeriodEndsAtUtc,
     IReadOnlyList<CommercialQuotaDto> EffectiveQuotas, bool AutoRenew)
 {
+    public bool PaymentAvailable { get; init; }
+    public string? PaymentUnavailableCode { get; init; }
     public DateTime ExpiresAtUtc { get; init; }
     public bool PreviewOnly => true;
     public bool StartsUponVerifiedPayment { get; init; }

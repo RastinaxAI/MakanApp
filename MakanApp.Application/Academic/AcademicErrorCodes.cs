@@ -2,6 +2,8 @@ namespace MakanApp.Application.Academic;
 
 public static class AcademicErrorCodes
 {
+    public const string ClassCreationConflict = "CLASS_CREATION_CONFLICT";
+    public const string ClassSettingsConflict = "CLASS_SETTINGS_CONFLICT";
     public const string PersonalClassRequestInvalid = "PERSONAL_CLASS_REQUEST_INVALID";
     public const string PersonalClassRequestConflict = "PERSONAL_CLASS_REQUEST_CONFLICT";
     public const string PersonalClassReviewRequired = "PERSONAL_CLASS_REVIEW_REQUIRED";

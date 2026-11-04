@@ -4,6 +4,7 @@ namespace MakanApp.Infrastructure.Commerce;
 
 public sealed class UnavailablePaymentGateway : IPaymentGateway
 {
+    public bool IsConfigured => false;
     public string ProviderName => "Unavailable";
 
     public Task<PaymentGatewayCreationResult> CreatePaymentAsync(

@@ -188,11 +188,22 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CreationRequestHash")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
 
                     b.Property<DateTime?>("EndedAtUtc")
                         .HasColumnType("datetime2(7)");
@@ -219,13 +230,22 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasAlternateKey("OrganizationId", "Id")
                         .HasName("UQ_Classes_OrganizationId_Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("OrganizationId", "AcademicPeriodId");
 
                     b.HasIndex("OrganizationId", "CourseId");
 
+                    b.HasIndex("OrganizationId", "CreatedByUserId", "ClientOperationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Classes_CreationIntent")
+                        .HasFilter("[ClientOperationId] IS NOT NULL");
+
                     b.ToTable("Classes", "academic", t =>
                         {
                             t.HasCheckConstraint("CK_Classes_Capacity", "[Capacity] > 0");
+
+                            t.HasCheckConstraint("CK_Classes_CreationIntent", "([CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationRequestHash] IS NULL) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationRequestHash] IS NOT NULL AND LEN([CreationRequestHash]) = 64)");
 
                             t.HasCheckConstraint("CK_Classes_Status", "[Status] IN (1, 2, 3, 4)");
                         });
@@ -8485,6 +8505,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MakanApp.Domain.Academic.Class", b =>
                 {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Organization.Organization", null)
                         .WithMany()
                         .HasForeignKey("OrganizationId")

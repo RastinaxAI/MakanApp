@@ -28,7 +28,11 @@ public sealed record CreateClassCommand(
     Guid CourseId,
     string Title,
     int Capacity,
-    bool ActivateImmediately);
+    bool ActivateImmediately,
+    Guid ClientOperationId);
+
+public sealed record UpdateClassSettingsCommand(string Title, int Capacity, string ExpectedVersion, string Reason);
+public sealed record EndTeacherAssignmentCommand(string ExpectedVersion);
 
 public sealed record ClassResult(
     Guid Id,
@@ -39,7 +43,8 @@ public sealed record ClassResult(
     string CourseTitle,
     string Title,
     int Capacity,
-    ClassStatus Status);
+    ClassStatus Status,
+    string Version = "");
 
 public sealed record EnrollLearnerCommand(Guid LearnerOrganizationPersonId);
 
@@ -50,9 +55,10 @@ public sealed record EnrollmentResult(
     Guid LearnerOrganizationPersonId,
     EnrollmentStatus Status,
     DateTime EnrolledAtUtc,
-    DateTime? EndedAtUtc);
+    DateTime? EndedAtUtc,
+    string Version = "");
 
-public sealed record EndEnrollmentCommand(EnrollmentStatus FinalStatus);
+public sealed record EndEnrollmentCommand(EnrollmentStatus FinalStatus, string? ExpectedVersion = null);
 
 public sealed record AssignTeacherCommand(Guid TeacherMembershipId);
 
@@ -63,7 +69,8 @@ public sealed record TeacherAssignmentResult(
     Guid TeacherMembershipId,
     TeacherAssignmentStatus Status,
     DateTime AssignedAtUtc,
-    DateTime? EndedAtUtc);
+    DateTime? EndedAtUtc,
+    string Version = "");
 
 public sealed record AcademicClassRecord(
     Guid Id,
@@ -74,4 +81,5 @@ public sealed record AcademicClassRecord(
     string CourseTitle,
     string Title,
     int Capacity,
-    ClassStatus Status);
+    ClassStatus Status,
+    byte[]? RowVersion = null);

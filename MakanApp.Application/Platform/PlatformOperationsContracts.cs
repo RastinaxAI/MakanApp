@@ -96,7 +96,8 @@ public sealed record ProvisionOrganizationCommand(
 public sealed record PlatformProvisioningQuery(
     PlatformProvisioningStatus? Status,
     int Page = 1,
-    int PageSize = 30);
+    int PageSize = 30,
+    string? ClientOperationId = null);
 
 public sealed record PlatformProvisioningItem(
     Guid Id,

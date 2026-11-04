@@ -45,8 +45,15 @@
   },
   "Notifications": {
     "PushProvider": "Unavailable",
-    "SmsProvider": "Unavailable"
+    "SmsProvider": "Unavailable",
+    "WebPush": {
+      "VapidSubject": "",
+      "VapidPublicKey": "",
+      "VapidPrivateKey": "",
+      "TimeToLiveSeconds": 3600
+    }
   },
+  "AiService": { "Enabled": false },
   "Storage": {
     "RootPath": "C:\\MakanAppData\\Storage"
   },

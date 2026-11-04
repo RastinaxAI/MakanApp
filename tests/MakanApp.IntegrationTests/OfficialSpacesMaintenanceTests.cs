@@ -30,6 +30,19 @@ public sealed partial class MessagingEndpointsTests
         Assert.NotEqual(0, wrongApproval.ExitCode); Assert.Equal(before, await Counts());
         var contradictory = await Run("--apply", "--dry-run", "--organization-id", scenario.OrganizationId.ToString(), "--approved-plan-sha256", new string('0', 64));
         Assert.NotEqual(0, contradictory.ExitCode); Assert.Equal(before, await Counts());
+        using var approved = JsonDocument.Parse(dry.Output);
+        var apply = await Run("--apply", "--organization-id", scenario.OrganizationId.ToString(), "--approved-plan-sha256",
+            approved.RootElement.GetProperty("planSha256").GetString()!);
+        Assert.Equal(0, apply.ExitCode);
+        var repaired = await Counts(); Assert.Equal(4, repaired.Conversations - before.Conversations);
+        Assert.Equal(before.Publications, repaired.Publications);
+        var rerun = await Run("--organization-id", scenario.OrganizationId.ToString());
+        Assert.Equal(0, rerun.ExitCode);
+        using var current = JsonDocument.Parse(rerun.Output);
+        Assert.Equal(0, current.RootElement.GetProperty("wouldCreate").GetInt32());
+        var repeat = await Run("--apply", "--organization-id", scenario.OrganizationId.ToString(), "--approved-plan-sha256",
+            current.RootElement.GetProperty("planSha256").GetString()!);
+        Assert.Equal(0, repeat.ExitCode); Assert.Equal(repaired, await Counts());
 
         async Task<(int Provisions, int Conversations, int Publications)> Counts() => (
             await db.OfficialSpaceProvisions.CountAsync(p => p.OrganizationId == scenario.OrganizationId),

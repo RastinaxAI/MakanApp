@@ -2,6 +2,7 @@ using MakanApp.Api.Authentication;
 using MakanApp.Application.Academic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace MakanApp.Api.Controllers;
 
@@ -10,6 +11,10 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/academic/classes")]
 public sealed class ClassesController(IAcademicService academicService, SchoolReadService schoolReads) : ControllerBase
 {
+    [HttpPatch("{classId:guid}")]
+    [ProducesResponseType<ClassResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<ClassResult>> Update(Guid classId, UpdateClassSettingsCommand command, CancellationToken ct) =>
+        Ok(await academicService.UpdateClassSettingsAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), classId, command, ct));
     [HttpGet("{classId:guid}/learners")]
     [ProducesResponseType<SchoolPage<ClassLearnerResult>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<SchoolPage<ClassLearnerResult>>> GetLearners(Guid classId, [FromQuery] SchoolPageQuery query,
@@ -103,6 +108,7 @@ public sealed class ClassesController(IAcademicService academicService, SchoolRe
     public async Task<ActionResult<TeacherAssignmentResult>> EndTeacherAssignment(
         Guid classId,
         Guid teacherAssignmentId,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] EndTeacherAssignmentCommand? command,
         CancellationToken cancellationToken)
     {
         var result = await academicService.EndTeacherAssignmentAsync(
@@ -110,7 +116,7 @@ public sealed class ClassesController(IAcademicService academicService, SchoolRe
             AuthenticatedSession.GetSessionId(User),
             classId,
             teacherAssignmentId,
-            cancellationToken);
+            cancellationToken, command?.ExpectedVersion);
         return Ok(result);
     }
 }

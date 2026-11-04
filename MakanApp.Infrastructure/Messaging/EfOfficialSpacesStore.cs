@@ -72,18 +72,35 @@ public sealed partial class EfOfficialSpacesStore(MakanDbContext db, IOutbox out
     }
 
     public async Task<IReadOnlyList<AcademicActivityDeliveryResult>> ReadSourceDeliveryAsync(Guid userId, AccessContext context, Guid classId,
-        AcademicActivityKind kind, Guid sourceVersionId, int revision, CancellationToken ct)
+        AcademicActivityKind kind, Guid sourceVersionId, int? revision, CancellationToken ct)
     {
         var org = await AuthorizeAsync(userId, context, classId, ct);
-        if (!Enum.IsDefined(kind) || sourceVersionId == Guid.Empty || revision < 1) throw NotFound();
+        if (!Enum.IsDefined(kind) || sourceVersionId == Guid.Empty || revision < 1)
+            throw new MessagingException(MessagingErrorCodes.AcademicActivityQueryInvalid, "نوع، شناسهٔ منبع یا revision معتبر نیست.");
         var eventId = await db.AcademicActivityPublications.AsNoTracking()
-            .Where(p => p.OrganizationId == org && p.ClassId == classId && p.Kind == kind && p.SourceRevision == revision &&
+            .Where(p => p.OrganizationId == org && p.ClassId == classId && p.Kind == kind && (revision == null || p.SourceRevision == revision) &&
                 (kind == AcademicActivityKind.Lesson && p.LessonId == sourceVersionId ||
                  kind == AcademicActivityKind.Assignment && p.AssignmentVersionId == sourceVersionId ||
                  kind == AcademicActivityKind.Exam && p.ExamVersionId == sourceVersionId ||
                  kind == AcademicActivityKind.Session && p.SessionId == sourceVersionId))
-            .Select(p => (Guid?)p.Id).SingleOrDefaultAsync(ct) ?? throw NotFound();
-        return await ReadDeliveryAsync(userId, context, classId, eventId, ct);
+            .OrderByDescending(p => p.SourceRevision).ThenBy(p => p.Id).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
+        if (eventId.HasValue) return await ReadDeliveryAsync(userId, context, classId, eventId.Value, ct);
+        // نبودن رویداد تاریخی فقط برای منبع منتشرشدهٔ مجاز از NotFound قابل تفکیک است؛ هیچ رویدادی در GET ساخته نمی‌شود.
+        var published = kind switch
+        {
+            AcademicActivityKind.Assignment => await db.AssignmentVersions.AnyAsync(v => v.Id == sourceVersionId && v.OrganizationId == org &&
+                v.ClassId == classId && v.PublishedAtUtc != null && (revision == null || v.VersionNumber == revision), ct),
+            AcademicActivityKind.Exam => await db.ExamVersions.AnyAsync(v => v.Id == sourceVersionId && v.OrganizationId == org &&
+                v.PublishedAtUtc != null && (revision == null || v.VersionNumber == revision) &&
+                db.Exams.Any(e => e.Id == v.ExamId && e.OrganizationId == org && e.ClassId == classId), ct),
+            AcademicActivityKind.Lesson => await db.ClassLessons.AnyAsync(l => l.Id == sourceVersionId && l.OrganizationId == org && l.ClassId == classId &&
+                l.Status == LessonStatus.Published && (revision == null || l.RevisionNumber == revision), ct),
+            AcademicActivityKind.Session => await db.AcademicSessions.AnyAsync(s => s.Id == sourceVersionId && s.OrganizationId == org && s.ClassId == classId &&
+                (revision == null || s.ActivityRevision == revision), ct),
+            _ => false
+        };
+        if (!published) throw NotFound();
+        throw new MessagingException(MessagingErrorCodes.AcademicActivityPublicationMissing, "منبع منتشر شده است اما رویداد انتشار تاریخی ثبت نشده؛ بررسی عملیاتی لازم است.");
     }
 
     private async Task<Guid> AuthorizeAsync(Guid userId, AccessContext context, Guid? classId, CancellationToken ct)

@@ -229,7 +229,7 @@ public sealed partial class OrganizationPersonOnboardingEndpointsTests(MakanAppW
         var period = await PostAsync<AcademicPeriodResult>(client, "/api/v1/academic/periods",
             new CreateAcademicPeriodCommand("Operational period", new DateOnly(2026, 1, 1), new DateOnly(2027, 12, 31)));
         var course = await PostAsync<CourseResult>(client, "/api/v1/academic/courses", new CreateCourseCommand("Operational course"));
-        var result = await PostAsync<ClassResult>(client, "/api/v1/academic/classes", new CreateClassCommand(period.Id, course.Id, "Operational class", 10, true));
+        var result = await PostAsync<ClassResult>(client, "/api/v1/academic/classes", new CreateClassCommand(period.Id, course.Id, "Operational class", 10, true, Guid.NewGuid()));
         return result.Id;
     }
     private async Task<(int Users, int Credentials, int Memberships, int Roles, int Enrollments, int Teachers)> CountsAsync()

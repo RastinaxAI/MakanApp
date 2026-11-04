@@ -3,6 +3,8 @@ using MakanApp.Application.Academic;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Organization;
+using MakanApp.Domain.Platform;
+using MakanApp.Application.Organization;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +13,34 @@ using AcademicClass = MakanApp.Domain.Academic.Class;
 
 namespace MakanApp.Infrastructure.Academic;
 
-public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime,
+public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime, TimeProvider clock,
     MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IAcademicStore
 {
+    public Task<AcademicClass?> FindCreationIntentAsync(Guid organizationId, Guid actorId, Guid operationId, CancellationToken ct) =>
+        dbContext.Classes.FromSqlInterpolated($"SELECT * FROM [academic].[Classes] WITH (UPDLOCK,HOLDLOCK) WHERE [OrganizationId]={organizationId} AND [CreatedByUserId]={actorId} AND [ClientOperationId]={operationId}")
+            .SingleOrDefaultAsync(ct);
+
+    public async Task EnsureManagerForUpdateAsync(AccessContext context, CancellationToken ct)
+    {
+        var organization = await dbContext.Organizations.FromSqlInterpolated($"SELECT * FROM [organization].[Organizations] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={context.OrganizationId}").SingleOrDefaultAsync(ct);
+        var now = clock.GetUtcNow().UtcDateTime;
+        if (organization?.IsActive != true || context.ActiveRole != OrganizationRole.Manager || context.WorkspaceType != WorkspaceType.Organization ||
+            !await dbContext.Memberships.AnyAsync(m => m.Id == context.MembershipId && m.UserId == context.UserId && m.OrganizationId == context.OrganizationId &&
+                m.Status == MembershipStatus.Active && m.EndedAtUtc == null &&
+                dbContext.RoleAssignments.Any(r => r.MembershipId == m.Id && r.Role == OrganizationRole.Manager && r.Status == RoleAssignmentStatus.Active && r.EndedAtUtc == null) &&
+                dbContext.Users.Any(u => u.Id == m.UserId && u.AccountStatus == UserAccountStatus.Active) &&
+                dbContext.UserSessions.Any(s => s.Id == context.SessionId && s.UserId == m.UserId && s.RevokedAtUtc == null &&
+                    s.ExpiresAtUtc > now && s.AbsoluteExpiresAtUtc > now && s.SelectedMembershipId == m.Id && s.SelectedRole == "Manager"), ct))
+            throw new AcademicException(AcademicErrorCodes.ManagerRoleRequired, "مجوز جاری مدیر همان سازمان لازم است.");
+    }
+
+    public async Task AuditClassSettingsAsync(AccessContext context, AcademicClass classroom, string reason, DateTime now, CancellationToken ct)
+    {
+        var personId = await dbContext.Users.Where(u => u.Id == context.UserId).Select(u => u.PersonId).SingleAsync(ct);
+        dbContext.AdminAuditLogs.Add(AdminAuditLog.Create(context.UserId, personId, context.SessionId, "organization.class.settings.update",
+            "Class", classroom.Id.ToString("D"), classroom.OrganizationId, reason, now, System.Diagnostics.Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N"),
+            AdminAuditResult.Succeeded, null, "settings=updated"));
+    }
     public async Task<IAcademicTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
     {
@@ -156,7 +183,7 @@ public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastru
                 course.Title,
                 academicClass.Title,
                 academicClass.Capacity,
-                academicClass.Status))
+                academicClass.Status, academicClass.RowVersion))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
@@ -191,7 +218,7 @@ public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastru
                 course.Title,
                 academicClass.Title,
                 academicClass.Capacity,
-                academicClass.Status))
+                academicClass.Status, academicClass.RowVersion))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 
@@ -237,7 +264,7 @@ public sealed class EfAcademicStore(MakanDbContext dbContext, MakanApp.Infrastru
                 course.Title,
                 academicClass.Title,
                 academicClass.Capacity,
-                academicClass.Status))
+                academicClass.Status, academicClass.RowVersion))
             .AsNoTracking()
             .ToArrayAsync(cancellationToken);
 

@@ -47,6 +47,7 @@ public sealed record PaymentGatewayVerificationResult(
 
 public interface IPaymentGateway
 {
+    bool IsConfigured { get; }
     string ProviderName { get; }
 
     Task<PaymentGatewayCreationResult> CreatePaymentAsync(

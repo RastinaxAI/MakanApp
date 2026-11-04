@@ -9,6 +9,17 @@ namespace MakanApp.Infrastructure.Guardian;
 
 public sealed class EfGuardianManagementStore(MakanDbContext database) : IGuardianManagementStore
 {
+    public async Task<IReadOnlyDictionary<Guid, SchoolGuardianSafeIdentity>> ReadIdentitiesAsync(Guid organizationId, IReadOnlyCollection<Guid> relationIds, CancellationToken ct) =>
+        await (from r in database.GuardianRelations.AsNoTracking()
+            join u in database.Users.AsNoTracking() on r.GuardianUserId equals u.Id
+            join p in database.Persons.AsNoTracking() on u.PersonId equals (Guid?)p.Id into guardians
+            from p in guardians.DefaultIfEmpty()
+            join learner in database.OrganizationPersons.AsNoTracking() on r.LearnerOrganizationPersonId equals learner.Id
+            join name in database.Persons.AsNoTracking() on learner.PersonId equals name.Id
+            where r.OrganizationId == organizationId && learner.OrganizationId == organizationId && relationIds.Contains(r.Id)
+            select new { r.Id, Guardian = p == null ? u.Username ?? "والد" : p.DisplayName ?? p.FirstName + " " + p.LastName,
+                u.Username, Learner = name.DisplayName ?? name.FirstName + " " + name.LastName })
+            .ToDictionaryAsync(r => r.Id, r => new SchoolGuardianSafeIdentity(r.Guardian, r.Username, r.Learner), ct);
     public Task<GuardianRelation?> GetAsync(Guid organizationId, Guid id, bool forUpdate, CancellationToken cancellationToken) =>
         forUpdate
             ? database.GuardianRelations.FromSqlInterpolated($"SELECT * FROM [guardian].[GuardianRelations] WITH (UPDLOCK, HOLDLOCK) WHERE [OrganizationId] = {organizationId} AND [Id] = {id}").SingleOrDefaultAsync(cancellationToken)

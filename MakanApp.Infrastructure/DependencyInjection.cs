@@ -119,6 +119,12 @@ public static class DependencyInjection
         services.AddScoped<IAcademicAuditWriter, EfAcademicAuditWriter>();
         services.AddScoped<IPersonalClassHistoryStore, EfPersonalClassHistoryStore>();
         services.AddScoped<PersonalClassHistoryService>();
+        services.AddScoped<IPersonalClassAdminMembershipStore, EfPersonalClassAdminMembershipStore>();
+        services.AddScoped<PersonalClassAdminMembershipService>();
+        services.AddScoped<ISchoolInvitationReadStore, EfSchoolInvitationReadStore>();
+        services.AddScoped<SchoolInvitationReadService>();
+        services.AddScoped<ISchoolAcademicDiscoveryStore, EfSchoolAcademicDiscoveryStore>();
+        services.AddScoped<SchoolAcademicDiscoveryService>();
         services.AddScoped<IPersonalAcademicReadStore, EfPersonalAcademicReadStore>();
         services.AddScoped<PersonalAcademicReadService>();
         services.AddScoped<ISubmissionStore, EfSubmissionStore>();

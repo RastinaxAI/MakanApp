@@ -2,6 +2,8 @@ namespace MakanApp.Application.Messaging;
 
 public static class MessagingErrorCodes
 {
+    public const string AcademicActivityQueryInvalid = "ACADEMIC_ACTIVITY_QUERY_INVALID";
+    public const string AcademicActivityPublicationMissing = "ACADEMIC_ACTIVITY_PUBLICATION_MISSING";
     public const string ConversationNotFound = "CONVERSATION_NOT_FOUND";
     public const string ConversationNotAllowed = "CONVERSATION_NOT_ALLOWED";
     public const string DirectRecipientNotAvailable = "DIRECT_RECIPIENT_NOT_AVAILABLE";

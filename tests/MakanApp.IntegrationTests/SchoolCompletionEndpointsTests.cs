@@ -117,7 +117,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
         var learner = Assert.Single((await SchoolPageAsync<ClassLearnerResult>(ta, $"/api/v1/academic/classes/{k.ClassId}/learners")).Items);
         Assert.Equal(enrollment.Id, learner.EnrollmentId); Assert.Equal(student.UserId, learner.UserId); Assert.NotEmpty(learner.Version);
         Assert.Equal(2, (await SchoolPageAsync<ClassTeacherResult>(ta, $"/api/v1/academic/classes/{k.ClassId}/teachers")).TotalCount);
-        await ErrorAsync(await ta.PostAsJsonAsync("/api/v1/academic/classes", new CreateClassCommand(k.PeriodId, k.CourseId, "Denied", 20, true)), HttpStatusCode.Forbidden, "MANAGER_ROLE_REQUIRED");
+        await ErrorAsync(await ta.PostAsJsonAsync("/api/v1/academic/classes", new CreateClassCommand(k.PeriodId, k.CourseId, "Denied", 20, true, Guid.NewGuid())), HttpStatusCode.Forbidden, "MANAGER_ROLE_REQUIRED");
         var session = new CreateSessionCommand("جلسه", Now.AddDays(1), Now.AddDays(1).AddHours(1), "UTC", null);
         using var allowed = await ta.PostAsJsonAsync($"/api/v1/academic/classes/{k.ClassId}/sessions", session); Assert.Equal(HttpStatusCode.Created, allowed.StatusCode);
         using var unrelated = await ta.PostAsJsonAsync($"/api/v1/academic/classes/{unassigned.ClassId}/sessions", session); Assert.Equal(HttpStatusCode.Forbidden, unrelated.StatusCode);

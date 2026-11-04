@@ -1,5 +1,7 @@
 # قرارداد تحویل Backoffice به Frontend
 
+> افزودهٔ `2026-11-04`: [B01/B02، B04 و قرارداد جاری رفع Gap](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md). Platform با PersonalClassesRead فهرست Membership و نسخهٔ همان دوره را می‌گیرد؛ Grant مستقیم فقط Manager، تفویض Teacher توسط Manager. Provisioning یک فیلتر string اختیاری `clientOperationId` دارد و unknown صفحهٔ خالی ۲۰۰ می‌دهد. `activeLearners` همان PlatformClassPerson نام‌دار است.
+
 ## قرارداد تجاری افزودهٔ Admin — ۲۰۲۶-۱۰-۳۰
 
 PlatformCommercialContractsController مسیرهای زیر /api/admin/v1/commerce را با permissionهای CommerceRead/CommerceManage اضافه می‌کند: summary مالک User/Organization، availability مستقل Plan، ویرایش Draft و validation نسخه، ثبت commercial-contract و history. [Handoff دقیق Admin](../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md) و [مرجع request/response](../backend-api-reference.md).

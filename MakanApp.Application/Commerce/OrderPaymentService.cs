@@ -19,7 +19,9 @@ public sealed class OrderPaymentService(
     {
         if (command.PlanVersionId == Guid.Empty || !Enum.IsDefined(command.Purpose)) throw Error(CommerceErrorCodes.OrderInvalid, "درخواست پیش‌فاکتور معتبر نیست.");
         var organizationId = await ResolveOwnerOrganizationAsync(userId, sessionId, ownerType, cancellationToken);
-        return await store.QuoteAsync(userId, organizationId, command, UtcNow(), cancellationToken);
+        var quote = await store.QuoteAsync(userId, organizationId, command, UtcNow(), cancellationToken);
+        return quote with { PaymentAvailable = paymentGateway.IsConfigured,
+            PaymentUnavailableCode = paymentGateway.IsConfigured ? null : CommerceErrorCodes.PaymentProviderUnavailable };
     }
     public async Task<CreateOrderResult> CreateOrderAsync(
         Guid userId,

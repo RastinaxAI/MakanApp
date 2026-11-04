@@ -13,9 +13,12 @@ public interface IGuardianManagementService
 
 public interface IGuardianManagementStore
 {
+    Task<IReadOnlyDictionary<Guid, SchoolGuardianSafeIdentity>> ReadIdentitiesAsync(Guid organizationId, IReadOnlyCollection<Guid> relationIds, CancellationToken ct);
     Task<GuardianRelation?> GetAsync(Guid organizationId, Guid id, bool forUpdate, CancellationToken cancellationToken);
     Task<GuardianRelation?> FindCurrentAsync(Guid organizationId, Guid guardianId, Guid learnerId, CancellationToken cancellationToken);
     Task<bool> IsActiveParentAsync(Guid organizationId, Guid userId, CancellationToken cancellationToken);
     Task<(int Total, IReadOnlyCollection<GuardianRelation> Items)> ListAsync(Guid organizationId, Guid? learnerId, int page, int pageSize, CancellationToken cancellationToken);
     void Add(GuardianRelation relation);
 }
+
+public sealed record SchoolGuardianSafeIdentity(string GuardianDisplayName, string? GuardianUsername, string LearnerDisplayName);

@@ -1,4 +1,5 @@
 using MakanApp.Domain.Academic;
+using MakanApp.Application.Organization;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Academic;
@@ -22,6 +23,9 @@ public interface IAcademicService
         Guid sessionId,
         CreateClassCommand command,
         CancellationToken cancellationToken);
+
+    Task<ClassResult> UpdateClassSettingsAsync(Guid userId, Guid sessionId, Guid classId,
+        UpdateClassSettingsCommand command, CancellationToken cancellationToken);
 
     Task<EnrollmentResult> EnrollLearnerAsync(
         Guid userId,
@@ -50,7 +54,7 @@ public interface IAcademicService
         Guid sessionId,
         Guid classId,
         Guid teacherAssignmentId,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken, string? expectedVersion = null);
 
     Task<IReadOnlyCollection<ClassResult>> GetClassesAsync(
         Guid userId,
@@ -65,6 +69,9 @@ public interface IAcademicTransaction : IAsyncDisposable
 
 public interface IAcademicStore
 {
+    Task<Class?> FindCreationIntentAsync(Guid organizationId, Guid actorId, Guid operationId, CancellationToken ct);
+    Task EnsureManagerForUpdateAsync(AccessContext context, CancellationToken ct);
+    Task AuditClassSettingsAsync(AccessContext context, Class classroom, string reason, DateTime now, CancellationToken ct);
     Task<IAcademicTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken);
 

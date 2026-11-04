@@ -35,6 +35,8 @@ public sealed partial class CommercialSubscriptionEndpointsTests(MakanAppWebAppl
         var command = new CreateOrderCommand(versionId, Guid.NewGuid());
         var quote = await PostAsync<CommercialQuoteDto>(actor.Client, "/api/v1/commerce/personal/quote", command);
         Assert.Equal(100m, quote.PriceToman); Assert.False(quote.AutoRenew);
+        Assert.True(quote.PaymentAvailable); Assert.Null(quote.PaymentUnavailableCode);
+        Assert.True(quote.ExpiresAtUtc > factory.Clock.GetUtcNow().UtcDateTime);
         var created = await PostAsync<CreateOrderResult>(actor.Client, "/api/v1/commerce/personal/orders", command);
         var replay = await PostAsync<CreateOrderResult>(actor.Client, "/api/v1/commerce/personal/orders", command);
         Assert.Equal(created.Order.OrderId, replay.Order.OrderId); Assert.True(replay.Replayed);

@@ -1,5 +1,7 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
+> افزودهٔ قرارداد `2026-11-04`: [رفع Gapهای Backend](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md) مرجع تغییرات Class/دعوت/Guardian/Activity/Exam Discovery/Quote این مرحله است. ساخت Class اکنون `clientOperationId` الزامی می‌خواهد؛ Endهای Teacher/Enrollment نسخهٔ افزایشی دارند و کلاینت جدید باید نسخهٔ همان رابطه را ارسال کند. HTML/PDF زیر Snapshot تاریخی‌اند؛ OpenAPI بستهٔ جدید و این افزوده بر آن‌ها مقدم‌اند.
+
 > قرارداد جاری Messaging از سیاست `2026-11-01` پیروی می‌کند: [تحویل Frontend](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) و [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md). سن/DOB/تأیید سن مجوز امکانات عمومی نیستند؛ Privacy/Block/Safety/مجوز منبع پابرجا هستند. صندوق حساب و Replay آن، invitation receipt، capability و عکس گفتگو افزوده‌اند. اعداد و HTML/PDF زیر Snapshot تاریخی `e11d4ec` هستند؛ جایگزین این اصلاح معنایی یا OpenAPI زنده نیستند. هیچ کد Frontend تغییر نکرده است.
 
 بازبینی `2026-10-30` با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.

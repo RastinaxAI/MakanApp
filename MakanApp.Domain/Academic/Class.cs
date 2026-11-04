@@ -36,8 +36,29 @@ public sealed class Class
     public DateTime? ActivatedAtUtc { get; private set; }
     public DateTime? EndedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
+    public Guid? CreatedByUserId { get; private set; }
+    public Guid? ClientOperationId { get; private set; }
+    public string? CreationRequestHash { get; private set; }
 
     public bool IsActive => Status == ClassStatus.Active && !EndedAtUtc.HasValue;
+
+    public void RecordCreationIntent(Guid actorId, Guid operationId, string requestHash)
+    {
+        if (CreatedByUserId.HasValue || actorId == Guid.Empty || operationId == Guid.Empty ||
+            requestHash.Length != 64 || !requestHash.All(Uri.IsHexDigit))
+            throw new ArgumentException("قصد ایجاد کلاس معتبر نیست یا قبلاً ثبت شده است.");
+        CreatedByUserId = actorId; ClientOperationId = operationId; CreationRequestHash = requestHash;
+    }
+
+    public void UpdateSettings(string title, int capacity, int activeLearnerCount)
+    {
+        var normalized = title?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 200 || capacity <= 0 || activeLearnerCount < 0)
+            throw new ArgumentException("عنوان یا ظرفیت کلاس معتبر نیست.");
+        if (Status is ClassStatus.Completed or ClassStatus.Archived || capacity < activeLearnerCount)
+            throw new InvalidOperationException("تغییر تنظیمات کلاس پایان‌یافته یا ظرفیت کمتر از فراگیران فعال مجاز نیست.");
+        Title = normalized; Capacity = capacity;
+    }
 
     public static Class CreateDraft(
         Guid organizationId,

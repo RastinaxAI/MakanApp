@@ -41,7 +41,11 @@ public sealed class PlatformOperationsService(
         CancellationToken cancellationToken)
     {
         ValidatePage(query.Page, query.PageSize);
-        return store.GetProvisioningAsync(query, cancellationToken);
+        if (query.Status.HasValue && !Enum.IsDefined(query.Status.Value) ||
+            query.ClientOperationId is not null && (string.IsNullOrWhiteSpace(query.ClientOperationId) ||
+                query.ClientOperationId.Trim().Length > PlatformProvisioningRequest.MaximumClientOperationIdLength))
+            throw Error(PlatformErrorCodes.QueryInvalid, "وضعیت یا شناسهٔ عملیات معتبر نیست.");
+        return store.GetProvisioningAsync(query with { ClientOperationId = query.ClientOperationId?.Trim() }, cancellationToken);
     }
 
     public Task<PlatformProvisioningResult> CreateOrganizationAsync(

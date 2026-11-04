@@ -27,7 +27,8 @@ public sealed partial class MessagingEndpointsTests
             courseId = cls.CourseId,
             title = "ساخت رسمی نامجاز توسط استاد منتسب",
             capacity = 5,
-            activateImmediately = true
+            activateImmediately = true,
+            clientOperationId = Guid.NewGuid()
         }, JsonOptions);
         Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
         Assert.Equal(before, await db.Classes.CountAsync(c => c.OrganizationId == cls.OrganizationId));

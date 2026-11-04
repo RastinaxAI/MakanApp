@@ -17,8 +17,11 @@ public sealed record PersonalClassDto(Guid Id, Guid HostUserId, string Title, bo
 }
 public sealed record PersonalClassCapabilities(bool CanManageMembers, bool CanManageRoles, bool CanManageSpaces,
     bool CanAuthorAssignments, bool CanAuthorExams, bool CanGrade, bool CanArchive, bool CanViewOwnResults);
+public sealed record PersonalClassInviterIdentity(Guid UserId, string DisplayName, string? Username);
 public sealed record PersonalClassInvitationDto(Guid Id, Guid PersonalClassId, Guid DestinationUserId, DateTime ExpiresAtUtc, bool Accepted)
 {
+    public string? ClassTitle { get; init; }
+    public PersonalClassInviterIdentity? Inviter { get; init; }
     public string Status { get; init; } = string.Empty;
     public string Version { get; init; } = string.Empty;
     public MakanApp.Domain.Academic.PersonalClassLocalRoles LocalRoles { get; init; }

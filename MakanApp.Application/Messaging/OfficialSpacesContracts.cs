@@ -56,7 +56,7 @@ public interface IOfficialSpacesStore
     Task<OfficialSpacesPairResult> ReadAsync(Guid userId, AccessContext context, Guid? classId, CancellationToken ct);
     Task<IReadOnlyList<AcademicActivityDeliveryResult>> ReadDeliveryAsync(Guid userId, AccessContext context, Guid classId, Guid eventId, CancellationToken ct);
     Task<IReadOnlyList<AcademicActivityDeliveryResult>> ReadSourceDeliveryAsync(Guid userId, AccessContext context, Guid classId,
-        AcademicActivityKind kind, Guid sourceVersionId, int revision, CancellationToken ct);
+        AcademicActivityKind kind, Guid sourceVersionId, int? revision, CancellationToken ct);
 }
 
 public interface IOfficialSpacesWorkHandler
@@ -72,6 +72,6 @@ public sealed class OfficialSpacesService(IAccessContextResolver contexts, IOffi
     public async Task<IReadOnlyList<AcademicActivityDeliveryResult>> ReadDeliveryAsync(Guid userId, Guid sessionId, Guid classId, Guid eventId, CancellationToken ct) =>
         await store.ReadDeliveryAsync(userId, await contexts.ResolveAsync(userId, sessionId, ct), classId, eventId, ct);
     public async Task<IReadOnlyList<AcademicActivityDeliveryResult>> ReadSourceDeliveryAsync(Guid userId, Guid sessionId, Guid classId,
-        AcademicActivityKind kind, Guid sourceVersionId, int revision, CancellationToken ct) =>
+        AcademicActivityKind kind, Guid sourceVersionId, int? revision, CancellationToken ct) =>
         await store.ReadSourceDeliveryAsync(userId, await contexts.ResolveAsync(userId, sessionId, ct), classId, kind, sourceVersionId, revision, ct);
 }

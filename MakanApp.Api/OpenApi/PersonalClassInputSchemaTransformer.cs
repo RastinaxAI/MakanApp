@@ -11,11 +11,19 @@ public sealed class PersonalClassInputSchemaTransformer : IOpenApiSchemaTransfor
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
         var type = context.JsonTypeInfo.Type;
+        // collection دوم همان DTO در .NET 9 ممکن است items خالی بگیرد؛ schema همان نوع واقعی reuse می‌شود.
+        if (type == typeof(MakanApp.Application.Platform.PlatformClassDetail) &&
+            schema.Properties.TryGetValue("activeTeachers", out var teachers) &&
+            schema.Properties.TryGetValue("activeLearners", out var learners))
+            learners.Items = teachers.Items;
         schema.Properties ??= new Dictionary<string, OpenApiSchema>();
         schema.Required ??= new HashSet<string>();
         var personal = type.Namespace == "MakanApp.Application.Academic" && type.Name.Contains("PersonalClass", StringComparison.Ordinal);
         var assessment = type.Namespace == "MakanApp.Application.Assessment";
-        if ((!personal && !assessment) || !(type.Name.EndsWith("Command", StringComparison.Ordinal) || type.Name.EndsWith("Input", StringComparison.Ordinal) || type.Name.EndsWith("Query", StringComparison.Ordinal))) return Task.CompletedTask;
+        var school = type == typeof(MakanApp.Application.Academic.UpdateClassSettingsCommand) ||
+            type == typeof(MakanApp.Application.Academic.CreateClassCommand) || type == typeof(MakanApp.Application.Academic.EndEnrollmentCommand) ||
+            type == typeof(MakanApp.Application.Academic.EndTeacherAssignmentCommand);
+        if ((!personal && !assessment && !school) || !(type.Name.EndsWith("Command", StringComparison.Ordinal) || type.Name.EndsWith("Input", StringComparison.Ordinal) || type.Name.EndsWith("Query", StringComparison.Ordinal))) return Task.CompletedTask;
         foreach (var (name, field) in schema.Properties)
         {
             switch (name)
@@ -51,6 +59,10 @@ public sealed class PersonalClassInputSchemaTransformer : IOpenApiSchemaTransfor
         }
         Required(schema, type.Name switch
         {
+            "UpdateClassSettingsCommand" => ["title", "capacity", "expectedVersion", "reason"],
+            "CreateClassCommand" => ["academicPeriodId", "courseId", "title", "capacity", "activateImmediately", "clientOperationId"],
+            "EndTeacherAssignmentCommand" => ["expectedVersion"],
+            "EndEnrollmentCommand" => ["finalStatus"],
             "PersonalClassRequestInput" => ["title", "purpose", "suggestedCapacity"],
             "CreatePersonalClassRequestCommand" => ["clientOperationId", "details"],
             "EditPersonalClassRequestCommand" => ["expectedVersion", "details"],

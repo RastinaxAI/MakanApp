@@ -13,6 +13,7 @@ public sealed class ClassConfiguration : IEntityTypeConfiguration<AcademicClass>
         {
             table.HasCheckConstraint("CK_Classes_Capacity", "[Capacity] > 0");
             table.HasCheckConstraint("CK_Classes_Status", "[Status] IN (1, 2, 3, 4)");
+            table.HasCheckConstraint("CK_Classes_CreationIntent", "([CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationRequestHash] IS NULL) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationRequestHash] IS NOT NULL AND LEN([CreationRequestHash]) = 64)");
         });
         builder.HasKey(academicClass => academicClass.Id);
         builder.HasAlternateKey(academicClass => new
@@ -25,6 +26,10 @@ public sealed class ClassConfiguration : IEntityTypeConfiguration<AcademicClass>
         builder.Property(academicClass => academicClass.ActivatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(academicClass => academicClass.EndedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(academicClass => academicClass.RowVersion).IsRowVersion();
+        builder.Property(c => c.CreationRequestHash).HasMaxLength(64).IsUnicode(false);
+        builder.HasIndex(c => new { c.OrganizationId, c.CreatedByUserId, c.ClientOperationId }).IsUnique()
+            .HasFilter("[ClientOperationId] IS NOT NULL").HasDatabaseName("UX_Classes_CreationIntent");
+        builder.HasOne<MakanApp.Domain.Identity.User>().WithMany().HasForeignKey(c => c.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<MakanApp.Domain.Organization.Organization>()
             .WithMany()

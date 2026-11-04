@@ -62,6 +62,59 @@ public sealed class ApiContractOperationTransformer(StorageOptions storage) : IO
         }
         if (route.StartsWith("api/admin/v1/", StringComparison.Ordinal) && method is not ("GET" or "HEAD" or "OPTIONS"))
             Error(operation, "429", [ApiErrorCodes.RateLimited]);
+        var gapRead = route is "api/admin/v1/provisioning" or "api/admin/v1/personal-classes/{classId}/memberships" or
+            "api/v1/organization/invitations" or "api/v1/organization/teacher-content-activities" or "api/v1/academic/exams/discovery";
+        if (gapRead && method == "GET")
+        {
+            Error(operation, "400", [ApiErrorCodes.InvalidRequest]);
+            operation.Summary = route switch
+            {
+                "api/admin/v1/provisioning" => "فهرست و lookup دقیق قصد سازمان‌سازی",
+                "api/admin/v1/personal-classes/{classId}/memberships" => "خواندن دوره‌های عضویت کلاس مستقل با نسخهٔ همان دوره",
+                "api/v1/organization/invitations" => "دعوت‌های ارسالی سازمان جاری با وضعیت و انقضای مؤثر",
+                "api/v1/organization/teacher-content-activities" => "گزارش نسخه‌های محتوای منتشرشدهٔ سازمان؛ بدون بدنه یا یادداشت خصوصی",
+                _ => "کشف صفحه‌بندی‌شدهٔ نسخهٔ جاری آزمون کلاس‌های مجاز مدرس یا مدیر"
+            };
+            operation.Description = (operation.Description ?? "") + (route switch
+            {
+                "api/admin/v1/provisioning" => "\nclientOperationId اختیاری، string و حداکثر ۱۰۰ نویسه است؛ query پیش از paging اعمال می‌شود. unknown=صفحهٔ خالی ۲۰۰؛ GET عملیات را Retry نمی‌کند.",
+                "api/admin/v1/personal-classes/{classId}/memberships" => "\nPersonalClassesRead مجوز این metadata است. membershipVersion نسخهٔ همان دوره است، نه Grant؛ Grant مستقیم Platform فقط برای Manager جاری است و Teacher از Manager تفویض می‌گیرد.",
+                "api/v1/organization/invitations" => "\nفقط Manager با Workspace سازمانی جاری؛ OrganizationId ورودی ندارد. نام در context مجاز است، شمارهٔ کامل برگردانده نمی‌شود. Revoke فقط برای نوع/وضعیت دارای مسیر موجود پیشنهاد می‌شود.",
+                "api/v1/organization/teacher-content-activities" => "\nفقط Manager همان سازمان؛ منابع Published واقعی، نویسندهٔ نسخه و بازهٔ نیمه‌باز UTC. eventId برای منبع تاریخی بدون رویداد null است؛ GET رویداد نمی‌سازد.",
+                _ => "\nManager یا Teacher با انتساب جاری همان کلاس در سازمانِ Workspace؛ StudentExamSummary بدون Editor/Questions/AnswerKey. endpoint آرایه‌ای قبلی حفظ شده است."
+            });
+            if (route.StartsWith("api/v1/", StringComparison.Ordinal))
+            {
+                Error(operation, "400", [MakanApp.Application.Organization.SchoolOnboardingErrorCodes.Invalid, SchoolErrorCodes.Invalid]);
+                Error(operation, "403", [MakanApp.Application.Organization.OrganizationErrorCodes.WorkspaceNotAllowed, AcademicErrorCodes.AcademicReadNotAllowed]);
+            }
+            foreach (var p in operation.Parameters ?? [])
+            {
+                var metadataParameter = context.Description.ParameterDescriptions.SingleOrDefault(d =>
+                    string.Equals(d.Name, p.Name, StringComparison.OrdinalIgnoreCase));
+                var parameterType = metadataParameter?.ModelMetadata?.ModelType ?? metadataParameter?.Type;
+                var enumType = parameterType is null ? null : Nullable.GetUnderlyingType(parameterType) ?? parameterType;
+                if (p.In == ParameterLocation.Query) p.Name = System.Text.Json.JsonNamingPolicy.CamelCase.ConvertName(p.Name);
+                if (enumType?.IsEnum == true && !enumType.IsDefined(typeof(FlagsAttribute), false))
+                    p.Schema.Enum = Enum.GetNames(enumType).Select(n => (IOpenApiAny)new OpenApiString(n)).ToList();
+                if (enumType?.IsEnum == true && enumType.IsDefined(typeof(FlagsAttribute), false))
+                    p.Description = "نقش یا ترکیب نقش‌های معتبر با comma؛ None یا بیت ناشناخته برای فیلتر پذیرفته نمی‌شود.";
+                if (p.Name == "page") { p.Schema.Minimum = 1; p.Schema.Maximum = route.Contains("personal-classes", StringComparison.Ordinal) ? 1_000_000 : 100_000; p.Schema.Default = new OpenApiInteger(1); }
+                if (p.Name == "pageSize") { p.Schema.Minimum = 1; p.Schema.Maximum = 100; p.Schema.Default = new OpenApiInteger(route.StartsWith("api/admin/", StringComparison.Ordinal) ? 30 : route.EndsWith("/discovery", StringComparison.Ordinal) ? 25 : 50); }
+                if (p.Name == "search") p.Schema.MaxLength = route.Contains("personal-classes", StringComparison.Ordinal) ? 100 : 200;
+                if (p.Name == "clientOperationId")
+                { p.Schema.MaxLength = 100; p.Schema.MinLength = 1; p.Description = "شناسهٔ string همان قصد؛ trim و exact lookup با semantics مقایسهٔ SQL موجود. نبود نتیجه: صفحهٔ خالی ۲۰۰؛ این GET عملیات را Retry نمی‌کند."; }
+            }
+        }
+        if (route == "api/v1/academic/classes/{classId}" && method == "PATCH")
+            Error(operation, "400", [MakanApp.Application.Organization.SchoolOnboardingErrorCodes.Invalid]);
+        if (route.EndsWith("official-spaces/activities", StringComparison.Ordinal) && method == "GET")
+        {
+            Error(operation, "400", [MakanApp.Application.Messaging.MessagingErrorCodes.AcademicActivityQueryInvalid]);
+            Error(operation, "404", [MakanApp.Application.Messaging.MessagingErrorCodes.ConversationNotFound, MakanApp.Application.Messaging.MessagingErrorCodes.AcademicActivityPublicationMissing]);
+            var revision = operation.Parameters?.SingleOrDefault(p => p.Name == "revision");
+            if (revision is not null) { revision.Required = false; revision.Schema.Minimum = 1; revision.Description = "اختیاری؛ در نبود مقدار، جدیدترین رویداد ثبت‌شدهٔ همان منبع مجاز خوانده می‌شود. از publicationReceipt مقدار دقیق را بگیرید؛ GET هیچ رویدادی نمی‌سازد."; }
+        }
         if (method == "POST" && route == "api/v1/files" && operation.RequestBody?.Content.TryGetValue("multipart/form-data", out var multipart) == true)
         {
             operation.RequestBody.Required = true;

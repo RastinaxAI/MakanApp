@@ -18,9 +18,11 @@ public sealed class PlatformProvisioningController(
         [FromQuery] PlatformProvisioningStatus? status,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 30,
+        [FromQuery] string? clientOperationId = null,
         CancellationToken cancellationToken = default) =>
         Ok(await operationsService.GetProvisioningAsync(
-            new PlatformProvisioningQuery(status, page, pageSize),
+            new PlatformProvisioningQuery(status, page, pageSize,
+                Request.Query.ContainsKey(nameof(clientOperationId)) ? clientOperationId ?? string.Empty : null),
             cancellationToken));
 
     [HttpPost]

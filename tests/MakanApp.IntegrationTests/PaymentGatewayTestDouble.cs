@@ -75,6 +75,7 @@ public sealed class PaymentGatewayTestControl
 
 public sealed class RecordingPaymentGateway(PaymentGatewayTestControl control) : IPaymentGateway
 {
+    public bool IsConfigured => true;
     public string ProviderName => "Recording";
 
     public Task<PaymentGatewayCreationResult> CreatePaymentAsync(

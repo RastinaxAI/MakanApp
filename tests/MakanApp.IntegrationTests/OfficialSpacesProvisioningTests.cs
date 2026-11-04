@@ -86,6 +86,13 @@ public sealed partial class MessagingEndpointsTests
                 $"/api/v1/organization/classes/{s.ClassId}/official-spaces/activities?kind={kind}&sourceVersionId={versionId}&revision={publication.SourceRevision}", JsonOptions))!;
             Assert.Equal(2, status.Length);
             Assert.All(status, d => { Assert.Equal(publicationId, d.EventId); Assert.Equal(AcademicActivityDeliveryState.Pending, d.State); });
+            var withoutRevision = (await s.Teacher.GetFromJsonAsync<AcademicActivityDeliveryResult[]>(
+                $"/api/v1/organization/classes/{s.ClassId}/official-spaces/activities?kind={kind}&sourceVersionId={versionId}", JsonOptions))!;
+            Assert.Equal(status, withoutRevision);
+            using var invalidRevision = await s.Teacher.GetAsync(
+                $"/api/v1/organization/classes/{s.ClassId}/official-spaces/activities?kind={kind}&sourceVersionId={versionId}&revision=0");
+            Assert.Equal(HttpStatusCode.BadRequest, invalidRevision.StatusCode);
+            Assert.Equal(MessagingErrorCodes.AcademicActivityQueryInvalid, await ReadProblemCodeAsync(invalidRevision));
             Assert.False(await pendingScope.ServiceProvider.GetRequiredService<MakanDbContext>().Messages.AnyAsync(m => m.AcademicActivityPublicationId == publicationId));
         }
         async Task Deliver()
@@ -131,11 +138,48 @@ public sealed partial class MessagingEndpointsTests
             await Assert.ThrowsAsync<InvalidOperationException>(() => handler.HandleAsync(publication, OfficialSpaceEventWriter.PublicationType, "{}", default));
             var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
             Assert.Equal(1, await db.Messages.CountAsync(m => m.AcademicActivityPublicationId == publication));
+            var partial = (await s.Teacher.GetFromJsonAsync<AcademicActivityDeliveryResult[]>(
+                $"/api/v1/organization/classes/{s.ClassId}/official-spaces/activities/{publication}", JsonOptions))!;
+            Assert.Equal(AcademicActivityDeliveryState.Delivered, partial.Single(d => d.Purpose == ConversationType.Group).State);
+            Assert.NotEqual(AcademicActivityDeliveryState.Delivered, partial.Single(d => d.Purpose == ConversationType.Channel).State);
             Assert.True(await scope.ServiceProvider.GetRequiredService<EfOfficialSpacesStore>().EnsurePairAsync(s.OrganizationId, s.ClassId, default));
             await handler.HandleAsync(publication, OfficialSpaceEventWriter.PublicationType, "{}", default);
             Assert.Equal(2, await db.Messages.CountAsync(m => m.AcademicActivityPublicationId == publication));
             Assert.Single(await db.Messages.Where(m => m.ConversationId == groupId && m.AcademicActivityPublicationId == publication).ToArrayAsync());
         }
+    }
+
+    [Fact]
+    public async Task OfficialActivityHistoricalMissingPublicationIsDistinctOnlyForAuthorizedPublishedSource()
+    {
+        using var s = await CreateOfficialScenarioAsync(false); Guid lessonId; Guid draftId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>(); var now = DateTime.UtcNow;
+            var lesson = ClassLesson.Create(s.OrganizationId, s.ClassId, s.TeacherId, Guid.NewGuid(), new string('B', 64),
+                "درس تاریخی بدون رویداد", "بدنهٔ خصوصی نباید در پاسخ باشد", 0, [], now); lesson.Publish(now);
+            var draft = ClassLesson.Create(s.OrganizationId, s.ClassId, s.TeacherId, Guid.NewGuid(), new string('C', 64),
+                "پیش‌نویس خصوصی", "محتوای پیش‌نویس", 0, [], now);
+            db.ClassLessons.AddRange(lesson, draft); await db.SaveChangesAsync(); lessonId = lesson.Id; draftId = draft.Id;
+        }
+        var route = $"/api/v1/organization/classes/{s.ClassId}/official-spaces/activities?kind=Lesson&sourceVersionId=";
+        using (var historical = await s.Teacher.GetAsync(route + lessonId))
+        {
+            Assert.Equal(HttpStatusCode.NotFound, historical.StatusCode);
+            Assert.Equal(MessagingErrorCodes.AcademicActivityPublicationMissing, await ReadProblemCodeAsync(historical));
+        }
+        foreach (var id in new[] { draftId, Guid.NewGuid() })
+        { using var hidden = await s.Student.GetAsync(route + id); Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
+            Assert.Equal(MessagingErrorCodes.ConversationNotFound, await ReadProblemCodeAsync(hidden)); }
+        using var unrelated = factory.CreateClient();
+        var outsider = await CreateMessagingUserAsync(unrelated);
+        var other = await factory.CreateOrganizationAsync(NewOrganizationName());
+        var member = await factory.CreateMembershipAsync(outsider.UserId, other, OrganizationRole.Manager);
+        await SelectOrganizationAsync(unrelated, member.MembershipId, OrganizationRole.Manager);
+        using var cross = await unrelated.GetAsync(route + lessonId);
+        Assert.Equal(MessagingErrorCodes.ConversationNotFound, await ReadProblemCodeAsync(cross));
+        await using var verifyScope = factory.Services.CreateAsyncScope();
+        Assert.False(await verifyScope.ServiceProvider.GetRequiredService<MakanDbContext>().AcademicActivityPublications.AnyAsync(p => p.ClassId == s.ClassId));
     }
 
     [Fact]

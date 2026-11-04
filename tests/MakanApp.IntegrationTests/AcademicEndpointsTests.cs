@@ -41,7 +41,7 @@ public sealed class AcademicEndpointsTests(MakanAppWebApplicationFactory factory
 
         using var classResponse = await client.PostAsJsonAsync(
             "/api/v1/academic/classes",
-            new CreateClassCommand(period.Id, course.Id, "ریاضی هفتم الف", 25, true),
+            new CreateClassCommand(period.Id, course.Id, "ریاضی هفتم الف", 25, true, Guid.NewGuid()),
             JsonOptions);
         var academicClass = await ReadRequiredAsync<ClassResult>(classResponse);
 
@@ -67,11 +67,11 @@ public sealed class AcademicEndpointsTests(MakanAppWebApplicationFactory factory
 
         using var courseResponse = await client.PostAsJsonAsync(
             "/api/v1/academic/classes",
-            new CreateClassCommand(ownPeriodId, otherCourseId, "Invalid", 10, true),
+            new CreateClassCommand(ownPeriodId, otherCourseId, "Invalid", 10, true, Guid.NewGuid()),
             JsonOptions);
         using var periodResponse = await client.PostAsJsonAsync(
             "/api/v1/academic/classes",
-            new CreateClassCommand(otherPeriodId, ownCourseId, "Invalid", 10, true),
+            new CreateClassCommand(otherPeriodId, ownCourseId, "Invalid", 10, true, Guid.NewGuid()),
             JsonOptions);
 
         Assert.Equal(HttpStatusCode.NotFound, courseResponse.StatusCode);

@@ -25,7 +25,12 @@ public sealed record CreateSchoolGuardianRelationCommand(
 public sealed record SchoolGuardianRelationDto(
     Guid Id, Guid OrganizationId, Guid GuardianUserId, Guid LearnerOrganizationPersonId,
     GuardianRelationStatus Status, DateTime ValidFromUtc, DateTime? EndedAtUtc,
-    string RowVersion, bool Replayed = false);
+    string RowVersion, bool Replayed = false)
+{
+    public string? GuardianDisplayName { get; init; }
+    public string? GuardianUsername { get; init; }
+    public string? LearnerDisplayName { get; init; }
+}
 public sealed record SchoolGuardianRelationsPage(
     DateTime DataAsOfUtc, int Page, int PageSize, int TotalCount, IReadOnlyCollection<SchoolGuardianRelationDto> Items);
 
