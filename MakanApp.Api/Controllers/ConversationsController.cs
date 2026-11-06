@@ -111,6 +111,7 @@ public sealed class ConversationsController(
             cancellationToken));
 
     [HttpGet("{conversationId:guid}/summary")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<ConversationSummaryResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<ConversationSummaryResult>> GetSummary(Guid conversationId, CancellationToken cancellationToken) =>
         Ok(await messagingService.GetConversationSummaryAsync(AuthenticatedSession.GetUserId(User),

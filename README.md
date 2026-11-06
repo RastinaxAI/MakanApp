@@ -427,6 +427,8 @@ Search، Block و Report پس از STEP 7D اضافه شده‌اند و در ر
 
 ## محدودیت‌ها
 
+قرارداد جدید [پذیرش Gapها، Summary و فایل](docs/product/BACKEND_FINAL_GAP_ACCEPTANCE_20261106_FA.md) رفتار `BE-404-A` را توضیح می‌دهد: Summary از مجوز Global Inbox حساب استفاده می‌کند و تغییر Workspace مجوز تاریخچه، فایل یا Hub نمی‌سازد. رسانه با Internal Safety فعلی همچنان `ReviewRequired` است؛ [راهنمای Test candidate](docs/production/BACKEND_MASTER_TEST_DEPLOYMENT_20261106_FA.md) پذیرش محلی را از استقرار سرور و gate انتشار Production جدا می‌کند.
+
 انتخاب و مجوزدهی منابع برای چهار مسیر AI و Preflight خواندنی اضافه شده است؛ [شرح Backend](docs/ai-handoff/AI_SOURCE_SELECTION_AND_AUTHORIZATION_FA.md) و [قرارداد Frontend](docs/product/AI_SOURCE_SELECTION_FRONTEND_HANDOFF_FA.md). انتخاب معتبر فعلاً با `AI_SOURCE_RETRIEVAL_NOT_AVAILABLE` پیش از Provider و مصرف سهمیه متوقف می‌شود؛ Contract v1 و Service JWT تغییر نکرده‌اند و RAG واقعی همچنان deferred است.
 
 هر ۱۲ عملیات source-less اکنون از `AiInvocationExecutor` به entitlement، reservation و finalize موجود وصل‌اند؛ [سند اتصال AI v1](docs/ai-handoff/AI_V1_BACKEND_INTEGRATION_FA.md). پذیرش محلی با Kestrel و SQL ایزوله و AI کنترل‌شده ۱۲/۱۲ موفق بود، با صفر تماس Provider واقعی. AI در تنظیمات خصوصی Test/Production خاموش مانده است؛ [Runbook فعال‌سازی سرور](docs/ai-handoff/AI_V1_SERVER_ACTIVATION_RUNBOOK_FA.md) فقط برای مرحلهٔ بعد است. پذیرش Full12 واقعی و timeout قبلی Provider هنوز با این نتیجهٔ محلی بسته نمی‌شوند.

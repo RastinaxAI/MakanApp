@@ -1222,6 +1222,8 @@ policy دقیق ساخت/عضویت Personal Group/Channel release blocker با�
 
 Hub موجود `/hubs/messaging` علاوه بر ConversationChanged، رویداد ClientInvalidated برای access، commerce، مدرسه و ارزیابی دارد. دادهٔ حساس، متن پیام، نمره و موجودی در notification نیست؛ مجوز read جاری دوباره بررسی می‌شود. گروه نشست خودکار است و پیام اولِ گفتگوی بازنشده نیز قابل اعلان است. GET مدیریتی `/conversations/{id}` مخصوص Group/Channel است؛ برای Direct/Saved از `/summary` و `/messages` استفاده کنید.
 
+از اصلاح ۲۰۲۶-۱۱-۰۶، `/conversations/{conversationId}/summary` همان DTO و مجوز Global Inbox حساب را مستقل از Workspace انتخاب‌شده و با `no-store` می‌خواند. عضویت/نقش/Participant و رابطهٔ منبع رسمی باید جاری باشند؛ شناسهٔ نامجاز 404 است. تاریخچه، ارسال، فایل سازمانی و Subscribe روی Hub همچنان Context کامل می‌خواهند. [قرارداد BE-404-A و پذیرش فایل](product/BACKEND_FINAL_GAP_ACCEPTANCE_20261106_FA.md) حدود فایل، Range، revoke و مانع واقعی رسانهٔ `ReviewRequired` را مشخص می‌کند.
+
 1. listenerها را نصب و Hub را وصل کنید؛ Bearer در header و مرورگر با LongPolling و withCredentials=false.
 2. `GET /api/v1/realtime/changes` بدون cursor را برای boundary بگیرید؛ Changes خالی bootstrap است.
 3. Snapshotهای مجاز و صفحه‌های لازم را بخوانید؛ event هم‌زمان را در buffer محدود نگه دارید.

@@ -24,6 +24,8 @@ public sealed partial class MessagingEndpointsTests
     [Theory]
     [InlineData(CommunicationAgeCategory.Minor, "image/png", MessageKind.Image)]
     [InlineData(CommunicationAgeCategory.Unknown, "application/pdf", MessageKind.File)]
+    [InlineData(CommunicationAgeCategory.Adult, "image/png", MessageKind.Image)]
+    [InlineData(CommunicationAgeCategory.Adult, "application/pdf", MessageKind.File)]
     public async Task Be01PendingReviewIsAuditableAndNeverCreatesDeliveryBindingOrDuplicateUsage(
         CommunicationAgeCategory age, string contentType, MessageKind kind)
     {

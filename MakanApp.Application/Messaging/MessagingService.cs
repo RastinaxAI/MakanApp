@@ -11,6 +11,7 @@ public sealed class MessagingService(
     IContentSafetyProvider contentSafetyProvider,
     MessagingOptions options,
     TimeProvider timeProvider,
+    AccountInboxService accountInbox,
     IMessagingEphemeralState? ephemeralState = null,
     MessagingOperationContextResolver? operationContexts = null) : IMessagingService
 {
@@ -74,14 +75,8 @@ public sealed class MessagingService(
         return Map(result);
     }
 
-    public async Task<ConversationSummaryResult> GetConversationSummaryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken)
-    {
-        ValidateConversationId(conversationId);
-        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
-        var records = await store.GetMyConversationsAsync(userId, context, ConversationListFilter.All, 1, 1,
-            null, cancellationToken, conversationId: conversationId);
-        return records.Count == 1 ? Map(records.Single()) : throw Error(MessagingErrorCodes.ConversationNotFound, "گفتگوی مجاز یافت نشد.");
-    }
+    public Task<ConversationSummaryResult> GetConversationSummaryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken cancellationToken) =>
+        accountInbox.ReadSummaryAsync(userId, sessionId, conversationId, cancellationToken);
 
     public async Task<IReadOnlyCollection<ConversationSummaryResult>> GetMyConversationsAsync(
         Guid userId,

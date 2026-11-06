@@ -6,6 +6,18 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class MessagingEndpointsTests
 {
     [Fact]
+    public async Task AccountSummaryOpenApiDocumentsAccountVisibilityWithoutChangingInboxDto()
+    {
+        using var client = factory.CreateClient();
+        using var document = JsonDocument.Parse(await client.GetStringAsync("/openapi/v1.json"));
+        var operation = document.RootElement.GetProperty("paths").GetProperty("/api/v1/conversations/{conversationId}/summary").GetProperty("get");
+        Assert.Contains("BE-404-A", operation.GetProperty("description").GetString());
+        Assert.Contains("no-store", operation.GetProperty("description").GetString());
+        var schema = operation.GetProperty("responses").GetProperty("200").GetProperty("content").GetProperty("application/json").GetProperty("schema");
+        Assert.EndsWith("/ConversationSummaryResult", schema.GetProperty("$ref").GetString());
+    }
+
+    [Fact]
     public async Task StabilizationFileOpenApiDescribesBinaryAndRangeWithoutJsonSuccess()
     {
         using var client = factory.CreateClient();

@@ -12,6 +12,9 @@ public sealed record AccountInboxPageResult(IReadOnlyList<ConversationSummaryRes
 
 public interface IAccountInboxStore
 {
+    Task<ConversationSummaryStoreRecord?> ReadConversationSummaryAsync(Guid userId,
+        Guid conversationId, CancellationToken ct);
+
     Task<IReadOnlyList<ConversationSummaryStoreRecord>> ReadAccountInboxAsync(Guid userId,
         ConversationListFilter filter, string? search, int limit, AccountInboxPosition? position, CancellationToken ct);
 }
@@ -22,6 +25,21 @@ public sealed class AccountInboxService(IAccountInboxStore store, MessagingOpera
     private const string View = "account-inbox-page-v1";
     private sealed record Cursor(string View, Guid UserId, Guid SessionId, string Filter,
         AccountInboxPosition Position, DateTime ExpiresAtUtc);
+
+    public async Task<ConversationSummaryResult> ReadSummaryAsync(Guid userId, Guid sessionId,
+        Guid conversationId, CancellationToken ct)
+    {
+        await contexts.PersonalAsync(userId, sessionId, ct);
+        if (conversationId == Guid.Empty)
+            throw SummaryNotFound();
+        // مجوز همان صندوق حساب است؛ این خواندن، بافت نشست یا مجوز محتوای کامل را تغییر نمی‌دهد.
+        var record = await store.ReadConversationSummaryAsync(userId, conversationId, ct);
+        await contexts.PersonalAsync(userId, sessionId, ct);
+        return record is null ? throw SummaryNotFound() : ConversationSummaryMapping.Map(record, clock.GetUtcNow().UtcDateTime);
+    }
+
+    private static MessagingException SummaryNotFound() =>
+        new(MessagingErrorCodes.ConversationNotFound, "گفتگوی مجاز یافت نشد.");
 
     public async Task<AccountInboxPageResult> ReadAsync(Guid userId, Guid sessionId, AccountInboxQuery query, CancellationToken ct)
     {

@@ -45,8 +45,8 @@ public sealed class FileAndMessagingOperationTransformer : IOpenApiOperationTran
         }
         if (context.Description.HttpMethod == "GET" && route == "api/v1/conversations/{conversationId}/summary")
         {
-            operation.Summary = "Summary مجاز گفتگو مستقل از صفحه و فیلتر Inbox";
-            operation.Description = "Direct، Saved، Group و Channel مجاز را با DTO موجود Inbox می‌خواند؛ archive مانع deep-link نیست. نشست، workspace جاری و participant فعال همچنان الزامی‌اند. شناسهٔ نامجاز یا context متفاوت 404 می‌گیرد. این مسیر مجوز مدیریت گروه یا ارسال پیام جدید ایجاد نمی‌کند.";
+            operation.Summary = "Summary مجاز گفتگو مستقل از Workspace انتخاب‌شده و صفحهٔ Inbox";
+            operation.Description = "BE-404-A: همان DTO و مجوز جاری Global Inbox حساب برای Direct، Saved، Group و Channel استفاده می‌شود؛ archive مانع deep-link نیست. نشست معتبر، حساب و participant فعال و برای سازمان، عضویت و نقش جاری همان سازمان و مجوز منبع رسمی الزامی‌اند. شناسهٔ حدسی، عضویت پایان‌یافته یا منبع نامجاز 404 می‌گیرد. انتخاب Workspace دیگر مجوز تازه‌ای ایجاد نمی‌کند و این مسیر Workspace را عوض نمی‌کند. تاریخچه، ارسال، فایل، Hub، اعضا، تنظیمات و مدیریت همچنان بافت و مجوز کامل خود را می‌خواهند. پاسخ no-store است.";
         }
         if (context.Description.HttpMethod == "POST" && route == "api/v1/conversations/{conversationId}/messages")
         {

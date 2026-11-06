@@ -14,7 +14,7 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class FileStorageEndpointsTests(MakanAppWebApplicationFactory factory)
+public sealed partial class FileStorageEndpointsTests(MakanAppWebApplicationFactory factory)
 {
     private static int _phoneSequence = 1_000_000;
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();

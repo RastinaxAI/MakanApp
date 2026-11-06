@@ -10,6 +10,13 @@ public sealed partial class EfMessagingStore : IAccountInboxStore
 {
     private const int LastMessagePreviewLength = 120;
 
+    public async Task<ConversationSummaryStoreRecord?> ReadConversationSummaryAsync(Guid userId,
+        Guid conversationId, CancellationToken ct) =>
+        (await ReadConversationsAsync(userId,
+            new(userId, userId, Guid.Empty, WorkspaceType.Personal, null, null, null, null),
+            ConversationListFilter.All, 1, 1, null, ct,
+            conversationId: conversationId, accountWide: true)).SingleOrDefault();
+
     public Task<IReadOnlyCollection<ConversationSummaryStoreRecord>> GetMyConversationsAsync(
         Guid userId, AccessContext accessContext, ConversationListFilter filter, int page, int pageSize,
         string? search, CancellationToken cancellationToken, Guid? folderId = null, Guid? conversationId = null) =>
