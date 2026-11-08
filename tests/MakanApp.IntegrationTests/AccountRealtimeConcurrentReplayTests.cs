@@ -26,6 +26,8 @@ public sealed partial class MessagingEndpointsTests
         {
             for (var page = 0; page < 200; page++)
             {
+                // HasMore فقط cut همین خواندن را توصیف می‌کند؛ پایان producer پس از شروع آن، پایان stream را ثابت نمی‌کند.
+                var producerFinishedBeforeRead = producer.IsCompleted;
                 using var response = await client.GetAsync("/api/v1/realtime/changes?limit=3&cursor=" + Uri.EscapeDataString(cursor), budget.Token);
                 if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
                 {
@@ -38,7 +40,7 @@ public sealed partial class MessagingEndpointsTests
                 foreach (var item in next.Changes) seen.Add(item.EventId);
                 cursor = next.NextCursor;
                 firstPage.TrySetResult();
-                if (producer.IsCompleted && !next.HasMore) break;
+                if (producerFinishedBeforeRead && !next.HasMore) break;
                 if (next.RetryAfterMilliseconds is int delay) await Task.Delay(delay, budget.Token);
             }
             await producer;

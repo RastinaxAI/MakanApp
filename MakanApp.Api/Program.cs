@@ -261,10 +261,12 @@ builder.Services.AddHsts(options =>
 builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer<StringEnumSchemaTransformer>();
+    options.AddSchemaTransformer<KnowledgeContractTransformer>();
     options.AddSchemaTransformer<PersonalClassInputSchemaTransformer>();
     options.AddOperationTransformer<SchoolOperationTransformer>();
     options.AddOperationTransformer<FileAndMessagingOperationTransformer>();
     options.AddOperationTransformer<AiInvocationOperationTransformer>();
+    options.AddOperationTransformer<KnowledgeContractTransformer>();
     options.AddOperationTransformer<PersonalAcademicOperationTransformer>();
     options.AddOperationTransformer<ApiContractOperationTransformer>();
     options.AddDocumentTransformer<ApiContractDocumentTransformer>();

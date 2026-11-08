@@ -8,7 +8,7 @@ namespace MakanApp.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/sources")]
-public sealed class EducationalSourcesController(EducationalSourceService service) : ControllerBase
+public sealed class EducationalSourcesController(EducationalSourceService service, KnowledgeProcessingProjection processing) : ControllerBase
 {
     private Guid Actor => AuthenticatedSession.GetUserId(User);
     private Guid Session => AuthenticatedSession.GetSessionId(User);
@@ -25,8 +25,9 @@ public sealed class EducationalSourcesController(EducationalSourceService servic
     public async Task<ActionResult<EducationalSourceResult>> Get(Guid id, [FromQuery] int? revision, CancellationToken ct) =>
         Ok(await service.GetAsync(Actor, Session, id, revision, ct));
     [HttpGet("{id:guid}/processing")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<ActionResult<EducationalSourceResult>> Processing(Guid id, [FromQuery] int? revision, CancellationToken ct) =>
-        Ok(await service.GetAsync(Actor, Session, id, revision, ct));
+        Ok(await processing.ReadAsync(Actor, Session, id, revision, HttpContext.TraceIdentifier, ct));
     [HttpPatch("{id:guid}/draft")]
     public async Task<ActionResult<EducationalSourceResult>> Update(Guid id, UpdateSourceDraftCommand command, CancellationToken ct) =>
         Ok(await service.MutateAsync(Actor, Session, id, command, null, null, null, null, ct));

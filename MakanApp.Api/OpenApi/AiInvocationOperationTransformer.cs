@@ -9,7 +9,8 @@ public sealed class AiInvocationOperationTransformer : IOpenApiOperationTransfor
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
         var route = context.Description.RelativePath?.Split('?')[0] ?? "";
-        if (!route.StartsWith("api/v1/ai/", StringComparison.Ordinal) || route == "api/v1/ai/sources/preflight") return Task.CompletedTask;
+        if (!route.StartsWith("api/v1/ai/", StringComparison.Ordinal) || route == "api/v1/ai/sources/preflight" ||
+            route.StartsWith("api/v1/ai/knowledge/", StringComparison.Ordinal)) return Task.CompletedTask;
         operation.Parameters ??= new List<OpenApiParameter>();
         operation.Responses ??= new OpenApiResponses();
         operation.Parameters.Add(new OpenApiParameter { Name = "X-AI-Operation-Id", In = ParameterLocation.Header, Required = false,

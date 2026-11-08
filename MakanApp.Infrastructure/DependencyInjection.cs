@@ -6,6 +6,7 @@ using MakanApp.Application.Assessment;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
+using MakanApp.Application.Knowledge;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Outbox;
@@ -22,6 +23,7 @@ using MakanApp.Infrastructure.Commerce;
 using MakanApp.Infrastructure.Guardian;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
+using MakanApp.Infrastructure.Knowledge;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Outbox;
@@ -298,6 +300,29 @@ public static class DependencyInjection
         services.AddScoped<IStorageService, StorageService>();
         services.AddScoped<MakanApp.Application.Knowledge.IEducationalSourceStore, MakanApp.Infrastructure.Knowledge.EfEducationalSourceStore>();
         services.AddScoped<MakanApp.Application.Knowledge.EducationalSourceService>();
+        services.AddOptions<AiKnowledgeOptions>()
+            .Configure(options =>
+            {
+                options.Enabled = bool.TryParse(configuration["AiKnowledge:Enabled"], out var knowledgeEnabled) && knowledgeEnabled;
+                options.BaseUrl = configuration["AiKnowledge:BaseUrl"] ?? string.Empty;
+                options.ContractVersion = configuration["AiKnowledge:ContractVersion"] ?? "knowledge-v1";
+                options.TimeoutSeconds = ReadPositiveInt(configuration, "AiKnowledge:TimeoutSeconds", 35);
+                options.MaximumContentBytes = ReadPositiveInt(configuration, "AiKnowledge:MaximumContentBytes", 10 * 1024 * 1024);
+                options.MaximumResponseBytes = ReadPositiveInt(configuration, "AiKnowledge:MaximumResponseBytes", 2 * 1024 * 1024);
+                options.StatusPollAttempts = ReadPositiveInt(configuration, "AiKnowledge:StatusPollAttempts", 20);
+                options.StatusPollIntervalMilliseconds = ReadPositiveInt(configuration, "AiKnowledge:StatusPollIntervalMilliseconds", 500);
+                options.StatusPollTimeoutSeconds = ReadPositiveInt(configuration, "AiKnowledge:StatusPollTimeoutSeconds", 60);
+                options.UseServiceAuthentication = bool.TryParse(configuration["AiKnowledge:UseServiceAuthentication"], out var knowledgeAuthentication) && knowledgeAuthentication;
+            })
+            .Validate(AiKnowledgeOptions.IsValid, "تنظیمات سرویس دانش معتبر نیست.")
+            .ValidateOnStart();
+        services.AddScoped<IKnowledgeRuntimeAvailability, KnowledgeRuntimeAvailability>();
+        services.AddHttpClient<IAiKnowledgeClient, AiKnowledgeClient>(client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+        services.AddScoped<KnowledgeAuthorizationService>();
+        services.AddScoped<KnowledgeIntegrationService>();
+        services.AddScoped<KnowledgeProcessingProjection>();
+        services.AddScoped<IKnowledgeOperationAudit, EfKnowledgeOperationAudit>();
         services.AddSingleton<IFileContentValidator, FileSignatureValidator>();
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
         services.AddSingleton(TimeProvider.System);

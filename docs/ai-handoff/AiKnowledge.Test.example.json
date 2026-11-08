@@ -1,0 +1,20 @@
+{
+  "AiService": {
+    "Enabled": false,
+    "BaseUrl": "",
+    "ContractVersion": "v1",
+    "TimeoutSeconds": 35
+  },
+  "AiKnowledge": {
+    "Enabled": false,
+    "BaseUrl": "",
+    "ContractVersion": "knowledge-v1",
+    "TimeoutSeconds": 35,
+    "MaximumContentBytes": 10485760,
+    "MaximumResponseBytes": 2097152,
+    "StatusPollAttempts": 20,
+    "StatusPollIntervalMilliseconds": 500,
+    "StatusPollTimeoutSeconds": 60,
+    "UseServiceAuthentication": false
+  }
+}

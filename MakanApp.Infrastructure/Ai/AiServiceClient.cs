@@ -197,7 +197,7 @@ public sealed class AiServiceClient(
             AiServiceTelemetry.SetHttpStatus((int)response.StatusCode);
             if (!response.IsSuccessStatusCode)
             {
-                ThrowMappedFailure(operation, response, started);
+                await ThrowMappedFailureAsync(operation, response, started, timeoutSource.Token, cancellationToken);
             }
 
             try
@@ -284,15 +284,54 @@ public sealed class AiServiceClient(
             string.IsNullOrWhiteSpace(request.Actor.UserId) ||
             request.Actor.Role != requiredRole ||
             request.RequestId.Length > 128 ||
-            request.CorrelationId?.Length > 128)
+            request.CorrelationId?.Length > 128 || request.CorrelationId is { } correlation &&
+                (string.IsNullOrWhiteSpace(correlation) || correlation != correlation.Trim() || correlation.Any(char.IsControl)))
         {
             throw InvalidRequest();
         }
     }
 
-    private void ThrowMappedFailure(string operation, HttpResponseMessage response, long started)
+    private async Task ThrowMappedFailureAsync(string operation, HttpResponseMessage response, long started,
+        CancellationToken timeout, CancellationToken caller)
     {
         var statusCode = (int)response.StatusCode;
+        string? upstreamCode = null;
+        try
+        {
+            if (response.Content.Headers.ContentLength is null or <= 4096)
+            {
+                await using var stream = await response.Content.ReadAsStreamAsync(timeout);
+                var buffer = new byte[4097];
+                var length = 0;
+                while (length < buffer.Length)
+                {
+                    var count = await stream.ReadAsync(buffer.AsMemory(length), timeout);
+                    if (count == 0) break;
+                    length += count;
+                }
+                if (length <= 4096)
+                {
+                    using var document = JsonDocument.Parse(buffer.AsMemory(0, length));
+                    if (document.RootElement.ValueKind == JsonValueKind.Object &&
+                        document.RootElement.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.Object &&
+                        error.TryGetProperty("code", out var value) && value.ValueKind == JsonValueKind.String)
+                    {
+                        var candidate = value.GetString();
+                        upstreamCode = (statusCode, candidate) switch
+                        {
+                            (422, "AI_INVALID_REQUEST" or "AI_INVALID_CONTEXT") or
+                            (503, "AI_MODEL_UNAVAILABLE") or (504, "AI_PROVIDER_TIMEOUT") or
+                            (429, "AI_RATE_LIMITED") or (502, "AI_RESPONSE_INVALID" or "AI_INTERNAL_ERROR") or
+                            (401, "AI_SERVICE_UNAUTHORIZED") or (403, "AI_SERVICE_FORBIDDEN") => candidate,
+                            _ => null
+                        };
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException) when (caller.IsCancellationRequested) { throw; }
+        catch (Exception error) when (error is JsonException or IOException or HttpRequestException or OperationCanceledException)
+        { /* در نبود envelope معتبر، همان mapping امنِ status حفظ می‌شود؛ بدنه ثبت نمی‌شود. */ }
         var retryAfter = response.Headers.RetryAfter?.Delta;
         var code = response.StatusCode switch
         {
@@ -317,7 +356,8 @@ public sealed class AiServiceClient(
             code,
             "سرویس هوش مصنوعی درخواست را تکمیل نکرد.",
             statusCode,
-            retryAfter);
+            retryAfter,
+            upstreamErrorCode: upstreamCode);
     }
 
     private static void ValidateChatResponse(AiChatRequest request, AiChatResponse? response)

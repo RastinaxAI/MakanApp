@@ -8,7 +8,7 @@ using Xunit;
 
 namespace MakanApp.UnitTests.Ai;
 
-public sealed class AiServiceClientTests
+public sealed partial class AiServiceClientTests
 {
     public static IEnumerable<object[]> OperationRequests =>
         AiRoleContractTests.Requests.Select(item => new object[] { item[0] })

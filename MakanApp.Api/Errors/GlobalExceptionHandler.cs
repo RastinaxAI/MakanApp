@@ -4,6 +4,7 @@ using MakanApp.Application.Assessment;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Guardian;
 using MakanApp.Application.Identity;
+using MakanApp.Application.Knowledge;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Organization;
@@ -27,7 +28,7 @@ public sealed class GlobalExceptionHandler(
     // فقط ثابت‌های catalogهای مورد اعتماد خوانده می‌شوند؛ metadata یا Code ورودی مجوز لاگ خام نیست.
     private static readonly FrozenSet<string> SafeErrorCodes = new[]
     {
-        typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(CommerceErrorCodes),
+        typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(KnowledgeErrorCodes), typeof(CommerceErrorCodes),
         typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(MessagingErrorCodes),
         typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
         typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
@@ -45,6 +46,7 @@ public sealed class GlobalExceptionHandler(
     {
         ProblemDetails? problemDetails = exception switch
         {
+            AiKnowledgeException knowledgeException => CreateKnownProblem(knowledgeException.Code, knowledgeException.Message),
             MakanApp.Application.Knowledge.EducationalSourceException sourceException => CreateKnownProblem(sourceException.Code, sourceException.Message),
             RealtimeException realtimeException => CreateKnownProblem(realtimeException.Code, realtimeException.Message),
             AssessmentException assessmentException => CreateKnownProblem(
@@ -104,6 +106,9 @@ public sealed class GlobalExceptionHandler(
         httpContext.Response.StatusCode = problemDetails.Status
             ?? StatusCodes.Status500InternalServerError;
 
+        if (exception is AiKnowledgeException knowledgeError && knowledgeError.ProcessingFailureCode == "AI_OCR_FAILED")
+            problemDetails.Extensions["processingFailureCode"] = "AI_OCR_FAILED";
+
         if (exception is MessagingException safetyException && safetyException.Code is
             MessagingErrorCodes.MessageSafetyReviewRequired or MessagingErrorCodes.MessageSafetyBlocked)
         {
@@ -148,6 +153,14 @@ public sealed class GlobalExceptionHandler(
     internal static int? GetKnownStatusCode(string code) =>
         code switch
         {
+            KnowledgeErrorCodes.InvalidRequest or KnowledgeErrorCodes.ContextTooLarge => StatusCodes.Status422UnprocessableEntity,
+            KnowledgeErrorCodes.NotIngested or KnowledgeErrorCodes.Processing or KnowledgeErrorCodes.ProcessingFailed or
+                KnowledgeErrorCodes.VersionConflict => StatusCodes.Status409Conflict,
+            KnowledgeErrorCodes.ResponseInvalid or KnowledgeErrorCodes.RagResponseInvalid => StatusCodes.Status502BadGateway,
+            KnowledgeErrorCodes.Timeout or KnowledgeErrorCodes.PollingTimeout => StatusCodes.Status504GatewayTimeout,
+            KnowledgeErrorCodes.RateLimited => StatusCodes.Status429TooManyRequests,
+            KnowledgeErrorCodes.VectorUnavailable or KnowledgeErrorCodes.EmbeddingUnavailable or KnowledgeErrorCodes.GenerationUnavailable or
+                KnowledgeErrorCodes.Unavailable => StatusCodes.Status503ServiceUnavailable,
             SchoolMembershipErrorCodes.NotFound or SchoolMembershipErrorCodes.RoleNotFound => StatusCodes.Status404NotFound,
             SchoolMembershipErrorCodes.Conflict or SchoolMembershipErrorCodes.OperationConflict or SchoolMembershipErrorCodes.LastManagerRequired => StatusCodes.Status409Conflict,
             MakanApp.Application.Knowledge.SourceErrorCodes.NotFound => StatusCodes.Status404NotFound,

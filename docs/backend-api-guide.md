@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> افزودهٔ `2026-11-08`: [اتصال Knowledge و RAG مجاز](architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md) هفت عملیات جدید و enrichment مسیر processing منبع را توضیح می‌دهد. SourceVersion، ACL جاری، evidence واقعی و ledger سهمیه در Backend کنترل می‌شوند؛ Library بسته می‌ماند. پذیرش محلی Backend → AI واقعی برای ۱۲ عملیات Business و چهار قالب فایل موفق است؛ پذیرش سرور، Worker/Queue و Cutover هنوز انجام نشده‌اند. [راهنمای اجرای سرور و rollback](ai-handoff/KNOWLEDGE_FINAL_INTEGRATION_RUNBOOK_FA.md). این نتیجه جای وضعیت تاریخی Timeout/تعویق RAG در یادداشت‌های قدیمی را می‌گیرد، نه gate عملیاتی سرور را.
+
 > افزودهٔ `2026-11-05`: [مدیریت نقش سازمانی Phase 6](product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). Manager، مدیر دیگر همان سازمان را هم با محافظ آخرین مدیر مدیریت می‌کند؛ چهار mutation با نسخه‌های مستقل و رسید Retry اضافه شده‌اند. مرز تصمیم بازِ یادداشت قبلی با این قرارداد جایگزین شده است.
 
 > افزودهٔ `2026-11-04`: [قرارداد رفع Gapهای Backend و Manual Acceptance](product/BACKEND_GAP_RESOLUTION_20261104_FA.md). خواندن Membership مستقل Platform، lookup قصد Provisioning، Activity با revision اختیاری، دعوت‌های ارسالی سازمان، Class نسخه‌دار، SafeIdentity و discovery آزمون تشریح شده‌اند. مدیریت نقش سازمانی هنوز منتظر تصمیم محدودهٔ اختیار است؛ وجود بسته به معنی پذیرش سرور نیست.
