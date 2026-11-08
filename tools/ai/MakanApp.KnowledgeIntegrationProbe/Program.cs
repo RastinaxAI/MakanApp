@@ -62,7 +62,7 @@ internal static class KnowledgeProbeProgram
                 services.RemoveAll<IAiKnowledgeClient>();
                 services.AddSingleton<ILogger<AiKnowledgeClient>, ProbeKnowledgeLogger>();
                 services.AddHttpClient<IAiKnowledgeClient, AiKnowledgeClient>(client => client.Timeout = Timeout.InfiniteTimeSpan)
-                    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+                    .ConfigurePrimaryHttpMessageHandler(() => new KnowledgeAcceptanceHandler(new HttpClientHandler { AllowAutoRedirect = false }));
             }));
             await using (var scope = factory.Services.CreateAsyncScope())
             {
@@ -74,7 +74,6 @@ internal static class KnowledgeProbeProgram
             await ((IAsyncLifetime)factory).InitializeAsync();
             var staged = new List<(HttpClient Client, EducationalSourceResult Source)>();
             var actorClients = new List<HttpClient>();
-            var readySources = new List<EducationalSourceResult>();
             try
             {
                 var actor = await CreateActor(application, 1); var client = actor.Client; actorClients.Add(client);
@@ -99,7 +98,6 @@ internal static class KnowledgeProbeProgram
                             var state = await status.Content.ReadFromJsonAsync<KnowledgeProcessingStatus>(Json);
                             Write(new { stage = "processing_state", mime, state = state!.State, passed = state.State == "Ready" });
                             if (state.State != "Ready") { passed = false; continue; }
-                            readySources.Add(source);
                         }
                         if (mime == "text/plain")
                         {
@@ -193,30 +191,13 @@ internal static class KnowledgeProbeProgram
                         Write(new { stage = "revocation_without_vector_delete", passed = retained });
                     }
                 }
-                if (readySources.Count > 0)
-                {
-                    stage = "lifecycle";
-                    var source = readySources[0];
-                    using (var reindex = await client.PostAsJsonAsync(SourcePath(source, "reindex"),
-                        new KnowledgeMutationCommand(Guid.NewGuid(), source.Version, "بازنمایه‌سازی فقط QA"), Json)) await Observe(reindex, "reindex", [202]);
-                    using (var ready = await client.GetAsync(SourcePath(source, "status") + "?wait=true")) await Observe(ready, "reindex_ready", [200]);
-                    using (var supersede = await client.PostAsJsonAsync(SourcePath(source, "supersede"),
-                        new KnowledgeMutationCommand(Guid.NewGuid(), source.Version, "پایان نسخهٔ QA"), Json)) await Observe(supersede, "supersede", [200]);
-                }
             }
             finally
             {
-                foreach (var (client, source) in staged)
-                {
-                    try
-                    {
-                        // فقط identityهایی که همین اجرا از Backend ساخته است پاک می‌شوند؛ checkpoint یا منبع قدیمی لمس نمی‌شود.
-                        using var deletion = await client.PostAsJsonAsync(SourcePath(source, "delete"),
-                            new KnowledgeMutationCommand(Guid.NewGuid(), source.Version, "پاک‌سازی فقط منبع QA همین اجرا"), Json);
-                        await Observe(deletion, "qa_delete", [200]);
-                    }
-                    catch (Exception error) { passed = false; Write(new { stage = "qa_cleanup", passed = false, errorType = error.GetType().Name }); }
-                }
+                // منبع QA نیز در AI حذف نمی‌شود؛ فقط شناسهٔ همان اجرای غیرحساس برای پیگیری ثبت می‌شود.
+                Write(new { stage = "qa_resources_preserved", sources = staged.Select(item => new
+                    { item.Source.SourceId, version = item.Source.Revision }).ToArray(),
+                    oldResourcesTouched = false, aiLifecycleMutations = 0 });
                 foreach (var actorClient in actorClients) actorClient.Dispose();
                 await ((IAsyncLifetime)factory).DisposeAsync();
                 Write(new { stage = "isolated_database_removed", passed = true, normalDatabaseChanged = false });

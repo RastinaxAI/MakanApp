@@ -1,5 +1,7 @@
 # قرارداد نهایی Backend و Knowledge — ۲۰۲۶-۱۱-۰۸
 
+> وضعیت عملیاتی جاری: مالک، Phase C/E5/Qdrant و Knowledge Production را Active/Ready تأیید کرده است؛ Recovery منجمد و Cleanup ممنوع است. [اصلاحیهٔ پذیرش Backend و دو بستهٔ Enabled](../ai-handoff/AI_PRODUCTION_BACKEND_ACCEPTANCE_20261108_FA.md) بر توضیح‌های تاریخی وضعیت فیزیکی/تعویق بسته در این سند مقدم است. نتیجهٔ پذیرش Backend از claim تیم AI جدا ثبت می‌شود و هیچ تغییر قرارداد AI لازم نیست.
+
 این سند تغییر همین مرحله را ثبت می‌کند؛ گزارش‌های قدیمی و claim تیم AI مدرک نسخهٔ مستقر نیستند. مبنای شروع Backend `3668be0233f856b982ba7eddfeddc96af54d1c0b` بود. Client دوازده عملیات Business، Context builderها، Source ACL، Pin و Ledger سهمیه موجود بودند؛ Client و مسیر اجرایی Knowledge وجود نداشتند. [راهنمای اجرای مرحله](../ai-handoff/KNOWLEDGE_FINAL_INTEGRATION_RUNBOOK_FA.md).
 
 ## مرجع قرارداد و مشاهدهٔ واقعی

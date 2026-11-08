@@ -1,5 +1,7 @@
 # اجرای Test و Cutover کنترل‌شدهٔ AI/Knowledge — ۲۰۲۶-۱۱-۰۸
 
+> اصلاحیهٔ جاری مالک: Phase C در Production فعال است و Recovery منجمد می‌ماند. [دستور پذیرش و بسته‌های روشن Test/Production](AI_PRODUCTION_BACKEND_ACCEPTANCE_20261108_FA.md) بر دستور تاریخی «هر دو بسته Disabled بمانند» در این گزارش مقدم است. تا PASS سرور، خود Traffic واقعی تغییر نمی‌کند. AI deploy/reconfigure یا حذف منابع در محدوده نیست.
+
 این راهنما مجوز خودکار تغییر Production نیست. Source این مرحله به AI واقعی متصل و با دادهٔ synthetic آزموده شده است؛ تنظیمات خصوصی و Traffic واقعی تغییر نکرده‌اند. [قرارداد و محدودیت‌های پیاده‌سازی](../architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md).
 
 ## حفظ وضعیت و تنظیمات
@@ -61,7 +63,7 @@ dotnet run --project tools/ai/MakanApp.KnowledgeIntegrationProbe --configuration
 
 ۵. Client/Provider/SDK retry loop اضافه نشود. budget Backend۳۵ثانیه و سیاست Provider اعلام‌شده۳۰ثانیه/retry0 تغییر نکند. polling خواندن محدود با retry generation متفاوت است.
 
-Probe واقعی فقط با `--run-live --allow-remote-https` و `AiKnowledge__BaseUrl` و `AiLiveProbe__ApprovedOrigin` همسان و فایل‌های QA غیرحساس در `KnowledgeLiveProbe__AssetsDirectory` کار می‌کند. به LocalDB ایزوله نیاز دارد؛ آن را به MakanApp یا MakanApp_Test برای Migration وصل نکنید. کد runner همان target policy قبلی را reuse می‌کند. Host آزمایشی خودش را فعال می‌کند و config/IIS را تغییر نمی‌دهد؛ این یک ابزار پذیرش است، نه روش Cutover.
+Probe واقعی فقط با `--run-live --allow-remote-https` و `AiKnowledge__BaseUrl` و `AiLiveProbe__ApprovedOrigin` همسان و فایل‌های QA غیرحساس در `KnowledgeLiveProbe__AssetsDirectory` کار می‌کند. به LocalDB ایزوله نیاز دارد؛ آن را به MakanApp یا MakanApp_Test برای Migration وصل نکنید. کد runner همان target policy قبلی را reuse می‌کند. Host آزمایشی خودش را فعال می‌کند و config/IIS را تغییر نمی‌دهد؛ این یک ابزار پذیرش است، نه روش Cutover. اجرای جاری هیچ Delete/Supersede/Reindex نمی‌فرستد و منبع‌های تازهٔ QA را در AI حفظ می‌کند؛ رفتار cleanup گزارش قبلی تاریخی است.
 
 ## Cutover، پایش و Rollback
 
