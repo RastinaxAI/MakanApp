@@ -10,6 +10,22 @@ namespace MakanApp.UnitTests.Ai;
 
 public sealed partial class AiServiceClientTests
 {
+    [Fact]
+    public async Task ExplicitNoAuthenticationDoesNotResolveCredentialAndPreservesContractHeaders()
+    {
+        var handler = new StubHandler((request, _) =>
+        {
+            Assert.Null(request.Headers.Authorization);
+            Assert.Equal("v1", request.Headers.GetValues("X-AI-Contract-Version").Single());
+            Assert.Equal("corr-1", request.Headers.GetValues("X-Correlation-ID").Single());
+            return Task.FromResult(JsonResponse(HttpStatusCode.OK, ValidResponse()));
+        });
+        var client = CreateClient(handler, credentialProvider: new StubCredentialProvider { ThrowIfCalled = true },
+            useServiceAuthentication: false);
+        Assert.Equal("req-1", (await client.ChatAsync(Request(), default)).RequestId);
+        Assert.Equal(1, handler.CallCount);
+    }
+
     public static IEnumerable<object[]> OperationRequests =>
         AiRoleContractTests.Requests.Select(item => new object[] { item[0] })
             .Append([Request()]);
@@ -591,11 +607,13 @@ public sealed partial class AiServiceClientTests
         int timeoutSeconds = 5,
         int failureThreshold = 3,
         IAiServiceCredentialProvider? credentialProvider = null,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        bool useServiceAuthentication = true)
     {
         var options = new AiServiceOptions
         {
             Enabled = enabled,
+            UseServiceAuthentication = useServiceAuthentication,
             BaseUrl = "http://ai.test",
             TimeoutSeconds = timeoutSeconds,
             ContractVersion = "v1",

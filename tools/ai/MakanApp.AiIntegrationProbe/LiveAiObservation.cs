@@ -19,6 +19,7 @@ internal sealed class LiveAiObservation : IDisposable
     public int Measurements { get; private set; }
     public bool MetricsSafe { get; private set; } = true;
     public bool PayloadsSafe { get; private set; } = true;
+    public bool UseServiceAuthentication { get; set; } = true;
     public int? AiHttpStatus { get; set; }
     public string? AiErrorCode { get; set; }
     public string? ModelAlias { get; set; }
@@ -74,7 +75,7 @@ internal sealed class LiveAiObservation : IDisposable
         valid &= request.Headers.GetValues("X-Correlation-ID").Single() == CorrelationId &&
             request.Headers.GetValues("X-AI-Contract-Version").Single() == "v1" &&
             request.Content.Headers.ContentType?.MediaType == "application/json" &&
-            request.Headers.Authorization?.Scheme == "Bearer";
+            (UseServiceAuthentication ? request.Headers.Authorization?.Scheme == "Bearer" : request.Headers.Authorization is null);
         if (root.TryGetProperty("homework", out var homework))
             valid &= homework.GetProperty("maxScore").GetDecimal() == 10m;
         if (root.TryGetProperty("exam", out var exam))

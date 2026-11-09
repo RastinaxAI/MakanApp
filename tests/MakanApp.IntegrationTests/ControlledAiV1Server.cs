@@ -30,17 +30,20 @@ public sealed class ControlledAiV1Server : IAsyncDisposable
     public TimeSpan ResponseDelay { get; set; }
     public IReadOnlyList<JsonObject> Requests => _requests.ToArray();
     public IReadOnlyList<AiContractTestEvent> Events => _events.ToArray();
+    private bool _requireServiceAuthentication = true;
 
     private ControlledAiV1Server(WebApplication app, string key, TimeProvider clock)
     { _app = app; Key = key; _clock = clock; }
 
-    public static async Task<ControlledAiV1Server> StartAsync(TimeProvider? clock = null, string? key = null)
+    public static async Task<ControlledAiV1Server> StartAsync(TimeProvider? clock = null, string? key = null,
+        bool requireServiceAuthentication = true)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Test", Args = [] });
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         var app = builder.Build();
         var server = new ControlledAiV1Server(app, key ?? Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)), clock ?? TimeProvider.System);
+        server._requireServiceAuthentication = requireServiceAuthentication;
         app.MapPost("/api/v1/ai/{**operation}", server.HandleAsync);
         await app.StartAsync();
         server.BaseUrl = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
@@ -51,7 +54,7 @@ public sealed class ControlledAiV1Server : IAsyncDisposable
     private async Task HandleAsync(HttpContext http)
     {
         var operation = http.Request.RouteValues["operation"]?.ToString() ?? "";
-        var auth = Authenticate(http.Request);
+        var auth = _requireServiceAuthentication ? Authenticate(http.Request) : http.Request.Headers.ContainsKey("Authorization") ? 401 : 200;
         if (auth != 200) { await Failure(auth, auth == 401 ? "AI_SERVICE_UNAUTHORIZED" : "AI_SERVICE_FORBIDDEN"); return; }
         if (http.Request.Headers["X-AI-Contract-Version"].Count != 1 || http.Request.Headers["X-AI-Contract-Version"] != "v1" ||
             http.Request.ContentType?.Split(';')[0] != "application/json")

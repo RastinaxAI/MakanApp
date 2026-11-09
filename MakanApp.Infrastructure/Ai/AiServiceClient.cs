@@ -135,21 +135,24 @@ public sealed class AiServiceClient(
             throw;
         }
 
-        AiServiceCredential credential;
-        try
+        AiServiceCredential? credential = null;
+        if (options.UseServiceAuthentication)
         {
-            credential = await credentialProvider.GetCredentialAsync(cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception)
-        {
-            RecordFailure(operation, AiServiceErrorCodes.ServiceUnavailable, started);
-            throw new AiServiceException(
-                AiServiceErrorCodes.ServiceUnavailable,
-                "اعتبارنامه سرویس هوش مصنوعی در دسترس نیست.");
+            try
+            {
+                credential = await credentialProvider.GetCredentialAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                RecordFailure(operation, AiServiceErrorCodes.ServiceUnavailable, started);
+                throw new AiServiceException(
+                    AiServiceErrorCodes.ServiceUnavailable,
+                    "اعتبارنامه سرویس هوش مصنوعی در دسترس نیست.");
+            }
         }
 
         using var message = new HttpRequestMessage(
@@ -158,7 +161,8 @@ public sealed class AiServiceClient(
         {
             Content = JsonContent.Create(request, options: JsonOptions)
         };
-        message.Headers.Authorization = new AuthenticationHeaderValue(credential.Scheme, credential.Token);
+        if (credential is not null)
+            message.Headers.Authorization = new AuthenticationHeaderValue(credential.Scheme, credential.Token);
         message.Headers.TryAddWithoutValidation("X-AI-Contract-Version", options.ContractVersion);
         if (!string.IsNullOrWhiteSpace(request.CorrelationId))
         {

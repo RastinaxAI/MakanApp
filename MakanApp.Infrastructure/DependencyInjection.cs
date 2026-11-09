@@ -918,6 +918,7 @@ public static class DependencyInjection
     private static AiServiceOptions CreateAiServiceOptions(IConfiguration configuration) => new()
     {
         Enabled = bool.TryParse(configuration[$"{AiServiceOptions.SectionName}:Enabled"], out var enabled) && enabled,
+        UseServiceAuthentication = configuration.GetValue($"{AiServiceOptions.SectionName}:UseServiceAuthentication", true),
         BaseUrl = configuration[$"{AiServiceOptions.SectionName}:BaseUrl"]?.Trim()
             ?? new AiServiceOptions().BaseUrl,
         TimeoutSeconds = ReadPositiveInt(

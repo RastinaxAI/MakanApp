@@ -62,23 +62,26 @@ internal static class LiveAiProgram
             var authentication = configuration.GetSection(AiServiceAuthenticationOptions.SectionName)
                 .Get<AiServiceAuthenticationOptions>() ?? new();
             var credentials = new HmacAiServiceCredentialProvider(authentication, TimeProvider.System);
-            _ = await credentials.GetCredentialAsync(CancellationToken.None);
             var options = new AiServiceOptions
             {
                 Enabled = true,
+                UseServiceAuthentication = configuration.GetValue("AiService:UseServiceAuthentication", true),
                 BaseUrl = target.AbsoluteUri,
                 TimeoutSeconds = configuration.GetValue("AiService:TimeoutSeconds", AiServiceOptions.DefaultTimeoutSeconds)
             };
             if (options.TimeoutSeconds is < 1 or > AiServiceOptions.MaximumTimeoutSeconds)
                 throw new InvalidOperationException("LIVE_AI_TIMEOUT_INVALID");
+            if (options.UseServiceAuthentication)
+                _ = await credentials.GetCredentialAsync(CancellationToken.None);
             EvidenceOutput.WriteLine(JsonSerializer.Serialize(new
             {
-                stage = "configuration", passed = true, AI_SERVICE_AUTH_CONFIGURED = true,
+                stage = "configuration", passed = true, AI_SERVICE_AUTH_ENABLED = options.UseServiceAuthentication,
                 baseUrl = target.GetLeftPart(UriPartial.Authority), options.TimeoutSeconds,
                 contractVersion = options.ContractVersion
             }));
             if (serviceAuthOnly)
             {
+                if (!options.UseServiceAuthentication) throw new InvalidOperationException("SERVICE_AUTH_PROBE_REQUIRES_EXPLICIT_AUTH");
                 stage = "service_auth_real_matrix";
                 await ServiceAuthProbe.RunAsync(target, credentials, authentication);
                 return 0;
@@ -86,6 +89,7 @@ internal static class LiveAiProgram
 
             using var factory = new MakanAppWebApplicationFactory();
             using var observation = new LiveAiObservation();
+            observation.UseServiceAuthentication = options.UseServiceAuthentication;
             observation.Forbid(authentication.CurrentKey);
             var evidence = evidenceOnly ? new FailureEvidenceCapture(observation.IsSafe) : null;
             if (evidenceOnly) FailureEvidenceCapture.VerifySanitization();

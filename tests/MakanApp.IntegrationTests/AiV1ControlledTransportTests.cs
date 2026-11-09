@@ -14,6 +14,20 @@ namespace MakanApp.IntegrationTests;
 public sealed class AiV1ControlledTransportTests
 {
     [Fact]
+    public async Task AllTwelveOperationsSupportExplicitNoAuthContractWithNoSigningKey()
+    {
+        await using var server = await ControlledAiV1Server.StartAsync(requireServiceAuthentication: false);
+        using var http = new HttpClient();
+        var options = new AiServiceOptions { Enabled = true, BaseUrl = server.BaseUrl, UseServiceAuthentication = false };
+        var client = new AiServiceClient(http, new HmacAiServiceCredentialProvider(new(), TimeProvider.System),
+            options, new AiServiceCircuitBreaker(options, TimeProvider.System));
+        foreach (var request in Requests())
+            Assert.Equal(request.RequestId, (await Invoke(client, request)).RequestId);
+        Assert.Equal(12, server.BusinessCalls);
+        Assert.All(server.Events, value => Assert.Equal(200, value.Status));
+    }
+
+    [Fact]
     public async Task ValidExistingServiceCredentialReachesBodyValidation()
     {
         await using var server = await ControlledAiV1Server.StartAsync();

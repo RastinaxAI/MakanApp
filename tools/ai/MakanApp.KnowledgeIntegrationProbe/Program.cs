@@ -56,8 +56,8 @@ internal static class KnowledgeProbeProgram
             using var factory = MakanAppWebApplicationFactory.CreateKnowledgeProbe();
             using var application = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             {
-                services.RemoveAll<AiServiceOptions>(); services.AddSingleton(new AiServiceOptions { Enabled = true, BaseUrl = target.AbsoluteUri });
-                services.Configure<AiKnowledgeOptions>(options => { options.Enabled = true; options.BaseUrl = target.AbsoluteUri; });
+                services.RemoveAll<AiServiceOptions>(); services.AddSingleton(new AiServiceOptions { Enabled = true, BaseUrl = target.AbsoluteUri, UseServiceAuthentication = false });
+                services.Configure<AiKnowledgeOptions>(options => { options.Enabled = true; options.BaseUrl = target.AbsoluteUri; options.UseServiceAuthentication = false; options.StatusPollAttempts = 120; });
                 services.RemoveAll<StorageOptions>(); services.AddSingleton(new StorageOptions { RootPath = factory.StorageRootPath });
                 services.RemoveAll<IAiKnowledgeClient>();
                 services.AddSingleton<ILogger<AiKnowledgeClient>, ProbeKnowledgeLogger>();

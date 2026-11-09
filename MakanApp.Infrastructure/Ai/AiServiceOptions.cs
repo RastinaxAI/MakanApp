@@ -5,6 +5,8 @@ public sealed class AiServiceOptions
     public const string SectionName = "AiService";
 
     public bool Enabled { get; init; }
+    // قرارداد جاری بدون JWT با false صریح فعال می‌شود؛ تنظیمات قدیمی رفتار خود را حفظ می‌کنند.
+    public bool UseServiceAuthentication { get; init; } = true;
     public string BaseUrl { get; init; } = string.Empty;
     // بودجهٔ محلی ۳۵ ثانیه‌ای حفظ می‌شود؛ تنظیم محیط می‌تواند آن را صریحاً تغییر دهد.
     public const int DefaultTimeoutSeconds = 35;

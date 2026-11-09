@@ -6,6 +6,18 @@ namespace MakanApp.UnitTests.Knowledge;
 
 public sealed class KnowledgeAcceptanceHandlerTests
 {
+    [Fact]
+    public async Task CurrentNoAuthAcceptanceRejectsAuthorizationBeforeAnyUpstreamRequest()
+    {
+        var inner = new CountingHandler();
+        using var client = new HttpClient(new KnowledgeAcceptanceHandler(inner)) { BaseAddress = new("https://knowledge.example.test") };
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/knowledge/retrieve");
+        request.Headers.Authorization = new("Bearer", "non-secret-test-placeholder");
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => client.SendAsync(request));
+        Assert.Equal("KNOWLEDGE_ACCEPTANCE_AUTH_HEADER_FORBIDDEN", error.Message);
+        Assert.Equal(0, inner.Calls);
+    }
+
     private const string Source = "/api/v1/knowledge/sources/309f21bd-f81c-4d4c-b9bf-53c802824a93/versions/1/";
 
     [Theory]

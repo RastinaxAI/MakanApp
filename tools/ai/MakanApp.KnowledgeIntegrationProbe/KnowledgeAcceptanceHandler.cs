@@ -7,6 +7,8 @@ internal sealed class KnowledgeAcceptanceHandler(HttpMessageHandler inner) : Del
 {
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
+        if (request.Headers.Authorization is not null)
+            throw new InvalidOperationException("KNOWLEDGE_ACCEPTANCE_AUTH_HEADER_FORBIDDEN");
         var path = request.RequestUri?.AbsolutePath;
         var query = request.Method == HttpMethod.Post && path is "/api/v1/knowledge/retrieve" or "/api/v1/knowledge/rag/answer";
         var segments = path?.Split('/', StringSplitOptions.RemoveEmptyEntries);
