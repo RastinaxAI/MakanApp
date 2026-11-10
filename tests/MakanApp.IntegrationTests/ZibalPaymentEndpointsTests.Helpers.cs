@@ -62,10 +62,10 @@ public sealed partial class ZibalPaymentEndpointsTests
     private static HttpClient Client(WebApplicationFactory<Program> host) => host.CreateClient(new WebApplicationFactoryClientOptions
         { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
 
-    private async Task<Guid> AuthenticateAsync(HttpClient client)
+    private async Task<Guid> AuthenticateAsync(HttpClient client, string? existingPhone = null)
     {
         using var authentication = factory.CreateClient();
-        var phone = $"+98936{Interlocked.Increment(ref _phoneSequence):D7}";
+        var phone = existingPhone ?? $"+98936{Interlocked.Increment(ref _phoneSequence):D7}";
         var challenge = await ReadAsync<RequestOtpResult>(await authentication.PostAsJsonAsync("/api/v1/auth/otp/challenges", new RequestOtpCommand(phone), JsonOptions));
         var auth = await ReadAsync<VerifyOtpResult>(await authentication.PostAsJsonAsync("/api/v1/auth/otp/verify",
             new VerifyOtpCommand(challenge.ChallengeId, phone, factory.GetLatestOtpCode(phone)), JsonOptions));
@@ -73,9 +73,9 @@ public sealed partial class ZibalPaymentEndpointsTests
         return auth.User.Id;
     }
 
-    private async Task<Setup> SetupAsync(HttpClient client, bool personal = false)
+    private async Task<Setup> SetupAsync(HttpClient client, bool personal = false, string? existingPhone = null)
     {
-        var userId = await AuthenticateAsync(client); Guid? membershipId = null;
+        var userId = await AuthenticateAsync(client, existingPhone); Guid? membershipId = null;
         if (!personal)
         {
             var organization = await factory.CreateOrganizationAsync("پرداخت زیبال " + Guid.NewGuid().ToString("N"));
@@ -123,18 +123,20 @@ public sealed partial class ZibalPaymentEndpointsTests
         public string? Failure { get; init; }
         public bool InitiationTimeout { get; init; }
         public bool AlreadyVerified { get; init; }
+        public long? CreationReferenceOverride { get; init; }
         public int ProviderStatus { get; init; } = 1;
         public int RequestCount => _requestCount;
         public long LastTrackId => Interlocked.Read(ref _lastTrack);
         public int VerifyCount => _verifyCount;
         public ConcurrentBag<string> Paths { get; } = [];
+        public static long ReserveTrackId() => Interlocked.Increment(ref _nextTrack);
         public HttpResponseMessage Reply(string path, JsonElement request)
         {
             Paths.Add(path);
             if (path == "/v1/request")
             {
                 Interlocked.Increment(ref _requestCount);
-                var track = Interlocked.Increment(ref _nextTrack);
+                var track = CreationReferenceOverride ?? ReserveTrackId();
                 Interlocked.Exchange(ref _lastTrack, track);
                 _payments[track] = (request.GetProperty("orderId").GetString()!, request.GetProperty("amount").GetInt64());
                 if (InitiationTimeout) throw new TaskCanceledException();
@@ -143,6 +145,9 @@ public sealed partial class ZibalPaymentEndpointsTests
             if (path == "/v1/verify") Interlocked.Increment(ref _verifyCount);
             if (Failure == "timeout") throw new TaskCanceledException();
             if (Failure == "http500") return new(HttpStatusCode.InternalServerError);
+            if (Failure == "inquiry500" && path == "/v1/inquiry") return new(HttpStatusCode.InternalServerError);
+            if (Failure == "inquiry500" && path == "/v1/verify") return Json(new { result = 201 });
+            if (Failure == "empty") return new(HttpStatusCode.OK) { Content = new StringContent("", Encoding.UTF8, "application/json") };
             if (Failure == "malformed") return new(HttpStatusCode.OK) { Content = new StringContent("private-provider-message") };
             if (path == "/v1/verify" && (AlreadyVerified || Failure == "unknown201" || ProviderStatus != 1)) return Json(new { result = 201 });
             if (Failure == "unknown201") return Json(new { result = 203 });

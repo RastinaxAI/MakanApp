@@ -84,6 +84,7 @@ public sealed partial class ZibalPaymentEndpointsTests(MakanAppWebApplicationFac
     [InlineData("amount")] [InlineData("order")] [InlineData("track")]
     [InlineData("missing-bank")] [InlineData("malformed")] [InlineData("timeout")]
     [InlineData("http500")] [InlineData("unknown201")]
+    [InlineData("inquiry500")] [InlineData("empty")]
     public async Task InvalidProviderProofNeverPaysOrActivates(string failure)
     {
         var stub = new ZibalStub { Failure = failure };
@@ -300,12 +301,13 @@ public sealed partial class ZibalPaymentEndpointsTests(MakanAppWebApplicationFac
         var marker = "test-only-" + Guid.NewGuid().ToString("N");
         using var host = Host(stub: new ZibalStub { Failure = failure }, merchant: marker); using var client = Client(host);
         var setup = await SetupAsync(client);
-        using var callback = await client.GetAsync(Callback(setup.Attempt)); Assert.Equal(HttpStatusCode.SeeOther, callback.StatusCode);
+        var callbackMarker = "callback-private-" + Guid.NewGuid().ToString("N");
+        using var callback = await client.GetAsync(Callback(setup.Attempt) + "&privateDump=" + callbackMarker); Assert.Equal(HttpStatusCode.SeeOther, callback.StatusCode);
         using var details = await client.GetAsync(AttemptRoute(setup.Attempt)); details.EnsureSuccessStatusCode();
         var response = await details.Content.ReadAsStringAsync();
         var logs = host.Services.GetRequiredService<SensitiveLogTestControl>();
         var captured = string.Join("\n", logs.Snapshot()) + JsonSerializer.Serialize(logs.Entries(), JsonOptions);
-        foreach (var privateValue in new[] { marker, "must-not-persist", "private-provider-message" })
+        foreach (var privateValue in new[] { marker, callbackMarker, client.DefaultRequestHeaders.Authorization!.Parameter!, "must-not-persist", "private-provider-message" })
         {
             Assert.DoesNotContain(privateValue, response, StringComparison.Ordinal);
             Assert.DoesNotContain(privateValue, captured, StringComparison.Ordinal);
