@@ -51,6 +51,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 attempt.Amount,
                 attempt.Currency,
                 attempt.ProviderReference,
+                attempt.SettlementReference,
+                attempt.CallbackReceivedAtUtc,
                 attempt.CreatedAtUtc,
                 attempt.VerifiedAtUtc,
                 attempt.CompletedAtUtc,
@@ -69,7 +71,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 item.CreatedAtUtc,
                 item.VerifiedAtUtc,
                 item.CompletedAtUtc,
-                item.FailureCode));
+                item.FailureCode)
+            { MaskedSettlementReference = MaskReference(item.SettlementReference), CallbackReceivedAtUtc = item.CallbackReceivedAtUtc });
         var paymentRows = await _dbContext.Payments.AsNoTracking()
             .Where(payment => orderIds.Contains(payment.OrderId))
             .Select(payment => new
@@ -79,6 +82,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 payment.PaymentAttemptId,
                 payment.Provider,
                 payment.ProviderReference,
+                payment.SettlementReference,
+                payment.ProviderPaidAtUtc,
                 payment.Amount,
                 payment.Currency,
                 payment.PaidAtUtc
@@ -93,7 +98,10 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 MaskReference(item.ProviderReference)!,
                 item.Amount,
                 item.Currency,
-                item.PaidAtUtc));
+                item.PaidAtUtc)
+            { MaskedSettlementReference = MaskReference(item.SettlementReference), ProviderPaidAtUtc = item.ProviderPaidAtUtc });
+        var activatedIds = await _dbContext.Subscriptions.Where(s => s.SourceOrderId.HasValue && orderIds.Contains(s.SourceOrderId.Value))
+            .Select(s => s.SourceOrderId!.Value).Union(_dbContext.SubscriptionAmendments.Where(a => orderIds.Contains(a.OrderId)).Select(a => a.OrderId)).ToArrayAsync(cancellationToken);
         var items = rows.Select(row => new PlatformOrderItem(
             row.Order.Id,
             row.Order.PurchaserUserId,
@@ -108,7 +116,7 @@ public sealed partial class EfPlatformCommerceOperationsStore
             row.Order.PaidAtUtc,
             row.Order.CancelledAtUtc,
             attempts[row.Order.Id].ToArray(),
-            payments.GetValueOrDefault(row.Order.Id))).ToArray();
+            payments.GetValueOrDefault(row.Order.Id)) { FulfillmentState = FinanceFulfillment(row.Order, activatedIds.Contains(row.Order.Id)) }).ToArray();
 
         return new PlatformOrderPage(
             items,
@@ -156,7 +164,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 attempt.CreatedAtUtc,
                 attempt.VerifiedAtUtc,
                 attempt.CompletedAtUtc,
-                attempt.FailureCode))
+                attempt.FailureCode)
+                { MaskedSettlementReference = MaskReference(attempt.SettlementReference), CallbackReceivedAtUtc = attempt.CallbackReceivedAtUtc })
             .ToArrayAsync(cancellationToken);
         var paymentRow = await _dbContext.Payments.AsNoTracking()
             .Where(payment => payment.OrderId == orderId)
@@ -166,6 +175,8 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 payment.PaymentAttemptId,
                 payment.Provider,
                 payment.ProviderReference,
+                payment.SettlementReference,
+                payment.ProviderPaidAtUtc,
                 payment.Amount,
                 payment.Currency,
                 payment.PaidAtUtc
@@ -180,7 +191,10 @@ public sealed partial class EfPlatformCommerceOperationsStore
                 MaskReference(paymentRow.ProviderReference)!,
                 paymentRow.Amount,
                 paymentRow.Currency,
-                paymentRow.PaidAtUtc);
+                paymentRow.PaidAtUtc)
+            { MaskedSettlementReference = MaskReference(paymentRow.SettlementReference), ProviderPaidAtUtc = paymentRow.ProviderPaidAtUtc };
+        var activated = await _dbContext.Subscriptions.AnyAsync(s => s.SourceOrderId == orderId, cancellationToken)
+            || await _dbContext.SubscriptionAmendments.AnyAsync(a => a.OrderId == orderId, cancellationToken);
         return new PlatformOrderItem(
             row.Order.Id,
             row.Order.PurchaserUserId,
@@ -195,8 +209,14 @@ public sealed partial class EfPlatformCommerceOperationsStore
             row.Order.PaidAtUtc,
             row.Order.CancelledAtUtc,
             attempts,
-            payment);
+            payment) { FulfillmentState = FinanceFulfillment(row.Order, activated) };
     }
+
+    private static MakanApp.Application.Commerce.OrderFulfillmentState FinanceFulfillment(Order order, bool activated) =>
+        order.Status != OrderStatus.Paid ? MakanApp.Application.Commerce.OrderFulfillmentState.NotStarted :
+        activated ? MakanApp.Application.Commerce.OrderFulfillmentState.SubscriptionActivated :
+        order.OrganizationId.HasValue || order.HasCommercialTerms ? MakanApp.Application.Commerce.OrderFulfillmentState.SubscriptionActivationPending :
+        MakanApp.Application.Commerce.OrderFulfillmentState.ProvisioningPending;
 
     private static string? MaskReference(string? value)
     {

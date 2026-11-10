@@ -2818,6 +2818,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PlanVersionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ProductTitleSnapshot")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<Guid>("PurchaserUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -2905,8 +2909,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("ProviderPaidAtUtc")
+                        .HasColumnType("datetime2(7)");
+
                     b.Property<string>("ProviderReference")
                         .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SettlementReference")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -2941,6 +2952,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("CallbackReceivedAtUtc")
+                        .HasColumnType("datetime2(7)");
 
                     b.Property<Guid>("ClientOperationId")
                         .HasColumnType("uniqueidentifier");
@@ -2980,6 +2994,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("ProviderPaidAtUtc")
+                        .HasColumnType("datetime2(7)");
+
                     b.Property<string>("ProviderReference")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -2993,6 +3010,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<string>("SettlementReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -3025,6 +3046,45 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_PaymentAttempts_RequestPayloadHash", "DATALENGTH([RequestPayloadHash]) = 32");
 
                             t.HasCheckConstraint("CK_PaymentAttempts_Status", "[Status] BETWEEN 1 AND 6");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PaymentAttemptEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid>("PaymentAttemptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ProviderResult")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProviderStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentAttemptId", "OccurredAtUtc", "Id");
+
+                    b.ToTable("PaymentAttemptEvents", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentAttemptEvents_Type", "[Type] BETWEEN 1 AND 8");
                         });
                 });
 
@@ -9444,6 +9504,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Commerce.Order", null)
                         .WithMany()
                         .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.PaymentAttemptEvent", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Commerce.PaymentAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentAttemptId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

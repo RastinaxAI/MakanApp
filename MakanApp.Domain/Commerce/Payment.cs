@@ -31,6 +31,8 @@ public sealed class Payment
     public Guid PaymentAttemptId { get; private set; }
     public string Provider { get; private set; } = string.Empty;
     public string ProviderReference { get; private set; } = string.Empty;
+    public string? SettlementReference { get; private set; }
+    public DateTime? ProviderPaidAtUtc { get; private set; }
     public decimal Amount { get; private set; }
     public CurrencyCode Currency { get; private set; }
     public DateTime PaidAtUtc { get; private set; }
@@ -57,6 +59,10 @@ public sealed class Payment
             attempt.ProviderReference,
             attempt.Amount,
             attempt.Currency,
-            paidAtUtc);
+            paidAtUtc)
+        {
+            SettlementReference = attempt.SettlementReference,
+            ProviderPaidAtUtc = attempt.ProviderPaidAtUtc
+        };
     }
 }

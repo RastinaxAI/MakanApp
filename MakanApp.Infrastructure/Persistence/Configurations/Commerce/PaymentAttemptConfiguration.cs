@@ -37,6 +37,9 @@ public sealed class PaymentAttemptConfiguration : IEntityTypeConfiguration<Payme
             .IsRequired();
         builder.Property(attempt => attempt.ProviderReference)
             .HasMaxLength(PaymentAttempt.MaximumProviderReferenceLength);
+        builder.Property(attempt => attempt.SettlementReference).HasMaxLength(PaymentAttempt.MaximumProviderReferenceLength);
+        builder.Property(attempt => attempt.ProviderPaidAtUtc).HasColumnType("datetime2(7)");
+        builder.Property(attempt => attempt.CallbackReceivedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(attempt => attempt.PaymentUrl)
             .HasMaxLength(PaymentAttempt.MaximumPaymentUrlLength);
         builder.Property(attempt => attempt.FailureCode)

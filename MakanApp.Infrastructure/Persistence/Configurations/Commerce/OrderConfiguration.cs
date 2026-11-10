@@ -26,6 +26,7 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
                 "([Status] = 3 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NOT NULL)");
         });
         builder.HasKey(order => order.Id);
+        builder.Property(order => order.ProductTitleSnapshot).HasMaxLength(200);
         builder.Property(order => order.Amount).HasPrecision(18, 2);
         builder.Property(order => order.Currency)
             .HasConversion(new ValueConverter<CurrencyCode, string>(

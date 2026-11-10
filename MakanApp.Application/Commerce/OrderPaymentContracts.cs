@@ -31,7 +31,14 @@ public sealed record PaymentAttemptDto(
     string? ProviderReference,
     string? PaymentUrl,
     DateTime CreatedAtUtc,
-    DateTime? CompletedAtUtc);
+    DateTime? CompletedAtUtc)
+{
+    public string? SettlementReference { get; init; }
+    public string? FailureCode { get; init; }
+    public DateTime? CallbackReceivedAtUtc { get; init; }
+    public DateTime? ProviderPaidAtUtc { get; init; }
+    public DateTime? VerifiedAtUtc { get; init; }
+}
 
 public sealed record OrderDto(
     Guid OrderId,

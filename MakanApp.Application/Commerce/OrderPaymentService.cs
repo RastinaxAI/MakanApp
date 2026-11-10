@@ -6,13 +6,14 @@ using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Commerce;
 
-public sealed class OrderPaymentService(
+public sealed partial class OrderPaymentService(
     IAccessContextResolver accessContextResolver,
     CommercialActorAccess actors,
     IOrderPaymentStore store,
     IPaymentGateway paymentGateway,
     PaymentOptions options,
-    TimeProvider timeProvider) : IOrderPaymentService, IPaymentVerificationService
+    TimeProvider timeProvider,
+    IPaymentGatewayResolver gatewayResolver) : IOrderPaymentService, IPaymentVerificationService, IPaymentRecoveryService
 {
     public async Task<CommercialQuoteDto> QuoteAsync(Guid userId, Guid sessionId, CreateOrderCommand command, CancellationToken cancellationToken,
         SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
@@ -88,7 +89,7 @@ public sealed class OrderPaymentService(
             orderId,
             paymentGateway.ProviderName,
             command.ClientOperationId,
-            Hash($"payment|{orderId:N}|{paymentGateway.ProviderName}"),
+            Hash($"payment|{orderId:N}"),
             UtcNow(),
             cancellationToken,
             organizationId.HasValue ? null : userId);
@@ -109,7 +110,12 @@ public sealed class OrderPaymentService(
             throw Error(CommerceErrorCodes.OrderNotPayable, "سفارش در وضعیت قابل پرداخت نیست.");
         }
 
+        if (created.Status == CreatePaymentAttemptStoreStatus.UnresolvedAttempt)
+            throw Error(CommerceErrorCodes.PaymentPendingVerification, "ابتدا وضعیت تلاش پرداخت قبلی را بازیابی کنید؛ پرداخت تازه ایجاد نشد.");
+
         var attempt = created.Attempt!;
+        var attemptGateway = gatewayResolver.Resolve(attempt.Provider)
+            ?? throw Error(CommerceErrorCodes.PaymentProviderUnavailable, "درگاه ثبت‌شدهٔ تلاش پرداخت در دسترس نیست.");
         var replayed = created.Status == CreatePaymentAttemptStoreStatus.Replayed;
         var claimToken = Guid.NewGuid();
         var nowUtc = UtcNow();
@@ -133,7 +139,7 @@ public sealed class OrderPaymentService(
         PaymentGatewayCreationResult providerResult;
         try
         {
-            providerResult = await paymentGateway.CreatePaymentAsync(
+            providerResult = await attemptGateway.CreatePaymentAsync(
                 new PaymentGatewayCreationRequest(
                     attempt.Id,
                     attempt.OrderId,
@@ -232,11 +238,6 @@ public sealed class OrderPaymentService(
 
         var attempt = await store.GetPaymentAttemptAsync(command.PaymentAttemptId, cancellationToken)
             ?? throw Error(CommerceErrorCodes.PaymentAttemptNotFound, "تلاش پرداخت پیدا نشد.");
-        if (!attempt.Provider.Equals(paymentGateway.ProviderName, StringComparison.OrdinalIgnoreCase))
-        {
-            throw Error(CommerceErrorCodes.PaymentProviderUnavailable, "provider این تلاش پرداخت در دسترس نیست.");
-        }
-
         var observedReference = NormalizeOptional(command.ProviderReference);
         if (attempt.ProviderReference is not null &&
             observedReference is not null &&
@@ -245,10 +246,19 @@ public sealed class OrderPaymentService(
             throw Error(CommerceErrorCodes.PaymentReferenceInvalid, "مرجع callback با تلاش پرداخت تطبیق ندارد.");
         }
 
+        if (attempt.Status == PaymentAttemptStatus.Succeeded)
+        {
+            var settled = await store.RecordPaymentVerificationAsync(attempt.Id, UnknownVerification(attempt.ProviderReference),
+                UtcNow(), null, cancellationToken);
+            return new(PaymentVerificationStatus.AlreadySettled, MapOrder(settled.Order!), MapAttempt(settled.Attempt!));
+        }
+        var attemptGateway = gatewayResolver.Resolve(attempt.Provider)
+            ?? throw Error(CommerceErrorCodes.PaymentProviderUnavailable, "provider این تلاش پرداخت در دسترس نیست.");
+
         PaymentGatewayVerificationResult providerResult;
         try
         {
-            providerResult = await paymentGateway.VerifyPaymentAsync(
+            providerResult = await attemptGateway.VerifyPaymentAsync(
                 new PaymentGatewayVerificationRequest(
                     attempt.Id,
                     attempt.OrderId,
@@ -392,7 +402,12 @@ public sealed class OrderPaymentService(
             attempt.ProviderReference,
             attempt.PaymentUrl,
             attempt.CreatedAtUtc,
-            attempt.CompletedAtUtc);
+            attempt.CompletedAtUtc)
+        {
+            SettlementReference = attempt.SettlementReference, FailureCode = attempt.FailureCode,
+            CallbackReceivedAtUtc = attempt.CallbackReceivedAtUtc, ProviderPaidAtUtc = attempt.ProviderPaidAtUtc,
+            VerifiedAtUtc = attempt.VerifiedAtUtc
+        };
 
     private static PaymentVerificationStatus MapVerificationStatus(
         RecordPaymentVerificationStoreStatus status) => status switch

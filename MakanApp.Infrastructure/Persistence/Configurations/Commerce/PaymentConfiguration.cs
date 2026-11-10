@@ -15,6 +15,8 @@ public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             table.HasCheckConstraint("CK_Payments_Currency", "[Currency] = 'IRR'");
         });
         builder.HasKey(payment => payment.Id);
+        builder.Property(payment => payment.SettlementReference).HasMaxLength(PaymentAttempt.MaximumProviderReferenceLength);
+        builder.Property(payment => payment.ProviderPaidAtUtc).HasColumnType("datetime2(7)");
         builder.Property(payment => payment.Provider)
             .HasMaxLength(PaymentAttempt.MaximumProviderLength)
             .IsRequired();

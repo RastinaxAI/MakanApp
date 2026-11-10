@@ -57,7 +57,14 @@ public sealed record PaymentAttemptSnapshot(
     string? PaymentUrl,
     DateTime CreatedAtUtc,
     DateTime? CompletedAtUtc,
-    Guid? PurchaserUserId = null);
+    Guid? PurchaserUserId = null)
+{
+    public string? SettlementReference { get; init; }
+    public string? FailureCode { get; init; }
+    public DateTime? CallbackReceivedAtUtc { get; init; }
+    public DateTime? ProviderPaidAtUtc { get; init; }
+    public DateTime? VerifiedAtUtc { get; init; }
+}
 
 public sealed record OrderPaymentSnapshot(
     Guid Id,
@@ -70,7 +77,13 @@ public sealed record OrderPaymentSnapshot(
     DateTime CreatedAtUtc,
     DateTime? PaidAtUtc,
     OrderFulfillmentState FulfillmentState,
-    IReadOnlyCollection<PaymentAttemptSnapshot> PaymentAttempts);
+    IReadOnlyCollection<PaymentAttemptSnapshot> PaymentAttempts)
+{
+    public string? ProductTitleSnapshot { get; init; }
+    public CommercialOrderPurpose Purpose { get; init; }
+    public DateTime? BillingAnchorUtc { get; init; }
+    public int BillingPeriodIndex { get; init; }
+}
 
 public enum CreateOrderStoreStatus
 {
@@ -90,7 +103,8 @@ public enum CreatePaymentAttemptStoreStatus
     Replayed = 2,
     IdempotencyConflict = 3,
     OrderNotFound = 4,
-    OrderNotPayable = 5
+    OrderNotPayable = 5,
+    UnresolvedAttempt = 6
 }
 
 public sealed record CreatePaymentAttemptStoreResult(
@@ -130,6 +144,8 @@ public sealed record RecordPaymentVerificationStoreResult(
 
 public interface IOrderPaymentStore
 {
+    Task RecordCallbackAsync(Guid attemptId, DateTime receivedAtUtc, int? reportedStatus, string? correlationId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<PaymentHistoryDto>> GetPaymentHistoryAsync(Guid attemptId, CancellationToken cancellationToken);
     Task<CommercialQuoteDto> QuoteAsync(Guid purchaserUserId, Guid? organizationId, CreateOrderCommand command, DateTime utcNow, CancellationToken cancellationToken);
     Task<CreateOrderStoreResult> CreateOrderAsync(
         Guid purchaserUserId,

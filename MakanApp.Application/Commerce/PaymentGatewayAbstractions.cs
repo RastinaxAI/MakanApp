@@ -29,7 +29,10 @@ public sealed record PaymentGatewayCreationResult(
     PaymentGatewayCreationOutcome Outcome,
     string? ProviderReference,
     string? PaymentUrl,
-    string? FailureCode);
+    string? FailureCode)
+{
+    public int? ProviderResult { get; init; }
+}
 
 public sealed record PaymentGatewayVerificationRequest(
     Guid PaymentAttemptId,
@@ -43,7 +46,19 @@ public sealed record PaymentGatewayVerificationResult(
     string? ProviderReference,
     decimal? VerifiedAmount,
     CurrencyCode? VerifiedCurrency,
-    string? FailureCode);
+    string? FailureCode)
+{
+    public string? SettlementReference { get; init; }
+    public DateTime? ProviderPaidAtUtc { get; init; }
+    public IReadOnlyList<PaymentProviderObservation> Observations { get; init; } = [];
+}
+
+public sealed record PaymentProviderObservation(bool IsInquiry, int? Result, int? Status);
+
+public interface IPaymentGatewayResolver
+{
+    IPaymentGateway? Resolve(string providerName);
+}
 
 public interface IPaymentGateway
 {

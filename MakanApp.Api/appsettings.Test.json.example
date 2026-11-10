@@ -38,7 +38,16 @@
     }
   },
   "Payments": {
-    "Provider": "Unavailable"
+    "Provider": "Unavailable",
+    "InitiationClaimLeaseSeconds": 30,
+    "Zibal": {
+      "BaseUrl": "https://gateway.zibal.ir",
+      "Merchant": "",
+      "CallbackUrl": "",
+      "ClientReturnUrl": "",
+      "AllowedClientReturnOrigins": [],
+      "TimeoutSeconds": 15
+    }
   },
   "Messaging": {
     "ContentSafetyProvider": "Internal"

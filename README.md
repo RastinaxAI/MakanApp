@@ -43,7 +43,7 @@ MFA/step-up و probe/config صرفاً key ring حذف شده‌اند؛ OTP/ses
 | Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
 | Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
 | Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
-| Commerce / Backoffice | اشتراک Individual/Organization، نسخهٔ پلن و دورهٔ ماهانه، رزرو/ledger، Trial و Upgrade/Downgrade؛ فعال‌شدن کنترل سازمان با ثبت قرارداد معتبر Admin؛ gateway مالی واقعی unavailable؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
+| Commerce / Backoffice | اشتراک Individual/Organization، نسخهٔ پلن و دورهٔ ماهانه، رزرو/ledger، Trial و Upgrade/Downgrade؛ فعال‌شدن کنترل سازمان با ثبت قرارداد معتبر Admin؛ Adapter زیبال با فعال‌سازیِ وابسته به تنظیمات خصوصی و پذیرش واقعی؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
 | AI | ۱۲ API v1 و Knowledge شامل ingest/status/lifecycle/retrieve/RAG، ACL و نسخهٔ pinشده؛ پذیرش Backend محلی → AI واقعی موفق، اما Worker/Queue و مسیر سرور Production تأیید نشده و Cutover انجام نشده است؛ [قرارداد جاری](docs/architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md) |
 | Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
 
@@ -136,7 +136,7 @@ dotnet user-secrets set "ConnectionStrings:MakanDatabase" "Server=.;Database=Mak
 
 در محیط‌های دیگر مقدار از secret store، environment یا فایل خصوصی دارای ACL تأمین می‌شود. ۴۸ Migration نسخه‌بندی‌شده داریم؛ آخرین شناسه `20261017033804_AddConversationChecklists` است. `Database.EnsureCreated` در برنامه استفاده نمی‌شود و migration هنگام startup اجرا نمی‌شود؛ اعمال آن عملیات کنترل‌شده و جداگانه است. [ساختار جاری دیتابیس](docs/database-current-structure.md) و ابزار SQL بررسی‌شده در [runbook IIS](docs/production/DEPLOYMENT_IIS.md) را ببینید؛ این تغییر مستندات Migration تازه نمی‌خواهد.
 
-زیرساخت Order/Payment فعلاً provider واقعی ندارد. مقدار commit‌شده `Payments:Provider=Unavailable` است و secret پرداختی در appsettings نگهداری نمی‌شود. Integration Testها `RecordingPaymentGateway` داخلی را جایگزین می‌کنند و هیچ تماس مالی واقعی ندارند. جزئیات در `docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md` ثبت شده است.
+زیرساخت Order/Payment اکنون Adapter زیبال، Callback GET، Verify/Inquiry، بازیابی مجاز و رسید تاریخی دارد. مقدار پیش‌فرض commit‌شده `Payments:Provider=Unavailable` حفظ شده؛ فعال‌سازی Zibal به Merchant خصوصی، Callback و Return allowlisted معتبر نیاز دارد و کانفیگ ناقص fail-fast است. Test رسمی فقط Merchant عمومی `zibal` در Test/Testing را می‌پذیرد و Production آن را رد می‌کند. تست‌های خودکار فقط از gateway/HTTP handler کنترل‌شده و SQL اختصاصی استفاده می‌کنند؛ پذیرش مالی واقعی و استقرار مستقل‌اند. [معماری](docs/architecture/STEP_13B_ORDER_AND_PAYMENT.md)، [قرارداد کلاینت](docs/commerce/ZIBAL_FRONTEND_HANDOFF_FA.md) و [عملیات/تنظیمات](docs/commerce/ZIBAL_OPERATIONS_FA.md).
 
 ## API Foundation
 

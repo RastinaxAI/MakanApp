@@ -48,6 +48,14 @@ public sealed partial class Order
     public Guid PurchaserUserId { get; private set; }
     public Guid? OrganizationId { get; private set; }
     public Guid PlanVersionId { get; private set; }
+    public string? ProductTitleSnapshot { get; private set; }
+
+    public void CaptureProductTitle(string title)
+    {
+        if (ProductTitleSnapshot is not null || Status != OrderStatus.PendingPayment || string.IsNullOrWhiteSpace(title) || title.Length > 200)
+            throw new InvalidOperationException("عنوان تاریخی سفارش معتبر نیست.");
+        ProductTitleSnapshot = title.Trim();
+    }
     public OrderStatus Status { get; private set; }
     public decimal Amount { get; private set; }
     public CurrencyCode Currency { get; private set; }

@@ -1,5 +1,15 @@
 # STEP 13B — Order & Payment Foundation
 
+## وضعیت جاری پس از یکپارچه‌سازی زیبال — ۲۰۲۶-۱۱-۱۰
+
+توضیحات پایین این بخش گزارش تاریخی STEP 13B هستند؛ عبارت «Provider واقعی وجود ندارد» یا ترتیب قدیمی lock در آن‌ها وضعیت runtime جاری نیست. اکنون `ZibalPaymentGateway` با typed HttpClient/System.Text.Json و `IPaymentGatewayResolver` به foundation موجود متصل است. Provider پیش‌فرض Unavailable همچنان معتبر است؛ انتخاب Zibal با تنظیمات ناقص fail-fast می‌شود. Merchant رسمی Test فقط در Test/Testing مجاز است. هیچ تضمین استقرار یا پرداخت واقعی از وجود Adapter استنباط نمی‌شود.
+
+`OrderPaymentService` و `EfOrderPaymentStore` همان مسیر قبلی تسویهٔ اتمیک را دارند؛ تمام عملیات ابتدا Order و سپس Attempt را قفل می‌کنند. تماس HTTP خارج transaction است. تلاش غیرقطعی، پرداخت تازه را متوقف می‌کند و lease منقضی موجب POST تکراری نمی‌شود. Provider هر تلاش ثابت می‌ماند. callback GET فقط محرک Verify است؛ result=201 بدون Inquiry معتبر موفق نیست. Payment، Paid Order و Outbox یک‌بار ثبت می‌شوند و فعال‌سازی اشتراک از handler فعلی مستقل می‌ماند.
+
+Migration `20261110081503_AddZibalPaymentIntegration` فقط ستون‌های nullable برای مراجع/زمان‌ها و عنوان تاریخی، و جدول `commerce.PaymentAttemptEvents` با FK/Index اضافه می‌کند. refNumber مستقل از trackId است؛ تاریخچه و Payment در SaveChanges append-only هستند. دادهٔ قدیمی حدسی backfill نمی‌شود. مسیرهای شخصی، دورهٔ تجاری و قواعد فعلی اشتراک reuse می‌شوند؛ توصیف تاریخیِ «اشتراک بدون تاریخ پایان» پایین، مبنای ایجاد قرارداد جدید نیست.
+
+Callback، API status/recovery دارای نشست و رسید تاریخی اضافه شده‌اند. جزئیات قرارداد و مرزهای مجوز در [راهنمای کلاینت زیبال](../commerce/ZIBAL_FRONTEND_HANDOFF_FA.md) و تنظیمات/SQL/Smoke در [راهنمای عملیات زیبال](../commerce/ZIBAL_OPERATIONS_FA.md) ثبت شده‌اند. Refund، درگاه فروشگاه‌ها، قیمت‌گذاری و workflow تأسیس جدید خارج از این Task هستند. مبنای محصول Spec v8 و Flowchart است؛ موارد صرفاً پیشنهادی آن‌ها به‌عنوان قابلیت پیاده‌شده گزارش نشده‌اند.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-18` از `main@ef67624`: این فایل قرارداد/گزارش مرحله‌ای است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->

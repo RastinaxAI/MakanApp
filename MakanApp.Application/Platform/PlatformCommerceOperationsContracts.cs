@@ -139,7 +139,11 @@ public sealed record PlatformPaymentAttemptItem(
     DateTime CreatedAtUtc,
     DateTime? VerifiedAtUtc,
     DateTime? CompletedAtUtc,
-    string? FailureCode);
+    string? FailureCode)
+{
+    public string? MaskedSettlementReference { get; init; }
+    public DateTime? CallbackReceivedAtUtc { get; init; }
+}
 
 public sealed record PlatformPaymentItem(
     Guid PaymentId,
@@ -148,7 +152,11 @@ public sealed record PlatformPaymentItem(
     string MaskedProviderReference,
     decimal Amount,
     CurrencyCode Currency,
-    DateTime PaidAtUtc);
+    DateTime PaidAtUtc)
+{
+    public string? MaskedSettlementReference { get; init; }
+    public DateTime? ProviderPaidAtUtc { get; init; }
+}
 
 public sealed record PlatformOrderItem(
     Guid OrderId,
@@ -162,7 +170,10 @@ public sealed record PlatformOrderItem(
     DateTime? PaidAtUtc,
     DateTime? CancelledAtUtc,
     IReadOnlyCollection<PlatformPaymentAttemptItem> PaymentAttempts,
-    PlatformPaymentItem? Payment);
+    PlatformPaymentItem? Payment)
+{
+    public MakanApp.Application.Commerce.OrderFulfillmentState FulfillmentState { get; init; }
+}
 
 public sealed record PlatformOrderPage(
     IReadOnlyCollection<PlatformOrderItem> Items,

@@ -58,6 +58,9 @@ public sealed class PaymentAttempt
     public Guid ClientOperationId { get; private set; }
     public byte[] RequestPayloadHash { get; private set; } = [];
     public string? ProviderReference { get; private set; }
+    public string? SettlementReference { get; private set; }
+    public DateTime? ProviderPaidAtUtc { get; private set; }
+    public DateTime? CallbackReceivedAtUtc { get; private set; }
     public string? PaymentUrl { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? InitiatedAtUtc { get; private set; }
@@ -101,8 +104,13 @@ public sealed class PaymentAttempt
             throw new ArgumentException("claim تلاش پرداخت معتبر نیست.");
         }
 
-        var claimable = Status == PaymentAttemptStatus.Created ||
-                        Status == PaymentAttemptStatus.Initiating && InitiationClaimedUntilUtc <= nowUtc;
+        // انقضای lease ثابت نمی‌کند درخواست قبلی به درگاه نرسیده است؛ POST تکرار نمی‌شود.
+        if (Status == PaymentAttemptStatus.Initiating && InitiationClaimedUntilUtc <= nowUtc)
+        {
+            MarkInitiationUnknown(InitiationClaimToken!.Value, "PAYMENT_PENDING_VERIFICATION", nowUtc);
+            return false;
+        }
+        var claimable = Status == PaymentAttemptStatus.Created;
         if (!claimable)
         {
             return false;
@@ -179,6 +187,8 @@ public sealed class PaymentAttempt
     {
         EnsureVerifiable();
         EnsureUtc(verifiedAtUtc, nameof(verifiedAtUtc));
+        // پاسخ نامشخصِ دیررس، شکست قطعی یا initiation در حال اجرا را بازنویسی نمی‌کند.
+        if (Status is PaymentAttemptStatus.Failed or PaymentAttemptStatus.Initiating) return;
         SetProviderReference(providerReference);
         Status = PaymentAttemptStatus.Unknown;
         FailureCode = NormalizeText(failureCode, MaximumFailureCodeLength, nameof(failureCode));
@@ -187,7 +197,14 @@ public sealed class PaymentAttempt
         ClearClaim();
     }
 
-    public void MarkSucceeded(string providerReference, DateTime verifiedAtUtc)
+    public void RecordCallback(DateTime receivedAtUtc)
+    {
+        EnsureUtc(receivedAtUtc, nameof(receivedAtUtc));
+        CallbackReceivedAtUtc ??= receivedAtUtc;
+    }
+
+    public void MarkSucceeded(string providerReference, DateTime verifiedAtUtc,
+        string? settlementReference = null, DateTime? providerPaidAtUtc = null)
     {
         EnsureVerifiable();
         EnsureUtc(verifiedAtUtc, nameof(verifiedAtUtc));
@@ -195,6 +212,10 @@ public sealed class PaymentAttempt
             providerReference,
             MaximumProviderReferenceLength,
             nameof(providerReference)));
+        SettlementReference = string.IsNullOrWhiteSpace(settlementReference) ? null :
+            NormalizeText(settlementReference, MaximumProviderReferenceLength, nameof(settlementReference));
+        if (providerPaidAtUtc.HasValue) EnsureUtc(providerPaidAtUtc.Value, nameof(providerPaidAtUtc));
+        ProviderPaidAtUtc = providerPaidAtUtc;
         Status = PaymentAttemptStatus.Succeeded;
         FailureCode = null;
         VerifiedAtUtc = verifiedAtUtc;

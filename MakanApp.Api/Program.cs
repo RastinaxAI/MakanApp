@@ -131,6 +131,8 @@ builder.Services.AddRateLimiter(options =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 20)));
+    options.AddPolicy("payment-callback", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(GetIpPartitionKey(httpContext), _ => FixedWindow(builder.Environment, 60)));
     options.AddPolicy("messaging-discovery", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
@@ -169,9 +171,8 @@ builder.Services.AddRateLimiter(options =>
             _ => FixedWindow(builder.Environment, 20)));
     options.OnRejected = async (context, cancellationToken) =>
     {
-        var isPayment = context.HttpContext.Request.Path.StartsWithSegments(
-            "/api/v1/commerce/orders",
-            StringComparison.OrdinalIgnoreCase);
+        var isPayment = context.HttpContext.Request.Path.StartsWithSegments("/api/v1/commerce", StringComparison.OrdinalIgnoreCase)
+            || context.HttpContext.Request.Path.StartsWithSegments("/api/integrations/v1/commerce/payments", StringComparison.OrdinalIgnoreCase);
         var isMessagingDiscovery = context.HttpContext.Request.Path.StartsWithSegments(
             "/api/v1/people",
             StringComparison.OrdinalIgnoreCase) ||
@@ -269,6 +270,7 @@ builder.Services.AddOpenApi(options =>
     options.AddOperationTransformer<KnowledgeContractTransformer>();
     options.AddOperationTransformer<PersonalAcademicOperationTransformer>();
     options.AddOperationTransformer<ApiContractOperationTransformer>();
+    options.AddOperationTransformer<CommercePaymentOperationTransformer>();
     options.AddDocumentTransformer<ApiContractDocumentTransformer>();
 });
 builder.Services.AddProblemDetails(options =>

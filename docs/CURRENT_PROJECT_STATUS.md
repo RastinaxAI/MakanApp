@@ -25,7 +25,7 @@
 
 | موضوع | وضعیت |
 |---|---|
-| درگاه پرداخت واقعی / قیمت و سقف تجاری | provider unavailable؛ مقدار تجاری حدسی Seed نشده است |
+| درگاه پرداخت واقعی / قیمت و سقف تجاری | Adapter زیبال، Callback/Verify/Inquiry، رسید و بازیابی پیاده شده؛ پیش‌فرض Unavailable و پذیرش Production وابسته به Merchant/HTTPS/Smoke مقصد است. [راهنما](commerce/ZIBAL_OPERATIONS_FA.md)؛ مقدار تجاری حدسی Seed نشده است |
 | Learning Profile / Badge / Source lifecycle / RAG | هنوز پیاده‌شده فرض نمی‌شوند؛ [تفکیک محصول](product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) |
 | AI واقعی | پیش‌فرض خاموش؛ Service Auth قبلی PASS، Parent Provider Timeout و Full-12 Deferred |
 | Push دستگاه واقعی | P1_PUSH_RUNTIME_PENDING |

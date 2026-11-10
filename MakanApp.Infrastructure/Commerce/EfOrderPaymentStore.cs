@@ -1,5 +1,6 @@
 using System.Data;
 using System.Security.Cryptography;
+using System.Text;
 using MakanApp.Application.Commerce;
 using MakanApp.Application.Outbox;
 using MakanApp.Domain.Commerce;
@@ -64,6 +65,8 @@ public sealed partial class EfOrderPaymentStore(
             clientOperationId,
             requestPayloadHash,
             createdAtUtc);
+        var productTitle = await dbContext.Plans.Where(p => p.Id == planVersion.PlanId).Select(p => p.DisplayName).SingleAsync(cancellationToken);
+        order.CaptureProductTitle(productTitle);
         await SetCommercialOrderTermsAsync(order, planVersion, purpose, targetSubscriptionId, createdAtUtc, cancellationToken);
         dbContext.Orders.Add(order);
         if (order.Amount == 0)
@@ -170,7 +173,8 @@ public sealed partial class EfOrderPaymentStore(
             .SingleOrDefaultAsync(cancellationToken);
         if (existing is not null)
         {
-            var matches = FixedEquals(existing.RequestPayloadHash, requestPayloadHash);
+            var matches = FixedEquals(existing.RequestPayloadHash, requestPayloadHash)
+                || FixedEquals(existing.RequestPayloadHash, SHA256.HashData(Encoding.UTF8.GetBytes($"payment|{orderId:N}|{existing.Provider}")));
             var snapshot = await CreateSnapshotAsync(order, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new CreatePaymentAttemptStoreResult(
@@ -190,6 +194,12 @@ public sealed partial class EfOrderPaymentStore(
                 null);
         }
 
+        if (await dbContext.PaymentAttempts.AnyAsync(a => a.OrderId == orderId && a.Status != PaymentAttemptStatus.Failed, cancellationToken))
+        {
+            await transaction.CommitAsync(cancellationToken);
+            return new(CreatePaymentAttemptStoreStatus.UnresolvedAttempt, null, null);
+        }
+
         var attempt = PaymentAttempt.Create(
             order,
             provider,
@@ -197,6 +207,7 @@ public sealed partial class EfOrderPaymentStore(
             requestPayloadHash,
             createdAtUtc);
         dbContext.PaymentAttempts.Add(attempt);
+        AddEvent(attempt.Id, PaymentAttemptEventType.Created, createdAtUtc);
         await dbContext.SaveChangesAsync(cancellationToken);
         var createdOrder = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -218,19 +229,24 @@ public sealed partial class EfOrderPaymentStore(
         DateTime claimedUntilUtc,
         CancellationToken cancellationToken)
     {
+        var orderId = await FindPaymentOrderIdAsync(paymentAttemptId, cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await LockPaymentOrderAsync(orderId, cancellationToken);
         var attempt = await dbContext.PaymentAttempts
             .FromSqlInterpolated($"SELECT * FROM [commerce].[PaymentAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {paymentAttemptId}")
             .SingleOrDefaultAsync(cancellationToken);
-        if (attempt is null || !attempt.TryClaimInitiation(claimToken, nowUtc, claimedUntilUtc))
+        if (attempt is null)
         {
             await transaction.CommitAsync(cancellationToken);
             return false;
         }
-
+        var before = attempt.Status;
+        var claimed = attempt.TryClaimInitiation(claimToken, nowUtc, claimedUntilUtc);
+        if (claimed || before != attempt.Status)
+            AddEvent(attempt.Id, claimed ? PaymentAttemptEventType.InitiationStarted : PaymentAttemptEventType.InitiationUncertain, nowUtc);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return true;
+        return claimed;
     }
 
     public async Task<CompletePaymentInitiationStoreResult> CompletePaymentInitiationAsync(
@@ -240,9 +256,11 @@ public sealed partial class EfOrderPaymentStore(
         DateTime occurredAtUtc,
         CancellationToken cancellationToken)
     {
+        var orderId = await FindPaymentOrderIdAsync(paymentAttemptId, cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+        await LockPaymentOrderAsync(orderId, cancellationToken);
         var attempt = await dbContext.PaymentAttempts
             .FromSqlInterpolated($"SELECT * FROM [commerce].[PaymentAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {paymentAttemptId}")
             .SingleOrDefaultAsync(cancellationToken);
@@ -267,6 +285,8 @@ public sealed partial class EfOrderPaymentStore(
                 claimToken,
                 CommerceErrorCodes.PaymentReferenceConflict,
                 occurredAtUtc);
+            AddEvent(attempt.Id, PaymentAttemptEventType.InitiationCompleted, occurredAtUtc, providerResult.ProviderResult,
+                errorCode: CommerceErrorCodes.PaymentReferenceConflict);
             await dbContext.SaveChangesAsync(cancellationToken);
             var conflictOrder = await dbContext.Orders.SingleAsync(
                 order => order.Id == attempt.OrderId,
@@ -315,6 +335,7 @@ public sealed partial class EfOrderPaymentStore(
                 break;
         }
 
+        AddEvent(attempt.Id, PaymentAttemptEventType.InitiationCompleted, occurredAtUtc, providerResult.ProviderResult, errorCode: attempt.FailureCode);
         await dbContext.SaveChangesAsync(cancellationToken);
         var order = await dbContext.Orders.SingleAsync(
             item => item.Id == attempt.OrderId,
@@ -353,9 +374,11 @@ public sealed partial class EfOrderPaymentStore(
         OutboxEnvelope? subscriptionActivationMessage,
         CancellationToken cancellationToken)
     {
+        var orderId = await FindPaymentOrderIdAsync(paymentAttemptId, cancellationToken);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
+        await LockPaymentOrderAsync(orderId, cancellationToken);
         var attempt = await dbContext.PaymentAttempts
             .FromSqlInterpolated($"SELECT * FROM [commerce].[PaymentAttempts] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {paymentAttemptId}")
             .SingleOrDefaultAsync(cancellationToken);
@@ -368,6 +391,10 @@ public sealed partial class EfOrderPaymentStore(
                 null);
         }
 
+        foreach (var observation in providerResult.Observations)
+            AddEvent(attempt.Id, observation.IsInquiry ? PaymentAttemptEventType.InquiryCompleted : PaymentAttemptEventType.VerificationCompleted,
+                verifiedAtUtc, observation.Result, observation.Status, providerResult.FailureCode);
+
         var order = await dbContext.Orders
             .FromSqlInterpolated($"SELECT * FROM [commerce].[Orders] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {attempt.OrderId}")
             .SingleAsync(cancellationToken);
@@ -377,6 +404,8 @@ public sealed partial class EfOrderPaymentStore(
         if (existingPayment is not null ||
             attempt.Status == PaymentAttemptStatus.Succeeded && order.Status == OrderStatus.Paid)
         {
+            AddEvent(attempt.Id, PaymentAttemptEventType.SettlementReplayed, verifiedAtUtc);
+            await dbContext.SaveChangesAsync(cancellationToken);
             var existingSnapshot = await CreateSnapshotAsync(order, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             logger.LogInformation(
@@ -415,6 +444,7 @@ public sealed partial class EfOrderPaymentStore(
                 order,
                 attempt,
                 RecordPaymentVerificationStoreStatus.ReferenceConflict,
+                verifiedAtUtc,
                 cancellationToken);
         }
 
@@ -429,6 +459,7 @@ public sealed partial class EfOrderPaymentStore(
                 order,
                 attempt,
                 RecordPaymentVerificationStoreStatus.Failed,
+                verifiedAtUtc,
                 cancellationToken);
         }
 
@@ -446,6 +477,7 @@ public sealed partial class EfOrderPaymentStore(
                 order,
                 attempt,
                 RecordPaymentVerificationStoreStatus.Unknown,
+                verifiedAtUtc,
                 cancellationToken);
         }
 
@@ -460,6 +492,7 @@ public sealed partial class EfOrderPaymentStore(
                 order,
                 attempt,
                 RecordPaymentVerificationStoreStatus.AmountMismatch,
+                verifiedAtUtc,
                 cancellationToken);
         }
 
@@ -474,10 +507,11 @@ public sealed partial class EfOrderPaymentStore(
                 order,
                 attempt,
                 RecordPaymentVerificationStoreStatus.CurrencyMismatch,
+                verifiedAtUtc,
                 cancellationToken);
         }
 
-        attempt.MarkSucceeded(providerResult.ProviderReference, verifiedAtUtc);
+        attempt.MarkSucceeded(providerResult.ProviderReference, verifiedAtUtc, providerResult.SettlementReference, providerResult.ProviderPaidAtUtc);
         order.MarkPaid(verifiedAtUtc);
         dbContext.Payments.Add(Payment.Create(attempt, verifiedAtUtc));
         if (order.OrganizationId.HasValue || order.HasCommercialTerms)
@@ -495,6 +529,7 @@ public sealed partial class EfOrderPaymentStore(
             order,
             attempt,
             RecordPaymentVerificationStoreStatus.Settled,
+            verifiedAtUtc,
             cancellationToken);
     }
 
@@ -503,8 +538,11 @@ public sealed partial class EfOrderPaymentStore(
         Order order,
         PaymentAttempt attempt,
         RecordPaymentVerificationStoreStatus status,
+        DateTime occurredAtUtc,
         CancellationToken cancellationToken)
     {
+        AddEvent(attempt.Id, PaymentAttemptEventType.VerificationCompleted, occurredAtUtc,
+            errorCode: attempt.FailureCode);
         await dbContext.SaveChangesAsync(cancellationToken);
         var snapshot = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -570,7 +608,11 @@ public sealed partial class EfOrderPaymentStore(
             order.CreatedAtUtc,
             order.PaidAtUtc,
             FulfillmentState(order, activated),
-            attempts);
+            attempts)
+        {
+            ProductTitleSnapshot = order.ProductTitleSnapshot, Purpose = order.Purpose,
+            BillingAnchorUtc = order.BillingAnchorUtc, BillingPeriodIndex = order.BillingPeriodIndex
+        };
 
     private static PaymentAttemptSnapshot MapAttempt(PaymentAttempt attempt, Order order) =>
         new(
@@ -586,7 +628,12 @@ public sealed partial class EfOrderPaymentStore(
             attempt.PaymentUrl,
             attempt.CreatedAtUtc,
             attempt.CompletedAtUtc,
-            order.PurchaserUserId);
+            order.PurchaserUserId)
+        {
+            SettlementReference = attempt.SettlementReference, FailureCode = attempt.FailureCode,
+            CallbackReceivedAtUtc = attempt.CallbackReceivedAtUtc, ProviderPaidAtUtc = attempt.ProviderPaidAtUtc,
+            VerifiedAtUtc = attempt.VerifiedAtUtc
+        };
 
     private static OrderFulfillmentState FulfillmentState(Order order, bool activated)
     {

@@ -68,6 +68,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<PaymentAttempt> PaymentAttempts => Set<PaymentAttempt>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PaymentAttemptEvent> PaymentAttemptEvents => Set<PaymentAttemptEvent>();
     public DbSet<User> Users => Set<User>();
     public DbSet<CommunicationAgeVerification> CommunicationAgeVerifications => Set<CommunicationAgeVerification>();
     public DbSet<Person> Persons => Set<Person>();
@@ -180,6 +181,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries().Any(e => e.Entity is Payment or PaymentAttemptEvent && e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("رسید و تاریخچهٔ پرداخت فقط قابل افزودن است.");
         if (ChangeTracker.Entries<OrganizationMembershipOperation>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("رسید مدیریت عضویت فقط قابل افزودن است.");
         if (ChangeTracker.Entries().Any(e => e.Entity is MakanApp.Domain.Knowledge.AiSourceSelectionOperation or MakanApp.Domain.Knowledge.AiSourceSelectionPin

@@ -180,6 +180,7 @@ public static class DependencyInjection
             serviceProvider.GetRequiredService<OrderPaymentService>());
         services.AddScoped<IPaymentVerificationService>(serviceProvider =>
             serviceProvider.GetRequiredService<OrderPaymentService>());
+        services.AddScoped<IPaymentRecoveryService>(sp => sp.GetRequiredService<OrderPaymentService>());
         services.AddScoped<ISubscriptionActivationHandler, EfSubscriptionActivationHandler>();
         services.AddScoped<IDashboardReadService, EfDashboardReadService>();
         services.AddScoped<IDashboardService, DashboardService>();
@@ -384,7 +385,7 @@ public static class DependencyInjection
                 UsesManagedOtpProvider(configuration))));
         AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass, authentication);
         AddNotificationDeliveryProviders(services, configuration, environmentName);
-        AddPaymentGateway(services, configuration);
+        AddPaymentGateway(services, configuration, environmentName);
 
         if (IsDevelopmentLike(environmentName) || !string.IsNullOrWhiteSpace(storageOptions.RootPath))
         {
@@ -442,17 +443,27 @@ public static class DependencyInjection
 
     private static void AddPaymentGateway(
         IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        string environmentName)
     {
         var provider = configuration[$"{PaymentOptions.SectionName}:Provider"]?.Trim()
             ?? "Unavailable";
-        if (!provider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase))
+        var useZibal = provider.Equals(ZibalPaymentGateway.Name, StringComparison.OrdinalIgnoreCase);
+        if (!provider.Equals("Unavailable", StringComparison.OrdinalIgnoreCase) && !useZibal)
         {
             throw new InvalidOperationException(
-                "Payments:Provider is not supported. A real provider requires an approved adapter contract.");
+                "Payments:Provider باید Zibal یا Unavailable باشد.");
         }
 
-        services.AddSingleton<IPaymentGateway, UnavailablePaymentGateway>();
+        var zibal = configuration.GetSection(ZibalOptions.SectionName).Get<ZibalOptions>() ?? new ZibalOptions();
+        zibal.Validate(environmentName, useZibal);
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(zibal));
+        services.AddSingleton<UnavailablePaymentGateway>();
+        services.AddHttpClient<ZibalPaymentGateway>(client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
+            .RemoveAllLoggers();
+        services.AddScoped<IPaymentGateway>(sp => useZibal ? sp.GetRequiredService<ZibalPaymentGateway>() : sp.GetRequiredService<UnavailablePaymentGateway>());
+        services.AddScoped<IPaymentGatewayResolver, PaymentGatewayResolver>();
     }
 
     private static void AddNotificationDeliveryProviders(
