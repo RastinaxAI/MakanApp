@@ -64,7 +64,7 @@
   },
   "AiService": { "Enabled": false },
   "Storage": {
-    "RootPath": "C:\\MakanAppData\\Storage"
+    "RootPath": "C:\\MakanAppData\\Production\\Storage"
   },
   "Logging": {
     "LogLevel": {
