@@ -21,7 +21,7 @@ public sealed class PersonalClassOptions
 
 public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercialStore commerce, IOptions<PersonalClassOptions> options,
     RealtimeInvalidationWriter realtime, OfficialSpaceEventWriter spaces, EfOfficialSpacesStore officialSpaces,
-    CommercialActorAccess actors, TimeProvider clock) : IPersonalClassStore, IPersonalClassLifecycleStore
+    CommercialActorAccess actors, TimeProvider clock, MakanApp.Application.Assessment.PersonalClassAcademicFeatures features) : IPersonalClassStore, IPersonalClassLifecycleStore
 {
     public Task<PersonalClassDto> CreateAsync(Guid host, CreatePersonalClassCommand command, DateTime now, CancellationToken ct) =>
         throw Error(AcademicErrorCodes.PersonalClassReviewRequired, "برای تشکیل تازه ابتدا درخواست را ثبت و ارسال کنید.");
@@ -179,17 +179,18 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
         if (member is null) return dto with { Capabilities = new(false, false, false, false, false, false, false, false) };
         var granted = await PersonalClassAcademicAccessQuery.Effective(db, c.Id).Where(g => g.MembershipId == member.Id)
             .Select(g => (PersonalClassAcademicCapabilities?)g.Capabilities).SingleOrDefaultAsync(ct) ?? PersonalClassAcademicCapabilities.None;
+        granted = features.Effective(granted);
         var authorAssignments = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.AuthorAssignments);
         var authorExams = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.AuthorExams);
         return dto with
         {
             CanCreateEducationalContent = authorAssignments || authorExams,
-            EducationalWorkflowStatus = "Available",
+            EducationalWorkflowStatus = features.AnyEnabled ? "Available" : "NotAvailable",
             Capabilities = dto.Capabilities with
             {
                 CanAuthorAssignments = authorAssignments, CanAuthorExams = authorExams,
                 CanGrade = c.State == PersonalClassState.Active && granted.HasFlag(PersonalClassAcademicCapabilities.Grade),
-                CanViewOwnResults = member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner)
+                CanViewOwnResults = features.AnyEnabled && member.LocalRoles.HasFlag(PersonalClassLocalRoles.Learner)
             }
         };
     }

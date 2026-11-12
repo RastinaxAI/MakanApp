@@ -28,7 +28,7 @@ public sealed class SchoolCompletionMigrationTests(MakanAppWebApplicationFactory
             var migrator = db.GetService<IMigrator>(); await migrator.MigrateAsync("20261028164838_AddUserProfilePhoto");
             var now = DateTime.UtcNow; var org = Organization.Create("مدرسه قبلی", now); var user = User.Create(now);
             var person = Person.Create("فراگیر قبلی", "آزمون", null, now); person.SetDateOfBirth(new DateOnly(2012, 1, 1), now);
-            db.Organizations.Add(org); db.Users.Add(user); db.Persons.Add(person); await db.SaveChangesAsync();
+            db.Organizations.Add(org); await LegacyAcademicMigrationFixture.InsertAsync(db, user); db.Persons.Add(person); await db.SaveChangesAsync();
             var children = new[] { OrganizationPerson.CreateActive(org.Id, person.Id, now), OrganizationPerson.CreateActive(org.Id, (await AddPersonAsync(db, now)).Id, now) };
             db.OrganizationPersons.AddRange(children); await db.SaveChangesAsync();
             var oldInvitationId = Guid.NewGuid(); var expiry = now.AddDays(1);

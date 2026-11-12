@@ -174,7 +174,12 @@ public sealed class ReleaseEnvironmentOtpTests(MakanAppWebApplicationFactory fac
             builder.ConfigureTestServices(services =>
             {
                 // فقط مرز ارسال خارجی جایگزین می‌شود؛ Options، use case، SQL و نشست واقعی باقی می‌مانند.
-                Assert.Equal(environment == "Production", services.Any(item => item.ServiceType == typeof(MeliPayamakOtpOptions)));
+                // وجود adapter واقعی phone-change در Test، به معنی واقعی‌بودن Login نیست.
+                var loginDelivery = Assert.Single(services, item => item.ServiceType == typeof(IOtpDeliveryProvider) && !item.IsKeyedService);
+                if (environment == "Production") Assert.NotNull(loginDelivery.ImplementationFactory);
+                else Assert.Equal(typeof(UnavailableOtpDeliveryProvider), loginDelivery.ImplementationType);
+                Assert.Contains(services, item => item.ServiceType == typeof(IOtpDeliveryProvider) && item.IsKeyedService &&
+                    Equals(item.ServiceKey, PhoneChangeService.RealDeliveryKey));
                 services.RemoveAll<IOtpDeliveryProvider>();
                 services.AddSingleton<IOtpDeliveryProvider>(delivery);
                 foreach (var item in services.Where(item => item.ServiceType == typeof(IHostedService) &&

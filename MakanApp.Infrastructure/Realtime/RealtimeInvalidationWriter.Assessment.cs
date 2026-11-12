@@ -110,6 +110,7 @@ public sealed partial class RealtimeInvalidationWriter
         }
         async Task PersonalAsync(Guid classId, string key, Guid resourceId, bool staffOnly, Guid? ownerMembershipId = null, bool ownerOnly = false)
         {
+            if (key.StartsWith("assessment.exam", StringComparison.Ordinal) ? !academicFeatures.ExamsEnabled : !academicFeatures.AssignmentsEnabled) return;
             var required = key == "assessment.assignment" ? PersonalClassAcademicCapabilities.AuthorAssignments :
                 key == "assessment.exam" ? PersonalClassAcademicCapabilities.AuthorExams : PersonalClassAcademicCapabilities.Grade;
             var grants = PersonalClassAcademicAccessQuery.Effective(db, classId);

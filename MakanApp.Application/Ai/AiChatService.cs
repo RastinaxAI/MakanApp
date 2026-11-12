@@ -50,7 +50,7 @@ public sealed class AiChatService(
             new AiScope(
                 context.OrganizationId!.Value.ToString("D"),
                 context.OrganizationId.Value.ToString("D"),
-                null,
+                context.AssistantClassId?.ToString("D"),
                 learnerId?.ToString("D")),
             new AiMessage(command.Message.Trim()),
             AiAuthorizedContext.Empty);

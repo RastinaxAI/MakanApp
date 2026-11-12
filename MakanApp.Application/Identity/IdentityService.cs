@@ -339,6 +339,12 @@ public sealed partial class IdentityService(
         }
 
         user.SetProfile(person.Id, username, normalizedUsername, nowUtc);
+        // درخواست قدیمی بدون Bio مقدار موجود را حفظ می‌کند؛ رشتهٔ خالی برای پاک‌کردن است.
+        if (command.Bio is not null)
+        {
+            try { user.SetBio(command.Bio, nowUtc); }
+            catch (ArgumentException) { throw ProfileValidationException(); }
+        }
         await store.SaveChangesAsync(cancellationToken);
 
         var credential = await store.GetMobileCredentialByUserIdAsync(userId, cancellationToken)
@@ -446,7 +452,8 @@ public sealed partial class IdentityService(
             person?.DisplayName,
             user.Username,
             person?.DateOfBirth,
-            await store.GetProfilePhotoAsync(user.Id, cancellationToken));
+            await store.GetProfilePhotoAsync(user.Id, cancellationToken),
+            user.Bio);
     }
 
     private byte[] HashOtpForCurrentMode(string code, byte[] salt) =>

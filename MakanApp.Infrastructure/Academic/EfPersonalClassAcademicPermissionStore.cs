@@ -13,7 +13,8 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Academic;
 
 public sealed class EfPersonalClassAcademicPermissionStore(MakanDbContext db, CommercialActorAccess actors,
-    IPlatformPermissionResolver permissions, RealtimeInvalidationWriter realtime) : IPersonalClassAcademicPermissionStore
+    IPlatformPermissionResolver permissions, RealtimeInvalidationWriter realtime,
+    MakanApp.Application.Assessment.PersonalClassAcademicFeatures features) : IPersonalClassAcademicPermissionStore
 {
     public async Task<PersonalClassAcademicPermissionDto> SetAsync(PersonalClassActor actor, Guid classId, Guid membershipId,
         SetPersonalClassAcademicPermissionCommand command, bool platform, DateTime now, CancellationToken ct)
@@ -59,6 +60,8 @@ public sealed class EfPersonalClassAcademicPermissionStore(MakanDbContext db, Co
                 throw EfPersonalClassFormationStore.NotFound();
             parentId = parent?.GrantId;
         }
+        // لغو مجوز در حالت خاموش هم مجاز می‌ماند؛ grant تازه نمی‌تواند Gate محصول را دور بزند.
+        features.EnsureCapabilities(command.Capabilities);
         var current = await db.PersonalClassAcademicGrants.SingleOrDefaultAsync(g => g.PersonalClassId == classId && g.MembershipId == membershipId && g.RevokedAtUtc == null, ct);
         if (current is null ? command.ExpectedGrantVersion is not null : command.ExpectedGrantVersion is null)
             throw EfPersonalClassFormationStore.Conflict();
@@ -90,7 +93,7 @@ public sealed class EfPersonalClassAcademicPermissionStore(MakanDbContext db, Co
         var count = await query.CountAsync(ct);
         var rows = await query.OrderByDescending(g => g.CreatedAtUtc).ThenBy(g => g.Id).Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(ct);
         var effective = await PersonalClassAcademicAccessQuery.Effective(db, classId).Select(g => g.GrantId).ToArrayAsync(ct);
-        return new(rows.Select(g => Map(g, effective.Contains(g.Id))).ToArray(), page, pageSize, count);
+        return new(rows.Select(g => Map(g, effective.Contains(g.Id) && features.Effective(g.Capabilities) != PersonalClassAcademicCapabilities.None)).ToArray(), page, pageSize, count);
     }
     private async Task Authorize(PersonalClassActor actor, PersonalClass classroom, bool platform, CancellationToken ct)
     {
@@ -105,7 +108,8 @@ public sealed class EfPersonalClassAcademicPermissionStore(MakanDbContext db, Co
             throw EfPersonalClassFormationStore.NotFound();
     }
     private async Task<PersonalClassAcademicPermissionDto> ResultAsync(PersonalClassAcademicGrant grant, CancellationToken ct) =>
-        Map(grant, await PersonalClassAcademicAccessQuery.Effective(db, grant.PersonalClassId).AnyAsync(g => g.GrantId == grant.Id, ct));
+        Map(grant, features.Effective(grant.Capabilities) != PersonalClassAcademicCapabilities.None &&
+            await PersonalClassAcademicAccessQuery.Effective(db, grant.PersonalClassId).AnyAsync(g => g.GrantId == grant.Id, ct));
     private static PersonalClassAcademicPermissionDto Map(PersonalClassAcademicGrant g, bool effective) =>
         new(g.Id, g.PersonalClassId, g.MembershipId, g.Capabilities, g.ParentGrantId, effective, g.CreatedAtUtc, g.RevokedAtUtc, Convert.ToBase64String(g.RowVersion));
 }

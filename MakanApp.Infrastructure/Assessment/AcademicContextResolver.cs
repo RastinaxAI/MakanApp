@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Assessment;
 
 public sealed class AcademicContextResolver(MakanDbContext db, IAccountOperationContextResolver accounts,
-    IAccessContextResolver organizations) : IAcademicContextResolver
+    IAccessContextResolver organizations, PersonalClassAcademicFeatures features) : IAcademicContextResolver
 {
     public async Task<AcademicAccessContext> RevalidateAsync(AcademicAccessContext context, CancellationToken ct)
     {
@@ -76,6 +76,8 @@ public sealed class AcademicContextResolver(MakanDbContext db, IAccountOperation
         var member = await db.PersonalClassParticipants.AsNoTracking()
             .SingleOrDefaultAsync(m => m.PersonalClassId == resource.ClassId && m.StudentUserId == userId && m.EndedAtUtc == null, ct)
             ?? throw Missing(kind);
+        // ابتدا مالکیت/عضویت اثبات می‌شود تا پاسخ Gate وجود منبع خصوصی را برای فرد نامرتبط افشا نکند.
+        features.EnsureResource(kind, operation);
         var capabilities = await PersonalClassAcademicAccessQuery.Effective(db, resource.ClassId)
             .Where(g => g.MembershipId == member.Id).Select(g => (PersonalClassAcademicCapabilities?)g.Capabilities)
             .SingleOrDefaultAsync(ct) ?? PersonalClassAcademicCapabilities.None;

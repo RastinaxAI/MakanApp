@@ -1,20 +1,25 @@
 using MakanApp.Application.Notification;
+using MakanApp.Application.Assessment;
+using MakanApp.Domain.Notification;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using DomainNotification = MakanApp.Domain.Notification.Notification;
 
 namespace MakanApp.Infrastructure.Notification;
 
-public sealed class EfNotificationStore(MakanDbContext dbContext) : INotificationStore
+public sealed class EfNotificationStore(MakanDbContext dbContext, PersonalClassAcademicFeatures features, ProductNotificationAccess resourceAccess) : INotificationStore
 {
+    private IQueryable<DomainNotification> Visible(Guid userId) => dbContext.Notifications.Where(n =>
+        n.RecipientUserId == userId && (n.OrganizationId != null ||
+            (features.AssignmentsEnabled || n.ResourceType != NotificationResourceType.Assignment && n.ResourceType != NotificationResourceType.SubmissionAttempt) &&
+            (features.ExamsEnabled || n.ResourceType != NotificationResourceType.Exam && n.ResourceType != NotificationResourceType.ExamAttempt)));
+
     public async Task<(IReadOnlyCollection<NotificationItem> Items, int TotalCount)> GetPageAsync(
         Guid userId,
         NotificationQuery query,
         CancellationToken cancellationToken)
     {
-        var filtered = dbContext.Notifications
-            .AsNoTracking()
-            .Where(notification => notification.RecipientUserId == userId);
+        var filtered = (await resourceAccess.FilterAsync(Visible(userId), userId, cancellationToken)).AsNoTracking();
         if (query.UnreadOnly)
         {
             filtered = filtered.Where(notification => notification.ReadAtUtc == null);
@@ -51,12 +56,12 @@ public sealed class EfNotificationStore(MakanDbContext dbContext) : INotificatio
         return (items, totalCount);
     }
 
-    public Task<int> GetUnreadCountAsync(
+    public async Task<int> GetUnreadCountAsync(
         Guid userId,
         Guid? organizationId,
         CancellationToken cancellationToken)
     {
-        var query = dbContext.Notifications
+        var query = (await resourceAccess.FilterAsync(Visible(userId), userId, cancellationToken))
             .AsNoTracking()
             .Where(notification =>
                 notification.RecipientUserId == userId && notification.ReadAtUtc == null);
@@ -65,14 +70,14 @@ public sealed class EfNotificationStore(MakanDbContext dbContext) : INotificatio
             query = query.Where(notification => notification.OrganizationId == organizationId.Value);
         }
 
-        return query.CountAsync(cancellationToken);
+        return await query.CountAsync(cancellationToken);
     }
 
-    public Task<DomainNotification?> GetForUpdateAsync(
+    public async Task<DomainNotification?> GetForUpdateAsync(
         Guid notificationId,
         Guid userId,
         CancellationToken cancellationToken) =>
-        dbContext.Notifications.SingleOrDefaultAsync(
+        await (await resourceAccess.FilterAsync(Visible(userId), userId, cancellationToken)).SingleOrDefaultAsync(
             notification => notification.Id == notificationId &&
                             notification.RecipientUserId == userId,
             cancellationToken);

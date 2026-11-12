@@ -24,6 +24,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         });
         builder.HasKey(user => user.Id);
         builder.Property(user => user.Username).HasMaxLength(32);
+        builder.Property(user => user.Bio).HasMaxLength(User.MaximumBioLength);
         builder.Property(user => user.NormalizedUsername).HasMaxLength(32);
         builder.Property(user => user.CreatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.UpdatedAtUtc).HasColumnType("datetime2(7)");

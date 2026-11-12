@@ -34,7 +34,7 @@ public sealed class PersonalClassV2MigrationTests(MakanAppWebApplicationFactory 
             if (withBaseline)
             {
                 await migrator.MigrateAsync("20261101202642_ExpandMessagingAccountPolicyAndMedia");
-                db.Users.AddRange(host, learner); await db.SaveChangesAsync();
+                await LegacyAcademicMigrationFixture.InsertAsync(db, host); await LegacyAcademicMigrationFixture.InsertAsync(db, learner);
                 await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [academic].[PersonalClasses] ([Id],[HostUserId],[Title],[ClientOperationId],[CreatedAtUtc],[ArchivedAtUtc]) VALUES ({classId},{host.Id},N'قدیمی',{operation},{now},NULL),({archivedId},{host.Id},N'بایگانی',{Guid.NewGuid()},{now},{now})");
                 await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [academic].[PersonalClassInvitations] ([Id],[PersonalClassId],[DestinationUserId],[ClientOperationId],[CreatedAtUtc],[ExpiresAtUtc],[AcceptedAtUtc],[RevokedAtUtc]) VALUES ({inviteId},{classId},{learner.Id},{Guid.NewGuid()},{now},{expires},{now},NULL)");
                 await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [academic].[PersonalClassParticipants] ([Id],[PersonalClassId],[StudentUserId],[InvitationId],[JoinedAtUtc],[EndedAtUtc]) VALUES ({participantId},{classId},{learner.Id},{inviteId},{now},NULL)");

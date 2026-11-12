@@ -15,12 +15,14 @@ public interface IPersonalAcademicReadStore
     Task<AcademicPage<ExamSummaryRecord>> ExamsAsync(AcademicAccessContext access, AcademicListQuery query, CancellationToken ct);
 }
 
-public sealed class PersonalAcademicReadService(IAcademicContextResolver contexts, IPersonalAcademicReadStore store)
+public sealed class PersonalAcademicReadService(IAcademicContextResolver contexts, IPersonalAcademicReadStore store,
+    PersonalClassAcademicFeatures features)
 {
     public async Task<AcademicPage<AssignmentResult>> AssignmentsAsync(Guid userId, Guid sessionId, Guid classId, AcademicListQuery query, CancellationToken ct)
     {
         Validate(query);
         var access = await contexts.ResolveAsync(userId, sessionId, AcademicResourceKind.PersonalClass, classId, AcademicOperation.Read, false, ct);
+        features.EnsureAssignments();
         if (!access.IsLocalLearner && !access.Has(PersonalClassAcademicCapabilities.AuthorAssignments) && !access.Has(PersonalClassAcademicCapabilities.Grade)) throw Denied();
         var page = await store.AssignmentsAsync(access, query, ct);
         return new(page.Items.Select(r => AssignmentService.ToResult(r.Assignment, r.Version, r.ClassTitle)).ToArray(), page.Page, page.PageSize, page.Total);
@@ -30,6 +32,7 @@ public sealed class PersonalAcademicReadService(IAcademicContextResolver context
     {
         Validate(query);
         var access = await contexts.ResolveAsync(userId, sessionId, AcademicResourceKind.PersonalClass, classId, AcademicOperation.Read, false, ct);
+        features.EnsureExams();
         if (!access.IsLocalLearner && !access.Has(PersonalClassAcademicCapabilities.AuthorExams) && !access.Has(PersonalClassAcademicCapabilities.Grade)) throw Denied();
         var page = await store.ExamsAsync(access, query, ct);
         return new(page.Items.Select(ExamService.ToSummary).ToArray(), page.Page, page.PageSize, page.Total);

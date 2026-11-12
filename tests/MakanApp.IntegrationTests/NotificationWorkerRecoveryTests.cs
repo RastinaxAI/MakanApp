@@ -254,7 +254,7 @@ public sealed class NotificationWorkerRecoveryTests(WorkerRecoverySqlFixture sql
         INotificationPreferenceResolver? preference = null, TimeSpan? providerTimeout = null) =>
         new(db, provider, new UnavailableNotificationSmsProvider(), preference ?? new CallbackPreference(), new UnusedPrivacyResolver(),
             new NotificationDeliveryOptions { BatchSize = batchSize, ProviderTimeout = providerTimeout ?? TimeSpan.FromSeconds(10) },
-            _clock, sql.Telemetry, NullLogger<NotificationDeliveryProcessor>.Instance);
+            _clock, sql.Telemetry, NullLogger<NotificationDeliveryProcessor>.Instance, new() { AssignmentsEnabled = true, ExamsEnabled = true });
 
     private async Task<Guid[]> SeedAsync(int count, bool exhaustedFirst = false, bool organizationScope = false)
     {

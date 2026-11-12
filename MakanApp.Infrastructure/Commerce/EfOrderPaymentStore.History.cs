@@ -19,7 +19,7 @@ public sealed partial class EfOrderPaymentStore
         attempt.RecordCallback(receivedAtUtc);
         dbContext.PaymentAttemptEvents.Add(PaymentAttemptEvent.Create(attemptId, PaymentAttemptEventType.CallbackReceived,
             receivedAtUtc, providerStatus: reportedStatus, correlationId: correlationId));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 

@@ -14,7 +14,7 @@ namespace MakanApp.Infrastructure.Platform;
 public sealed class EfPlatformOperationsStore(
     MakanDbContext dbContext,
     TimeProvider timeProvider,
-    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IPlatformOperationsStore
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IPlatformOperationsStore
 {
     public async Task<PlatformOrganizationPage> GetOrganizationsAsync(
         PlatformOrganizationQuery query,
@@ -181,7 +181,7 @@ public sealed class EfPlatformOperationsStore(
                 organization.Status.ToString(),
                 cancellationToken));
             if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -285,7 +285,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             $"user={command.UserId:D};role={command.Role}",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return MapInvitation(invitation, false);
     }
@@ -352,7 +352,7 @@ public sealed class EfPlatformOperationsStore(
             command.ToRole.ToString(),
             cancellationToken));
         if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlatformMembershipMutationResult(
             await GetMembershipItemAsync(membershipId, cancellationToken),
@@ -404,7 +404,7 @@ public sealed class EfPlatformOperationsStore(
             "Ended",
             cancellationToken));
         if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlatformMembershipMutationResult(
             await GetMembershipItemAsync(membershipId, cancellationToken),
@@ -650,7 +650,7 @@ public sealed class EfPlatformOperationsStore(
             active ? "Suspended" : "Active",
             active ? "Active" : $"Suspended;sessionsRevoked={revokedSessions}",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new PlatformUserMutationResult(
             user.Id,
@@ -704,7 +704,7 @@ public sealed class EfPlatformOperationsStore(
                 null,
                 $"user={userId:D};revoked={revoked}",
                 cancellationToken));
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -760,7 +760,7 @@ public sealed class EfPlatformOperationsStore(
             if (existing.Status == PlatformProvisioningStatus.NeedsAttention)
             {
                 existing.Resume(actor.OccurredAtUtc);
-                await dbContext.SaveChangesAsync(cancellationToken);
+                if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);
@@ -790,7 +790,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             $"clientOperationId={command.ClientOperationId}",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         var requestId = request.Id;
         dbContext.ChangeTracker.Clear();
@@ -827,7 +827,7 @@ public sealed class EfPlatformOperationsStore(
             $"name={organization.Name}",
             cancellationToken));
         if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
     }
@@ -889,7 +889,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             $"planVersionId={planVersionId:D};status=Active",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
     }
@@ -946,7 +946,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             $"user={managerUserId:D};role=Manager",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
     }
@@ -976,7 +976,7 @@ public sealed class EfPlatformOperationsStore(
             null,
             "status=Completed",
             cancellationToken));
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         dbContext.ChangeTracker.Clear();
     }
@@ -1003,7 +1003,7 @@ public sealed class EfPlatformOperationsStore(
                 null,
                 $"status=NeedsAttention;failureCode={failureCode}",
                 cancellationToken));
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

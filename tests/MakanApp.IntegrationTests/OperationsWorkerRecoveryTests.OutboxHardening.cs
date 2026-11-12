@@ -116,7 +116,7 @@ public sealed partial class OperationsWorkerRecoveryTests
                 return Task.FromException(new IOException("synthetic-expired-owner-private-marker"));
             });
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                new OutboxProcessor(db, coordinator, new NoopSubscriptionActivation(), _clock, sql.Telemetry, logs)
+                new OutboxProcessor(db, coordinator, new NoopSubscriptionActivation(), _clock, sql.Telemetry, logs, academicFeatures: new() { AssignmentsEnabled = true, ExamsEnabled = true })
                     .DispatchBatchAsync(caller.Token));
         }
         var pending = Assert.Single(await ReadOutboxAsync([id]));
@@ -144,7 +144,7 @@ public sealed partial class OperationsWorkerRecoveryTests
             {
                 fault.Armed = true;
                 return Task.CompletedTask;
-            }), new NoopSubscriptionActivation(), _clock, sql.Telemetry, logs).DispatchBatchAsync(CancellationToken.None));
+            }), new NoopSubscriptionActivation(), _clock, sql.Telemetry, logs, academicFeatures: new() { AssignmentsEnabled = true, ExamsEnabled = true }).DispatchBatchAsync(CancellationToken.None));
         Assert.True(fault.Thrown);
         Assert.NotNull(Assert.Single(await ReadOutboxAsync([id])).ProcessedAtUtc);
         Assert.Equal(0, await RunOutboxAsync(new CallbackCoordinator()));
@@ -173,7 +173,7 @@ public sealed partial class OperationsWorkerRecoveryTests
         var observer = new OutboxScalarDedupObserver();
         await using (var db = sql.CreateDb(observer))
             Assert.Equal(1, await new OutboxProcessor(db, new CallbackCoordinator(), new NoopSubscriptionActivation(), _clock,
-                sql.Telemetry, NullLogger<OutboxProcessor>.Instance).DispatchBatchAsync(CancellationToken.None));
+                sql.Telemetry, NullLogger<OutboxProcessor>.Instance, academicFeatures: new() { AssignmentsEnabled = true, ExamsEnabled = true }).DispatchBatchAsync(CancellationToken.None));
         var command = Assert.Single(observer.Commands);
         Assert.Contains("EXISTS", command, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("[RecipientUserId]", command, StringComparison.Ordinal);

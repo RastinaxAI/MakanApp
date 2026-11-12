@@ -20,6 +20,13 @@ public sealed class PlatformRolePermissionConfiguration : IEntityTypeConfigurati
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasData(
+            Owner(PlatformCatalogIds.SchoolApplicationsReadPermission),
+            Owner(PlatformCatalogIds.SchoolApplicationsReviewPermission),
+            Owner(PlatformCatalogIds.SupportReadPermission),
+            Owner(PlatformCatalogIds.SupportManagePermission),
+            Owner(PlatformCatalogIds.PrivacyRequestsReadPermission),
+            Mapping(PlatformCatalogIds.SupportRole, PlatformCatalogIds.SupportReadPermission),
+            Mapping(PlatformCatalogIds.SupportRole, PlatformCatalogIds.SupportManagePermission),
             Owner(PlatformCatalogIds.AccessPermission),
             Owner(PlatformCatalogIds.RolesReadPermission),
             Owner(PlatformCatalogIds.RolesManagePermission),

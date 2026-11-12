@@ -163,7 +163,8 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         else
         {
             Assert.IsType<UnavailableOtpDeliveryProvider>(provider.GetRequiredService<IOtpDeliveryProvider>());
-            Assert.DoesNotContain(builder.Services, item => item.ServiceType == typeof(MeliPayamakOtpOptions));
+            // Login Mock همچنان unavailable است؛ تغییر شماره با تنظیم معتبر، adapter واقعی مستقل دارد.
+            Assert.IsType<MeliPayamakOtpProvider>(provider.GetRequiredKeyedService<IOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey));
         }
         Assert.NotNull(configuration.GetSection(MeliPayamakOtpOptions.SectionName).Get<MeliPayamakOtpOptions>());
         using var scope = provider.CreateScope();

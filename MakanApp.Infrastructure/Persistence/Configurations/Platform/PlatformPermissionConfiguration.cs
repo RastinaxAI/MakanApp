@@ -17,6 +17,11 @@ public sealed class PlatformPermissionConfiguration : IEntityTypeConfiguration<P
             .HasDatabaseName("UX_PlatformPermissions_Key");
 
         builder.HasData(
+            Permission(PlatformCatalogIds.SchoolApplicationsReadPermission, PlatformPermissionKeys.SchoolApplicationsRead, "مشاهدهٔ درخواست تأسیس آموزشگاه"),
+            Permission(PlatformCatalogIds.SchoolApplicationsReviewPermission, PlatformPermissionKeys.SchoolApplicationsReview, "بررسی درخواست تأسیس آموزشگاه"),
+            Permission(PlatformCatalogIds.SupportReadPermission, PlatformPermissionKeys.SupportRead, "مشاهدهٔ پرونده‌های پشتیبانی"),
+            Permission(PlatformCatalogIds.SupportManagePermission, PlatformPermissionKeys.SupportManage, "پاسخ و مدیریت پروندهٔ پشتیبانی"),
+            Permission(PlatformCatalogIds.PrivacyRequestsReadPermission, PlatformPermissionKeys.PrivacyRequestsRead, "مشاهدهٔ وضعیت درخواست‌های حریم خصوصی"),
             Permission(PlatformCatalogIds.AccessPermission, PlatformPermissionKeys.Access, "Access platform backoffice"),
             Permission(PlatformCatalogIds.RolesReadPermission, PlatformPermissionKeys.RolesRead, "Read platform role catalog and assignments"),
             Permission(PlatformCatalogIds.RolesManagePermission, PlatformPermissionKeys.RolesManage, "Manage platform role assignments"),

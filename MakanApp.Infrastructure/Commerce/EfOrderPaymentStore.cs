@@ -15,7 +15,7 @@ public sealed partial class EfOrderPaymentStore(
     IOutbox outbox,
     EfCommercialStore commerce,
     Microsoft.Extensions.Options.IOptions<CommercialOptions> commercialOptions,
-    ILogger<EfOrderPaymentStore> logger) : IOrderPaymentStore
+    ILogger<EfOrderPaymentStore> logger, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IOrderPaymentStore
 {
     public async Task<CreateOrderStoreResult> CreateOrderAsync(
         Guid purchaserUserId,
@@ -74,7 +74,7 @@ public sealed partial class EfOrderPaymentStore(
             order.MarkPaid(createdAtUtc);
             outbox.Enqueue(SubscriptionActivationOutboxContract.Create(order.Id, order.OrganizationId, order.PlanVersionId, createdAtUtc, order.PurchaserUserId));
         }
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         var created = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         logger.LogInformation(
@@ -208,7 +208,7 @@ public sealed partial class EfOrderPaymentStore(
             createdAtUtc);
         dbContext.PaymentAttempts.Add(attempt);
         AddEvent(attempt.Id, PaymentAttemptEventType.Created, createdAtUtc);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         var createdOrder = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         logger.LogInformation(
@@ -244,7 +244,7 @@ public sealed partial class EfOrderPaymentStore(
         var claimed = attempt.TryClaimInitiation(claimToken, nowUtc, claimedUntilUtc);
         if (claimed || before != attempt.Status)
             AddEvent(attempt.Id, claimed ? PaymentAttemptEventType.InitiationStarted : PaymentAttemptEventType.InitiationUncertain, nowUtc);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return claimed;
     }
@@ -287,7 +287,7 @@ public sealed partial class EfOrderPaymentStore(
                 occurredAtUtc);
             AddEvent(attempt.Id, PaymentAttemptEventType.InitiationCompleted, occurredAtUtc, providerResult.ProviderResult,
                 errorCode: CommerceErrorCodes.PaymentReferenceConflict);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
             var conflictOrder = await dbContext.Orders.SingleAsync(
                 order => order.Id == attempt.OrderId,
                 cancellationToken);
@@ -336,7 +336,7 @@ public sealed partial class EfOrderPaymentStore(
         }
 
         AddEvent(attempt.Id, PaymentAttemptEventType.InitiationCompleted, occurredAtUtc, providerResult.ProviderResult, errorCode: attempt.FailureCode);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         var order = await dbContext.Orders.SingleAsync(
             item => item.Id == attempt.OrderId,
             cancellationToken);
@@ -405,7 +405,7 @@ public sealed partial class EfOrderPaymentStore(
             attempt.Status == PaymentAttemptStatus.Succeeded && order.Status == OrderStatus.Paid)
         {
             AddEvent(attempt.Id, PaymentAttemptEventType.SettlementReplayed, verifiedAtUtc);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
             var existingSnapshot = await CreateSnapshotAsync(order, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             logger.LogInformation(
@@ -543,7 +543,7 @@ public sealed partial class EfOrderPaymentStore(
     {
         AddEvent(attempt.Id, PaymentAttemptEventType.VerificationCompleted, occurredAtUtc,
             errorCode: attempt.FailureCode);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        productNotifications?.CapturePaidOrders(); await dbContext.SaveChangesAsync(cancellationToken);
         var snapshot = await CreateSnapshotAsync(order, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         if (status is RecordPaymentVerificationStoreStatus.AmountMismatch or

@@ -17,7 +17,7 @@ public sealed class KnowledgeProcessingProjection(EducationalSourceService sourc
         var identity = new KnowledgeSourceVersion(id, source.Revision);
         var status = await knowledge.StatusAsync(user, session, identity, false, correlation, ct);
         var context = await authorization.ResolveAsync(user, session, [identity], null, ct);
-        var quota = await commerce.PreflightAsync(user, session, context.Commerce, ct);
+        var quota = await commerce.PreflightForAssistantAsync(user, session, context.Commerce, context.Actor.Organization ?? context.Actor.Account, ct);
         var current = await sources.GetAsync(user, session, id, source.Revision, ct);
         var processing = status.State switch
         {

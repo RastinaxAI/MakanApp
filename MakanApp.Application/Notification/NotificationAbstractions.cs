@@ -24,6 +24,7 @@ public interface INotificationStore
 
 public interface INotificationService
 {
+    Task<NotificationTargetResult> ResolveTargetAsync(Guid userId, Guid sessionId, Guid notificationId, CancellationToken ct);
     Task<NotificationPage> GetPageAsync(
         Guid userId,
         NotificationQuery query,
@@ -38,4 +39,10 @@ public interface INotificationService
         Guid userId,
         Guid notificationId,
         CancellationToken cancellationToken);
+}
+
+public sealed record NotificationTargetResult(string Kind, Guid ResourceId, string ApiRoute, Guid? RequiredOrganizationId);
+public interface INotificationTargetResolver
+{
+    Task<NotificationTargetResult?> ResolveAsync(Guid user, Guid session, Domain.Notification.Notification notification, CancellationToken ct);
 }

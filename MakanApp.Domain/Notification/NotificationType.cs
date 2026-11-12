@@ -8,5 +8,10 @@ public enum NotificationType
     ExamGradeReleased = 4,
     MessageReceived = 5,
     MessageReply = 6,
-    MessageMention = 7
+    MessageMention = 7,
+    OrganizationInvitation = 8,
+    MembershipChanged = 9,
+    OrderPaid = 10,
+    SupportUpdated = 11,
+    SchoolApplicationUpdated = 12
 }

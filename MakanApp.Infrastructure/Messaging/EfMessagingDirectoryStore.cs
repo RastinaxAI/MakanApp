@@ -398,7 +398,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 user.CommunicationAgeCategory != CommunicationAgeCategory.Adult ||
                 user.CommunicationAgeVerificationStatus != CommunicationAgeVerificationStatus.Verified,
                 file != null && file.UploadedByUserId == user.Id
-                    ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null))
+                    ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null,
+                user.Bio))
             .ToArrayAsync(cancellationToken);
         var validUserIds = identities.Select(identity => identity.UserId).ToArray();
         if (validUserIds.Length == 0)
@@ -453,7 +454,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
                 blockedUserIds.Contains(identity.UserId),
                 identity.IsProtected,
                 requesterCanMessage,
-                identity.ProfilePhoto);
+                identity.ProfilePhoto,
+                identity.Bio);
         }
 
         return result;
@@ -499,7 +501,8 @@ public sealed class EfMessagingDirectoryStore(MakanDbContext dbContext, TimeProv
         string DisplayName,
         string? NormalizedPhoneNumber,
         bool IsProtected,
-        MakanApp.Application.Identity.ProfilePhotoResult? ProfilePhoto);
+        MakanApp.Application.Identity.ProfilePhotoResult? ProfilePhoto,
+        string? Bio);
 
     private sealed record RecentRow(Guid UserId, DateTime LastActivityAtUtc);
 }

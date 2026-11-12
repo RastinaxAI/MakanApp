@@ -37,7 +37,11 @@ public sealed record AccessContext(
     Guid? OrganizationId,
     Guid? MembershipId,
     OrganizationRole? ActiveRole,
-    Guid? SubjectOrganizationPersonId);
+    Guid? SubjectOrganizationPersonId)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Guid? AssistantClassId { get; init; }
+}
 
 public sealed record InvitationResult(
     Guid Id,

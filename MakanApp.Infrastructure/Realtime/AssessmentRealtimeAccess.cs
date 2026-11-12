@@ -45,7 +45,8 @@ public sealed class AssessmentRealtimeAccess(IAssignmentService assignments, IEx
             }
             return true;
         }
-        catch (Exception e) when (e is AssessmentException or OrganizationException or GuardianException or IdentityException) { return false; }
+        catch (Exception e) when (e is AssessmentException or OrganizationException or GuardianException or IdentityException ||
+            e is MakanApp.Application.Commerce.CommerceException commerce && commerce.Code == MakanApp.Application.Commerce.CommerceErrorCodes.FeatureNotEntitled) { return false; }
     }
 
     private async Task<bool> PersonalAsync(AccessContext c, InvalidationEnvelope item, Guid id, CancellationToken ct)

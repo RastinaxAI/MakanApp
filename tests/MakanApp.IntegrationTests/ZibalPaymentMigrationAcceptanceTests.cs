@@ -63,7 +63,7 @@ public sealed class ZibalPaymentMigrationAcceptanceTests(MakanAppWebApplicationF
         var version = PlanVersion.CreateDraft(plan.Id, 1, now);
         version.SetMonthlyTerms(BillingCalendar.Gregorian, "migration-acceptance", null, null);
         version.SetEntitlement(EntitlementKey.Messaging, false); version.SetPrice(1000, CurrencyCode.Irr); version.Publish(now);
-        db.Users.Add(user); db.Organizations.Add(organization); db.Plans.Add(plan); db.PlanVersions.Add(version);
+        await LegacyAcademicMigrationFixture.InsertAsync(db, user); db.Organizations.Add(organization); db.Plans.Add(plan); db.PlanVersions.Add(version);
         await db.SaveChangesAsync();
         var orderId = Guid.NewGuid(); var attemptId = Guid.NewGuid(); var paymentId = Guid.NewGuid();
         var operation = Guid.NewGuid(); var reference = "legacy-" + paymentId.ToString("N"); var hash = new byte[32];
@@ -99,7 +99,9 @@ public sealed class ZibalPaymentMigrationAcceptanceTests(MakanAppWebApplicationF
         Assert.Null(attempt.SettlementReference); Assert.Null(attempt.ProviderPaidAtUtc); Assert.Null(attempt.CallbackReceivedAtUtc);
         Assert.Equal(0, await db.PaymentAttemptEvents.CountAsync());
         Assert.Equal(1, await db.Orders.CountAsync()); Assert.Equal(1, await db.Payments.CountAsync()); Assert.Equal(1, await db.PaymentAttempts.CountAsync());
-        Assert.Equal(65, (await db.Database.GetAppliedMigrationsAsync()).Count()); Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+        Assert.Equal(65, (await db.Database.GetAppliedMigrationsAsync()).Count());
+        // ??? ???? ????? ?? ?????? Zibal ????????? migration??? v6 ???? ???? pending ?????.
+        Assert.Equal(db.Database.GetMigrations().SkipWhile(m => m != Target).Skip(1), await db.Database.GetPendingMigrationsAsync());
         Assert.False(db.Database.HasPendingModelChanges());
         Assert.Equal(2, Convert.ToInt32(await ScalarAsync(db, """
             SELECT COUNT(*) FROM sys.columns c JOIN sys.tables t ON c.object_id=t.object_id

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -14,8 +15,17 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class NotificationEndpointsTests(MakanAppWebApplicationFactory factory)
+public sealed class NotificationEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
 {
+    // ??? fixture ??????? engine ??????? ????? ?? ?? ????????? ???? ?????????.
+    public Task InitializeAsync() { SetAcademicFeatures(true); return Task.CompletedTask; }
+    public Task DisposeAsync() { SetAcademicFeatures(false); return Task.CompletedTask; }
+    private void SetAcademicFeatures(bool enabled)
+    {
+        var features = factory.Services.GetRequiredService<MakanApp.Application.Assessment.PersonalClassAcademicFeatures>();
+        features.AssignmentsEnabled = enabled; features.ExamsEnabled = enabled;
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 9700000;
 

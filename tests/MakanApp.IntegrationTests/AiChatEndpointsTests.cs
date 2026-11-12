@@ -25,7 +25,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     private static int _phoneSequence = 9_100_000;
 
     [Fact]
-    public async Task ParentSummary_MultipleChildren_OnlySelectedChildEducationalDataIsProjected()
+    public async Task ParentSummary_MultipleChildren_OnlyExplicitAssistantChildEducationalDataIsProjected()
     {
         using var client = factory.CreateClient();
         var user = await CreateAuthenticatedUserAsync(client);
@@ -53,6 +53,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
         {
             using var selected = await client.PostAsync($"/api/v1/guardian/children/{child}/select", null);
             selected.EnsureSuccessStatusCode();
+            await SelectAssistantFromWorkspaceAsync(client);
             using var response = await client.PostAsync("/api/v1/ai/parents/child-summary", null);
             response.EnsureSuccessStatusCode();
             var request = Assert.IsType<AiParentChildSummaryRequest>(factory.AiService.LastRoleRequest);
@@ -89,7 +90,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     }
 
     [Fact]
-    public async Task TeacherSummary_MultipleSchools_ReResolvesWorkspaceAndClassOnEveryRequest()
+    public async Task TeacherSummary_MultipleSchools_RevalidatesExplicitAssistantSelectionAndClassOnEveryRequest()
     {
         using var client = factory.CreateClient();
         var user = await CreateAuthenticatedUserAsync(client);
@@ -111,6 +112,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
         })
         {
             await SelectWorkspaceAsync(client, item.Membership, OrganizationRole.Teacher);
+            await SelectAssistantFromWorkspaceAsync(client);
             using var response = await client.PostAsync($"/api/v1/ai/teachers/classes/{item.Class}/summary", null);
             response.EnsureSuccessStatusCode();
             var request = Assert.IsType<AiTeacherClassSummaryRequest>(factory.AiService.LastRoleRequest);
@@ -543,7 +545,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     }
 
     [Fact]
-    public async Task Chat_MultiOrganizationScope_FollowsServerSelectedWorkspaceOnly()
+    public async Task Chat_MultiOrganizationScope_FollowsExplicitAssistantSelectionOnly()
     {
         using var client = factory.CreateClient();
         var user = await CreateAuthenticatedUserAsync(client);
@@ -566,6 +568,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
             factory.AiService.LastRequest?.Scope.OrganizationId);
 
         await SelectWorkspaceAsync(client, membershipB.MembershipId, OrganizationRole.Manager);
+        await SelectAssistantFromWorkspaceAsync(client);
         using var responseB = await client.PostAsJsonAsync(
             "/api/v1/ai/chat",
             new SendAiChatCommand("سازمان جاری", null),
@@ -742,5 +745,16 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     {
         factory.AiService.Reset();
         return Task.CompletedTask;
+    }
+    private static async Task SelectAssistantFromWorkspaceAsync(HttpClient client)
+    {
+        var workspace = (await client.GetFromJsonAsync<AccessContext>("/api/v1/workspaces/current", JsonOptions))!;
+        using var existing = await client.GetAsync("/api/v1/ai/assistant-context");
+        existing.EnsureSuccessStatusCode();
+        var previous = existing.StatusCode == HttpStatusCode.NoContent ? null : await existing.Content.ReadFromJsonAsync<AssistantContextResult>(JsonOptions);
+        using var selected = await client.PutAsJsonAsync("/api/v1/ai/assistant-context",
+            new SelectAssistantContextCommand(MakanApp.Domain.Intelligence.AssistantDataContextKind.Organization, Guid.NewGuid(),
+                workspace.MembershipId, workspace.ActiveRole, workspace.SubjectOrganizationPersonId, ExpectedVersion: previous?.Version), JsonOptions);
+        selected.EnsureSuccessStatusCode();
     }
 }

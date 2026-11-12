@@ -41,6 +41,16 @@ public sealed class CommercialSubscriptionService(IAccessContextResolver accessR
         return await store.ReserveAsync(context, command.OperationId, command.PayloadHash, Now(), cancellationToken);
     }
 
+    // فقط use case داخلیِ Assistant، زمینهٔ resolveشده و دوباره‌مجازشدهٔ خودش را تحویل می‌دهد.
+    internal async Task<UsageReservationDto> ReserveForAssistantAsync(Guid userId, Guid sessionId, ReserveUsageCommand command, AccessContext authorized, CancellationToken ct)
+    {
+        if (command.OperationId == Guid.Empty || command.PayloadHash is not { Length: 32 }) throw Invalid();
+        var context = await ResolveContextAsync(userId, sessionId, command.Context, ct, authorized);
+        return await store.ReserveAsync(context, command.OperationId, command.PayloadHash, Now(), ct);
+    }
+    internal async Task<AiQuotaPreflightDto> PreflightForAssistantAsync(Guid userId, Guid sessionId, AiQuotaPreflightCommand command, AccessContext authorized, CancellationToken ct) =>
+        await store.PreflightAsync(await ResolveContextAsync(userId, sessionId, command, ct, authorized), Now(), ct);
+
     // این port داخلی فقط نتیجهٔ قطعی مجری را ثبت می‌کند و endpoint عمومی ندارد.
     public Task<UsageReservationDto> FinalizeAsync(Guid consumerUserId, Guid reservationId, UsageReservationStatus status,
         string reasonCode, CancellationToken cancellationToken) =>
@@ -55,14 +65,15 @@ public sealed class CommercialSubscriptionService(IAccessContextResolver accessR
             command, userId, sessionId, Now(), cancellationToken);
     }
 
-    private async Task<CommercialContext> ResolveContextAsync(Guid userId, Guid sessionId, AiQuotaPreflightCommand command, CancellationToken cancellationToken)
+    private async Task<CommercialContext> ResolveContextAsync(Guid userId, Guid sessionId, AiQuotaPreflightCommand command, CancellationToken cancellationToken, AccessContext? assistant = null)
     {
         await actors.EnsureAsync(userId, sessionId, cancellationToken);
+        if (assistant is not null && (assistant.UserId != userId || assistant.ActorId != userId || assistant.SessionId != sessionId)) throw Denied();
         if (!Enum.IsDefined(command.ContextType) || command.Payer.HasValue && !Enum.IsDefined(command.Payer.Value)) throw Invalid();
         Guid contextId;
         if (command.ContextType == CommerceContextType.Organization)
         {
-            var actor = await accessResolver.ResolveAsync(userId, sessionId, cancellationToken);
+            var actor = assistant ?? await accessResolver.ResolveAsync(userId, sessionId, cancellationToken);
             if (actor.WorkspaceType != WorkspaceType.Organization || actor.OrganizationId is null || actor.MembershipId is null
                 || actor.OrganizationId != command.ContextId) throw Denied();
             contextId = actor.OrganizationId.Value;

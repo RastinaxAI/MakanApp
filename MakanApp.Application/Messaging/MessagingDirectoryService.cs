@@ -305,7 +305,8 @@ public sealed class MessagingDirectoryService(
             record.IsSavedContact,
             record.IsFavorite,
             canStartDirect,
-            record.ProfilePhoto);
+            record.ProfilePhoto,
+            record.Bio);
     }
 
     private static MessagingPrivacySettingsResult MapPrivacy(

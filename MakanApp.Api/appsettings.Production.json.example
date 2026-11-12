@@ -1,4 +1,10 @@
 {
+  "Features": {
+    "PersonalClass": {
+      "AssignmentsEnabled": false,
+      "ExamsEnabled": false
+    }
+  },
   "Otp": {
     "Enabled": true,
     "AllowMockAuthentication": false

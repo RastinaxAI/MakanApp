@@ -14,9 +14,14 @@ namespace MakanApp.Infrastructure.Storage;
 
 public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbContext, TimeProvider clock, ISchoolReadStore schoolAccess,
     ISubmissionService submissions, ISubmissionStore submissionStore, IExamAttemptService examAttempts, IExamGradingStore grading,
-    MakanApp.Application.Knowledge.IEducationalSourceStore sources, IAcademicContextResolver academicContexts)
+    MakanApp.Application.Knowledge.IEducationalSourceStore sources, IAcademicContextResolver academicContexts,
+    MakanApp.Application.Platform.IPlatformPermissionResolver platformPermissions)
     : IFileAssetBoundAccessResolver
 {
+    public Task<bool> IsSupportTicketBoundAsync(Guid fileAssetId, CancellationToken ct) =>
+        dbContext.SupportTicketAttachments.AnyAsync(a => a.FileAssetId == fileAssetId, ct);
+    public Task<bool> IsSchoolApplicationBoundAsync(Guid fileAssetId, CancellationToken ct) =>
+        dbContext.SchoolApplicationDocuments.AnyAsync(d => d.FileAssetId == fileAssetId, ct);
     public Task<bool> IsEducationalSourceBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken);
     public Task<bool> IsProfilePhotoBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
@@ -30,6 +35,8 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
     public async Task<bool> IsBoundAsync(
         Guid fileAssetId,
         CancellationToken cancellationToken) =>
+        await IsSupportTicketBoundAsync(fileAssetId, cancellationToken) ||
+        await IsSchoolApplicationBoundAsync(fileAssetId, cancellationToken) ||
         await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await dbContext.AssignmentVersionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
         await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
@@ -52,6 +59,19 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         AccessContext accessContext,
         CancellationToken cancellationToken)
     {
+        // مدرک پرونده پیش از fallback مالک فایل، فقط با ACL جاری پرونده خوانده می‌شود.
+        if (await IsSchoolApplicationBoundAsync(fileAsset.Id, cancellationToken))
+        {
+            var applications = from document in dbContext.SchoolApplicationDocuments join app in dbContext.SchoolApplications on document.ApplicationId equals app.Id
+                               where document.FileAssetId == fileAsset.Id select app;
+            return await applications.AnyAsync(a => a.ApplicantUserId == accessContext.UserId, cancellationToken) ||
+                await applications.AnyAsync(a => a.Status != MakanApp.Domain.Organization.SchoolApplicationStatus.Draft, cancellationToken) &&
+                await platformPermissions.HasPermissionAsync(accessContext.UserId, MakanApp.Domain.Platform.PlatformPermissionKeys.SchoolApplicationsRead, cancellationToken);
+        }
+        if (await IsSupportTicketBoundAsync(fileAsset.Id, cancellationToken))
+            return await dbContext.SupportTicketAttachments.AnyAsync(a => a.FileAssetId == fileAsset.Id &&
+                dbContext.SupportTickets.Any(t => t.Id == a.TicketId && t.OwnerUserId == accessContext.UserId), cancellationToken) ||
+                await platformPermissions.HasPermissionAsync(accessContext.UserId, MakanApp.Domain.Platform.PlatformPermissionKeys.SupportRead, cancellationToken);
         if (await IsConversationPhotoBoundAsync(fileAsset.Id, cancellationToken))
             return fileAsset.Status == FileAssetStatus.Ready && fileAsset.ContentType is ("image/jpeg" or "image/png") &&
                 await AccountInboxAccessQuery.Conversations(dbContext, accessContext.UserId).AnyAsync(c => c.PhotoFileAssetId == fileAsset.Id, cancellationToken);

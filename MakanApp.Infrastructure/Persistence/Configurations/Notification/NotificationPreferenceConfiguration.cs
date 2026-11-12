@@ -12,7 +12,7 @@ public sealed class NotificationPreferenceConfiguration : IEntityTypeConfigurati
     {
         builder.ToTable("NotificationPreferences", "notification", table =>
         {
-            table.HasCheckConstraint("CK_NotificationPreferences_Category", "[Category] BETWEEN 1 AND 7");
+            table.HasCheckConstraint("CK_NotificationPreferences_Category", "[Category] BETWEEN 1 AND 8");
             table.HasCheckConstraint(
                 "CK_NotificationPreferences_QuietHours",
                 "([QuietHoursEnabled] = 0 AND [QuietHoursStartLocal] IS NULL AND [QuietHoursEndLocal] IS NULL AND [TimeZoneId] IS NULL) OR " +

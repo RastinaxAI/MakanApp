@@ -7,11 +7,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Assessment;
 
-public sealed class ExamDeadlineFinalizer(MakanDbContext db, IExamFinalizationStore finalization, TimeProvider clock)
+public sealed class ExamDeadlineFinalizer(MakanDbContext db, IExamFinalizationStore finalization, TimeProvider clock,
+    PersonalClassAcademicFeatures features)
     : IExamDeadlineFinalizer
 {
     public async Task FinalizeDueForExamAsync(Guid examId, Guid learnerUserId, CancellationToken ct)
     {
+        if (!features.ExamsEnabled) return;
         var now = clock.GetUtcNow().UtcDateTime;
         var ids = await db.ExamAttempts.AsNoTracking().Where(a => a.ExamId == examId &&
                 a.ContextKind == AcademicClassKind.PersonalClass && a.Status == ExamAttemptStatus.InProgress && a.EffectiveDeadlineUtc <= now &&
@@ -23,6 +25,7 @@ public sealed class ExamDeadlineFinalizer(MakanDbContext db, IExamFinalizationSt
 
     public async Task<bool> FinalizeDueAttemptAsync(Guid attemptId, CancellationToken ct)
     {
+        if (!features.ExamsEnabled) return false;
         var candidate = await (from a in db.ExamAttempts.AsNoTracking()
             join c in db.PersonalClasses on a.PersonalClassId equals c.Id
             where a.Id == attemptId && a.ContextKind == AcademicClassKind.PersonalClass

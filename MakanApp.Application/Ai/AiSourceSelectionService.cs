@@ -87,6 +87,11 @@ public sealed class AiSourceSelectionService(IAccountOperationContextResolver ac
                 classId = requested;
                 break;
         }
+        if (organization?.AssistantClassId is Guid selectedClass)
+        {
+            if (classId.HasValue && classId != selectedClass) throw AiSourceSelection.Error(AiSourceErrorCodes.ContextMismatch);
+            classId = selectedClass;
+        }
         return new(new SourceActor(userId, sessionId, account, organization), command.Operation, classId, command.AssignmentId);
     }
 }

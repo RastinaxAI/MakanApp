@@ -3687,6 +3687,51 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Identity.AccountDeletionRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PolicyStatus")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("RequestedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RequestedBySessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("RequestedBySessionId", "UserId");
+
+                    b.HasIndex("UserId", "ClientOperationId")
+                        .IsUnique();
+
+                    b.ToTable("AccountDeletionRequests", "identity", t =>
+                        {
+                            t.HasCheckConstraint("CK_AccountDeletionRequests_Policy", "[PolicyStatus] = N'PRODUCT_LEGAL_DECISION_REQUIRED'");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Identity.CommunicationAgeVerification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3836,6 +3881,99 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("Persons", "identity");
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Identity.PhoneChangeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varbinary(32)");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CredentialId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("CredentialVersion")
+                        .IsRequired()
+                        .HasColumnType("varbinary(8)");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxFailedAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte[]>("Salt")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varbinary(64)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("State")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetPhone")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CredentialId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_PhoneChangeRequests_PendingUser")
+                        .HasFilter("[State] IN (1, 2)");
+
+                    b.HasIndex("SessionId", "UserId");
+
+                    b.HasIndex("TargetPhone", "CreatedAtUtc");
+
+                    b.HasIndex("UserId", "ClientOperationId")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAtUtc");
+
+                    b.ToTable("PhoneChangeRequests", "identity", t =>
+                        {
+                            t.HasCheckConstraint("CK_PhoneChangeRequests_Attempts", "[FailedAttempts] >= 0 AND [MaxFailedAttempts] > 0 AND [FailedAttempts] <= [MaxFailedAttempts]");
+
+                            t.HasCheckConstraint("CK_PhoneChangeRequests_Completed", "([State] = 3 AND [CompletedAtUtc] IS NOT NULL) OR ([State] <> 3 AND [CompletedAtUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_PhoneChangeRequests_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
+
+                            t.HasCheckConstraint("CK_PhoneChangeRequests_Hash", "[State] IN (1,4) OR (DATALENGTH([CodeHash]) = 32 AND DATALENGTH([Salt]) >= 16)");
+
+                            t.HasCheckConstraint("CK_PhoneChangeRequests_State", "[State] IN (1,2,3,4)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3898,6 +4036,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("CommunicationAgeCategory")
                         .HasColumnType("int");
@@ -4063,6 +4205,67 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_UserSessions_User_Revoked_AbsoluteExpiry");
 
                     b.ToTable("UserSessions", "identity");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AssistantContextSelection", b =>
+                {
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ClassId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("LastClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("MembershipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("SelectedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SubjectOrganizationPersonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("SessionId");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("MembershipId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("SubjectOrganizationPersonId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SessionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AssistantContextSelections", "intelligence", t =>
+                        {
+                            t.HasCheckConstraint("CK_AssistantContextSelections_Kind", "[Kind] IN (1,2,3)");
+
+                            t.HasCheckConstraint("CK_AssistantContextSelections_Scope", "([Kind]=1 AND [OrganizationId] IS NULL AND [MembershipId] IS NULL AND [Role] IS NULL AND [SubjectOrganizationPersonId] IS NULL AND [ClassId] IS NULL) OR ([Kind]=2 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NULL) OR ([Kind]=3 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Knowledge.AiSourceSelectionOperation", b =>
@@ -4498,6 +4701,58 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.AddressBookEntry", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasManualName")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("LinkedAccountUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProtectedContent")
+                        .IsRequired()
+                        .HasMaxLength(16384)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ServerVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("OwnerUserId", "Id");
+
+                    b.HasIndex("LinkedAccountUserId");
+
+                    b.HasIndex("OwnerUserId", "ServerVersion")
+                        .IsUnique();
+
+                    b.ToTable("AddressBookEntries", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_AddressBookEntries_Tombstone", "[DeletedAtUtc] IS NULL OR ([ProtectedContent] = N'' AND [LinkedAccountUserId] IS NULL)");
+
+                            t.HasCheckConstraint("CK_AddressBookEntries_Version", "[ServerVersion] > 0");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.ChatFolder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4546,6 +4801,143 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("CK_ChatFolders_SortOrder", "[SortOrder] BETWEEN 0 AND 10000");
 
                             t.HasCheckConstraint("CK_ChatFolders_Types", "([IncludedTypes] & ~15) = 0 AND ([ExcludedTypes] & ~15) = 0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactDeviceBinding", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("ServerVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SourceRevision")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("OwnerUserId", "DeviceId", "EntryId");
+
+                    b.HasIndex("OwnerUserId", "EntryId");
+
+                    b.ToTable("ContactDeviceBindings", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ContactDeviceBindings_Versions", "[SourceRevision] > 0 AND [ServerVersion] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactPhone", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PhoneIndex")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("OwnerUserId", "EntryId", "PhoneIndex");
+
+                    b.HasIndex("OwnerUserId", "PhoneIndex");
+
+                    b.ToTable("ContactPhones", "messaging");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncDevice", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConsentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConsentVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("GrantedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("LastSourceRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<bool>("SyncEnabled")
+                        .HasColumnType("bit");
+
+                    b.HasKey("OwnerUserId", "DeviceId");
+
+                    b.ToTable("ContactSyncDevices", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ContactSyncDevices_Revision", "[LastSourceRevision] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncOperation", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Receipt")
+                        .IsRequired()
+                        .HasMaxLength(65536)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("OwnerUserId", "DeviceId", "ClientOperationId");
+
+                    b.ToTable("ContactSyncOperations", "messaging");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncState", b =>
+                {
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("ServerVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("OwnerUserId");
+
+                    b.ToTable("ContactSyncStates", "messaging", t =>
+                        {
+                            t.HasCheckConstraint("CK_ContactSyncStates_Version", "[ServerVersion] >= 0");
                         });
                 });
 
@@ -6751,9 +7143,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Notifications_ReadAt", "[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]");
 
-                            t.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)");
 
-                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7)");
+                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)");
                         });
                 });
 
@@ -6897,7 +7289,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("NotificationPreferences", "notification", t =>
                         {
-                            t.HasCheckConstraint("CK_NotificationPreferences_Category", "[Category] BETWEEN 1 AND 7");
+                            t.HasCheckConstraint("CK_NotificationPreferences_Category", "[Category] BETWEEN 1 AND 8");
 
                             t.HasCheckConstraint("CK_NotificationPreferences_QuietHours", "([QuietHoursEnabled] = 0 AND [QuietHoursStartLocal] IS NULL AND [QuietHoursEndLocal] IS NULL AND [TimeZoneId] IS NULL) OR ([QuietHoursEnabled] = 1 AND [QuietHoursStartLocal] IS NOT NULL AND [QuietHoursEndLocal] IS NOT NULL AND [QuietHoursStartLocal] <> [QuietHoursEndLocal] AND [TimeZoneId] IS NOT NULL)");
                         });
@@ -7316,6 +7708,195 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplication", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicantUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DegreeField")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LegalEntityName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SchoolName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StudentCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmittedPolicyVersion")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("TeacherCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TeachingHistory")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WorkSamples")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicantUserId", "UpdatedAtUtc");
+
+                    b.HasIndex("Status", "UpdatedAtUtc");
+
+                    b.ToTable("SchoolApplications", "organization", t =>
+                        {
+                            t.HasCheckConstraint("CK_SchoolApplications_Kind", "[Kind] IN (1,2)");
+
+                            t.HasCheckConstraint("CK_SchoolApplications_Status", "[Status] IN (1,2,3,4,5,6)");
+
+                            t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status]=1 OR [SubmittedPolicyVersion] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_SchoolApplications_Version", "[Revision] > 0 AND [Version] >= [Revision]");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApplicantFeedback")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ReviewerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewerUserId");
+
+                    b.HasIndex("ApplicationId", "OccurredAtUtc");
+
+                    b.HasIndex("ApplicationId", "Revision");
+
+                    b.ToTable("SchoolApplicationDecisions", "organization");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationDocument", b =>
+                {
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("ApplicationId", "Revision", "FileAssetId");
+
+                    b.HasIndex("FileAssetId");
+
+                    b.ToTable("SchoolApplicationDocuments", "organization");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationOperation", b =>
+                {
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ActorUserId", "ClientOperationId");
+
+                    b.HasIndex("ApplicationId");
+
+                    b.ToTable("SchoolApplicationOperations", "organization");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationRevision", b =>
+                {
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProtectedSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(131072)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ApplicationId", "Number");
+
+                    b.ToTable("SchoolApplicationRevisions", "organization");
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Platform.AdminAuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -7424,6 +8005,36 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("PlatformPermissions", "platform");
 
                     b.HasData(
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000030"),
+                            Description = "مشاهدهٔ درخواست تأسیس آموزشگاه",
+                            Key = "platform.school_applications.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000031"),
+                            Description = "بررسی درخواست تأسیس آموزشگاه",
+                            Key = "platform.school_applications.review"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000032"),
+                            Description = "مشاهدهٔ پرونده‌های پشتیبانی",
+                            Key = "platform.support.read"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000033"),
+                            Description = "پاسخ و مدیریت پروندهٔ پشتیبانی",
+                            Key = "platform.support.manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000034"),
+                            Description = "مشاهدهٔ وضعیت درخواست‌های حریم خصوصی",
+                            Key = "platform.privacy_requests.read"
+                        },
                         new
                         {
                             Id = new Guid("20000000-0000-0000-0000-000000000001"),
@@ -7828,6 +8439,41 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("PlatformRolePermissions", "platform");
 
                     b.HasData(
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000030")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000031")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000032")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000033")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000034")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000032")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000033")
+                        },
                         new
                         {
                             RoleId = new Guid("10000000-0000-0000-0000-000000000001"),
@@ -8460,6 +9106,154 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_FileAssets_UnattachedExpiry", "[UnattachedExpiresAtUtc] > [CreatedAtUtc]");
                         });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssignedStaffUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedStaffUserId");
+
+                    b.HasIndex("OwnerUserId", "UpdatedAtUtc");
+
+                    b.HasIndex("Status", "UpdatedAtUtc");
+
+                    b.ToTable("SupportTickets", "support", t =>
+                        {
+                            t.HasCheckConstraint("CK_SupportTickets_Resolution", "([Status]=5 AND [ResolvedAtUtc] IS NOT NULL) OR ([Status]<>5 AND [ResolvedAtUtc] IS NULL)");
+
+                            t.HasCheckConstraint("CK_SupportTickets_Status", "[Status] IN (1,2,3,4,5)");
+
+                            t.HasCheckConstraint("CK_SupportTickets_Version", "[Version] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketAttachment", b =>
+                {
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("MessageId", "FileAssetId");
+
+                    b.HasIndex("FileAssetId")
+                        .IsUnique();
+
+                    b.HasIndex("TicketId", "MessageId");
+
+                    b.ToTable("SupportTicketAttachments", "support");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsStaff")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("TicketVersion")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("TicketId", "TicketVersion")
+                        .IsUnique();
+
+                    b.ToTable("SupportTicketMessages", "support");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketOperation", b =>
+                {
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<long>("ResultVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ActorUserId", "ClientOperationId");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("SupportTicketOperations", "support");
                 });
 
             modelBuilder.Entity("MakanApp.Infrastructure.Messaging.MessagingRealtimeOutboxMessage", b =>
@@ -9682,6 +10476,22 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Identity.AccountDeletionRequest", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithMany()
+                        .HasForeignKey("RequestedBySessionId", "UserId")
+                        .HasPrincipalKey("Id", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Identity.CommunicationAgeVerification", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -9698,6 +10508,28 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Identity.PhoneChangeRequest", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.UserCredential", null)
+                        .WithMany()
+                        .HasForeignKey("CredentialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId", "UserId")
+                        .HasPrincipalKey("Id", "UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -9744,6 +10576,42 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AssistantContextSelection", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Academic.Class", null)
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Membership", null)
+                        .WithMany()
+                        .HasForeignKey("MembershipId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.Organization", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Organization.OrganizationPerson", null)
+                        .WithMany()
+                        .HasForeignKey("SubjectOrganizationPersonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.UserSession", null)
+                        .WithOne()
+                        .HasForeignKey("MakanApp.Domain.Intelligence.AssistantContextSelection", "SessionId", "UserId")
+                        .HasPrincipalKey("MakanApp.Domain.Identity.UserSession", "Id", "UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -9909,7 +10777,72 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Messaging.AddressBookEntry", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("LinkedAccountUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Messaging.ChatFolder", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactDeviceBinding", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ContactSyncDevice", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId", "DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Messaging.AddressBookEntry", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId", "EntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactPhone", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.AddressBookEntry", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId", "EntryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncDevice", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Messaging.ContactSyncDevice", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId", "DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Messaging.ContactSyncState", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
@@ -10850,6 +11783,69 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplication", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationDecision", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplicationRevision", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId", "Revision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationDocument", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplicationRevision", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId", "Revision")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplication", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationRevision", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplication", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Platform.AdminAuditLog", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.Person", null)
@@ -10997,6 +11993,66 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("PersonalClassId", "PersonalClassMembershipId")
                         .HasPrincipalKey("PersonalClassId", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicket", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedStaffUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketAttachment", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("FileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Support.SupportTicketMessage", null)
+                        .WithMany()
+                        .HasForeignKey("TicketId", "MessageId")
+                        .HasPrincipalKey("TicketId", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketMessage", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Support.SupportTicket", null)
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Support.SupportTicketOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Support.SupportTicket", null)
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MakanApp.Infrastructure.Messaging.MessagingRealtimeOutboxMessage", b =>

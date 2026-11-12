@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -12,8 +13,17 @@ using Xunit;
 namespace MakanApp.IntegrationTests;
 
 [Collection(SqlServerCollection.Name)]
-public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationFactory factory)
+public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationFactory factory) : IAsyncLifetime
 {
+    // ??? fixture ??????? engine ??????? ????? ?? ?? ????????? ???? ?????????.
+    public Task InitializeAsync() { SetAcademicFeatures(true); return Task.CompletedTask; }
+    public Task DisposeAsync() { SetAcademicFeatures(false); return Task.CompletedTask; }
+    private void SetAcademicFeatures(bool enabled)
+    {
+        var features = factory.Services.GetRequiredService<MakanApp.Application.Assessment.PersonalClassAcademicFeatures>();
+        features.AssignmentsEnabled = enabled; features.ExamsEnabled = enabled;
+    }
+
     private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
     private static int _phoneSequence = 9800000;
 
@@ -29,7 +39,9 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         _ = await factory.CreateMembershipAsync(owner.User.Id, organizationB, OrganizationRole.Student);
 
         var defaults = await GetPreferencesAsync(ownerClient, null);
-        Assert.Equal(7, defaults.Count);
+        Assert.Equal(8, defaults.Count);
+        var serviceUpdates = Assert.Single(defaults, item => item.Category == NotificationPreferenceCategory.ServiceUpdates);
+        Assert.True(serviceUpdates.PushEnabled); Assert.False(serviceUpdates.SmsEnabled); Assert.False(serviceUpdates.IsMandatory);
         var assignmentDefault = Assert.Single(defaults, item =>
             item.Category == NotificationPreferenceCategory.Assignments);
         Assert.True(assignmentDefault.InAppEnabled);

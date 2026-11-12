@@ -29,7 +29,8 @@ public sealed record MessagingPublicProfileResult(
     bool IsSavedContact,
     bool IsFavorite,
     bool CanStartDirect,
-    ProfilePhotoResult? ProfilePhoto = null);
+    ProfilePhotoResult? ProfilePhoto = null,
+    string? Bio = null);
 
 public sealed record UserContactResult(
     Guid ContactUserId,

@@ -114,6 +114,11 @@ public static class DependencyInjection
         services.AddScoped<IAcademicSessionStore, EfAcademicSessionStore>();
         services.AddScoped<IAcademicSessionService, AcademicSessionService>();
         services.AddScoped<IAssignmentStore, EfAssignmentStore>();
+        services.AddSingleton(new PersonalClassAcademicFeatures
+        {
+            AssignmentsEnabled = configuration.GetValue<bool>($"{PersonalClassAcademicFeatures.SectionName}:AssignmentsEnabled"),
+            ExamsEnabled = configuration.GetValue<bool>($"{PersonalClassAcademicFeatures.SectionName}:ExamsEnabled")
+        });
         services.AddScoped<IAcademicContextResolver, AcademicContextResolver>();
         services.AddScoped<IPersonalClassAcademicPermissionStore, EfPersonalClassAcademicPermissionStore>();
         services.AddScoped<PersonalClassAcademicPermissionService>();
@@ -320,12 +325,14 @@ public static class DependencyInjection
         services.AddScoped<IKnowledgeRuntimeAvailability, KnowledgeRuntimeAvailability>();
         services.AddHttpClient<IAiKnowledgeClient, AiKnowledgeClient>(client => client.Timeout = Timeout.InfiniteTimeSpan)
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
-        services.AddScoped<KnowledgeAuthorizationService>();
+        services.AddScoped<KnowledgeAuthorizationService>(sp => ActivatorUtilities.CreateInstance<KnowledgeAuthorizationService>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<KnowledgeIntegrationService>();
         services.AddScoped<KnowledgeProcessingProjection>();
         services.AddScoped<IKnowledgeOperationAudit, EfKnowledgeOperationAudit>();
         services.AddSingleton<IFileContentValidator, FileSignatureValidator>();
         services.AddScoped<IAccessContextResolver, GuardianAccessContextResolver>();
+        services.AddScoped<IAssistantContextStore, EfAssistantContextStore>();
+        services.AddScoped<AssistantContextResolver>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(CreateAiServiceAuthenticationOptions(configuration));
         services.AddSingleton(CreateAiServiceOptions(configuration));
@@ -335,19 +342,19 @@ public static class DependencyInjection
                 client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
-        services.AddScoped<IAiChatService, AiChatService>();
-        services.AddScoped<IAiInvocationExecutor, AiInvocationExecutor>();
+        services.AddScoped<IAiChatService>(sp => ActivatorUtilities.CreateInstance<AiChatService>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<IAiInvocationExecutor>(sp => ActivatorUtilities.CreateInstance<AiInvocationExecutor>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<IAiRuntimeAvailability, AiRuntimeAvailability>();
-        services.AddScoped<IAiSourceSelectionService, AiSourceSelectionService>();
+        services.AddScoped<IAiSourceSelectionService>(sp => ActivatorUtilities.CreateInstance<AiSourceSelectionService>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<IAiSourceAuthorizationService, EfAiSourceAuthorizationService>();
         services.AddScoped<IAiSourceSelectionStore, EfAiSourceSelectionStore>();
-        services.AddScoped<IStudentContextBuilder, StudentContextBuilder>();
-        services.AddScoped<IParentChildContextBuilder, ParentChildContextBuilder>();
-        services.AddScoped<ITeacherClassContextBuilder, TeacherClassContextBuilder>();
-        services.AddScoped<ITeacherStudentContextBuilder, TeacherStudentContextBuilder>();
-        services.AddScoped<IManagerSchoolContextBuilder, ManagerSchoolContextBuilder>();
-        services.AddScoped<IManagerClassContextBuilder, ManagerClassContextBuilder>();
-        services.AddScoped<IManagerStudentContextBuilder, ManagerStudentContextBuilder>();
+        services.AddScoped<IStudentContextBuilder>(sp => ActivatorUtilities.CreateInstance<StudentContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<IParentChildContextBuilder>(sp => ActivatorUtilities.CreateInstance<ParentChildContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<ITeacherClassContextBuilder>(sp => ActivatorUtilities.CreateInstance<TeacherClassContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<ITeacherStudentContextBuilder>(sp => ActivatorUtilities.CreateInstance<TeacherStudentContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<IManagerSchoolContextBuilder>(sp => ActivatorUtilities.CreateInstance<ManagerSchoolContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<IManagerClassContextBuilder>(sp => ActivatorUtilities.CreateInstance<ManagerClassContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
+        services.AddScoped<IManagerStudentContextBuilder>(sp => ActivatorUtilities.CreateInstance<ManagerStudentContextBuilder>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<IAiRoleContextService, AiRoleContextService>();
         var authentication = OtpAuthenticationOptions.Load(configuration, environmentName);
         services.AddOptions<OtpAuthenticationOptions>()
@@ -378,12 +385,29 @@ public static class DependencyInjection
         services.AddSingleton(CreateNotificationDeliveryOptions(configuration));
         services.AddSingleton(CreatePaymentOptions(configuration));
         services.AddSingleton<FileUploadPolicy>();
-        services.AddSingleton<IIdentitySecurity>(
-            new IdentityCryptography(CreateSecurityKey(
+        var identitySecurityKey = CreateSecurityKey(
                 configuration,
                 environmentName,
-                UsesManagedOtpProvider(configuration))));
+                UsesManagedOtpProvider(configuration));
+        services.AddSingleton<IIdentitySecurity>(new IdentityCryptography(identitySecurityKey));
+        services.AddSingleton(sp => new AddressBookProtection(sp.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(), identitySecurityKey));
+        services.AddSingleton<ContactPhoneCanonicalizer>();
+        services.AddScoped<IAddressBookStore, EfAddressBookStore>();
+        services.AddScoped<ProductNotificationWriter>();
+        services.AddScoped<ProductNotificationAccess>();
+        services.AddScoped<INotificationTargetResolver, EfNotificationTargetResolver>();
+        services.AddScoped<AddressBookService>();
+        services.AddScoped<MakanApp.Application.Support.ISupportTicketStore, MakanApp.Infrastructure.Support.EfSupportTicketStore>();
+        services.AddScoped<MakanApp.Application.Support.SupportTicketService>();
+        services.AddScoped<IAccountDeletionStore, EfAccountDeletionStore>();
+        services.AddScoped<AccountDeletionService>();
+        services.AddScoped<ISchoolApplicationStore, EfSchoolApplicationStore>();
+        services.AddScoped<SchoolApplicationService>();
         AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass, authentication);
+        AddPhoneChangeDeliveryProvider(services, configuration);
+        services.AddScoped<IPhoneChangeStore, EfPhoneChangeStore>();
+        services.AddScoped(sp => ActivatorUtilities.CreateInstance<PhoneChangeService>(sp,
+            sp.GetRequiredKeyedService<IOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey)));
         AddNotificationDeliveryProviders(services, configuration, environmentName);
         AddPaymentGateway(services, configuration, environmentName);
 
@@ -520,6 +544,34 @@ public static class DependencyInjection
             throw new InvalidOperationException(
                 "Notifications:SmsProvider must be Development or Unavailable until an approved general SMS contract exists.");
         }
+    }
+
+    private static void AddPhoneChangeDeliveryProvider(IServiceCollection services, IConfiguration configuration)
+    {
+        // Mock/Development adapter ورود هرگز به تغییر شماره متصل نمی‌شود.
+        if (!string.Equals(configuration["Sms:Provider"]?.Trim(), "MeliPayamakOtp", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddKeyedSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey);
+            return;
+        }
+        var options = CreateMeliPayamakOtpOptions(configuration);
+        Uri baseUri;
+        try { baseUri = options.ValidateAndGetBaseUri(); }
+        catch (InvalidOperationException)
+        {
+            // در محیط Mock، تنظیم ناقص SMS مانع ورود تست نیست؛ تغییر شماره با 503 بسته می‌ماند.
+            services.AddKeyedSingleton<IOtpDeliveryProvider, UnavailableOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey);
+            return;
+        }
+        if (!services.Any(d => d.ServiceType == typeof(MeliPayamakOtpProvider)))
+        {
+            services.AddSingleton(options);
+            services.AddHttpClient<MeliPayamakOtpProvider>(client => {
+                client.BaseAddress = baseUri; client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            }).RemoveAllLoggers();
+        }
+        services.AddKeyedTransient<IOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey,
+            (sp, _) => sp.GetRequiredService<MeliPayamakOtpProvider>());
     }
 
     private static void AddOtpDeliveryProvider(

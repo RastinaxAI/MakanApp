@@ -10,6 +10,9 @@ namespace MakanApp.Api.Controllers;
 [Route("api/v1/notifications")]
 public sealed class NotificationsController(INotificationService notificationService) : ControllerBase
 {
+    [HttpGet("{notificationId:guid}/target")]
+    public async Task<ActionResult<NotificationTargetResult>> ResolveTarget(Guid notificationId, CancellationToken ct) =>
+        Ok(await notificationService.ResolveTargetAsync(UserId(), AuthenticatedSession.GetSessionId(User), notificationId, ct));
     [HttpGet]
     [ProducesResponseType<NotificationPage>(StatusCodes.Status200OK)]
     public async Task<ActionResult<NotificationPage>> GetPage(

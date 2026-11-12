@@ -18,6 +18,24 @@ namespace MakanApp.Infrastructure.Persistence;
 public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, TimeProvider? timeProvider = null)
     : DbContext(options)
 {
+    public DbSet<SchoolApplication> SchoolApplications => Set<SchoolApplication>();
+    public DbSet<SchoolApplicationRevision> SchoolApplicationRevisions => Set<SchoolApplicationRevision>();
+    public DbSet<SchoolApplicationDocument> SchoolApplicationDocuments => Set<SchoolApplicationDocument>();
+    public DbSet<SchoolApplicationDecision> SchoolApplicationDecisions => Set<SchoolApplicationDecision>();
+    public DbSet<SchoolApplicationOperation> SchoolApplicationOperations => Set<SchoolApplicationOperation>();
+    public DbSet<MakanApp.Domain.Intelligence.AssistantContextSelection> AssistantContextSelections => Set<MakanApp.Domain.Intelligence.AssistantContextSelection>();
+    public DbSet<AccountDeletionRequest> AccountDeletionRequests => Set<AccountDeletionRequest>();
+    public DbSet<PhoneChangeRequest> PhoneChangeRequests => Set<PhoneChangeRequest>();
+    public DbSet<MakanApp.Domain.Support.SupportTicket> SupportTickets => Set<MakanApp.Domain.Support.SupportTicket>();
+    public DbSet<MakanApp.Domain.Support.SupportTicketMessage> SupportTicketMessages => Set<MakanApp.Domain.Support.SupportTicketMessage>();
+    public DbSet<MakanApp.Domain.Support.SupportTicketAttachment> SupportTicketAttachments => Set<MakanApp.Domain.Support.SupportTicketAttachment>();
+    public DbSet<MakanApp.Domain.Support.SupportTicketOperation> SupportTicketOperations => Set<MakanApp.Domain.Support.SupportTicketOperation>();
+    public DbSet<AddressBookEntry> AddressBookEntries => Set<AddressBookEntry>();
+    public DbSet<ContactPhone> ContactPhones => Set<ContactPhone>();
+    public DbSet<ContactSyncDevice> ContactSyncDevices => Set<ContactSyncDevice>();
+    public DbSet<ContactDeviceBinding> ContactDeviceBindings => Set<ContactDeviceBinding>();
+    public DbSet<ContactSyncState> ContactSyncStates => Set<ContactSyncState>();
+    public DbSet<ContactSyncOperation> ContactSyncOperations => Set<ContactSyncOperation>();
     public DbSet<AcademicPeriod> AcademicPeriods => Set<AcademicPeriod>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<ClassLesson> ClassLessons => Set<ClassLesson>();
@@ -153,7 +171,14 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         // SQL Server نوع Kind را ذخیره نمی‌کند؛ مرز دامنهٔ قرارداد و رزرو همیشه UTC است.
         var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
             value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
+        var foundationUtcTypes = new HashSet<Type> {
+            typeof(AddressBookEntry), typeof(ContactSyncDevice), typeof(ContactSyncOperation), typeof(AccountDeletionRequest), typeof(PhoneChangeRequest),
+            typeof(MakanApp.Domain.Support.SupportTicket), typeof(MakanApp.Domain.Support.SupportTicketMessage),
+            typeof(SchoolApplication), typeof(SchoolApplicationRevision), typeof(SchoolApplicationDecision), typeof(SchoolApplicationOperation),
+            typeof(MakanApp.Domain.Intelligence.AssistantContextSelection)
+        };
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType.Namespace == "MakanApp.Domain.Commerce"
+            || foundationUtcTypes.Contains(t.ClrType)
             || t.ClrType == typeof(PersonalClassAcademicGrant) || t.ClrType == typeof(PersonalClassRequest) || t.ClrType == typeof(PersonalClassJoinRequest) || t.ClrType == typeof(PersonalClassManagerTransfer) || t.ClrType == typeof(PersonalClass) || t.ClrType == typeof(PersonalClassInvitation) || t.ClrType == typeof(PersonalClassParticipant)))
             foreach (var property in entity.GetProperties().Where(p => (p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)) && p.Name.EndsWith("Utc", StringComparison.Ordinal)))
                 property.SetValueConverter(utcConverter);
@@ -181,6 +206,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
 
     private void EnsureAdminAuditIsAppendOnly()
     {
+        if (ChangeTracker.Entries().Any(e => e.Entity is SchoolApplicationRevision or SchoolApplicationDecision or SchoolApplicationOperation or
+            ContactSyncOperation or MakanApp.Domain.Support.SupportTicketOperation or MakanApp.Domain.Support.SupportTicketMessage && e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("نسخه، تصمیم، پیام و رسیدهای عملیاتی این foundation فقط قابل افزودن هستند.");
         if (ChangeTracker.Entries().Any(e => e.Entity is Payment or PaymentAttemptEvent && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("رسید و تاریخچهٔ پرداخت فقط قابل افزودن است.");
         if (ChangeTracker.Entries<OrganizationMembershipOperation>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))

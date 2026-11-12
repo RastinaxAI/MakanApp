@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace MakanApp.Infrastructure.Organization;
 
 public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime,
-    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null) : IOrganizationStore
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IOrganizationStore
 {
     public async Task<IOrganizationTransaction> BeginSerializableTransactionAsync(
         CancellationToken cancellationToken)
@@ -157,7 +157,7 @@ public sealed partial class EfOrganizationStore(MakanDbContext dbContext, MakanA
         {
             if (officialSpaces is not null) await officialSpaces.CaptureSchoolAsync(cancellationToken);
             await realtime.CaptureSchoolAsync(cancellationToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
         {

@@ -164,10 +164,19 @@ public sealed partial class CommercialSubscriptionEndpointsTests
     private static JsonSerializerOptions MakeJson()
     { var options = new JsonSerializerOptions(JsonSerializerDefaults.Web); options.Converters.Add(new JsonStringEnumConverter()); return options; }
     public Task InitializeAsync()
-    { factory.Clock.SetUtcNow(new DateTime(2026, 10, 29, 12, 0, 0, DateTimeKind.Utc)); factory.PaymentGateway.Reset(); return Task.CompletedTask; }
+    {
+        // فقط fixture این engine، قابلیت‌های پیشنهادی را صریحاً روشن می‌کند؛ پیش‌فرض محصول خاموش است.
+        var features = factory.Services.GetRequiredService<MakanApp.Application.Assessment.PersonalClassAcademicFeatures>();
+        features.AssignmentsEnabled = true;
+        features.ExamsEnabled = true;
+        factory.Clock.SetUtcNow(new DateTime(2026, 10, 29, 12, 0, 0, DateTimeKind.Utc)); factory.PaymentGateway.Reset(); return Task.CompletedTask;
+    }
     public Task DisposeAsync()
     {
         output.WriteLine("SUBSCRIPTION_HTTP_REQUESTS=" + _requestCount);
+        var features = factory.Services.GetRequiredService<MakanApp.Application.Assessment.PersonalClassAcademicFeatures>();
+        features.AssignmentsEnabled = false;
+        features.ExamsEnabled = false;
         foreach (var client in _clients) client.Dispose(); factory.Clock.UseSystemTime(); return Task.CompletedTask;
     }
 }

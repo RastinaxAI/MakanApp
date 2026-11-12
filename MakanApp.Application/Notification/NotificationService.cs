@@ -4,8 +4,14 @@ namespace MakanApp.Application.Notification;
 
 public sealed class NotificationService(
     INotificationStore store,
-    TimeProvider timeProvider) : INotificationService
+    TimeProvider timeProvider, INotificationTargetResolver? targets = null) : INotificationService
 {
+    public async Task<NotificationTargetResult> ResolveTargetAsync(Guid userId, Guid sessionId, Guid notificationId, CancellationToken ct)
+    {
+        var notification = await store.GetForUpdateAsync(notificationId, userId, ct);
+        if (notification is null || targets is null) throw new NotificationException(NotificationErrorCodes.NotFound, "اعلان در دسترس نیست.");
+        return await targets.ResolveAsync(userId, sessionId, notification, ct) ?? throw new NotificationException(NotificationErrorCodes.NotFound, "هدف اعلان در دسترس نیست.");
+    }
     public const int MaximumPageSize = 100;
 
     public async Task<NotificationPage> GetPageAsync(

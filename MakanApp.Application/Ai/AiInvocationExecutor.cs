@@ -28,12 +28,14 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
             !scope.TryGetProperty("organizationId", out var org) || !scope.TryGetProperty("schoolId", out var school) ||
             org.GetString() != context.OrganizationId.Value.ToString("D") || school.GetString() != org.GetString())
             throw Denied();
+        if (context.AssistantClassId.HasValue && (!scope.TryGetProperty("classId", out var classroom) || classroom.GetString() != context.AssistantClassId.Value.ToString("D")))
+            throw Denied();
         var quotaContext = new AiQuotaPreflightCommand(CommerceContextType.Organization, context.OrganizationId, command.Payer);
         var hash = Fingerprint(request, context);
         // Reserve موجود، replay را پیش از بررسی دوبارهٔ مانده تشخیص می‌دهد؛ آخرین سهمیه نیز retry-safe است.
         // بررسی Preflight اتمیکِ نهایی در همان transaction کوتاه Reserve انجام می‌شود.
-        var reservation = await commerce.ReserveSimpleTextAsync(userId, sessionId,
-            new(quotaContext, command.OperationId!.Value, hash), ct);
+        var reservation = await commerce.ReserveForAssistantAsync(userId, sessionId,
+            new(quotaContext, command.OperationId!.Value, hash), context, ct);
         if (reservation.Replayed)
             throw new AiServiceException(reservation.Status switch
             {
@@ -81,6 +83,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
         foreach (var key in new[] { "requestId", "correlationId", "studentData", "childData", "classData", "schoolData", "context" }) payload.Remove(key);
         payload["operation"] = request.GetType().Name;
         payload["membershipId"] = context.MembershipId?.ToString("D");
+        payload["assistantClassId"] = context.AssistantClassId?.ToString("D");
         payload["selectedSourceIds"] = new JsonArray();
         return SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions));
     }

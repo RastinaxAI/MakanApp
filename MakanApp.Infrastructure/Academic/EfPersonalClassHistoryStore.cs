@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Academic;
 
-public sealed class EfPersonalClassHistoryStore(MakanDbContext db, IPlatformPermissionResolver permissions) : IPersonalClassHistoryStore
+public sealed class EfPersonalClassHistoryStore(MakanDbContext db, IPlatformPermissionResolver permissions,
+    MakanApp.Application.Assessment.PersonalClassAcademicFeatures features) : IPersonalClassHistoryStore
 {
     public async Task<PersonalClassPage<PersonalClassHistoryItem>> ReadAsync(PersonalClassActor actor, Guid classId,
         bool platform, int page, int pageSize, CancellationToken ct)
@@ -19,7 +20,7 @@ public sealed class EfPersonalClassHistoryStore(MakanDbContext db, IPlatformPerm
             (m.LocalRoles & PersonalClassLocalRoles.Manager) != 0, ct))) throw EfPersonalClassFormationStore.NotFound();
         if (platform && !await permissions.HasPermissionAsync(actor.UserId, PlatformPermissionKeys.PersonalClassesRead, ct))
             throw EfPersonalClassFormationStore.NotFound();
-        var canGrade = !platform && await PersonalClassAcademicAccessQuery.Effective(db, classId)
+        var canGrade = features.AnyEnabled && !platform && await PersonalClassAcademicAccessQuery.Effective(db, classId)
             .AnyAsync(g => (g.Capabilities & PersonalClassAcademicCapabilities.Grade) != 0 &&
                 db.PersonalClassParticipants.Any(m => m.Id == g.MembershipId && m.StudentUserId == actor.UserId), ct);
         var canReadGrants = !platform || await permissions.HasPermissionAsync(actor.UserId, PlatformPermissionKeys.PersonalClassesAcademicPermissions, ct);

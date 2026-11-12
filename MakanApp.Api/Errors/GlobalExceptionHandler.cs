@@ -13,6 +13,7 @@ using MakanApp.Application.Reports.Detailed;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Application.Storage;
 using MakanApp.Application.Realtime;
+using MakanApp.Application.Support;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Frozen;
@@ -32,7 +33,7 @@ public sealed class GlobalExceptionHandler(
         typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(MessagingErrorCodes),
         typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
         typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
-        typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes), typeof(RealtimeErrorCodes)
+        typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes), typeof(RealtimeErrorCodes), typeof(AddressBookErrorCodes), typeof(SupportErrorCodes), typeof(AssistantContextErrorCodes), typeof(SchoolApplicationErrorCodes), typeof(PhoneChangeErrorCodes)
     }.SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
         .Where(field => field.IsLiteral && field.FieldType == typeof(string))
         .Select(field => field.GetRawConstantValue())
@@ -46,6 +47,8 @@ public sealed class GlobalExceptionHandler(
     {
         ProblemDetails? problemDetails = exception switch
         {
+            SupportException support => CreateKnownProblem(support.Code, support.Message),
+            SchoolApplicationException schoolApplication => CreateKnownProblem(schoolApplication.Code, schoolApplication.Message),
             AiKnowledgeException knowledgeException => CreateKnownProblem(knowledgeException.Code, knowledgeException.Message),
             MakanApp.Application.Knowledge.EducationalSourceException sourceException => CreateKnownProblem(sourceException.Code, sourceException.Message),
             RealtimeException realtimeException => CreateKnownProblem(realtimeException.Code, realtimeException.Message),
@@ -322,6 +325,24 @@ public sealed class GlobalExceptionHandler(
             MessagingErrorCodes.ReportNotAllowed => StatusCodes.Status403Forbidden,
             MessagingErrorCodes.ReportMessageNotFound => StatusCodes.Status404NotFound,
             MessagingErrorCodes.ReportIdempotencyConflict => StatusCodes.Status409Conflict,
+            AssistantContextErrorCodes.Conflict => StatusCodes.Status409Conflict,
+            SchoolApplicationErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            SchoolApplicationErrorCodes.NotFound or SchoolApplicationErrorCodes.FileUnavailable => StatusCodes.Status404NotFound,
+            SchoolApplicationErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
+            SchoolApplicationErrorCodes.Conflict or SchoolApplicationErrorCodes.ProductDecisionRequired => StatusCodes.Status409Conflict,
+            SupportErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            SupportErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            SupportErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
+            SupportErrorCodes.Conflict => StatusCodes.Status409Conflict,
+            SupportErrorCodes.FileUnavailable => StatusCodes.Status404NotFound,
+            AddressBookErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            AddressBookErrorCodes.ConsentRequired => StatusCodes.Status403Forbidden,
+            AddressBookErrorCodes.Conflict => StatusCodes.Status409Conflict,
+            AddressBookErrorCodes.StaleSource => StatusCodes.Status409Conflict,
+            AddressBookErrorCodes.CursorInvalid => StatusCodes.Status400BadRequest,
+            PhoneChangeErrorCodes.Invalid => StatusCodes.Status400BadRequest,
+            PhoneChangeErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            PhoneChangeErrorCodes.Conflict or PhoneChangeErrorCodes.DeliveryPending => StatusCodes.Status409Conflict,
             MessagingErrorCodes.ContactInvalid => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.ContactSelfNotAllowed => StatusCodes.Status400BadRequest,
             MessagingErrorCodes.ContactTargetNotAvailable => StatusCodes.Status404NotFound,

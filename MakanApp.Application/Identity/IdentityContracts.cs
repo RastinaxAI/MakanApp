@@ -43,7 +43,8 @@ public sealed record CompleteProfileCommand(
     string LastName,
     string? DisplayName,
     string Username,
-    DateOnly? DateOfBirth = null);
+    DateOnly? DateOfBirth = null,
+    string? Bio = null);
 
 public sealed record CurrentUserResult(
     Guid Id,
@@ -54,6 +55,7 @@ public sealed record CurrentUserResult(
     string? DisplayName,
     string? Username,
     DateOnly? DateOfBirth = null,
-    ProfilePhotoResult? ProfilePhoto = null);
+    ProfilePhotoResult? ProfilePhoto = null,
+    string? Bio = null);
 
 public sealed record SessionIdentity(Guid UserId, Guid SessionId);

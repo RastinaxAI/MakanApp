@@ -30,7 +30,8 @@ public sealed class KnowledgeAuthorizationService(IAccountOperationContextResolv
         foreach (var version in requested.OrderBy(x => x.SourceId))
         {
             var source = await sources.GetAsync(actor, version.SourceId, version.Version, ct);
-            if (source.Scope == EducationalSourceScope.Library || !source.Capabilities.CanRead ||
+            if (organization?.AssistantClassId is Guid selectedClass && source.Scope == EducationalSourceScope.Class && source.ClassId != selectedClass ||
+                source.Scope == EducationalSourceScope.Library || !source.Capabilities.CanRead ||
                 source.Scope == EducationalSourceScope.Personal && source.OwnerUserId != user ||
                 source.Scope is EducationalSourceScope.Class or EducationalSourceScope.Organization &&
                     (organization?.OrganizationId is null || organization.OrganizationId != source.OrganizationId))

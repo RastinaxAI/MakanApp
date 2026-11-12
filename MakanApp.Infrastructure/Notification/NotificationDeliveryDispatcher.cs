@@ -73,7 +73,9 @@ public sealed partial class NotificationDeliveryProcessor(
     NotificationDeliveryOptions options,
     TimeProvider timeProvider,
     WorkerTelemetry telemetry,
-    ILogger<NotificationDeliveryProcessor> logger)
+    ILogger<NotificationDeliveryProcessor> logger,
+    MakanApp.Application.Assessment.PersonalClassAcademicFeatures academicFeatures,
+    ProductNotificationAccess? productAccess = null)
 {
     public async Task<int> DispatchBatchAsync(CancellationToken cancellationToken)
     {

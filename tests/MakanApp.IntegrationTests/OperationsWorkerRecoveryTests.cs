@@ -77,7 +77,7 @@ public sealed partial class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixtu
         else
         {
             await new OutboxProcessor(db, new CallbackCoordinator(), new NoopSubscriptionActivation(), _clock, sql.Telemetry,
-                NullLogger<OutboxProcessor>.Instance).DispatchBatchAsync(CancellationToken.None);
+                NullLogger<OutboxProcessor>.Instance, academicFeatures: new() { AssignmentsEnabled = true, ExamsEnabled = true }).DispatchBatchAsync(CancellationToken.None);
             Assert.NotNull((await db.OutboxMessages.AsNoTracking().SingleAsync(row => row.Id == id)).ProcessedAtUtc);
         }
     }
@@ -320,7 +320,7 @@ public sealed partial class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixtu
     {
         await using var db = sql.CreateDb();
         return await new OutboxProcessor(db, coordinator, new NoopSubscriptionActivation(), _clock, sql.Telemetry,
-            NullLogger<OutboxProcessor>.Instance).DispatchBatchAsync(ct);
+            NullLogger<OutboxProcessor>.Instance, academicFeatures: new() { AssignmentsEnabled = true, ExamsEnabled = true }).DispatchBatchAsync(ct);
     }
 
     private async Task<int> RunRealtimeAsync(CallbackNotifier notifier, CancellationToken ct = default)
@@ -332,7 +332,7 @@ public sealed partial class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixtu
 
     private NotificationDeliveryProcessor DeliveryProcessor(MakanDbContext db, CallbackPushProvider provider) =>
         new(db, provider, new UnavailableNotificationSmsProvider(), new AlwaysEnabledPreference(), new UnusedPrivacyResolver(),
-            new NotificationDeliveryOptions(), _clock, sql.Telemetry, NullLogger<NotificationDeliveryProcessor>.Instance);
+            new NotificationDeliveryOptions(), _clock, sql.Telemetry, NullLogger<NotificationDeliveryProcessor>.Instance, new() { AssignmentsEnabled = true, ExamsEnabled = true });
 
     private async Task<Guid[]> SeedOutboxAsync(int count, bool exhausted = false)
     {

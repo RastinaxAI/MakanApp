@@ -17,7 +17,8 @@ internal sealed record InvalidationEnvelope(string Key, Guid? OrganizationId = n
     Guid? ResourceId = null, Guid? TargetUserId = null, bool StaffOnly = false, string? TraceId = null,
     Guid? LearnerOrganizationPersonId = null, Guid? PersonalClassId = null, Guid? PersonalMembershipId = null);
 
-public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock)
+public sealed partial class RealtimeInvalidationWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock,
+    MakanApp.Application.Assessment.PersonalClassAcademicFeatures academicFeatures)
 {
     public const string MessageType = "platform.realtime-invalidation.v1";
 

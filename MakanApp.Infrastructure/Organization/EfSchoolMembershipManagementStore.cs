@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Organization;
 
 public sealed class EfSchoolMembershipManagementStore(MakanDbContext db, TimeProvider clock,
-    RealtimeInvalidationWriter realtime, OfficialSpaceEventWriter officialSpaces) : ISchoolMembershipManagementStore
+    RealtimeInvalidationWriter realtime, OfficialSpaceEventWriter officialSpaces, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : ISchoolMembershipManagementStore
 {
     public async Task<SchoolMembershipMutationResult> ExecuteAsync(AccessContext actor, Guid membershipId,
         SchoolMembershipMutation command, CancellationToken ct)
@@ -106,7 +106,7 @@ public sealed class EfSchoolMembershipManagementStore(MakanDbContext db, TimePro
             { command.ClientOperationId, ResultRoleAssignmentId = resultAssignmentId, Status = membership.Status.ToString(), Role = command.Role?.ToString() })));
         await realtime.CaptureSchoolAsync(ct);
         await officialSpaces.CaptureSchoolAsync(ct);
-        try { await db.SaveChangesAsync(ct); }
+        try { if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(ct); await db.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw Error(OrganizationErrorCodes.ConcurrencyConflict, "نسخهٔ عضویت یا نقش تغییر کرده است."); }
         catch (DbUpdateException e) when (e.InnerException is SqlException { Number: 2601 or 2627 })
         { throw Conflict("قصد یا نقش فعال یکتا هم‌زمان ثبت شده است؛ وضعیت را دوباره بخوانید."); }

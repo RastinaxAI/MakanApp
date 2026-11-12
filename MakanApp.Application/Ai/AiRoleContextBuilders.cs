@@ -535,12 +535,15 @@ internal static class AiContextAuthorization
     public static AiScope Scope(
         AccessContext context,
         Guid? studentId = null,
-        Guid? classId = null) =>
-        new(
+        Guid? classId = null)
+    {
+        if (context.AssistantClassId.HasValue && context.AssistantClassId != classId) throw NotAllowed();
+        return new(
             context.OrganizationId!.Value.ToString("D"),
             context.OrganizationId.Value.ToString("D"),
             classId?.ToString("D"),
             studentId?.ToString("D"));
+    }
 
     public static AiServiceException NotAllowed() => new(
         AiServiceErrorCodes.ContextNotAllowed,

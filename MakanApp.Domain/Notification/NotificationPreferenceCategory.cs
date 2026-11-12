@@ -8,5 +8,6 @@ public enum NotificationPreferenceCategory
     Sessions = 4,
     Reports = 5,
     Invitations = 6,
-    AccountSecurity = 7
+    AccountSecurity = 7,
+    ServiceUpdates = 8
 }

@@ -197,6 +197,9 @@ public sealed partial class MakanAppWebApplicationFactory :
             services.AddSingleton<DevelopmentOtpProvider>();
             services.RemoveAll<IOtpDeliveryProvider>();
             services.AddSingleton<IOtpDeliveryProvider, FaultInjectingOtpDeliveryProvider>();
+            // فقط میزبان تست، تحویل واقعی را با provider قابل‌کنترل جایگزین می‌کند؛ SMS واقعی نداریم.
+            services.AddKeyedSingleton<IOtpDeliveryProvider>(PhoneChangeService.RealDeliveryKey,
+                (sp, _) => sp.GetRequiredService<IOtpDeliveryProvider>());
             services.RemoveAll<IPushNotificationProvider>();
             services.AddSingleton<IPushNotificationProvider, RecordingPushNotificationProvider>();
             services.RemoveAll<INotificationSmsProvider>();

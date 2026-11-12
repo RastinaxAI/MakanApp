@@ -98,8 +98,8 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
         var payload = new { Action = "rag", command.Query, command.MaxResults, command.IncludeQuotePreview, command.Language };
         await authorization.PinAsync(context, command.ClientOperationId, payload, ct);
         // همان ledger و واحد SimpleText موجود استفاده می‌شود؛ قیمت/پرداخت یا ledger موازی ساخته نمی‌شود.
-        var reservation = await commerce.ReserveSimpleTextAsync(user, session,
-            new(context.Commerce, command.ClientOperationId, KnowledgeAuthorizationService.Fingerprint(context, payload)), ct);
+        var reservation = await commerce.ReserveForAssistantAsync(user, session,
+            new(context.Commerce, command.ClientOperationId, KnowledgeAuthorizationService.Fingerprint(context, payload)), context.Actor.Organization ?? context.Actor.Account, ct);
         if (reservation.Replayed) throw new AiServiceException(reservation.Status switch
         {
             UsageReservationStatus.Consumed => AiInvocationErrorCodes.Completed,
@@ -142,7 +142,7 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
 
     private async Task RequireEntitlementAsync(KnowledgeAuthorizedSources context, CancellationToken ct)
     {
-        var result = await commerce.PreflightAsync(context.Actor.UserId, context.Actor.SessionId, context.Commerce, ct);
+        var result = await commerce.PreflightForAssistantAsync(context.Actor.UserId, context.Actor.SessionId, context.Commerce, context.Actor.Organization ?? context.Actor.Account, ct);
         if (!result.Allowed) throw new CommerceException(result.ErrorCode ?? CommerceErrorCodes.EntitlementRequired, "مجوز تجاری معتبر برای استفاده از دانش لازم است.");
     }
     private async Task EnsureReadyAsync(KnowledgeAuthorizedSources context, string correlation, CancellationToken ct)

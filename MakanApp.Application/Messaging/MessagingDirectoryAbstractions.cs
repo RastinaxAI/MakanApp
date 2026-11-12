@@ -17,7 +17,8 @@ public sealed record MessagingProfileStoreRecord(
     bool HasEffectiveDirectBlock,
     bool IsProtectedAccount = false,
     bool SafetyAllowsDirect = true,
-    ProfilePhotoResult? ProfilePhoto = null);
+    ProfilePhotoResult? ProfilePhoto = null,
+    string? Bio = null);
 
 public sealed record UserContactStoreRecord(
     UserContact Contact,

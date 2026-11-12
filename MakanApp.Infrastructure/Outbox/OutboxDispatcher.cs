@@ -73,7 +73,9 @@ public sealed class OutboxProcessor(
     WorkerTelemetry telemetry,
     ILogger<OutboxProcessor> logger,
     IRealtimeInvalidationNotifier? realtimeNotifier = null,
-    MakanApp.Application.Messaging.IOfficialSpacesWorkHandler? officialSpaces = null)
+    MakanApp.Application.Messaging.IOfficialSpacesWorkHandler? officialSpaces = null,
+    MakanApp.Application.Assessment.PersonalClassAcademicFeatures? academicFeatures = null,
+    MakanApp.Infrastructure.Notification.ProductNotificationAccess? productAccess = null)
 {
     public const int BatchSize = 50;
     public const int MaximumAttempts = 10;
@@ -221,7 +223,11 @@ public sealed class OutboxProcessor(
                 var exists = await dbContext.Notifications.AnyAsync(notification =>
                     notification.SourceEventId == payload.SourceEventId &&
                     notification.RecipientUserId == payload.Recipient.UserId, cancellationToken);
-                if (payload.Recipient.UserId != Guid.Empty && !exists)
+                if (payload.Recipient.UserId != Guid.Empty && !exists &&
+                    (academicFeatures ?? new()).AllowsNotification(payload.OrganizationId, payload.ResourceType) &&
+                    (productAccess is not null ? await productAccess.AllowsAsync(payload.Recipient.UserId, payload.ResourceType, payload.ResourceId, cancellationToken) :
+                        payload.ResourceType is Domain.Notification.NotificationResourceType.Assignment or Domain.Notification.NotificationResourceType.SubmissionAttempt or
+                            Domain.Notification.NotificationResourceType.Exam or Domain.Notification.NotificationResourceType.ExamAttempt or Domain.Notification.NotificationResourceType.Conversation))
                 {
                     var notification = Domain.Notification.Notification.Create(
                         payload.SourceEventId,

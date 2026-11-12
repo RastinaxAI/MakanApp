@@ -16,6 +16,13 @@ public sealed partial class NotificationDeliveryProcessor
     private async Task<DeliveryWork?> EvaluateCurrentDeliveryAsync(
         NotificationDeliveryAttempt attempt, DomainNotification notification, DateTime nowUtc, CancellationToken ct)
     {
+        if (!academicFeatures.AllowsNotification(notification.OrganizationId, notification.ResourceType))
+            return Suppress(NotificationDeliveryFailureReason.ResourceAccessRevoked);
+        if (productAccess is not null && !await productAccess.AllowsAsync(notification.RecipientUserId, notification.ResourceType, notification.ResourceId, ct))
+            return Suppress(NotificationDeliveryFailureReason.ResourceAccessRevoked);
+        if (productAccess is null && notification.ResourceType is not (NotificationResourceType.Assignment or NotificationResourceType.SubmissionAttempt or
+            NotificationResourceType.Exam or NotificationResourceType.ExamAttempt or NotificationResourceType.Conversation))
+            return Suppress(NotificationDeliveryFailureReason.ResourceAccessRevoked);
         if (!await dbContext.Users.AnyAsync(u => u.Id == notification.RecipientUserId && u.AccountStatus == UserAccountStatus.Active, ct))
             return Suppress(NotificationDeliveryFailureReason.ResourceAccessRevoked);
         var preference = await preferenceResolver.ResolveAsync(notification.RecipientUserId, notification.OrganizationId,

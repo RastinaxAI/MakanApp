@@ -35,7 +35,7 @@ public sealed class AcademicExamAttachmentMigrationTests(MakanAppWebApplicationF
             var now = DateTime.UtcNow;
             var org = Organization.Create("آزمون ارتقای پیوست", now);
             var user = User.Create(now); var person = Person.Create("کاربر", "آزمایشی", null, now);
-            db.Organizations.Add(org); db.Users.Add(user); db.Persons.Add(person); await db.SaveChangesAsync();
+            db.Organizations.Add(org); await LegacyAcademicMigrationFixture.InsertAsync(db, user); db.Persons.Add(person); await db.SaveChangesAsync();
             var membership = Membership.CreateActive(user.Id, org.Id, now);
             var learner = OrganizationPerson.CreateActive(org.Id, person.Id, now);
             var period = AcademicPeriod.Create(org.Id, "دوره", new DateOnly(2026, 1, 1), new DateOnly(2027, 1, 1), now);

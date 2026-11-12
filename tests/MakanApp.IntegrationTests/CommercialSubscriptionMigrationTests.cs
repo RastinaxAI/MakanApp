@@ -32,7 +32,7 @@ public sealed class CommercialSubscriptionMigrationTests(MakanAppWebApplicationF
             var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync("20261028202239_CompleteSchoolManagement");
             var now = DateTime.UtcNow; var organization = Organization.Create("سازمان قدیمی آزمون", now); var user = User.Create(now);
-            db.Organizations.Add(organization); db.Users.Add(user); await db.SaveChangesAsync();
+            db.Organizations.Add(organization); await LegacyAcademicMigrationFixture.InsertAsync(db, user); await db.SaveChangesAsync();
             var plan = Guid.NewGuid(); var version = Guid.NewGuid(); var subscription = Guid.NewGuid(); var ledger = Guid.NewGuid(); var operation = Guid.NewGuid();
             var code = "legacy-" + plan.ToString("N");
             await db.Database.ExecuteSqlInterpolatedAsync($"""

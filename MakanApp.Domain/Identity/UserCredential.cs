@@ -29,6 +29,14 @@ public sealed class UserCredential
     public DateTime CreatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
+    public void ChangeVerifiedPhone(string normalizedPhoneNumber, DateTime verifiedAtUtc)
+    {
+        if (Kind != CredentialKind.MobilePhone || string.IsNullOrWhiteSpace(normalizedPhoneNumber) ||
+            normalizedPhoneNumber.Length > 32 || verifiedAtUtc.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("شمارهٔ تأییدشده معتبر نیست.");
+        NormalizedIdentifier = normalizedPhoneNumber; VerifiedAtUtc = verifiedAtUtc;
+    }
+
     public static UserCredential CreateMobile(
         Guid userId,
         string normalizedPhoneNumber,

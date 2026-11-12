@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace MakanApp.Infrastructure.Organization;
 
-public sealed class EfOrganizationPersonStore(MakanDbContext database, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) : IOrganizationPersonStore
+public sealed class EfOrganizationPersonStore(MakanDbContext database, MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IOrganizationPersonStore
 {
     public async Task<IOrganizationTransaction> BeginAsync(CancellationToken cancellationToken) =>
         new Transaction(await database.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken));
@@ -93,7 +93,7 @@ public sealed class EfOrganizationPersonStore(MakanDbContext database, MakanApp.
 
     public async Task SaveAsync(CancellationToken cancellationToken)
     {
-        try { await realtime.CaptureSchoolAsync(cancellationToken); await database.SaveChangesAsync(cancellationToken); }
+        try { await realtime.CaptureSchoolAsync(cancellationToken); if (productNotifications is not null) await productNotifications.CaptureOrganizationAsync(cancellationToken); await database.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException)
         {
             throw new OrganizationException(OrganizationErrorCodes.ConcurrencyConflict, "اطلاعات هم‌زمان تغییر کرده است.");

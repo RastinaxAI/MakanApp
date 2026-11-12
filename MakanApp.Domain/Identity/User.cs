@@ -2,6 +2,7 @@ namespace MakanApp.Domain.Identity;
 
 public sealed class User
 {
+    public const int MaximumBioLength = 500;
     private User()
     {
     }
@@ -18,6 +19,7 @@ public sealed class User
     public Guid? ProfilePhotoFileAssetId { get; private set; }
     public string? Username { get; private set; }
     public string? NormalizedUsername { get; private set; }
+    public string? Bio { get; private set; }
     public CommunicationAgeCategory CommunicationAgeCategory { get; private set; }
     public CommunicationAgeVerificationStatus CommunicationAgeVerificationStatus { get; private set; }
     public DateTime? MessagingRestrictedUntilUtc { get; private set; }
@@ -33,6 +35,16 @@ public sealed class User
 
     public static User Create(DateTime createdAtUtc) =>
         new(Guid.NewGuid(), createdAtUtc);
+
+    public void SetBio(string? value, DateTime nowUtc)
+    {
+        var bio = value?.Trim();
+        if (bio?.Length > MaximumBioLength || bio?.Any(c => char.IsControl(c) && c is not '\n' and not '\r' and not '\t') == true)
+            throw new ArgumentException("متن معرفی معتبر نیست.", nameof(value));
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("زمان تغییر باید UTC باشد.", nameof(nowUtc));
+        Bio = string.IsNullOrEmpty(bio) ? null : bio;
+        UpdatedAtUtc = nowUtc;
+    }
 
     public void SetProfilePhoto(Guid? fileAssetId, DateTime updatedAtUtc)
     {

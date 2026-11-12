@@ -72,6 +72,11 @@ public static class NotificationOutboxContract
         NotificationType.MessageReceived => MessageReceivedMessageType,
         NotificationType.MessageReply => MessageReplyMessageType,
         NotificationType.MessageMention => MessageMentionMessageType,
+        NotificationType.OrganizationInvitation => "notification.organization-invitation.v1",
+        NotificationType.MembershipChanged => "notification.membership-changed.v1",
+        NotificationType.OrderPaid => "notification.order-paid.v1",
+        NotificationType.SupportUpdated => "notification.support-updated.v1",
+        NotificationType.SchoolApplicationUpdated => "notification.school-application-updated.v1",
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 }
