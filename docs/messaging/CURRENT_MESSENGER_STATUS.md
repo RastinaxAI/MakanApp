@@ -1,6 +1,6 @@
 # وضعیت جاری Messenger: P0، P1، P2 و مرز P3
 
-> سیاست جاری عمومی `2026-11-01`: [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [Handoff](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع سنیِ عمومی گزارش‌های P0/P1/P2 تاریخی/superseded است؛ Safety/Privacy/Block و مجوز واقعی منبع باقی‌اند. AccountInbox/Replay، capability رسمی، دعوت ۳۰روزه، Photo و Receipt افزوده‌اند. این تغییر شاهد اجرای Media/P3، Push واقعی یا پذیرش سرور نیست.
+> سیاست جاری عمومی `2026-11-01`: [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [Handoff](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع سنیِ عمومی گزارش‌های P0/P1/P2 تاریخی/superseded است؛ Safety/Privacy/Block و مجوز واقعی منبع باقی‌اند. AccountInbox/Replay، capability رسمی، دعوت اولیهٔ هفت‌روزه، Photo و Receipt افزوده‌اند. مقدار هفت روز در `ConversationInvitation.DefaultInitialLifetime` است و retry همان عملیات مهلت را تمدید نمی‌کند. این تغییر شاهد اجرای Media/P3، Push واقعی یا پذیرش سرور نیست.
 
 افزودهٔ جاری `2026-10-30` / `main@e11d4ec`: replay حساب با GET /api/v1/realtime/changes و ClientInvalidated، ContextRevision، bootstrap پیش از Snapshot و resync/backoff موجودند. مجوز read فعلی، نه گروه قدیمی Hub، مخاطب را تعیین می‌کند. Direct/Saved از summary خوانده می‌شود. [Handoff جاری](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md).
 
@@ -14,7 +14,7 @@ BE-01 همچنان PRODUCT_DECISION_BLOCKED است: رسانهٔ Minor/Unknown �
 
 | حوزه | وضعیت جاری و مرجع |
 |---|---|
-| سن و شروع ارتباط | تأیید اولیهٔ رسمی سن، وضعیت امن self و Direct دو حساب Adult طبق GAP-05 در P0 موجودند؛ OTP/DOB خوداظهاری اثبات سن نیست |
+| سن و شروع ارتباط | Profile لازم و Privacy/Block/Safety و مجوز جاری منبع بررسی می‌شوند؛ طبق سیاست مصوب 2026-11-01، سن یا Unverified به‌تنهایی منع عمومی Messaging نیست. OTP/DOB خوداظهاری اثبات سن نیست |
 | Peer Read | read-state مجاز Direct در P1؛ Group/Channel رسید per-member ندارند و Hidden علت خصوصی را افشا نمی‌کند |
 | Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ `P1_PUSH_RUNTIME_PENDING` باقی است؛ SMS عمومی اعلان provider واقعی ندارد |
 | Typing / Presence | lease و TTL واقعی با subscription و privacy جاری در P2؛ state گذرا در حافظه و تک‌instance، نه تاریخچه دائمی یا توزیع‌شده |

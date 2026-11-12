@@ -1,10 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-> اصلاح جاری `2026-11-01`: [قرارداد Messaging](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) بر توضیح‌های سنی این Snapshot مقدم است. فیلدهای سن فقط داده‌اند؛ منع عمومی Unknown/Minor/Unverified superseded است و Privacy/Block/Safety/مجوز منبع حفظ شده‌اند. پنج عملیات افزایشی، Capability، Receipt و Photo را از Handoff و OpenAPI زنده بخوانید؛ جدول‌های تولیدشدهٔ قبلی زیر کاتالوگ کامل Build جدید نیستند.
+بازبینی `2026-11-12` با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-بازبینی `2026-10-30` با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
-
-پوشش: **365 عملیات HTTP، 322 مسیر متمایز، 63 Controller و 608 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **483 عملیات HTTP، 427 مسیر متمایز، 91 Controller و 772 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -26,7 +24,7 @@
 
 عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.
 
-AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.
+AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. طبق override جاری، AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند؛ شواهد تاریخی JWT الزام فعال Runtime نیستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal تا قرارداد سازگار Upstream محدود است. [قرارداد v6](product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).
 
 پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده‌اند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست‌های date-only/null، عکس Bearer، visibility Draft و رضایت والد در [راهنما](backend-api-guide.md) و [قرارداد مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) توضیح داده شده‌اند.
 
@@ -41,12 +39,15 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | Controller | تعداد عملیات | سورس |
 |---|---|---|
 | AcademicPeriods | 2 | [AcademicPeriodsController](../MakanApp.Api/Controllers/AcademicPeriodsController.cs) |
+| AccountDeletion | 2 | [AccountDeletionController](../MakanApp.Api/Controllers/AccountDeletionController.cs) |
+| AddressBook | 3 | [AddressBookController](../MakanApp.Api/Controllers/AddressBookController.cs) |
 | AdminAuditLogs | 1 | [AdminAuditLogsController](../MakanApp.Api/Controllers/AdminAuditLogsController.cs) |
-| Ai | 12 | [AiController](../MakanApp.Api/Controllers/AiController.cs) |
+| Ai | 13 | [AiController](../MakanApp.Api/Controllers/AiController.cs) |
 | Assignments | 6 | [AssignmentsController](../MakanApp.Api/Controllers/AssignmentsController.cs) |
+| AssistantContext | 2 | [AssistantContextController](../MakanApp.Api/Controllers/AssistantContextController.cs) |
 | Auth | 7 | [AuthController](../MakanApp.Api/Controllers/AuthController.cs) |
 | ClassLessons | 5 | [ClassLessonsController](../MakanApp.Api/Controllers/ClassLessonsController.cs) |
-| Classes | 8 | [ClassesController](../MakanApp.Api/Controllers/ClassesController.cs) |
+| Classes | 9 | [ClassesController](../MakanApp.Api/Controllers/ClassesController.cs) |
 | Commerce | 5 | [CommerceController](../MakanApp.Api/Controllers/CommerceController.cs) |
 | CommercialSubscriptions | 12 | [CommercialSubscriptionsController](../MakanApp.Api/Controllers/CommercialSubscriptionsController.cs) |
 | CommunicationAge | 6 | [CommunicationAgeController](../MakanApp.Api/Controllers/CommunicationAgeController.cs) |
@@ -56,17 +57,20 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | ConversationInvitations | 5 | [ConversationInvitationsController](../MakanApp.Api/Controllers/ConversationInvitationsController.cs) |
 | ConversationInviteLinks | 9 | [ConversationInviteLinksController](../MakanApp.Api/Controllers/ConversationInviteLinksController.cs) |
 | ConversationModeration | 6 | [ConversationModerationController](../MakanApp.Api/Controllers/ConversationModerationController.cs) |
+| ConversationPhotos | 2 | [ConversationPhotosController](../MakanApp.Api/Controllers/ConversationPhotosController.cs) |
 | ConversationPolls | 5 | [ConversationPollsController](../MakanApp.Api/Controllers/ConversationPollsController.cs) |
 | ConversationTopics | 3 | [ConversationTopicsController](../MakanApp.Api/Controllers/ConversationTopicsController.cs) |
-| Conversations | 43 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
+| Conversations | 45 | [ConversationsController](../MakanApp.Api/Controllers/ConversationsController.cs) |
 | Courses | 2 | [CoursesController](../MakanApp.Api/Controllers/CoursesController.cs) |
 | Dashboards | 4 | [DashboardsController](../MakanApp.Api/Controllers/DashboardsController.cs) |
-| Evaluations | 8 | [EvaluationsController](../MakanApp.Api/Controllers/EvaluationsController.cs) |
-| ExamGradings | 9 | [ExamGradingsController](../MakanApp.Api/Controllers/ExamGradingsController.cs) |
-| Exams | 23 | [ExamsController](../MakanApp.Api/Controllers/ExamsController.cs) |
+| EducationalSources | 10 | [EducationalSourcesController](../MakanApp.Api/Controllers/EducationalSourcesController.cs) |
+| Evaluations | 9 | [EvaluationsController](../MakanApp.Api/Controllers/EvaluationsController.cs) |
+| ExamGradings | 10 | [ExamGradingsController](../MakanApp.Api/Controllers/ExamGradingsController.cs) |
+| Exams | 24 | [ExamsController](../MakanApp.Api/Controllers/ExamsController.cs) |
 | Files | 4 | [FilesController](../MakanApp.Api/Controllers/FilesController.cs) |
 | Guardian | 3 | [GuardianController](../MakanApp.Api/Controllers/GuardianController.cs) |
 | Invitations | 3 | [InvitationsController](../MakanApp.Api/Controllers/InvitationsController.cs) |
+| KnowledgeIntegration | 7 | [KnowledgeIntegrationController](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs) |
 | MessageReports | 1 | [MessageReportsController](../MakanApp.Api/Controllers/MessageReportsController.cs) |
 | Messages | 1 | [MessagesController](../MakanApp.Api/Controllers/MessagesController.cs) |
 | MessagingFolders | 3 | [MessagingFoldersController](../MakanApp.Api/Controllers/MessagingFoldersController.cs) |
@@ -74,35 +78,57 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | MessagingSafety | 4 | [MessagingSafetyController](../MakanApp.Api/Controllers/MessagingSafetyController.cs) |
 | NotificationDevices | 5 | [NotificationDevicesController](../MakanApp.Api/Controllers/NotificationDevicesController.cs) |
 | NotificationPreferences | 2 | [NotificationPreferencesController](../MakanApp.Api/Controllers/NotificationPreferencesController.cs) |
-| Notifications | 3 | [NotificationsController](../MakanApp.Api/Controllers/NotificationsController.cs) |
+| Notifications | 4 | [NotificationsController](../MakanApp.Api/Controllers/NotificationsController.cs) |
 | OfficialClassConversations | 1 | [OfficialClassConversationsController](../MakanApp.Api/Controllers/OfficialClassConversationsController.cs) |
+| OfficialSpaces | 4 | [OfficialSpacesController](../MakanApp.Api/Controllers/OfficialSpacesController.cs) |
 | OrganizationMembers | 1 | [OrganizationMembersController](../MakanApp.Api/Controllers/OrganizationMembersController.cs) |
+| OrganizationMembershipManagement | 4 | [OrganizationMembershipManagementController](../MakanApp.Api/Controllers/OrganizationMembershipManagementController.cs) |
 | OrganizationPeople | 7 | [OrganizationPeopleController](../MakanApp.Api/Controllers/OrganizationPeopleController.cs) |
+| PaymentRecovery | 4 | [PaymentRecoveryController](../MakanApp.Api/Controllers/PaymentRecoveryController.cs) |
 | People | 3 | [PeopleController](../MakanApp.Api/Controllers/PeopleController.cs) |
 | PeoplePresence | 1 | [PeoplePresenceController](../MakanApp.Api/Controllers/PeoplePresenceController.cs) |
+| PersonalClassAcademicPermissions | 2 | [PersonalClassAcademicPermissionsController](../MakanApp.Api/Controllers/PersonalClassAcademicPermissionsController.cs) |
+| PersonalClassAcademics | 4 | [PersonalClassAcademicsController](../MakanApp.Api/Controllers/PersonalClassAcademicsController.cs) |
+| PersonalClassHistory | 1 | [PersonalClassHistoryController](../MakanApp.Api/Controllers/PersonalClassHistoryController.cs) |
+| PersonalClassLifecycle | 19 | [PersonalClassLifecycleController](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs) |
+| PersonalClassRequests | 7 | [PersonalClassRequestsController](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs) |
 | PersonalClasses | 9 | [PersonalClassesController](../MakanApp.Api/Controllers/PersonalClassesController.cs) |
+| PhoneChange | 2 | [PhoneChangeController](../MakanApp.Api/Controllers/PhoneChangeController.cs) |
 | PlatformCommerce | 7 | [PlatformCommerceController](../MakanApp.Api/Controllers/PlatformCommerceController.cs) |
 | PlatformCommercialContracts | 8 | [PlatformCommercialContractsController](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs) |
+| PlatformDeletionRequests | 1 | [PlatformDeletionRequestsController](../MakanApp.Api/Controllers/AccountDeletionController.cs) |
 | PlatformEducation | 6 | [PlatformEducationController](../MakanApp.Api/Controllers/PlatformEducationController.cs) |
 | PlatformFinance | 2 | [PlatformFinanceController](../MakanApp.Api/Controllers/PlatformFinanceController.cs) |
 | PlatformIam | 5 | [PlatformIamController](../MakanApp.Api/Controllers/PlatformIamController.cs) |
+| PlatformLibrarySources | 2 | [PlatformLibrarySourcesController](../MakanApp.Api/Controllers/PlatformLibrarySourcesController.cs) |
 | PlatformMessagingMetadata | 1 | [PlatformMessagingMetadataController](../MakanApp.Api/Controllers/PlatformMessagingMetadataController.cs) |
 | PlatformModeration | 9 | [PlatformModerationController](../MakanApp.Api/Controllers/PlatformModerationController.cs) |
 | PlatformOrganizations | 10 | [PlatformOrganizationsController](../MakanApp.Api/Controllers/PlatformOrganizationsController.cs) |
+| PlatformPersonalClassAcademicPermissions | 2 | [PlatformPersonalClassAcademicPermissionsController](../MakanApp.Api/Controllers/PlatformPersonalClassAcademicPermissionsController.cs) |
+| PlatformPersonalClassHistory | 1 | [PlatformPersonalClassHistoryController](../MakanApp.Api/Controllers/PlatformPersonalClassHistoryController.cs) |
+| PlatformPersonalClassMemberships | 1 | [PlatformPersonalClassMembershipsController](../MakanApp.Api/Controllers/PlatformPersonalClassMembershipsController.cs) |
+| PlatformPersonalClassRequests | 4 | [PlatformPersonalClassRequestsController](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs) |
 | PlatformProvisioning | 2 | [PlatformProvisioningController](../MakanApp.Api/Controllers/PlatformProvisioningController.cs) |
+| PlatformSchoolApplications | 4 | [PlatformSchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
+| PlatformSupportTickets | 5 | [PlatformSupportTicketsController](../MakanApp.Api/Controllers/SupportTicketsController.cs) |
 | PlatformSystemOperations | 3 | [PlatformSystemOperationsController](../MakanApp.Api/Controllers/PlatformSystemOperationsController.cs) |
 | PlatformUsers | 6 | [PlatformUsersController](../MakanApp.Api/Controllers/PlatformUsersController.cs) |
 | Profile | 4 | [ProfileController](../MakanApp.Api/Controllers/ProfileController.cs) |
-| Realtime | 1 | [RealtimeController](../MakanApp.Api/Controllers/RealtimeController.cs) |
+| Realtime | 2 | [RealtimeController](../MakanApp.Api/Controllers/RealtimeController.cs) |
 | Reports | 19 | [ReportsController](../MakanApp.Api/Controllers/ReportsController.cs) |
 | SavedMessageLabels | 2 | [SavedMessageLabelsController](../MakanApp.Api/Controllers/SavedMessageLabelsController.cs) |
 | Schedule | 3 | [ScheduleController](../MakanApp.Api/Controllers/ScheduleController.cs) |
 | ScheduledMessages | 3 | [ScheduledMessagesController](../MakanApp.Api/Controllers/ScheduledMessagesController.cs) |
+| SchoolAcademicDiscovery | 2 | [SchoolAcademicDiscoveryController](../MakanApp.Api/Controllers/SchoolAcademicDiscoveryController.cs) |
+| SchoolApplications | 5 | [SchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
 | SchoolGuardianInvitations | 2 | [SchoolGuardianInvitationsController](../MakanApp.Api/Controllers/SchoolGuardianInvitationsController.cs) |
 | SchoolGuardianRelations | 6 | [SchoolGuardianRelationsController](../MakanApp.Api/Controllers/SchoolGuardianRelationsController.cs) |
+| SchoolSentInvitations | 1 | [SchoolSentInvitationsController](../MakanApp.Api/Controllers/SchoolSentInvitationsController.cs) |
 | Sessions | 8 | [SessionsController](../MakanApp.Api/Controllers/SessionsController.cs) |
-| Submissions | 8 | [SubmissionsController](../MakanApp.Api/Controllers/SubmissionsController.cs) |
-| Workspaces | 3 | [WorkspacesController](../MakanApp.Api/Controllers/WorkspacesController.cs) |
+| Submissions | 10 | [SubmissionsController](../MakanApp.Api/Controllers/SubmissionsController.cs) |
+| SupportTickets | 4 | [SupportTicketsController](../MakanApp.Api/Controllers/SupportTicketsController.cs) |
+| Workspaces | 4 | [WorkspacesController](../MakanApp.Api/Controllers/WorkspacesController.cs) |
+| ZibalCallback | 1 | [ZibalCallbackController](../MakanApp.Api/Controllers/ZibalCallbackController.cs) |
 
 ## AcademicPeriods
 
@@ -126,9 +152,18 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfAcademicPeriodResult](#contract-SchoolPageOfAcademicPeriodResult)<br>`application/json`: [SchoolPageOfAcademicPeriodResult](#contract-SchoolPageOfAcademicPeriodResult)<br>`text/json`: [SchoolPageOfAcademicPeriodResult](#contract-SchoolPageOfAcademicPeriodResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/periods
 
@@ -143,6 +178,111 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [AcademicPeriodResult](#contract-AcademicPeriodResult)<br>`application/json`: [AcademicPeriodResult](#contract-AcademicPeriodResult)<br>`text/json`: [AcademicPeriodResult](#contract-AcademicPeriodResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## AccountDeletion
+
+### GET /api/v1/me/deletion-request
+
+کد واقعی: [AccountDeletionController.Status](../MakanApp.Api/Controllers/AccountDeletionController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.AccountDeletionService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`application/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`text/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult) |
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/me/deletion-request
+
+کد واقعی: [AccountDeletionController.CreateRequest](../MakanApp.Api/Controllers/AccountDeletionController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.AccountDeletionService`
+
+بدنه درخواست: `application/json`: [RequestAccountDeletionCommand](#contract-RequestAccountDeletionCommand)<br>`text/json`: [RequestAccountDeletionCommand](#contract-RequestAccountDeletionCommand)<br>`application/*+json`: [RequestAccountDeletionCommand](#contract-RequestAccountDeletionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 202 | Accepted | `text/plain`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`application/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`text/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## AddressBook
+
+### GET /api/v1/address-book/delta
+
+کد واقعی: [AddressBookController.Delta](../MakanApp.Api/Controllers/AddressBookController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.AddressBookService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `deviceId` | query | خیر | string / uuid |
+| `cursor` | query | خیر | string |
+| `limit` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ContactDeltaResult](#contract-ContactDeltaResult)<br>`application/json`: [ContactDeltaResult](#contract-ContactDeltaResult)<br>`text/json`: [ContactDeltaResult](#contract-ContactDeltaResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/address-book/devices/consent
+
+کد واقعی: [AddressBookController.Consent](../MakanApp.Api/Controllers/AddressBookController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.AddressBookService`
+
+بدنه درخواست: `application/json`: [SetContactConsentCommand](#contract-SetContactConsentCommand)<br>`text/json`: [SetContactConsentCommand](#contract-SetContactConsentCommand)<br>`application/*+json`: [SetContactConsentCommand](#contract-SetContactConsentCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ContactDeviceResult](#contract-ContactDeviceResult)<br>`application/json`: [ContactDeviceResult](#contract-ContactDeviceResult)<br>`text/json`: [ContactDeviceResult](#contract-ContactDeviceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/address-book/sync
+
+کد واقعی: [AddressBookController.Sync](../MakanApp.Api/Controllers/AddressBookController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.AddressBookService`
+
+بدنه درخواست: `application/json`: [ContactSyncCommand](#contract-ContactSyncCommand)<br>`text/json`: [ContactSyncCommand](#contract-ContactSyncCommand)<br>`application/*+json`: [ContactSyncCommand](#contract-ContactSyncCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ContactSyncResult](#contract-ContactSyncResult)<br>`application/json`: [ContactSyncResult](#contract-ContactSyncResult)<br>`text/json`: [ContactSyncResult](#contract-ContactSyncResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## AdminAuditLogs
@@ -176,6 +316,8 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AdminAuditLogPage](#contract-AdminAuditLogPage)<br>`application/json`: [AdminAuditLogPage](#contract-AdminAuditLogPage)<br>`text/json`: [AdminAuditLogPage](#contract-AdminAuditLogPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Ai
@@ -186,13 +328,21 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: `application/json`: [SendAiChatCommand](#contract-SendAiChatCommand)<br>`text/json`: [SendAiChatCommand](#contract-SendAiChatCommand)<br>`application/*+json`: [SendAiChatCommand](#contract-SendAiChatCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiChatResult](#contract-AiChatResult)<br>`application/json`: [AiChatResult](#contract-AiChatResult)<br>`text/json`: [AiChatResult](#contract-AiChatResult) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/exams/{examId}/prepare
 
@@ -200,17 +350,22 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `examId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiExamPreparationResponse](#contract-AiExamPreparationResponse)<br>`application/json`: [AiExamPreparationResponse](#contract-AiExamPreparationResponse)<br>`text/json`: [AiExamPreparationResponse](#contract-AiExamPreparationResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/homeworks/{assignmentId}/explain
 
@@ -218,17 +373,22 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `assignmentId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: `application/json`: [ExplainHomeworkCommand](#contract-ExplainHomeworkCommand)<br>`text/json`: [ExplainHomeworkCommand](#contract-ExplainHomeworkCommand)<br>`application/*+json`: [ExplainHomeworkCommand](#contract-ExplainHomeworkCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiHomeworkExplanationResponse](#contract-AiHomeworkExplanationResponse)<br>`application/json`: [AiHomeworkExplanationResponse](#contract-AiHomeworkExplanationResponse)<br>`text/json`: [AiHomeworkExplanationResponse](#contract-AiHomeworkExplanationResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/managers/classes/{classId}/insight
 
@@ -236,17 +396,22 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`application/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`text/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/managers/classes/{classId}/students/{studentId}/insight
 
@@ -254,18 +419,23 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
 | `studentId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`application/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`text/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/managers/school-summary
 
@@ -273,13 +443,21 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`application/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`text/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/parents/child-summary
 
@@ -287,13 +465,37 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiParentChildSummaryResponse](#contract-AiParentChildSummaryResponse)<br>`application/json`: [AiParentChildSummaryResponse](#contract-AiParentChildSummaryResponse)<br>`text/json`: [AiParentChildSummaryResponse](#contract-AiParentChildSummaryResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/ai/sources/preflight
+
+کد واقعی: [AiController.SourcePreflight](../MakanApp.Api/Controllers/AiController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+بدنه درخواست: `application/json`: [AiSourcePreflightCommand](#contract-AiSourcePreflightCommand)<br>`text/json`: [AiSourcePreflightCommand](#contract-AiSourcePreflightCommand)<br>`application/*+json`: [AiSourcePreflightCommand](#contract-AiSourcePreflightCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AiSourcePreflightResult](#contract-AiSourcePreflightResult)<br>`application/json`: [AiSourcePreflightResult](#contract-AiSourcePreflightResult)<br>`text/json`: [AiSourcePreflightResult](#contract-AiSourcePreflightResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/students/analyze
 
@@ -301,13 +503,21 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiStudentAnalysisResponse](#contract-AiStudentAnalysisResponse)<br>`application/json`: [AiStudentAnalysisResponse](#contract-AiStudentAnalysisResponse)<br>`text/json`: [AiStudentAnalysisResponse](#contract-AiStudentAnalysisResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/study-plan
 
@@ -315,13 +525,21 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: `application/json`: [CreateStudyPlanCommand](#contract-CreateStudyPlanCommand)<br>`text/json`: [CreateStudyPlanCommand](#contract-CreateStudyPlanCommand)<br>`application/*+json`: [CreateStudyPlanCommand](#contract-CreateStudyPlanCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiStudyPlanResponse](#contract-AiStudyPlanResponse)<br>`application/json`: [AiStudyPlanResponse](#contract-AiStudyPlanResponse)<br>`text/json`: [AiStudyPlanResponse](#contract-AiStudyPlanResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/teachers/classes/{classId}/activity-suggestions
 
@@ -329,17 +547,22 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: `application/json`: [SuggestTeacherActivitiesCommand](#contract-SuggestTeacherActivitiesCommand)<br>`text/json`: [SuggestTeacherActivitiesCommand](#contract-SuggestTeacherActivitiesCommand)<br>`application/*+json`: [SuggestTeacherActivitiesCommand](#contract-SuggestTeacherActivitiesCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiActivitySuggestionsResponse](#contract-AiActivitySuggestionsResponse)<br>`application/json`: [AiActivitySuggestionsResponse](#contract-AiActivitySuggestionsResponse)<br>`text/json`: [AiActivitySuggestionsResponse](#contract-AiActivitySuggestionsResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/teachers/classes/{classId}/students/{studentId}/insight
 
@@ -347,18 +570,23 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
 | `studentId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`application/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`text/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/ai/teachers/classes/{classId}/summary
 
@@ -366,17 +594,22 @@ policy: `platform.audit.read`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.IAiChatService`، `MakanApp.Application.Ai.IAiRoleContextService`، `MakanApp.Application.Ai.IAiSourceSelectionService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`application/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse)<br>`text/json`: [AiRoleInsightResponse](#contract-AiRoleInsightResponse) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Assignments
@@ -398,6 +631,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: آرایه از [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: آرایه از [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/assignments/{assignmentId}
 
@@ -416,6 +661,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/assignments/{assignmentId}
 
@@ -434,6 +691,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/assignments/{assignmentId}/publish
 
@@ -452,6 +721,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PublishAssignmentResult](#contract-PublishAssignmentResult)<br>`application/json`: [PublishAssignmentResult](#contract-PublishAssignmentResult)<br>`text/json`: [PublishAssignmentResult](#contract-PublishAssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/classes/{classId}/assignments
 
@@ -470,6 +751,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: آرایه از [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: آرایه از [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/assignments
 
@@ -488,6 +781,66 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## AssistantContext
+
+### GET /api/v1/ai/assistant-context
+
+کد واقعی: [AssistantContextController.Read](../MakanApp.Api/Controllers/AssistantContextController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.AssistantContextResolver`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AssistantContextResult](#contract-AssistantContextResult)<br>`application/json`: [AssistantContextResult](#contract-AssistantContextResult)<br>`text/json`: [AssistantContextResult](#contract-AssistantContextResult) |
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/ai/assistant-context
+
+کد واقعی: [AssistantContextController.Select](../MakanApp.Api/Controllers/AssistantContextController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Ai.AssistantContextResolver`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `X-AI-Operation-Id` | header | خیر | string / uuid |
+| `X-AI-Payer` | header | خیر | string / Organization, Individual, FreeTrial |
+
+بدنه درخواست: `application/json`: [SelectAssistantContextCommand](#contract-SelectAssistantContextCommand)<br>`text/json`: [SelectAssistantContextCommand](#contract-SelectAssistantContextCommand)<br>`application/*+json`: [SelectAssistantContextCommand](#contract-SelectAssistantContextCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AssistantContextResult](#contract-AssistantContextResult)<br>`application/json`: [AssistantContextResult](#contract-AssistantContextResult)<br>`text/json`: [AssistantContextResult](#contract-AssistantContextResult) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Auth
@@ -505,6 +858,8 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/auth/otp/challenges
 
@@ -561,6 +916,8 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [UserSessionResult](#contract-UserSessionResult)<br>`application/json`: آرایه از [UserSessionResult](#contract-UserSessionResult)<br>`text/json`: آرایه از [UserSessionResult](#contract-UserSessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/auth/sessions/revoke-others
 
@@ -575,6 +932,8 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/auth/sessions/{sessionId}
 
@@ -593,6 +952,8 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ClassLessons
@@ -617,12 +978,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfClassLessonResult](#contract-SchoolPageOfClassLessonResult)<br>`application/json`: [SchoolPageOfClassLessonResult](#contract-SchoolPageOfClassLessonResult)<br>`text/json`: [SchoolPageOfClassLessonResult](#contract-SchoolPageOfClassLessonResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/lessons
 
@@ -642,12 +1009,18 @@ policy: `platform.audit.read`
 |---|---|---|
 | 201 | Created | `text/plain`: [ClassLessonResult](#contract-ClassLessonResult)<br>`application/json`: [ClassLessonResult](#contract-ClassLessonResult)<br>`text/json`: [ClassLessonResult](#contract-ClassLessonResult) |
 | 200 | OK | `text/plain`: [ClassLessonResult](#contract-ClassLessonResult)<br>`application/json`: [ClassLessonResult](#contract-ClassLessonResult)<br>`text/json`: [ClassLessonResult](#contract-ClassLessonResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/lessons/{lessonId}
 
@@ -666,12 +1039,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ClassLessonResult](#contract-ClassLessonResult)<br>`application/json`: [ClassLessonResult](#contract-ClassLessonResult)<br>`text/json`: [ClassLessonResult](#contract-ClassLessonResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/lessons/{lessonId}
 
@@ -690,12 +1069,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ClassLessonResult](#contract-ClassLessonResult)<br>`application/json`: [ClassLessonResult](#contract-ClassLessonResult)<br>`text/json`: [ClassLessonResult](#contract-ClassLessonResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/lessons/{lessonId}/publish
 
@@ -714,12 +1099,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ClassLessonResult](#contract-ClassLessonResult)<br>`application/json`: [ClassLessonResult](#contract-ClassLessonResult)<br>`text/json`: [ClassLessonResult](#contract-ClassLessonResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Classes
@@ -737,6 +1128,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [ClassResult](#contract-ClassResult)<br>`application/json`: آرایه از [ClassResult](#contract-ClassResult)<br>`text/json`: آرایه از [ClassResult](#contract-ClassResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes
 
@@ -751,6 +1154,48 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ClassResult](#contract-ClassResult)<br>`application/json`: [ClassResult](#contract-ClassResult)<br>`text/json`: [ClassResult](#contract-ClassResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PATCH /api/v1/academic/classes/{classId}
+
+کد واقعی: [ClassesController.Update](../MakanApp.Api/Controllers/ClassesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.IAcademicService`، `MakanApp.Application.Academic.SchoolReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateClassSettingsCommand](#contract-UpdateClassSettingsCommand)<br>`text/json`: [UpdateClassSettingsCommand](#contract-UpdateClassSettingsCommand)<br>`application/*+json`: [UpdateClassSettingsCommand](#contract-UpdateClassSettingsCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ClassResult](#contract-ClassResult)<br>`application/json`: [ClassResult](#contract-ClassResult)<br>`text/json`: [ClassResult](#contract-ClassResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/enrollments
 
@@ -769,6 +1214,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [EnrollmentResult](#contract-EnrollmentResult)<br>`application/json`: [EnrollmentResult](#contract-EnrollmentResult)<br>`text/json`: [EnrollmentResult](#contract-EnrollmentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/enrollments/{enrollmentId}/end
 
@@ -788,6 +1245,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [EnrollmentResult](#contract-EnrollmentResult)<br>`application/json`: [EnrollmentResult](#contract-EnrollmentResult)<br>`text/json`: [EnrollmentResult](#contract-EnrollmentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/classes/{classId}/learners
 
@@ -810,10 +1279,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfClassLearnerResult](#contract-SchoolPageOfClassLearnerResult)<br>`application/json`: [SchoolPageOfClassLearnerResult](#contract-SchoolPageOfClassLearnerResult)<br>`text/json`: [SchoolPageOfClassLearnerResult](#contract-SchoolPageOfClassLearnerResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/classes/{classId}/teachers
 
@@ -836,10 +1313,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfClassTeacherResult](#contract-SchoolPageOfClassTeacherResult)<br>`application/json`: [SchoolPageOfClassTeacherResult](#contract-SchoolPageOfClassTeacherResult)<br>`text/json`: [SchoolPageOfClassTeacherResult](#contract-SchoolPageOfClassTeacherResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/teachers
 
@@ -858,6 +1343,18 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult)<br>`application/json`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult)<br>`text/json`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/classes/{classId}/teachers/{teacherAssignmentId}/end
 
@@ -872,11 +1369,23 @@ policy: `platform.audit.read`
 | `classId` | path | بله | string / uuid |
 | `teacherAssignmentId` | path | بله | string / uuid |
 
-بدنه درخواست: ندارد.
+بدنه درخواست: `application/json`: [EndTeacherAssignmentCommand](#contract-EndTeacherAssignmentCommand)<br>`text/json`: [EndTeacherAssignmentCommand](#contract-EndTeacherAssignmentCommand)<br>`application/*+json`: [EndTeacherAssignmentCommand](#contract-EndTeacherAssignmentCommand)؛ optional در schema
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult)<br>`application/json`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult)<br>`text/json`: [TeacherAssignmentResult](#contract-TeacherAssignmentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Commerce
@@ -898,6 +1407,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrderListResult](#contract-OrderListResult)<br>`application/json`: [OrderListResult](#contract-OrderListResult)<br>`text/json`: [OrderListResult](#contract-OrderListResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/orders
 
@@ -913,6 +1428,13 @@ policy: `platform.audit.read`
 |---|---|---|
 | 200 | OK | `text/plain`: [CreateOrderResult](#contract-CreateOrderResult)<br>`application/json`: [CreateOrderResult](#contract-CreateOrderResult)<br>`text/json`: [CreateOrderResult](#contract-CreateOrderResult) |
 | 201 | Created | `text/plain`: [CreateOrderResult](#contract-CreateOrderResult)<br>`application/json`: [CreateOrderResult](#contract-CreateOrderResult)<br>`text/json`: [CreateOrderResult](#contract-CreateOrderResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/orders/{orderId}
 
@@ -931,6 +1453,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrderDto](#contract-OrderDto)<br>`application/json`: [OrderDto](#contract-OrderDto)<br>`text/json`: [OrderDto](#contract-OrderDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/orders/{orderId}/payments
 
@@ -950,6 +1478,13 @@ policy: `platform.audit.read`
 |---|---|---|
 | 200 | OK | `text/plain`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`application/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`text/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult) |
 | 201 | Created | `text/plain`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`application/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`text/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/summary
 
@@ -964,6 +1499,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto)<br>`application/json`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto)<br>`text/json`: [ManagerCommerceSummaryDto](#contract-ManagerCommerceSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## CommercialSubscriptions
@@ -981,6 +1522,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto)<br>`application/json`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto)<br>`text/json`: [AiQuotaPreflightDto](#contract-AiQuotaPreflightDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/catalog
 
@@ -999,6 +1547,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto)<br>`application/json`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto)<br>`text/json`: آرایه از [CommercialPlanDto](#contract-CommercialPlanDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/organization/quote
 
@@ -1013,6 +1567,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`application/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`text/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/organization/subscription
 
@@ -1027,6 +1588,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/organization/subscription/downgrade
 
@@ -1041,6 +1608,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/personal/orders
 
@@ -1059,6 +1633,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrderListResult](#contract-OrderListResult)<br>`application/json`: [OrderListResult](#contract-OrderListResult)<br>`text/json`: [OrderListResult](#contract-OrderListResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/personal/orders
 
@@ -1073,6 +1653,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CreateOrderResult](#contract-CreateOrderResult)<br>`application/json`: [CreateOrderResult](#contract-CreateOrderResult)<br>`text/json`: [CreateOrderResult](#contract-CreateOrderResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/personal/orders/{orderId}
 
@@ -1091,6 +1678,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrderDto](#contract-OrderDto)<br>`application/json`: [OrderDto](#contract-OrderDto)<br>`text/json`: [OrderDto](#contract-OrderDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/personal/orders/{orderId}/payments
 
@@ -1109,6 +1702,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`application/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult)<br>`text/json`: [InitiatePaymentResult](#contract-InitiatePaymentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/personal/quote
 
@@ -1123,6 +1723,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`application/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`text/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/commerce/personal/subscription
 
@@ -1137,6 +1744,12 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/commerce/personal/subscription/downgrade
 
@@ -1151,6 +1764,13 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## CommunicationAge
@@ -1174,6 +1794,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/communication-age/resolve
 
@@ -1194,6 +1816,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/communication-age/verifications
 
@@ -1214,6 +1839,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/me/messaging-status
 
@@ -1228,6 +1856,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessagingStatusResult](#contract-MessagingStatusResult)<br>`application/json`: [MessagingStatusResult](#contract-MessagingStatusResult)<br>`text/json`: [MessagingStatusResult](#contract-MessagingStatusResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/organization/people/{personId}/communication-age
 
@@ -1246,6 +1876,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people/{personId}/communication-age/verify
 
@@ -1264,6 +1896,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`application/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult)<br>`text/json`: [CommunicationAgeResult](#contract-CommunicationAgeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Contacts
@@ -1288,6 +1922,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [UserContactPageResult](#contract-UserContactPageResult)<br>`application/json`: [UserContactPageResult](#contract-UserContactPageResult)<br>`text/json`: [UserContactPageResult](#contract-UserContactPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/contacts
 
@@ -1303,6 +1939,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [UserContactResult](#contract-UserContactResult)<br>`application/json`: [UserContactResult](#contract-UserContactResult)<br>`text/json`: [UserContactResult](#contract-UserContactResult) |
 | 201 | Created | `text/plain`: [UserContactResult](#contract-UserContactResult)<br>`application/json`: [UserContactResult](#contract-UserContactResult)<br>`text/json`: [UserContactResult](#contract-UserContactResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/contacts/recent
 
@@ -1322,6 +1960,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [RecentContactPageResult](#contract-RecentContactPageResult)<br>`application/json`: [RecentContactPageResult](#contract-RecentContactPageResult)<br>`text/json`: [RecentContactPageResult](#contract-RecentContactPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/contacts/{contactUserId}
 
@@ -1340,6 +1980,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/contacts/{contactUserId}
 
@@ -1358,6 +2000,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [UserContactResult](#contract-UserContactResult)<br>`application/json`: [UserContactResult](#contract-UserContactResult)<br>`text/json`: [UserContactResult](#contract-UserContactResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationAdvancedManagement
@@ -1379,6 +2023,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInfoResult](#contract-ConversationInfoResult)<br>`application/json`: [ConversationInfoResult](#contract-ConversationInfoResult)<br>`text/json`: [ConversationInfoResult](#contract-ConversationInfoResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/me/restriction
 
@@ -1397,6 +2043,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`application/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`text/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/member-restrictions
 
@@ -1417,6 +2065,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult)<br>`application/json`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult)<br>`text/json`: [MemberRestrictionPageResult](#contract-MemberRestrictionPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/{conversationId}/members/{userId}/restriction
 
@@ -1436,6 +2086,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`application/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult)<br>`text/json`: [MemberRestrictionResult](#contract-MemberRestrictionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationChecklists
@@ -1457,6 +2109,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/messages/{messageId}/checklist
 
@@ -1476,6 +2130,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/{conversationId}/messages/{messageId}/checklist
 
@@ -1495,6 +2151,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/{conversationId}/messages/{messageId}/checklist/items/{itemId}
 
@@ -1515,6 +2173,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`application/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult)<br>`text/json`: [ConversationChecklistResult](#contract-ConversationChecklistResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationInvitations
@@ -1536,6 +2196,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/messaging/invitations
 
@@ -1550,6 +2212,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: آرایه از [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: آرایه از [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/invitations/{invitationId}/accept
 
@@ -1568,6 +2232,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/invitations/{invitationId}/decline
 
@@ -1586,6 +2252,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/invitations/{invitationId}/revoke
 
@@ -1604,6 +2272,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`application/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult)<br>`text/json`: [ConversationInvitationResult](#contract-ConversationInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationInviteLinks
@@ -1627,6 +2297,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [InviteLinkPageResult](#contract-InviteLinkPageResult)<br>`application/json`: [InviteLinkPageResult](#contract-InviteLinkPageResult)<br>`text/json`: [InviteLinkPageResult](#contract-InviteLinkPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/invite-links
 
@@ -1645,6 +2317,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult)<br>`application/json`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult)<br>`text/json`: [CreatedInviteLinkResult](#contract-CreatedInviteLinkResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/invite-links/{linkId}/revoke
 
@@ -1664,6 +2338,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [InviteLinkResult](#contract-InviteLinkResult)<br>`application/json`: [InviteLinkResult](#contract-InviteLinkResult)<br>`text/json`: [InviteLinkResult](#contract-InviteLinkResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/join-requests
 
@@ -1684,6 +2360,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`application/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`text/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/invite-links/redeem
 
@@ -1698,6 +2376,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult)<br>`application/json`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult)<br>`text/json`: [InviteLinkRedemptionResult](#contract-InviteLinkRedemptionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/messaging/join-requests
 
@@ -1717,6 +2397,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`application/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult)<br>`text/json`: [ConversationJoinRequestPageResult](#contract-ConversationJoinRequestPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/join-requests/{requestId}/approve
 
@@ -1735,6 +2417,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/join-requests/{requestId}/cancel
 
@@ -1753,6 +2437,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/join-requests/{requestId}/reject
 
@@ -1771,6 +2457,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`application/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2)<br>`text/json`: [ConversationJoinRequestResult2](#contract-ConversationJoinRequestResult2) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationModeration
@@ -1796,6 +2484,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ModerationCasePageResult](#contract-ModerationCasePageResult)<br>`application/json`: [ModerationCasePageResult](#contract-ModerationCasePageResult)<br>`text/json`: [ModerationCasePageResult](#contract-ModerationCasePageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/moderation/cases/{caseId}
 
@@ -1815,6 +2505,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`application/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`text/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/moderation/cases/{caseId}/dismiss
 
@@ -1834,6 +2526,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`application/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`text/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/moderation/cases/{caseId}/evidence/files/{fileAssetId}
 
@@ -1853,7 +2547,11 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | بدون بدنهٔ منتشرشده |
+| 200 | بایت خام فایل؛ Content-Type واقعی از metadata معتبر فایل می‌آید. | `application/octet-stream`: string / binary |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 206 | بازهٔ معتبر فایل روی stream قابل seek؛ Content-Range را بخوانید. | `application/octet-stream`: string / binary |
+| 416 | بازهٔ درخواستی معتبر نیست؛ پاسخ فایل موفق نیست و ممکن است بدنه نداشته باشد. | بدون بدنهٔ منتشرشده |
 
 ### POST /api/v1/conversations/{conversationId}/moderation/cases/{caseId}/resolve
 
@@ -1873,6 +2571,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`application/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`text/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/moderation/cases/{caseId}/start-review
 
@@ -1892,6 +2592,61 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`application/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult)<br>`text/json`: [ModerationCaseDetailResult](#contract-ModerationCaseDetailResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## ConversationPhotos
+
+### DELETE /api/v1/conversations/{conversationId}/photo
+
+کد واقعی: [ConversationPhotosController.Remove](../MakanApp.Api/Controllers/ConversationPhotosController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPhotoService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+| `expectedVersion` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult)<br>`application/json`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult)<br>`text/json`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | Not Found | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | Precondition Failed | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/conversations/{conversationId}/photo
+
+کد واقعی: [ConversationPhotosController.Set](../MakanApp.Api/Controllers/ConversationPhotosController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.ConversationPhotoService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `conversationId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SetConversationPhotoCommand](#contract-SetConversationPhotoCommand)<br>`text/json`: [SetConversationPhotoCommand](#contract-SetConversationPhotoCommand)<br>`application/*+json`: [SetConversationPhotoCommand](#contract-SetConversationPhotoCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult)<br>`application/json`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult)<br>`text/json`: [ConversationPhotoMutationResult](#contract-ConversationPhotoMutationResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | Forbidden | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | Not Found | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | Precondition Failed | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | Unsupported Media Type | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationPolls
@@ -1914,6 +2669,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/messages/{messageId}/poll/close
 
@@ -1933,6 +2690,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/messages/{messageId}/poll/vote
 
@@ -1952,6 +2711,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPollResult](#contract-ConversationPollResult)<br>`application/json`: [ConversationPollResult](#contract-ConversationPollResult)<br>`text/json`: [ConversationPollResult](#contract-ConversationPollResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/messages/{messageId}/poll/voters
 
@@ -1974,6 +2735,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult)<br>`application/json`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult)<br>`text/json`: [ConversationPollVoterPageResult](#contract-ConversationPollVoterPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/polls
 
@@ -1992,6 +2755,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ConversationTopics
@@ -2015,6 +2780,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult)<br>`application/json`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult)<br>`text/json`: [ConversationTopicPageResult](#contract-ConversationTopicPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/topics
 
@@ -2033,6 +2800,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`application/json`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`text/json`: [ConversationTopicResult](#contract-ConversationTopicResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/{conversationId}/topics/{topicId}
 
@@ -2052,6 +2821,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`application/json`: [ConversationTopicResult](#contract-ConversationTopicResult)<br>`text/json`: [ConversationTopicResult](#contract-ConversationTopicResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Conversations
@@ -2062,7 +2833,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2071,12 +2842,39 @@ policy: `platform.users.manage`
 | `pageSize` | query | خیر | integer / int32 |
 | `q` | query | خیر | string |
 | `folderId` | query | خیر | string / uuid |
+| `scope` | query | خیر | string |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`application/json`: آرایه از [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`text/json`: آرایه از [ConversationSummaryResult](#contract-ConversationSummaryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/conversations/account
+
+کد واقعی: [ConversationsController.Account](../MakanApp.Api/Controllers/ConversationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `Filter` | query | خیر | string / All, Direct, Group, Channel, Unread, Archived, Saved |
+| `Search` | query | خیر | string |
+| `Limit` | query | خیر | integer / int32 |
+| `Cursor` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountInboxPageResult](#contract-AccountInboxPageResult)<br>`application/json`: [AccountInboxPageResult](#contract-AccountInboxPageResult)<br>`text/json`: [AccountInboxPageResult](#contract-AccountInboxPageResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | Unauthorized | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/channels
 
@@ -2084,7 +2882,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 بدنه درخواست: `application/json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)<br>`text/json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)<br>`application/*+json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)؛ required
 
@@ -2092,6 +2890,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
 | 201 | Created | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/direct
 
@@ -2099,7 +2899,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 بدنه درخواست: `application/json`: [StartDirectConversationCommand](#contract-StartDirectConversationCommand)<br>`text/json`: [StartDirectConversationCommand](#contract-StartDirectConversationCommand)<br>`application/*+json`: [StartDirectConversationCommand](#contract-StartDirectConversationCommand)؛ required
 
@@ -2107,6 +2907,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [DirectConversationResult](#contract-DirectConversationResult)<br>`application/json`: [DirectConversationResult](#contract-DirectConversationResult)<br>`text/json`: [DirectConversationResult](#contract-DirectConversationResult) |
 | 201 | Created | `text/plain`: [DirectConversationResult](#contract-DirectConversationResult)<br>`application/json`: [DirectConversationResult](#contract-DirectConversationResult)<br>`text/json`: [DirectConversationResult](#contract-DirectConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/discover
 
@@ -2114,7 +2916,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2122,12 +2924,15 @@ policy: `platform.users.manage`
 | `q` | query | خیر | string |
 | `page` | query | خیر | integer / int32 |
 | `pageSize` | query | خیر | integer / int32 |
+| `scope` | query | خیر | string |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [DiscoverableConversationPageResult](#contract-DiscoverableConversationPageResult)<br>`application/json`: [DiscoverableConversationPageResult](#contract-DiscoverableConversationPageResult)<br>`text/json`: [DiscoverableConversationPageResult](#contract-DiscoverableConversationPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/groups
 
@@ -2135,7 +2940,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 بدنه درخواست: `application/json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)<br>`text/json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)<br>`application/*+json`: [CreateManagedConversationCommand](#contract-CreateManagedConversationCommand)؛ required
 
@@ -2143,6 +2948,24 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
 | 201 | Created | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/conversations/permissions
+
+کد واقعی: [ConversationsController.GetPermissions](../MakanApp.Api/Controllers/ConversationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [ConversationPermissionDescriptor](#contract-ConversationPermissionDescriptor)<br>`application/json`: آرایه از [ConversationPermissionDescriptor](#contract-ConversationPermissionDescriptor)<br>`text/json`: آرایه از [ConversationPermissionDescriptor](#contract-ConversationPermissionDescriptor) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/saved
 
@@ -2150,7 +2973,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 بدنه درخواست: ندارد.
 
@@ -2158,6 +2981,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [SavedConversationResult](#contract-SavedConversationResult)<br>`application/json`: [SavedConversationResult](#contract-SavedConversationResult)<br>`text/json`: [SavedConversationResult](#contract-SavedConversationResult) |
 | 201 | Created | `text/plain`: [SavedConversationResult](#contract-SavedConversationResult)<br>`application/json`: [SavedConversationResult](#contract-SavedConversationResult)<br>`text/json`: [SavedConversationResult](#contract-SavedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}
 
@@ -2165,7 +2990,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2176,6 +3001,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/archive
 
@@ -2183,7 +3010,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2194,6 +3021,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/archive
 
@@ -2201,7 +3030,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2212,6 +3041,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/changes
 
@@ -2219,7 +3050,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2232,6 +3063,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationChangePageResult](#contract-ConversationChangePageResult)<br>`application/json`: [ConversationChangePageResult](#contract-ConversationChangePageResult)<br>`text/json`: [ConversationChangePageResult](#contract-ConversationChangePageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/clear-history
 
@@ -2239,7 +3072,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2250,6 +3083,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/delivered
 
@@ -2257,7 +3092,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2268,6 +3103,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`application/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`text/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/join
 
@@ -2275,7 +3112,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2286,6 +3123,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/leave
 
@@ -2293,7 +3132,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2304,6 +3143,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/mark-unread
 
@@ -2311,7 +3152,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2322,6 +3163,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/media
 
@@ -2329,7 +3172,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2343,6 +3186,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationMediaPageResult](#contract-ConversationMediaPageResult)<br>`application/json`: [ConversationMediaPageResult](#contract-ConversationMediaPageResult)<br>`text/json`: [ConversationMediaPageResult](#contract-ConversationMediaPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/members
 
@@ -2350,7 +3195,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2363,6 +3208,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationParticipantPageResult](#contract-ConversationParticipantPageResult)<br>`application/json`: [ConversationParticipantPageResult](#contract-ConversationParticipantPageResult)<br>`text/json`: [ConversationParticipantPageResult](#contract-ConversationParticipantPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/members
 
@@ -2370,7 +3217,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2381,6 +3228,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/members/{targetUserId}
 
@@ -2388,7 +3237,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2400,6 +3249,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/conversations/{conversationId}/members/{targetUserId}/permissions
 
@@ -2407,7 +3258,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2419,6 +3270,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/conversations/{conversationId}/members/{targetUserId}/role
 
@@ -2426,7 +3279,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2438,6 +3291,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/messages
 
@@ -2445,7 +3300,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2459,6 +3314,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationMessagePageResult](#contract-ConversationMessagePageResult)<br>`application/json`: [ConversationMessagePageResult](#contract-ConversationMessagePageResult)<br>`text/json`: [ConversationMessagePageResult](#contract-ConversationMessagePageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/messages
 
@@ -2466,7 +3323,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2476,9 +3333,11 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
-| 422 | MESSAGE_SAFETY_REVIEW_REQUIRED: وضعیت PendingReview، یا MESSAGE_SAFETY_BLOCKED: وضعیت Rejected. تغییر اعمال نشده و مجوز تحویل/دانلود تازه ایجاد نشده است. Ready فایل تأیید ایمنی نیست. پیش‌نویس حفظ شود و retry خودکار نشود؛ همان شناسه و payload همان نتیجه را می‌دهد. PendingReview وعدهٔ صف انسانی، SLA یا تأیید async نیست. دلیل داخلی و اطلاعات provider عمومی نیستند. | `application/problem+json`: object |
+| 422 | MESSAGE_SAFETY_REVIEW_REQUIRED: وضعیت PendingReview، یا MESSAGE_SAFETY_BLOCKED: وضعیت Rejected. تغییر اعمال نشده و مجوز تحویل/دانلود تازه ایجاد نشده است. Ready فایل تأیید ایمنی نیست. پیش‌نویس حفظ شود و retry خودکار نشود؛ همان شناسه و payload همان نتیجه را می‌دهد. PendingReview وعدهٔ صف انسانی، SLA یا تأیید async نیست. دلیل داخلی و اطلاعات provider عمومی نیستند. | `application/problem+json`: allOf: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}
 
@@ -2486,7 +3345,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2499,6 +3358,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageMutationResult](#contract-MessageMutationResult)<br>`application/json`: [MessageMutationResult](#contract-MessageMutationResult)<br>`text/json`: [MessageMutationResult](#contract-MessageMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/conversations/{conversationId}/messages/{messageId}
 
@@ -2506,7 +3367,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2517,8 +3378,10 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 200 | OK | `text/plain`: [MessageMutationResult](#contract-MessageMutationResult)<br>`application/json`: [MessageMutationResult](#contract-MessageMutationResult)<br>`text/json`: [MessageMutationResult](#contract-MessageMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}/for-everyone
 
@@ -2526,7 +3389,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2539,6 +3402,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageMutationResult](#contract-MessageMutationResult)<br>`application/json`: [MessageMutationResult](#contract-MessageMutationResult)<br>`text/json`: [MessageMutationResult](#contract-MessageMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}/for-me
 
@@ -2546,7 +3411,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2558,6 +3423,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [DeleteMessageForMeResult](#contract-DeleteMessageForMeResult)<br>`application/json`: [DeleteMessageForMeResult](#contract-DeleteMessageForMeResult)<br>`text/json`: [DeleteMessageForMeResult](#contract-DeleteMessageForMeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/messages/{messageId}/forward
 
@@ -2565,7 +3432,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2576,8 +3443,10 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`application/json`: [MessageReceiptResult](#contract-MessageReceiptResult)<br>`text/json`: [MessageReceiptResult](#contract-MessageReceiptResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/messages/{messageId}/reactions
 
@@ -2585,7 +3454,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2596,8 +3465,10 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 200 | OK | `text/plain`: [MessageReactionResult](#contract-MessageReactionResult)<br>`application/json`: [MessageReactionResult](#contract-MessageReactionResult)<br>`text/json`: [MessageReactionResult](#contract-MessageReactionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/messages/{messageId}/reactions/{reaction}
 
@@ -2605,7 +3476,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2617,8 +3488,10 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/mute
 
@@ -2626,7 +3499,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2637,6 +3510,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/{conversationId}/mute
 
@@ -2644,7 +3519,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2655,6 +3530,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/ownership-transfers
 
@@ -2662,7 +3539,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2673,6 +3550,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`application/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`text/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/ownership-transfers/{transferId}/accept
 
@@ -2680,7 +3559,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2692,6 +3571,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`application/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`text/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/ownership-transfers/{transferId}/decline
 
@@ -2699,7 +3580,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2711,6 +3592,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`application/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult)<br>`text/json`: [OwnershipTransferResult](#contract-OwnershipTransferResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/pins/{messageId}
 
@@ -2718,7 +3601,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2730,6 +3613,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPinResult](#contract-ConversationPinResult)<br>`application/json`: [ConversationPinResult](#contract-ConversationPinResult)<br>`text/json`: [ConversationPinResult](#contract-ConversationPinResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/pins/{messageId}
 
@@ -2737,7 +3622,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2749,6 +3634,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPinResult](#contract-ConversationPinResult)<br>`application/json`: [ConversationPinResult](#contract-ConversationPinResult)<br>`text/json`: [ConversationPinResult](#contract-ConversationPinResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/read
 
@@ -2756,7 +3643,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2767,6 +3654,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`application/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult)<br>`text/json`: [ConversationCursorStateResult](#contract-ConversationCursorStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/read-states
 
@@ -2774,7 +3663,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2785,7 +3674,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult)<br>`application/json`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult)<br>`text/json`: [ConversationPeerReadStateResult](#contract-ConversationPeerReadStateResult) |
-| 404 | Not Found | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 404 | Not Found | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/conversations/{conversationId}/settings
 
@@ -2793,7 +3684,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2804,6 +3695,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`application/json`: [ManagedConversationResult](#contract-ManagedConversationResult)<br>`text/json`: [ManagedConversationResult](#contract-ManagedConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/conversations/{conversationId}/state/pin
 
@@ -2811,7 +3704,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2822,6 +3715,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/state/pin
 
@@ -2829,7 +3724,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2840,6 +3735,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`application/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult)<br>`text/json`: [ConversationUserStateResult](#contract-ConversationUserStateResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/conversations/{conversationId}/summary
 
@@ -2847,7 +3744,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.IMessagingService`، `MakanApp.Application.Messaging.IConversationManagementService`، `MakanApp.Application.Messaging.AccountInboxService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -2858,6 +3755,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`application/json`: [ConversationSummaryResult](#contract-ConversationSummaryResult)<br>`text/json`: [ConversationSummaryResult](#contract-ConversationSummaryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Courses
@@ -2882,9 +3781,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfCourseResult](#contract-SchoolPageOfCourseResult)<br>`application/json`: [SchoolPageOfCourseResult](#contract-SchoolPageOfCourseResult)<br>`text/json`: [SchoolPageOfCourseResult](#contract-SchoolPageOfCourseResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/courses
 
@@ -2899,6 +3807,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [CourseResult](#contract-CourseResult)<br>`application/json`: [CourseResult](#contract-CourseResult)<br>`text/json`: [CourseResult](#contract-CourseResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Dashboards
@@ -2916,6 +3836,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagerDashboardDto](#contract-ManagerDashboardDto)<br>`application/json`: [ManagerDashboardDto](#contract-ManagerDashboardDto)<br>`text/json`: [ManagerDashboardDto](#contract-ManagerDashboardDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/dashboards/parent
 
@@ -2930,6 +3852,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ParentDashboardDto](#contract-ParentDashboardDto)<br>`application/json`: [ParentDashboardDto](#contract-ParentDashboardDto)<br>`text/json`: [ParentDashboardDto](#contract-ParentDashboardDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/dashboards/student
 
@@ -2944,6 +3868,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentDashboardDto](#contract-StudentDashboardDto)<br>`application/json`: [StudentDashboardDto](#contract-StudentDashboardDto)<br>`text/json`: [StudentDashboardDto](#contract-StudentDashboardDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/dashboards/teacher
 
@@ -2958,6 +3884,218 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [TeacherDashboardDto](#contract-TeacherDashboardDto)<br>`application/json`: [TeacherDashboardDto](#contract-TeacherDashboardDto)<br>`text/json`: [TeacherDashboardDto](#contract-TeacherDashboardDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## EducationalSources
+
+### GET /api/v1/sources
+
+کد واقعی: [EducationalSourcesController.List](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `Scope` | query | خیر | [EducationalSourceScope](#contract-EducationalSourceScope) |
+| `ClassId` | query | خیر | string / uuid |
+| `Search` | query | خیر | string |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+| `Status` | query | خیر | string |
+| `SourceType` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SourcePage](#contract-SourcePage)<br>`application/json`: [SourcePage](#contract-SourcePage)<br>`text/json`: [SourcePage](#contract-SourcePage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources
+
+کد واقعی: [EducationalSourcesController.Create](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+بدنه درخواست: `application/json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)<br>`text/json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)<br>`application/*+json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/sources/{id}
+
+کد واقعی: [EducationalSourcesController.Get](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{id}/archive
+
+کد واقعی: [EducationalSourcesController.Archive](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SourceMutationCommand](#contract-SourceMutationCommand)<br>`text/json`: [SourceMutationCommand](#contract-SourceMutationCommand)<br>`application/*+json`: [SourceMutationCommand](#contract-SourceMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/sources/{id}/content
+
+کد واقعی: [EducationalSourcesController.Download](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | بایت خام فایل؛ Content-Type واقعی از metadata معتبر فایل می‌آید. | `application/octet-stream`: string / binary |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 206 | بازهٔ معتبر فایل روی stream قابل seek؛ Content-Range را بخوانید. | `application/octet-stream`: string / binary |
+| 416 | بازهٔ درخواستی معتبر نیست؛ پاسخ فایل موفق نیست و ممکن است بدنه نداشته باشد. | بدون بدنهٔ منتشرشده |
+
+### PATCH /api/v1/sources/{id}/draft
+
+کد واقعی: [EducationalSourcesController.Update](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateSourceDraftCommand](#contract-UpdateSourceDraftCommand)<br>`text/json`: [UpdateSourceDraftCommand](#contract-UpdateSourceDraftCommand)<br>`application/*+json`: [UpdateSourceDraftCommand](#contract-UpdateSourceDraftCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/sources/{id}/processing
+
+کد واقعی: [EducationalSourcesController.Processing](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{id}/publish
+
+کد واقعی: [EducationalSourcesController.Publish](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SourceMutationCommand](#contract-SourceMutationCommand)<br>`text/json`: [SourceMutationCommand](#contract-SourceMutationCommand)<br>`application/*+json`: [SourceMutationCommand](#contract-SourceMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{id}/versions
+
+کد واقعی: [EducationalSourcesController.Version](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateSourceVersionCommand](#contract-CreateSourceVersionCommand)<br>`text/json`: [CreateSourceVersionCommand](#contract-CreateSourceVersionCommand)<br>`application/*+json`: [CreateSourceVersionCommand](#contract-CreateSourceVersionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/sources/{id}/visibility
+
+کد واقعی: [EducationalSourcesController.Visibility](../MakanApp.Api/Controllers/EducationalSourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`، `MakanApp.Application.Knowledge.KnowledgeProcessingProjection`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SourceVisibilityCommand](#contract-SourceVisibilityCommand)<br>`text/json`: [SourceVisibilityCommand](#contract-SourceVisibilityCommand)<br>`application/*+json`: [SourceVisibilityCommand](#contract-SourceVisibilityCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Evaluations
@@ -2976,12 +4114,63 @@ policy: `platform.users.manage`
 | `classId` | query | خیر | string / uuid |
 | `reviewStatus` | query | خیر | string |
 | `isLate` | query | خیر | boolean |
+| `classKind` | query | خیر | string / OrganizationClass, PersonalClass |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [EvaluationQueueItemResult](#contract-EvaluationQueueItemResult)<br>`application/json`: آرایه از [EvaluationQueueItemResult](#contract-EvaluationQueueItemResult)<br>`text/json`: آرایه از [EvaluationQueueItemResult](#contract-EvaluationQueueItemResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/evaluations/queue/page
+
+کد واقعی: [EvaluationsController.GetQueuePage](../MakanApp.Api/Controllers/EvaluationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IEvaluationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `AssignmentId` | query | خیر | string / uuid |
+| `ClassId` | query | خیر | string / uuid |
+| `ReviewStatus` | query | خیر | string |
+| `IsLate` | query | خیر | boolean |
+| `ClassKind` | query | خیر | [AcademicClassKind](#contract-AcademicClassKind) |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfEvaluationQueueItemResult](#contract-AcademicPageOfEvaluationQueueItemResult)<br>`application/json`: [AcademicPageOfEvaluationQueueItemResult](#contract-AcademicPageOfEvaluationQueueItemResult)<br>`text/json`: [AcademicPageOfEvaluationQueueItemResult](#contract-AcademicPageOfEvaluationQueueItemResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/submission-attempts/{attemptId}/evaluation
 
@@ -3000,6 +4189,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`application/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`text/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/academic/submission-attempts/{attemptId}/evaluation
 
@@ -3018,6 +4219,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`application/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`text/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/submission-attempts/{attemptId}/evaluation/corrections
 
@@ -3036,6 +4249,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`application/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult)<br>`text/json`: [EvaluatorEvaluationResult](#contract-EvaluatorEvaluationResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/submission-attempts/{attemptId}/evaluation/release
 
@@ -3054,6 +4279,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [GradeReleaseResult](#contract-GradeReleaseResult)<br>`application/json`: [GradeReleaseResult](#contract-GradeReleaseResult)<br>`text/json`: [GradeReleaseResult](#contract-GradeReleaseResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/submission-attempts/{attemptId}/evaluation/submission
 
@@ -3072,6 +4309,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionForEvaluationResult](#contract-SubmissionForEvaluationResult)<br>`application/json`: [SubmissionForEvaluationResult](#contract-SubmissionForEvaluationResult)<br>`text/json`: [SubmissionForEvaluationResult](#contract-SubmissionForEvaluationResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/submission-attempts/{attemptId}/guardian-result
 
@@ -3090,6 +4339,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ParentReleasedResult](#contract-ParentReleasedResult)<br>`application/json`: [ParentReleasedResult](#contract-ParentReleasedResult)<br>`text/json`: [ParentReleasedResult](#contract-ParentReleasedResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/submission-attempts/{attemptId}/result
 
@@ -3108,6 +4369,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentReleasedResult](#contract-StudentReleasedResult)<br>`application/json`: [StudentReleasedResult](#contract-StudentReleasedResult)<br>`text/json`: [StudentReleasedResult](#contract-StudentReleasedResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ExamGradings
@@ -3129,6 +4402,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ExamGradeDto](#contract-ExamGradeDto)<br>`application/json`: [ExamGradeDto](#contract-ExamGradeDto)<br>`text/json`: [ExamGradeDto](#contract-ExamGradeDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/grade/release
 
@@ -3147,6 +4432,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamGradeReleaseDto](#contract-ExamGradeReleaseDto)<br>`application/json`: [ExamGradeReleaseDto](#contract-ExamGradeReleaseDto)<br>`text/json`: [ExamGradeReleaseDto](#contract-ExamGradeReleaseDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}/grading
 
@@ -3165,6 +4462,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamGradeDto](#contract-ExamGradeDto)<br>`application/json`: [ExamGradeDto](#contract-ExamGradeDto)<br>`text/json`: [ExamGradeDto](#contract-ExamGradeDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/grading
 
@@ -3183,6 +4492,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamGradeDto](#contract-ExamGradeDto)<br>`application/json`: [ExamGradeDto](#contract-ExamGradeDto)<br>`text/json`: [ExamGradeDto](#contract-ExamGradeDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/grading/complete
 
@@ -3201,6 +4522,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamGradeDto](#contract-ExamGradeDto)<br>`application/json`: [ExamGradeDto](#contract-ExamGradeDto)<br>`text/json`: [ExamGradeDto](#contract-ExamGradeDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/exam-attempts/{attemptId}/grading/questions/{attemptQuestionId}
 
@@ -3220,6 +4553,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamGradeDto](#contract-ExamGradeDto)<br>`application/json`: [ExamGradeDto](#contract-ExamGradeDto)<br>`text/json`: [ExamGradeDto](#contract-ExamGradeDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}/guardian-result
 
@@ -3238,6 +4583,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [GuardianExamResultDto](#contract-GuardianExamResultDto)<br>`application/json`: [GuardianExamResultDto](#contract-GuardianExamResultDto)<br>`text/json`: [GuardianExamResultDto](#contract-GuardianExamResultDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}/result
 
@@ -3256,6 +4613,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentExamResultDto](#contract-StudentExamResultDto)<br>`application/json`: [StudentExamResultDto](#contract-StudentExamResultDto)<br>`text/json`: [StudentExamResultDto](#contract-StudentExamResultDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/grading
 
@@ -3270,12 +4639,60 @@ policy: `platform.users.manage`
 | `examId` | path | بله | string / uuid |
 | `classId` | query | خیر | string / uuid |
 | `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [ExamGradingQueueItemDto](#contract-ExamGradingQueueItemDto)<br>`application/json`: آرایه از [ExamGradingQueueItemDto](#contract-ExamGradingQueueItemDto)<br>`text/json`: آرایه از [ExamGradingQueueItemDto](#contract-ExamGradingQueueItemDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/exams/{examId}/grading/page
+
+کد واقعی: [ExamGradingsController.GetQueuePage](../MakanApp.Api/Controllers/ExamGradingsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IExamGradingService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `examId` | path | بله | string / uuid |
+| `ClassId` | query | خیر | string / uuid |
+| `Status` | query | خیر | string |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfExamGradingQueueItemDto](#contract-AcademicPageOfExamGradingQueueItemDto)<br>`application/json`: [AcademicPageOfExamGradingQueueItemDto](#contract-AcademicPageOfExamGradingQueueItemDto)<br>`text/json`: [AcademicPageOfExamGradingQueueItemDto](#contract-AcademicPageOfExamGradingQueueItemDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Exams
@@ -3297,6 +4714,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}
 
@@ -3315,6 +4744,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`application/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`text/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}/answers
 
@@ -3333,6 +4774,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentExamAnswersDto](#contract-StudentExamAnswersDto)<br>`application/json`: [StudentExamAnswersDto](#contract-StudentExamAnswersDto)<br>`text/json`: [StudentExamAnswersDto](#contract-StudentExamAnswersDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}
 
@@ -3352,6 +4805,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments
 
@@ -3371,11 +4836,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
-| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments/{fileAssetId}
 
@@ -3399,11 +4871,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`application/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto)<br>`text/json`: [ExamAnswerReceiptDto](#contract-ExamAnswerReceiptDto) |
-| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
-| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: object |
+| 400 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails: سیاست/سقف پیوست 400؛ احراز هویت 401؛ نقش نامجاز 403؛ فایل/تلاش نامجاز 404؛ نسخه، lease، مهلت، فایل غیرآماده یا Finalize برابر 409. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/finalize
 
@@ -3422,6 +4901,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto)<br>`application/json`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto)<br>`text/json`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exam-attempts/{attemptId}/receipt
 
@@ -3440,6 +4931,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto)<br>`application/json`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto)<br>`text/json`: [ExamFinalReceiptDto](#contract-ExamFinalReceiptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/write-lease
 
@@ -3458,6 +4961,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto)<br>`application/json`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto)<br>`text/json`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exam-attempts/{attemptId}/write-lease/transfer
 
@@ -3476,6 +4991,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto)<br>`application/json`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto)<br>`text/json`: [ExamWriteLeaseDto](#contract-ExamWriteLeaseDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams
 
@@ -3490,6 +5017,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [StudentExamSummary](#contract-StudentExamSummary)<br>`application/json`: آرایه از [StudentExamSummary](#contract-StudentExamSummary)<br>`text/json`: آرایه از [StudentExamSummary](#contract-StudentExamSummary) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/exams/{examId}
 
@@ -3508,6 +5047,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/attempts/me
 
@@ -3526,6 +5077,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [StudentExamAttemptSummaryDto](#contract-StudentExamAttemptSummaryDto)<br>`application/json`: آرایه از [StudentExamAttemptSummaryDto](#contract-StudentExamAttemptSummaryDto)<br>`text/json`: آرایه از [StudentExamAttemptSummaryDto](#contract-StudentExamAttemptSummaryDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/attempts/me/active
 
@@ -3544,6 +5107,50 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`application/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`text/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/exams/{examId}/attempts/me/page
+
+کد واقعی: [ExamsController.MyAttemptsPage](../MakanApp.Api/Controllers/ExamsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.IExamAttemptService`، `MakanApp.Application.Assessment.IExamAnswerService`، `MakanApp.Application.Assessment.IExamFinalizationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `examId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfStudentExamAttemptSummaryDto](#contract-AcademicPageOfStudentExamAttemptSummaryDto)<br>`application/json`: [AcademicPageOfStudentExamAttemptSummaryDto](#contract-AcademicPageOfStudentExamAttemptSummaryDto)<br>`text/json`: [AcademicPageOfStudentExamAttemptSummaryDto](#contract-AcademicPageOfStudentExamAttemptSummaryDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exams/{examId}/attempts/start
 
@@ -3562,6 +5169,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`application/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto)<br>`text/json`: [StudentExamAttemptDto](#contract-StudentExamAttemptDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/editor
 
@@ -3580,6 +5199,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exams/{examId}/publish
 
@@ -3598,6 +5229,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exams/{examId}/questions
 
@@ -3616,6 +5259,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/academic/exams/{examId}/questions/{questionId}
 
@@ -3635,6 +5290,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/exams/{examId}/questions/{questionId}
 
@@ -3654,6 +5321,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/student-preview
 
@@ -3672,6 +5351,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [StudentSafeExamPreview](#contract-StudentSafeExamPreview)<br>`application/json`: [StudentSafeExamPreview](#contract-StudentSafeExamPreview)<br>`text/json`: [StudentSafeExamPreview](#contract-StudentSafeExamPreview) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/exams/{examId}/teacher-preview
 
@@ -3690,6 +5381,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ExamTeacherPreview](#contract-ExamTeacherPreview)<br>`application/json`: [ExamTeacherPreview](#contract-ExamTeacherPreview)<br>`text/json`: [ExamTeacherPreview](#contract-ExamTeacherPreview) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/exams/{examId}/versions
 
@@ -3708,6 +5411,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Files
@@ -3720,11 +5435,17 @@ policy: `platform.users.manage`
 
 وابستگی‌های واقعی Controller: `MakanApp.Application.Storage.IStorageService`
 
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `workspaceScope` | query | خیر | string |
+
 بدنه درخواست: `multipart/form-data`: object؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [FileAssetResult](#contract-FileAssetResult)<br>`application/json`: [FileAssetResult](#contract-FileAssetResult)<br>`text/json`: [FileAssetResult](#contract-FileAssetResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/files/{fileId}
 
@@ -3744,6 +5465,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [FileAssetResult](#contract-FileAssetResult)<br>`application/json`: [FileAssetResult](#contract-FileAssetResult)<br>`text/json`: [FileAssetResult](#contract-FileAssetResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/files/{fileId}
 
@@ -3762,6 +5485,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [FileAssetResult](#contract-FileAssetResult)<br>`application/json`: [FileAssetResult](#contract-FileAssetResult)<br>`text/json`: [FileAssetResult](#contract-FileAssetResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/files/{fileId}/content
 
@@ -3782,11 +5507,11 @@ policy: `platform.users.manage`
 | 200 | فایل کامل؛ مصرف‌کننده باید bytes یا Blob بخواند. | `application/octet-stream`: string / binary |
 | 206 | بخشی از بایت‌ها برای Range معتبر روی stream قابل seek؛ Content-Range مشخص است. | `application/octet-stream`: string / binary |
 | 416 | Range خارج محدوده است؛ پاسخ موفق فایل نیست. | بدون بدنهٔ منتشرشده |
-| 401 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
-| 503 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: object |
+| 401 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خطای JSON نباید به‌عنوان فایل موفق ذخیره شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Guardian
@@ -3804,6 +5529,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [AuthorizedChildResult](#contract-AuthorizedChildResult)<br>`application/json`: آرایه از [AuthorizedChildResult](#contract-AuthorizedChildResult)<br>`text/json`: آرایه از [AuthorizedChildResult](#contract-AuthorizedChildResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/guardian/children/{organizationPersonId}/select
 
@@ -3822,6 +5549,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AccessContext](#contract-AccessContext)<br>`application/json`: [AccessContext](#contract-AccessContext)<br>`text/json`: [AccessContext](#contract-AccessContext) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/guardian/relations/{organizationPersonId}
 
@@ -3840,6 +5569,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [GuardianRelationSummaryResult](#contract-GuardianRelationSummaryResult)<br>`application/json`: [GuardianRelationSummaryResult](#contract-GuardianRelationSummaryResult)<br>`text/json`: [GuardianRelationSummaryResult](#contract-GuardianRelationSummaryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Invitations
@@ -3857,6 +5588,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [InvitationResult](#contract-InvitationResult)<br>`application/json`: آرایه از [InvitationResult](#contract-InvitationResult)<br>`text/json`: آرایه از [InvitationResult](#contract-InvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/invitations/{invitationId}/accept
 
@@ -3875,7 +5608,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AcceptInvitationResult](#contract-AcceptInvitationResult)<br>`application/json`: [AcceptInvitationResult](#contract-AcceptInvitationResult)<br>`text/json`: [AcceptInvitationResult](#contract-AcceptInvitationResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/invitations/{invitationId}/decline
 
@@ -3894,6 +5629,199 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [DeclineInvitationResult](#contract-DeclineInvitationResult)<br>`application/json`: [DeclineInvitationResult](#contract-DeclineInvitationResult)<br>`text/json`: [DeclineInvitationResult](#contract-DeclineInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## KnowledgeIntegration
+
+### POST /api/v1/ai/knowledge/rag/answer
+
+کد واقعی: [KnowledgeIntegrationController.Answer](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+بدنه درخواست: `application/json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)<br>`text/json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)<br>`application/*+json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [KnowledgeRagResponse](#contract-KnowledgeRagResponse)<br>`application/json`: [KnowledgeRagResponse](#contract-KnowledgeRagResponse)<br>`text/json`: [KnowledgeRagResponse](#contract-KnowledgeRagResponse) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/ai/knowledge/retrieve
+
+کد واقعی: [KnowledgeIntegrationController.Retrieve](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+بدنه درخواست: `application/json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)<br>`text/json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)<br>`application/*+json`: [KnowledgeQueryCommand](#contract-KnowledgeQueryCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [KnowledgeRetrieveResponse](#contract-KnowledgeRetrieveResponse)<br>`application/json`: [KnowledgeRetrieveResponse](#contract-KnowledgeRetrieveResponse)<br>`text/json`: [KnowledgeRetrieveResponse](#contract-KnowledgeRetrieveResponse) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{sourceId}/versions/{version}/knowledge/delete
+
+کد واقعی: [KnowledgeIntegrationController.Delete](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `sourceId` | path | بله | string / uuid |
+| `version` | path | بله | integer / int32 |
+
+بدنه درخواست: `application/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`text/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`application/*+json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{sourceId}/versions/{version}/knowledge/ingest
+
+کد واقعی: [KnowledgeIntegrationController.Ingest](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `sourceId` | path | بله | string / uuid |
+| `version` | path | بله | integer / int32 |
+
+بدنه درخواست: `application/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`text/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`application/*+json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 202 | Accepted | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 200 | OK | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{sourceId}/versions/{version}/knowledge/reindex
+
+کد واقعی: [KnowledgeIntegrationController.Reindex](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `sourceId` | path | بله | string / uuid |
+| `version` | path | بله | integer / int32 |
+
+بدنه درخواست: `application/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`text/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`application/*+json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 202 | Accepted | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/sources/{sourceId}/versions/{version}/knowledge/status
+
+کد واقعی: [KnowledgeIntegrationController.Status](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `sourceId` | path | بله | string / uuid |
+| `version` | path | بله | integer / int32 |
+| `wait` | query | خیر | boolean |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/sources/{sourceId}/versions/{version}/knowledge/supersede
+
+کد واقعی: [KnowledgeIntegrationController.Supersede](../MakanApp.Api/Controllers/KnowledgeIntegrationController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.KnowledgeIntegrationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `sourceId` | path | بله | string / uuid |
+| `version` | path | بله | integer / int32 |
+
+بدنه درخواست: `application/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`text/json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)<br>`application/*+json`: [KnowledgeMutationCommand](#contract-KnowledgeMutationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`application/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus)<br>`text/json`: [KnowledgeProcessingStatus](#contract-KnowledgeProcessingStatus) |
+| 401 | نشست نامعتبر. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | منبع ناموجود یا خارج از دسترسی جاری؛ concealment. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | قرارداد Knowledge یا Query معتبر نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | محدودیت درخواست حساب. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 502 | پاسخ یا Citation معتبر و grounded نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Feature یا dependency آماده نیست. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 504 | مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## MessageReports
@@ -3916,6 +5844,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult)<br>`application/json`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult)<br>`text/json`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Messages
@@ -3942,12 +5872,15 @@ policy: `platform.users.manage`
 | `hasAttachment` | query | خیر | boolean |
 | `hasLinks` | query | خیر | boolean |
 | `topicId` | query | خیر | string / uuid |
+| `scope` | query | خیر | string |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessageSearchPageResult](#contract-MessageSearchPageResult)<br>`application/json`: [MessageSearchPageResult](#contract-MessageSearchPageResult)<br>`text/json`: [MessageSearchPageResult](#contract-MessageSearchPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## MessagingFolders
@@ -3965,6 +5898,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [ChatFolderResult](#contract-ChatFolderResult)<br>`application/json`: آرایه از [ChatFolderResult](#contract-ChatFolderResult)<br>`text/json`: آرایه از [ChatFolderResult](#contract-ChatFolderResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/messaging/folders/{folderId}
 
@@ -3984,6 +5919,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/messaging/folders/{folderId}
 
@@ -4002,6 +5939,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ChatFolderResult](#contract-ChatFolderResult)<br>`application/json`: [ChatFolderResult](#contract-ChatFolderResult)<br>`text/json`: [ChatFolderResult](#contract-ChatFolderResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## MessagingPrivacy
@@ -4019,6 +5958,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult)<br>`application/json`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult)<br>`text/json`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/messaging/privacy
 
@@ -4033,6 +5974,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult)<br>`application/json`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult)<br>`text/json`: [MessagingPrivacySettingsResult](#contract-MessagingPrivacySettingsResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## MessagingSafety
@@ -4050,6 +5993,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [BlockedUserResult](#contract-BlockedUserResult)<br>`application/json`: آرایه از [BlockedUserResult](#contract-BlockedUserResult)<br>`text/json`: آرایه از [BlockedUserResult](#contract-BlockedUserResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/messaging/blocks/{userId}
 
@@ -4068,6 +6013,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/messaging/blocks/{userId}
 
@@ -4087,6 +6034,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [UserBlockResult](#contract-UserBlockResult)<br>`application/json`: [UserBlockResult](#contract-UserBlockResult)<br>`text/json`: [UserBlockResult](#contract-UserBlockResult) |
 | 201 | Created | `text/plain`: [UserBlockResult](#contract-UserBlockResult)<br>`application/json`: [UserBlockResult](#contract-UserBlockResult)<br>`text/json`: [UserBlockResult](#contract-UserBlockResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/messaging/reports/{reportId}
 
@@ -4105,6 +6054,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult)<br>`application/json`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult)<br>`text/json`: [AbuseReportReceiptResult](#contract-AbuseReportReceiptResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## NotificationDevices
@@ -4128,6 +6079,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PushDevicePageResult](#contract-PushDevicePageResult)<br>`application/json`: [PushDevicePageResult](#contract-PushDevicePageResult)<br>`text/json`: [PushDevicePageResult](#contract-PushDevicePageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/notifications/devices
 
@@ -4142,6 +6095,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`application/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`text/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/notifications/devices/web-push
 
@@ -4156,9 +6111,11 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`application/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult)<br>`text/json`: [PushDeviceRegistrationResult](#contract-PushDeviceRegistrationResult) |
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/notifications/devices/web-push/configuration
 
@@ -4173,6 +6130,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration)<br>`application/json`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration)<br>`text/json`: [WebPushClientConfiguration](#contract-WebPushClientConfiguration) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/notifications/devices/{registrationId}
 
@@ -4191,6 +6150,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## NotificationPreferences
@@ -4212,6 +6173,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [NotificationPreferenceItem](#contract-NotificationPreferenceItem)<br>`application/json`: آرایه از [NotificationPreferenceItem](#contract-NotificationPreferenceItem)<br>`text/json`: آرایه از [NotificationPreferenceItem](#contract-NotificationPreferenceItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/notification-preferences/{category}
 
@@ -4231,6 +6194,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [NotificationPreferenceItem](#contract-NotificationPreferenceItem)<br>`application/json`: [NotificationPreferenceItem](#contract-NotificationPreferenceItem)<br>`text/json`: [NotificationPreferenceItem](#contract-NotificationPreferenceItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Notifications
@@ -4256,6 +6221,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [NotificationPage](#contract-NotificationPage)<br>`application/json`: [NotificationPage](#contract-NotificationPage)<br>`text/json`: [NotificationPage](#contract-NotificationPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/notifications/unread-count
 
@@ -4274,6 +6241,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [NotificationUnreadCount](#contract-NotificationUnreadCount)<br>`application/json`: [NotificationUnreadCount](#contract-NotificationUnreadCount)<br>`text/json`: [NotificationUnreadCount](#contract-NotificationUnreadCount) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/notifications/{notificationId}/read
 
@@ -4292,6 +6261,28 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [NotificationItem](#contract-NotificationItem)<br>`application/json`: [NotificationItem](#contract-NotificationItem)<br>`text/json`: [NotificationItem](#contract-NotificationItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/notifications/{notificationId}/target
+
+کد واقعی: [NotificationsController.ResolveTarget](../MakanApp.Api/Controllers/NotificationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Notification.INotificationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `notificationId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [NotificationTargetResult](#contract-NotificationTargetResult)<br>`application/json`: [NotificationTargetResult](#contract-NotificationTargetResult)<br>`text/json`: [NotificationTargetResult](#contract-NotificationTargetResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## OfficialClassConversations
@@ -4313,6 +6304,93 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OfficialClassConversationResult](#contract-OfficialClassConversationResult)<br>`application/json`: [OfficialClassConversationResult](#contract-OfficialClassConversationResult)<br>`text/json`: [OfficialClassConversationResult](#contract-OfficialClassConversationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## OfficialSpaces
+
+### GET /api/v1/organization/classes/{classId}/official-spaces
+
+کد واقعی: [OfficialSpacesController.Class](../MakanApp.Api/Controllers/OfficialSpacesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.OfficialSpacesService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`application/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`text/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/organization/classes/{classId}/official-spaces/activities
+
+کد واقعی: [OfficialSpacesController.SourceDelivery](../MakanApp.Api/Controllers/OfficialSpacesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.OfficialSpacesService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `kind` | query | خیر | [AcademicActivityKind](#contract-AcademicActivityKind) |
+| `sourceVersionId` | query | خیر | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult)<br>`application/json`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult)<br>`text/json`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/organization/classes/{classId}/official-spaces/activities/{eventId}
+
+کد واقعی: [OfficialSpacesController.Delivery](../MakanApp.Api/Controllers/OfficialSpacesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.OfficialSpacesService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `eventId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult)<br>`application/json`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult)<br>`text/json`: آرایه از [AcademicActivityDeliveryResult](#contract-AcademicActivityDeliveryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/organization/official-spaces
+
+کد واقعی: [OfficialSpacesController.Organization](../MakanApp.Api/Controllers/OfficialSpacesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Messaging.OfficialSpacesService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`application/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`text/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## OrganizationMembers
@@ -4338,9 +6416,110 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolPageOfSchoolMemberResult](#contract-SchoolPageOfSchoolMemberResult)<br>`application/json`: [SchoolPageOfSchoolMemberResult](#contract-SchoolPageOfSchoolMemberResult)<br>`text/json`: [SchoolPageOfSchoolMemberResult](#contract-SchoolPageOfSchoolMemberResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## OrganizationMembershipManagement
+
+### DELETE /api/v1/organization/members/{membershipId}
+
+کد واقعی: [OrganizationMembershipManagementController.EndMembership](../MakanApp.Api/Controllers/OrganizationMembershipManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolMembershipManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `membershipId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [EndSchoolMembershipCommand](#contract-EndSchoolMembershipCommand)<br>`text/json`: [EndSchoolMembershipCommand](#contract-EndSchoolMembershipCommand)<br>`application/*+json`: [EndSchoolMembershipCommand](#contract-EndSchoolMembershipCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`application/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`text/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/organization/members/{membershipId}/roles
+
+کد واقعی: [OrganizationMembershipManagementController.Grant](../MakanApp.Api/Controllers/OrganizationMembershipManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolMembershipManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `membershipId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [GrantSchoolRoleCommand](#contract-GrantSchoolRoleCommand)<br>`text/json`: [GrantSchoolRoleCommand](#contract-GrantSchoolRoleCommand)<br>`application/*+json`: [GrantSchoolRoleCommand](#contract-GrantSchoolRoleCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`application/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`text/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### DELETE /api/v1/organization/members/{membershipId}/roles/{roleAssignmentId}
+
+کد واقعی: [OrganizationMembershipManagementController.EndRole](../MakanApp.Api/Controllers/OrganizationMembershipManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolMembershipManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `membershipId` | path | بله | string / uuid |
+| `roleAssignmentId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [EndSchoolRoleCommand](#contract-EndSchoolRoleCommand)<br>`text/json`: [EndSchoolRoleCommand](#contract-EndSchoolRoleCommand)<br>`application/*+json`: [EndSchoolRoleCommand](#contract-EndSchoolRoleCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`application/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`text/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/organization/members/{membershipId}/roles/{roleAssignmentId}
+
+کد واقعی: [OrganizationMembershipManagementController.Change](../MakanApp.Api/Controllers/OrganizationMembershipManagementController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolMembershipManagementService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `membershipId` | path | بله | string / uuid |
+| `roleAssignmentId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ChangeSchoolRoleCommand](#contract-ChangeSchoolRoleCommand)<br>`text/json`: [ChangeSchoolRoleCommand](#contract-ChangeSchoolRoleCommand)<br>`application/*+json`: [ChangeSchoolRoleCommand](#contract-ChangeSchoolRoleCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`application/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult)<br>`text/json`: [SchoolMembershipMutationResult](#contract-SchoolMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## OrganizationPeople
@@ -4364,6 +6543,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrganizationPeoplePage](#contract-OrganizationPeoplePage)<br>`application/json`: [OrganizationPeoplePage](#contract-OrganizationPeoplePage)<br>`text/json`: [OrganizationPeoplePage](#contract-OrganizationPeoplePage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people
 
@@ -4379,6 +6560,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 201 | Created | `text/plain`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`application/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`text/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto) |
 | 200 | OK | `text/plain`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`application/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`text/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/organization/people/{id}
 
@@ -4397,6 +6580,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`application/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`text/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/organization/people/{id}
 
@@ -4415,6 +6600,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`application/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`text/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people/{id}/end
 
@@ -4433,6 +6620,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`application/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto)<br>`text/json`: [OrganizationPersonDto](#contract-OrganizationPersonDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people/{id}/invitations
 
@@ -4452,6 +6641,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 201 | Created | `text/plain`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`application/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`text/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto) |
 | 200 | OK | `text/plain`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`application/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`text/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people/{id}/invitations/{invitationId}/revoke
 
@@ -4471,6 +6662,108 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`application/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto)<br>`text/json`: [PersonLinkInvitationDto](#contract-PersonLinkInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PaymentRecovery
+
+### GET /api/v1/commerce/orders/{orderId}/receipt
+
+کد واقعی: [PaymentRecoveryController.OrganizationReceipt](../MakanApp.Api/Controllers/PaymentRecoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.IPaymentRecoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `orderId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PaymentReceiptDto](#contract-PaymentReceiptDto)<br>`application/json`: [PaymentReceiptDto](#contract-PaymentReceiptDto)<br>`text/json`: [PaymentReceiptDto](#contract-PaymentReceiptDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/commerce/payment-attempts/{attemptId}
+
+کد واقعی: [PaymentRecoveryController.GetAttempt](../MakanApp.Api/Controllers/PaymentRecoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.IPaymentRecoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `attemptId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PaymentAttemptDetailsDto](#contract-PaymentAttemptDetailsDto)<br>`application/json`: [PaymentAttemptDetailsDto](#contract-PaymentAttemptDetailsDto)<br>`text/json`: [PaymentAttemptDetailsDto](#contract-PaymentAttemptDetailsDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/commerce/payment-attempts/{attemptId}/verify
+
+کد واقعی: [PaymentRecoveryController.Verify](../MakanApp.Api/Controllers/PaymentRecoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.IPaymentRecoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `attemptId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [VerifyPaymentResult](#contract-VerifyPaymentResult)<br>`application/json`: [VerifyPaymentResult](#contract-VerifyPaymentResult)<br>`text/json`: [VerifyPaymentResult](#contract-VerifyPaymentResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/commerce/personal/orders/{orderId}/receipt
+
+کد واقعی: [PaymentRecoveryController.PersonalReceipt](../MakanApp.Api/Controllers/PaymentRecoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.IPaymentRecoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `orderId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PaymentReceiptDto](#contract-PaymentReceiptDto)<br>`application/json`: [PaymentReceiptDto](#contract-PaymentReceiptDto)<br>`text/json`: [PaymentReceiptDto](#contract-PaymentReceiptDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## People
@@ -4488,6 +6781,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PeopleResolveResult](#contract-PeopleResolveResult)<br>`application/json`: [PeopleResolveResult](#contract-PeopleResolveResult)<br>`text/json`: [PeopleResolveResult](#contract-PeopleResolveResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/people/search
 
@@ -4508,6 +6803,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PeopleSearchPageResult](#contract-PeopleSearchPageResult)<br>`application/json`: [PeopleSearchPageResult](#contract-PeopleSearchPageResult)<br>`text/json`: [PeopleSearchPageResult](#contract-PeopleSearchPageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/people/{userId}
 
@@ -4526,6 +6823,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult)<br>`application/json`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult)<br>`text/json`: [MessagingPublicProfileResult](#contract-MessagingPublicProfileResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PeoplePresence
@@ -4547,6 +6846,949 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PresenceResult](#contract-PresenceResult)<br>`application/json`: [PresenceResult](#contract-PresenceResult)<br>`text/json`: [PresenceResult](#contract-PresenceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PersonalClassAcademicPermissions
+
+### GET /api/v1/personal-classes/{classId}/academic-permissions
+
+کد واقعی: [PersonalClassAcademicPermissionsController.List](../MakanApp.Api/Controllers/PersonalClassAcademicPermissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassAcademicPermissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto)<br>`application/json`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto)<br>`text/json`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/personal-classes/{classId}/academic-permissions/{membershipId}
+
+کد واقعی: [PersonalClassAcademicPermissionsController.Set](../MakanApp.Api/Controllers/PersonalClassAcademicPermissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassAcademicPermissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `membershipId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)<br>`text/json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)<br>`application/*+json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto)<br>`application/json`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto)<br>`text/json`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PersonalClassAcademics
+
+### GET /api/v1/academic/personal-classes/{classId}/assignments
+
+کد واقعی: [PersonalClassAcademicsController.Assignments](../MakanApp.Api/Controllers/PersonalClassAcademicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IAssignmentService`، `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.PersonalAcademicReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+| `Search` | query | خیر | string |
+| `Published` | query | خیر | boolean |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfAssignmentResult](#contract-AcademicPageOfAssignmentResult)<br>`application/json`: [AcademicPageOfAssignmentResult](#contract-AcademicPageOfAssignmentResult)<br>`text/json`: [AcademicPageOfAssignmentResult](#contract-AcademicPageOfAssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/academic/personal-classes/{classId}/assignments
+
+کد واقعی: [PersonalClassAcademicsController.CreateAssignment](../MakanApp.Api/Controllers/PersonalClassAcademicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IAssignmentService`، `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.PersonalAcademicReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateAssignmentDraftCommand](#contract-CreateAssignmentDraftCommand)<br>`text/json`: [CreateAssignmentDraftCommand](#contract-CreateAssignmentDraftCommand)<br>`application/*+json`: [CreateAssignmentDraftCommand](#contract-CreateAssignmentDraftCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 201 | Created | `text/plain`: [AssignmentResult](#contract-AssignmentResult)<br>`application/json`: [AssignmentResult](#contract-AssignmentResult)<br>`text/json`: [AssignmentResult](#contract-AssignmentResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/personal-classes/{classId}/exams
+
+کد واقعی: [PersonalClassAcademicsController.Exams](../MakanApp.Api/Controllers/PersonalClassAcademicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IAssignmentService`، `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.PersonalAcademicReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+| `Search` | query | خیر | string |
+| `Published` | query | خیر | boolean |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary)<br>`application/json`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary)<br>`text/json`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/academic/personal-classes/{classId}/exams
+
+کد واقعی: [PersonalClassAcademicsController.CreateExam](../MakanApp.Api/Controllers/PersonalClassAcademicsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.IAssignmentService`، `MakanApp.Application.Assessment.IExamService`، `MakanApp.Application.Assessment.PersonalAcademicReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreateExamDraftCommand](#contract-CreateExamDraftCommand)<br>`text/json`: [CreateExamDraftCommand](#contract-CreateExamDraftCommand)<br>`application/*+json`: [CreateExamDraftCommand](#contract-CreateExamDraftCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 201 | Created | `text/plain`: [ExamEditorDto](#contract-ExamEditorDto)<br>`application/json`: [ExamEditorDto](#contract-ExamEditorDto)<br>`text/json`: [ExamEditorDto](#contract-ExamEditorDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PersonalClassHistory
+
+### GET /api/v1/personal-classes/{classId}/history
+
+کد واقعی: [PersonalClassHistoryController.Read](../MakanApp.Api/Controllers/PersonalClassHistoryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassHistoryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem)<br>`application/json`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem)<br>`text/json`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PersonalClassLifecycle
+
+### GET /api/v1/personal-classes/invitations/page
+
+کد واقعی: [PersonalClassLifecycleController.Invitations](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassInvitationDto](#contract-PersonalClassPageOfPersonalClassInvitationDto)<br>`application/json`: [PersonalClassPageOfPersonalClassInvitationDto](#contract-PersonalClassPageOfPersonalClassInvitationDto)<br>`text/json`: [PersonalClassPageOfPersonalClassInvitationDto](#contract-PersonalClassPageOfPersonalClassInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/invitations/{id}/decline
+
+کد واقعی: [PersonalClassLifecycleController.Decline](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/invitations/{id}/revoke
+
+کد واقعی: [PersonalClassLifecycleController.Revoke](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/join-requests
+
+کد واقعی: [PersonalClassLifecycleController.Joins](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | query | خیر | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassJoinDto](#contract-PersonalClassPageOfPersonalClassJoinDto)<br>`application/json`: [PersonalClassPageOfPersonalClassJoinDto](#contract-PersonalClassPageOfPersonalClassJoinDto)<br>`text/json`: [PersonalClassPageOfPersonalClassJoinDto](#contract-PersonalClassPageOfPersonalClassJoinDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/join-requests/{id}/decision
+
+کد واقعی: [PersonalClassLifecycleController.DecideJoin](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [DecidePersonalClassJoinCommand](#contract-DecidePersonalClassJoinCommand)<br>`text/json`: [DecidePersonalClassJoinCommand](#contract-DecidePersonalClassJoinCommand)<br>`application/*+json`: [DecidePersonalClassJoinCommand](#contract-DecidePersonalClassJoinCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto)<br>`application/json`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto)<br>`text/json`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/manager-transfers
+
+کد واقعی: [PersonalClassLifecycleController.Transfers](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | query | خیر | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassTransferDto](#contract-PersonalClassPageOfPersonalClassTransferDto)<br>`application/json`: [PersonalClassPageOfPersonalClassTransferDto](#contract-PersonalClassPageOfPersonalClassTransferDto)<br>`text/json`: [PersonalClassPageOfPersonalClassTransferDto](#contract-PersonalClassPageOfPersonalClassTransferDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/manager-transfers/{id}/decision
+
+کد واقعی: [PersonalClassLifecycleController.DecideTransfer](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [DecidePersonalClassTransferCommand](#contract-DecidePersonalClassTransferCommand)<br>`text/json`: [DecidePersonalClassTransferCommand](#contract-DecidePersonalClassTransferCommand)<br>`application/*+json`: [DecidePersonalClassTransferCommand](#contract-DecidePersonalClassTransferCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto)<br>`application/json`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto)<br>`text/json`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/page
+
+کد واقعی: [PersonalClassLifecycleController.Classes](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassDto](#contract-PersonalClassPageOfPersonalClassDto)<br>`application/json`: [PersonalClassPageOfPersonalClassDto](#contract-PersonalClassPageOfPersonalClassDto)<br>`text/json`: [PersonalClassPageOfPersonalClassDto](#contract-PersonalClassPageOfPersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/{id}/activate
+
+کد واقعی: [PersonalClassLifecycleController.Activate](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/{id}/join-requests
+
+کد واقعی: [PersonalClassLifecycleController.RequestJoin](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreatePersonalClassJoinCommand](#contract-CreatePersonalClassJoinCommand)<br>`text/json`: [CreatePersonalClassJoinCommand](#contract-CreatePersonalClassJoinCommand)<br>`application/*+json`: [CreatePersonalClassJoinCommand](#contract-CreatePersonalClassJoinCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto)<br>`application/json`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto)<br>`text/json`: [PersonalClassJoinDto](#contract-PersonalClassJoinDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/{id}/manager-transfers
+
+کد واقعی: [PersonalClassLifecycleController.Transfer](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [CreatePersonalClassTransferCommand](#contract-CreatePersonalClassTransferCommand)<br>`text/json`: [CreatePersonalClassTransferCommand](#contract-CreatePersonalClassTransferCommand)<br>`application/*+json`: [CreatePersonalClassTransferCommand](#contract-CreatePersonalClassTransferCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto)<br>`application/json`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto)<br>`text/json`: [PersonalClassTransferDto](#contract-PersonalClassTransferDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/{id}/memberships
+
+کد واقعی: [PersonalClassLifecycleController.Members](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassMembershipDto](#contract-PersonalClassPageOfPersonalClassMembershipDto)<br>`application/json`: [PersonalClassPageOfPersonalClassMembershipDto](#contract-PersonalClassPageOfPersonalClassMembershipDto)<br>`text/json`: [PersonalClassPageOfPersonalClassMembershipDto](#contract-PersonalClassPageOfPersonalClassMembershipDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### DELETE /api/v1/personal-classes/{id}/memberships/{memberId}
+
+کد واقعی: [PersonalClassLifecycleController.End](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `memberId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/personal-classes/{id}/memberships/{memberId}/roles
+
+کد واقعی: [PersonalClassLifecycleController.Roles](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `memberId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ChangePersonalClassRolesCommand](#contract-ChangePersonalClassRolesCommand)<br>`text/json`: [ChangePersonalClassRolesCommand](#contract-ChangePersonalClassRolesCommand)<br>`application/*+json`: [ChangePersonalClassRolesCommand](#contract-ChangePersonalClassRolesCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassMembershipDto](#contract-PersonalClassMembershipDto)<br>`application/json`: [PersonalClassMembershipDto](#contract-PersonalClassMembershipDto)<br>`text/json`: [PersonalClassMembershipDto](#contract-PersonalClassMembershipDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/personal-classes/{id}/settings
+
+کد واقعی: [PersonalClassLifecycleController.Configure](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ConfigurePersonalClassCommand](#contract-ConfigurePersonalClassCommand)<br>`text/json`: [ConfigurePersonalClassCommand](#contract-ConfigurePersonalClassCommand)<br>`application/*+json`: [ConfigurePersonalClassCommand](#contract-ConfigurePersonalClassCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/{id}/spaces
+
+کد واقعی: [PersonalClassLifecycleController.Spaces](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`application/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult)<br>`text/json`: [OfficialSpacesPairResult](#contract-OfficialSpacesPairResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-classes/{id}/spaces/backfill-plan
+
+کد واقعی: [PersonalClassLifecycleController.BackfillPlan](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassBackfillPlanRow](#contract-PersonalClassBackfillPlanRow)<br>`application/json`: [PersonalClassBackfillPlanRow](#contract-PersonalClassBackfillPlanRow)<br>`text/json`: [PersonalClassBackfillPlanRow](#contract-PersonalClassBackfillPlanRow) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/{id}/spaces/repair
+
+کد واقعی: [PersonalClassLifecycleController.Repair](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [RepairPersonalClassSpacesCommand](#contract-RepairPersonalClassSpacesCommand)<br>`text/json`: [RepairPersonalClassSpacesCommand](#contract-RepairPersonalClassSpacesCommand)<br>`application/*+json`: [RepairPersonalClassSpacesCommand](#contract-RepairPersonalClassSpacesCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 202 | Accepted | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-classes/{id}/suspend
+
+کد واقعی: [PersonalClassLifecycleController.Suspend](../MakanApp.Api/Controllers/PersonalClassLifecycleController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassLifecycleService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PersonalClassRequests
+
+### GET /api/v1/personal-class-requests
+
+کد واقعی: [PersonalClassRequestsController.List](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto)<br>`application/json`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto)<br>`text/json`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-class-requests
+
+کد واقعی: [PersonalClassRequestsController.Create](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+بدنه درخواست: `application/json`: [CreatePersonalClassRequestCommand](#contract-CreatePersonalClassRequestCommand)<br>`text/json`: [CreatePersonalClassRequestCommand](#contract-CreatePersonalClassRequestCommand)<br>`application/*+json`: [CreatePersonalClassRequestCommand](#contract-CreatePersonalClassRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-class-requests/{id}
+
+کد واقعی: [PersonalClassRequestsController.Get](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/personal-class-requests/{id}
+
+کد واقعی: [PersonalClassRequestsController.Edit](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [EditPersonalClassRequestCommand](#contract-EditPersonalClassRequestCommand)<br>`text/json`: [EditPersonalClassRequestCommand](#contract-EditPersonalClassRequestCommand)<br>`application/*+json`: [EditPersonalClassRequestCommand](#contract-EditPersonalClassRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-class-requests/{id}/cancel
+
+کد واقعی: [PersonalClassRequestsController.Cancel](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)<br>`text/json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)<br>`application/*+json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/personal-class-requests/{id}/history
+
+کد واقعی: [PersonalClassRequestsController.History](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto)<br>`application/json`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto)<br>`text/json`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/personal-class-requests/{id}/submit
+
+کد واقعی: [PersonalClassRequestsController.Submit](../MakanApp.Api/Controllers/PersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)<br>`text/json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)<br>`application/*+json`: [PersonalClassVersionCommand](#contract-PersonalClassVersionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PersonalClasses
@@ -4557,13 +7799,22 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: آرایه از [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: آرایه از [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/personal-classes
 
@@ -4571,13 +7822,22 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 بدنه درخواست: `application/json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)<br>`text/json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)<br>`application/*+json`: [CreatePersonalClassCommand](#contract-CreatePersonalClassCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/personal-classes/invitations
 
@@ -4585,13 +7845,22 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/personal-classes/invitations/{invitationId}/accept
 
@@ -4599,7 +7868,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -4610,6 +7879,15 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/personal-classes/{classId}
 
@@ -4617,7 +7895,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -4628,6 +7906,15 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/personal-classes/{classId}/archive
 
@@ -4635,17 +7922,26 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
 
-بدنه درخواست: ندارد.
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonalClassDto](#contract-PersonalClassDto)<br>`application/json`: [PersonalClassDto](#contract-PersonalClassDto)<br>`text/json`: [PersonalClassDto](#contract-PersonalClassDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/personal-classes/{classId}/invitations
 
@@ -4653,7 +7949,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -4664,6 +7960,15 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`application/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto)<br>`text/json`: [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/personal-classes/{classId}/participants
 
@@ -4671,7 +7976,7 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -4682,6 +7987,15 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto)<br>`application/json`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto)<br>`text/json`: آرایه از [PersonalClassParticipantDto](#contract-PersonalClassParticipantDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/personal-classes/{classId}/participants/{participantId}
 
@@ -4689,18 +8003,66 @@ policy: `platform.users.manage`
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassService`، `MakanApp.Application.Academic.PersonalClassLifecycleService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
 | `classId` | path | بله | string / uuid |
 | `participantId` | path | بله | string / uuid |
 
-بدنه درخواست: ندارد.
+بدنه درخواست: `application/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`text/json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)<br>`application/*+json`: [PersonalClassReasonCommand](#contract-PersonalClassReasonCommand)؛ required
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | بدون بدنهٔ منتشرشده |
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PhoneChange
+
+### POST /api/v1/me/phone-change/requests
+
+کد واقعی: [PhoneChangeController.RequestChange](../MakanApp.Api/Controllers/PhoneChangeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.PhoneChangeService`
+
+بدنه درخواست: `application/json`: [RequestPhoneChangeCommand](#contract-RequestPhoneChangeCommand)<br>`text/json`: [RequestPhoneChangeCommand](#contract-RequestPhoneChangeCommand)<br>`application/*+json`: [RequestPhoneChangeCommand](#contract-RequestPhoneChangeCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PhoneChangeResult](#contract-PhoneChangeResult)<br>`application/json`: [PhoneChangeResult](#contract-PhoneChangeResult)<br>`text/json`: [PhoneChangeResult](#contract-PhoneChangeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/me/phone-change/requests/{requestId}/verify
+
+کد واقعی: [PhoneChangeController.Verify](../MakanApp.Api/Controllers/PhoneChangeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.PhoneChangeService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [VerifyPhoneChangeCommand](#contract-VerifyPhoneChangeCommand)<br>`text/json`: [VerifyPhoneChangeCommand](#contract-VerifyPhoneChangeCommand)<br>`application/*+json`: [VerifyPhoneChangeCommand](#contract-VerifyPhoneChangeCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PhoneChangeResult](#contract-PhoneChangeResult)<br>`application/json`: [PhoneChangeResult](#contract-PhoneChangeResult)<br>`text/json`: [PhoneChangeResult](#contract-PhoneChangeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformCommerce
@@ -4724,6 +8086,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSubscriptionOverrideResult](#contract-PlatformSubscriptionOverrideResult)<br>`application/json`: [PlatformSubscriptionOverrideResult](#contract-PlatformSubscriptionOverrideResult)<br>`text/json`: [PlatformSubscriptionOverrideResult](#contract-PlatformSubscriptionOverrideResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/commerce/plan-versions/{planVersionId}/publish
 
@@ -4744,6 +8109,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem)<br>`application/json`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem)<br>`text/json`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/plans
 
@@ -4766,6 +8134,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformPlanPage](#contract-PlatformPlanPage)<br>`application/json`: [PlatformPlanPage](#contract-PlatformPlanPage)<br>`text/json`: [PlatformPlanPage](#contract-PlatformPlanPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/commerce/plans
 
@@ -4782,6 +8152,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformPlanDetail](#contract-PlatformPlanDetail)<br>`application/json`: [PlatformPlanDetail](#contract-PlatformPlanDetail)<br>`text/json`: [PlatformPlanDetail](#contract-PlatformPlanDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/plans/{planId}
 
@@ -4802,6 +8175,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformPlanDetail](#contract-PlatformPlanDetail)<br>`application/json`: [PlatformPlanDetail](#contract-PlatformPlanDetail)<br>`text/json`: [PlatformPlanDetail](#contract-PlatformPlanDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/commerce/plans/{planId}/versions
 
@@ -4822,6 +8197,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem)<br>`application/json`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem)<br>`text/json`: [PlatformPlanVersionItem](#contract-PlatformPlanVersionItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/subscriptions
 
@@ -4845,6 +8223,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage)<br>`application/json`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage)<br>`text/json`: [PlatformSubscriptionPage](#contract-PlatformSubscriptionPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformCommercialContracts
@@ -4868,6 +8248,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto)<br>`application/json`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto)<br>`text/json`: آرایه از [CommercialHistoryDto](#contract-CommercialHistoryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/commerce/organizations/{ownerId}/commercial-contracts
 
@@ -4888,6 +8270,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/organizations/{ownerId}/subscription
 
@@ -4908,6 +8293,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/admin/v1/commerce/plan-versions/{versionId}/draft
 
@@ -4928,6 +8315,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`application/json`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`text/json`: [CommercialValidationDto](#contract-CommercialValidationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/plan-versions/{versionId}/validation
 
@@ -4948,6 +8338,8 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`application/json`: [CommercialValidationDto](#contract-CommercialValidationDto)<br>`text/json`: [CommercialValidationDto](#contract-CommercialValidationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/admin/v1/commerce/plans/{planId}/availability
 
@@ -4967,7 +8359,10 @@ policy: `platform.commerce.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | بدون بدنهٔ منتشرشده |
+| 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/commerce/users/{ownerId}/commercial-contracts
 
@@ -4988,6 +8383,9 @@ policy: `platform.commerce.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/commerce/users/{ownerId}/subscription
 
@@ -5008,6 +8406,34 @@ policy: `platform.commerce.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`application/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto)<br>`text/json`: [CommercialSummaryDto](#contract-CommercialSummaryDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformDeletionRequests
+
+### GET /api/admin/v1/privacy/deletion-requests
+
+کد واقعی: [PlatformDeletionRequestsController.Queue](../MakanApp.Api/Controllers/AccountDeletionController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.privacy_requests.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.AccountDeletionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountDeletionPage](#contract-AccountDeletionPage)<br>`application/json`: [AccountDeletionPage](#contract-AccountDeletionPage)<br>`text/json`: [AccountDeletionPage](#contract-AccountDeletionPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformEducation
@@ -5035,6 +8461,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformAssignmentPage](#contract-PlatformAssignmentPage)<br>`application/json`: [PlatformAssignmentPage](#contract-PlatformAssignmentPage)<br>`text/json`: [PlatformAssignmentPage](#contract-PlatformAssignmentPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/education/classes
 
@@ -5059,6 +8487,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformClassPage](#contract-PlatformClassPage)<br>`application/json`: [PlatformClassPage](#contract-PlatformClassPage)<br>`text/json`: [PlatformClassPage](#contract-PlatformClassPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/education/classes/{classId}
 
@@ -5079,6 +8509,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformClassDetail](#contract-PlatformClassDetail)<br>`application/json`: [PlatformClassDetail](#contract-PlatformClassDetail)<br>`text/json`: [PlatformClassDetail](#contract-PlatformClassDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/education/enrollments
 
@@ -5103,6 +8535,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformEnrollmentPage](#contract-PlatformEnrollmentPage)<br>`application/json`: [PlatformEnrollmentPage](#contract-PlatformEnrollmentPage)<br>`text/json`: [PlatformEnrollmentPage](#contract-PlatformEnrollmentPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/education/exams
 
@@ -5127,6 +8561,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformExamPage](#contract-PlatformExamPage)<br>`application/json`: [PlatformExamPage](#contract-PlatformExamPage)<br>`text/json`: [PlatformExamPage](#contract-PlatformExamPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/education/teachers
 
@@ -5151,6 +8587,8 @@ policy: `platform.education.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformTeacherAssignmentPage](#contract-PlatformTeacherAssignmentPage)<br>`application/json`: [PlatformTeacherAssignmentPage](#contract-PlatformTeacherAssignmentPage)<br>`text/json`: [PlatformTeacherAssignmentPage](#contract-PlatformTeacherAssignmentPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformFinance
@@ -5177,6 +8615,8 @@ policy: `platform.finance.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrderPage](#contract-PlatformOrderPage)<br>`application/json`: [PlatformOrderPage](#contract-PlatformOrderPage)<br>`text/json`: [PlatformOrderPage](#contract-PlatformOrderPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/finance/orders/{orderId}
 
@@ -5197,6 +8637,8 @@ policy: `platform.finance.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrderItem](#contract-PlatformOrderItem)<br>`application/json`: [PlatformOrderItem](#contract-PlatformOrderItem)<br>`text/json`: [PlatformOrderItem](#contract-PlatformOrderItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformIam
@@ -5216,6 +8658,8 @@ policy: `platform.access`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformMeResult](#contract-PlatformMeResult)<br>`application/json`: [PlatformMeResult](#contract-PlatformMeResult)<br>`text/json`: [PlatformMeResult](#contract-PlatformMeResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/role-assignments
 
@@ -5240,6 +8684,8 @@ policy: `platform.roles.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformRoleAssignmentPage](#contract-PlatformRoleAssignmentPage)<br>`application/json`: [PlatformRoleAssignmentPage](#contract-PlatformRoleAssignmentPage)<br>`text/json`: [PlatformRoleAssignmentPage](#contract-PlatformRoleAssignmentPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/role-assignments
 
@@ -5257,6 +8703,9 @@ policy: `platform.roles.manage`
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`application/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`text/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult) |
 | 201 | Created | `text/plain`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`application/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`text/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/admin/v1/role-assignments/{assignmentId}
 
@@ -5277,6 +8726,9 @@ policy: `platform.roles.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`application/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult)<br>`text/json`: [PlatformRoleMutationResult](#contract-PlatformRoleMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/roles
 
@@ -5293,6 +8745,54 @@ policy: `platform.roles.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [PlatformRoleCatalogItem](#contract-PlatformRoleCatalogItem)<br>`application/json`: آرایه از [PlatformRoleCatalogItem](#contract-PlatformRoleCatalogItem)<br>`text/json`: آرایه از [PlatformRoleCatalogItem](#contract-PlatformRoleCatalogItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformLibrarySources
+
+### GET /api/admin/v1/library/sources
+
+کد واقعی: [PlatformLibrarySourcesController.List](../MakanApp.Api/Controllers/PlatformLibrarySourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `Scope` | query | خیر | [EducationalSourceScope](#contract-EducationalSourceScope) |
+| `ClassId` | query | خیر | string / uuid |
+| `Search` | query | خیر | string |
+| `Page` | query | خیر | integer / int32 |
+| `PageSize` | query | خیر | integer / int32 |
+| `Status` | query | خیر | string |
+| `SourceType` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SourcePage](#contract-SourcePage)<br>`application/json`: [SourcePage](#contract-SourcePage)<br>`text/json`: [SourcePage](#contract-SourcePage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/library/sources
+
+کد واقعی: [PlatformLibrarySourcesController.Create](../MakanApp.Api/Controllers/PlatformLibrarySourcesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Knowledge.EducationalSourceService`
+
+بدنه درخواست: `application/json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)<br>`text/json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)<br>`application/*+json`: [CreateEducationalSourceCommand](#contract-CreateEducationalSourceCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`application/json`: [EducationalSourceResult](#contract-EducationalSourceResult)<br>`text/json`: [EducationalSourceResult](#contract-EducationalSourceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformMessagingMetadata
@@ -5322,6 +8822,8 @@ policy: `platform.messaging.read_metadata`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage)<br>`application/json`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage)<br>`text/json`: [PlatformConversationMetadataPage](#contract-PlatformConversationMetadataPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformModeration
@@ -5348,6 +8850,8 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCasePage](#contract-PlatformModerationCasePage)<br>`application/json`: [PlatformModerationCasePage](#contract-PlatformModerationCasePage)<br>`text/json`: [PlatformModerationCasePage](#contract-PlatformModerationCasePage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/moderation/cases/{caseId}
 
@@ -5368,6 +8872,8 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/actions
 
@@ -5388,6 +8894,9 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/dismiss
 
@@ -5408,6 +8917,9 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/enforce-content-removal
 
@@ -5428,6 +8940,9 @@ policy: `platform.moderation.review`، `platform.moderation.enforce`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/moderation/cases/{caseId}/evidence/files/{fileAssetId}
 
@@ -5448,7 +8963,11 @@ policy: `platform.moderation.review`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | بدون بدنهٔ منتشرشده |
+| 200 | بایت خام فایل؛ Content-Type واقعی از metadata معتبر فایل می‌آید. | `application/octet-stream`: string / binary |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 206 | بازهٔ معتبر فایل روی stream قابل seek؛ Content-Range را بخوانید. | `application/octet-stream`: string / binary |
+| 416 | بازهٔ درخواستی معتبر نیست؛ پاسخ فایل موفق نیست و ممکن است بدنه نداشته باشد. | بدون بدنهٔ منتشرشده |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/expanded-context
 
@@ -5469,6 +8988,9 @@ policy: `platform.moderation.review`، `platform.moderation.enforce`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/resolve
 
@@ -5489,6 +9011,9 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/moderation/cases/{caseId}/start-review
 
@@ -5509,6 +9034,9 @@ policy: `platform.moderation.review`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`application/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail)<br>`text/json`: [PlatformModerationCaseDetail](#contract-PlatformModerationCaseDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformOrganizations
@@ -5537,6 +9065,8 @@ policy: `platform.organizations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrganizationPage](#contract-PlatformOrganizationPage)<br>`application/json`: [PlatformOrganizationPage](#contract-PlatformOrganizationPage)<br>`text/json`: [PlatformOrganizationPage](#contract-PlatformOrganizationPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/organizations
 
@@ -5553,6 +9083,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult)<br>`application/json`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult)<br>`text/json`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/organizations/{organizationId}
 
@@ -5573,6 +9106,8 @@ policy: `platform.organizations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrganizationDetail](#contract-PlatformOrganizationDetail)<br>`application/json`: [PlatformOrganizationDetail](#contract-PlatformOrganizationDetail)<br>`text/json`: [PlatformOrganizationDetail](#contract-PlatformOrganizationDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/organizations/{organizationId}/invitations
 
@@ -5593,6 +9128,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformInvitationResult](#contract-PlatformInvitationResult)<br>`application/json`: [PlatformInvitationResult](#contract-PlatformInvitationResult)<br>`text/json`: [PlatformInvitationResult](#contract-PlatformInvitationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/organizations/{organizationId}/memberships
 
@@ -5616,6 +9154,8 @@ policy: `platform.organizations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformMembershipPage](#contract-PlatformMembershipPage)<br>`application/json`: [PlatformMembershipPage](#contract-PlatformMembershipPage)<br>`text/json`: [PlatformMembershipPage](#contract-PlatformMembershipPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}
 
@@ -5637,6 +9177,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult)<br>`application/json`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult)<br>`text/json`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/admin/v1/organizations/{organizationId}/memberships/{membershipId}/role
 
@@ -5658,6 +9201,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult)<br>`application/json`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult)<br>`text/json`: [PlatformMembershipMutationResult](#contract-PlatformMembershipMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/organizations/{organizationId}/reactivate
 
@@ -5678,6 +9224,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult)<br>`application/json`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult)<br>`text/json`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/organizations/{organizationId}/suspend
 
@@ -5698,6 +9247,9 @@ policy: `platform.organizations.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult)<br>`application/json`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult)<br>`text/json`: [PlatformOrganizationMutationResult](#contract-PlatformOrganizationMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/organizations/{organizationId}/suspension-impact
 
@@ -5718,6 +9270,266 @@ policy: `platform.organizations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformOrganizationImpactPreview](#contract-PlatformOrganizationImpactPreview)<br>`application/json`: [PlatformOrganizationImpactPreview](#contract-PlatformOrganizationImpactPreview)<br>`text/json`: [PlatformOrganizationImpactPreview](#contract-PlatformOrganizationImpactPreview) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformPersonalClassAcademicPermissions
+
+### GET /api/admin/v1/personal-classes/{classId}/academic-permissions
+
+کد واقعی: [PlatformPersonalClassAcademicPermissionsController.List](../MakanApp.Api/Controllers/PlatformPersonalClassAcademicPermissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.academic_permissions.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassAcademicPermissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto)<br>`application/json`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto)<br>`text/json`: [PersonalClassPageOfPersonalClassAcademicPermissionDto](#contract-PersonalClassPageOfPersonalClassAcademicPermissionDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/admin/v1/personal-classes/{classId}/academic-permissions/{membershipId}
+
+کد واقعی: [PlatformPersonalClassAcademicPermissionsController.Set](../MakanApp.Api/Controllers/PlatformPersonalClassAcademicPermissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.academic_permissions.manage`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassAcademicPermissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `membershipId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)<br>`text/json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)<br>`application/*+json`: [SetPersonalClassAcademicPermissionCommand](#contract-SetPersonalClassAcademicPermissionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto)<br>`application/json`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto)<br>`text/json`: [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformPersonalClassHistory
+
+### GET /api/admin/v1/personal-classes/{classId}/history
+
+کد واقعی: [PlatformPersonalClassHistoryController.Read](../MakanApp.Api/Controllers/PlatformPersonalClassHistoryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassHistoryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem)<br>`application/json`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem)<br>`text/json`: [PersonalClassPageOfPersonalClassHistoryItem](#contract-PersonalClassPageOfPersonalClassHistoryItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformPersonalClassMemberships
+
+### GET /api/admin/v1/personal-classes/{classId}/memberships
+
+کد واقعی: [PlatformPersonalClassMembershipsController.Read](../MakanApp.Api/Controllers/PlatformPersonalClassMembershipsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassAdminMembershipService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | path | بله | string / uuid |
+| `search` | query | خیر | string |
+| `role` | query | خیر | string |
+| `activeOnly` | query | خیر | boolean |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPlatformPersonalClassMembershipDto](#contract-PersonalClassPageOfPlatformPersonalClassMembershipDto)<br>`application/json`: [PersonalClassPageOfPlatformPersonalClassMembershipDto](#contract-PersonalClassPageOfPlatformPersonalClassMembershipDto)<br>`text/json`: [PersonalClassPageOfPlatformPersonalClassMembershipDto](#contract-PersonalClassPageOfPlatformPersonalClassMembershipDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformPersonalClassRequests
+
+### GET /api/admin/v1/personal-class-requests
+
+کد واقعی: [PlatformPersonalClassRequestsController.List](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto)<br>`application/json`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto)<br>`text/json`: [PersonalClassPageOfPersonalClassRequestDto](#contract-PersonalClassPageOfPersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/admin/v1/personal-class-requests/{id}
+
+کد واقعی: [PlatformPersonalClassRequestsController.Get](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/admin/v1/personal-class-requests/{id}/history
+
+کد واقعی: [PlatformPersonalClassRequestsController.History](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto)<br>`application/json`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto)<br>`text/json`: [PersonalClassPageOfPersonalClassDecisionDto](#contract-PersonalClassPageOfPersonalClassDecisionDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/personal-class-requests/{id}/review
+
+کد واقعی: [PlatformPersonalClassRequestsController.Review](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.personal_classes.review`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.PersonalClassFormationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ReviewPersonalClassRequestCommand](#contract-ReviewPersonalClassRequestCommand)<br>`text/json`: [ReviewPersonalClassRequestCommand](#contract-ReviewPersonalClassRequestCommand)<br>`application/*+json`: [ReviewPersonalClassRequestCommand](#contract-ReviewPersonalClassRequestCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`application/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto)<br>`text/json`: [PersonalClassRequestDto](#contract-PersonalClassRequestDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformProvisioning
@@ -5734,15 +9546,19 @@ policy: `platform.provisioning.read`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
-| `status` | query | خیر | string |
+| `status` | query | خیر | string / Requested, OrganizationCreated, SubscriptionAssigned, ManagerInvitationCreated, Completed, NeedsAttention |
 | `page` | query | خیر | integer / int32 |
 | `pageSize` | query | خیر | integer / int32 |
+| `clientOperationId` | query | خیر | string |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformProvisioningPage](#contract-PlatformProvisioningPage)<br>`application/json`: [PlatformProvisioningPage](#contract-PlatformProvisioningPage)<br>`text/json`: [PlatformProvisioningPage](#contract-PlatformProvisioningPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/provisioning
 
@@ -5759,6 +9575,224 @@ policy: `platform.provisioning.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult)<br>`application/json`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult)<br>`text/json`: [PlatformProvisioningResult](#contract-PlatformProvisioningResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformSchoolApplications
+
+### GET /api/admin/v1/school-applications
+
+کد واقعی: [PlatformSchoolApplicationsController.Queue](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationPage](#contract-SchoolApplicationPage)<br>`application/json`: [SchoolApplicationPage](#contract-SchoolApplicationPage)<br>`text/json`: [SchoolApplicationPage](#contract-SchoolApplicationPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/admin/v1/school-applications/{id}
+
+کد واقعی: [PlatformSchoolApplicationsController.Read](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/school-applications/{id}/decisions
+
+کد واقعی: [PlatformSchoolApplicationsController.Decide](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.review`، `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`text/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`application/*+json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/school-applications/{id}/review
+
+کد واقعی: [PlatformSchoolApplicationsController.StartReview](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.review`، `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`text/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`application/*+json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## PlatformSupportTickets
+
+### GET /api/admin/v1/support/tickets
+
+کد واقعی: [PlatformSupportTicketsController.Queue](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.support.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketPage](#contract-SupportTicketPage)<br>`application/json`: [SupportTicketPage](#contract-SupportTicketPage)<br>`text/json`: [SupportTicketPage](#contract-SupportTicketPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/admin/v1/support/tickets/{id}
+
+کد واقعی: [PlatformSupportTicketsController.Read](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.support.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `afterMessageVersion` | query | خیر | integer / int64 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/support/tickets/{id}/assign
+
+کد واقعی: [PlatformSupportTicketsController.Assign](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.support.manage`، `platform.support.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)<br>`text/json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)<br>`application/*+json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/support/tickets/{id}/messages
+
+کد واقعی: [PlatformSupportTicketsController.Reply](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.support.manage`، `platform.support.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)<br>`text/json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)<br>`application/*+json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/support/tickets/{id}/resolve
+
+کد واقعی: [PlatformSupportTicketsController.Resolve](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.support.manage`، `platform.support.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)<br>`text/json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)<br>`application/*+json`: [ManageSupportTicketCommand](#contract-ManageSupportTicketCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformSystemOperations
@@ -5778,6 +9812,8 @@ policy: `platform.operations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSystemHealth](#contract-PlatformSystemHealth)<br>`application/json`: [PlatformSystemHealth](#contract-PlatformSystemHealth)<br>`text/json`: [PlatformSystemHealth](#contract-PlatformSystemHealth) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/operations/jobs
 
@@ -5794,6 +9830,8 @@ policy: `platform.operations.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformJobOperations](#contract-PlatformJobOperations)<br>`application/json`: [PlatformJobOperations](#contract-PlatformJobOperations)<br>`text/json`: [PlatformJobOperations](#contract-PlatformJobOperations) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/operations/notifications
 
@@ -5810,6 +9848,8 @@ policy: `platform.notifications.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformNotificationOperations](#contract-PlatformNotificationOperations)<br>`application/json`: [PlatformNotificationOperations](#contract-PlatformNotificationOperations)<br>`text/json`: [PlatformNotificationOperations](#contract-PlatformNotificationOperations) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## PlatformUsers
@@ -5838,6 +9878,8 @@ policy: `platform.users.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformUserPage](#contract-PlatformUserPage)<br>`application/json`: [PlatformUserPage](#contract-PlatformUserPage)<br>`text/json`: [PlatformUserPage](#contract-PlatformUserPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/admin/v1/users/{userId}
 
@@ -5858,6 +9900,8 @@ policy: `platform.users.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformUserDetail](#contract-PlatformUserDetail)<br>`application/json`: [PlatformUserDetail](#contract-PlatformUserDetail)<br>`text/json`: [PlatformUserDetail](#contract-PlatformUserDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/reactivate
 
@@ -5878,6 +9922,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult)<br>`application/json`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult)<br>`text/json`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/sessions/revoke
 
@@ -5898,6 +9945,9 @@ policy: `platform.sessions.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult)<br>`application/json`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult)<br>`text/json`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/sessions/{sessionId}/revoke
 
@@ -5919,6 +9969,9 @@ policy: `platform.sessions.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult)<br>`application/json`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult)<br>`text/json`: [PlatformSessionRevocationResult](#contract-PlatformSessionRevocationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/users/{userId}/suspend
 
@@ -5939,6 +9992,9 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult)<br>`application/json`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult)<br>`text/json`: [PlatformUserMutationResult](#contract-PlatformUserMutationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Profile
@@ -5956,6 +10012,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CurrentUserResult](#contract-CurrentUserResult)<br>`application/json`: [CurrentUserResult](#contract-CurrentUserResult)<br>`text/json`: [CurrentUserResult](#contract-CurrentUserResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/me/profile
 
@@ -5970,6 +10028,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [CurrentUserResult](#contract-CurrentUserResult)<br>`application/json`: [CurrentUserResult](#contract-CurrentUserResult)<br>`text/json`: [CurrentUserResult](#contract-CurrentUserResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/me/profile-photo
 
@@ -5984,6 +10044,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 204 | No Content | بدون بدنهٔ منتشرشده |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/me/profile-photo
 
@@ -5998,17 +10060,19 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3)<br>`application/json`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3)<br>`text/json`: [ProfilePhotoResult3](#contract-ProfilePhotoResult3) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Realtime
 
-### GET /api/v1/realtime/changes
+### GET /api/v1/realtime/account-inbox/changes
 
-کد واقعی: [RealtimeController.Changes](../MakanApp.Api/Controllers/RealtimeController.cs).
+کد واقعی: [RealtimeController.AccountInboxChanges](../MakanApp.Api/Controllers/RealtimeController.cs).
 
 احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
 
-وابستگی‌های واقعی Controller: `MakanApp.Application.Realtime.IRealtimeSyncService`
+وابستگی‌های واقعی Controller: `MakanApp.Application.Realtime.IRealtimeSyncService`، `MakanApp.Application.Realtime.IAccountInboxRealtimeService`
 
 | پارامتر | محل | الزام در schema | نوع |
 |---|---|---|---|
@@ -6020,11 +10084,38 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`application/json`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`text/json`: [AccountChangePageResult](#contract-AccountChangePageResult) |
-| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 401 | Unauthorized | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | Unauthorized | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/realtime/changes
+
+کد واقعی: [RealtimeController.Changes](../MakanApp.Api/Controllers/RealtimeController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Realtime.IRealtimeSyncService`، `MakanApp.Application.Realtime.IAccountInboxRealtimeService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `cursor` | query | خیر | string |
+| `limit` | query | خیر | integer / int32 |
+| `scope` | query | خیر | string |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`application/json`: [AccountChangePageResult](#contract-AccountChangePageResult)<br>`text/json`: [AccountChangePageResult](#contract-AccountChangePageResult) |
+| 400 | Bad Request | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | Unauthorized | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | Too Many Requests | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | Service Unavailable | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Reports
@@ -6042,6 +10133,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 202 | Accepted | `text/plain`: [ReportExportJobResult](#contract-ReportExportJobResult)<br>`application/json`: [ReportExportJobResult](#contract-ReportExportJobResult)<br>`text/json`: [ReportExportJobResult](#contract-ReportExportJobResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/exports/{jobId}
 
@@ -6060,6 +10153,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportExportJobResult](#contract-ReportExportJobResult)<br>`application/json`: [ReportExportJobResult](#contract-ReportExportJobResult)<br>`text/json`: [ReportExportJobResult](#contract-ReportExportJobResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/exports/{jobId}/download
 
@@ -6077,7 +10172,9 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 200 | OK | `text/plain`: [FileStreamResult](#contract-FileStreamResult)<br>`application/json`: [FileStreamResult](#contract-FileStreamResult)<br>`text/json`: [FileStreamResult](#contract-FileStreamResult) |
+| 200 | بایت خام فایل؛ Content-Type واقعی از metadata معتبر فایل می‌آید. | `application/octet-stream`: string / binary |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/manager/assessments
 
@@ -6104,6 +10201,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfManagerAssessmentReportItem](#contract-ReportPageOfManagerAssessmentReportItem)<br>`application/json`: [ReportPageOfManagerAssessmentReportItem](#contract-ReportPageOfManagerAssessmentReportItem)<br>`text/json`: [ReportPageOfManagerAssessmentReportItem](#contract-ReportPageOfManagerAssessmentReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/manager/attendance
 
@@ -6127,6 +10226,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfManagerAttendanceReportItem](#contract-ReportPageOfManagerAttendanceReportItem)<br>`application/json`: [ReportPageOfManagerAttendanceReportItem](#contract-ReportPageOfManagerAttendanceReportItem)<br>`text/json`: [ReportPageOfManagerAttendanceReportItem](#contract-ReportPageOfManagerAttendanceReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/manager/classes/{classId}
 
@@ -6145,6 +10246,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ManagerClassPerformanceDto](#contract-ManagerClassPerformanceDto)<br>`application/json`: [ManagerClassPerformanceDto](#contract-ManagerClassPerformanceDto)<br>`text/json`: [ManagerClassPerformanceDto](#contract-ManagerClassPerformanceDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/manager/enrollments
 
@@ -6171,6 +10274,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfManagerEnrollmentReportItem](#contract-ReportPageOfManagerEnrollmentReportItem)<br>`application/json`: [ReportPageOfManagerEnrollmentReportItem](#contract-ReportPageOfManagerEnrollmentReportItem)<br>`text/json`: [ReportPageOfManagerEnrollmentReportItem](#contract-ReportPageOfManagerEnrollmentReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/manager/teacher-workload
 
@@ -6196,6 +10301,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfManagerTeacherWorkloadReportItem](#contract-ReportPageOfManagerTeacherWorkloadReportItem)<br>`application/json`: [ReportPageOfManagerTeacherWorkloadReportItem](#contract-ReportPageOfManagerTeacherWorkloadReportItem)<br>`text/json`: [ReportPageOfManagerTeacherWorkloadReportItem](#contract-ReportPageOfManagerTeacherWorkloadReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/parent/assignments
 
@@ -6219,6 +10326,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfParentAssignmentReportItem](#contract-ReportPageOfParentAssignmentReportItem)<br>`application/json`: [ReportPageOfParentAssignmentReportItem](#contract-ReportPageOfParentAssignmentReportItem)<br>`text/json`: [ReportPageOfParentAssignmentReportItem](#contract-ReportPageOfParentAssignmentReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/parent/attendance
 
@@ -6242,6 +10351,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AttendanceReportPageOfParentAttendanceReportItem](#contract-AttendanceReportPageOfParentAttendanceReportItem)<br>`application/json`: [AttendanceReportPageOfParentAttendanceReportItem](#contract-AttendanceReportPageOfParentAttendanceReportItem)<br>`text/json`: [AttendanceReportPageOfParentAttendanceReportItem](#contract-AttendanceReportPageOfParentAttendanceReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/parent/exams
 
@@ -6265,6 +10376,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfParentExamReportItem](#contract-ReportPageOfParentExamReportItem)<br>`application/json`: [ReportPageOfParentExamReportItem](#contract-ReportPageOfParentExamReportItem)<br>`text/json`: [ReportPageOfParentExamReportItem](#contract-ReportPageOfParentExamReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/student/assignments
 
@@ -6288,6 +10401,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfStudentAssignmentReportItem](#contract-ReportPageOfStudentAssignmentReportItem)<br>`application/json`: [ReportPageOfStudentAssignmentReportItem](#contract-ReportPageOfStudentAssignmentReportItem)<br>`text/json`: [ReportPageOfStudentAssignmentReportItem](#contract-ReportPageOfStudentAssignmentReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/student/attendance
 
@@ -6311,6 +10426,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AttendanceReportPageOfStudentAttendanceReportItem](#contract-AttendanceReportPageOfStudentAttendanceReportItem)<br>`application/json`: [AttendanceReportPageOfStudentAttendanceReportItem](#contract-AttendanceReportPageOfStudentAttendanceReportItem)<br>`text/json`: [AttendanceReportPageOfStudentAttendanceReportItem](#contract-AttendanceReportPageOfStudentAttendanceReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/student/exams
 
@@ -6334,6 +10451,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfStudentExamReportItem](#contract-ReportPageOfStudentExamReportItem)<br>`application/json`: [ReportPageOfStudentExamReportItem](#contract-ReportPageOfStudentExamReportItem)<br>`text/json`: [ReportPageOfStudentExamReportItem](#contract-ReportPageOfStudentExamReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/student/grades
 
@@ -6357,6 +10476,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfStudentReleasedGradeReportItem](#contract-ReportPageOfStudentReleasedGradeReportItem)<br>`application/json`: [ReportPageOfStudentReleasedGradeReportItem](#contract-ReportPageOfStudentReleasedGradeReportItem)<br>`text/json`: [ReportPageOfStudentReleasedGradeReportItem](#contract-ReportPageOfStudentReleasedGradeReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/teacher/classes/{classId}/assignments
 
@@ -6381,6 +10502,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfTeacherAssignmentReportItem](#contract-ReportPageOfTeacherAssignmentReportItem)<br>`application/json`: [ReportPageOfTeacherAssignmentReportItem](#contract-ReportPageOfTeacherAssignmentReportItem)<br>`text/json`: [ReportPageOfTeacherAssignmentReportItem](#contract-ReportPageOfTeacherAssignmentReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/teacher/classes/{classId}/attendance
 
@@ -6405,6 +10528,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AttendanceReportPageOfTeacherAttendanceReportItem](#contract-AttendanceReportPageOfTeacherAttendanceReportItem)<br>`application/json`: [AttendanceReportPageOfTeacherAttendanceReportItem](#contract-AttendanceReportPageOfTeacherAttendanceReportItem)<br>`text/json`: [AttendanceReportPageOfTeacherAttendanceReportItem](#contract-AttendanceReportPageOfTeacherAttendanceReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/teacher/classes/{classId}/exams
 
@@ -6429,6 +10554,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ReportPageOfTeacherExamReportItem](#contract-ReportPageOfTeacherExamReportItem)<br>`application/json`: [ReportPageOfTeacherExamReportItem](#contract-ReportPageOfTeacherExamReportItem)<br>`text/json`: [ReportPageOfTeacherExamReportItem](#contract-ReportPageOfTeacherExamReportItem) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/reports/teacher/classes/{classId}/learners/{learnerId}
 
@@ -6448,6 +10575,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto)<br>`application/json`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto)<br>`text/json`: [TeacherLearnerOverviewDto](#contract-TeacherLearnerOverviewDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## SavedMessageLabels
@@ -6469,6 +10598,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`application/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`text/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/conversations/saved/messages/{messageId}/labels
 
@@ -6487,6 +10618,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`application/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult)<br>`text/json`: [SavedMessageLabelsResult](#contract-SavedMessageLabelsResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Schedule
@@ -6508,6 +10641,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`application/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`text/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/schedule
 
@@ -6527,7 +10672,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [SessionResult](#contract-SessionResult)<br>`application/json`: آرایه از [SessionResult](#contract-SessionResult)<br>`text/json`: آرایه از [SessionResult](#contract-SessionResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/schedule-rules/{scheduleRuleId}
 
@@ -6546,6 +10702,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`application/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult)<br>`text/json`: [ScheduleRuleResult](#contract-ScheduleRuleResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## ScheduledMessages
@@ -6569,6 +10737,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult)<br>`application/json`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult)<br>`text/json`: [ScheduledMessagePageResult](#contract-ScheduledMessagePageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/scheduled-messages
 
@@ -6587,6 +10757,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`application/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`text/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/conversations/{conversationId}/scheduled-messages/{id}/cancel
 
@@ -6606,6 +10778,174 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`application/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult)<br>`text/json`: [ScheduledMessageResult](#contract-ScheduledMessageResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## SchoolAcademicDiscovery
+
+### GET /api/v1/academic/exams/discovery
+
+کد واقعی: [SchoolAcademicDiscoveryController.Exams](../MakanApp.Api/Controllers/SchoolAcademicDiscoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.SchoolAcademicDiscoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `classId` | query | خیر | string / uuid |
+| `status` | query | خیر | string / Draft, Published |
+| `search` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary)<br>`application/json`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary)<br>`text/json`: [AcademicPageOfStudentExamSummary](#contract-AcademicPageOfStudentExamSummary) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/organization/teacher-content-activities
+
+کد واقعی: [SchoolAcademicDiscoveryController.Activities](../MakanApp.Api/Controllers/SchoolAcademicDiscoveryController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Academic.SchoolAcademicDiscoveryService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `teacherUserId` | query | خیر | string / uuid |
+| `classId` | query | خیر | string / uuid |
+| `kind` | query | خیر | string / Lesson, Assignment, Exam, Session |
+| `fromUtc` | query | خیر | string / date-time |
+| `toUtc` | query | خیر | string / date-time |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolPageOfTeacherContentActivityDto](#contract-SchoolPageOfTeacherContentActivityDto)<br>`application/json`: [SchoolPageOfTeacherContentActivityDto](#contract-SchoolPageOfTeacherContentActivityDto)<br>`text/json`: [SchoolPageOfTeacherContentActivityDto](#contract-SchoolPageOfTeacherContentActivityDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## SchoolApplications
+
+### GET /api/v1/school-applications
+
+کد واقعی: [SchoolApplicationsController.List](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationPage](#contract-SchoolApplicationPage)<br>`application/json`: [SchoolApplicationPage](#contract-SchoolApplicationPage)<br>`text/json`: [SchoolApplicationPage](#contract-SchoolApplicationPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/school-applications
+
+کد واقعی: [SchoolApplicationsController.Create](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+بدنه درخواست: `application/json`: [CreateSchoolApplicationCommand](#contract-CreateSchoolApplicationCommand)<br>`text/json`: [CreateSchoolApplicationCommand](#contract-CreateSchoolApplicationCommand)<br>`application/*+json`: [CreateSchoolApplicationCommand](#contract-CreateSchoolApplicationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 201 | Created | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/school-applications/{id}
+
+کد واقعی: [SchoolApplicationsController.Read](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `revision` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/v1/school-applications/{id}
+
+کد واقعی: [SchoolApplicationsController.Update](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [UpdateSchoolApplicationCommand](#contract-UpdateSchoolApplicationCommand)<br>`text/json`: [UpdateSchoolApplicationCommand](#contract-UpdateSchoolApplicationCommand)<br>`application/*+json`: [UpdateSchoolApplicationCommand](#contract-UpdateSchoolApplicationCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/school-applications/{id}/submit
+
+کد واقعی: [SchoolApplicationsController.Submit](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`text/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`application/*+json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## SchoolGuardianInvitations
@@ -6627,13 +10967,13 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`application/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`text/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 429 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/people/{learnerId}/guardian-invitations
 
@@ -6653,13 +10993,13 @@ policy: `platform.users.manage`
 |---|---|---|
 | 201 | Created | `text/plain`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`application/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`text/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult) |
 | 200 | OK | `text/plain`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`application/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult)<br>`text/json`: [SchoolGuardianInvitationResult](#contract-SchoolGuardianInvitationResult) |
-| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
-| 429 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: object |
+| 400 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ مجوز، وضعیت یا نسخهٔ معتبر لازم است. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## SchoolGuardianRelations
@@ -6683,6 +11023,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianRelationsPage](#contract-SchoolGuardianRelationsPage)<br>`application/json`: [SchoolGuardianRelationsPage](#contract-SchoolGuardianRelationsPage)<br>`text/json`: [SchoolGuardianRelationsPage](#contract-SchoolGuardianRelationsPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/guardian-relations
 
@@ -6698,6 +11040,8 @@ policy: `platform.users.manage`
 |---|---|---|
 | 201 | Created | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
 | 200 | OK | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/organization/guardian-relations/{id}
 
@@ -6716,6 +11060,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/guardian-relations/{id}/activate
 
@@ -6734,6 +11080,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/guardian-relations/{id}/end
 
@@ -6752,6 +11100,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/organization/guardian-relations/{id}/revoke
 
@@ -6770,6 +11120,35 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`application/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto)<br>`text/json`: [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## SchoolSentInvitations
+
+### GET /api/v1/organization/invitations
+
+کد واقعی: [SchoolSentInvitationsController.Read](../MakanApp.Api/Controllers/SchoolSentInvitationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolInvitationReadService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string / Pending, Accepted, Declined, Expired, Revoked |
+| `invitationType` | query | خیر | string / Membership, PersonLink, GuardianLink |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolPageOfSchoolSentInvitationDto](#contract-SchoolPageOfSchoolSentInvitationDto)<br>`application/json`: [SchoolPageOfSchoolSentInvitationDto](#contract-SchoolPageOfSchoolSentInvitationDto)<br>`text/json`: [SchoolPageOfSchoolSentInvitationDto](#contract-SchoolPageOfSchoolSentInvitationDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Sessions
@@ -6791,6 +11170,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [SessionResult](#contract-SessionResult)<br>`application/json`: [SessionResult](#contract-SessionResult)<br>`text/json`: [SessionResult](#contract-SessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/sessions/{sessionId}
 
@@ -6809,6 +11200,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SessionResult](#contract-SessionResult)<br>`application/json`: [SessionResult](#contract-SessionResult)<br>`text/json`: [SessionResult](#contract-SessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/sessions/{sessionId}
 
@@ -6827,6 +11230,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SessionResult](#contract-SessionResult)<br>`application/json`: [SessionResult](#contract-SessionResult)<br>`text/json`: [SessionResult](#contract-SessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/sessions/{sessionId}/attendance
 
@@ -6845,6 +11260,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SessionAttendanceResult](#contract-SessionAttendanceResult)<br>`application/json`: [SessionAttendanceResult](#contract-SessionAttendanceResult)<br>`text/json`: [SessionAttendanceResult](#contract-SessionAttendanceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PUT /api/v1/academic/sessions/{sessionId}/attendance
 
@@ -6863,6 +11290,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [AttendanceEntryResult](#contract-AttendanceEntryResult)<br>`application/json`: آرایه از [AttendanceEntryResult](#contract-AttendanceEntryResult)<br>`text/json`: آرایه از [AttendanceEntryResult](#contract-AttendanceEntryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/sessions/{sessionId}/attendance/{attendanceId}
 
@@ -6882,6 +11321,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AttendanceEntryResult](#contract-AttendanceEntryResult)<br>`application/json`: [AttendanceEntryResult](#contract-AttendanceEntryResult)<br>`text/json`: [AttendanceEntryResult](#contract-AttendanceEntryResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/sessions/{sessionId}/cancel
 
@@ -6900,6 +11351,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SessionResult](#contract-SessionResult)<br>`application/json`: [SessionResult](#contract-SessionResult)<br>`text/json`: [SessionResult](#contract-SessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/sessions/{sessionId}/complete
 
@@ -6918,6 +11381,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SessionResult](#contract-SessionResult)<br>`application/json`: [SessionResult](#contract-SessionResult)<br>`text/json`: [SessionResult](#contract-SessionResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 400 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Submissions
@@ -6939,6 +11414,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 201 | Created | `text/plain`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/assignments/{assignmentId}/attempts/me
 
@@ -6957,6 +11444,50 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/assignments/{assignmentId}/attempts/me/page
+
+کد واقعی: [SubmissionsController.MyAttemptsPage](../MakanApp.Api/Controllers/SubmissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.ISubmissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `assignmentId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult)<br>`application/json`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult)<br>`text/json`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/assignments/{assignmentId}/submitted-attempts
 
@@ -6975,6 +11506,50 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/academic/assignments/{assignmentId}/submitted-attempts/page
+
+کد واقعی: [SubmissionsController.SubmittedAttemptsPage](../MakanApp.Api/Controllers/SubmissionsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Assessment.ISubmissionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `assignmentId` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult)<br>`application/json`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult)<br>`text/json`: [AcademicPageOfSubmissionAttemptResult](#contract-AcademicPageOfSubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/academic/submission-attempts/{attemptId}
 
@@ -6993,6 +11568,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/submission-attempts/{attemptId}/attachments
 
@@ -7011,6 +11598,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### DELETE /api/v1/academic/submission-attempts/{attemptId}/attachments/{fileAssetId}
 
@@ -7024,13 +11623,25 @@ policy: `platform.users.manage`
 |---|---|---|---|
 | `attemptId` | path | بله | string / uuid |
 | `fileAssetId` | path | بله | string / uuid |
-| `expectedRowVersion` | query | خیر | string |
+| `expectedRowVersion` | query | خیر | string / byte |
 
 بدنه درخواست: ندارد.
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### PATCH /api/v1/academic/submission-attempts/{attemptId}/draft
 
@@ -7049,6 +11660,18 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`application/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult)<br>`text/json`: [SubmissionAttemptResult](#contract-SubmissionAttemptResult) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/academic/submission-attempts/{attemptId}/submit
 
@@ -7067,6 +11690,100 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [SubmissionReceipt](#contract-SubmissionReceipt)<br>`application/json`: [SubmissionReceipt](#contract-SubmissionReceipt)<br>`text/json`: [SubmissionReceipt](#contract-SubmissionReceipt) |
+| 400 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 412 | خطای پایدار ProblemDetails؛ code و correlationId برای تصمیم کلاینت و پیگیری. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 413 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 415 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 500 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## SupportTickets
+
+### GET /api/v1/support/tickets
+
+کد واقعی: [SupportTicketsController.List](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `status` | query | خیر | string |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketPage](#contract-SupportTicketPage)<br>`application/json`: [SupportTicketPage](#contract-SupportTicketPage)<br>`text/json`: [SupportTicketPage](#contract-SupportTicketPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/support/tickets
+
+کد واقعی: [SupportTicketsController.Create](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+بدنه درخواست: `application/json`: [CreateSupportTicketCommand](#contract-CreateSupportTicketCommand)<br>`text/json`: [CreateSupportTicketCommand](#contract-CreateSupportTicketCommand)<br>`application/*+json`: [CreateSupportTicketCommand](#contract-CreateSupportTicketCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 201 | Created | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/support/tickets/{id}
+
+کد واقعی: [SupportTicketsController.Read](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `afterMessageVersion` | query | خیر | integer / int64 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/support/tickets/{id}/messages
+
+کد واقعی: [SupportTicketsController.Reply](../MakanApp.Api/Controllers/SupportTicketsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Support.SupportTicketService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)<br>`text/json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)<br>`application/*+json`: [ReplySupportTicketCommand](#contract-ReplySupportTicketCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SupportTicketResult](#contract-SupportTicketResult)<br>`application/json`: [SupportTicketResult](#contract-SupportTicketResult)<br>`text/json`: [SupportTicketResult](#contract-SupportTicketResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 
 ## Workspaces
@@ -7084,6 +11801,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AccessContext](#contract-AccessContext)<br>`application/json`: [AccessContext](#contract-AccessContext)<br>`text/json`: [AccessContext](#contract-AccessContext) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### GET /api/v1/workspaces/me
 
@@ -7098,6 +11817,8 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: آرایه از [WorkspaceResult](#contract-WorkspaceResult)<br>`application/json`: آرایه از [WorkspaceResult](#contract-WorkspaceResult)<br>`text/json`: آرایه از [WorkspaceResult](#contract-WorkspaceResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/v1/workspaces/select
 
@@ -7112,6 +11833,53 @@ policy: `platform.users.manage`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AccessContext](#contract-AccessContext)<br>`application/json`: [AccessContext](#contract-AccessContext)<br>`text/json`: [AccessContext](#contract-AccessContext) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/workspaces/snapshot
+
+کد واقعی: [WorkspacesController.GetSnapshot](../MakanApp.Api/Controllers/WorkspacesController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.IOrganizationService`، `MakanApp.Application.Organization.IAccessContextResolver`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [WorkspaceSnapshotResult](#contract-WorkspaceSnapshotResult)<br>`application/json`: [WorkspaceSnapshotResult](#contract-WorkspaceSnapshotResult)<br>`text/json`: [WorkspaceSnapshotResult](#contract-WorkspaceSnapshotResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+
+## ZibalCallback
+
+### GET /api/integrations/v1/commerce/payments/zibal/callback
+
+کد واقعی: [ZibalCallbackController.Callback](../MakanApp.Api/Controllers/ZibalCallbackController.cs).
+
+احراز هویت: عمومی از نظر ورود؛ validation، محدودیت درخواست و قواعد اختصاصی همچنان برقرارند.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Commerce.IPaymentRecoveryService`، `Microsoft.Extensions.Options.IOptions`1[[MakanApp.Infrastructure.Commerce.ZibalOptions, MakanApp.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `orderId` | query | بله | string |
+| `trackId` | query | بله | string |
+| `success` | query | بله | string |
+| `status` | query | بله | integer |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 303 | بازگشت به آدرس ثابت؛ بدون ادعای موفقیت پرداخت. | بدون بدنهٔ منتشرشده |
+| 400 | PAYMENT_INVALID، PAYMENT_REFERENCE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 404 | PAYMENT_ATTEMPT_NOT_FOUND، ORDER_NOT_FOUND | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | PAYMENT_PENDING_VERIFICATION، PAYMENT_REFERENCE_CONFLICT، ORDER_NOT_PAYABLE، PAYMENT_IDEMPOTENCY_CONFLICT، ORDER_IDEMPOTENCY_CONFLICT | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 503 | PAYMENT_PROVIDER_UNAVAILABLE | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | PAYMENT_RATE_LIMITED | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ## قراردادهای JSON و Enum
 
@@ -7151,6 +11919,67 @@ literalهای JSON واقعی MVC: `["Submitted", "UnderReview", "Resolved", "Di
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-AcademicActivityCardResult"></a>
+### AcademicActivityCardResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `kind` | [AcademicActivityKind](#contract-AcademicActivityKind) | بله | خیر/تصریح نشده | — |
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceRevision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `classId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `destinationConversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `destinationPurpose` | [ConversationType](#contract-ConversationType) | بله | خیر/تصریح نشده | — |
+| `actorKind` | string | بله | خیر/تصریح نشده | — |
+| `initiatedByUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `dueAtUtc` | string / date-time | بله | بله | — |
+| `availableFromUtc` | string / date-time | بله | بله | — |
+| `availableUntilUtc` | string / date-time | بله | بله | — |
+| `state` | string | بله | خیر/تصریح نشده | — |
+| `isActionable` | boolean | بله | خیر/تصریح نشده | — |
+| `sessionAction` | [NullableOfSessionActivityAction](#contract-NullableOfSessionActivityAction) | خیر | خیر/تصریح نشده | — |
+| `classRef` | [AcademicClassRefDto](#contract-AcademicClassRefDto) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicActivityDeliveryResult"></a>
+### AcademicActivityDeliveryResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `purpose` | [ConversationType](#contract-ConversationType) | بله | خیر/تصریح نشده | — |
+| `state` | [AcademicActivityDeliveryState](#contract-AcademicActivityDeliveryState) | بله | خیر/تصریح نشده | — |
+| `conversationId` | string / uuid | بله | بله | — |
+| `messageId` | string / uuid | بله | بله | — |
+| `attemptCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `lastFailureCategory` | string | بله | بله | — |
+
+<a id="contract-AcademicActivityDeliveryState"></a>
+### AcademicActivityDeliveryState
+
+CLR واقعی: `MakanApp.Domain.Messaging.AcademicActivityDeliveryState`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Pending", "Delivered", "Superseded"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-AcademicActivityKind"></a>
+### AcademicActivityKind
+
+CLR واقعی: `MakanApp.Domain.Messaging.AcademicActivityKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Lesson", "Assignment", "Exam", "Session"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-AcademicAnswerAttachmentDto"></a>
 ### AcademicAnswerAttachmentDto
 
@@ -7165,6 +11994,103 @@ object
 | `fileStatus` | [FileAssetStatus](#contract-FileAssetStatus) | بله | خیر/تصریح نشده | — |
 | `canDownload` | boolean | بله | خیر/تصریح نشده | — |
 | `downloadPath` | string | بله | بله | — |
+
+<a id="contract-AcademicClassKind"></a>
+### AcademicClassKind
+
+CLR واقعی: `MakanApp.Domain.Assessment.AcademicClassKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["OrganizationClass", "PersonalClass"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-AcademicClassRefDto"></a>
+### AcademicClassRefDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | [AcademicClassKind](#contract-AcademicClassKind) | بله | خیر/تصریح نشده | — |
+| `classId` | string / uuid | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfAssignmentResult"></a>
+### AcademicPageOfAssignmentResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [AssignmentResult](#contract-AssignmentResult) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfEvaluationQueueItemResult"></a>
+### AcademicPageOfEvaluationQueueItemResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [EvaluationQueueItemResult](#contract-EvaluationQueueItemResult) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfExamGradingQueueItemDto"></a>
+### AcademicPageOfExamGradingQueueItemDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ExamGradingQueueItemDto](#contract-ExamGradingQueueItemDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfStudentExamAttemptSummaryDto"></a>
+### AcademicPageOfStudentExamAttemptSummaryDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [StudentExamAttemptSummaryDto](#contract-StudentExamAttemptSummaryDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfStudentExamSummary"></a>
+### AcademicPageOfStudentExamSummary
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [StudentExamSummary](#contract-StudentExamSummary) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AcademicPageOfSubmissionAttemptResult"></a>
+### AcademicPageOfSubmissionAttemptResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [SubmissionAttemptResult](#contract-SubmissionAttemptResult) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-AcademicPeriodResult"></a>
 ### AcademicPeriodResult
@@ -7188,6 +12114,20 @@ CLR واقعی: `MakanApp.Domain.Academic.AcademicPeriodStatus`؛ Flags: False
 literalهای JSON واقعی MVC: `["Active", "Closed"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-AcademicPublicationReceipt"></a>
+### AcademicPublicationReceipt
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `activityKind` | [AcademicActivityKind](#contract-AcademicActivityKind) | بله | خیر/تصریح نشده | — |
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceRevision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `deliveryState` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-AcceptInvitationCommand"></a>
 ### AcceptInvitationCommand
@@ -7259,6 +12199,52 @@ object
 | `conversation` | [MessagingRealtimeNotification](#contract-MessagingRealtimeNotification) | بله | خیر/تصریح نشده | — |
 | `invalidation` | [RealtimeInvalidation](#contract-RealtimeInvalidation) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-AccountDeletionPage"></a>
+### AccountDeletionPage
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [AccountDeletionQueueItem](#contract-AccountDeletionQueueItem) | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AccountDeletionQueueItem"></a>
+### AccountDeletionQueueItem
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `request` | [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AccountDeletionStatusResult"></a>
+### AccountDeletionStatusResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `requestedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+| `executionEnabled` | boolean | بله | خیر/تصریح نشده | — |
+| `scheduledExecutionAtUtc` | string / date-time | بله | بله | — |
+
+<a id="contract-AccountInboxPageResult"></a>
+### AccountInboxPageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ConversationSummaryResult](#contract-ConversationSummaryResult) | بله | خیر/تصریح نشده | — |
+| `nextCursor` | string | بله | بله | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
 <a id="contract-AddConversationMemberCommand"></a>
 ### AddConversationMemberCommand
 
@@ -7275,12 +12261,12 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `order` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `order` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
 | `type` | [ExamQuestionType](#contract-ExamQuestionType) | بله | خیر/تصریح نشده | — |
-| `prompt` | string | بله | خیر/تصریح نشده | — |
-| `score` | number / double | بله | خیر/تصریح نشده | — |
+| `prompt` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,19998}\\S)\\s*$"} |
+| `score` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
 | `options` | آرایه از [ExamQuestionOptionCommand](#contract-ExamQuestionOptionCommand) | بله | بله | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 | `attachmentPolicy` | [ExamQuestionAttachmentPolicyCommand](#contract-ExamQuestionAttachmentPolicyCommand) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-AddReactionCommand"></a>
@@ -7291,6 +12277,22 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `reaction` | [MessageReactionType](#contract-MessageReactionType) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AddressBookEntryResult"></a>
+### AddressBookEntryResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `entryId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `savedName` | string | بله | بله | — |
+| `phones` | آرایه از string | بله | خیر/تصریح نشده | — |
+| `linkedAccountUserId` | string / uuid | بله | بله | — |
+| `linkCurrentlyVisible` | boolean | بله | خیر/تصریح نشده | — |
+| `serverVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `deleted` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-AdminAuditLogItem"></a>
 ### AdminAuditLogItem
@@ -7562,6 +12564,41 @@ literalهای JSON واقعی MVC: `["Info", "Low", "Medium", "High", "Critical"
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-AiSourceOperation"></a>
+### AiSourceOperation
+
+CLR واقعی: `MakanApp.Application.Ai.AiSourceOperation`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Chat", "StudyPlan", "HomeworkExplain", "TeacherActivitySuggestions"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-AiSourcePreflightCommand"></a>
+### AiSourcePreflightCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `operation` | [AiSourceOperation](#contract-AiSourceOperation) | بله | خیر/تصریح نشده | — |
+| `selectedSourceIds` | آرایه از string / uuid | بله | بله | — |
+| `classId` | string / uuid | خیر | بله | {"default": null} |
+| `assignmentId` | string / uuid | خیر | بله | {"default": null} |
+
+<a id="contract-AiSourcePreflightResult"></a>
+### AiSourcePreflightResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `authorized` | boolean | بله | خیر/تصریح نشده | — |
+| `retrievalAvailable` | boolean | بله | خیر/تصریح نشده | — |
+| `selectedCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `errorCode` | string | بله | بله | — |
+| `commercialStatus` | string | بله | خیر/تصریح نشده | — |
+| `versions` | آرایه از [AiSourceVersionIdentity](#contract-AiSourceVersionIdentity) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-AiSourceReference"></a>
 ### AiSourceReference
 
@@ -7571,6 +12608,16 @@ object
 |---|---|---|---|---|
 | `type` | string | بله | خیر/تصریح نشده | — |
 | `id` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-AiSourceVersionIdentity"></a>
+### AiSourceVersionIdentity
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `number` | integer / int32 | بله | خیر/تصریح نشده | — |
 
 <a id="contract-AiStudentAnalysisResponse"></a>
 ### AiStudentAnalysisResponse
@@ -7658,7 +12705,7 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `id` | string / uuid | بله | خیر/تصریح نشده | — |
-| `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
 | `classId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `classTitle` | string | بله | خیر/تصریح نشده | — |
 | `status` | [AssignmentStatus](#contract-AssignmentStatus) | بله | خیر/تصریح نشده | — |
@@ -7675,6 +12722,8 @@ object
 | `maxScore` | number / double | بله | خیر/تصریح نشده | — |
 | `assignmentRowVersion` | string | بله | خیر/تصریح نشده | — |
 | `versionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `classRef` | [AcademicClassRefDto](#contract-AcademicClassRefDto) | خیر | خیر/تصریح نشده | — |
+| `attachmentFileIds` | آرایه از string / uuid | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-AssignmentStatus"></a>
 ### AssignmentStatus
@@ -7682,6 +12731,33 @@ object
 CLR واقعی: `MakanApp.Domain.Assessment.AssignmentStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Draft", "Published", "Closed", "Archived"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-AssistantContextResult"></a>
+### AssistantContextResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | [AssistantDataContextKind](#contract-AssistantDataContextKind) | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `membershipId` | string / uuid | بله | بله | — |
+| `role` | [NullableOfOrganizationRole](#contract-NullableOfOrganizationRole) | بله | خیر/تصریح نشده | — |
+| `subjectOrganizationPersonId` | string / uuid | بله | بله | — |
+| `classId` | string / uuid | بله | بله | — |
+| `selectedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `upstreamContextSupported` | boolean | بله | خیر/تصریح نشده | — |
+| `limitation` | string | بله | بله | — |
+
+<a id="contract-AssistantDataContextKind"></a>
+### AssistantDataContextKind
+
+CLR واقعی: `MakanApp.Domain.Intelligence.AssistantDataContextKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Personal", "Organization", "OrganizationClass"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -7705,7 +12781,7 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-AttendanceEntryResult"></a>
 ### AttendanceEntryResult
@@ -7855,6 +12931,18 @@ object
 | `role` | [ConversationParticipantRole](#contract-ConversationParticipantRole) | بله | خیر/تصریح نشده | — |
 | `adminPermissions` | [ConversationAdminPermission2](#contract-ConversationAdminPermission2) | خیر | خیر/تصریح نشده | — |
 
+<a id="contract-ChangePersonalClassRolesCommand"></a>
+### ChangePersonalClassRolesCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `roles` | [PersonalClassLocalRoles](#contract-PersonalClassLocalRoles) | بله | خیر/تصریح نشده | — |
+| `delegatedCapabilities` | [PersonalClassDelegatedCapabilities](#contract-PersonalClassDelegatedCapabilities) | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
 <a id="contract-ChangePlatformMembershipRoleCommand"></a>
 ### ChangePlatformMembershipRoleCommand
 
@@ -7865,6 +12953,19 @@ object
 | `fromRole` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
 | `toRole` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ChangeSchoolRoleCommand"></a>
+### ChangeSchoolRoleCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `toRole` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedMembershipVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedRoleVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
 
 <a id="contract-ChatFolderResult"></a>
 ### ChatFolderResult
@@ -7934,6 +13035,7 @@ object
 | `publishedAtUtc` | string / date-time | بله | بله | — |
 | `attachments` | آرایه از [LessonAttachmentResult](#contract-LessonAttachmentResult) | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `publicationReceipt` | [AcademicPublicationReceipt](#contract-AcademicPublicationReceipt) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ClassResult"></a>
 ### ClassResult
@@ -7951,6 +13053,7 @@ object
 | `title` | string | بله | خیر/تصریح نشده | — |
 | `capacity` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `status` | [ClassStatus](#contract-ClassStatus) | بله | خیر/تصریح نشده | — |
+| `version` | string | خیر | خیر/تصریح نشده | {"default": ""} |
 
 <a id="contract-ClassStatus"></a>
 ### ClassStatus
@@ -8178,6 +13281,8 @@ object
 | `periodEndsAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `effectiveQuotas` | آرایه از [CommercialQuotaDto](#contract-CommercialQuotaDto) | بله | خیر/تصریح نشده | — |
 | `autoRenew` | boolean | بله | خیر/تصریح نشده | — |
+| `paymentAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `paymentUnavailableCode` | string | خیر | بله | — |
 | `expiresAtUtc` | string / date-time | خیر | خیر/تصریح نشده | — |
 | `previewOnly` | boolean | خیر | خیر/تصریح نشده | — |
 | `startsUponVerifiedPayment` | boolean | خیر | خیر/تصریح نشده | — |
@@ -8267,10 +13372,10 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `learnerFeedback` | string | بله | بله | — |
-| `guardianVisibleFeedback` | string | بله | بله | — |
-| `evaluatorPrivateNote` | string | بله | بله | — |
-| `expectedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `learnerFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `guardianVisibleFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `evaluatorPrivateNote` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `expectedGradeRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CompleteJoinRequestCommand"></a>
 ### CompleteJoinRequestCommand
@@ -8303,6 +13408,19 @@ object
 | `displayName` | string | بله | بله | — |
 | `username` | string | بله | خیر/تصریح نشده | — |
 | `dateOfBirth` | string / date | خیر | بله | {"default": null} |
+| `bio` | string | خیر | بله | {"default": null} |
+
+<a id="contract-ConfigurePersonalClassCommand"></a>
+### ConfigurePersonalClassCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `capacity` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `acceptingJoinRequests` | boolean | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
 
 <a id="contract-ContactCardResult"></a>
 ### ContactCardResult
@@ -8314,6 +13432,101 @@ object
 | `userId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `username` | string | بله | خیر/تصریح نشده | — |
 | `displayName` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ContactDeltaResult"></a>
+### ContactDeltaResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `upserts` | آرایه از [AddressBookEntryResult](#contract-AddressBookEntryResult) | بله | خیر/تصریح نشده | — |
+| `tombstones` | آرایه از بدون schema منتشرشده | بله | خیر/تصریح نشده | — |
+| `nextCursor` | string | بله | خیر/تصریح نشده | — |
+| `serverVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `hasMore` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ContactDeviceResult"></a>
+### ContactDeviceResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `deviceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `consentVersion` | string | بله | خیر/تصریح نشده | — |
+| `scope` | string | بله | خیر/تصریح نشده | — |
+| `syncEnabled` | boolean | بله | خیر/تصریح نشده | — |
+| `grantedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `lastSourceRevision` | integer / int64 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ContactMutation"></a>
+### ContactMutation
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `entryId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `kind` | [ContactMutationKind](#contract-ContactMutationKind) | بله | خیر/تصریح نشده | — |
+| `expectedServerVersion` | integer / int64 | بله | بله | — |
+| `savedName` | string | خیر | بله | {"default": null} |
+| `phones` | آرایه از string | خیر | بله | {"default": null} |
+| `nameOrigin` | [ContactNameOrigin](#contract-ContactNameOrigin) | خیر | خیر/تصریح نشده | — |
+| `linkedAccountUserId` | string / uuid | خیر | بله | {"default": null} |
+
+<a id="contract-ContactMutationKind"></a>
+### ContactMutationKind
+
+CLR واقعی: `MakanApp.Application.Messaging.ContactMutationKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Upsert", "Delete", "LinkAccount"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ContactNameOrigin"></a>
+### ContactNameOrigin
+
+CLR واقعی: `MakanApp.Application.Messaging.ContactNameOrigin`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Device", "Manual"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ContactSyncCommand"></a>
+### ContactSyncCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `deviceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceRevision` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `entries` | آرایه از [ContactMutation](#contract-ContactMutation) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ContactSyncItemResult"></a>
+### ContactSyncItemResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `entryId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+| `serverVersion` | integer / int64 | بله | بله | — |
+| `errorCode` | string | بله | بله | — |
+
+<a id="contract-ContactSyncResult"></a>
+### ContactSyncResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [ContactSyncItemResult](#contract-ContactSyncItemResult) | بله | خیر/تصریح نشده | — |
+| `nextCursor` | string | بله | خیر/تصریح نشده | — |
+| `serverVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ContentSafetyDecision"></a>
 ### ContentSafetyDecision
@@ -8417,6 +13630,24 @@ object
 | `updatedAtUtc` | string / date-time | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-ConversationEffectiveCapabilities"></a>
+### ConversationEffectiveCapabilities
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `canEditInfo` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageMembers` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageMessages` | boolean | بله | خیر/تصریح نشده | — |
+| `canPublish` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageAdmins` | boolean | بله | خیر/تصریح نشده | — |
+| `canChangeSettings` | boolean | بله | خیر/تصریح نشده | — |
+| `canInviteMembers` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageInvites` | boolean | بله | خیر/تصریح نشده | — |
+| `canBanMembers` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageTopics` | boolean | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ConversationInfoResult"></a>
 ### ConversationInfoResult
 
@@ -8428,6 +13659,27 @@ object
 | `title` | string | بله | خیر/تصریح نشده | — |
 | `description` | string | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationInitialTargetOutcome"></a>
+### ConversationInitialTargetOutcome
+
+CLR واقعی: `MakanApp.Domain.Messaging.ConversationInitialTargetOutcome`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Added", "InvitationPending", "NotAvailable"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-ConversationInitialTargetResult"></a>
+### ConversationInitialTargetResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `targetUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `outcome` | [ConversationInitialTargetOutcome](#contract-ConversationInitialTargetOutcome) | بله | خیر/تصریح نشده | — |
+| `invitationId` | string / uuid | بله | بله | — |
+| `invitationExpiresAtUtc` | string / date-time | بله | بله | — |
 
 <a id="contract-ConversationInvitationResult"></a>
 ### ConversationInvitationResult
@@ -8573,6 +13825,8 @@ object
 | `version` | string | بله | خیر/تصریح نشده | — |
 | `topicId` | string / uuid | خیر | بله | {"default": null} |
 | `isSilent` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `originKind` | string | خیر | خیر/تصریح نشده | — |
+| `academicActivity` | [AcademicActivityCardResult](#contract-AcademicActivityCardResult) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ConversationMuteMode"></a>
 ### ConversationMuteMode
@@ -8651,6 +13905,47 @@ object
 | `peerReadThroughSequence` | integer / int64 | بله | بله | — |
 | `visibility` | [PeerReadVisibility](#contract-PeerReadVisibility) | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | بله | — |
+
+<a id="contract-ConversationPermissionDescriptor"></a>
+### ConversationPermissionDescriptor
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `key` | string | بله | خیر/تصریح نشده | — |
+| `category` | string | بله | خیر/تصریح نشده | — |
+| `flag` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | خیر/تصریح نشده | — |
+| `conversationTypes` | آرایه از [ConversationType](#contract-ConversationType) | بله | خیر/تصریح نشده | — |
+| `ownerCanGrant` | boolean | بله | خیر/تصریح نشده | — |
+| `adminCanDelegate` | boolean | بله | خیر/تصریح نشده | — |
+| `appliesToUserManaged` | boolean | بله | خیر/تصریح نشده | — |
+| `appliesToSystemManagedAcademic` | boolean | بله | خیر/تصریح نشده | — |
+| `officialRelationshipDerivedOnly` | boolean | بله | خیر/تصریح نشده | — |
+| `delegationRequirement` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationPhotoMutationResult"></a>
+### ConversationPhotoMutationResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `photo` | [ConversationPhotoResult](#contract-ConversationPhotoResult) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-ConversationPhotoResult"></a>
+### ConversationPhotoResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `contentType` | string | بله | خیر/تصریح نشده | — |
+| `downloadUrl` | string | خیر | بله | — |
 
 <a id="contract-ConversationPinResult"></a>
 ### ConversationPinResult
@@ -8775,6 +14070,10 @@ object
 | `isPinned` | boolean | بله | خیر/تصریح نشده | — |
 | `isManuallyUnread` | boolean | بله | خیر/تصریح نشده | — |
 | `organization` | [ConversationOrganizationBadgeResult](#contract-ConversationOrganizationBadgeResult) | بله | خیر/تصریح نشده | — |
+| `official` | [OfficialSpaceMetadata](#contract-OfficialSpaceMetadata) | خیر | خیر/تصریح نشده | — |
+| `isOfficial` | boolean | خیر | خیر/تصریح نشده | — |
+| `effectiveCapabilities` | [ConversationEffectiveCapabilities](#contract-ConversationEffectiveCapabilities) | خیر | خیر/تصریح نشده | — |
+| `photo` | [ConversationPhotoResult](#contract-ConversationPhotoResult) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ConversationTopicPageResult"></a>
 ### ConversationTopicPageResult
@@ -8871,12 +14170,12 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `score` | number / double | بله | خیر/تصریح نشده | — |
-| `learnerFeedback` | string | بله | بله | — |
-| `guardianVisibleFeedback` | string | بله | بله | — |
-| `teacherPrivateNote` | string | بله | بله | — |
-| `correctionReason` | string | بله | خیر/تصریح نشده | — |
-| `expectedReleasedEvaluationRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `score` | number / double | بله | خیر/تصریح نشده | {"minimum": 0, "maximum": 9999999.99} |
+| `learnerFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `guardianVisibleFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `teacherPrivateNote` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `correctionReason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,998}\\S)\\s*$"} |
+| `expectedReleasedEvaluationRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CorrectReleasedExamGradeCommand"></a>
 ### CorrectReleasedExamGradeCommand
@@ -8885,8 +14184,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `correctionReason` | string | بله | خیر/تصریح نشده | — |
-| `expectedReleasedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `correctionReason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,998}\\S)\\s*$"} |
+| `expectedReleasedGradeRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CourseResult"></a>
 ### CourseResult
@@ -8927,12 +14226,13 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `title` | string | بله | خیر/تصریح نشده | — |
-| `description` | string | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `description` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S)\\s*$"} |
 | `dueAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `allowLateSubmission` | boolean | بله | خیر/تصریح نشده | — |
-| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxScore` | number / double | بله | خیر/تصریح نشده | — |
+| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxScore` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
+| `attachmentFileIds` | آرایه از string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-CreateClassCommand"></a>
 ### CreateClassCommand
@@ -8943,9 +14243,10 @@ object
 |---|---|---|---|---|
 | `academicPeriodId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `courseId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `title` | string | بله | خیر/تصریح نشده | — |
-| `capacity` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `capacity` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
 | `activateImmediately` | boolean | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CreateClassLessonCommand"></a>
 ### CreateClassLessonCommand
@@ -9021,6 +14322,21 @@ object
 |---|---|---|---|---|
 | `title` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-CreateEducationalSourceCommand"></a>
+### CreateEducationalSourceCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `scope` | [EducationalSourceScope](#contract-EducationalSourceScope) | بله | خیر/تصریح نشده | — |
+| `classId` | string / uuid | بله | بله | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-CreateExamDraftCommand"></a>
 ### CreateExamDraftCommand
 
@@ -9028,13 +14344,13 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `title` | string | بله | خیر/تصریح نشده | — |
-| `description` | string | بله | بله | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `description` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
 | `availableFromUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `availableUntilUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-| `durationMinutes` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxScore` | number / double | بله | خیر/تصریح نشده | — |
+| `durationMinutes` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxScore` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
 | `randomizationPolicy` | [ExamRandomizationPolicy](#contract-ExamRandomizationPolicy) | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CreateInviteLinkCommand"></a>
@@ -9072,8 +14388,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedExamRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedPublishedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedExamRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedPublishedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-CreateOrderCommand"></a>
 ### CreateOrderCommand
@@ -9130,8 +14446,39 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `title` | string | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CreatePersonalClassJoinCommand"></a>
+### CreatePersonalClassJoinCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CreatePersonalClassRequestCommand"></a>
+### CreatePersonalClassRequestCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `details` | [PersonalClassRequestInput](#contract-PersonalClassRequestInput) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-CreatePersonalClassTransferCommand"></a>
+### CreatePersonalClassTransferCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `targetUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
 
 <a id="contract-CreatePlatformInvitationCommand"></a>
 ### CreatePlatformInvitationCommand
@@ -9214,6 +14561,18 @@ object
 | `sessionTitle` | string | بله | خیر/تصریح نشده | — |
 | `meetingUrl` | string | بله | بله | — |
 
+<a id="contract-CreateSchoolApplicationCommand"></a>
+### CreateSchoolApplicationCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `kind` | [SchoolApplicationKind](#contract-SchoolApplicationKind) | بله | خیر/تصریح نشده | — |
+| `data` | [SchoolApplicationDraftData](#contract-SchoolApplicationDraftData) | بله | خیر/تصریح نشده | — |
+| `documents` | آرایه از [SchoolDocumentInput](#contract-SchoolDocumentInput) | خیر | بله | {"default": null} |
+
 <a id="contract-CreateSchoolGuardianInvitationCommand"></a>
 ### CreateSchoolGuardianInvitationCommand
 
@@ -9251,6 +14610,19 @@ object
 | `timeZoneId` | string | بله | خیر/تصریح نشده | — |
 | `meetingUrl` | string | بله | بله | — |
 
+<a id="contract-CreateSourceVersionCommand"></a>
+### CreateSourceVersionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-CreateStudyPlanCommand"></a>
 ### CreateStudyPlanCommand
 
@@ -9261,6 +14633,21 @@ object
 | `goals` | آرایه از string | بله | خیر/تصریح نشده | — |
 | `availableMinutes` | integer / int32 | بله | بله | — |
 | `notes` | string | بله | بله | — |
+| `selectedSourceIds` | آرایه از string / uuid | خیر | بله | — |
+| `operationId` | string / uuid | خیر | بله | — |
+
+<a id="contract-CreateSupportTicketCommand"></a>
+### CreateSupportTicketCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `subject` | string | بله | خیر/تصریح نشده | — |
+| `category` | string | بله | خیر/تصریح نشده | — |
+| `body` | string | بله | خیر/تصریح نشده | — |
+| `fileAssetIds` | آرایه از string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-CreatedInviteLinkResult"></a>
 ### CreatedInviteLinkResult
@@ -9298,6 +14685,7 @@ object
 | `username` | string | بله | بله | — |
 | `dateOfBirth` | string / date | خیر | بله | {"default": null} |
 | `profilePhoto` | [ProfilePhotoResult](#contract-ProfilePhotoResult) | خیر | خیر/تصریح نشده | — |
+| `bio` | string | خیر | بله | {"default": null} |
 
 <a id="contract-DashboardAssignmentItem"></a>
 ### DashboardAssignmentItem
@@ -9459,6 +14847,27 @@ literalهای JSON واقعی MVC: `["Sunday", "Monday", "Tuesday", "Wednesday",
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-DecidePersonalClassJoinCommand"></a>
+### DecidePersonalClassJoinCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `decision` | [PersonalClassJoinRequestStatus](#contract-PersonalClassJoinRequestStatus) | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
+<a id="contract-DecidePersonalClassTransferCommand"></a>
+### DecidePersonalClassTransferCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `decision` | [PersonalClassManagerTransferStatus](#contract-PersonalClassManagerTransferStatus) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-DeclineInvitationResult"></a>
 ### DeclineInvitationResult
 
@@ -9476,8 +14885,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedQuestionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedQuestionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-DeleteMessageForMeResult"></a>
 ### DeleteMessageForMeResult
@@ -9562,6 +14971,80 @@ object
 | `text` | string | بله | بله | — |
 | `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-EditPersonalClassRequestCommand"></a>
+### EditPersonalClassRequestCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `details` | [PersonalClassRequestInput](#contract-PersonalClassRequestInput) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-EducationalSourceResult"></a>
+### EducationalSourceResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `scope` | [EducationalSourceScope](#contract-EducationalSourceScope) | بله | خیر/تصریح نشده | — |
+| `ownerUserId` | string / uuid | بله | بله | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `classId` | string / uuid | بله | بله | — |
+| `status` | [EducationalSourceStatus](#contract-EducationalSourceStatus) | بله | خیر/تصریح نشده | — |
+| `visibility` | [SourceVisibility](#contract-SourceVisibility) | بله | خیر/تصریح نشده | — |
+| `currentVersion` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `publishedVersion` | integer / int32 | بله | بله | — |
+| `revision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
+| `sourceType` | [EducationalSourceType](#contract-EducationalSourceType) | بله | خیر/تصریح نشده | — |
+| `publicationStatus` | [SourcePublicationStatus](#contract-SourcePublicationStatus) | بله | خیر/تصریح نشده | — |
+| `safetyStatus` | [SourceSafetyStatus](#contract-SourceSafetyStatus) | بله | خیر/تصریح نشده | — |
+| `processingStatus` | [SourceProcessingStatus](#contract-SourceProcessingStatus) | بله | خیر/تصریح نشده | — |
+| `processingFailureCode` | string | بله | بله | — |
+| `fileReady` | boolean | بله | خیر/تصریح نشده | — |
+| `sourceReady` | boolean | بله | خیر/تصریح نشده | — |
+| `aiReady` | boolean | بله | خیر/تصریح نشده | — |
+| `capabilities` | [SourceCapabilities](#contract-SourceCapabilities) | بله | خیر/تصریح نشده | — |
+| `file` | [SourceFileMetadata](#contract-SourceFileMetadata) | بله | خیر/تصریح نشده | — |
+| `createdByUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `publishedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `aiReadiness` | string | خیر | بله | — |
+| `aiUnavailableReason` | string | خیر | بله | — |
+
+<a id="contract-EducationalSourceScope"></a>
+### EducationalSourceScope
+
+CLR واقعی: `MakanApp.Domain.Knowledge.EducationalSourceScope`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Personal", "Class", "Organization", "Library"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-EducationalSourceStatus"></a>
+### EducationalSourceStatus
+
+CLR واقعی: `MakanApp.Domain.Knowledge.EducationalSourceStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Active", "Inactive", "Archived"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-EducationalSourceType"></a>
+### EducationalSourceType
+
+CLR واقعی: `MakanApp.Domain.Knowledge.EducationalSourceType`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Document", "Image"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
 <a id="contract-EndEnrollmentCommand"></a>
 ### EndEnrollmentCommand
 
@@ -9570,6 +15053,7 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `finalStatus` | [EnrollmentStatus](#contract-EnrollmentStatus) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string / byte | خیر | بله | {"default": null} |
 
 <a id="contract-EndPlatformMembershipCommand"></a>
 ### EndPlatformMembershipCommand
@@ -9588,6 +15072,38 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-EndSchoolMembershipCommand"></a>
+### EndSchoolMembershipCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
+<a id="contract-EndSchoolRoleCommand"></a>
+### EndSchoolRoleCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedMembershipVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedRoleVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
+<a id="contract-EndTeacherAssignmentCommand"></a>
+### EndTeacherAssignmentCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-EnrollLearnerCommand"></a>
 ### EnrollLearnerCommand
@@ -9612,6 +15128,7 @@ object
 | `status` | [EnrollmentStatus](#contract-EnrollmentStatus) | بله | خیر/تصریح نشده | — |
 | `enrolledAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `endedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | خیر | خیر/تصریح نشده | {"default": ""} |
 
 <a id="contract-EnrollmentStatus"></a>
 ### EnrollmentStatus
@@ -9696,13 +15213,14 @@ object
 | `guardianVisibleFeedback` | string | بله | بله | — |
 | `teacherPrivateNote` | string | بله | بله | — |
 | `status` | [EvaluationRevisionStatus](#contract-EvaluationRevisionStatus) | بله | خیر/تصریح نشده | — |
-| `createdByMembershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `createdByMembershipId` | string / uuid | بله | بله | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `supersedesEvaluationRevisionId` | string / uuid | بله | بله | — |
 | `correctionReason` | string | بله | بله | — |
 | `releasedAtUtc` | string / date-time | بله | بله | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
+| `createdByPersonalMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-ExamAnswerReceiptDto"></a>
 ### ExamAnswerReceiptDto
@@ -9737,7 +15255,7 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `id` | string / uuid | بله | خیر/تصریح نشده | — |
-| `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
 | `classId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `classTitle` | string | بله | خیر/تصریح نشده | — |
 | `status` | [ExamStatus](#contract-ExamStatus) | بله | خیر/تصریح نشده | — |
@@ -9757,6 +15275,8 @@ object
 | `publishedAtUtc` | string / date-time | بله | بله | — |
 | `versionRowVersion` | string | بله | خیر/تصریح نشده | — |
 | `questions` | آرایه از [ExamEditorQuestionDto](#contract-ExamEditorQuestionDto) | بله | خیر/تصریح نشده | — |
+| `classRef` | [AcademicClassRefDto](#contract-AcademicClassRefDto) | خیر | خیر/تصریح نشده | — |
+| `publicationReceipt` | [AcademicPublicationReceipt](#contract-AcademicPublicationReceipt) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ExamEditorOptionDto"></a>
 ### ExamEditorOptionDto
@@ -9803,6 +15323,7 @@ object
 | `answeredQuestionCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `totalQuestionCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `status` | [ExamAttemptStatus](#contract-ExamAttemptStatus) | بله | خیر/تصریح نشده | — |
+| `finalizationMode` | string | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ExamGradeDto"></a>
 ### ExamGradeDto
@@ -9827,7 +15348,7 @@ object
 | `learnerFeedback` | string | بله | بله | — |
 | `guardianVisibleFeedback` | string | بله | بله | — |
 | `evaluatorPrivateNote` | string | بله | بله | — |
-| `createdByMembershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `createdByMembershipId` | string / uuid | بله | بله | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `supersedesExamGradeRevisionId` | string / uuid | بله | بله | — |
@@ -9835,6 +15356,7 @@ object
 | `releasedAtUtc` | string / date-time | بله | بله | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 | `questions` | آرایه از [ExamQuestionGradeDto](#contract-ExamQuestionGradeDto) | بله | خیر/تصریح نشده | — |
+| `createdByPersonalMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-ExamGradeReleaseDto"></a>
 ### ExamGradeReleaseDto
@@ -9850,8 +15372,9 @@ object
 | `totalScore` | number / double | بله | خیر/تصریح نشده | — |
 | `maximumScore` | number / double | بله | خیر/تصریح نشده | — |
 | `releasedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-| `releasedByMembershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `releasedByMembershipId` | string / uuid | بله | بله | — |
 | `gradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `releasedByPersonalMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-ExamGradeRevisionStatus"></a>
 ### ExamGradeRevisionStatus
@@ -9913,8 +15436,8 @@ object
 | `attachmentsAllowed` | boolean | بله | خیر/تصریح نشده | — |
 | `textRequired` | boolean | بله | خیر/تصریح نشده | — |
 | `allowedContentTypes` | آرایه از string | بله | بله | — |
-| `maximumCount` | integer / int32 | بله | بله | — |
-| `maximumTotalBytes` | integer / int64 | بله | بله | — |
+| `maximumCount` | integer / int32 | بله | بله | {"minimum": 1} |
+| `maximumTotalBytes` | integer / int64 | بله | بله | {"minimum": 1} |
 
 <a id="contract-ExamQuestionAttachmentPolicyDto"></a>
 ### ExamQuestionAttachmentPolicyDto
@@ -9952,6 +15475,7 @@ object
 | `evaluatorPrivateNote` | string | بله | بله | — |
 | `reviewedByMembershipId` | string / uuid | بله | بله | — |
 | `reviewedAtUtc` | string / date-time | بله | بله | — |
+| `reviewedByPersonalMembershipId` | string / uuid | خیر | بله | — |
 | `attachments` | آرایه از [AcademicAnswerAttachmentDto](#contract-AcademicAnswerAttachmentDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ExamQuestionGradingMode"></a>
@@ -9970,8 +15494,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `order` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `text` | string | بله | خیر/تصریح نشده | — |
+| `order` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `text` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,1998}\\S)\\s*$"} |
 | `isCorrect` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ExamQuestionType"></a>
@@ -10052,6 +15576,8 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `question` | string | بله | خیر/تصریح نشده | — |
+| `selectedSourceIds` | آرایه از string / uuid | خیر | بله | — |
+| `operationId` | string / uuid | خیر | بله | — |
 
 <a id="contract-FileAssetResult"></a>
 ### FileAssetResult
@@ -10074,6 +15600,8 @@ object
 | `retainedAtUtc` | string / date-time | بله | بله | — |
 | `unattachedExpiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | خیر | بله | — |
+| `personalClassMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-FileAssetStatus"></a>
 ### FileAssetStatus
@@ -10105,7 +15633,7 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-FinalizeExamCommand"></a>
 ### FinalizeExamCommand
@@ -10157,10 +15685,10 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `awardedScore` | number / double | بله | خیر/تصریح نشده | — |
-| `learnerFeedback` | string | بله | بله | — |
-| `evaluatorPrivateNote` | string | بله | بله | — |
-| `expectedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `awardedScore` | number / double | بله | خیر/تصریح نشده | {"minimum": 0, "maximum": 9999999.99} |
+| `learnerFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `evaluatorPrivateNote` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `expectedGradeRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-GradeReleaseResult"></a>
 ### GradeReleaseResult
@@ -10175,8 +15703,9 @@ object
 | `revisionNumber` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `score` | number / double | بله | خیر/تصریح نشده | — |
 | `releasedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-| `releasedByMembershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `releasedByMembershipId` | string / uuid | بله | بله | — |
 | `evaluationRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `releasedByPersonalMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-GrantPlatformRoleCommand"></a>
 ### GrantPlatformRoleCommand
@@ -10188,6 +15717,18 @@ object
 | `userId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `roleKey` | string | بله | خیر/تصریح نشده | — |
 | `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-GrantSchoolRoleCommand"></a>
+### GrantSchoolRoleCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `role` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedMembershipVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
 
 <a id="contract-GroupHistoryPolicy"></a>
 ### GroupHistoryPolicy
@@ -10355,6 +15896,126 @@ object
 |---|---|---|---|---|
 | `destinationUserId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `localRoles` | [PersonalClassLocalRoles2](#contract-PersonalClassLocalRoles2) | خیر | خیر/تصریح نشده | — |
+| `delegatedCapabilities` | [PersonalClassDelegatedCapabilities2](#contract-PersonalClassDelegatedCapabilities2) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeCitation"></a>
+### KnowledgeCitation
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `version` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `chunkId` | string | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `pageStart` | integer / int32 | بله | بله | — |
+| `pageEnd` | integer / int32 | بله | بله | — |
+| `sectionTitle` | string | بله | بله | — |
+| `quotePreview` | string | بله | بله | — |
+
+<a id="contract-KnowledgeMutationCommand"></a>
+### KnowledgeMutationCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `payer` | [NullableOfAiPayerSelection](#contract-NullableOfAiPayerSelection) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeProcessingStatus"></a>
+### KnowledgeProcessingStatus
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `version` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `state` | string / NotIngested, Queued, Extracting, OCR, Normalizing, Chunking, Embedding, Indexing, Ready, ExtractFailed, OcrFailed, ChunkFailed, EmbeddingFailed, IndexFailed, Superseded, Deleted, ReindexRequired | بله | خیر/تصریح نشده | — |
+| `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `readyAtUtc` | string / date-time | خیر | بله | {"default": null} |
+| `failureCode` | string | خیر | بله | {"default": null} |
+| `retryable` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+
+<a id="contract-KnowledgeQueryCommand"></a>
+### KnowledgeQueryCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `query` | string | بله | خیر/تصریح نشده | {"minLength": 1, "maxLength": 4000} |
+| `sources` | آرایه از [KnowledgeSourceVersion](#contract-KnowledgeSourceVersion) | بله | خیر/تصریح نشده | — |
+| `maxResults` | integer / int32 | خیر | خیر/تصریح نشده | {"minimum": 1, "maximum": 20, "default": 8} |
+| `includeQuotePreview` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `language` | string | خیر | خیر/تصریح نشده | {"default": "fa"} |
+| `payer` | [NullableOfAiPayerSelection](#contract-NullableOfAiPayerSelection) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeRagClaim"></a>
+### KnowledgeRagClaim
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `text` | string | بله | خیر/تصریح نشده | — |
+| `citations` | آرایه از [KnowledgeCitation](#contract-KnowledgeCitation) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeRagResponse"></a>
+### KnowledgeRagResponse
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `requestId` | string | بله | خیر/تصریح نشده | — |
+| `correlationId` | string | بله | خیر/تصریح نشده | — |
+| `status` | string / Ok, InsufficientEvidence | بله | خیر/تصریح نشده | — |
+| `answer` | string | بله | خیر/تصریح نشده | — |
+| `claims` | آرایه از [KnowledgeRagClaim](#contract-KnowledgeRagClaim) | بله | خیر/تصریح نشده | — |
+| `citations` | آرایه از بدون schema منتشرشده | بله | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeRetrieveResponse"></a>
+### KnowledgeRetrieveResponse
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `requestId` | string | بله | خیر/تصریح نشده | — |
+| `correlationId` | string | بله | خیر/تصریح نشده | — |
+| `status` | string / Ok, Empty | بله | خیر/تصریح نشده | — |
+| `results` | آرایه از [KnowledgeRetrieveResult](#contract-KnowledgeRetrieveResult) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeRetrieveResult"></a>
+### KnowledgeRetrieveResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `version` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `rank` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `chunkId` | string | بله | خیر/تصریح نشده | — |
+| `text` | string | بله | خیر/تصریح نشده | — |
+| `citation` | [KnowledgeCitation](#contract-KnowledgeCitation) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-KnowledgeSourceVersion"></a>
+### KnowledgeSourceVersion
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `version` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
 
 <a id="contract-LessonAttachmentResult"></a>
 ### LessonAttachmentResult
@@ -10380,6 +16041,35 @@ literalهای JSON واقعی MVC: `["Draft", "Published"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-MakanProblemDetails"></a>
+### MakanProblemDetails
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `type` | string | خیر | خیر/تصریح نشده | — |
+| `title` | string | خیر | خیر/تصریح نشده | — |
+| `status` | integer | بله | خیر/تصریح نشده | {"minimum": 400, "maximum": 599} |
+| `detail` | string | خیر | بله | — |
+| `instance` | string | خیر | بله | — |
+| `code` | string | بله | خیر/تصریح نشده | — |
+| `traceId` | string | بله | خیر/تصریح نشده | — |
+| `correlationId` | string | بله | خیر/تصریح نشده | — |
+| `errors` | object / مقادیر دیکشنری: آرایه از string | خیر | بله | — |
+
+<a id="contract-ManageSupportTicketCommand"></a>
+### ManageSupportTicketCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `assignedStaffUserId` | string / uuid | خیر | بله | {"default": null} |
+
 <a id="contract-ManagedConversationResult"></a>
 ### ManagedConversationResult
 
@@ -10403,6 +16093,9 @@ object
 | `version` | string | بله | خیر/تصریح نشده | — |
 | `participants` | آرایه از [ConversationParticipantResult](#contract-ConversationParticipantResult) | بله | خیر/تصریح نشده | — |
 | `alreadyExisted` | boolean | بله | خیر/تصریح نشده | — |
+| `initialTargets` | آرایه از [ConversationInitialTargetResult](#contract-ConversationInitialTargetResult) | خیر | خیر/تصریح نشده | — |
+| `effectiveCapabilities` | [ConversationEffectiveCapabilities](#contract-ConversationEffectiveCapabilities) | خیر | خیر/تصریح نشده | — |
+| `photo` | [ConversationPhotoResult](#contract-ConversationPhotoResult) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-ManagerAssessmentReportItem"></a>
 ### ManagerAssessmentReportItem
@@ -10786,6 +16479,7 @@ object
 | `isFavorite` | boolean | بله | خیر/تصریح نشده | — |
 | `canStartDirect` | boolean | بله | خیر/تصریح نشده | — |
 | `profilePhoto` | [ProfilePhotoResult](#contract-ProfilePhotoResult) | خیر | خیر/تصریح نشده | — |
+| `bio` | string | خیر | بله | {"default": null} |
 
 <a id="contract-MessagingPublicProfileResult2"></a>
 ### MessagingPublicProfileResult2
@@ -10802,6 +16496,7 @@ object
 | `isFavorite` | boolean | بله | خیر/تصریح نشده | — |
 | `canStartDirect` | boolean | بله | خیر/تصریح نشده | — |
 | `profilePhoto` | [ProfilePhotoResult](#contract-ProfilePhotoResult) | خیر | خیر/تصریح نشده | — |
+| `bio` | string | خیر | بله | {"default": null} |
 
 <a id="contract-MessagingRealtimeNotification"></a>
 ### MessagingRealtimeNotification
@@ -11013,7 +16708,7 @@ object
 
 CLR واقعی: `MakanApp.Domain.Notification.NotificationPreferenceCategory`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Messages", "Assignments", "Results", "Sessions", "Reports", "Invitations", "AccountSecurity"]`
+literalهای JSON واقعی MVC: `["Messages", "Assignments", "Results", "Sessions", "Reports", "Invitations", "AccountSecurity", "ServiceUpdates"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -11055,16 +16750,28 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
 CLR واقعی: `MakanApp.Domain.Notification.NotificationResourceType`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation"]`
+literalهای JSON واقعی MVC: `["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-NotificationTargetResult"></a>
+### NotificationTargetResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | string | بله | خیر/تصریح نشده | — |
+| `resourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `apiRoute` | string | بله | خیر/تصریح نشده | — |
+| `requiredOrganizationId` | string / uuid | بله | بله | — |
 
 <a id="contract-NotificationType"></a>
 ### NotificationType
 
 CLR واقعی: `MakanApp.Domain.Notification.NotificationType`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention"]`
+literalهای JSON واقعی MVC: `["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -11132,6 +16839,11 @@ string / AwaitingGrading, AwaitingRelease, Released, None
 
 string
 
+<a id="contract-NullableOfMembershipStatus"></a>
+### NullableOfMembershipStatus
+
+string / Active, Suspended, Ended, None
+
 <a id="contract-NullableOfMessageKind"></a>
 ### NullableOfMessageKind
 
@@ -11147,6 +16859,16 @@ string / SuppressedByPreference, NoDevice, NoSmsDestination, OrganizationAccessR
 
 string / Student, Teacher, Parent, Manager, None
 
+<a id="contract-NullableOfOrganizationRole2"></a>
+### NullableOfOrganizationRole2
+
+string / Student, Teacher, Parent, Manager, None
+
+<a id="contract-NullableOfOrganizationStatus"></a>
+### NullableOfOrganizationStatus
+
+string / Active, Suspended, None
+
 <a id="contract-NullableOfPaymentAttemptStatus"></a>
 ### NullableOfPaymentAttemptStatus
 
@@ -11161,6 +16883,21 @@ string / Everyone, Contacts, Nobody, None
 ### NullableOfReportExportAssessmentKind
 
 string / Assignment, Exam, None
+
+<a id="contract-NullableOfRoleAssignmentStatus"></a>
+### NullableOfRoleAssignmentStatus
+
+string / Active, Ended, None
+
+<a id="contract-NullableOfSchoolApplicationStatus"></a>
+### NullableOfSchoolApplicationStatus
+
+string / Draft, Submitted, UnderReview, NeedsChanges, Rejected, Approved, None
+
+<a id="contract-NullableOfSessionActivityAction"></a>
+### NullableOfSessionActivityAction
+
+string / Scheduled, Rescheduled, Cancelled, Completed, None
 
 <a id="contract-NullableOfSubmissionAttemptStatus"></a>
 ### NullableOfSubmissionAttemptStatus
@@ -11178,6 +16915,69 @@ object
 | `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `classId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `activeMemberCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-OfficialSourceKind"></a>
+### OfficialSourceKind
+
+CLR واقعی: `MakanApp.Domain.Messaging.OfficialSourceKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Organization", "Class", "PersonalClass"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-OfficialSpaceCapabilities"></a>
+### OfficialSpaceCapabilities
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `canRead` | boolean | بله | خیر/تصریح نشده | — |
+| `canSend` | boolean | بله | خیر/تصریح نشده | — |
+| `canManage` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-OfficialSpaceEndpointResult"></a>
+### OfficialSpaceEndpointResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `conversationId` | string / uuid | بله | بله | — |
+| `state` | string | بله | خیر/تصریح نشده | — |
+| `capabilities` | [OfficialSpaceCapabilities](#contract-OfficialSpaceCapabilities) | بله | خیر/تصریح نشده | — |
+| `official` | [OfficialSpaceMetadata](#contract-OfficialSpaceMetadata) | بله | خیر/تصریح نشده | — |
+| `attemptCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `lastFailureCategory` | string | بله | بله | — |
+| `effectiveCapabilities` | [ConversationEffectiveCapabilities](#contract-ConversationEffectiveCapabilities) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-OfficialSpaceMetadata"></a>
+### OfficialSpaceMetadata
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceKind` | [OfficialSourceKind](#contract-OfficialSourceKind) | بله | خیر/تصریح نشده | — |
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `purpose` | [ConversationType](#contract-ConversationType) | بله | خیر/تصریح نشده | — |
+| `displayLabel` | string | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-OfficialSpacesPairResult"></a>
+### OfficialSpacesPairResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `sourceKind` | [OfficialSourceKind](#contract-OfficialSourceKind) | بله | خیر/تصریح نشده | — |
+| `sourceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `group` | [OfficialSpaceEndpointResult](#contract-OfficialSpaceEndpointResult) | بله | خیر/تصریح نشده | — |
+| `channel` | [OfficialSpaceEndpointResult](#contract-OfficialSpaceEndpointResult) | بله | خیر/تصریح نشده | — |
 
 <a id="contract-OnboardingStateCommand"></a>
 ### OnboardingStateCommand
@@ -11463,6 +17263,17 @@ object
 | `guardianVisibleFeedback` | string | بله | بله | — |
 | `releasedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 
+<a id="contract-PaymentAttemptDetailsDto"></a>
+### PaymentAttemptDetailsDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `order` | [OrderDto](#contract-OrderDto) | بله | خیر/تصریح نشده | — |
+| `paymentAttempt` | [PaymentAttemptDto](#contract-PaymentAttemptDto) | بله | خیر/تصریح نشده | — |
+| `history` | آرایه از [PaymentHistoryDto](#contract-PaymentHistoryDto) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-PaymentAttemptDto"></a>
 ### PaymentAttemptDto
 
@@ -11479,6 +17290,20 @@ object
 | `paymentUrl` | string | بله | بله | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `completedAtUtc` | string / date-time | بله | بله | — |
+| `settlementReference` | string | خیر | بله | — |
+| `failureCode` | string | خیر | بله | — |
+| `callbackReceivedAtUtc` | string / date-time | خیر | بله | — |
+| `providerPaidAtUtc` | string / date-time | خیر | بله | — |
+| `verifiedAtUtc` | string / date-time | خیر | بله | — |
+
+<a id="contract-PaymentAttemptEventType"></a>
+### PaymentAttemptEventType
+
+CLR واقعی: `MakanApp.Domain.Commerce.PaymentAttemptEventType`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Created", "InitiationStarted", "InitiationCompleted", "CallbackReceived", "VerificationCompleted", "InquiryCompleted", "SettlementReplayed", "InitiationUncertain"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-PaymentAttemptStatus"></a>
 ### PaymentAttemptStatus
@@ -11486,6 +17311,54 @@ object
 CLR واقعی: `MakanApp.Domain.Commerce.PaymentAttemptStatus`؛ Flags: False
 
 literalهای JSON واقعی MVC: `["Created", "Initiating", "PendingVerification", "Succeeded", "Failed", "Unknown"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PaymentHistoryDto"></a>
+### PaymentHistoryDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `type` | [PaymentAttemptEventType](#contract-PaymentAttemptEventType) | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `providerResult` | integer / int32 | بله | بله | — |
+| `providerStatus` | integer / int32 | بله | بله | — |
+| `errorCode` | string | بله | بله | — |
+| `correlationId` | string | بله | بله | — |
+
+<a id="contract-PaymentReceiptDto"></a>
+### PaymentReceiptDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `orderId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `purchaserUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `productTitle` | string | بله | بله | — |
+| `amount` | number / double | بله | خیر/تصریح نشده | — |
+| `currency` | string | بله | خیر/تصریح نشده | — |
+| `paidAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `fulfillmentState` | [OrderFulfillmentState](#contract-OrderFulfillmentState) | بله | خیر/تصریح نشده | — |
+| `provider` | string | بله | بله | — |
+| `providerReference` | string | بله | بله | — |
+| `settlementReference` | string | بله | بله | — |
+| `providerPaidAtUtc` | string / date-time | بله | بله | — |
+| `purpose` | [CommercialOrderPurpose2](#contract-CommercialOrderPurpose2) | بله | خیر/تصریح نشده | — |
+| `billingAnchorUtc` | string / date-time | بله | بله | — |
+| `billingPeriodIndex` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PaymentVerificationStatus"></a>
+### PaymentVerificationStatus
+
+CLR واقعی: `MakanApp.Application.Commerce.PaymentVerificationStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Settled", "AlreadySettled", "Failed", "Unknown", "AmountMismatch", "CurrencyMismatch", "ReferenceConflict"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -11536,6 +17409,96 @@ object
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
 
+<a id="contract-PersonalClassAcademicCapabilities"></a>
+### PersonalClassAcademicCapabilities
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassAcademicCapabilities`؛ Flags: True
+
+literalهای JSON واقعی MVC: `["None", "AuthorAssignments", "AuthorExams", "Grade"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassAcademicPermissionDto"></a>
+### PersonalClassAcademicPermissionDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `membershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `capabilities` | [PersonalClassAcademicCapabilities](#contract-PersonalClassAcademicCapabilities) | بله | خیر/تصریح نشده | — |
+| `parentGrantId` | string / uuid | بله | بله | — |
+| `isEffective` | boolean | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `revokedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassBackfillPlanRow"></a>
+### PersonalClassBackfillPlanRow
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `classId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `hostUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `managerUserId` | string / uuid | بله | بله | — |
+| `migrationState` | string | بله | خیر/تصریح نشده | — |
+| `activeMemberships` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `groupCandidateId` | string / uuid | بله | بله | — |
+| `channelCandidateId` | string / uuid | بله | بله | — |
+| `unboundCandidates` | آرایه از string / uuid | بله | خیر/تصریح نشده | — |
+| `groupAction` | string | بله | خیر/تصریح نشده | — |
+| `channelAction` | string | بله | خیر/تصریح نشده | — |
+| `conflict` | boolean | بله | خیر/تصریح نشده | — |
+| `manualDecision` | string | بله | بله | — |
+| `planSha256` | string | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassCapabilities"></a>
+### PersonalClassCapabilities
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `canManageMembers` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageRoles` | boolean | بله | خیر/تصریح نشده | — |
+| `canManageSpaces` | boolean | بله | خیر/تصریح نشده | — |
+| `canAuthorAssignments` | boolean | بله | خیر/تصریح نشده | — |
+| `canAuthorExams` | boolean | بله | خیر/تصریح نشده | — |
+| `canGrade` | boolean | بله | خیر/تصریح نشده | — |
+| `canArchive` | boolean | بله | خیر/تصریح نشده | — |
+| `canViewOwnResults` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassDecisionDto"></a>
+### PersonalClassDecisionDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `action` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `actorUserId` | string / uuid | بله | بله | — |
+
+<a id="contract-PersonalClassDelegatedCapabilities"></a>
+### PersonalClassDelegatedCapabilities
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassDelegatedCapabilities`؛ Flags: True
+
+literalهای JSON واقعی MVC: `["None", "PublishCommunication", "ManageCommunication"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassDelegatedCapabilities2"></a>
+### PersonalClassDelegatedCapabilities2
+
+string
+
 <a id="contract-PersonalClassDto"></a>
 ### PersonalClassDto
 
@@ -11551,6 +17514,40 @@ object
 | `canCreateEducationalContent` | boolean | بله | خیر/تصریح نشده | — |
 | `educationalWorkflowStatus` | string | بله | خیر/تصریح نشده | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `managerUserId` | string / uuid | خیر | بله | — |
+| `capacity` | integer / int32 | خیر | بله | — |
+| `acceptingJoinRequests` | boolean | خیر | خیر/تصریح نشده | — |
+| `state` | string | خیر | خیر/تصریح نشده | — |
+| `migrationState` | string | خیر | خیر/تصریح نشده | — |
+| `version` | string | خیر | خیر/تصریح نشده | — |
+| `capabilities` | [PersonalClassCapabilities](#contract-PersonalClassCapabilities) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassFormationProgress"></a>
+### PersonalClassFormationProgress
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `classState` | string | بله | خیر/تصریح نشده | — |
+| `managerAccepted` | boolean | بله | خیر/تصریح نشده | — |
+| `groupState` | string | بله | خیر/تصریح نشده | — |
+| `channelState` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassHistoryItem"></a>
+### PersonalClassHistoryItem
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `action` | string | بله | خیر/تصریح نشده | — |
+| `resourceType` | string | بله | خیر/تصریح نشده | — |
+| `resourceId` | string / uuid | بله | بله | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `actorUserId` | string / uuid | بله | بله | — |
+| `correlationId` | string | بله | بله | — |
 
 <a id="contract-PersonalClassInvitationDto"></a>
 ### PersonalClassInvitationDto
@@ -11564,6 +17561,209 @@ object
 | `destinationUserId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `accepted` | boolean | بله | خیر/تصریح نشده | — |
+| `classTitle` | string | خیر | بله | — |
+| `inviter` | [PersonalClassInviterIdentity](#contract-PersonalClassInviterIdentity) | خیر | خیر/تصریح نشده | — |
+| `status` | string | خیر | خیر/تصریح نشده | — |
+| `version` | string | خیر | خیر/تصریح نشده | — |
+| `localRoles` | [PersonalClassLocalRoles](#contract-PersonalClassLocalRoles) | خیر | خیر/تصریح نشده | — |
+| `delegatedCapabilities` | [PersonalClassDelegatedCapabilities](#contract-PersonalClassDelegatedCapabilities) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassInviterIdentity"></a>
+### PersonalClassInviterIdentity
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `displayName` | string | بله | خیر/تصریح نشده | — |
+| `username` | string | بله | بله | — |
+
+<a id="contract-PersonalClassJoinDto"></a>
+### PersonalClassJoinDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [PersonalClassJoinRequestStatus](#contract-PersonalClassJoinRequestStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `closedAtUtc` | string / date-time | بله | بله | — |
+| `closureReason` | string | بله | بله | — |
+| `membershipId` | string / uuid | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassJoinRequestStatus"></a>
+### PersonalClassJoinRequestStatus
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassJoinRequestStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Pending", "Approved", "Rejected", "Cancelled"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassLocalRoles"></a>
+### PersonalClassLocalRoles
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassLocalRoles`؛ Flags: True
+
+literalهای JSON واقعی MVC: `["None", "Learner", "Teacher", "Manager"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassLocalRoles2"></a>
+### PersonalClassLocalRoles2
+
+string
+
+<a id="contract-PersonalClassManagerTransferStatus"></a>
+### PersonalClassManagerTransferStatus
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassManagerTransferStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Pending", "Accepted", "Declined", "Cancelled"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassMembershipDto"></a>
+### PersonalClassMembershipDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `localRoles` | [PersonalClassLocalRoles](#contract-PersonalClassLocalRoles) | بله | خیر/تصریح نشده | — |
+| `delegatedCapabilities` | [PersonalClassDelegatedCapabilities](#contract-PersonalClassDelegatedCapabilities) | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+| `joinedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `endedAtUtc` | string / date-time | بله | بله | — |
+| `endReason` | string | بله | بله | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassAcademicPermissionDto"></a>
+### PersonalClassPageOfPersonalClassAcademicPermissionDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassAcademicPermissionDto](#contract-PersonalClassAcademicPermissionDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassDecisionDto"></a>
+### PersonalClassPageOfPersonalClassDecisionDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassDecisionDto](#contract-PersonalClassDecisionDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassDto"></a>
+### PersonalClassPageOfPersonalClassDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassDto](#contract-PersonalClassDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassHistoryItem"></a>
+### PersonalClassPageOfPersonalClassHistoryItem
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassHistoryItem](#contract-PersonalClassHistoryItem) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassInvitationDto"></a>
+### PersonalClassPageOfPersonalClassInvitationDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassInvitationDto](#contract-PersonalClassInvitationDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassJoinDto"></a>
+### PersonalClassPageOfPersonalClassJoinDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassJoinDto](#contract-PersonalClassJoinDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassMembershipDto"></a>
+### PersonalClassPageOfPersonalClassMembershipDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassMembershipDto](#contract-PersonalClassMembershipDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassRequestDto"></a>
+### PersonalClassPageOfPersonalClassRequestDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassRequestDto](#contract-PersonalClassRequestDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPersonalClassTransferDto"></a>
+### PersonalClassPageOfPersonalClassTransferDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PersonalClassTransferDto](#contract-PersonalClassTransferDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassPageOfPlatformPersonalClassMembershipDto"></a>
+### PersonalClassPageOfPlatformPersonalClassMembershipDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [PlatformPersonalClassMembershipDto](#contract-PlatformPersonalClassMembershipDto) | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 
 <a id="contract-PersonalClassParticipantDto"></a>
 ### PersonalClassParticipantDto
@@ -11577,6 +17777,97 @@ object
 | `joinedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `active` | boolean | بله | خیر/تصریح نشده | — |
 
+<a id="contract-PersonalClassReasonCommand"></a>
+### PersonalClassReasonCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
+<a id="contract-PersonalClassRequestCapabilities"></a>
+### PersonalClassRequestCapabilities
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `canEdit` | boolean | بله | خیر/تصریح نشده | — |
+| `canSubmit` | boolean | بله | خیر/تصریح نشده | — |
+| `canCancel` | boolean | بله | خیر/تصریح نشده | — |
+| `canRespondToChanges` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassRequestDto"></a>
+### PersonalClassRequestDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `requesterUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `details` | [PersonalClassRequestInput](#contract-PersonalClassRequestInput) | بله | خیر/تصریح نشده | — |
+| `status` | [PersonalClassRequestStatus](#contract-PersonalClassRequestStatus) | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `submittedAtUtc` | string / date-time | بله | بله | — |
+| `decidedAtUtc` | string / date-time | بله | بله | — |
+| `decisionReason` | string | بله | بله | — |
+| `createdClassId` | string / uuid | بله | بله | — |
+| `finalManagerUserId` | string / uuid | بله | بله | — |
+| `capabilities` | [PersonalClassRequestCapabilities](#contract-PersonalClassRequestCapabilities) | بله | خیر/تصریح نشده | — |
+| `progress` | [PersonalClassFormationProgress](#contract-PersonalClassFormationProgress) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassRequestInput"></a>
+### PersonalClassRequestInput
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `purpose` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,1998}\\S)\\s*$"} |
+| `description` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,3998}\\S))?\\s*$"} |
+| `suggestedCapacity` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `suggestedManagerUserId` | string / uuid | بله | بله | — |
+| `suggestedTeacherUserId` | string / uuid | بله | بله | — |
+
+<a id="contract-PersonalClassRequestStatus"></a>
+### PersonalClassRequestStatus
+
+CLR واقعی: `MakanApp.Domain.Academic.PersonalClassRequestStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Draft", "Submitted", "UnderReview", "NeedsChanges", "Approved", "Rejected", "Cancelled"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PersonalClassTransferDto"></a>
+### PersonalClassTransferDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `targetUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `previousManagerUserId` | string / uuid | بله | بله | — |
+| `status` | [PersonalClassManagerTransferStatus](#contract-PersonalClassManagerTransferStatus) | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-PersonalClassVersionCommand"></a>
+### PersonalClassVersionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+
 <a id="contract-PersonalMessagingAction"></a>
 ### PersonalMessagingAction
 
@@ -11585,6 +17876,19 @@ CLR واقعی: `MakanApp.Application.Messaging.PersonalMessagingAction`؛ Flags
 literalهای JSON واقعی MVC: `["ReadExistingConversations", "DiscoverUsers", "CreateDirect", "CreatePersonalGroup", "CreatePersonalChannel", "DiscoverRelatedUsers", "CreateDirectWithAuthorizedRelationship", "CreatePrivatePersonalGroup"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-PhoneChangeResult"></a>
+### PhoneChangeResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `requestId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `state` | string | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `resendAvailableAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `completedAtUtc` | string / date-time | بله | بله | — |
 
 <a id="contract-PlanVersionStatus"></a>
 ### PlanVersionStatus
@@ -11687,7 +17991,7 @@ object
 |---|---|---|---|---|
 | `class` | [PlatformClassItem](#contract-PlatformClassItem) | بله | خیر/تصریح نشده | — |
 | `activeTeachers` | آرایه از [PlatformClassPerson](#contract-PlatformClassPerson) | بله | خیر/تصریح نشده | — |
-| `activeLearners` | آرایه از بدون schema منتشرشده | بله | خیر/تصریح نشده | — |
+| `activeLearners` | آرایه از [PlatformClassPerson](#contract-PlatformClassPerson) | بله | خیر/تصریح نشده | — |
 | `activeTeachersTruncated` | boolean | بله | خیر/تصریح نشده | — |
 | `activeLearnersTruncated` | boolean | بله | خیر/تصریح نشده | — |
 | `sessions` | [PlatformClassSessionSummary](#contract-PlatformClassSessionSummary) | بله | خیر/تصریح نشده | — |
@@ -12151,6 +18455,7 @@ object
 | `cancelledAtUtc` | string / date-time | بله | بله | — |
 | `paymentAttempts` | آرایه از [PlatformPaymentAttemptItem](#contract-PlatformPaymentAttemptItem) | بله | خیر/تصریح نشده | — |
 | `payment` | [PlatformPaymentItem](#contract-PlatformPaymentItem) | بله | خیر/تصریح نشده | — |
+| `fulfillmentState` | [OrderFulfillmentState](#contract-OrderFulfillmentState) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-PlatformOrderPage"></a>
 ### PlatformOrderPage
@@ -12305,6 +18610,8 @@ object
 | `verifiedAtUtc` | string / date-time | بله | بله | — |
 | `completedAtUtc` | string / date-time | بله | بله | — |
 | `failureCode` | string | بله | بله | — |
+| `maskedSettlementReference` | string | خیر | بله | — |
+| `callbackReceivedAtUtc` | string / date-time | خیر | بله | — |
 
 <a id="contract-PlatformPaymentItem"></a>
 ### PlatformPaymentItem
@@ -12320,6 +18627,27 @@ object
 | `amount` | number / double | بله | خیر/تصریح نشده | — |
 | `currency` | [CurrencyCode](#contract-CurrencyCode) | بله | خیر/تصریح نشده | — |
 | `paidAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `maskedSettlementReference` | string | خیر | بله | — |
+| `providerPaidAtUtc` | string / date-time | خیر | بله | — |
+
+<a id="contract-PlatformPersonalClassMembershipDto"></a>
+### PlatformPersonalClassMembershipDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `membershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `personalClassId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `userId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `displayName` | string | بله | خیر/تصریح نشده | — |
+| `username` | string | بله | بله | — |
+| `localRoles` | [PersonalClassLocalRoles](#contract-PersonalClassLocalRoles) | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+| `joinedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `endedAtUtc` | string / date-time | بله | بله | — |
+| `membershipVersion` | string | بله | خیر/تصریح نشده | — |
+| `canReceivePlatformAcademicGrant` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-PlatformPlanDetail"></a>
 ### PlatformPlanDetail
@@ -12857,8 +19185,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedAssignmentRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedAssignmentRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-PublishAssignmentResult"></a>
 ### PublishAssignmentResult
@@ -12869,6 +19197,7 @@ object
 |---|---|---|---|---|
 | `assignment` | [AssignmentResult](#contract-AssignmentResult) | بله | خیر/تصریح نشده | — |
 | `recipientCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `publicationReceipt` | [AcademicPublicationReceipt](#contract-AcademicPublicationReceipt) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-PublishClassLessonCommand"></a>
 ### PublishClassLessonCommand
@@ -12886,8 +19215,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedExamRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedExamRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-PublishPlatformPlanVersionCommand"></a>
 ### PublishPlatformPlanVersionCommand
@@ -13108,7 +19437,7 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ReleaseExamGradeCommand"></a>
 ### ReleaseExamGradeCommand
@@ -13118,7 +19447,18 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `expectedGradeRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedGradeRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+
+<a id="contract-RepairPersonalClassSpacesCommand"></a>
+### RepairPersonalClassSpacesCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+| `approvedPlanSha256` | string | خیر | بله | {"default": null} |
 
 <a id="contract-ReplaceSavedLabelsCommand"></a>
 ### ReplaceSavedLabelsCommand
@@ -13129,6 +19469,18 @@ object
 |---|---|---|---|---|
 | `labels` | آرایه از string | بله | خیر/تصریح نشده | — |
 | `expectedVersion` | string | بله | بله | — |
+
+<a id="contract-ReplySupportTicketCommand"></a>
+### ReplySupportTicketCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `body` | string | بله | خیر/تصریح نشده | — |
+| `fileAssetIds` | آرایه از string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-ReportExportFilters"></a>
 ### ReportExportFilters
@@ -13347,6 +19699,15 @@ object
 | `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `items` | آرایه از [TeacherExamReportItem](#contract-TeacherExamReportItem) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-RequestAccountDeletionCommand"></a>
+### RequestAccountDeletionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+
 <a id="contract-RequestOtpCommand"></a>
 ### RequestOtpCommand
 
@@ -13367,6 +19728,16 @@ object
 | `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `resendAvailableAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 
+<a id="contract-RequestPhoneChangeCommand"></a>
+### RequestPhoneChangeCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `newPhoneNumber` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-ResolvePersonCommand"></a>
 ### ResolvePersonCommand
 
@@ -13376,6 +19747,18 @@ object
 |---|---|---|---|---|
 | `username` | string | بله | بله | — |
 | `phoneNumber` | string | بله | بله | — |
+
+<a id="contract-ReviewPersonalClassRequestCommand"></a>
+### ReviewPersonalClassRequestCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `decision` | [PersonalClassRequestStatus](#contract-PersonalClassRequestStatus) | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+| `finalManagerUserId` | string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-RevokeInviteLinkCommand"></a>
 ### RevokeInviteLinkCommand
@@ -13450,11 +19833,11 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `score` | number / double | بله | خیر/تصریح نشده | — |
-| `learnerFeedback` | string | بله | بله | — |
-| `guardianVisibleFeedback` | string | بله | بله | — |
-| `teacherPrivateNote` | string | بله | بله | — |
-| `expectedRowVersion` | string | بله | بله | — |
+| `score` | number / double | بله | خیر/تصریح نشده | {"minimum": 0, "maximum": 9999999.99} |
+| `learnerFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `guardianVisibleFeedback` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `teacherPrivateNote` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
+| `expectedRowVersion` | string / byte | بله | بله | — |
 
 <a id="contract-SaveExamAnswerCommand"></a>
 ### SaveExamAnswerCommand
@@ -13467,7 +19850,7 @@ object
 | `writeLeaseVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
 | `expectedRevisionNumber` | integer / int32 | بله | بله | — |
 | `selectedOptionId` | string / uuid | بله | بله | — |
-| `textAnswer` | string | بله | بله | — |
+| `textAnswer` | string | بله | بله | {"maxLength": 20000} |
 
 <a id="contract-SaveSubmissionDraftCommand"></a>
 ### SaveSubmissionDraftCommand
@@ -13476,8 +19859,8 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `answerText` | string | بله | بله | — |
-| `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `answerText` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,49998}\\S))?\\s*$"} |
+| `expectedRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-SaveUserContactCommand"></a>
 ### SaveUserContactCommand
@@ -13620,6 +20003,106 @@ literalهای JSON واقعی MVC: `["Scheduled", "Dispatched", "Cancelled", "Fa
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
+<a id="contract-SchoolApplicationActionCommand"></a>
+### SchoolApplicationActionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `applicantFeedback` | string | خیر | بله | {"default": null} |
+| `decision` | [NullableOfSchoolApplicationStatus](#contract-NullableOfSchoolApplicationStatus) | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolApplicationDecisionResult"></a>
+### SchoolApplicationDecisionResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `revision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `status` | [SchoolApplicationStatus](#contract-SchoolApplicationStatus) | بله | خیر/تصریح نشده | — |
+| `applicantFeedback` | string | بله | خیر/تصریح نشده | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolApplicationDraftData"></a>
+### SchoolApplicationDraftData
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `schoolName` | string | بله | بله | — |
+| `legalEntityName` | string | بله | بله | — |
+| `teachingHistory` | string | بله | بله | — |
+| `workSamples` | string | بله | بله | — |
+| `degreeField` | string | بله | بله | — |
+| `studentCapacity` | integer / int32 | بله | بله | — |
+| `teacherCapacity` | integer / int32 | بله | بله | — |
+
+<a id="contract-SchoolApplicationKind"></a>
+### SchoolApplicationKind
+
+CLR واقعی: `MakanApp.Domain.Organization.SchoolApplicationKind`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["LegalOrganization", "IndividualTeacher"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SchoolApplicationPage"></a>
+### SchoolApplicationPage
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [SchoolApplicationResult](#contract-SchoolApplicationResult) | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolApplicationResult"></a>
+### SchoolApplicationResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `kind` | [SchoolApplicationKind](#contract-SchoolApplicationKind) | بله | خیر/تصریح نشده | — |
+| `status` | [SchoolApplicationStatus](#contract-SchoolApplicationStatus) | بله | خیر/تصریح نشده | — |
+| `revision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `version` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `data` | [SchoolApplicationDraftData](#contract-SchoolApplicationDraftData) | بله | خیر/تصریح نشده | — |
+| `documents` | آرایه از [SchoolDocumentInput](#contract-SchoolDocumentInput) | بله | خیر/تصریح نشده | — |
+| `decisions` | آرایه از [SchoolApplicationDecisionResult](#contract-SchoolApplicationDecisionResult) | بله | خیر/تصریح نشده | — |
+| `canSubmit` | boolean | بله | خیر/تصریح نشده | — |
+| `submissionLimitation` | string | بله | بله | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolApplicationStatus"></a>
+### SchoolApplicationStatus
+
+CLR واقعی: `MakanApp.Domain.Organization.SchoolApplicationStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Draft", "Submitted", "UnderReview", "NeedsChanges", "Rejected", "Approved"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SchoolDocumentInput"></a>
+### SchoolDocumentInput
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `kind` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-SchoolGuardianInvitationResult"></a>
 ### SchoolGuardianInvitationResult
 
@@ -13652,6 +20135,9 @@ object
 | `endedAtUtc` | string / date-time | بله | بله | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `guardianDisplayName` | string | خیر | بله | — |
+| `guardianUsername` | string | خیر | بله | — |
+| `learnerDisplayName` | string | خیر | بله | — |
 
 <a id="contract-SchoolGuardianRelationsPage"></a>
 ### SchoolGuardianRelationsPage
@@ -13665,6 +20151,15 @@ object
 | `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `items` | آرایه از [SchoolGuardianRelationDto](#contract-SchoolGuardianRelationDto) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolInvitationType"></a>
+### SchoolInvitationType
+
+CLR واقعی: `MakanApp.Application.Organization.SchoolInvitationType`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Membership", "PersonLink", "GuardianLink"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-SchoolMemberResult"></a>
 ### SchoolMemberResult
@@ -13684,6 +20179,22 @@ object
 | `activeRoles` | آرایه از [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
 | `roleAssignments` | آرایه از [SchoolRoleAssignmentResult](#contract-SchoolRoleAssignmentResult) | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolMembershipMutationResult"></a>
+### SchoolMembershipMutationResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `membershipId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `status` | [MembershipStatus](#contract-MembershipStatus) | بله | خیر/تصریح نشده | — |
+| `membershipVersion` | string | بله | خیر/تصریح نشده | — |
+| `activeRoleAssignments` | آرایه از [SchoolRoleAssignmentResult](#contract-SchoolRoleAssignmentResult) | بله | خیر/تصریح نشده | — |
+| `resultRoleAssignmentId` | string / uuid | بله | بله | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `operationCompletedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `replayed` | boolean | بله | خیر/تصریح نشده | — |
 
 <a id="contract-SchoolPageOfAcademicPeriodResult"></a>
 ### SchoolPageOfAcademicPeriodResult
@@ -13763,6 +20274,32 @@ object
 | `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `items` | آرایه از [SchoolMemberResult](#contract-SchoolMemberResult) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-SchoolPageOfSchoolSentInvitationDto"></a>
+### SchoolPageOfSchoolSentInvitationDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `dataAsOfUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [SchoolSentInvitationDto](#contract-SchoolSentInvitationDto) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolPageOfTeacherContentActivityDto"></a>
+### SchoolPageOfTeacherContentActivityDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `dataAsOfUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [TeacherContentActivityDto](#contract-TeacherContentActivityDto) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-SchoolRoleAssignmentResult"></a>
 ### SchoolRoleAssignmentResult
 
@@ -13776,6 +20313,43 @@ object
 | `assignedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `endedAtUtc` | string / date-time | بله | بله | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolSentInvitationDto"></a>
+### SchoolSentInvitationDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `invitationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `invitationType` | [SchoolInvitationType](#contract-SchoolInvitationType) | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `destinationUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `targetDisplayName` | string | بله | خیر/تصریح نشده | — |
+| `targetUsername` | string | بله | بله | — |
+| `organizationPersonId` | string / uuid | بله | بله | — |
+| `learnerOrganizationPersonId` | string / uuid | بله | بله | — |
+| `role` | [OrganizationRole](#contract-OrganizationRole) | بله | خیر/تصریح نشده | — |
+| `status` | [InvitationStatus](#contract-InvitationStatus) | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `expiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `allowedActions` | آرایه از string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SelectAssistantContextCommand"></a>
+### SelectAssistantContextCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | [AssistantDataContextKind](#contract-AssistantDataContextKind) | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `membershipId` | string / uuid | خیر | بله | {"default": null} |
+| `role` | [NullableOfOrganizationRole2](#contract-NullableOfOrganizationRole2) | خیر | خیر/تصریح نشده | — |
+| `subjectOrganizationPersonId` | string / uuid | خیر | بله | {"default": null} |
+| `classId` | string / uuid | خیر | بله | {"default": null} |
+| `expectedVersion` | string | خیر | بله | {"default": null} |
 
 <a id="contract-SelectWorkspaceCommand"></a>
 ### SelectWorkspaceCommand
@@ -13797,6 +20371,8 @@ object
 |---|---|---|---|---|
 | `message` | string | بله | خیر/تصریح نشده | — |
 | `conversationId` | string / uuid | بله | بله | — |
+| `selectedSourceIds` | آرایه از string / uuid | خیر | بله | — |
+| `operationId` | string / uuid | خیر | بله | — |
 
 <a id="contract-SendMessageCommand"></a>
 ### SendMessageCommand
@@ -13848,6 +20424,7 @@ object
 | `cancelledAtUtc` | string / date-time | بله | بله | — |
 | `completedAtUtc` | string / date-time | بله | بله | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
+| `publicationReceipt` | [AcademicPublicationReceipt](#contract-AcademicPublicationReceipt) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-SessionStatus"></a>
 ### SessionStatus
@@ -13878,6 +20455,18 @@ object
 | `expectedDefinitionVersion` | string | بله | خیر/تصریح نشده | — |
 | `expectedStateVersion` | string | خیر | بله | {"default": null} |
 
+<a id="contract-SetContactConsentCommand"></a>
+### SetContactConsentCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `deviceId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `consentVersion` | string | بله | خیر/تصریح نشده | — |
+| `scope` | string | بله | خیر/تصریح نشده | — |
+| `syncEnabled` | boolean | بله | خیر/تصریح نشده | — |
+
 <a id="contract-SetConversationMuteCommand"></a>
 ### SetConversationMuteCommand
 
@@ -13887,6 +20476,16 @@ object
 |---|---|---|---|---|
 | `mode` | [ConversationMuteMode](#contract-ConversationMuteMode) | بله | خیر/تصریح نشده | — |
 | `mutedUntilUtc` | string / date-time | بله | بله | — |
+
+<a id="contract-SetConversationPhotoCommand"></a>
+### SetConversationPhotoCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-SetMemberRestrictionCommand"></a>
 ### SetMemberRestrictionCommand
@@ -13901,6 +20500,19 @@ object
 | `reason` | string | بله | خیر/تصریح نشده | — |
 | `expectedVersion` | string | بله | بله | — |
 
+<a id="contract-SetPersonalClassAcademicPermissionCommand"></a>
+### SetPersonalClassAcademicPermissionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `capabilities` | [PersonalClassAcademicCapabilities](#contract-PersonalClassAcademicCapabilities) | بله | خیر/تصریح نشده | — |
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedMembershipVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedGrantVersion` | string / byte | بله | بله | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
+
 <a id="contract-SetProfilePhotoCommand"></a>
 ### SetProfilePhotoCommand
 
@@ -13909,6 +20521,104 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SourceCapabilities"></a>
+### SourceCapabilities
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `canRead` | boolean | بله | خیر/تصریح نشده | — |
+| `canWrite` | boolean | بله | خیر/تصریح نشده | — |
+| `canPublish` | boolean | بله | خیر/تصریح نشده | — |
+| `canArchive` | boolean | بله | خیر/تصریح نشده | — |
+| `canDownload` | boolean | بله | خیر/تصریح نشده | — |
+| `canUseForAi` | boolean | بله | خیر/تصریح نشده | — |
+| `canCreateVersion` | boolean | خیر | خیر/تصریح نشده | — |
+| `canChangeVisibility` | boolean | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-SourceFileMetadata"></a>
+### SourceFileMetadata
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `fileAssetId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `originalFileName` | string | بله | خیر/تصریح نشده | — |
+| `contentType` | string | بله | خیر/تصریح نشده | — |
+| `sizeBytes` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SourceMutationCommand"></a>
+### SourceMutationCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SourcePage"></a>
+### SourcePage
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `totalCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `items` | آرایه از [EducationalSourceResult](#contract-EducationalSourceResult) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SourceProcessingStatus"></a>
+### SourceProcessingStatus
+
+CLR واقعی: `MakanApp.Domain.Knowledge.SourceProcessingStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["NotRequested", "Pending", "Processing", "Ready", "Failed"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SourcePublicationStatus"></a>
+### SourcePublicationStatus
+
+CLR واقعی: `MakanApp.Domain.Knowledge.SourcePublicationStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Draft", "Published"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SourceSafetyStatus"></a>
+### SourceSafetyStatus
+
+CLR واقعی: `MakanApp.Domain.Knowledge.SourceSafetyStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["PendingValidation", "FileValidated", "ReviewRequired", "Rejected"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SourceVisibility"></a>
+### SourceVisibility
+
+CLR واقعی: `MakanApp.Domain.Knowledge.SourceVisibility`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Hidden", "Public"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
+
+<a id="contract-SourceVisibilityCommand"></a>
+### SourceVisibilityCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `visibility` | [SourceVisibility](#contract-SourceVisibility) | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-StartDirectConversationCommand"></a>
 ### StartDirectConversationCommand
@@ -14192,6 +20902,7 @@ object
 | `description` | string | بله | بله | — |
 | `publicationState` | [ExamVersionStatus](#contract-ExamVersionStatus) | بله | خیر/تصریح نشده | — |
 | `rules` | [StudentExamRules](#contract-StudentExamRules) | بله | خیر/تصریح نشده | — |
+| `classRef` | [AcademicClassRefDto](#contract-AcademicClassRefDto) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-StudentReleasedAssignmentItem"></a>
 ### StudentReleasedAssignmentItem
@@ -14299,11 +21010,11 @@ object
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
 | `id` | string / uuid | بله | خیر/تصریح نشده | — |
-| `organizationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `organizationId` | string / uuid | بله | بله | — |
 | `assignmentId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `assignmentVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `assignmentRecipientId` | string / uuid | بله | خیر/تصریح نشده | — |
-| `enrollmentId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `enrollmentId` | string / uuid | بله | بله | — |
 | `attemptNumber` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `status` | [SubmissionAttemptStatus](#contract-SubmissionAttemptStatus) | بله | خیر/تصریح نشده | — |
 | `contentVisible` | boolean | بله | خیر/تصریح نشده | — |
@@ -14314,6 +21025,8 @@ object
 | `submittedAtUtc` | string / date-time | بله | بله | — |
 | `isLate` | boolean | بله | خیر/تصریح نشده | — |
 | `rowVersion` | string | بله | خیر/تصریح نشده | — |
+| `classRef` | [AcademicClassRefDto](#contract-AcademicClassRefDto) | خیر | خیر/تصریح نشده | — |
+| `personalClassMembershipId` | string / uuid | خیر | بله | — |
 
 <a id="contract-SubmissionAttemptStatus"></a>
 ### SubmissionAttemptStatus
@@ -14403,6 +21116,63 @@ object
 | `availableMinutes` | integer / int32 | بله | بله | — |
 | `materials` | آرایه از string | بله | خیر/تصریح نشده | — |
 | `notes` | string | بله | بله | — |
+| `selectedSourceIds` | آرایه از string / uuid | خیر | بله | — |
+| `operationId` | string / uuid | خیر | بله | — |
+
+<a id="contract-SupportMessageResult"></a>
+### SupportMessageResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `authorType` | string | بله | خیر/تصریح نشده | — |
+| `body` | string | بله | خیر/تصریح نشده | — |
+| `ticketVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `fileAssetIds` | آرایه از string / uuid | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SupportTicketPage"></a>
+### SupportTicketPage
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [SupportTicketResult](#contract-SupportTicketResult) | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SupportTicketResult"></a>
+### SupportTicketResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `subject` | string | بله | خیر/تصریح نشده | — |
+| `category` | string | بله | خیر/تصریح نشده | — |
+| `status` | [SupportTicketStatus](#contract-SupportTicketStatus) | بله | خیر/تصریح نشده | — |
+| `version` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `ownerUserId` | string / uuid | بله | بله | — |
+| `assignedStaffUserId` | string / uuid | بله | بله | — |
+| `messages` | آرایه از [SupportMessageResult](#contract-SupportMessageResult) | بله | خیر/تصریح نشده | — |
+| `hasMoreMessages` | boolean | خیر | خیر/تصریح نشده | {"default": false} |
+| `nextMessageVersion` | integer / int64 | خیر | بله | {"default": null} |
+
+<a id="contract-SupportTicketStatus"></a>
+### SupportTicketStatus
+
+CLR واقعی: `MakanApp.Domain.Support.SupportTicketStatus`؛ Flags: False
+
+literalهای JSON واقعی MVC: `["Open", "InProgress", "WaitingForUser", "WaitingForSupport", "Resolved"]`
+
+نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
 <a id="contract-TeacherAssignmentReportItem"></a>
 ### TeacherAssignmentReportItem
@@ -14441,6 +21211,7 @@ object
 | `status` | [TeacherAssignmentStatus](#contract-TeacherAssignmentStatus) | بله | خیر/تصریح نشده | — |
 | `assignedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `endedAtUtc` | string / date-time | بله | بله | — |
+| `version` | string | خیر | خیر/تصریح نشده | {"default": ""} |
 
 <a id="contract-TeacherAssignmentStatus"></a>
 ### TeacherAssignmentStatus
@@ -14467,6 +21238,24 @@ object
 | `learnerDisplayName` | string | بله | خیر/تصریح نشده | — |
 | `status` | [AttendanceStatus](#contract-AttendanceStatus) | بله | خیر/تصریح نشده | — |
 | `recordedAtUtc` | string / date-time | بله | بله | — |
+
+<a id="contract-TeacherContentActivityDto"></a>
+### TeacherContentActivityDto
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `eventId` | string / uuid | بله | بله | — |
+| `teacherUserId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `teacherDisplayName` | string | بله | خیر/تصریح نشده | — |
+| `classId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `classTitle` | string | بله | خیر/تصریح نشده | — |
+| `kind` | [AcademicActivityKind](#contract-AcademicActivityKind) | بله | خیر/تصریح نشده | — |
+| `sourceVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `sourceRevision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `publishedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 
 <a id="contract-TeacherDashboardDto"></a>
 ### TeacherDashboardDto
@@ -14539,14 +21328,15 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `title` | string | بله | خیر/تصریح نشده | — |
-| `description` | string | بله | خیر/تصریح نشده | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `description` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S)\\s*$"} |
 | `dueAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `allowLateSubmission` | boolean | بله | خیر/تصریح نشده | — |
-| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxScore` | number / double | بله | خیر/تصریح نشده | — |
-| `expectedAssignmentRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxScore` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
+| `expectedAssignmentRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `attachmentFileIds` | آرایه از string / uuid | خیر | بله | {"default": null} |
 
 <a id="contract-UpdateClassLessonCommand"></a>
 ### UpdateClassLessonCommand
@@ -14560,6 +21350,18 @@ object
 | `displayOrder` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `fileAssetIds` | آرایه از string / uuid | بله | خیر/تصریح نشده | — |
 | `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-UpdateClassSettingsCommand"></a>
+### UpdateClassSettingsCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `capacity` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `expectedVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,498}\\S)\\s*$"} |
 
 <a id="contract-UpdateConversationChecklistCommand"></a>
 ### UpdateConversationChecklistCommand
@@ -14624,15 +21426,15 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `title` | string | بله | خیر/تصریح نشده | — |
-| `description` | string | بله | بله | — |
+| `title` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,198}\\S)\\s*$"} |
+| `description` | string | بله | بله | {"minLength": 0, "pattern": "^\\s*(?:(?:\\S&#124;\\S[\\s\\S]{0,9998}\\S))?\\s*$"} |
 | `availableFromUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `availableUntilUtc` | string / date-time | بله | خیر/تصریح نشده | — |
-| `durationMinutes` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | — |
-| `maxScore` | number / double | بله | خیر/تصریح نشده | — |
+| `durationMinutes` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxAttempts` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
+| `maxScore` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
 | `randomizationPolicy` | [ExamRandomizationPolicy](#contract-ExamRandomizationPolicy) | بله | خیر/تصریح نشده | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateExamQuestionCommand"></a>
 ### UpdateExamQuestionCommand
@@ -14641,13 +21443,13 @@ object
 
 | فیلد | نوع | required | nullable | قید منتشرشده |
 |---|---|---|---|---|
-| `order` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `order` | integer / int32 | بله | خیر/تصریح نشده | {"minimum": 1} |
 | `type` | [ExamQuestionType](#contract-ExamQuestionType) | بله | خیر/تصریح نشده | — |
-| `prompt` | string | بله | خیر/تصریح نشده | — |
-| `score` | number / double | بله | خیر/تصریح نشده | — |
+| `prompt` | string | بله | خیر/تصریح نشده | {"minLength": 1, "pattern": "^\\s*(?:\\S&#124;\\S[\\s\\S]{0,19998}\\S)\\s*$"} |
+| `score` | number / double | بله | خیر/تصریح نشده | {"minimum": 0.01, "maximum": 9999999.99} |
 | `options` | آرایه از [ExamQuestionOptionCommand](#contract-ExamQuestionOptionCommand) | بله | بله | — |
-| `expectedVersionRowVersion` | string | بله | خیر/تصریح نشده | — |
-| `expectedQuestionRowVersion` | string | بله | خیر/تصریح نشده | — |
+| `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
+| `expectedQuestionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 | `attachmentPolicy` | [ExamQuestionAttachmentPolicyCommand](#contract-ExamQuestionAttachmentPolicyCommand) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateMessagingPrivacyCommand"></a>
@@ -14712,6 +21514,18 @@ object
 | `meetingUrl` | string | بله | بله | — |
 | `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
 
+<a id="contract-UpdateSchoolApplicationCommand"></a>
+### UpdateSchoolApplicationCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `data` | [SchoolApplicationDraftData](#contract-SchoolApplicationDraftData) | بله | خیر/تصریح نشده | — |
+| `documents` | آرایه از [SchoolDocumentInput](#contract-SchoolDocumentInput) | خیر | بله | {"default": null} |
+
 <a id="contract-UpdateSessionCommand"></a>
 ### UpdateSessionCommand
 
@@ -14725,6 +21539,18 @@ object
 | `timeZoneId` | string | بله | خیر/تصریح نشده | — |
 | `meetingUrl` | string | بله | بله | — |
 | `expectedRowVersion` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-UpdateSourceDraftCommand"></a>
+### UpdateSourceDraftCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `title` | string | بله | خیر/تصریح نشده | — |
+| `description` | string | بله | بله | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-UpdateUserContactCommand"></a>
 ### UpdateUserContactCommand
@@ -14848,6 +21674,26 @@ object
 | `refreshExpiresAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `user` | [CurrentUserResult](#contract-CurrentUserResult) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-VerifyPaymentResult"></a>
+### VerifyPaymentResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `status` | [PaymentVerificationStatus](#contract-PaymentVerificationStatus) | بله | خیر/تصریح نشده | — |
+| `order` | [OrderDto](#contract-OrderDto) | بله | خیر/تصریح نشده | — |
+| `paymentAttempt` | [PaymentAttemptDto](#contract-PaymentAttemptDto) | بله | خیر/تصریح نشده | — |
+
+<a id="contract-VerifyPhoneChangeCommand"></a>
+### VerifyPhoneChangeCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `code` | string | بله | خیر/تصریح نشده | — |
+
 <a id="contract-VoteConversationPollCommand"></a>
 ### VoteConversationPollCommand
 
@@ -14882,6 +21728,26 @@ object
 | `role` | [NullableOfOrganizationRole](#contract-NullableOfOrganizationRole) | بله | خیر/تصریح نشده | — |
 | `displayName` | string | بله | خیر/تصریح نشده | — |
 | `status` | string | بله | خیر/تصریح نشده | — |
+| `membershipStatus` | [NullableOfMembershipStatus](#contract-NullableOfMembershipStatus) | خیر | خیر/تصریح نشده | — |
+| `roleStatus` | [NullableOfRoleAssignmentStatus](#contract-NullableOfRoleAssignmentStatus) | خیر | خیر/تصریح نشده | — |
+| `organizationStatus` | [NullableOfOrganizationStatus](#contract-NullableOfOrganizationStatus) | خیر | خیر/تصریح نشده | — |
+| `isEffective` | boolean | خیر | خیر/تصریح نشده | — |
+| `canEnter` | boolean | خیر | خیر/تصریح نشده | — |
+| `isVisible` | boolean | خیر | بله | — |
+| `hasEffectiveEducationalRole` | boolean | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-WorkspaceSnapshotResult"></a>
+### WorkspaceSnapshotResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `version` | string | بله | خیر/تصریح نشده | — |
+| `hasEffectiveEducationalRole` | boolean | بله | خیر/تصریح نشده | — |
+| `personalWorkspaceVisible` | boolean | بله | بله | — |
+| `personalVisibilityDecision` | string | بله | خیر/تصریح نشده | — |
+| `workspaces` | آرایه از [WorkspaceResult](#contract-WorkspaceResult) | بله | خیر/تصریح نشده | — |
 
 <a id="contract-WorkspaceType"></a>
 ### WorkspaceType
@@ -14898,8 +21764,11 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
 | code | HTTP صریح | منبع |
 |---|---|---|
+| `ACADEMIC_ACTIVITY_PUBLICATION_MISSING` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `ACADEMIC_ACTIVITY_QUERY_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `ACADEMIC_PERIOD_INVALID` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `ACADEMIC_PERIOD_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `ACADEMIC_QUERY_INVALID` | طبق handler/مسیر فراخوانی | [AssessmentErrorCodes](../MakanApp.Application/Assessment/AssessmentErrorCodes.cs) |
 | `ACADEMIC_READ_NOT_ALLOWED` | 403 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `ACCOUNT_SUSPENDED` | 403 | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `AI_CONTEXT_NOT_ALLOWED` | 403 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
@@ -14927,15 +21796,18 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `ATTENDANCE_CORRECTION_REASON_REQUIRED` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `ATTENDANCE_ENROLLMENT_INVALID` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `ATTENDANCE_NOT_ALLOWED` | 403 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `AUTH_FORBIDDEN` | طبق handler/مسیر فراخوانی | [ApiErrorCodes](../MakanApp.Api/Errors/ApiErrorCodes.cs) |
 | `AUTH_REQUIRED` | 401 | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `CHANGE_CURSOR_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `CHILD_CONTEXT_NOT_ALLOWED` | 403 | [GuardianErrorCodes](../MakanApp.Application/Guardian/GuardianErrorCodes.cs) |
 | `CHILD_CONTEXT_NOT_FOUND` | 404 | [GuardianErrorCodes](../MakanApp.Application/Guardian/GuardianErrorCodes.cs) |
 | `CLASS_CAPACITY_EXCEEDED` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `CLASS_CREATION_CONFLICT` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_INVALID` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_NOT_ACTIVE` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `CLASS_SESSION_CONFLICT` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `CLASS_SETTINGS_CONFLICT` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `COMMERCE_CONTEXT_NOT_ALLOWED` | 403 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `COMMERCE_METER_UNAVAILABLE` | 503 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `COMMERCE_RESOURCE_NOT_FOUND` | 404 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
@@ -15142,6 +22014,16 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `PAYMENT_REFERENCE_INVALID` | 400 | [CommerceErrorCodes](../MakanApp.Application/Commerce/CommerceErrorCodes.cs) |
 | `PEOPLE_RESOLVE_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `PEOPLE_SEARCH_INVALID` | 400 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
+| `PERSONAL_CLASS_CAPACITY_REACHED` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_LAST_MANAGER_REQUIRED` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_MEMBERSHIP_INACTIVE` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_NOT_FOUND` | 404 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_NOT_READY` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_PROVISIONING_FAILED` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_REQUEST_CONFLICT` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_REQUEST_INVALID` | طبق handler/مسیر فراخوانی | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_REVIEW_REQUIRED` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
+| `PERSONAL_CLASS_VERSION_CONFLICT` | 409 | [AcademicErrorCodes](../MakanApp.Application/Academic/AcademicErrorCodes.cs) |
 | `PERSON_NOT_DISCOVERABLE` | 404 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `PHONE_INVALID` | طبق handler/مسیر فراخوانی | [IdentityErrorCodes](../MakanApp.Application/Identity/IdentityErrorCodes.cs) |
 | `PIN_NOT_ALLOWED` | 403 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
@@ -15196,6 +22078,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `REPORT_PAGINATION_INVALID` | طبق handler/مسیر فراخوانی | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `REPORT_RESOURCE_NOT_FOUND` | 404 | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
 | `REPORT_SORT_INVALID` | طبق handler/مسیر فراخوانی | [DetailedReportErrorCodes](../MakanApp.Application/Reports/Detailed/DetailedReportErrorCodes.cs) |
+| `REQUEST_INVALID` | طبق handler/مسیر فراخوانی | [ApiErrorCodes](../MakanApp.Api/Errors/ApiErrorCodes.cs) |
 | `ROLE_NOT_ACTIVE` | 403 | [OrganizationErrorCodes](../MakanApp.Application/Organization/OrganizationErrorCodes.cs) |
 | `SCHEDULED_MESSAGE_CLAIM_LOST` | 409 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |
 | `SCHEDULED_MESSAGE_CONFLICT` | 412 | [MessagingErrorCodes](../MakanApp.Application/Messaging/MessagingErrorCodes.cs) |

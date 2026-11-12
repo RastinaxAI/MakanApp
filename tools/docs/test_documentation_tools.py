@@ -9,6 +9,20 @@ import sync_repository_docs as sync
 
 
 class DocumentationToolsTests(unittest.TestCase):
+    def test_multiple_controllers_link_to_their_actual_shared_source_file(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'MakanApp.Api/Controllers/SupportTicketsController.cs'
+            source.parent.mkdir(parents=True)
+            source.write_text('class SupportTicketsController {}\nclass PlatformSupportTicketsController {}', encoding='utf-8')
+            sync.controller_source.cache_clear()
+            try:
+                with patch.object(sync, 'ROOT', root):
+                    expected = '../MakanApp.Api/Controllers/SupportTicketsController.cs'
+                    self.assertEqual(expected, sync.controller_source('SupportTickets'))
+                    self.assertEqual(expected, sync.controller_source('PlatformSupportTickets'))
+            finally:
+                sync.controller_source.cache_clear()
     def test_reference_is_linked_to_exact_contract(self):
         self.assertEqual('[VerifyOtpResult](#contract-VerifyOtpResult)', sync.schema_label({'$ref': '#/components/schemas/VerifyOtpResult'}))
 

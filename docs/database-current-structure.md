@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9`؛ بازبینی `2026-10-30`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26`؛ بازبینی `2026-11-12`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**113 جدول، 1162 ستون، 266 FK، 332 index مستقل از key و 298 CHECK؛ 55 Migration.**
+**146 جدول، 1560 ستون، 388 FK، 449 index مستقل از key و 405 CHECK؛ 71 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -23,17 +23,20 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 
 | Schema | جدول |
 |---|---|
-| academic | 14 |
-| assessment | 19 |
-| commerce | 12 |
+| academic | 18 |
+| assessment | 20 |
+| commerce | 13 |
 | guardian | 1 |
-| identity | 7 |
-| messaging | 42 |
+| identity | 9 |
+| intelligence | 1 |
+| knowledge | 4 |
+| messaging | 52 |
 | notification | 4 |
-| organization | 5 |
+| organization | 11 |
 | platform | 7 |
 | reports | 1 |
 | storage | 1 |
+| support | 4 |
 
 ## Migrationهای نسخه‌بندی‌شده
 
@@ -94,6 +97,22 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 53 | 20261029111645_AddCommercialOwnershipPeriodsAndPersonalClasses | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261029111645_AddCommercialOwnershipPeriodsAndPersonalClasses.cs) |
 | 54 | 20261029122246_BindReportExportsToCommercialReservations | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261029122246_BindReportExportsToCommercialReservations.cs) |
 | 55 | 20261030060025_AddExamAnswerAttachments | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261030060025_AddExamAnswerAttachments.cs) |
+| 56 | 20261030093927_AddOfficialOrganizationAndClassSpaces | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261030093927_AddOfficialOrganizationAndClassSpaces.cs) |
+| 57 | 20261030133521_AddScopedEducationalSources | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261030133521_AddScopedEducationalSources.cs) |
+| 58 | 20261030152943_AddAiSourceSelectionPins | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261030152943_AddAiSourceSelectionPins.cs) |
+| 59 | 20261101202642_ExpandMessagingAccountPolicyAndMedia | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261101202642_ExpandMessagingAccountPolicyAndMedia.cs) |
+| 60 | 20261103073219_AddReviewedPersonalClassLifecycle | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261103073219_AddReviewedPersonalClassLifecycle.cs) |
+| 61 | 20261103074858_BindPersonalClassInvitationRoles | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261103074858_BindPersonalClassInvitationRoles.cs) |
+| 62 | 20261103104624_ExtendAcademicEngineToPersonalClasses | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261103104624_ExtendAcademicEngineToPersonalClasses.cs) |
+| 63 | 20261104164717_HardenOrganizationClassCreationIntent | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261104164717_HardenOrganizationClassCreationIntent.cs) |
+| 64 | 20261104224922_AddSchoolMembershipManagementOperations | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261104224922_AddSchoolMembershipManagementOperations.cs) |
+| 65 | 20261110081503_AddZibalPaymentIntegration | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261110081503_AddZibalPaymentIntegration.cs) |
+| 66 | 20261112145324_AddProductV6ProfileAndAddressBook | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112145324_AddProductV6ProfileAndAddressBook.cs) |
+| 67 | 20261112151714_AddSupportPrivacyAndAssistantContexts | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112151714_AddSupportPrivacyAndAssistantContexts.cs) |
+| 68 | 20261112152027_EnforceAssistantAndDeletionSessionOwnership | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112152027_EnforceAssistantAndDeletionSessionOwnership.cs) |
+| 69 | 20261112153121_AddVersionedSchoolApplications | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112153121_AddVersionedSchoolApplications.cs) |
+| 70 | 20261112160026_ExtendProductNotificationTargets | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112160026_ExtendProductNotificationTargets.cs) |
+| 71 | 20261112165826_AddVerifiedPhoneChangeRequests | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112165826_AddVerifiedPhoneChangeRequests.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -234,8 +253,11 @@ Entity: `MakanApp.Domain.Academic.Class`؛ مالک نگاشت: [EF Configuratio
 | AcademicPeriodId | `uniqueidentifier` | خیر | خیر | Never |
 | ActivatedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Capacity | `int` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | بله | خیر | Never |
 | CourseId | `uniqueidentifier` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | بله | خیر | Never |
+| CreationRequestHash | `varchar(64)` | بله | خیر | Never |
 | EndedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
@@ -254,13 +276,16 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_Classes_CreatedByUserId | CreatedByUserId | False | — |
 | IX_Classes_OrganizationId_AcademicPeriodId | OrganizationId, AcademicPeriodId | False | — |
 | IX_Classes_OrganizationId_CourseId | OrganizationId, CourseId | False | — |
+| UX_Classes_CreationIntent | OrganizationId, CreatedByUserId, ClientOperationId | True | [ClientOperationId] IS NOT NULL |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| CreatedByUserId | identity.Users | Id | Restrict |
 | OrganizationId | organization.Organizations | Id | Restrict |
 | OrganizationId, AcademicPeriodId | academic.AcademicPeriods | OrganizationId, Id | Restrict |
 | OrganizationId, CourseId | academic.Courses | OrganizationId, Id | Restrict |
@@ -270,6 +295,7 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_Classes_Capacity | `[Capacity] > 0` |
+| CK_Classes_CreationIntent | `([CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationRequestHash] IS NULL) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationRequestHash] IS NOT NULL AND LEN([CreationRequestHash]) = 64)` |
 | CK_Classes_Status | `[Status] IN (1, 2, 3, 4)` |
 
 ### academic.ClassLessonAttachments
@@ -435,18 +461,73 @@ CHECKها:
 |---|---|
 | CK_Enrollments_Status | `[Status] IN (1, 2, 3)` |
 
+### academic.PersonalClassAcademicGrants
+
+Entity: `MakanApp.Domain.Academic.PersonalClassAcademicGrant`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Capabilities | `int` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| GrantedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| MembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| ParentGrantId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
+| RequestHash | `varchar(64)` | خیر | خیر | Never |
+| RevokedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassAcademicGrants | PK | Id |
+| AK_PersonalClassAcademicGrants_PersonalClassId_Id | Alternate Key | PersonalClassId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassAcademicGrants_GrantedByUserId_ClientOperationId | GrantedByUserId, ClientOperationId | True | — |
+| IX_PersonalClassAcademicGrants_PersonalClassId_MembershipId | PersonalClassId, MembershipId | True | [RevokedAtUtc] IS NULL |
+| IX_PersonalClassAcademicGrants_PersonalClassId_ParentGrantId | PersonalClassId, ParentGrantId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| GrantedByUserId | identity.Users | Id | Restrict |
+| PersonalClassId, MembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| PersonalClassId, ParentGrantId | academic.PersonalClassAcademicGrants | PersonalClassId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassAcademicGrants_Capabilities | `[Capabilities] BETWEEN 0 AND 7 AND ([Capabilities] <> 0 OR [RevokedAtUtc] IS NOT NULL)` |
+| CK_PersonalClassAcademicGrants_Parent | `[ParentGrantId] IS NULL OR [ParentGrantId] <> [Id]` |
+| CK_PersonalClassAcademicGrants_Time | `[RevokedAtUtc] IS NULL OR [RevokedAtUtc] >= [CreatedAtUtc]` |
+
 ### academic.PersonalClasses
 
 Entity: `MakanApp.Domain.Academic.PersonalClass`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| AcceptingJoinRequests | `bit` | خیر | خیر | Never |
 | ArchivedAtUtc | `datetime2` | بله | خیر | Never |
+| Capacity | `int` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| FormationRequestId | `uniqueidentifier` | بله | خیر | Never |
 | HostUserId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| ManagerUserId | `uniqueidentifier` | بله | خیر | Never |
+| MigrationState | `int` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| State | `int` | خیر | خیر | Never |
 | Title | `nvarchar(200)` | خیر | خیر | Never |
 
 کلیدها:
@@ -459,13 +540,27 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_PersonalClasses_FormationRequestId | FormationRequestId | True | [FormationRequestId] IS NOT NULL |
+| IX_PersonalClasses_ManagerUserId | ManagerUserId | False | — |
 | IX_PersonalClasses_HostUserId_ClientOperationId | HostUserId, ClientOperationId | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| FormationRequestId | academic.PersonalClassRequests | Id | Restrict |
 | HostUserId | identity.Users | Id | Restrict |
+| ManagerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClasses_Archive | `([State]=6 AND [ArchivedAtUtc] IS NOT NULL) OR ([State]<>6 AND [ArchivedAtUtc] IS NULL)` |
+| CK_PersonalClasses_Capacity | `[Capacity] IS NULL OR [Capacity]>0` |
+| CK_PersonalClasses_Manager | `[State]<>3 OR [ManagerUserId] IS NOT NULL OR [MigrationState]<>0` |
+| CK_PersonalClasses_Migration | `[MigrationState] BETWEEN 0 AND 5` |
+| CK_PersonalClasses_State | `[State] BETWEEN 1 AND 6` |
 
 ### academic.PersonalClassInvitations
 
@@ -475,10 +570,14 @@ Entity: `MakanApp.Domain.Academic.PersonalClassInvitation`؛ مالک نگاشت
 |---|---|---|---|---|
 | AcceptedAtUtc | `datetime2` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| ClosureReason | `nvarchar(500)` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DeclinedAtUtc | `datetime2` | بله | خیر | Never |
+| DelegatedCapabilities | `int` | خیر | خیر | Never |
 | DestinationUserId | `uniqueidentifier` | خیر | خیر | Never |
 | ExpiresAtUtc | `datetime2` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| LocalRoles | `int` | خیر | خیر | Never |
 | PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
 | RevokedAtUtc | `datetime2` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
@@ -508,7 +607,107 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_PersonalClassInvitations_Delegation | `[DelegatedCapabilities] BETWEEN 0 AND 3 AND ([DelegatedCapabilities]=0 OR ([LocalRoles]&2)=2)` |
 | CK_PersonalClassInvitations_Expiry | `[ExpiresAtUtc]>[CreatedAtUtc]` |
+| CK_PersonalClassInvitations_Roles | `[LocalRoles] BETWEEN 1 AND 3` |
+
+### academic.PersonalClassJoinRequests
+
+Entity: `MakanApp.Domain.Academic.PersonalClassJoinRequest`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| ClosedAtUtc | `datetime2` | بله | خیر | Never |
+| ClosureReason | `nvarchar(500)` | بله | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| MembershipId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassJoinRequests | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassJoinRequests_PersonalClassId_UserId | PersonalClassId, UserId | True | [Status]=1 |
+| IX_PersonalClassJoinRequests_UserId_ClientOperationId | UserId, ClientOperationId | True | — |
+| IX_PersonalClassJoinRequests_PersonalClassId_UserId_MembershipId | PersonalClassId, UserId, MembershipId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+| PersonalClassId, UserId, MembershipId | academic.PersonalClassParticipants | PersonalClassId, StudentUserId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassJoinRequests_Closure | `([Status]=1 AND [ClosedAtUtc] IS NULL AND [ClosureReason] IS NULL) OR ([Status]<>1 AND [ClosedAtUtc] IS NOT NULL AND [ClosedAtUtc]>=[CreatedAtUtc] AND [ClosureReason] IS NOT NULL)` |
+| CK_PersonalClassJoinRequests_Membership | `([Status]=2 AND [MembershipId] IS NOT NULL) OR ([Status]<>2 AND [MembershipId] IS NULL)` |
+| CK_PersonalClassJoinRequests_Status | `[Status] BETWEEN 1 AND 4` |
+
+### academic.PersonalClassManagerTransfers
+
+Entity: `MakanApp.Domain.Academic.PersonalClassManagerTransfer`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DecidedAtUtc | `datetime2` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
+| PreviousManagerUserId | `uniqueidentifier` | بله | خیر | Never |
+| Reason | `nvarchar(500)` | خیر | خیر | Never |
+| RequestedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| TargetUserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassManagerTransfers | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassManagerTransfers_PersonalClassId | PersonalClassId | True | [Status]=1 |
+| IX_PersonalClassManagerTransfers_PreviousManagerUserId | PreviousManagerUserId | False | — |
+| IX_PersonalClassManagerTransfers_RequestedByUserId | RequestedByUserId | False | — |
+| IX_PersonalClassManagerTransfers_TargetUserId | TargetUserId | False | — |
+| IX_PersonalClassManagerTransfers_PersonalClassId_ClientOperationId | PersonalClassId, ClientOperationId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| PreviousManagerUserId | identity.Users | Id | Restrict |
+| RequestedByUserId | identity.Users | Id | Restrict |
+| TargetUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassManagerTransfers_Decision | `([Status]=1 AND [DecidedAtUtc] IS NULL) OR ([Status]<>1 AND [DecidedAtUtc] IS NOT NULL AND [DecidedAtUtc]>=[CreatedAtUtc])` |
+| CK_PersonalClassManagerTransfers_Status | `[Status] BETWEEN 1 AND 4` |
+| CK_PersonalClassManagerTransfers_Target | `[PreviousManagerUserId] IS NULL OR [PreviousManagerUserId]<>[TargetUserId]` |
 
 ### academic.PersonalClassParticipants
 
@@ -516,10 +715,13 @@ Entity: `MakanApp.Domain.Academic.PersonalClassParticipant`؛ مالک نگاش�
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| DelegatedCapabilities | `int` | خیر | خیر | Never |
 | EndedAtUtc | `datetime2` | بله | خیر | Never |
+| EndReason | `nvarchar(500)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| InvitationId | `uniqueidentifier` | خیر | خیر | Never |
+| InvitationId | `uniqueidentifier` | بله | خیر | Never |
 | JoinedAtUtc | `datetime2` | خیر | خیر | Never |
+| LocalRoles | `int` | خیر | خیر | Never |
 | PersonalClassId | `uniqueidentifier` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | StudentUserId | `uniqueidentifier` | خیر | خیر | Never |
@@ -529,12 +731,15 @@ Entity: `MakanApp.Domain.Academic.PersonalClassParticipant`؛ مالک نگاش�
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_PersonalClassParticipants | PK | Id |
+| AK_PersonalClassParticipants_PersonalClassId_Id | Alternate Key | PersonalClassId, Id |
+| AK_PersonalClassParticipants_PersonalClassId_StudentUserId_Id | Alternate Key | PersonalClassId, StudentUserId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| IX_PersonalClassParticipants_InvitationId | InvitationId | True | — |
+| IX_PersonalClassParticipants_InvitationId | InvitationId | True | [InvitationId] IS NOT NULL |
+| UX_PersonalClassParticipants_PrimaryManager | PersonalClassId | True | [EndedAtUtc] IS NULL AND [LocalRoles]>=4 |
 | IX_PersonalClassParticipants_StudentUserId | StudentUserId | False | — |
 | IX_PersonalClassParticipants_PersonalClassId_StudentUserId | PersonalClassId, StudentUserId | True | [EndedAtUtc] IS NULL |
 | IX_PersonalClassParticipants_PersonalClassId_StudentUserId_InvitationId | PersonalClassId, StudentUserId, InvitationId | False | — |
@@ -543,6 +748,7 @@ Indexها:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | StudentUserId | identity.Users | Id | Restrict |
 | PersonalClassId, StudentUserId, InvitationId | academic.PersonalClassInvitations | PersonalClassId, DestinationUserId, Id | Restrict |
 
@@ -550,7 +756,73 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_PersonalClassParticipants_Delegation | `[DelegatedCapabilities] BETWEEN 0 AND 3 AND ([DelegatedCapabilities]=0 OR ([LocalRoles]&2)=2)` |
 | CK_PersonalClassParticipants_End | `[EndedAtUtc] IS NULL OR [EndedAtUtc]>=[JoinedAtUtc]` |
+| CK_PersonalClassParticipants_Roles | `[LocalRoles] BETWEEN 1 AND 7` |
+
+### academic.PersonalClassRequests
+
+Entity: `MakanApp.Domain.Academic.PersonalClassRequest`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| CreatedClassId | `uniqueidentifier` | بله | خیر | Never |
+| CreationPayloadHash | `nchar(64)` | خیر | خیر | Never |
+| DecidedAtUtc | `datetime2` | بله | خیر | Never |
+| DecidedByUserId | `uniqueidentifier` | بله | خیر | Never |
+| DecisionReason | `nvarchar(500)` | بله | خیر | Never |
+| Description | `nvarchar(4000)` | بله | خیر | Never |
+| FinalManagerUserId | `uniqueidentifier` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| Purpose | `nvarchar(2000)` | خیر | خیر | Never |
+| RequesterUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| SubmittedAtUtc | `datetime2` | بله | خیر | Never |
+| SuggestedCapacity | `int` | خیر | خیر | Never |
+| SuggestedManagerUserId | `uniqueidentifier` | بله | خیر | Never |
+| SuggestedTeacherUserId | `uniqueidentifier` | بله | خیر | Never |
+| Title | `nvarchar(200)` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PersonalClassRequests | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PersonalClassRequests_CreatedClassId | CreatedClassId | True | [CreatedClassId] IS NOT NULL |
+| IX_PersonalClassRequests_DecidedByUserId | DecidedByUserId | False | — |
+| IX_PersonalClassRequests_FinalManagerUserId | FinalManagerUserId | False | — |
+| IX_PersonalClassRequests_SuggestedManagerUserId | SuggestedManagerUserId | False | — |
+| IX_PersonalClassRequests_SuggestedTeacherUserId | SuggestedTeacherUserId | False | — |
+| IX_PersonalClassRequests_RequesterUserId_ClientOperationId | RequesterUserId, ClientOperationId | True | — |
+| IX_PersonalClassRequests_Status_CreatedAtUtc_Id | Status, CreatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CreatedClassId | academic.PersonalClasses | Id | Restrict |
+| DecidedByUserId | identity.Users | Id | Restrict |
+| FinalManagerUserId | identity.Users | Id | Restrict |
+| RequesterUserId | identity.Users | Id | Restrict |
+| SuggestedManagerUserId | identity.Users | Id | Restrict |
+| SuggestedTeacherUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PersonalClassRequests_Approval | `([Status]=5 AND [CreatedClassId] IS NOT NULL AND [FinalManagerUserId] IS NOT NULL) OR ([Status]<>5 AND [CreatedClassId] IS NULL AND [FinalManagerUserId] IS NULL)` |
+| CK_PersonalClassRequests_Capacity | `[SuggestedCapacity]>0` |
+| CK_PersonalClassRequests_Status | `[Status] BETWEEN 1 AND 7` |
 
 ### academic.ScheduleRules
 
@@ -602,6 +874,7 @@ Entity: `MakanApp.Domain.Academic.Session`؛ مالک نگاشت: [EF Configurat
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ActivityRevision | `int` | خیر | خیر | Never |
 | CancelledAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
 | CompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -644,6 +917,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_Sessions_ActivityRevision | `[ActivityRevision]>=0` |
 | CK_Sessions_Status | `[Status] IN (1, 2, 3)` |
 | CK_Sessions_TimeRange | `[EndUtc] > [StartUtc]` |
 
@@ -696,10 +970,13 @@ Entity: `MakanApp.Domain.Assessment.AnswerRevisionAttachment`؛ مالک نگا�
 |---|---|---|---|---|
 | AnswerRevisionId | `uniqueidentifier` | خیر | خیر | Never |
 | AttachedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamAttemptQuestionId | `uniqueidentifier` | خیر | خیر | Never |
 | FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 
 کلیدها:
 
@@ -712,15 +989,23 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_AnswerRevisionAttachments_FileAssetId | FileAssetId | False | — |
-| IX_AnswerRevisionAttachments_OrganizationId_ExamAttemptId_FileAssetId | OrganizationId, ExamAttemptId, FileAssetId | False | — |
-| IX_AnswerRevisionAttachments_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | False | — |
+| IX_AnswerRevisionAttachments_PersonalClassId | PersonalClassId | False | — |
+| IX_AnswerRevisionAttachments_ContextKind_ContextId_ExamAttemptId_FileAssetId | ContextKind, ContextId, ExamAttemptId, FileAssetId | False | — |
+| IX_AnswerRevisionAttachments_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | FileAssetId | storage.FileAssets | Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | assessment.AnswerRevisions | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | assessment.AnswerRevisions | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AnswerRevisionAttachments_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 
 ### assessment.AnswerRevisions
 
@@ -733,11 +1018,14 @@ Entity: `MakanApp.Domain.Assessment.AnswerRevision`؛ مالک نگاشت: [EF C
 | AcceptedWriteLeaseVersion | `bigint` | خیر | خیر | Never |
 | AnswerType | `int` | خیر | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedBySessionId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamAttemptQuestionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | QuestionVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | RequestHash | `varchar(64)` | خیر | خیر | Never |
 | RevisionNumber | `int` | خیر | خیر | Never |
@@ -750,33 +1038,36 @@ Entity: `MakanApp.Domain.Assessment.AnswerRevision`؛ مالک نگاشت: [EF C
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_AnswerRevisions | PK | Id |
-| UQ_AnswerRevisions_Organization_Attempt_Question_Id | Alternate Key | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id |
+| UQ_AnswerRevisions_Organization_Attempt_Question_Id | Alternate Key | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_AnswerRevisions_CreatedBySessionId | CreatedBySessionId | False | — |
-| UX_AnswerRevisions_Organization_Attempt_ClientOperation | OrganizationId, ExamAttemptId, ClientOperationId | True | — |
-| IX_AnswerRevisions_OrganizationId_QuestionVersionId_SelectedOptionId | OrganizationId, QuestionVersionId, SelectedOptionId | False | — |
-| IX_AnswerRevisions_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
-| UX_AnswerRevisions_Organization_AttemptQuestion_Revision | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, RevisionNumber | True | — |
-| IX_AnswerRevisions_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_SupersedesAnswerRevisionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId | False | — |
+| IX_AnswerRevisions_PersonalClassId | PersonalClassId | False | — |
+| UX_AnswerRevisions_Organization_Attempt_ClientOperation | ContextKind, ContextId, ExamAttemptId, ClientOperationId | True | — |
+| IX_AnswerRevisions_ContextKind_ContextId_QuestionVersionId_SelectedOptionId | ContextKind, ContextId, QuestionVersionId, SelectedOptionId | False | — |
+| IX_AnswerRevisions_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
+| UX_AnswerRevisions_Organization_AttemptQuestion_Revision | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, RevisionNumber | True | — |
+| IX_AnswerRevisions_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_SupersedesAnswerRevisionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | CreatedBySessionId | identity.UserSessions | Id | Restrict |
-| OrganizationId, ExamAttemptId | assessment.ExamAttempts | OrganizationId, Id | Restrict |
-| OrganizationId, QuestionVersionId, SelectedOptionId | assessment.QuestionOptions | OrganizationId, QuestionVersionId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | OrganizationId, ExamAttemptId, Id, QuestionVersionId | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId | assessment.AnswerRevisions | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId | assessment.ExamAttempts | ContextKind, ContextId, Id | Restrict |
+| ContextKind, ContextId, QuestionVersionId, SelectedOptionId | assessment.QuestionOptions | ContextKind, ContextId, QuestionVersionId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | ContextKind, ContextId, ExamAttemptId, Id, QuestionVersionId | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, SupersedesAnswerRevisionId | assessment.AnswerRevisions | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_AnswerRevisions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_AnswerRevisions_AnswerSetVersion | `[AcceptedAnswerSetVersion] > 0` |
 | CK_AnswerRevisions_AnswerShape | `([AnswerType] = 1 AND [SelectedOptionId] IS NOT NULL AND [TextAnswer] IS NULL) OR ([AnswerType] = 2 AND [SelectedOptionId] IS NULL AND [TextAnswer] IS NOT NULL)` |
 | CK_AnswerRevisions_AnswerType | `[AnswerType] IN (1, 2)` |
@@ -794,32 +1085,48 @@ Entity: `MakanApp.Domain.Assessment.AssignmentRecipient`؛ مالک نگاشت: 
 | AssignmentId | `uniqueidentifier` | خیر | خیر | Never |
 | AssignmentVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| EnrollmentId | `uniqueidentifier` | خیر | خیر | Never |
+| EnrollmentId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| ParticipantId | `uniqueidentifier` | خیر | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassMembershipId | `uniqueidentifier` | بله | خیر | Never |
 
 کلیدها:
 
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_AssignmentRecipients | PK | Id |
-| UQ_AssignmentRecipients_SubmissionScope_Id | Alternate Key | OrganizationId, AssignmentId, AssignmentVersionId, EnrollmentId, Id |
+| UQ_AssignmentRecipients_SubmissionScope_Id | Alternate Key | ContextKind, ContextId, AssignmentId, AssignmentVersionId, ParticipantId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_AssignmentRecipients_Organization_Version_Enrollment | OrganizationId, AssignmentVersionId, EnrollmentId | True | — |
+| IX_AssignmentRecipients_PersonalClassId_PersonalClassMembershipId | PersonalClassId, PersonalClassMembershipId | False | — |
 | IX_AssignmentRecipients_OrganizationId_ClassId_EnrollmentId | OrganizationId, ClassId, EnrollmentId | False | — |
-| IX_AssignmentRecipients_OrganizationId_ClassId_AssignmentId_AssignmentVersionId | OrganizationId, ClassId, AssignmentId, AssignmentVersionId | False | — |
+| UX_AssignmentRecipients_Organization_Version_Enrollment | ContextKind, ContextId, AssignmentVersionId, ParticipantId | True | — |
+| IX_AssignmentRecipients_ContextKind_ContextId_ClassId_AssignmentId_AssignmentVersionId | ContextKind, ContextId, ClassId, AssignmentId, AssignmentVersionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| PersonalClassId, PersonalClassMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
 | OrganizationId, ClassId, EnrollmentId | academic.Enrollments | OrganizationId, ClassId, Id | Restrict |
-| OrganizationId, ClassId, AssignmentId, AssignmentVersionId | assessment.AssignmentVersions | OrganizationId, ClassId, AssignmentId, Id | Restrict |
+| ContextKind, ContextId, ClassId, AssignmentId, AssignmentVersionId | assessment.AssignmentVersions | ContextKind, ContextId, ClassId, AssignmentId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AssignmentRecipients_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_AssignmentRecipients_Participation | `([ContextKind] = 1 AND [EnrollmentId] IS NOT NULL AND [ParticipantId] = [EnrollmentId] AND [PersonalClassMembershipId] IS NULL) OR ([ContextKind] = 2 AND [EnrollmentId] IS NULL AND [PersonalClassMembershipId] IS NOT NULL AND [ParticipantId] = [PersonalClassMembershipId])` |
+| CK_AssignmentRecipients_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
 
 ### assessment.Assignments
 
@@ -828,11 +1135,15 @@ Entity: `MakanApp.Domain.Assessment.Assignment`؛ مالک نگاشت: [EF Confi
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | CurrentVersionNumber | `int` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | PublishedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Status | `int` | خیر | خیر | Never |
@@ -843,30 +1154,82 @@ Entity: `MakanApp.Domain.Assessment.Assignment`؛ مالک نگاشت: [EF Confi
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_Assignments | PK | Id |
-| UQ_Assignments_OrganizationId_ClassId_Id | Alternate Key | OrganizationId, ClassId, Id |
+| UQ_Assignments_OrganizationId_ClassId_Id | Alternate Key | ContextKind, ContextId, ClassId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_Assignments_OrganizationId_ClassId | OrganizationId, ClassId | False | — |
 | IX_Assignments_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| IX_Assignments_Organization_Class_Status_UpdatedAt | OrganizationId, ClassId, Status, UpdatedAtUtc | False | — |
+| IX_Assignments_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| IX_Assignments_Organization_Class_Status_UpdatedAt | ContextKind, ContextId, ClassId, Status, UpdatedAtUtc | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_Assignments_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_Assignments_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_Assignments_CurrentVersionNumber | `[CurrentVersionNumber] > 0` |
+| CK_Assignments_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
 | CK_Assignments_PublicationState | `([Status] = 1 AND [PublishedAtUtc] IS NULL) OR ([Status] IN (2, 3, 4) AND [PublishedAtUtc] IS NOT NULL)` |
 | CK_Assignments_Status | `[Status] IN (1, 2, 3, 4)` |
 | CK_Assignments_UpdatedAt | `[UpdatedAtUtc] >= [CreatedAtUtc]` |
+
+### assessment.AssignmentVersionAttachments
+
+Entity: `MakanApp.Domain.Assessment.AssignmentVersionAttachment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AssignmentId | `uniqueidentifier` | خیر | خیر | Never |
+| AssignmentVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| AttachedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AssignmentVersionAttachments | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AssignmentVersionAttachments_FileAssetId | FileAssetId | False | — |
+| IX_AssignmentVersionAttachments_PersonalClassId | PersonalClassId | False | — |
+| IX_AssignmentVersionAttachments_AssignmentVersionId_FileAssetId | AssignmentVersionId, FileAssetId | True | — |
+| IX_AssignmentVersionAttachments_ContextKind_ContextId_AssignmentId_AssignmentVersionId | ContextKind, ContextId, AssignmentId, AssignmentVersionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, AssignmentId, AssignmentVersionId | assessment.AssignmentVersions | ContextKind, ContextId, AssignmentId, Id | Cascade |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AssignmentVersionAttachments_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 
 ### assessment.AssignmentVersions
 
@@ -877,14 +1240,18 @@ Entity: `MakanApp.Domain.Assessment.AssignmentVersion`؛ مالک نگاشت: [E
 | AllowLateSubmission | `bit` | خیر | خیر | Never |
 | AssignmentId | `uniqueidentifier` | خیر | خیر | Never |
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | Description | `nvarchar(max)` | خیر | خیر | Never |
 | DueAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | MaxAttempts | `int` | خیر | خیر | Never |
 | MaxScore | `decimal(9,2)` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | PublishedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Title | `nvarchar(200)` | خیر | خیر | Never |
@@ -895,30 +1262,37 @@ Entity: `MakanApp.Domain.Assessment.AssignmentVersion`؛ مالک نگاشت: [E
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_AssignmentVersions | PK | Id |
-| UQ_AssignmentVersions_Organization_Assignment_Id | Alternate Key | OrganizationId, AssignmentId, Id |
-| UQ_AssignmentVersions_Organization_Class_Assignment_Id | Alternate Key | OrganizationId, ClassId, AssignmentId, Id |
+| AK_AssignmentVersions_ContextKind_ContextId_Id | Alternate Key | ContextKind, ContextId, Id |
+| UQ_AssignmentVersions_Organization_Assignment_Id | Alternate Key | ContextKind, ContextId, AssignmentId, Id |
+| UQ_AssignmentVersions_Organization_Class_Assignment_Id | Alternate Key | ContextKind, ContextId, ClassId, AssignmentId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_AssignmentVersions_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| UX_AssignmentVersions_Organization_Assignment_VersionNumber | OrganizationId, AssignmentId, VersionNumber | True | — |
+| IX_AssignmentVersions_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| UX_AssignmentVersions_Organization_Assignment_VersionNumber | ContextKind, ContextId, AssignmentId, VersionNumber | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, ClassId, AssignmentId | assessment.Assignments | OrganizationId, ClassId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, ClassId, AssignmentId | assessment.Assignments | ContextKind, ContextId, ClassId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_AssignmentVersions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_AssignmentVersions_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_AssignmentVersions_DueAt | `[DueAtUtc] > [CreatedAtUtc]` |
 | CK_AssignmentVersions_MaxAttempts | `[MaxAttempts] > 0` |
 | CK_AssignmentVersions_MaxScore | `[MaxScore] > 0` |
+| CK_AssignmentVersions_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
 | CK_AssignmentVersions_PublishedDueAt | `[PublishedAtUtc] IS NULL OR [DueAtUtc] > [PublishedAtUtc]` |
 | CK_AssignmentVersions_VersionNumber | `[VersionNumber] > 0` |
 
@@ -928,13 +1302,17 @@ Entity: `MakanApp.Domain.Assessment.EvaluationRevision`؛ مالک نگاشت: [
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CorrectionReason | `nvarchar(1000)` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | GuardianVisibleFeedback | `nvarchar(max)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | LearnerFeedback | `nvarchar(max)` | بله | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | RevisionNumber | `int` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Score | `decimal(9,2)` | خیر | خیر | Never |
@@ -949,30 +1327,35 @@ Entity: `MakanApp.Domain.Assessment.EvaluationRevision`؛ مالک نگاشت: [
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_EvaluationRevisions | PK | Id |
-| UQ_EvaluationRevisions_Organization_Attempt_Id | Alternate Key | OrganizationId, SubmissionAttemptId, Id |
+| UQ_EvaluationRevisions_Organization_Attempt_Id | Alternate Key | ContextKind, ContextId, SubmissionAttemptId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_EvaluationRevisions_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| UX_EvaluationRevisions_Attempt_RevisionNumber | OrganizationId, SubmissionAttemptId, RevisionNumber | True | — |
-| UX_EvaluationRevisions_OneCurrentStatus | OrganizationId, SubmissionAttemptId, Status | True | [Status] IN (1, 2) |
-| IX_EvaluationRevisions_OrganizationId_SubmissionAttemptId_SupersedesEvaluationRevisionId | OrganizationId, SubmissionAttemptId, SupersedesEvaluationRevisionId | False | — |
+| IX_EvaluationRevisions_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| UX_EvaluationRevisions_Attempt_RevisionNumber | ContextKind, ContextId, SubmissionAttemptId, RevisionNumber | True | — |
+| UX_EvaluationRevisions_OneCurrentStatus | ContextKind, ContextId, SubmissionAttemptId, Status | True | [Status] IN (1, 2) |
+| IX_EvaluationRevisions_ContextKind_ContextId_SubmissionAttemptId_SupersedesEvaluationRevisionId | ContextKind, ContextId, SubmissionAttemptId, SupersedesEvaluationRevisionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, SubmissionAttemptId | assessment.SubmissionAttempts | OrganizationId, Id | Restrict |
-| OrganizationId, SubmissionAttemptId, SupersedesEvaluationRevisionId | assessment.EvaluationRevisions | OrganizationId, SubmissionAttemptId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, SubmissionAttemptId | assessment.SubmissionAttempts | ContextKind, ContextId, Id | Restrict |
+| ContextKind, ContextId, SubmissionAttemptId, SupersedesEvaluationRevisionId | assessment.EvaluationRevisions | ContextKind, ContextId, SubmissionAttemptId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_EvaluationRevisions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_EvaluationRevisions_Correction | `([RevisionNumber] = 1 AND [SupersedesEvaluationRevisionId] IS NULL AND [CorrectionReason] IS NULL) OR ([RevisionNumber] > 1 AND [SupersedesEvaluationRevisionId] IS NOT NULL AND [CorrectionReason] IS NOT NULL)` |
+| CK_EvaluationRevisions_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_EvaluationRevisions_RevisionNumber | `[RevisionNumber] > 0` |
 | CK_EvaluationRevisions_Score | `[Score] >= 0` |
 | CK_EvaluationRevisions_Status | `[Status] IN (1, 2, 3)` |
@@ -983,12 +1366,15 @@ Entity: `MakanApp.Domain.Assessment.ExamAttemptQuestion`؛ مالک نگاشت: 
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CurrentAnswerRevisionId | `uniqueidentifier` | بله | خیر | Never |
 | DisplayOrder | `int` | خیر | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | QuestionVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 
@@ -997,30 +1383,33 @@ Entity: `MakanApp.Domain.Assessment.ExamAttemptQuestion`؛ مالک نگاشت: 
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_ExamAttemptQuestions | PK | Id |
-| UQ_ExamAttemptQuestions_Organization_Attempt_Id_QuestionVersion | Alternate Key | OrganizationId, ExamAttemptId, Id, QuestionVersionId |
+| UQ_ExamAttemptQuestions_Organization_Attempt_Id_QuestionVersion | Alternate Key | ContextKind, ContextId, ExamAttemptId, Id, QuestionVersionId |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_ExamAttemptQuestions_Organization_Attempt_DisplayOrder | OrganizationId, ExamAttemptId, DisplayOrder | True | — |
-| UX_ExamAttemptQuestions_Organization_Attempt_Question | OrganizationId, ExamAttemptId, QuestionVersionId | True | — |
-| IX_ExamAttemptQuestions_OrganizationId_ExamVersionId_ExamAttemptId | OrganizationId, ExamVersionId, ExamAttemptId | False | — |
-| IX_ExamAttemptQuestions_OrganizationId_ExamVersionId_QuestionVersionId | OrganizationId, ExamVersionId, QuestionVersionId | False | — |
-| IX_ExamAttemptQuestions_OrganizationId_ExamAttemptId_Id_CurrentAnswerRevisionId | OrganizationId, ExamAttemptId, Id, CurrentAnswerRevisionId | False | — |
+| IX_ExamAttemptQuestions_PersonalClassId | PersonalClassId | False | — |
+| UX_ExamAttemptQuestions_Organization_Attempt_DisplayOrder | ContextKind, ContextId, ExamAttemptId, DisplayOrder | True | — |
+| UX_ExamAttemptQuestions_Organization_Attempt_Question | ContextKind, ContextId, ExamAttemptId, QuestionVersionId | True | — |
+| IX_ExamAttemptQuestions_ContextKind_ContextId_ExamVersionId_ExamAttemptId | ContextKind, ContextId, ExamVersionId, ExamAttemptId | False | — |
+| IX_ExamAttemptQuestions_ContextKind_ContextId_ExamVersionId_QuestionVersionId | ContextKind, ContextId, ExamVersionId, QuestionVersionId | False | — |
+| IX_ExamAttemptQuestions_ContextKind_ContextId_ExamAttemptId_Id_CurrentAnswerRevisionId | ContextKind, ContextId, ExamAttemptId, Id, CurrentAnswerRevisionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, ExamVersionId, ExamAttemptId | assessment.ExamAttempts | OrganizationId, ExamVersionId, Id | Cascade |
-| OrganizationId, ExamVersionId, QuestionVersionId | assessment.QuestionVersions | OrganizationId, ExamVersionId, Id | Restrict |
-| OrganizationId, ExamAttemptId, Id, CurrentAnswerRevisionId | assessment.AnswerRevisions | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, ExamVersionId, ExamAttemptId | assessment.ExamAttempts | ContextKind, ContextId, ExamVersionId, Id | Cascade |
+| ContextKind, ContextId, ExamVersionId, QuestionVersionId | assessment.QuestionVersions | ContextKind, ContextId, ExamVersionId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, Id, CurrentAnswerRevisionId | assessment.AnswerRevisions | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamAttemptQuestions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_ExamAttemptQuestions_DisplayOrder | `[DisplayOrder] > 0` |
 
 ### assessment.ExamAttempts
@@ -1031,11 +1420,14 @@ Entity: `MakanApp.Domain.Assessment.ExamAttempt`؛ مالک نگاشت: [EF Conf
 |---|---|---|---|---|
 | AnswerSetVersion | `bigint` | خیر | خیر | Never |
 | AttemptNumber | `int` | خیر | خیر | Never |
+| AutoFinalizedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | EffectiveDeadlineUtc | `datetime2(7)` | خیر | خیر | Never |
-| EnrollmentId | `uniqueidentifier` | خیر | خیر | Never |
+| EnrollmentId | `uniqueidentifier` | بله | خیر | Never |
 | ExamId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | ExpiredAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -1045,7 +1437,10 @@ Entity: `MakanApp.Domain.Assessment.ExamAttempt`؛ مالک نگاشت: [EF Conf
 | FinalizedBySessionId | `uniqueidentifier` | بله | خیر | Never |
 | FinalizeRequestHash | `varchar(64)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| ParticipantId | `uniqueidentifier` | خیر | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | StartedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
@@ -1058,8 +1453,8 @@ Entity: `MakanApp.Domain.Assessment.ExamAttempt`؛ مالک نگاشت: [EF Conf
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_ExamAttempts | PK | Id |
-| UQ_ExamAttempts_Organization_Id | Alternate Key | OrganizationId, Id |
-| UQ_ExamAttempts_Organization_ExamVersion_Id | Alternate Key | OrganizationId, ExamVersionId, Id |
+| UQ_ExamAttempts_Organization_Id | Alternate Key | ContextKind, ContextId, Id |
+| UQ_ExamAttempts_Organization_ExamVersion_Id | Alternate Key | ContextKind, ContextId, ExamVersionId, Id |
 
 Indexها:
 
@@ -1067,35 +1462,42 @@ Indexها:
 |---|---|---|---|
 | IX_ExamAttempts_FinalizedBySessionId | FinalizedBySessionId | False | — |
 | IX_ExamAttempts_WriterSessionId | WriterSessionId | False | — |
+| IX_ExamAttempts_PersonalClassId_PersonalClassMembershipId | PersonalClassId, PersonalClassMembershipId | False | — |
+| IX_ExamAttempts_ContextKind_Status_EffectiveDeadlineUtc | ContextKind, Status, EffectiveDeadlineUtc | False | — |
 | IX_ExamAttempts_OrganizationId_ClassId_EnrollmentId | OrganizationId, ClassId, EnrollmentId | False | — |
-| IX_ExamAttempts_OrganizationId_ClassId_ExamId | OrganizationId, ClassId, ExamId | False | — |
-| UX_ExamAttempts_Organization_Enrollment_ClientOperation | OrganizationId, EnrollmentId, ClientOperationId | True | — |
-| UX_ExamAttempts_Organization_Exam_Enrollment_Active | OrganizationId, ExamId, EnrollmentId | True | [Status] = 1 |
-| IX_ExamAttempts_OrganizationId_ExamId_ExamVersionId | OrganizationId, ExamId, ExamVersionId | False | — |
-| UX_ExamAttempts_Organization_Exam_Enrollment_Number | OrganizationId, ExamId, EnrollmentId, AttemptNumber | True | — |
+| IX_ExamAttempts_ContextKind_ContextId_ClassId_ExamId | ContextKind, ContextId, ClassId, ExamId | False | — |
+| IX_ExamAttempts_ContextKind_ContextId_ExamId_ExamVersionId | ContextKind, ContextId, ExamId, ExamVersionId | False | — |
+| UX_ExamAttempts_Organization_Exam_Enrollment_Active | ContextKind, ContextId, ExamId, ParticipantId | True | [Status] = 1 |
+| UX_ExamAttempts_Organization_Enrollment_ClientOperation | ContextKind, ContextId, ParticipantId, ClientOperationId | True | — |
+| UX_ExamAttempts_Organization_Exam_Enrollment_Number | ContextKind, ContextId, ExamId, ParticipantId, AttemptNumber | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | FinalizedBySessionId | identity.UserSessions | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | WriterSessionId | identity.UserSessions | Id | Restrict |
+| PersonalClassId, PersonalClassMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
 | OrganizationId, ClassId, EnrollmentId | academic.Enrollments | OrganizationId, ClassId, Id | Restrict |
-| OrganizationId, ClassId, ExamId | assessment.Exams | OrganizationId, ClassId, Id | Restrict |
-| OrganizationId, ExamId, ExamVersionId | assessment.ExamVersions | OrganizationId, ExamId, Id | Restrict |
+| ContextKind, ContextId, ClassId, ExamId | assessment.Exams | ContextKind, ContextId, ClassId, Id | Restrict |
+| ContextKind, ContextId, ExamId, ExamVersionId | assessment.ExamVersions | ContextKind, ContextId, ExamId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamAttempts_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_ExamAttempts_AnswerSetVersion | `[AnswerSetVersion] >= 0` |
 | CK_ExamAttempts_AttemptNumber | `[AttemptNumber] > 0` |
 | CK_ExamAttempts_Deadline | `[EffectiveDeadlineUtc] > [StartedAtUtc]` |
 | CK_ExamAttempts_ExpirationState | `([Status] IN (1, 3) AND [ExpiredAtUtc] IS NULL) OR ([Status] = 2 AND [ExpiredAtUtc] IS NOT NULL)` |
-| CK_ExamAttempts_FinalizationState | `([Status] = 3 AND [FinalizedAtUtc] IS NOT NULL AND [FinalizedAnswerSetVersion] IS NOT NULL AND [FinalizeClientOperationId] IS NOT NULL AND [FinalizeRequestHash] IS NOT NULL AND [FinalizedBySessionId] IS NOT NULL) OR ([Status] <> 3 AND [FinalizedAtUtc] IS NULL AND [FinalizedAnswerSetVersion] IS NULL AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL)` |
+| CK_ExamAttempts_FinalizationState | `([Status] = 3 AND [FinalizedAtUtc] IS NOT NULL AND [FinalizedAnswerSetVersion] IS NOT NULL AND (([AutoFinalizedAtUtc] IS NULL AND [FinalizeClientOperationId] IS NOT NULL AND [FinalizeRequestHash] IS NOT NULL AND [FinalizedBySessionId] IS NOT NULL) OR ([AutoFinalizedAtUtc] IS NOT NULL AND [ContextKind] = 2 AND [AutoFinalizedAtUtc] >= [EffectiveDeadlineUtc] AND [FinalizedAtUtc] = [EffectiveDeadlineUtc] AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL))) OR ([Status] <> 3 AND [FinalizedAtUtc] IS NULL AND [AutoFinalizedAtUtc] IS NULL AND [FinalizedAnswerSetVersion] IS NULL AND [FinalizeClientOperationId] IS NULL AND [FinalizeRequestHash] IS NULL AND [FinalizedBySessionId] IS NULL)` |
 | CK_ExamAttempts_FinalizeRequestHash | `[FinalizeRequestHash] IS NULL OR LEN([FinalizeRequestHash]) = 64` |
 | CK_ExamAttempts_FinalizedAnswerSetVersion | `[FinalizedAnswerSetVersion] IS NULL OR ([FinalizedAnswerSetVersion] >= 0 AND [FinalizedAnswerSetVersion] = [AnswerSetVersion])` |
-| CK_ExamAttempts_FinalizedBeforeDeadline | `[FinalizedAtUtc] IS NULL OR [FinalizedAtUtc] < [EffectiveDeadlineUtc]` |
+| CK_ExamAttempts_FinalizedBeforeDeadline | `[FinalizedAtUtc] IS NULL OR ([AutoFinalizedAtUtc] IS NULL AND [FinalizedAtUtc] < [EffectiveDeadlineUtc]) OR ([AutoFinalizedAtUtc] IS NOT NULL AND [FinalizedAtUtc] = [EffectiveDeadlineUtc])` |
+| CK_ExamAttempts_Participation | `([ContextKind] = 1 AND [EnrollmentId] IS NOT NULL AND [ParticipantId] = [EnrollmentId] AND [PersonalClassMembershipId] IS NULL) OR ([ContextKind] = 2 AND [EnrollmentId] IS NULL AND [PersonalClassMembershipId] IS NOT NULL AND [ParticipantId] = [PersonalClassMembershipId])` |
+| CK_ExamAttempts_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
 | CK_ExamAttempts_Status | `[Status] IN (1, 2, 3)` |
 | CK_ExamAttempts_WriteLeaseState | `([WriterSessionId] IS NULL AND [WriteLeaseVersion] = 0 AND [WriteLeaseAcquiredAtUtc] IS NULL) OR ([WriterSessionId] IS NOT NULL AND [WriteLeaseVersion] > 0 AND [WriteLeaseAcquiredAtUtc] IS NOT NULL)` |
 | CK_ExamAttempts_WriteLeaseVersion | `[WriteLeaseVersion] >= 0` |
@@ -1107,31 +1509,42 @@ Entity: `MakanApp.Domain.Assessment.ExamFinalAnswer`؛ مالک نگاشت: [EF 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AnswerRevisionId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamAttemptQuestionId | `uniqueidentifier` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | QuestionVersionId | `uniqueidentifier` | خیر | خیر | Never |
 
 کلیدها:
 
 | نام | نوع | ستون‌ها |
 |---|---|---|
-| PK_ExamFinalAnswers | PK | OrganizationId, ExamAttemptId, ExamAttemptQuestionId |
+| PK_ExamFinalAnswers | PK | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| IX_ExamFinalAnswers_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | False | — |
-| IX_ExamFinalAnswers_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
+| IX_ExamFinalAnswers_PersonalClassId | PersonalClassId | False | — |
+| IX_ExamFinalAnswers_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_AnswerRevisionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | False | — |
+| IX_ExamFinalAnswers_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, ExamAttemptId | assessment.ExamAttempts | OrganizationId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | assessment.AnswerRevisions | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | OrganizationId, ExamAttemptId, Id, QuestionVersionId | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId | assessment.ExamAttempts | ContextKind, ContextId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, AnswerRevisionId | assessment.AnswerRevisions | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | ContextKind, ContextId, ExamAttemptId, Id, QuestionVersionId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ExamFinalAnswers_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 
 ### assessment.ExamGradeReleases
 
@@ -1140,12 +1553,16 @@ Entity: `MakanApp.Domain.Assessment.ExamGradeRelease`؛ مالک نگاشت: [EF
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamGradeRevisionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | ReleasedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| ReleasedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| ReleasedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| ReleasedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | RequestHash | `varchar(64)` | خیر | خیر | Never |
 
 کلیدها:
@@ -1158,23 +1575,28 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_ExamGradeReleases_Organization_Revision | OrganizationId, ExamGradeRevisionId | True | — |
 | IX_ExamGradeReleases_OrganizationId_ReleasedByMembershipId | OrganizationId, ReleasedByMembershipId | False | — |
-| UX_ExamGradeReleases_Attempt_ClientOperation | OrganizationId, ExamAttemptId, ClientOperationId | True | — |
-| IX_ExamGradeReleases_OrganizationId_ExamAttemptId_ExamGradeRevisionId | OrganizationId, ExamAttemptId, ExamGradeRevisionId | False | — |
-| IX_ExamGradeReleases_Attempt_ReleasedAtUtc | OrganizationId, ExamAttemptId, ReleasedAtUtc | False | — |
+| IX_ExamGradeReleases_PersonalClassId_ReleasedByPersonalMembershipId | PersonalClassId, ReleasedByPersonalMembershipId | False | — |
+| UX_ExamGradeReleases_Organization_Revision | ContextKind, ContextId, ExamGradeRevisionId | True | — |
+| UX_ExamGradeReleases_Attempt_ClientOperation | ContextKind, ContextId, ExamAttemptId, ClientOperationId | True | — |
+| IX_ExamGradeReleases_ContextKind_ContextId_ExamAttemptId_ExamGradeRevisionId | ContextKind, ContextId, ExamAttemptId, ExamGradeRevisionId | False | — |
+| IX_ExamGradeReleases_Attempt_ReleasedAtUtc | ContextKind, ContextId, ExamAttemptId, ReleasedAtUtc | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, ReleasedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamGradeRevisionId | assessment.ExamGradeRevisions | OrganizationId, ExamAttemptId, Id | Restrict |
+| PersonalClassId, ReleasedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamGradeRevisionId | assessment.ExamGradeRevisions | ContextKind, ContextId, ExamAttemptId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamGradeReleases_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_ExamGradeReleases_ReleasedByActor | `([ContextKind] = 1 AND [ReleasedByMembershipId] IS NOT NULL AND [ReleasedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [ReleasedByMembershipId] IS NULL AND [ReleasedByPersonalMembershipId] IS NOT NULL)` |
 | CK_ExamGradeReleases_RequestHash | `LEN([RequestHash]) = 64` |
 
 ### assessment.ExamGradeRevisions
@@ -1183,15 +1605,19 @@ Entity: `MakanApp.Domain.Assessment.ExamGradeRevision`؛ مالک نگاشت: [E
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CorrectionReason | `nvarchar(1000)` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | EvaluatorPrivateNote | `nvarchar(max)` | بله | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | GuardianVisibleFeedback | `nvarchar(max)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | LearnerFeedback | `nvarchar(max)` | بله | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | RevisionNumber | `int` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Status | `int` | خیر | خیر | Never |
@@ -1204,31 +1630,36 @@ Entity: `MakanApp.Domain.Assessment.ExamGradeRevision`؛ مالک نگاشت: [E
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_ExamGradeRevisions | PK | Id |
-| UQ_ExamGradeRevisions_Organization_Attempt_Id | Alternate Key | OrganizationId, ExamAttemptId, Id |
+| UQ_ExamGradeRevisions_Organization_Attempt_Id | Alternate Key | ContextKind, ContextId, ExamAttemptId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_ExamGradeRevisions_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| UX_ExamGradeRevisions_OneMutable | OrganizationId, ExamAttemptId | True | [Status] IN (1, 2) |
-| UX_ExamGradeRevisions_Attempt_RevisionNumber | OrganizationId, ExamAttemptId, RevisionNumber | True | — |
-| UX_ExamGradeRevisions_OneReleased | OrganizationId, ExamAttemptId, Status | True | [Status] = 3 |
-| IX_ExamGradeRevisions_OrganizationId_ExamAttemptId_SupersedesExamGradeRevisionId | OrganizationId, ExamAttemptId, SupersedesExamGradeRevisionId | False | — |
+| IX_ExamGradeRevisions_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| UX_ExamGradeRevisions_OneMutable | ContextKind, ContextId, ExamAttemptId | True | [Status] IN (1, 2) |
+| UX_ExamGradeRevisions_Attempt_RevisionNumber | ContextKind, ContextId, ExamAttemptId, RevisionNumber | True | — |
+| UX_ExamGradeRevisions_OneReleased | ContextKind, ContextId, ExamAttemptId, Status | True | [Status] = 3 |
+| IX_ExamGradeRevisions_ContextKind_ContextId_ExamAttemptId_SupersedesExamGradeRevisionId | ContextKind, ContextId, ExamAttemptId, SupersedesExamGradeRevisionId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, ExamAttemptId | assessment.ExamAttempts | OrganizationId, Id | Restrict |
-| OrganizationId, ExamAttemptId, SupersedesExamGradeRevisionId | assessment.ExamGradeRevisions | OrganizationId, ExamAttemptId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId | assessment.ExamAttempts | ContextKind, ContextId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, SupersedesExamGradeRevisionId | assessment.ExamGradeRevisions | ContextKind, ContextId, ExamAttemptId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamGradeRevisions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_ExamGradeRevisions_Correction | `([RevisionNumber] = 1 AND [SupersedesExamGradeRevisionId] IS NULL AND [CorrectionReason] IS NULL) OR ([RevisionNumber] > 1 AND [SupersedesExamGradeRevisionId] IS NOT NULL AND [CorrectionReason] IS NOT NULL)` |
+| CK_ExamGradeRevisions_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_ExamGradeRevisions_RevisionNumber | `[RevisionNumber] > 0` |
 | CK_ExamGradeRevisions_Status | `[Status] IN (1, 2, 3, 4)` |
 | CK_ExamGradeRevisions_TotalScore | `[TotalScore] >= 0` |
@@ -1241,6 +1672,8 @@ Entity: `MakanApp.Domain.Assessment.ExamQuestionGrade`؛ مالک نگاشت: [E
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AwardedScore | `decimal(9,2)` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | EvaluatorPrivateNote | `nvarchar(max)` | بله | خیر | Never |
 | ExamAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | ExamAttemptQuestionId | `uniqueidentifier` | خیر | خیر | Never |
@@ -1251,10 +1684,12 @@ Entity: `MakanApp.Domain.Assessment.ExamQuestionGrade`؛ مالک نگاشت: [E
 | IsReviewed | `bit` | خیر | خیر | Never |
 | LearnerFeedback | `nvarchar(max)` | بله | خیر | Never |
 | MaximumScore | `decimal(9,2)` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | QuestionVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | ReviewedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ReviewedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| ReviewedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 
 کلیدها:
 
@@ -1267,26 +1702,31 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_ExamQuestionGrades_OrganizationId_ReviewedByMembershipId | OrganizationId, ReviewedByMembershipId | False | — |
-| IX_ExamQuestionGrades_OrganizationId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
-| UX_ExamQuestionGrades_Revision_AttemptQuestion | OrganizationId, ExamAttemptId, ExamGradeRevisionId, ExamAttemptQuestionId | True | — |
+| IX_ExamQuestionGrades_PersonalClassId_ReviewedByPersonalMembershipId | PersonalClassId, ReviewedByPersonalMembershipId | False | — |
+| IX_ExamQuestionGrades_ContextKind_ContextId_ExamAttemptId_ExamAttemptQuestionId_QuestionVersionId | ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | False | — |
+| UX_ExamQuestionGrades_Revision_AttemptQuestion | ContextKind, ContextId, ExamAttemptId, ExamGradeRevisionId, ExamAttemptQuestionId | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, ReviewedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamGradeRevisionId | assessment.ExamGradeRevisions | OrganizationId, ExamAttemptId, Id | Restrict |
-| OrganizationId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | OrganizationId, ExamAttemptId, Id, QuestionVersionId | Restrict |
+| PersonalClassId, ReviewedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamGradeRevisionId | assessment.ExamGradeRevisions | ContextKind, ContextId, ExamAttemptId, Id | Restrict |
+| ContextKind, ContextId, ExamAttemptId, ExamAttemptQuestionId, QuestionVersionId | assessment.ExamAttemptQuestions | ContextKind, ContextId, ExamAttemptId, Id, QuestionVersionId | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamQuestionGrades_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_ExamQuestionGrades_AwardedScore | `[AwardedScore] >= 0 AND [AwardedScore] <= [MaximumScore]` |
 | CK_ExamQuestionGrades_GradingMode | `[GradingMode] IN (1, 2)` |
 | CK_ExamQuestionGrades_MaximumScore | `[MaximumScore] > 0` |
 | CK_ExamQuestionGrades_ObjectiveReviewed | `[GradingMode] <> 1 OR [IsReviewed] = 1` |
-| CK_ExamQuestionGrades_ReviewState | `([IsReviewed] = 0 AND [ReviewedByMembershipId] IS NULL AND [ReviewedAtUtc] IS NULL) OR ([IsReviewed] = 1 AND [ReviewedByMembershipId] IS NOT NULL AND [ReviewedAtUtc] IS NOT NULL)` |
+| CK_ExamQuestionGrades_ReviewState | `([IsReviewed] = 0 AND COALESCE([ReviewedByMembershipId], [ReviewedByPersonalMembershipId]) IS NULL AND [ReviewedAtUtc] IS NULL) OR ([IsReviewed] = 1 AND COALESCE([ReviewedByMembershipId], [ReviewedByPersonalMembershipId]) IS NOT NULL AND [ReviewedAtUtc] IS NOT NULL)` |
+| CK_ExamQuestionGrades_ReviewedByActor | `([ContextKind] = 1 AND [ReviewedByMembershipId] IS NOT NULL AND [ReviewedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [ReviewedByMembershipId] IS NULL AND [ReviewedByPersonalMembershipId] IS NOT NULL) OR ([ReviewedByMembershipId] IS NULL AND [ReviewedByPersonalMembershipId] IS NULL)` |
 
 ### assessment.Exams
 
@@ -1295,12 +1735,16 @@ Entity: `MakanApp.Domain.Assessment.Exam`؛ مالک نگاشت: [EF Configurati
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | CurrentVersionNumber | `int` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | LatestPublishedVersionNumber | `int` | بله | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Status | `int` | خیر | خیر | Never |
 
@@ -1309,28 +1753,35 @@ Entity: `MakanApp.Domain.Assessment.Exam`؛ مالک نگاشت: [EF Configurati
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_Exams | PK | Id |
-| UQ_Exams_OrganizationId_Id | Alternate Key | OrganizationId, Id |
-| UQ_Exams_Organization_Class_Id | Alternate Key | OrganizationId, ClassId, Id |
+| UQ_Exams_OrganizationId_Id | Alternate Key | ContextKind, ContextId, Id |
+| UQ_Exams_Organization_Class_Id | Alternate Key | ContextKind, ContextId, ClassId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_Exams_OrganizationId_ClassId | OrganizationId, ClassId | False | — |
 | IX_Exams_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| IX_Exams_Organization_Class_Status | OrganizationId, ClassId, Status | False | — |
+| IX_Exams_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| IX_Exams_Organization_Class_Status | ContextKind, ContextId, ClassId, Status | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_Exams_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_Exams_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_Exams_CurrentVersionNumber | `[CurrentVersionNumber] > 0` |
+| CK_Exams_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
 | CK_Exams_PublicationState | `([Status] = 1 AND [LatestPublishedVersionNumber] IS NULL) OR ([Status] = 2 AND [LatestPublishedVersionNumber] IS NOT NULL)` |
 | CK_Exams_PublishedVersion | `[LatestPublishedVersionNumber] IS NULL OR ([LatestPublishedVersionNumber] > 0 AND [LatestPublishedVersionNumber] <= [CurrentVersionNumber])` |
 | CK_Exams_Status | `[Status] IN (1, 2)` |
@@ -1343,15 +1794,19 @@ Entity: `MakanApp.Domain.Assessment.ExamVersion`؛ مالک نگاشت: [EF Conf
 |---|---|---|---|---|
 | AvailableFromUtc | `datetime2(7)` | خیر | خیر | Never |
 | AvailableUntilUtc | `datetime2(7)` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| CreatedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | Description | `nvarchar(max)` | بله | خیر | Never |
 | DurationMinutes | `int` | خیر | خیر | Never |
 | ExamId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | MaxAttempts | `int` | خیر | خیر | Never |
 | MaxScore | `decimal(9,2)` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | PublishedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RandomizationPolicy | `int` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
@@ -1365,28 +1820,33 @@ Entity: `MakanApp.Domain.Assessment.ExamVersion`؛ مالک نگاشت: [EF Conf
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_ExamVersions | PK | Id |
-| UQ_ExamVersions_OrganizationId_Id | Alternate Key | OrganizationId, Id |
-| UQ_ExamVersions_Organization_Exam_Id | Alternate Key | OrganizationId, ExamId, Id |
+| UQ_ExamVersions_OrganizationId_Id | Alternate Key | ContextKind, ContextId, Id |
+| UQ_ExamVersions_Organization_Exam_Id | Alternate Key | ContextKind, ContextId, ExamId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_ExamVersions_OrganizationId_CreatedByMembershipId | OrganizationId, CreatedByMembershipId | False | — |
-| UX_ExamVersions_Organization_Exam_ActiveDraft | OrganizationId, ExamId | True | [Status] = 1 |
-| UX_ExamVersions_Organization_Exam_VersionNumber | OrganizationId, ExamId, VersionNumber | True | — |
+| IX_ExamVersions_PersonalClassId_CreatedByPersonalMembershipId | PersonalClassId, CreatedByPersonalMembershipId | False | — |
+| UX_ExamVersions_Organization_Exam_ActiveDraft | ContextKind, ContextId, ExamId | True | [Status] = 1 |
+| UX_ExamVersions_Organization_Exam_VersionNumber | ContextKind, ContextId, ExamId, VersionNumber | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, CreatedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, ExamId | assessment.Exams | OrganizationId, Id | Restrict |
+| PersonalClassId, CreatedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, ExamId | assessment.Exams | ContextKind, ContextId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_ExamVersions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_ExamVersions_CreatedByActor | `([ContextKind] = 1 AND [CreatedByMembershipId] IS NOT NULL AND [CreatedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [CreatedByMembershipId] IS NULL AND [CreatedByPersonalMembershipId] IS NOT NULL)` |
 | CK_ExamVersions_Duration | `[DurationMinutes] > 0` |
 | CK_ExamVersions_MaxAttempts | `[MaxAttempts] > 0` |
 | CK_ExamVersions_MaxScore | `[MaxScore] > 0` |
@@ -1403,11 +1863,15 @@ Entity: `MakanApp.Domain.Assessment.GradeRelease`؛ مالک نگاشت: [EF Con
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | EvaluationRevisionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | ReleasedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| ReleasedByMembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| ReleasedByMembershipId | `uniqueidentifier` | بله | خیر | Never |
+| ReleasedByPersonalMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | SubmissionAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 
 کلیدها:
@@ -1420,17 +1884,27 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_GradeReleases_Organization_EvaluationRevision | OrganizationId, EvaluationRevisionId | True | — |
 | IX_GradeReleases_OrganizationId_ReleasedByMembershipId | OrganizationId, ReleasedByMembershipId | False | — |
-| IX_GradeReleases_OrganizationId_SubmissionAttemptId_EvaluationRevisionId | OrganizationId, SubmissionAttemptId, EvaluationRevisionId | False | — |
-| IX_GradeReleases_Attempt_ReleasedAtUtc | OrganizationId, SubmissionAttemptId, ReleasedAtUtc | False | — |
+| IX_GradeReleases_PersonalClassId_ReleasedByPersonalMembershipId | PersonalClassId, ReleasedByPersonalMembershipId | False | — |
+| UX_GradeReleases_Organization_EvaluationRevision | ContextKind, ContextId, EvaluationRevisionId | True | — |
+| IX_GradeReleases_ContextKind_ContextId_SubmissionAttemptId_EvaluationRevisionId | ContextKind, ContextId, SubmissionAttemptId, EvaluationRevisionId | False | — |
+| IX_GradeReleases_Attempt_ReleasedAtUtc | ContextKind, ContextId, SubmissionAttemptId, ReleasedAtUtc | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
 | OrganizationId, ReleasedByMembershipId | organization.Memberships | OrganizationId, Id | Restrict |
-| OrganizationId, SubmissionAttemptId, EvaluationRevisionId | assessment.EvaluationRevisions | OrganizationId, SubmissionAttemptId, Id | Restrict |
+| PersonalClassId, ReleasedByPersonalMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, SubmissionAttemptId, EvaluationRevisionId | assessment.EvaluationRevisions | ContextKind, ContextId, SubmissionAttemptId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_GradeReleases_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_GradeReleases_ReleasedByActor | `([ContextKind] = 1 AND [ReleasedByMembershipId] IS NOT NULL AND [ReleasedByPersonalMembershipId] IS NULL) OR ([ContextKind] = 2 AND [ReleasedByMembershipId] IS NULL AND [ReleasedByPersonalMembershipId] IS NOT NULL)` |
 
 ### assessment.QuestionOptions
 
@@ -1438,10 +1912,13 @@ Entity: `MakanApp.Domain.Assessment.QuestionOption`؛ مالک نگاشت: [EF C
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | IsCorrect | `bit` | خیر | خیر | Never |
 | Order | `int` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | QuestionVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | Text | `nvarchar(2000)` | خیر | خیر | Never |
 
@@ -1450,24 +1927,27 @@ Entity: `MakanApp.Domain.Assessment.QuestionOption`؛ مالک نگاشت: [EF C
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_QuestionOptions | PK | Id |
-| UQ_QuestionOptions_Organization_QuestionVersion_Id | Alternate Key | OrganizationId, QuestionVersionId, Id |
+| UQ_QuestionOptions_Organization_QuestionVersion_Id | Alternate Key | ContextKind, ContextId, QuestionVersionId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_QuestionOptions_Organization_Question_Order | OrganizationId, QuestionVersionId, Order | True | — |
+| IX_QuestionOptions_PersonalClassId | PersonalClassId | False | — |
+| UX_QuestionOptions_Organization_Question_Order | ContextKind, ContextId, QuestionVersionId, Order | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, QuestionVersionId | assessment.QuestionVersions | OrganizationId, Id | Cascade |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, QuestionVersionId | assessment.QuestionVersions | ContextKind, ContextId, Id | Cascade |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_QuestionOptions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_QuestionOptions_Order | `[Order] > 0` |
 
 ### assessment.QuestionVersions
@@ -1479,13 +1959,16 @@ Entity: `MakanApp.Domain.Assessment.QuestionVersion`؛ مالک نگاشت: [EF 
 | AllowedAnswerContentTypes | `nvarchar(2048)` | بله | خیر | Never |
 | AnswerTextRequired | `bit` | خیر | خیر | OnAdd |
 | AttachmentsAllowed | `bit` | خیر | خیر | OnAdd |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | ExamVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | MaximumAnswerAttachmentBytes | `bigint` | بله | خیر | Never |
 | MaximumAnswerAttachmentCount | `int` | بله | خیر | Never |
 | Order | `int` | خیر | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | Prompt | `nvarchar(max)` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Score | `decimal(9,2)` | خیر | خیر | Never |
@@ -1496,25 +1979,28 @@ Entity: `MakanApp.Domain.Assessment.QuestionVersion`؛ مالک نگاشت: [EF 
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_QuestionVersions | PK | Id |
-| UQ_QuestionVersions_OrganizationId_Id | Alternate Key | OrganizationId, Id |
-| UQ_QuestionVersions_Organization_ExamVersion_Id | Alternate Key | OrganizationId, ExamVersionId, Id |
+| UQ_QuestionVersions_OrganizationId_Id | Alternate Key | ContextKind, ContextId, Id |
+| UQ_QuestionVersions_Organization_ExamVersion_Id | Alternate Key | ContextKind, ContextId, ExamVersionId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_QuestionVersions_Organization_ExamVersion_Order | OrganizationId, ExamVersionId, Order | True | — |
+| IX_QuestionVersions_PersonalClassId | PersonalClassId | False | — |
+| UX_QuestionVersions_Organization_ExamVersion_Order | ContextKind, ContextId, ExamVersionId, Order | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, ExamVersionId | assessment.ExamVersions | OrganizationId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, ExamVersionId | assessment.ExamVersions | ContextKind, ContextId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_QuestionVersions_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_QuestionVersions_AttachmentPolicy | `([AttachmentsAllowed] = 0 AND [AnswerTextRequired] = 0 AND [MaximumAnswerAttachmentCount] IS NULL AND [MaximumAnswerAttachmentBytes] IS NULL AND [AllowedAnswerContentTypes] IS NULL) OR ([AttachmentsAllowed] = 1 AND [MaximumAnswerAttachmentCount] IS NOT NULL AND [MaximumAnswerAttachmentCount] > 0 AND [MaximumAnswerAttachmentBytes] IS NOT NULL AND [MaximumAnswerAttachmentBytes] > 0 AND [AllowedAnswerContentTypes] IS NOT NULL AND LEN([AllowedAnswerContentTypes]) > 0 AND ([Type] = 2 OR [AnswerTextRequired] = 0))` |
 | CK_QuestionVersions_Order | `[Order] > 0` |
 | CK_QuestionVersions_Score | `[Score] > 0` |
@@ -1527,9 +2013,12 @@ Entity: `MakanApp.Domain.Assessment.SubmissionAttachment`؛ مالک نگاشت:
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AttachedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
 | SubmissionAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 
 کلیدها:
@@ -1543,14 +2032,22 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_SubmissionAttachments_FileAssetId | FileAssetId | False | — |
-| UX_SubmissionAttachments_Attempt_FileAsset | OrganizationId, SubmissionAttemptId, FileAssetId | True | — |
+| IX_SubmissionAttachments_PersonalClassId | PersonalClassId | False | — |
+| UX_SubmissionAttachments_Attempt_FileAsset | ContextKind, ContextId, SubmissionAttemptId, FileAssetId | True | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | FileAssetId | storage.FileAssets | Id | Restrict |
-| OrganizationId, SubmissionAttemptId | assessment.SubmissionAttempts | OrganizationId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| ContextKind, ContextId, SubmissionAttemptId | assessment.SubmissionAttempts | ContextKind, ContextId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SubmissionAttachments_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 
 ### assessment.SubmissionAttempts
 
@@ -1563,12 +2060,17 @@ Entity: `MakanApp.Domain.Assessment.SubmissionAttempt`؛ مالک نگاشت: [E
 | AssignmentRecipientId | `uniqueidentifier` | خیر | خیر | Never |
 | AssignmentVersionId | `uniqueidentifier` | خیر | خیر | Never |
 | AttemptNumber | `int` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
-| EnrollmentId | `uniqueidentifier` | خیر | خیر | Never |
+| EnrollmentId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | IsLate | `bit` | خیر | خیر | Never |
 | LastSavedAtUtc | `datetime2(7)` | بله | خیر | Never |
-| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| ParticipantId | `uniqueidentifier` | خیر | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | Status | `int` | خیر | خیر | Never |
 | SubmittedAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -1578,29 +2080,34 @@ Entity: `MakanApp.Domain.Assessment.SubmissionAttempt`؛ مالک نگاشت: [E
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_SubmissionAttempts | PK | Id |
-| UQ_SubmissionAttempts_Organization_Id | Alternate Key | OrganizationId, Id |
+| UQ_SubmissionAttempts_Organization_Id | Alternate Key | ContextKind, ContextId, Id |
 
 Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
-| UX_SubmissionAttempts_OneDraft | OrganizationId, AssignmentRecipientId, AssignmentVersionId | True | [Status] = 1 |
-| IX_SubmissionAttempts_Assignment_Status_SubmittedAtUtc | OrganizationId, AssignmentId, Status, SubmittedAtUtc | False | — |
-| UX_SubmissionAttempts_Recipient_Version_Number | OrganizationId, AssignmentRecipientId, AssignmentVersionId, AttemptNumber | True | — |
-| IX_SubmissionAttempts_OrganizationId_AssignmentId_AssignmentVersionId_EnrollmentId_AssignmentRecipientId | OrganizationId, AssignmentId, AssignmentVersionId, EnrollmentId, AssignmentRecipientId | False | — |
+| IX_SubmissionAttempts_PersonalClassId_PersonalClassMembershipId | PersonalClassId, PersonalClassMembershipId | False | — |
+| UX_SubmissionAttempts_OneDraft | ContextKind, ContextId, AssignmentRecipientId, AssignmentVersionId | True | [Status] = 1 |
+| IX_SubmissionAttempts_Assignment_Status_SubmittedAtUtc | ContextKind, ContextId, AssignmentId, Status, SubmittedAtUtc | False | — |
+| UX_SubmissionAttempts_Recipient_Version_Number | ContextKind, ContextId, AssignmentRecipientId, AssignmentVersionId, AttemptNumber | True | — |
+| IX_SubmissionAttempts_ContextKind_ContextId_AssignmentId_AssignmentVersionId_ParticipantId_AssignmentRecipientId | ContextKind, ContextId, AssignmentId, AssignmentVersionId, ParticipantId, AssignmentRecipientId | False | — |
 
 روابط:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
-| OrganizationId, AssignmentId, AssignmentVersionId | assessment.AssignmentVersions | OrganizationId, AssignmentId, Id | Restrict |
-| OrganizationId, AssignmentId, AssignmentVersionId, EnrollmentId, AssignmentRecipientId | assessment.AssignmentRecipients | OrganizationId, AssignmentId, AssignmentVersionId, EnrollmentId, Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| PersonalClassId, PersonalClassMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
+| ContextKind, ContextId, AssignmentId, AssignmentVersionId | assessment.AssignmentVersions | ContextKind, ContextId, AssignmentId, Id | Restrict |
+| ContextKind, ContextId, AssignmentId, AssignmentVersionId, ParticipantId, AssignmentRecipientId | assessment.AssignmentRecipients | ContextKind, ContextId, AssignmentId, AssignmentVersionId, ParticipantId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_SubmissionAttempts_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
 | CK_SubmissionAttempts_AttemptNumber | `[AttemptNumber] > 0` |
+| CK_SubmissionAttempts_Participation | `([ContextKind] = 1 AND [EnrollmentId] IS NOT NULL AND [ParticipantId] = [EnrollmentId] AND [PersonalClassMembershipId] IS NULL) OR ([ContextKind] = 2 AND [EnrollmentId] IS NULL AND [PersonalClassMembershipId] IS NOT NULL AND [ParticipantId] = [PersonalClassMembershipId])` |
 | CK_SubmissionAttempts_State | `([Status] = 1 AND [SubmittedAtUtc] IS NULL AND [IsLate] = 0) OR ([Status] = 2 AND [SubmittedAtUtc] IS NOT NULL)` |
 | CK_SubmissionAttempts_Status | `[Status] IN (1, 2)` |
 | CK_SubmissionAttempts_Timestamps | `[LastSavedAtUtc] IS NULL OR [LastSavedAtUtc] >= [CreatedAtUtc]` |
@@ -1624,6 +2131,7 @@ Entity: `MakanApp.Domain.Commerce.Order`؛ مالک نگاشت: [EF Configuratio
 | OrganizationId | `uniqueidentifier` | بله | خیر | Never |
 | PaidAtUtc | `datetime2(7)` | بله | خیر | Never |
 | PlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| ProductTitleSnapshot | `nvarchar(200)` | بله | خیر | Never |
 | PurchaserUserId | `uniqueidentifier` | خیر | خیر | Never |
 | Purpose | `int` | خیر | خیر | Never |
 | RequestPayloadHash | `binary(32)` | خیر | خیر | Never |
@@ -1670,6 +2178,45 @@ CHECKها:
 | CK_Orders_RequestPayloadHash | `DATALENGTH([RequestPayloadHash]) = 32` |
 | CK_Orders_Status | `[Status] BETWEEN 1 AND 3` |
 
+### commerce.PaymentAttemptEvents
+
+Entity: `MakanApp.Domain.Commerce.PaymentAttemptEvent`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CorrelationId | `nvarchar(100)` | بله | خیر | Never |
+| ErrorCode | `nvarchar(100)` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OccurredAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| PaymentAttemptId | `uniqueidentifier` | خیر | خیر | Never |
+| ProviderResult | `int` | بله | خیر | Never |
+| ProviderStatus | `int` | بله | خیر | Never |
+| Type | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PaymentAttemptEvents | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PaymentAttemptEvents_PaymentAttemptId_OccurredAtUtc_Id | PaymentAttemptId, OccurredAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PaymentAttemptId | commerce.PaymentAttempts | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PaymentAttemptEvents_Type | `[Type] BETWEEN 1 AND 8` |
+
 ### commerce.PaymentAttempts
 
 Entity: `MakanApp.Domain.Commerce.PaymentAttempt`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -1677,6 +2224,7 @@ Entity: `MakanApp.Domain.Commerce.PaymentAttempt`؛ مالک نگاشت: [EF Con
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | Amount | `decimal(18,2)` | خیر | خیر | Never |
+| CallbackReceivedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
 | CompletedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
@@ -1689,9 +2237,11 @@ Entity: `MakanApp.Domain.Commerce.PaymentAttempt`؛ مالک نگاشت: [EF Con
 | OrderId | `uniqueidentifier` | خیر | خیر | Never |
 | PaymentUrl | `nvarchar(2048)` | بله | خیر | Never |
 | Provider | `nvarchar(50)` | خیر | خیر | Never |
+| ProviderPaidAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ProviderReference | `nvarchar(200)` | بله | خیر | Never |
 | RequestPayloadHash | `binary(32)` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SettlementReference | `nvarchar(200)` | بله | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
 | VerifiedAtUtc | `datetime2(7)` | بله | خیر | Never |
 
@@ -1738,7 +2288,9 @@ Entity: `MakanApp.Domain.Commerce.Payment`؛ مالک نگاشت: [EF Configurat
 | PaidAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | PaymentAttemptId | `uniqueidentifier` | خیر | خیر | Never |
 | Provider | `nvarchar(50)` | خیر | خیر | Never |
+| ProviderPaidAtUtc | `datetime2(7)` | بله | خیر | Never |
 | ProviderReference | `nvarchar(200)` | خیر | خیر | Never |
+| SettlementReference | `nvarchar(200)` | بله | خیر | Never |
 
 کلیدها:
 
@@ -2230,6 +2782,47 @@ CHECKها:
 |---|---|
 | CK_GuardianRelations_Status | `[Status] IN (1, 2, 3, 4)` |
 
+### identity.AccountDeletionRequests
+
+Entity: `MakanApp.Domain.Identity.AccountDeletionRequest`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| PolicyStatus | `nvarchar(64)` | خیر | خیر | Never |
+| RequestedAtUtc | `datetime2` | خیر | خیر | Never |
+| RequestedBySessionId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AccountDeletionRequests | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AccountDeletionRequests_UserId | UserId | True | — |
+| IX_AccountDeletionRequests_RequestedBySessionId_UserId | RequestedBySessionId, UserId | False | — |
+| IX_AccountDeletionRequests_UserId_ClientOperationId | UserId, ClientOperationId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| UserId | identity.Users | Id | Restrict |
+| RequestedBySessionId, UserId | identity.UserSessions | Id, UserId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AccountDeletionRequests_Policy | `[PolicyStatus] = N'PRODUCT_LEGAL_DECISION_REQUIRED'` |
+
 ### identity.CommunicationAgeVerifications
 
 Entity: `MakanApp.Domain.Identity.CommunicationAgeVerification`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -2329,6 +2922,64 @@ Entity: `MakanApp.Domain.Identity.Person`؛ مالک نگاشت: [EF Configurati
 |---|---|---|
 | PK_Persons | PK | Id |
 
+### identity.PhoneChangeRequests
+
+Entity: `MakanApp.Domain.Identity.PhoneChangeRequest`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CodeHash | `varbinary(32)` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2` | بله | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| CredentialId | `uniqueidentifier` | خیر | خیر | Never |
+| CredentialVersion | `varbinary(8)` | خیر | خیر | Never |
+| ExpiresAtUtc | `datetime2` | خیر | خیر | Never |
+| FailedAttempts | `int` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| MaxFailedAttempts | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Salt | `varbinary(64)` | خیر | خیر | Never |
+| SessionId | `uniqueidentifier` | خیر | خیر | Never |
+| State | `int` | خیر | خیر | Never |
+| TargetPhone | `nvarchar(32)` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_PhoneChangeRequests | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_PhoneChangeRequests_CredentialId | CredentialId | False | — |
+| UX_PhoneChangeRequests_PendingUser | UserId | True | [State] IN (1, 2) |
+| IX_PhoneChangeRequests_SessionId_UserId | SessionId, UserId | False | — |
+| IX_PhoneChangeRequests_TargetPhone_CreatedAtUtc | TargetPhone, CreatedAtUtc | False | — |
+| IX_PhoneChangeRequests_UserId_ClientOperationId | UserId, ClientOperationId | True | — |
+| IX_PhoneChangeRequests_UserId_CreatedAtUtc | UserId, CreatedAtUtc | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CredentialId | identity.UserCredentials | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+| SessionId, UserId | identity.UserSessions | Id, UserId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_PhoneChangeRequests_Attempts | `[FailedAttempts] >= 0 AND [MaxFailedAttempts] > 0 AND [FailedAttempts] <= [MaxFailedAttempts]` |
+| CK_PhoneChangeRequests_Completed | `([State] = 3 AND [CompletedAtUtc] IS NOT NULL) OR ([State] <> 3 AND [CompletedAtUtc] IS NULL)` |
+| CK_PhoneChangeRequests_Expiry | `[ExpiresAtUtc] > [CreatedAtUtc]` |
+| CK_PhoneChangeRequests_Hash | `[State] IN (1,4) OR (DATALENGTH([CodeHash]) = 32 AND DATALENGTH([Salt]) >= 16)` |
+| CK_PhoneChangeRequests_State | `[State] IN (1,2,3,4)` |
+
 ### identity.RefreshTokens
 
 Entity: `MakanApp.Domain.Identity.RefreshToken`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -2413,6 +3064,7 @@ Entity: `MakanApp.Domain.Identity.User`؛ مالک نگاشت: [EF Configuration
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AccountStatus | `int` | خیر | خیر | Never |
+| Bio | `nvarchar(500)` | بله | خیر | Never |
 | CommunicationAgeCategory | `int` | خیر | خیر | Never |
 | CommunicationAgeVerificationStatus | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
@@ -2496,6 +3148,226 @@ Indexها:
 |---|---|---|---|
 | UserId | identity.Users | Id | Cascade |
 
+### intelligence.AssistantContextSelections
+
+Entity: `MakanApp.Domain.Intelligence.AssistantContextSelection`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClassId | `uniqueidentifier` | بله | خیر | Never |
+| Kind | `int` | خیر | خیر | Never |
+| LastClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| MembershipId | `uniqueidentifier` | بله | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| Role | `int` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SelectedAtUtc | `datetime2` | خیر | خیر | Never |
+| SessionId | `uniqueidentifier` | خیر | خیر | Never |
+| SubjectOrganizationPersonId | `uniqueidentifier` | بله | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AssistantContextSelections | PK | SessionId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AssistantContextSelections_ClassId | ClassId | False | — |
+| IX_AssistantContextSelections_MembershipId | MembershipId | False | — |
+| IX_AssistantContextSelections_OrganizationId | OrganizationId | False | — |
+| IX_AssistantContextSelections_SubjectOrganizationPersonId | SubjectOrganizationPersonId | False | — |
+| IX_AssistantContextSelections_UserId | UserId | False | — |
+| IX_AssistantContextSelections_SessionId_UserId | SessionId, UserId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ClassId | academic.Classes | Id | Restrict |
+| MembershipId | organization.Memberships | Id | Restrict |
+| OrganizationId | organization.Organizations | Id | Restrict |
+| SubjectOrganizationPersonId | organization.OrganizationPersons | Id | Restrict |
+| UserId | identity.Users | Id | Restrict |
+| SessionId, UserId | identity.UserSessions | Id, UserId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AssistantContextSelections_Kind | `[Kind] IN (1,2,3)` |
+| CK_AssistantContextSelections_Scope | `([Kind]=1 AND [OrganizationId] IS NULL AND [MembershipId] IS NULL AND [Role] IS NULL AND [SubjectOrganizationPersonId] IS NULL AND [ClassId] IS NULL) OR ([Kind]=2 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NULL) OR ([Kind]=3 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NOT NULL)` |
+
+### knowledge.AiSourceSelectionOperations
+
+Entity: `MakanApp.Domain.Knowledge.AiSourceSelectionOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| OperationId | `uniqueidentifier` | خیر | خیر | Never |
+| PayloadHash | `binary(32)` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AiSourceSelectionOperations | PK | UserId, OperationId |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| UserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AiSourceSelectionOperations_Hash | `DATALENGTH([PayloadHash])=32` |
+
+### knowledge.AiSourceSelectionPins
+
+Entity: `MakanApp.Domain.Knowledge.AiSourceSelectionPin`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Number | `int` | خیر | خیر | Never |
+| OperationId | `uniqueidentifier` | خیر | خیر | Never |
+| SourceId | `uniqueidentifier` | خیر | خیر | Never |
+| UserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AiSourceSelectionPins | PK | UserId, OperationId, SourceId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AiSourceSelectionPins_SourceId_Number | SourceId, Number | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| SourceId, Number | knowledge.EducationalSourceVersions | SourceId, Number | Restrict |
+| UserId, OperationId | knowledge.AiSourceSelectionOperations | UserId, OperationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AiSourceSelectionPins_Number | `[Number]>0` |
+
+### knowledge.EducationalSources
+
+Entity: `MakanApp.Domain.Knowledge.EducationalSource`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ArchivedAtUtc | `datetime2` | بله | خیر | Never |
+| ClassId | `uniqueidentifier` | بله | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| CreationRequestHash | `nvarchar(64)` | خیر | خیر | Never |
+| CurrentVersion | `int` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | بله | خیر | Never |
+| PublishedVersion | `int` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Scope | `int` | خیر | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Visibility | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_EducationalSources | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_EducationalSources_CreatedByUserId_ClientOperationId | CreatedByUserId, ClientOperationId | True | — |
+| IX_EducationalSources_OwnerUserId_CreatedAtUtc | OwnerUserId, CreatedAtUtc | False | — |
+| IX_EducationalSources_OrganizationId_ClassId_CreatedAtUtc | OrganizationId, ClassId, CreatedAtUtc | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CreatedByUserId | identity.Users | Id | Restrict |
+| OrganizationId | organization.Organizations | Id | Restrict |
+| OwnerUserId | identity.Users | Id | Restrict |
+| OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_EducationalSources_Owner | `([Scope]=1 AND [OwnerUserId] IS NOT NULL AND [OrganizationId] IS NULL AND [ClassId] IS NULL) OR ([Scope]=2 AND [OwnerUserId] IS NULL AND [OrganizationId] IS NOT NULL AND [ClassId] IS NOT NULL) OR ([Scope]=3 AND [OwnerUserId] IS NULL AND [OrganizationId] IS NOT NULL AND [ClassId] IS NULL) OR ([Scope]=4 AND [OwnerUserId] IS NULL AND [OrganizationId] IS NULL AND [ClassId] IS NULL)` |
+| CK_EducationalSources_State | `[Status] IN (1,2,3) AND [Visibility] IN (1,2) AND ([Scope]=4 OR [Visibility]=1) AND [CurrentVersion]>0 AND ([PublishedVersion] IS NULL OR ([PublishedVersion]>0 AND [PublishedVersion]<=[CurrentVersion])) AND (([Status]=3 AND [ArchivedAtUtc] IS NOT NULL) OR ([Status]<>3 AND [ArchivedAtUtc] IS NULL))` |
+
+### knowledge.EducationalSourceVersions
+
+Entity: `MakanApp.Domain.Knowledge.EducationalSourceVersion`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| CreatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Description | `nvarchar(2000)` | بله | خیر | Never |
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| NormalizedTitle | `nvarchar(200)` | خیر | خیر | Never |
+| Number | `int` | خیر | خیر | Never |
+| ProcessingFailureCode | `nvarchar(64)` | بله | خیر | Never |
+| ProcessingStatus | `int` | خیر | خیر | Never |
+| PublicationStatus | `int` | خیر | خیر | Never |
+| PublishedAtUtc | `datetime2` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SafetyStatus | `int` | خیر | خیر | Never |
+| SourceId | `uniqueidentifier` | خیر | خیر | Never |
+| SourceType | `int` | خیر | خیر | Never |
+| Title | `nvarchar(200)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_EducationalSourceVersions | PK | SourceId, Number |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_EducationalSourceVersions_CreatedByUserId | CreatedByUserId | False | — |
+| IX_EducationalSourceVersions_FileAssetId | FileAssetId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| CreatedByUserId | identity.Users | Id | Restrict |
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| SourceId | knowledge.EducationalSources | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_EducationalSourceVersions_State | `[Number]>0 AND [SourceType] IN (1,2) AND [SafetyStatus] IN (1,2,3,4) AND [ProcessingStatus] IN (1,2,3,4,5) AND (([PublicationStatus]=1 AND [PublishedAtUtc] IS NULL) OR ([PublicationStatus]=2 AND [PublishedAtUtc] IS NOT NULL)) AND (([ProcessingStatus]=5 AND [ProcessingFailureCode]=N'SOURCE_PROCESSING_FAILED') OR ([ProcessingStatus]<>5 AND [ProcessingFailureCode] IS NULL))` |
+
 ### messaging.AbuseReports
 
 Entity: `MakanApp.Domain.Messaging.AbuseReport`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -2550,6 +3422,167 @@ CHECKها:
 | CK_AbuseReports_MessageKind | `[ReportedMessageKind] IN (1, 2, 3, 4, 5, 6, 7, 8)` |
 | CK_AbuseReports_Reason | `[Reason] IN (1, 2, 3, 4, 5, 6, 7)` |
 | CK_AbuseReports_Status | `[Status] IN (1, 2, 3, 4)` |
+
+### messaging.AcademicActivityDeliveries
+
+Entity: `MakanApp.Domain.Messaging.AcademicActivityDelivery`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| ConversationId | `uniqueidentifier` | بله | خیر | Never |
+| LastAttemptAtUtc | `datetime2` | بله | خیر | Never |
+| LastFailureCategory | `nvarchar(64)` | بله | خیر | Never |
+| MessageId | `uniqueidentifier` | بله | خیر | Never |
+| PublicationId | `uniqueidentifier` | خیر | خیر | Never |
+| Purpose | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| State | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AcademicActivityDeliveries | PK | PublicationId, Purpose |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AcademicActivityDeliveries_ConversationId | ConversationId | False | — |
+| IX_AcademicActivityDeliveries_MessageId | MessageId | True | [MessageId] IS NOT NULL |
+| IX_AcademicActivityDeliveries_MessageId_ConversationId | MessageId, ConversationId | False | — |
+| IX_AcademicActivityDeliveries_PublicationId_ConversationId | PublicationId, ConversationId | True | [ConversationId] IS NOT NULL |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| PublicationId | messaging.AcademicActivityPublications | Id | Restrict |
+| MessageId, ConversationId | messaging.Messages | Id, ConversationId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AcademicActivityDeliveries_Attempt | `[AttemptCount]>=0` |
+| CK_AcademicActivityDeliveries_Purpose | `[Purpose] IN (2,3)` |
+| CK_AcademicActivityDeliveries_State | `([State] IN (1,3) AND [MessageId] IS NULL AND [ConversationId] IS NULL) OR ([State]=2 AND [MessageId] IS NOT NULL AND [ConversationId] IS NOT NULL)` |
+
+### messaging.AcademicActivityPublications
+
+Entity: `MakanApp.Domain.Messaging.AcademicActivityPublication`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AssignmentVersionId | `uniqueidentifier` | بله | خیر | Never |
+| AvailableFromUtc | `datetime2` | بله | خیر | Never |
+| AvailableUntilUtc | `datetime2` | بله | خیر | Never |
+| ClassId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextId | `uniqueidentifier` | خیر | خیر | Never |
+| ContextKind | `int` | خیر | خیر | Never |
+| DueAtUtc | `datetime2` | بله | خیر | Never |
+| ExamVersionId | `uniqueidentifier` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| InitiatedByUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Kind | `int` | خیر | خیر | Never |
+| LessonId | `uniqueidentifier` | بله | خیر | Never |
+| OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| SessionAction | `int` | بله | خیر | Never |
+| SessionId | `uniqueidentifier` | بله | خیر | Never |
+| SourceRevision | `int` | خیر | خیر | Never |
+| Title | `nvarchar(200)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AcademicActivityPublications | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AcademicActivityPublications_AssignmentVersionId | AssignmentVersionId | True | [AssignmentVersionId] IS NOT NULL |
+| IX_AcademicActivityPublications_ExamVersionId | ExamVersionId | True | [ExamVersionId] IS NOT NULL |
+| IX_AcademicActivityPublications_InitiatedByUserId | InitiatedByUserId | False | — |
+| IX_AcademicActivityPublications_PersonalClassId | PersonalClassId | False | — |
+| IX_AcademicActivityPublications_LessonId_SourceRevision | LessonId, SourceRevision | True | [LessonId] IS NOT NULL |
+| IX_AcademicActivityPublications_OrganizationId_LessonId | OrganizationId, LessonId | False | — |
+| IX_AcademicActivityPublications_SessionId_SourceRevision | SessionId, SourceRevision | True | [SessionId] IS NOT NULL |
+| IX_AcademicActivityPublications_ContextKind_ContextId_AssignmentVersionId | ContextKind, ContextId, AssignmentVersionId | False | — |
+| IX_AcademicActivityPublications_ContextKind_ContextId_ExamVersionId | ContextKind, ContextId, ExamVersionId | False | — |
+| IX_AcademicActivityPublications_OrganizationId_ClassId_SessionId | OrganizationId, ClassId, SessionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| InitiatedByUserId | identity.Users | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
+| OrganizationId, LessonId | academic.ClassLessons | OrganizationId, Id | Restrict |
+| ContextKind, ContextId, AssignmentVersionId | assessment.AssignmentVersions | ContextKind, ContextId, Id | Restrict |
+| ContextKind, ContextId, ExamVersionId | assessment.ExamVersions | ContextKind, ContextId, Id | Restrict |
+| OrganizationId, ClassId, SessionId | academic.Sessions | OrganizationId, ClassId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AcademicActivityPublications_AcademicScope | `([ContextKind] = 1 AND [OrganizationId] IS NOT NULL AND [ContextId] = [OrganizationId] AND [PersonalClassId] IS NULL) OR ([ContextKind] = 2 AND [OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [ContextId] = [PersonalClassId])` |
+| CK_AcademicActivityPublications_PersonalClass | `[ContextKind] <> 2 OR [ClassId] = [PersonalClassId]` |
+| CK_AcademicActivityPublications_PersonalKind | `[ContextKind] <> 2 OR [Kind] IN (2,3)` |
+| CK_AcademicActivityPublications_Revision | `[SourceRevision]>0` |
+| CK_AcademicActivityPublications_SessionAction | `([Kind]=4 AND [SessionAction] IS NOT NULL) OR ([Kind]<>4 AND [SessionAction] IS NULL)` |
+| CK_AcademicActivityPublications_Source | `([Kind]=1 AND [LessonId] IS NOT NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=2 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NOT NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=3 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NOT NULL AND [SessionId] IS NULL AND [SessionAction] IS NULL) OR ([Kind]=4 AND [LessonId] IS NULL AND [AssignmentVersionId] IS NULL AND [ExamVersionId] IS NULL AND [SessionId] IS NOT NULL AND [SessionAction] IN (1,2,3,4))` |
+
+### messaging.AddressBookEntries
+
+Entity: `MakanApp.Domain.Messaging.AddressBookEntry`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DeletedAtUtc | `datetime2` | بله | خیر | Never |
+| HasManualName | `bit` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| LinkedAccountUserId | `uniqueidentifier` | بله | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ProtectedContent | `nvarchar(max)` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| ServerVersion | `bigint` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AddressBookEntries | PK | OwnerUserId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AddressBookEntries_LinkedAccountUserId | LinkedAccountUserId | False | — |
+| IX_AddressBookEntries_OwnerUserId_ServerVersion | OwnerUserId, ServerVersion | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| LinkedAccountUserId | identity.Users | Id | Restrict |
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AddressBookEntries_Tombstone | `[DeletedAtUtc] IS NULL OR ([ProtectedContent] = N'' AND [LinkedAccountUserId] IS NULL)` |
+| CK_AddressBookEntries_Version | `[ServerVersion] > 0` |
 
 ### messaging.ChangeEvents
 
@@ -2641,6 +3674,157 @@ CHECKها:
 | CK_ChatFolders_Revision | `[Revision] > 0` |
 | CK_ChatFolders_SortOrder | `[SortOrder] BETWEEN 0 AND 10000` |
 | CK_ChatFolders_Types | `([IncludedTypes] & ~15) = 0 AND ([ExcludedTypes] & ~15) = 0` |
+
+### messaging.ContactDeviceBindings
+
+Entity: `MakanApp.Domain.Messaging.ContactDeviceBinding`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| DeviceId | `uniqueidentifier` | خیر | خیر | Never |
+| EntryId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ServerVersion | `bigint` | خیر | خیر | Never |
+| SourceRevision | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ContactDeviceBindings | PK | OwnerUserId, DeviceId, EntryId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ContactDeviceBindings_OwnerUserId_EntryId | OwnerUserId, EntryId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId, DeviceId | messaging.ContactSyncDevices | OwnerUserId, DeviceId | Restrict |
+| OwnerUserId, EntryId | messaging.AddressBookEntries | OwnerUserId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ContactDeviceBindings_Versions | `[SourceRevision] > 0 AND [ServerVersion] > 0` |
+
+### messaging.ContactPhones
+
+Entity: `MakanApp.Domain.Messaging.ContactPhone`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| EntryId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| PhoneIndex | `varchar(64)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ContactPhones | PK | OwnerUserId, EntryId, PhoneIndex |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ContactPhones_OwnerUserId_PhoneIndex | OwnerUserId, PhoneIndex | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId, EntryId | messaging.AddressBookEntries | OwnerUserId, Id | Restrict |
+
+### messaging.ContactSyncDevices
+
+Entity: `MakanApp.Domain.Messaging.ContactSyncDevice`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConsentId | `uniqueidentifier` | خیر | خیر | Never |
+| ConsentVersion | `nvarchar(64)` | خیر | خیر | Never |
+| DeviceId | `uniqueidentifier` | خیر | خیر | Never |
+| GrantedAtUtc | `datetime2` | خیر | خیر | Never |
+| LastSourceRevision | `bigint` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Scope | `nvarchar(64)` | خیر | خیر | Never |
+| SyncEnabled | `bit` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ContactSyncDevices | PK | OwnerUserId, DeviceId |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ContactSyncDevices_Revision | `[LastSourceRevision] >= 0` |
+
+### messaging.ContactSyncOperations
+
+Entity: `MakanApp.Domain.Messaging.ContactSyncOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DeviceId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Receipt | `nvarchar(max)` | خیر | خیر | Never |
+| RequestFingerprint | `varchar(64)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ContactSyncOperations | PK | OwnerUserId, DeviceId, ClientOperationId |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId, DeviceId | messaging.ContactSyncDevices | OwnerUserId, DeviceId | Restrict |
+
+### messaging.ContactSyncStates
+
+Entity: `MakanApp.Domain.Messaging.ContactSyncState`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ServerVersion | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ContactSyncStates | PK | OwnerUserId |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ContactSyncStates_Version | `[ServerVersion] >= 0` |
 
 ### messaging.ConversationChecklistItems
 
@@ -2770,6 +3954,43 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_ConversationChecklists_Definition | `[Mode] IN (1,2) AND [DefinitionRevision]>0 AND DATALENGTH([CreationHash])=32 AND [UpdatedAtUtc]>=[CreatedAtUtc]` |
+
+### messaging.ConversationInitialTargets
+
+Entity: `MakanApp.Domain.Messaging.ConversationInitialTarget`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| InvitationExpiresAtUtc | `datetime2` | بله | خیر | Never |
+| InvitationId | `uniqueidentifier` | بله | خیر | Never |
+| Outcome | `int` | خیر | خیر | Never |
+| TargetUserId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_ConversationInitialTargets | PK | ConversationId, TargetUserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_ConversationInitialTargets_InvitationId | InvitationId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId | messaging.Conversations | Id | Restrict |
+| InvitationId | messaging.ConversationInvitations | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_ConversationInitialTargets_Outcome | `([Outcome]=2 AND [InvitationId] IS NOT NULL AND [InvitationExpiresAtUtc] IS NOT NULL) OR ([Outcome] IN (1,3) AND [InvitationId] IS NULL AND [InvitationExpiresAtUtc] IS NULL)` |
 
 ### messaging.ConversationInvitations
 
@@ -3023,6 +4244,7 @@ Entity: `MakanApp.Domain.Messaging.ConversationParticipant`؛ مالک نگاش�
 | ConversationId | `uniqueidentifier` | خیر | خیر | Never |
 | CursorUpdatedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | EndedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| EndedBySystem | `bit` | خیر | خیر | Never |
 | EndedByUserId | `uniqueidentifier` | بله | خیر | Never |
 | HistoryVisibleFromSequence | `bigint` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
@@ -3067,7 +4289,7 @@ CHECKها:
 | CK_ConversationParticipants_CursorTimestamp | `([LastDeliveredMessageSequence] = 0 AND [LastReadMessageSequence] = 0 AND [CursorUpdatedAtUtc] IS NULL) OR ([LastDeliveredMessageSequence] > 0 AND [CursorUpdatedAtUtc] IS NOT NULL)` |
 | CK_ConversationParticipants_Cursors | `[LastDeliveredMessageSequence] >= 0 AND [LastReadMessageSequence] >= 0 AND [LastReadMessageSequence] <= [LastDeliveredMessageSequence]` |
 | CK_ConversationParticipants_HistoryBoundary | `[HistoryVisibleFromSequence] > 0` |
-| CK_ConversationParticipants_Lifecycle | `([Status] = 1 AND [EndedAtUtc] IS NULL AND [EndedByUserId] IS NULL) OR ([Status] IN (2, 3) AND [EndedAtUtc] IS NOT NULL AND [EndedByUserId] IS NOT NULL)` |
+| CK_ConversationParticipants_Lifecycle | `([Status] = 1 AND [EndedAtUtc] IS NULL AND [EndedByUserId] IS NULL AND [EndedBySystem]=0) OR ([Status] IN (2, 3) AND [EndedAtUtc] IS NOT NULL AND (([EndedByUserId] IS NOT NULL AND [EndedBySystem]=0) OR ([Status]=2 AND [EndedByUserId] IS NULL AND [EndedBySystem]=1)))` |
 | CK_ConversationParticipants_Role | `[Role] IN (1, 2, 3)` |
 | CK_ConversationParticipants_Status | `[Status] IN (1, 2, 3)` |
 
@@ -3320,11 +4542,14 @@ Entity: `MakanApp.Domain.Messaging.Conversation`؛ مالک نگاشت: [EF Conf
 | DirectUserLowId | `uniqueidentifier` | بله | خیر | Never |
 | GroupHistoryPolicy | `int` | خیر | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsOfficialOrganizationSpace | `bit` | خیر | خیر | Never |
 | ManagementPolicy | `int` | خیر | خیر | Never |
 | MemberCapabilities | `int` | خیر | خیر | Never |
 | NextChangeSequence | `bigint` | خیر | خیر | Never |
 | NextMessageSequence | `bigint` | خیر | خیر | Never |
 | OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| PhotoFileAssetId | `uniqueidentifier` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | SavedOwnerUserId | `uniqueidentifier` | بله | خیر | Never |
 | Scope | `int` | خیر | خیر | Never |
@@ -3346,9 +4571,12 @@ Indexها:
 | IX_Conversations_DirectUserHighId | DirectUserHighId | False | — |
 | IX_Conversations_DirectUserLowId | DirectUserLowId | False | — |
 | IX_Conversations_OrganizationId | OrganizationId | False | — |
+| IX_Conversations_PhotoFileAssetId | PhotoFileAssetId | True | [PhotoFileAssetId] IS NOT NULL |
 | UX_Conversations_Saved_Owner | SavedOwnerUserId | True | [Type] = 4 |
 | UX_Conversations_Creator_ClientOperationId | CreatedByUserId, ClientOperationId | True | [ManagementPolicy] = 1 |
-| IX_Conversations_OrganizationId_AcademicClassId | OrganizationId, AcademicClassId | True | [AcademicClassId] IS NOT NULL |
+| IX_Conversations_OrganizationId_Type | OrganizationId, Type | True | [IsOfficialOrganizationSpace]=1 |
+| IX_Conversations_PersonalClassId_Type | PersonalClassId, Type | True | [PersonalClassId] IS NOT NULL |
+| IX_Conversations_OrganizationId_AcademicClassId_Type | OrganizationId, AcademicClassId, Type | True | [AcademicClassId] IS NOT NULL |
 | UX_Conversations_Direct_Scope_Organization_Pair | Scope, OrganizationId, DirectUserLowId, DirectUserHighId | True | [Type] = 1 |
 | IX_Conversations_PublicDiscovery | Scope, OrganizationId, Visibility, Type, Status, CreatedAtUtc, Id | False | — |
 
@@ -3360,6 +4588,8 @@ Indexها:
 | DirectUserHighId | identity.Users | Id | Restrict |
 | DirectUserLowId | identity.Users | Id | Restrict |
 | OrganizationId | organization.Organizations | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| PhotoFileAssetId | storage.FileAssets | Id | Restrict |
 | SavedOwnerUserId | identity.Users | Id | Restrict |
 | OrganizationId, AcademicClassId | academic.Classes | OrganizationId, Id | Restrict |
 
@@ -3367,7 +4597,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_Conversations_AcademicClass | `[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type]=2 AND [Scope]=2 AND [OrganizationId] IS NOT NULL)` |
+| CK_Conversations_AcademicClass | `[AcademicClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [IsOfficialOrganizationSpace]=0)` |
 | CK_Conversations_BehaviorShape | `([Type] IN (1, 4) AND [Visibility] = 1 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0) OR ([Type] = 2) OR ([Type] = 3 AND [GroupHistoryPolicy] = 1 AND [MemberCapabilities] = 0)` |
 | CK_Conversations_DirectPair | `[Type] <> 1 OR ([DirectUserLowId] IS NOT NULL AND [DirectUserHighId] IS NOT NULL AND [DirectUserLowId] <> [DirectUserHighId])` |
 | CK_Conversations_GroupHistoryPolicy | `[GroupHistoryPolicy] IN (1, 2)` |
@@ -3376,11 +4606,14 @@ CHECKها:
 | CK_Conversations_MemberCapabilities | `[MemberCapabilities] BETWEEN 0 AND 7` |
 | CK_Conversations_NextChangeSequence | `[NextChangeSequence] > 0` |
 | CK_Conversations_NextMessageSequence | `[NextMessageSequence] > 0` |
+| CK_Conversations_OfficialOrganization | `[IsOfficialOrganizationSpace]=0 OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=2 AND [OrganizationId] IS NOT NULL AND [AcademicClassId] IS NULL)` |
+| CK_Conversations_PersonalClass | `[PersonalClassId] IS NULL OR ([ManagementPolicy]=2 AND [Type] IN (2,3) AND [Scope]=1 AND [OrganizationId] IS NULL AND [AcademicClassId] IS NULL AND [IsOfficialOrganizationSpace]=0)` |
+| CK_Conversations_PhotoType | `[PhotoFileAssetId] IS NULL OR [Type] IN (2,3)` |
 | CK_Conversations_SavedShape | `([Type] = 4 AND [Scope] = 1 AND [OrganizationId] IS NULL AND [SavedOwnerUserId] IS NOT NULL AND [DirectUserLowId] IS NULL AND [DirectUserHighId] IS NULL AND [ManagementPolicy] = 0 AND [Title] IS NULL) OR ([Type] <> 4 AND [SavedOwnerUserId] IS NULL)` |
 | CK_Conversations_Scope | `[Scope] IN (1, 2)` |
 | CK_Conversations_ScopeOrganization | `([Scope] = 1 AND [OrganizationId] IS NULL) OR ([Scope] = 2 AND [OrganizationId] IS NOT NULL)` |
 | CK_Conversations_Status | `[Status] IN (1, 2)` |
-| CK_Conversations_SystemManagedAcademic | `([ManagementPolicy] <> 2) OR ([Scope] = 2 AND [CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationPayloadHash] IS NULL)` |
+| CK_Conversations_SystemManagedAcademic | `([ManagementPolicy] <> 2) OR (([Scope] = 2 OR ([Scope]=1 AND [PersonalClassId] IS NOT NULL)) AND [CreatedByUserId] IS NULL AND [ClientOperationId] IS NULL AND [CreationPayloadHash] IS NULL)` |
 | CK_Conversations_SystemManagedVisibility | `[ManagementPolicy] <> 2 OR [Visibility] = 1` |
 | CK_Conversations_Type | `[Type] IN (1, 2, 3, 4)` |
 | CK_Conversations_UserManagedCreation | `([ManagementPolicy] <> 1) OR ([CreatedByUserId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [CreationPayloadHash] IS NOT NULL)` |
@@ -3667,6 +4900,7 @@ Entity: `MakanApp.Domain.Messaging.Message`؛ مالک نگاشت: [EF Configura
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| AcademicActivityPublicationId | `uniqueidentifier` | بله | خیر | Never |
 | ClientMessageId | `uniqueidentifier` | خیر | خیر | Never |
 | ConversationId | `uniqueidentifier` | خیر | خیر | Never |
 | CurrentRevisionNumber | `int` | خیر | خیر | Never |
@@ -3705,6 +4939,7 @@ Indexها:
 | IX_Messages_ForwardedFromMessageId | ForwardedFromMessageId | False | — |
 | IX_Messages_ReplyToMessageId | ReplyToMessageId | False | — |
 | IX_Messages_SharedContactUserId | SharedContactUserId | False | — |
+| IX_Messages_AcademicActivityPublicationId_ConversationId | AcademicActivityPublicationId, ConversationId | True | [AcademicActivityPublicationId] IS NOT NULL |
 | UX_Messages_Conversation_Sequence | ConversationId, Sequence | True | — |
 | IX_Messages_ReplyToMessageId_ConversationId | ReplyToMessageId, ConversationId | False | — |
 | IX_Messages_TopicId_ConversationId | TopicId, ConversationId | False | — |
@@ -3717,6 +4952,7 @@ Indexها:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| AcademicActivityPublicationId | messaging.AcademicActivityPublications | Id | Restrict |
 | ConversationId | messaging.Conversations | Id | Restrict |
 | DeletedByUserId | identity.Users | Id | Restrict |
 | ForwardedFromMessageId | messaging.Messages | Id | Restrict |
@@ -3931,6 +5167,55 @@ Indexها:
 |---|---|---|---|
 | FileAssetId | storage.FileAssets | Id | Restrict |
 | ModerationCaseId | messaging.ModerationCases | Id | Restrict |
+
+### messaging.OfficialSpaceProvisions
+
+Entity: `MakanApp.Domain.Messaging.OfficialSpaceProvision`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| ClassId | `uniqueidentifier` | بله | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| LastAttemptAtUtc | `datetime2` | بله | خیر | Never |
+| LastFailureCategory | `nvarchar(64)` | بله | خیر | Never |
+| OrganizationId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| Purpose | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| State | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_OfficialSpaceProvisions | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_OfficialSpaceProvisions_OrganizationId_Purpose | OrganizationId, Purpose | True | [ClassId] IS NULL AND [OrganizationId] IS NOT NULL |
+| IX_OfficialSpaceProvisions_PersonalClassId_Purpose | PersonalClassId, Purpose | True | [PersonalClassId] IS NOT NULL |
+| IX_OfficialSpaceProvisions_OrganizationId_ClassId_Purpose | OrganizationId, ClassId, Purpose | True | [ClassId] IS NOT NULL |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OrganizationId | organization.Organizations | Id | Restrict |
+| PersonalClassId | academic.PersonalClasses | Id | Restrict |
+| OrganizationId, ClassId | academic.Classes | OrganizationId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_OfficialSpaceProvisions_Attempt | `[AttemptCount]>=0` |
+| CK_OfficialSpaceProvisions_Purpose | `[Purpose] IN (2,3)` |
+| CK_OfficialSpaceProvisions_Source | `([PersonalClassId] IS NULL AND [OrganizationId] IS NOT NULL) OR ([PersonalClassId] IS NOT NULL AND [OrganizationId] IS NULL AND [ClassId] IS NULL)` |
+| CK_OfficialSpaceProvisions_State | `[State] IN (1,2,3)` |
 
 ### messaging.PersonalCommunicationGrants
 
@@ -4457,7 +5742,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_NotificationPreferences_Category | `[Category] BETWEEN 1 AND 7` |
+| CK_NotificationPreferences_Category | `[Category] BETWEEN 1 AND 8` |
 | CK_NotificationPreferences_QuietHours | `([QuietHoursEnabled] = 0 AND [QuietHoursStartLocal] IS NULL AND [QuietHoursEndLocal] IS NULL AND [TimeZoneId] IS NULL) OR ([QuietHoursEnabled] = 1 AND [QuietHoursStartLocal] IS NOT NULL AND [QuietHoursEndLocal] IS NOT NULL AND [QuietHoursStartLocal] <> [QuietHoursEndLocal] AND [TimeZoneId] IS NOT NULL)` |
 
 ### notification.Notifications
@@ -4508,8 +5793,8 @@ CHECKها:
 |---|---|
 | CK_Notifications_Category | `[Category] IN (1, 2, 3)` |
 | CK_Notifications_ReadAt | `[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]` |
-| CK_Notifications_ResourceType | `[ResourceType] IN (1, 2, 3, 4, 5)` |
-| CK_Notifications_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7)` |
+| CK_Notifications_ResourceType | `[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)` |
+| CK_Notifications_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)` |
 
 ### notification.PushDeviceRegistrations
 
@@ -4625,6 +5910,53 @@ CHECKها:
 | CK_Invitations_PersonLink | `([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NULL) OR ([OrganizationPersonId] IS NOT NULL AND [GuardianLearnerOrganizationPersonId] IS NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 1) OR ([OrganizationPersonId] IS NULL AND [GuardianLearnerOrganizationPersonId] IS NOT NULL AND [ClientOperationId] IS NOT NULL AND [Role] = 3)` |
 | CK_Invitations_Role | `[Role] IN (1, 2, 3, 4)` |
 | CK_Invitations_Status | `[Status] IN (1, 2, 3, 4, 5)` |
+
+### organization.MembershipManagementOperations
+
+Entity: `MakanApp.Domain.Organization.OrganizationMembershipOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| Kind | `int` | خیر | خیر | Never |
+| MembershipId | `uniqueidentifier` | خیر | خیر | Never |
+| OrganizationId | `uniqueidentifier` | خیر | خیر | Never |
+| RequestHash | `varchar(64)` | خیر | خیر | Never |
+| ResultRoleAssignmentId | `uniqueidentifier` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_MembershipManagementOperations | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_MembershipManagementOperations_ActorUserId | ActorUserId | False | — |
+| IX_MembershipManagementOperations_ResultRoleAssignmentId | ResultRoleAssignmentId | False | — |
+| IX_MembershipManagementOperations_OrganizationId_MembershipId | OrganizationId, MembershipId | False | — |
+| UX_MembershipManagementOperations_Intent | OrganizationId, ActorUserId, ClientOperationId | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ActorUserId | identity.Users | Id | Restrict |
+| ResultRoleAssignmentId | organization.RoleAssignments | Id | Restrict |
+| OrganizationId, MembershipId | organization.Memberships | OrganizationId, Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_MembershipManagementOperations_Hash | `LEN([RequestHash]) = 64` |
+| CK_MembershipManagementOperations_Kind | `[Kind] IN (1, 2, 3, 4)` |
+| CK_MembershipManagementOperations_Result | `([Kind] = 4 AND [ResultRoleAssignmentId] IS NULL) OR ([Kind] IN (1, 2, 3) AND [ResultRoleAssignmentId] IS NOT NULL)` |
 
 ### organization.Memberships
 
@@ -4775,6 +6107,177 @@ CHECKها:
 |---|---|
 | CK_RoleAssignments_Role | `[Role] IN (1, 2, 3, 4)` |
 | CK_RoleAssignments_Status | `[Status] IN (1, 2)` |
+
+### organization.SchoolApplicationDecisions
+
+Entity: `MakanApp.Domain.Organization.SchoolApplicationDecision`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ApplicantFeedback | `nvarchar(2000)` | خیر | خیر | Never |
+| ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+| ReviewerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplicationDecisions | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolApplicationDecisions_ReviewerUserId | ReviewerUserId | False | — |
+| IX_SchoolApplicationDecisions_ApplicationId_OccurredAtUtc | ApplicationId, OccurredAtUtc | False | — |
+| IX_SchoolApplicationDecisions_ApplicationId_Revision | ApplicationId, Revision | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ReviewerUserId | identity.Users | Id | Restrict |
+| ApplicationId, Revision | organization.SchoolApplicationRevisions | ApplicationId, Number | Restrict |
+
+### organization.SchoolApplicationDocuments
+
+Entity: `MakanApp.Domain.Organization.SchoolApplicationDocument`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| Kind | `nvarchar(64)` | خیر | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplicationDocuments | PK | ApplicationId, Revision, FileAssetId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolApplicationDocuments_FileAssetId | FileAssetId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| ApplicationId, Revision | organization.SchoolApplicationRevisions | ApplicationId, Number | Restrict |
+
+### organization.SchoolApplicationOperations
+
+Entity: `MakanApp.Domain.Organization.SchoolApplicationOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| Fingerprint | `varchar(64)` | خیر | خیر | Never |
+| OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplicationOperations | PK | ActorUserId, ClientOperationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolApplicationOperations_ApplicationId | ApplicationId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ActorUserId | identity.Users | Id | Restrict |
+| ApplicationId | organization.SchoolApplications | Id | Restrict |
+
+### organization.SchoolApplicationRevisions
+
+Entity: `MakanApp.Domain.Organization.SchoolApplicationRevision`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Number | `int` | خیر | خیر | Never |
+| ProtectedSnapshot | `nvarchar(max)` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplicationRevisions | PK | ApplicationId, Number |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ApplicationId | organization.SchoolApplications | Id | Restrict |
+
+### organization.SchoolApplications
+
+Entity: `MakanApp.Domain.Organization.SchoolApplication`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ApplicantUserId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| DegreeField | `nvarchar(500)` | بله | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| Kind | `int` | خیر | خیر | Never |
+| LegalEntityName | `nvarchar(200)` | بله | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SchoolName | `nvarchar(200)` | بله | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| StudentCapacity | `int` | بله | خیر | Never |
+| SubmittedPolicyVersion | `nvarchar(100)` | بله | خیر | Never |
+| TeacherCapacity | `int` | بله | خیر | Never |
+| TeachingHistory | `nvarchar(4000)` | بله | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Version | `bigint` | خیر | خیر | Never |
+| WorkSamples | `nvarchar(4000)` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplications | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolApplications_ApplicantUserId_UpdatedAtUtc | ApplicantUserId, UpdatedAtUtc | False | — |
+| IX_SchoolApplications_Status_UpdatedAtUtc | Status, UpdatedAtUtc | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ApplicantUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SchoolApplications_Kind | `[Kind] IN (1,2)` |
+| CK_SchoolApplications_Status | `[Status] IN (1,2,3,4,5,6)` |
+| CK_SchoolApplications_SubmissionPolicy | `[Status]=1 OR [SubmittedPolicyVersion] IS NOT NULL` |
+| CK_SchoolApplications_Version | `[Revision] > 0 AND [Version] >= [Revision]` |
 
 ### platform.AdminAuditLogs
 
@@ -5145,6 +6648,8 @@ Entity: `MakanApp.Domain.Storage.FileAsset`؛ مالک نگاشت: [EF Configura
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OrganizationId | `uniqueidentifier` | بله | خیر | Never |
 | OriginalFileName | `nvarchar(255)` | خیر | خیر | Never |
+| PersonalClassId | `uniqueidentifier` | بله | خیر | Never |
+| PersonalClassMembershipId | `uniqueidentifier` | بله | خیر | Never |
 | RejectedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RetainedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
@@ -5167,6 +6672,7 @@ Indexها:
 |---|---|---|---|
 | IX_FileAssets_OrganizationId | OrganizationId | False | — |
 | UX_FileAssets_StorageKey | StorageKey | True | — |
+| IX_FileAssets_PersonalClassId_PersonalClassMembershipId | PersonalClassId, PersonalClassMembershipId | False | — |
 | IX_FileAssets_Status_CreatedAtUtc | Status, CreatedAtUtc | False | — |
 | IX_FileAssets_Status_UnattachedExpiresAtUtc | Status, UnattachedExpiresAtUtc | False | — |
 | IX_FileAssets_Uploader_Organization_Status | UploadedByUserId, OrganizationId, Status | False | — |
@@ -5177,15 +6683,161 @@ Indexها:
 |---|---|---|---|
 | OrganizationId | organization.Organizations | Id | Restrict |
 | UploadedByUserId | identity.Users | Id | Restrict |
+| PersonalClassId, PersonalClassMembershipId | academic.PersonalClassParticipants | PersonalClassId, Id | Restrict |
 
 CHECKها:
 
 | نام | SQL |
 |---|---|
 | CK_FileAssets_DeletedState | `([Status] = 4 AND [DeletedAtUtc] IS NOT NULL) OR [Status] <> 4` |
+| CK_FileAssets_PersonalClassBinding | `([PersonalClassId] IS NULL AND [PersonalClassMembershipId] IS NULL) OR ([OrganizationId] IS NULL AND [PersonalClassId] IS NOT NULL AND [PersonalClassMembershipId] IS NOT NULL)` |
 | CK_FileAssets_ReadyState | `([Status] = 2 AND [SizeBytes] > 0 AND [Sha256Hash] IS NOT NULL AND [CompletedAtUtc] IS NOT NULL) OR [Status] <> 2` |
 | CK_FileAssets_RejectedState | `([Status] = 3 AND [RejectedAtUtc] IS NOT NULL) OR [Status] <> 3` |
 | CK_FileAssets_RetentionState | `[RetainedAtUtc] IS NULL OR [Status] = 2` |
 | CK_FileAssets_SizeBytes | `[SizeBytes] >= 0` |
 | CK_FileAssets_Status | `[Status] IN (1, 2, 3, 4)` |
 | CK_FileAssets_UnattachedExpiry | `[UnattachedExpiresAtUtc] > [CreatedAtUtc]` |
+
+### support.SupportTicketAttachments
+
+Entity: `MakanApp.Domain.Support.SupportTicketAttachment`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| FileAssetId | `uniqueidentifier` | خیر | خیر | Never |
+| MessageId | `uniqueidentifier` | خیر | خیر | Never |
+| TicketId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SupportTicketAttachments | PK | MessageId, FileAssetId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SupportTicketAttachments_FileAssetId | FileAssetId | True | — |
+| IX_SupportTicketAttachments_TicketId_MessageId | TicketId, MessageId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| FileAssetId | storage.FileAssets | Id | Restrict |
+| TicketId, MessageId | support.SupportTicketMessages | TicketId, Id | Restrict |
+
+### support.SupportTicketMessages
+
+Entity: `MakanApp.Domain.Support.SupportTicketMessage`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AuthorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Body | `nvarchar(max)` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsStaff | `bit` | خیر | خیر | Never |
+| TicketId | `uniqueidentifier` | خیر | خیر | Never |
+| TicketVersion | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SupportTicketMessages | PK | Id |
+| AK_SupportTicketMessages_TicketId_Id | Alternate Key | TicketId, Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SupportTicketMessages_AuthorUserId | AuthorUserId | False | — |
+| IX_SupportTicketMessages_TicketId_TicketVersion | TicketId, TicketVersion | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| AuthorUserId | identity.Users | Id | Restrict |
+| TicketId | support.SupportTickets | Id | Restrict |
+
+### support.SupportTicketOperations
+
+Entity: `MakanApp.Domain.Support.SupportTicketOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Fingerprint | `varchar(64)` | خیر | خیر | Never |
+| ResultVersion | `bigint` | خیر | خیر | Never |
+| TicketId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SupportTicketOperations | PK | ActorUserId, ClientOperationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SupportTicketOperations_TicketId | TicketId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ActorUserId | identity.Users | Id | Restrict |
+| TicketId | support.SupportTickets | Id | Restrict |
+
+### support.SupportTickets
+
+Entity: `MakanApp.Domain.Support.SupportTicket`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AssignedStaffUserId | `uniqueidentifier` | بله | خیر | Never |
+| Category | `nvarchar(64)` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ResolvedAtUtc | `datetime2` | بله | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| Status | `int` | خیر | خیر | Never |
+| Subject | `nvarchar(200)` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Version | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SupportTickets | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SupportTickets_AssignedStaffUserId | AssignedStaffUserId | False | — |
+| IX_SupportTickets_OwnerUserId_UpdatedAtUtc | OwnerUserId, UpdatedAtUtc | False | — |
+| IX_SupportTickets_Status_UpdatedAtUtc | Status, UpdatedAtUtc | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| AssignedStaffUserId | identity.Users | Id | Restrict |
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SupportTickets_Resolution | `([Status]=5 AND [ResolvedAtUtc] IS NOT NULL) OR ([Status]<>5 AND [ResolvedAtUtc] IS NULL)` |
+| CK_SupportTickets_Status | `[Status] IN (1,2,3,4,5)` |
+| CK_SupportTickets_Version | `[Version] > 0` |

@@ -1,14 +1,10 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-> افزودهٔ `2026-11-05`: [قرارداد مدیریت نقش سازمانی](../product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). از GET اعضای موجود membershipId/Version و roleAssignmentId/Version را جدا بخوانید؛ Grant/Change/EndRole/EndMembership مسیر School دارند. Manager دیگر قابل مدیریت است؛ حذف آخرین مدیر، تغییر scope و بازپخش بدون مجوز جاری ممنوع است.
+> قراردادهای تازه و محدودیت‌های محصول در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) است: Gate آموزشی PersonalClass خاموش، Submit آموزشگاه و Generic Personal AI محدود و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.
 
-> افزودهٔ قرارداد `2026-11-04`: [رفع Gapهای Backend](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md) مرجع تغییرات Class/دعوت/Guardian/Activity/Exam Discovery/Quote این مرحله است. ساخت Class اکنون `clientOperationId` الزامی می‌خواهد؛ Endهای Teacher/Enrollment نسخهٔ افزایشی دارند و کلاینت جدید باید نسخهٔ همان رابطه را ارسال کند. HTML/PDF زیر Snapshot تاریخی‌اند؛ OpenAPI بستهٔ جدید و این افزوده بر آن‌ها مقدم‌اند.
+بازبینی `2026-11-12` با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-> قرارداد جاری Messaging از سیاست `2026-11-01` پیروی می‌کند: [تحویل Frontend](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) و [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md). سن/DOB/تأیید سن مجوز امکانات عمومی نیستند؛ Privacy/Block/Safety/مجوز منبع پابرجا هستند. صندوق حساب و Replay آن، invitation receipt، capability و عکس گفتگو افزوده‌اند. اعداد و HTML/PDF زیر Snapshot تاریخی `e11d4ec` هستند؛ جایگزین این اصلاح معنایی یا OpenAPI زنده نیستند. هیچ کد Frontend تغییر نکرده است.
-
-بازبینی `2026-10-30` با مبنای Git `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
-
-پوشش جاری: 365 عملیات HTTP در 322 مسیر، 63 Controller، 608 schema، 113 جدول و 55 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 483 عملیات HTTP در 427 مسیر، 91 Controller، 772 schema، 146 جدول و 71 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
@@ -83,7 +79,7 @@ GET /commerce/catalog با audience، GET /commerce/personal/subscription و org
 
 Quota را با Key/Kind/Unit/Limit/Consumed/Reserved/Remaining و IsUsageAvailable بخوانید. Limit حذف‌شده با صفر و null متفاوت است؛ meter ناموجود را مصرف صفر نمایش ندهید. CurrentCapacity ماهانه reset نمی‌شود. Preflight متن ساده AI فقط بررسی است؛ Trial سه موفقیت روزانه Account با مرز تهران بنیاد قرارداد است و Runtime AI فعال نشده است. انتخاب payer شخصی در Organization صریح و بدون fallback است. ReportExport با رزرو و operationId موجود idempotent است؛ Unknown را موفق/شکست قطعی ندانید.
 
-PersonalClass زیر /api/v1/personal-classes شامل ساخت/فهرست/دعوت/پذیرش/اعضا/پایان/archive است؛ HostUserId مالک، ظرفیت میزبان و عضویت پایه بدون خرید دانشجو است. CanCreateEducationalContent=false و EducationalWorkflowStatus=NotAvailable؛ Assignment/Exam مستقل هنوز ندارد. [Handoff کاربر](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md).
+PersonalClass زیر /api/v1/personal-classes با چرخهٔ درخواست/تأیید، نقش محلی، دعوت/پذیرش و archive موجود است. engine مستقل Assignment/Exam در Source حفظ شده ولی Features:PersonalClass:AssignmentsEnabled و ExamsEnabled پیش‌فرض false هستند؛ قابلیت مؤثر آموزشی خاموش و EducationalWorkflowStatus=NotAvailable است. مجوز ذخیره‌شده Gate را دور نمی‌زند. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).
 
 ## Replay حساب و invalidation
 
@@ -114,7 +110,7 @@ Moderation case-scoped است؛ permission/claim/escalation/session و reason ق
 
 بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.
 
-Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. نتیجه Fake-AI یا health این gate را نمی‌بندد. RAG source lifecycle نیز deferred و core آموزشی مستقل از AI است. [وضعیت جاری AI](../ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) و [شواهد Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md).
+AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal تا Contract سازگار Upstream محدود است و PersonalClass AI اضافه نشده. این Task فقط transport کنترل‌شده را تست می‌کند و نتیجهٔ health/Fake-AI شاهد Provider یا Cutover واقعی نیست. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).
 
 ## میزبانی و smoke
 
@@ -142,7 +138,7 @@ Job operations اکنون Queues تفکیک‌شده، تعدادها و سن ق
 
 | حوزه | وضعیت جاری و مرجع |
 |---|---|
-| سن و شروع ارتباط | تأیید اولیهٔ رسمی سن، وضعیت امن self و Direct دو حساب Adult طبق GAP-05 در P0 موجودند؛ OTP/DOB خوداظهاری اثبات سن نیست |
+| سن و شروع ارتباط | Profile لازم و Privacy/Block/Safety و مجوز جاری منبع بررسی می‌شوند؛ طبق سیاست مصوب 2026-11-01، سن یا Unverified به‌تنهایی منع عمومی Messaging نیست. OTP/DOB خوداظهاری اثبات سن نیست |
 | Peer Read | read-state مجاز Direct در P1؛ Group/Channel رسید per-member ندارند و Hidden علت خصوصی را افشا نمی‌کند |
 | Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ `P1_PUSH_RUNTIME_PENDING` باقی است؛ SMS عمومی اعلان provider واقعی ندارد |
 | Typing / Presence | lease و TTL واقعی با subscription و privacy جاری در P2؛ state گذرا در حافظه و تک‌instance، نه تاریخچه دائمی یا توزیع‌شده |

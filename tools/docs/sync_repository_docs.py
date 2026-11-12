@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from collections import Counter
+from functools import lru_cache
 import argparse
 import csv
 import html
@@ -13,6 +14,17 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 METHODS = {'get', 'post', 'put', 'patch', 'delete', 'head', 'options'}
+
+
+@lru_cache(maxsize=None)
+def controller_source(name):
+    # چند Controller ممکن است در یک فایل باشند؛ نام type جای مسیر واقعی سورس نیست.
+    declaration = re.compile(r'\bclass\s+' + re.escape(name + 'Controller') + r'\b')
+    matches = [path for path in (ROOT / 'MakanApp.Api/Controllers').glob('*.cs')
+               if declaration.search(path.read_text(encoding='utf-8-sig'))]
+    if len(matches) != 1:
+        raise ValueError(f'مسیر یکتای Controller پیدا نشد: {name}')
+    return '../' + matches[0].relative_to(ROOT).as_posix()
 
 
 def cell(value):
@@ -84,7 +96,7 @@ def write_reference(api, inventory, baseline, date):
     assert len(metadata) == len(operations) == len(inventory['Operations']), 'شمار عملیات OpenAPI و ApiExplorer متفاوت است.'
     lines = [
         '# مرجع جاری Endpointها و قراردادهای API ماکان', '',
-        f'بازبینی `{date}` با مبنای Git `main@{baseline}` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.', '',
+        f'بازبینی `{date}` با مبنای Git `source@{baseline}` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.', '',
         f'پوشش: **{len(operations)} عملیات HTTP، {len(api["paths"])} مسیر متمایز، {len(set(item["Controller"] for item in metadata.values()))} Controller و {len(api["components"]["schemas"])} schema**. Health، Swagger و Hub در این شمارش نیستند.', '',
         'این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.', '',
         '## قرارداد مشترک و مرزهای امنیتی', '',
@@ -102,7 +114,7 @@ def write_reference(api, inventory, baseline, date):
         '',
         'عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.',
         '',
-        'AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ 503 از Provider از جمله AI_MODEL_UNAVAILABLE به AI_SERVICE_UNAVAILABLE نگاشت می‌شود، body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. Service Auth واقعیِ قبلی، Parent Provider Timeout و Full-12 Deferred در [وضعیت AI](ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) تفکیک شده‌اند.',
+        'AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. طبق override جاری، AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند؛ شواهد تاریخی JWT الزام فعال Runtime نیستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal تا قرارداد سازگار Upstream محدود است. [قرارداد v6](product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).',
         '',
         'پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده\u200cاند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست\u200cهای date-only/null، عکس Bearer، visibility Draft و رضایت والد در [راهنما](backend-api-guide.md) و [قرارداد مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) توضیح داده شده\u200cاند.', '',
         'اشتراک Individual/Organization و بنیاد PersonalClass اکنون موجودند؛ خرید نقش نمی‌سازد، Legacy قبل از قرارداد معتبر Admin قفل تازه نمی‌گیرد و AI Runtime فعال نیست. [قرارداد کاربر](product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md).', '',
@@ -111,12 +123,12 @@ def write_reference(api, inventory, baseline, date):
         '## فهرست Controllerها', ''
     ]
     counts = Counter(item['Controller'] for item in metadata.values())
-    lines += table(['Controller', 'تعداد عملیات', 'سورس'], [(name, count, f'[{name}Controller](../MakanApp.Api/Controllers/{name}Controller.cs)') for name, count in sorted(counts.items())])
+    lines += table(['Controller', 'تعداد عملیات', 'سورس'], [(name, count, f'[{name}Controller]({controller_source(name)})') for name, count in sorted(counts.items())])
     for controller in sorted(counts):
         lines += ['', f'## {controller}', '']
         selected = [(path, method, operation, metadata[(method, canonical(path))]) for path, method, operation in operations if metadata[(method, canonical(path))]['Controller'] == controller]
         for path, method, operation, item in sorted(selected):
-            lines += [f'### {method.upper()} {path}', '', f'کد واقعی: [{controller}Controller.{item["Action"]}](../MakanApp.Api/Controllers/{controller}Controller.cs).', '']
+            lines += [f'### {method.upper()} {path}', '', f'کد واقعی: [{controller}Controller.{item["Action"]}]({controller_source(controller)}).', '']
             auth = 'عمومی از نظر ورود؛ validation، محدودیت درخواست و قواعد اختصاصی همچنان برقرارند.' if item['Anonymous'] else 'نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.'
             lines += ['احراز هویت: ' + auth, '']
             if item['Policies']:
@@ -173,7 +185,7 @@ def write_reference(api, inventory, baseline, date):
 def write_database(inventory, baseline, date):
     tables = inventory['Tables']
     counts = {key: sum(len(item[key]) for item in tables) for key in ('Columns', 'ForeignKeys', 'Indexes', 'Checks')}
-    lines = ['# ساختار فعلی دیتابیس MakanApp', '', f'مدل طراحی EF Core از working tree با مبنای Git `main@{baseline}`؛ بازبینی `{date}`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.', '',
+    lines = ['# ساختار فعلی دیتابیس MakanApp', '', f'مدل طراحی EF Core از working tree با مبنای Git `source@{baseline}`؛ بازبینی `{date}`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.', '',
              f'**{len(tables)} جدول، {counts["Columns"]} ستون، {counts["ForeignKeys"]} FK، {counts["Indexes"]} index مستقل از key و {counts["Checks"]} CHECK؛ {len(inventory["Migrations"])} Migration.**', '',
              '## مفاهیم و مرزها', '',
              'مدل جاری شامل چهار migration پس از Checklist است: RemovePlatformMfa دو جدول MFA و ستون‌های AssuranceLevel/StepUpAtUtc نشست را حذف می‌کند؛ AddSelfDeclaredProfileDateOfBirth ستون date nullable به Persons، AddUserProfilePhoto مرجع nullable و unique filtered به Users، و CompleteSchoolManagement جدول‌های ClassLessons/ClassLessonAttachments و توسعه Invitation والد را می‌افزاید. آخرین migration 20261028202239_CompleteSchoolManagement است. اجرا روی دیتابیس عادی/سرور مرحلهٔ مستقل است؛ Down اطلاعات حذف‌شدهٔ MFA را بازنمی‌گرداند.',
@@ -207,7 +219,7 @@ def write_database(inventory, baseline, date):
 
 def write_frontend(inventory, api, baseline, date):
     lines = ['# قرارداد جاری مصرف Backend برای Web و Mobile', '',
-             f'بازبینی `{date}` با مبنای Git `main@{baseline}` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.', '',
+             f'بازبینی `{date}` با مبنای Git `source@{baseline}` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.', '',
              f'پوشش جاری: {len(inventory["Operations"])} عملیات HTTP در {len(api["paths"])} مسیر، {len({item["Controller"] for item in inventory["Operations"]})} Controller، {len(api["components"]["schemas"])} schema، {len(inventory["Tables"])} جدول و {len(inventory["Migrations"])} Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.', '',
              '- [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.',
              '- [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).',
@@ -264,7 +276,7 @@ def write_frontend(inventory, api, baseline, date):
              '',
              'Quota را با Key/Kind/Unit/Limit/Consumed/Reserved/Remaining و IsUsageAvailable بخوانید. Limit حذف‌شده با صفر و null متفاوت است؛ meter ناموجود را مصرف صفر نمایش ندهید. CurrentCapacity ماهانه reset نمی‌شود. Preflight متن ساده AI فقط بررسی است؛ Trial سه موفقیت روزانه Account با مرز تهران بنیاد قرارداد است و Runtime AI فعال نشده است. انتخاب payer شخصی در Organization صریح و بدون fallback است. ReportExport با رزرو و operationId موجود idempotent است؛ Unknown را موفق/شکست قطعی ندانید.',
              '',
-             'PersonalClass زیر /api/v1/personal-classes شامل ساخت/فهرست/دعوت/پذیرش/اعضا/پایان/archive است؛ HostUserId مالک، ظرفیت میزبان و عضویت پایه بدون خرید دانشجو است. CanCreateEducationalContent=false و EducationalWorkflowStatus=NotAvailable؛ Assignment/Exam مستقل هنوز ندارد. [Handoff کاربر](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md).',
+             'PersonalClass زیر /api/v1/personal-classes با چرخهٔ درخواست/تأیید، نقش محلی، دعوت/پذیرش و archive موجود است. engine مستقل Assignment/Exam در Source حفظ شده ولی Features:PersonalClass:AssignmentsEnabled و ExamsEnabled پیش‌فرض false هستند؛ قابلیت مؤثر آموزشی خاموش و EducationalWorkflowStatus=NotAvailable است. مجوز ذخیره‌شده Gate را دور نمی‌زند. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).',
              '',
              '## Replay حساب و invalidation',
              '',
@@ -290,7 +302,7 @@ def write_frontend(inventory, api, baseline, date):
              '',
              'بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.',
              '',
-             'Service Auth واقعی در شواهد پیشین PASS شده؛ Parent Child Summary هنوز Provider Timeout دارد و Full-12 واقعی Deferred است. نتیجه Fake-AI یا health این gate را نمی‌بندد. RAG source lifecycle نیز deferred و core آموزشی مستقل از AI است. [وضعیت جاری AI](../ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) و [شواهد Consolidation](../release/BACKEND_FINAL_CONSOLIDATION_FA.md).',
+             'AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal تا Contract سازگار Upstream محدود است و PersonalClass AI اضافه نشده. این Task فقط transport کنترل‌شده را تست می‌کند و نتیجهٔ health/Fake-AI شاهد Provider یا Cutover واقعی نیست. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).',
              '',
              '## میزبانی و smoke', '',
              'Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و با Swagger:Enabled=true فعال است؛ Test طبق Program آن‌ها را منتشر می‌کند. Cors:AllowAnyOrigin انتخاب مستقل از محیط است؛ base و نمونه Test/Production فعلی true با AllowedHosts=* هستند. true از AllowAnyOrigin/Header/Method و بدون credentials استفاده می‌کند؛ false فهرست معتبر لازم دارد. REST با credentials:omit و SignalR با LongPolling و withCredentials:false، نه query-token؛ موفقیت Postman رفتار مرورگر نیست. [قرارداد CORS](../production/CORS_CONFIGURATION_FA.md).',
@@ -313,6 +325,8 @@ def write_frontend(inventory, api, baseline, date):
                   '[وضعیت یکپارچه P0/P1/P2 و gate رسانه](../messaging/CURRENT_MESSENGER_STATUS.md) و Handoffهای [P1](../messaging/MESSENGER_P1_FRONTEND_HANDOFF.md) و [P2](../messaging/MESSENGER_P2_FRONTEND_HANDOFF.md) مکمل کارت‌های کامل HTTP همین خروجی‌اند.', '',
                   capability_table.replace('(messaging/', '(../messaging/'),
                   'Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.', '']
+    if (ROOT / 'docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md').exists():
+        lines[2:2] = ['> قراردادهای تازه و محدودیت‌های محصول در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) است: Gate آموزشی PersonalClass خاموش، Submit آموزشگاه و Generic Personal AI محدود و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.', '']
     (ROOT / 'docs/frontend-contract/README.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
@@ -348,7 +362,7 @@ def document_inventory(baseline, date, preserve_paths=(), refresh_historical_not
             source = path.read_text(encoding='utf-8-sig')
             root_link = os.path.relpath(ROOT / 'README.md', path.parent).replace('\\', '/')
             readiness = os.path.relpath(ROOT / 'docs/production/PRODUCTION_READINESS.md', path.parent).replace('\\', '/')
-            notice = f'\n<!-- DOC-SYNC:BEGIN -->\n> راهنمای خواندن، بازبینی `{date}` از `main@{baseline[:7]}`: این فایل {kind} است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن]({root_link}) و برای gateهای سرور از [آمادگی جاری]({readiness}) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.\n<!-- DOC-SYNC:END -->\n'
+            notice = f'\n<!-- DOC-SYNC:BEGIN -->\n> راهنمای خواندن، بازبینی `{date}` از `source@{baseline[:7]}`: این فایل {kind} است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن]({root_link}) و برای gateهای سرور از [آمادگی جاری]({readiness}) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.\n<!-- DOC-SYNC:END -->\n'
             path.write_text(review_notice(source, notice), encoding='utf-8')
         rows.append([relative, kind, handling, baseline, date])
     rows.append(['README.md', 'ورودی جاری مخزن', 'آمار و مسیر مطالعهٔ جاری؛ بخش‌های مرحله‌ای تاریخچه‌اند', baseline, date])

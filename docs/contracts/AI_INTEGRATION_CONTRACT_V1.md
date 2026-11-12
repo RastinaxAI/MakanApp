@@ -8,6 +8,8 @@
 
 ## مرز و شناسه‌ها
 
+> وضعیت جاری `2026-11-12`: طبق override مالک، `AiService:UseServiceAuthentication=false` و `AiKnowledge:UseServiceAuthentication=false` هستند. بخش تاریخی Service JWT در این سند، الزام فعال Runtime نیست؛ کلید/JWT تازه لازم نیست. زمینهٔ AI از `AssistantContextResolver` مستقل از School Workspace می‌آید، در هر اجرا re-authorize می‌شود و Payer مجوز داده نمی‌دهد. Generic Personal با Role/Organization ساختگی ارسال نمی‌شود؛ انتخاب آن فعلاً `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` دارد. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) مرجع این تغییر است.
+
 - Backend `OrganizationId` همان boundary مدرسه و مقدار AI `schoolId` است؛ School aggregate جدا ساخته نمی‌شود.
 - `UserId` شناسه حساب ورود، `PersonId` شناسه شخص و `OrganizationPersonId` شناسه همان شخص در سازمان است؛ برابر فرض نمی‌شوند.
 - شناسه Student در داده آموزشی `OrganizationPersonId` است. `actor.userId` فقط شناسه کاربر احراز‌شده است.

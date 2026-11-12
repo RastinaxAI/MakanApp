@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> بازبینی جاری `2026-11-12` از Commit کد `source@e440c0143abee7cc40fb18223922cd3c06e22b26`: 483 عملیات، 427 مسیر و 772 schema؛ [تغییرات و محدودیت‌های قطعی v6](product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md). Gate آموزشی PersonalClass پیش‌فرض خاموش، Submit آموزشگاه و Generic Personal AI محدود، Service Auth هر دو سرویس خاموش‌اند. شرح‌های قدیمی Provider/JWT/سن در ادامه باید با همین override و سیاست مصوب 2026-11-01 خوانده شوند.
+
 > افزودهٔ `2026-11-08`: [اتصال Knowledge و RAG مجاز](architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md) هفت عملیات جدید و enrichment مسیر processing منبع را توضیح می‌دهد. SourceVersion، ACL جاری، evidence واقعی و ledger سهمیه در Backend کنترل می‌شوند؛ Library بسته می‌ماند. پذیرش محلی Backend → AI واقعی برای ۱۲ عملیات Business و چهار قالب فایل موفق است؛ پذیرش سرور، Worker/Queue و Cutover هنوز انجام نشده‌اند. [راهنمای اجرای سرور و rollback](ai-handoff/KNOWLEDGE_FINAL_INTEGRATION_RUNBOOK_FA.md). این نتیجه جای وضعیت تاریخی Timeout/تعویق RAG در یادداشت‌های قدیمی را می‌گیرد، نه gate عملیاتی سرور را.
 
 > افزودهٔ `2026-11-05`: [مدیریت نقش سازمانی Phase 6](product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md). Manager، مدیر دیگر همان سازمان را هم با محافظ آخرین مدیر مدیریت می‌کند؛ چهار mutation با نسخه‌های مستقل و رسید Retry اضافه شده‌اند. مرز تصمیم بازِ یادداشت قبلی با این قرارداد جایگزین شده است.

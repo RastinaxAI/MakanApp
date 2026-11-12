@@ -53,7 +53,7 @@ def html_document(name, markdown_module):
         # مرجعِ ضمیمه یک سطح عمیق‌تر است؛ لینک‌های سورس بدون تغییر معنا منتقل می‌شوند.
         reference = re.sub(r'\]\((?!https?://|#)([^)]+)\)', lambda match: '](../' + match.group(1) + ')', reference)
         source += '\n\n' + '\n'.join(reference.splitlines()[1:])
-    baseline = re.search(r'main@([0-9a-f]{7,40})', source)
+    baseline = re.search(r'(?:main|source)@([0-9a-f]{7,40})', source)
     reviewed = re.search(r'`(\d{4}-\d{2}-\d{2})`', source)
     if not baseline or not reviewed:
         raise RuntimeError(f'مبنای سورس یا تاریخ بازبینی در Markdown {name} مشخص نیست.')
@@ -144,7 +144,7 @@ def pdf_document(name, html_path, headings, edition, browser, pdf):
     assert not outside, f'متن بیرون صفحه: {outside[:8]}'
     title, subtitle = DOCUMENTS[name]
     html_sha = hashlib.sha256(html_path.read_bytes()).hexdigest()
-    document.set_metadata({'title': title, 'author': 'MakanApp Backend', 'subject': subtitle + f'؛ main@{edition[0]}؛ {edition[1]}', 'keywords': 'source-html-sha256:' + html_sha, 'creator': 'Markdown / Microsoft Edge / PyMuPDF'})
+    document.set_metadata({'title': title, 'author': 'MakanApp Backend', 'subject': subtitle + f'؛ source@{edition[0]}؛ {edition[1]}', 'keywords': 'source-html-sha256:' + html_sha, 'creator': 'Markdown / Microsoft Edge / PyMuPDF'})
     target = document_path(name, 'pdf')
     document.save(target, garbage=1, deflate=True)
     selected = sorted(set([0, len(document) // 2, len(document) - 1] + [destinations[headings[i][1]] - 1 for i in (0, min(len(headings) - 1, 10))]))
