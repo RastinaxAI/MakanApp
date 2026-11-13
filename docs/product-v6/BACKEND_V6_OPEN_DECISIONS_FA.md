@@ -1,10 +1,9 @@
 # تصمیم‌های باز Product v6
 
-تاریخ بررسی: `2026-11-12`. مبنا: Product v6، شرح وظایف v6، Source مبنا و override صریح این Task. این فهرست مجوز فعال‌سازی قابلیت پیشنهادی نیست.
+تاریخ بررسی: `2026-11-13`. مبنا: Product v6، شرح وظایف v6 و پرامپت مصوب School Establishment. این فهرست مجوز فعال‌سازی قابلیت پیشنهادی نیست.
 
 | شناسه | موضوع | وضعیت | رفتار تا تعیین تکلیف |
 |---|---|---|---|
-| V6-D01 | حداقل الزامات Submit دو نوع School Application؛ خصوصاً مدارک و الزامی‌بودن ظرفیت مدرس در مسیر مدرس حقیقی | `PRODUCT_DECISION_REQUIRED`؛ سؤال برای مالک ارسال شده | دادهٔ Draft بدون ظرفیت، قیمت یا هویت حدسی حفظ شود؛ validation الزامات تأییدنشده به‌عنوان Policy قطعی معرفی نشود. |
 | V6-D03 | مدت نگه‌داری Tombstone و رسیدهای Sync دفترچه و اثر حذف از دفترچهٔ اصلی گوشی بر cloud | `PRODUCT_DECISION_REQUIRED` | عدد TTL، purge یا حذف ابری خودکار از نبود مخاطب در snapshot گوشی اختراع نشود؛ Delete صریح cloud شناسه را Tombstone می‌کند و دستگاه قدیمی حق احیایش را ندارد. |
 | V6-D04 | Retention/استثنا و روش اجرای حذف Identity، Contacts، Messaging، دادهٔ آموزشی، مدارک مدرسه، مالی، Audit و AI/vector | `PRODUCT_LEGAL_DECISION_REQUIRED` | ثبت و پیگیری درخواست ممکن است؛ زمان اجرا، anonymization یا حذف خودکار فعال نشود. |
 | V6-D05 | اشتراک Student/Parent: چند فرزند، pooling/splitting، تعداد والد و پایان رابطه | `PRODUCT_DECISION_REQUIRED` | هویت/نشست/پیام/دفترچه/رسیدها جدا بمانند؛ سهمیه یا انتقال مالکیت حدسی ایجاد نشود. |
@@ -14,9 +13,14 @@
 | V6-D10 | Reopen تیکت Resolved و اختیار کاربر برای بستن نهایی | `PRODUCT_DECISION_REQUIRED` | Create/Read/Reply و Assign/Resolve مجاز موجود از بازگشایی جدا بمانند؛ Reply روی پروندهٔ نهایی، بازگشایی ضمنی ایجاد نکند. |
 | V6-D13 | سیاست نهایی target v6 دربارهٔ درخواست/stranger برای Unknown/Minor | `PRODUCT_DECISION_REQUIRED` برای رفتار پیشنهادی تازه | سیاست Source مصوب `2026-11-01`، Privacy/Block/Safety حفظ شود؛ Request Messaging تازه یا منع عمومی بر اساس سن احیا نشود. |
 | V6-D14 | شکل عضویت/اطلاعیهٔ والد در فضای رسمی کلاس در target v6 | `PRODUCT_DECISION_REQUIRED` برای گسترش پیشنهادی | دسترسی فعلیِ منبع و Guardian جاری حفظ شود؛ عضویت گسترده یا مجوز Direct از آن استنتاج نشود. |
+| V6-D15 | الزام سخت‌گیرانه‌تر مثبت‌بودن هر دو ظرفیت آموزشگاه در آینده | `PRODUCT_DECISION_REQUIRED` برای تغییر سیاست جاری | سیاست مصوب فعلی required/integer/non-negative است و صفر پذیرفته می‌شود؛ این تصمیم باز مانع Submit فعلی نیست. |
+| V6-D16 | فیلدهای حقوقی و دسته‌بندی دقیق‌تر مدارک آموزشگاه | `PRODUCT_DECISION_REQUIRED` برای گسترش بعدی | حداقل فعلی حقوقی با License/OrganizationDocument و مدرس با Degree، سابقه و نمونه‌کار اجرا می‌شود؛ کد ملی/ثبت/مالیات یا زیرنوع مدرک الزامی حدس زده نشود. |
+| V6-D17 | مرجع و روش انتخاب مدیر اولیهٔ آموزشگاه پس از پرداخت | `BLOCKED_PRODUCT_DECISION` | متقاضی مدیر فرض نشود؛ Paid محفوظ و Outbox به همان PlatformProvisioningRequest با مرجع پرونده/Order متصل شود؛ ساخت Organization/Subscription/دعوت تا تعیین سیاست بسته بماند. |
+| V6-D18 | Correction/Reopen پرونده بعد از Approved/Rejected/Cancelled | `PRODUCT_DECISION_REQUIRED` | فرم و شرایط تاریخی درجا mutate نشوند؛ چرخهٔ تازهٔ تأیید یا restore اختراع نشود. |
 
 ## مواردی که باز نیستند
 
+- V6-D01 با پرامپت School Establishment مورخ `2026-11-13` بسته شد: فیلد/مدرک لازم هر دو نوع و دو ظرفیت نامنفی مشخص‌اند؛ Submit واقعی، NeedsChanges/resubmit، لغو و History فعال‌اند. الزامات جزئی در [Handoff آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است.
 - V6-D02 تصویب شد: نشست فعال + OTP واقعی شمارهٔ جدید؛ تغییر اتمیک، حفظ UserId/نشست جاری و ابطال سایر نشست‌ها و Refreshهایشان. Mock ورود در تغییر شماره پذیرفته نمی‌شود.
 - V6-D12 تصویب شد: LinkAccount فقط reference خصوصی مالک است؛ پروفایل و Block جاری بررسی می‌شوند و مجوز Direct/ContactsAudience یا تغییر هویتی/سازمانی نمی‌سازد.
 - V6-D07 برابر `DEFERRED_APPROVED` است: BE-25 پیشنهادی، هر دو Gate پیش‌فرض false و engine/سوابق محفوظ؛ فعال‌سازی نهایی Task بعدی است.
@@ -34,7 +38,11 @@
 
 V6-D11 مانع سازگاری Upstream است، نه مجوز ساخت Role/Organization جعلی: Contract فعلی AI فقط Student/Parent/Teacher/Manager دارد. انتخاب Personal با limitation صریح ذخیره می‌شود ولی Generic Chat شخصی فعال نمی‌شود. `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` در Handoff ثبت شده است. قرارداد سازگار سرویس AI لازم است؛ Service Auth هر دو سرویس تغییر نمی‌کند.
 
-شمار تصمیم‌های باز Product/Legal در جدول بالا: **۱۰**؛ دو تصمیم D02/D12 تأیید شده‌اند، D07 به‌صورت مصوب Deferred است و D11 مانع Contract/Configuration جداست. آماده‌نبودن credential/device برای Push نیز تصمیم محصولی تازه نیست.
+شمار تصمیم‌های باز Product/Legal در جدول بالا: **۱۳**؛ D01/D02/D12 بسته یا تأیید شده‌اند، D07 به‌صورت مصوب Deferred است و D11 مانع Contract/Configuration جداست. D15/D16 محدودیت‌های توسعهٔ آینده‌اند و Submit جاری را نمی‌بندند. آماده‌نبودن credential/device برای Push نیز تصمیم محصولی تازه نیست.
+
+## تنظیم تجاری آموزشگاه
+
+`SCHOOL_APPLICATION_COMMERCIAL_TERMS=BLOCKED_CONFIGURATION`: هیچ قیمت، دوره یا Quota واقعی Seed نشده است. API نگاشت server-owned دو نوع پرونده به PlanVersion منتشرشدهٔ اختصاصی و معتبر موجود است؛ Platform باید دادهٔ مصوب را با permission تجاری صریح ثبت کند. این نیاز Configuration است و به شمار تصمیم‌های Product/Legal اضافه نشده است. تست‌ها فقط با دادهٔ ساختگی و درگاه کنترل‌شده انجام می‌شوند. سیاست مدیر اولیه مستقل از این نگاشت و در D17 باز است.
 
 ## پیش‌نیاز عملیاتی رمزنگاری دفترچه
 

@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26`؛ بازبینی `2026-11-12`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@b7ac095c3f5c0175254edadd6d5ef35f7b24215d`؛ بازبینی `2026-11-13`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**146 جدول، 1560 ستون، 388 FK، 449 index مستقل از key و 405 CHECK؛ 71 Migration.**
+**149 جدول، 1583 ستون، 396 FK، 456 index مستقل از key و 407 CHECK؛ 72 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -25,14 +25,14 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 |---|---|
 | academic | 18 |
 | assessment | 20 |
-| commerce | 13 |
+| commerce | 15 |
 | guardian | 1 |
 | identity | 9 |
 | intelligence | 1 |
 | knowledge | 4 |
 | messaging | 52 |
 | notification | 4 |
-| organization | 11 |
+| organization | 12 |
 | platform | 7 |
 | reports | 1 |
 | storage | 1 |
@@ -113,6 +113,7 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 69 | 20261112153121_AddVersionedSchoolApplications | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112153121_AddVersionedSchoolApplications.cs) |
 | 70 | 20261112160026_ExtendProductNotificationTargets | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112160026_ExtendProductNotificationTargets.cs) |
 | 71 | 20261112165826_AddVerifiedPhoneChangeRequests | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112165826_AddVerifiedPhoneChangeRequests.cs) |
+| 72 | 20261113065124_CompleteSchoolEstablishmentWorkflow | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113065124_CompleteSchoolEstablishmentWorkflow.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -2136,6 +2137,7 @@ Entity: `MakanApp.Domain.Commerce.Order`؛ مالک نگاشت: [EF Configuratio
 | Purpose | `int` | خیر | خیر | Never |
 | RequestPayloadHash | `binary(32)` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SchoolApplicationId | `uniqueidentifier` | بله | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
 | TargetSubscriptionId | `uniqueidentifier` | بله | خیر | Never |
 | TermsExpireAtUtc | `datetime2` | بله | خیر | Never |
@@ -2152,6 +2154,7 @@ Indexها:
 |---|---|---|---|
 | IX_Orders_ExpectedPreviousPlanVersionId | ExpectedPreviousPlanVersionId | False | — |
 | IX_Orders_PlanVersionId | PlanVersionId | False | — |
+| IX_Orders_SchoolApplicationId | SchoolApplicationId | True | [SchoolApplicationId] IS NOT NULL AND [Status] <> 3 |
 | IX_Orders_TargetSubscriptionId | TargetSubscriptionId | False | — |
 | UX_Orders_Purchaser_ClientOperation | PurchaserUserId, ClientOperationId | True | — |
 | IX_Orders_Purchaser_CreatedAt | PurchaserUserId, CreatedAtUtc | False | — |
@@ -2165,6 +2168,7 @@ Indexها:
 | OrganizationId | organization.Organizations | Id | Restrict |
 | PlanVersionId | commerce.PlanVersions | Id | Restrict |
 | PurchaserUserId | identity.Users | Id | Restrict |
+| SchoolApplicationId | organization.SchoolApplications | Id | Restrict |
 | TargetSubscriptionId | commerce.Subscriptions | Id | Restrict |
 
 CHECKها:
@@ -2504,6 +2508,74 @@ CHECKها:
 | CK_PlanVersions_Status | `[Status] IN (1, 2)` |
 | CK_PlanVersions_VersionNumber | `[VersionNumber] > 0` |
 | CK_PlanVersions_Warnings | `([WarningPercent] IS NULL OR [WarningPercent] BETWEEN 1 AND 99) AND ([CriticalWarningPercent] IS NULL OR [CriticalWarningPercent] BETWEEN 1 AND 99) AND ([WarningPercent] IS NULL OR [CriticalWarningPercent] IS NULL OR [WarningPercent]<[CriticalWarningPercent])` |
+
+### commerce.SchoolEstablishmentOfferings
+
+Entity: `MakanApp.Domain.Commerce.SchoolEstablishmentOffering`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Kind | `int` | خیر | خیر | Never |
+| PlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Version | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolEstablishmentOfferings | PK | Kind |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolEstablishmentOfferings_PlanVersionId | PlanVersionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| PlanVersionId | commerce.PlanVersions | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_SchoolOfferings_KindVersion | `[Kind] IN (1,2) AND [Version]>0` |
+
+### commerce.SchoolOfferingOperations
+
+Entity: `MakanApp.Domain.Commerce.SchoolOfferingOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| Fingerprint | `varchar(64)` | خیر | خیر | Never |
+| Kind | `int` | خیر | خیر | Never |
+| OfferingVersion | `bigint` | خیر | خیر | Never |
+| PlanVersionId | `uniqueidentifier` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolOfferingOperations | PK | ActorUserId, ClientOperationId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolOfferingOperations_PlanVersionId | PlanVersionId | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ActorUserId | identity.Users | Id | Restrict |
+| PlanVersionId | commerce.PlanVersions | Id | Restrict |
 
 ### commerce.SubscriptionAmendments
 
@@ -6173,6 +6245,42 @@ Indexها:
 | FileAssetId | storage.FileAssets | Id | Restrict |
 | ApplicationId, Revision | organization.SchoolApplicationRevisions | ApplicationId, Number | Restrict |
 
+### organization.SchoolApplicationHistory
+
+Entity: `MakanApp.Domain.Organization.SchoolApplicationHistory`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| Action | `nvarchar(100)` | خیر | خیر | Never |
+| ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
+| ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+| Reason | `nvarchar(2000)` | بله | خیر | Never |
+| Revision | `int` | خیر | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| Version | `bigint` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_SchoolApplicationHistory | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_SchoolApplicationHistory_ActorUserId | ActorUserId | False | — |
+| IX_SchoolApplicationHistory_ApplicationId_Version | ApplicationId, Version | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ActorUserId | identity.Users | Id | Restrict |
+| ApplicationId | organization.SchoolApplications | Id | Restrict |
+
 ### organization.SchoolApplicationOperations
 
 Entity: `MakanApp.Domain.Organization.SchoolApplicationOperation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
@@ -6274,9 +6382,10 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
+| CK_SchoolApplications_Capacities | `([StudentCapacity] IS NULL OR [StudentCapacity]>=0) AND ([TeacherCapacity] IS NULL OR [TeacherCapacity]>=0)` |
 | CK_SchoolApplications_Kind | `[Kind] IN (1,2)` |
-| CK_SchoolApplications_Status | `[Status] IN (1,2,3,4,5,6)` |
-| CK_SchoolApplications_SubmissionPolicy | `[Status]=1 OR [SubmittedPolicyVersion] IS NOT NULL` |
+| CK_SchoolApplications_Status | `[Status] IN (1,2,3,4,5,6,7)` |
+| CK_SchoolApplications_SubmissionPolicy | `[Status] IN (1,7) OR [SubmittedPolicyVersion] IS NOT NULL` |
 | CK_SchoolApplications_Version | `[Revision] > 0 AND [Version] >= [Revision]` |
 
 ### platform.AdminAuditLogs
@@ -6506,6 +6615,8 @@ Entity: `MakanApp.Domain.Platform.PlatformProvisioningRequest`؛ مالک نگا
 | Reason | `nvarchar(500)` | خیر | خیر | Never |
 | RequestedByUserId | `uniqueidentifier` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SchoolApplicationId | `uniqueidentifier` | بله | خیر | Never |
+| SourceOrderId | `uniqueidentifier` | بله | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
 | SubscriptionEndsAtUtc | `datetime2(7)` | بله | خیر | Never |
 | SubscriptionId | `uniqueidentifier` | بله | خیر | Never |
@@ -6527,6 +6638,8 @@ Indexها:
 | IX_ProvisioningRequests_OrganizationId | OrganizationId | False | — |
 | IX_ProvisioningRequests_PlanVersionId | PlanVersionId | False | — |
 | IX_ProvisioningRequests_RequestedByUserId | RequestedByUserId | False | — |
+| IX_ProvisioningRequests_SchoolApplicationId | SchoolApplicationId | True | [SchoolApplicationId] IS NOT NULL |
+| IX_ProvisioningRequests_SourceOrderId | SourceOrderId | True | [SourceOrderId] IS NOT NULL |
 | IX_ProvisioningRequests_SubscriptionId | SubscriptionId | False | — |
 | IX_ProvisioningRequests_Status_UpdatedAtUtc | Status, UpdatedAtUtc | False | — |
 
@@ -6539,6 +6652,8 @@ Indexها:
 | OrganizationId | organization.Organizations | Id | Restrict |
 | PlanVersionId | commerce.PlanVersions | Id | Restrict |
 | RequestedByUserId | identity.Users | Id | Restrict |
+| SchoolApplicationId | organization.SchoolApplications | Id | Restrict |
+| SourceOrderId | commerce.Orders | Id | Restrict |
 | SubscriptionId | commerce.Subscriptions | Id | Restrict |
 
 CHECKها:

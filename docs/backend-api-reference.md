@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-11-12` با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-11-13` با مبنای Git `source@b7ac095c3f5c0175254edadd6d5ef35f7b24215d` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **483 عملیات HTTP، 427 مسیر متمایز، 91 Controller و 772 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **490 عملیات HTTP، 434 مسیر متمایز، 91 Controller و 778 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -109,7 +109,7 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | PlatformPersonalClassMemberships | 1 | [PlatformPersonalClassMembershipsController](../MakanApp.Api/Controllers/PlatformPersonalClassMembershipsController.cs) |
 | PlatformPersonalClassRequests | 4 | [PlatformPersonalClassRequestsController](../MakanApp.Api/Controllers/PlatformPersonalClassRequestsController.cs) |
 | PlatformProvisioning | 2 | [PlatformProvisioningController](../MakanApp.Api/Controllers/PlatformProvisioningController.cs) |
-| PlatformSchoolApplications | 4 | [PlatformSchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
+| PlatformSchoolApplications | 7 | [PlatformSchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
 | PlatformSupportTickets | 5 | [PlatformSupportTicketsController](../MakanApp.Api/Controllers/SupportTicketsController.cs) |
 | PlatformSystemOperations | 3 | [PlatformSystemOperationsController](../MakanApp.Api/Controllers/PlatformSystemOperationsController.cs) |
 | PlatformUsers | 6 | [PlatformUsersController](../MakanApp.Api/Controllers/PlatformUsersController.cs) |
@@ -120,7 +120,7 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | Schedule | 3 | [ScheduleController](../MakanApp.Api/Controllers/ScheduleController.cs) |
 | ScheduledMessages | 3 | [ScheduledMessagesController](../MakanApp.Api/Controllers/ScheduledMessagesController.cs) |
 | SchoolAcademicDiscovery | 2 | [SchoolAcademicDiscoveryController](../MakanApp.Api/Controllers/SchoolAcademicDiscoveryController.cs) |
-| SchoolApplications | 5 | [SchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
+| SchoolApplications | 9 | [SchoolApplicationsController](../MakanApp.Api/Controllers/SchoolApplicationsController.cs) |
 | SchoolGuardianInvitations | 2 | [SchoolGuardianInvitationsController](../MakanApp.Api/Controllers/SchoolGuardianInvitationsController.cs) |
 | SchoolGuardianRelations | 6 | [SchoolGuardianRelationsController](../MakanApp.Api/Controllers/SchoolGuardianRelationsController.cs) |
 | SchoolSentInvitations | 1 | [SchoolSentInvitationsController](../MakanApp.Api/Controllers/SchoolSentInvitationsController.cs) |
@@ -9606,6 +9606,47 @@ policy: `platform.school_applications.read`
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
+### GET /api/admin/v1/school-applications/offerings
+
+کد واقعی: [PlatformSchoolApplicationsController.Offerings](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.commerce.manage`، `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: آرایه از [SchoolOfferingResult](#contract-SchoolOfferingResult)<br>`application/json`: آرایه از [SchoolOfferingResult](#contract-SchoolOfferingResult)<br>`text/json`: آرایه از [SchoolOfferingResult](#contract-SchoolOfferingResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PUT /api/admin/v1/school-applications/offerings/{kind}
+
+کد واقعی: [PlatformSchoolApplicationsController.Offering](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.review`، `platform.commerce.manage`، `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `kind` | path | بله | [SchoolApplicationKind](#contract-SchoolApplicationKind) |
+
+بدنه درخواست: `application/json`: [SchoolOfferingCommand](#contract-SchoolOfferingCommand)<br>`text/json`: [SchoolOfferingCommand](#contract-SchoolOfferingCommand)<br>`application/*+json`: [SchoolOfferingCommand](#contract-SchoolOfferingCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolOfferingResult](#contract-SchoolOfferingResult)<br>`application/json`: [SchoolOfferingResult](#contract-SchoolOfferingResult)<br>`text/json`: [SchoolOfferingResult](#contract-SchoolOfferingResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
 ### GET /api/admin/v1/school-applications/{id}
 
 کد واقعی: [PlatformSchoolApplicationsController.Read](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
@@ -9651,6 +9692,30 @@ policy: `platform.school_applications.review`، `platform.school_applications.re
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/admin/v1/school-applications/{id}/history
+
+کد واقعی: [PlatformSchoolApplicationsController.History](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.school_applications.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage)<br>`application/json`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage)<br>`text/json`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
 ### POST /api/admin/v1/school-applications/{id}/review
 
@@ -10927,6 +10992,88 @@ policy: `platform.users.manage`
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
+### POST /api/v1/school-applications/{id}/cancel
+
+کد واقعی: [SchoolApplicationsController.Cancel](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`text/json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)<br>`application/*+json`: [SchoolApplicationActionCommand](#contract-SchoolApplicationActionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### GET /api/v1/school-applications/{id}/history
+
+کد واقعی: [SchoolApplicationsController.History](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+| `page` | query | خیر | integer / int32 |
+| `pageSize` | query | خیر | integer / int32 |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage)<br>`application/json`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage)<br>`text/json`: [SchoolApplicationHistoryPage](#contract-SchoolApplicationHistoryPage) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/school-applications/{id}/orders
+
+کد واقعی: [SchoolApplicationsController.Order](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)<br>`text/json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)<br>`application/*+json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CreateOrderResult](#contract-CreateOrderResult)<br>`application/json`: [CreateOrderResult](#contract-CreateOrderResult)<br>`text/json`: [CreateOrderResult](#contract-CreateOrderResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/v1/school-applications/{id}/quote
+
+کد واقعی: [SchoolApplicationsController.Quote](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Organization.SchoolApplicationService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `id` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)<br>`text/json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)<br>`application/*+json`: [SchoolApplicationCommerceCommand](#contract-SchoolApplicationCommerceCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`application/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto)<br>`text/json`: [CommercialQuoteDto](#contract-CommercialQuoteDto) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
 ### POST /api/v1/school-applications/{id}/submit
 
 کد واقعی: [SchoolApplicationsController.Submit](../MakanApp.Api/Controllers/SchoolApplicationsController.cs).
@@ -10943,7 +11090,7 @@ policy: `platform.users.manage`
 
 | HTTP status | معنا | بدنه |
 |---|---|---|
-| 409 | Conflict | `text/plain`: [ProblemDetails](#contract-ProblemDetails)<br>`application/json`: [ProblemDetails](#contract-ProblemDetails)<br>`text/json`: [ProblemDetails](#contract-ProblemDetails)<br>`application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 200 | OK | `text/plain`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`application/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult)<br>`text/json`: [SchoolApplicationResult](#contract-SchoolApplicationResult) |
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
@@ -13282,6 +13429,7 @@ object
 | `effectiveQuotas` | آرایه از [CommercialQuotaDto](#contract-CommercialQuotaDto) | بله | خیر/تصریح نشده | — |
 | `autoRenew` | boolean | بله | خیر/تصریح نشده | — |
 | `paymentAvailable` | boolean | خیر | خیر/تصریح نشده | — |
+| `schoolApplicationId` | string / uuid | خیر | بله | — |
 | `paymentUnavailableCode` | string | خیر | بله | — |
 | `expiresAtUtc` | string / date-time | خیر | خیر/تصریح نشده | — |
 | `previewOnly` | boolean | خیر | خیر/تصریح نشده | — |
@@ -14402,6 +14550,8 @@ object
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `purpose` | [CommercialOrderPurpose](#contract-CommercialOrderPurpose) | خیر | خیر/تصریح نشده | — |
 | `subscriptionId` | string / uuid | خیر | بله | {"default": null} |
+| `schoolApplicationId` | string / uuid | خیر | بله | — |
+| `schoolApplicationVersion` | integer / int64 | خیر | بله | — |
 
 <a id="contract-CreateOrderResult"></a>
 ### CreateOrderResult
@@ -16892,7 +17042,7 @@ string / Active, Ended, None
 <a id="contract-NullableOfSchoolApplicationStatus"></a>
 ### NullableOfSchoolApplicationStatus
 
-string / Draft, Submitted, UnderReview, NeedsChanges, Rejected, Approved, None
+string / Draft, Submitted, UnderReview, NeedsChanges, Rejected, Approved, Cancelled, None
 
 <a id="contract-NullableOfSessionActivityAction"></a>
 ### NullableOfSessionActivityAction
@@ -17006,6 +17156,7 @@ object
 | `paidAtUtc` | string / date-time | بله | بله | — |
 | `fulfillmentState` | [OrderFulfillmentState](#contract-OrderFulfillmentState) | بله | خیر/تصریح نشده | — |
 | `paymentAttempts` | آرایه از [PaymentAttemptDto](#contract-PaymentAttemptDto) | بله | خیر/تصریح نشده | — |
+| `schoolApplicationId` | string / uuid | خیر | بله | — |
 | `priceToman` | number / double | خیر | خیر/تصریح نشده | — |
 | `displayCurrency` | string | خیر | بله | — |
 
@@ -18765,6 +18916,8 @@ object
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `version` | string | بله | خیر/تصریح نشده | — |
+| `schoolApplicationId` | string / uuid | خیر | بله | — |
+| `sourceOrderId` | string / uuid | خیر | بله | — |
 
 <a id="contract-PlatformProvisioningPage"></a>
 ### PlatformProvisioningPage
@@ -20015,6 +20168,16 @@ object
 | `applicantFeedback` | string | خیر | بله | {"default": null} |
 | `decision` | [NullableOfSchoolApplicationStatus](#contract-NullableOfSchoolApplicationStatus) | خیر | خیر/تصریح نشده | — |
 
+<a id="contract-SchoolApplicationCommerceCommand"></a>
+### SchoolApplicationCommerceCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+
 <a id="contract-SchoolApplicationDecisionResult"></a>
 ### SchoolApplicationDecisionResult
 
@@ -20043,6 +20206,34 @@ object
 | `studentCapacity` | integer / int32 | بله | بله | — |
 | `teacherCapacity` | integer / int32 | بله | بله | — |
 
+<a id="contract-SchoolApplicationHistoryPage"></a>
+### SchoolApplicationHistoryPage
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `items` | آرایه از [SchoolApplicationHistoryResult](#contract-SchoolApplicationHistoryResult) | بله | خیر/تصریح نشده | — |
+| `total` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `page` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolApplicationHistoryResult"></a>
+### SchoolApplicationHistoryResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `id` | string / uuid | بله | خیر/تصریح نشده | — |
+| `action` | string | بله | خیر/تصریح نشده | — |
+| `revision` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `version` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `status` | [SchoolApplicationStatus](#contract-SchoolApplicationStatus) | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | بله | — |
+| `occurredAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `actorUserId` | string / uuid | بله | بله | — |
+
 <a id="contract-SchoolApplicationKind"></a>
 ### SchoolApplicationKind
 
@@ -20064,6 +20255,21 @@ object
 | `page` | integer / int32 | بله | خیر/تصریح نشده | — |
 | `pageSize` | integer / int32 | بله | خیر/تصریح نشده | — |
 
+<a id="contract-SchoolApplicationProgress"></a>
+### SchoolApplicationProgress
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `commercialState` | string | بله | خیر/تصریح نشده | — |
+| `orderId` | string / uuid | بله | بله | — |
+| `paymentState` | string | بله | بله | — |
+| `provisioningState` | string | بله | خیر/تصریح نشده | — |
+| `provisioningRequestId` | string / uuid | بله | بله | — |
+| `organizationId` | string / uuid | بله | بله | — |
+| `subscriptionId` | string / uuid | بله | بله | — |
+
 <a id="contract-SchoolApplicationResult"></a>
 ### SchoolApplicationResult
 
@@ -20083,13 +20289,19 @@ object
 | `submissionLimitation` | string | بله | بله | — |
 | `createdAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `updatedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
+| `canEdit` | boolean | خیر | خیر/تصریح نشده | — |
+| `canCancel` | boolean | خیر | خیر/تصریح نشده | — |
+| `missingRequirements` | آرایه از string | خیر | خیر/تصریح نشده | — |
+| `nextAction` | string | خیر | خیر/تصریح نشده | — |
+| `applicantUserId` | string / uuid | خیر | بله | — |
+| `progress` | [SchoolApplicationProgress](#contract-SchoolApplicationProgress) | خیر | خیر/تصریح نشده | — |
 
 <a id="contract-SchoolApplicationStatus"></a>
 ### SchoolApplicationStatus
 
 CLR واقعی: `MakanApp.Domain.Organization.SchoolApplicationStatus`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Draft", "Submitted", "UnderReview", "NeedsChanges", "Rejected", "Approved"]`
+literalهای JSON واقعی MVC: `["Draft", "Submitted", "UnderReview", "NeedsChanges", "Rejected", "Approved", "Cancelled"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -20195,6 +20407,29 @@ object
 | `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
 | `operationCompletedAtUtc` | string / date-time | بله | خیر/تصریح نشده | — |
 | `replayed` | boolean | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolOfferingCommand"></a>
+### SchoolOfferingCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | integer / int64 | بله | خیر/تصریح نشده | — |
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `reason` | string | بله | خیر/تصریح نشده | — |
+
+<a id="contract-SchoolOfferingResult"></a>
+### SchoolOfferingResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `kind` | [SchoolApplicationKind](#contract-SchoolApplicationKind) | بله | خیر/تصریح نشده | — |
+| `planVersionId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `version` | integer / int64 | بله | خیر/تصریح نشده | — |
 
 <a id="contract-SchoolPageOfAcademicPeriodResult"></a>
 ### SchoolPageOfAcademicPeriodResult

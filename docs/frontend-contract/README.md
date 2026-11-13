@@ -1,10 +1,10 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-> قراردادهای تازه و محدودیت‌های محصول در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) است: Gate آموزشی PersonalClass خاموش، Submit آموزشگاه و Generic Personal AI محدود و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.
+> قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است: Submit آموزشگاه فعال و تجارت به Order/Payment/Outbox موجود متصل است؛ تنظیم قیمت واقعی و سیاست مدیر اولیه پیش‌نیاز آماده‌سازی نهایی‌اند. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.
 
-بازبینی `2026-11-12` با مبنای Git `source@e440c0143abee7cc40fb18223922cd3c06e22b26` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-11-13` با مبنای Git `source@b7ac095c3f5c0175254edadd6d5ef35f7b24215d` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-پوشش جاری: 483 عملیات HTTP در 427 مسیر، 91 Controller، 772 schema، 146 جدول و 71 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 490 عملیات HTTP در 434 مسیر، 91 Controller، 778 schema، 149 جدول و 72 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).

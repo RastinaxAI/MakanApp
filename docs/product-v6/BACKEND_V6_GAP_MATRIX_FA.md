@@ -1,5 +1,7 @@
 # ماتریس تطبیق Backend با Product v6
 
+> وضعیت جاری آموزشگاه پس از پرامپت تکمیلی `2026-11-13` در [جدول تکمیل آموزشگاه](#بهروزرسانی-آموزشگاه--2026-11-13) انتهای سند است؛ ردیف‌های Audit و تحویل قبلی با تاریخ و Commit خود حفظ شده‌اند.
+
 مبنای Audit پیش از تغییر Runtime: `e5bd3eae658991585ca09f581f6236351857b3b8`، تاریخ `2026-11-12`، شاخهٔ کاری `feature/product-v6-backend-alignment`. سه فایل untracked قبلی AI و تنظیمات خصوصی با Backup/هش محافظت شده‌اند. این سند وضعیت اولیه است؛ نتیجهٔ اجرای تغییرات و ارزیابی نهایی جدا ثبت می‌شوند.
 
 منابع کامل خوانده‌شده: `01_BACKEND_TASKS_FA.md` نسخه۶ و `MakanApp_Product_Architecture_FA_v6.pdf`، ۵۱ صفحه. SHA256 فایل PDF: `2b8f817dd9d91097a9fc4e34e0564f37fd4ad6b4a771a53d78e7350201250609`. سند هدف محصول، شاهد پیاده‌سازی یا Deploy نیست. تصمیم صریح پرامپت دربارهٔ خاموش‌بودن Service Authentication دو سرویس AI بر متن قدیمی BE-19 اولویت دارد.
@@ -289,3 +291,20 @@ Snapshot تازهٔ محلی: 403 path، 454 operation، 732 schema، 82 Control
 | BE-25 Proposed academics | `DEFERRED_APPROVED` | Assignment/Exam پیش‌فرض false؛ Gate مرکزی برای generic path، capabilities، worker، Realtime و Notification؛ engine و تاریخچه باقی‌اند. |
 
 هیچ ردیف PASS در این جدول ادعای Deploy، SMS/AI/Push واقعی، خرید Store یا آمادگی تمام Product v6 نیست. Test و Production private config و سه فایل AI قبلی حفظ شده‌اند؛ شش Migration جدید روی دیتابیس عادی یا سرور اجرا نشده است.
+
+## به‌روزرسانی آموزشگاه — 2026-11-13
+
+مرجع: پرامپت مصوب School Establishment با مبنای `1fd122c2bfa7930dbbf0a1325a3c360a2fa451a5`. [گزارش فنی و یادگیری](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md#تکمیل-درخواست-آموزشگاه--2026-11-13)، [قرارداد متقاضی](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) و [قرارداد Admin](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) جزئیات جاری را دارند. D01 بسته شده و Submit دیگر به نبود minimum requirements مسدود نیست.
+
+| بخش | وضعیت واقعی | شاهد/محدودیت |
+|---|---|---|
+| Domain / LegalOrganization / IndividualTeacher | `PASS` در پذیرش متمرکز | دو فرم، دو ظرفیت نامنفی مستقل، مدارک مصوب، Submit/Cancel/NeedsChanges/resubmit و readonly پس از تصمیم نهایی |
+| Documents / ACL / History | `PASS` در پذیرش متمرکز | همان FileAsset، binding retained، owner/reviewer جاری، منع cross-user و مخفی‌بودن Draft لغوشدهٔ ارسال‌نشده؛ history واقعی بدون backfill |
+| Idempotency / Version / Review | `PASS` در پذیرش متمرکز | receipt/fingerprint، ExpectedVersion، قفل SQL، دلیل اجباری؛ رقابت تصمیم فقط یک برنده دارد |
+| Commerce boundary / Order / Zibal | `PASS` در تست با داده/درگاه کنترل‌شده؛ تنظیم واقعی `BLOCKED_CONFIGURATION` | نگاشت دارای permission به Published PlanVersion، جداسازی خرید عادی، قیمت/نسخه frozen، correlation پرونده و Verify سرور |
+| Durable provisioning intent / Recovery | `PASS` تا مرز تصمیم | Outbox موجود → PlatformProvisioningRequest موجود؛ failure/retry پرداخت را تغییر یا دو intent نمی‌سازد |
+| Organization / Subscription / Initial Manager تکمیل این درخواست | `BLOCKED_PRODUCT_DECISION` | سیاست مدیر اولیه D17 باز؛ متقاضی مدیر فرض نشده و intent عمومی قابل resume نیست |
+| BE03_SCHOOL_APPLICATION | `PARTIAL` در هدف کامل تحویل خدمت | تمام بخش‌های فنی قابل اجرا تا Paid/intent انجام شده؛ قیمت واقعی و تصمیم مدیر اولیه لازم‌اند |
+| BE24_FULL_ACCEPTANCE | `FAIL` در هدف کامل Product v6 | موفقیت تست محلی یا همین پرونده، تصمیم‌های باز/پذیرش عملیاتی سایر حوزه‌ها را نمی‌بندد |
+
+Migration `20261113065124_CompleteSchoolEstablishmentWorkflow` افزودنی است و فقط روی disposable SQL آزموده شده است. جدول تجاری، پروندهٔ تاریخی یا مدیر ساختگی Seed نشده؛ `MakanApp`، `MakanApp_Test` و سرور تغییر نکرده‌اند. feature gateهای BE25 و Service Auth هر دو سرویس AI خاموش و تنظیمات/SMS/AI قبلی محفوظ‌اند. Commit کد `b7ac095c3f5c0175254edadd6d5ef35f7b24215d`؛ منبع آخر۱۲۹۸ Unit +۱۸۸۴ Integration +۱۴ Architecture =۳۱۹۶ PASS، صفر Failed/Skipped و صفر Build Warning/Error دارد.۱۱۴ تست Zibal و Fresh/Upgrade/replay SQL در regression پاس شدند. این موفقیت محلی، دو blocker تنظیم قیمت/مدیر و BE24 را به PASS تبدیل نمی‌کند.
