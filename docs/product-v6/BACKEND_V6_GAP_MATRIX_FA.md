@@ -1,6 +1,6 @@
 # ماتریس تطبیق Backend با Product v6
 
-> وضعیت جاری در بخش «نهایی‌سازی انتخاب مدیر و آماده‌سازی» انتهای سند است. ردیف‌های Audit و تحویل قبلی با تاریخ و Commit خود حفظ شده‌اند؛ D01 و D17 اکنون بسته‌اند. تنظیم تجاری واقعی Production و محدودیت‌های دیگر v6 جدا هستند.
+> وضعیت جاری BE19 در بخش «Personal AI و Knowledge/RAG» انتهای سند و وضعیت School در «نهایی‌سازی انتخاب مدیر و آماده‌سازی» است. ردیف‌های تاریخی با تاریخ و Commit خود حفظ شده‌اند؛ D01 و D17 بسته‌اند. تنظیم تجاری واقعی Production و محدودیت‌های دیگر v6 جدا هستند.
 
 مبنای Audit پیش از تغییر Runtime: `e5bd3eae658991585ca09f581f6236351857b3b8`، تاریخ `2026-11-12`، شاخهٔ کاری `feature/product-v6-backend-alignment`. سه فایل untracked قبلی AI و تنظیمات خصوصی با Backup/هش محافظت شده‌اند. این سند وضعیت اولیه است؛ نتیجهٔ اجرای تغییرات و ارزیابی نهایی جدا ثبت می‌شوند.
 
@@ -328,3 +328,24 @@ Migration `20261113065124_CompleteSchoolEstablishmentWorkflow` افزودنی ا
 Final Release Build با۰ Warning/۰ Error و Restore موفق بود؛ Final Tests=۱۳۰۸ Unit +۱۸۹۷ Integration +۱۴ Architecture =۳۲۱۹ Passed، Failed/Skipped=0؛۱۱۴ تست Zibal و دو تست School Migration در مجموعهٔ نهایی پاس شدند. Snapshot جدید۴۳۶ path/۴۹۲ operation/۷۸۰ schema،۱۴۹ جدول و۷۳ Migration دارد؛ OpenAPI SHA256=`ba5e08f0108fe8593e72b0b3c0874a18c7170a10166bd39a32eb656edcd57912`. `PRODUCTION_COMMERCIAL_CONFIGURATION=BLOCKED_CONFIGURATION`، `BE24_FULL_ACCEPTANCE=FAIL`؛ هیچ نتیجهٔ محلی، Deploy یا پرداخت واقعی ادعا نمی‌کند.
 
 D17 بسته شد و۱۲ تصمیم Product/Legal باز باقی‌اند. تکمیل انتخاب خالیِ Legacy، تعویض مدیر نهایی نیست؛ `POST_APPROVAL_MANAGER_CHANGE=DEFERRED` حفظ می‌شود. AI/Knowledge Service Auth و PersonalClass Assignment/Exam پیش‌فرض خاموش، MeliPayamak و private configها دست‌نخورده‌اند. Merge main و Deploy اجرا نمی‌شوند.
+
+## Personal AI و Knowledge/RAG — 2026-11-13
+
+مبنا: `fc5b297d20cc1cb97fc3b75a1762427bf81e419e`؛ [قرارداد Client و محدودیت‌ها](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، [گزارش آموزشی مرحله](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md).
+
+| معیار | وضعیت پیاده‌سازی | شاهد و مرز |
+|---|---|---|
+| BE19_AI_GATEWAY | `PARTIAL` | Chat شخصی در مرز خارجی blocked؛ نقش آموزشی جعلی ساخته نمی‌شود. |
+| Assistant Context شخصی بدون Role | پیاده و قابل انتخاب | `AssistantContextResolver`؛ scope فاقد Organization/Membership/Role/Subject/Class، per-session و مستقل از School Workspace. |
+| Personal Generic Chat | `BLOCKED_EXTERNAL_CONTRACT` | `AiChatService` و `PersonalAiChatContract`؛409 `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` پیش از Reserve/Provider. |
+| Executor و Commerce شخصی | پیاده؛ پذیرش داخلی با invoke کنترل‌شده | `PersonalAiChatIntent`، `AiInvocationContext` و ledger موجود؛ Individual پیش‌فرض، Trial صریح و Organization نامجاز، بدون مجوز دادهٔ تازه. |
+| Personal Source Selection | پیاده؛ retrieval legacy بسته | owner/current ACL/version/readiness و pin موجود؛ `AI_SOURCE_RETRIEVAL_NOT_AVAILABLE` در selectedSourceIds مسیر Business Chat. |
+| Personal Knowledge Retrieve/RAG | موجود و پذیرش تکمیلی Backend | `KnowledgeAuthorizationService` و `KnowledgeIntegrationService`؛ منبع دقیق شخصی، empty BusinessContext، reauthorization و همان Commerce. تست کنترل‌شده جای پذیرش زندهٔ upstream نیست. |
+| Isolation/Retry/Concurrency/Unknown | پوشش تست مرتبط | فایل‌های `PersonalAiAcceptanceTests` و `PersonalKnowledgeAcceptanceTests` به‌علاوهٔ تست‌های ACL/Source/AI موجود؛ SQL مرجع رزرو است. |
+| Telemetry | پیاده | `makan.ai.execution.results/duration` با tag محدود contextKind/payerKind/operation/result؛ بدون PII، prompt یا secret. |
+| Migration | صفر | EF model تغییر نکرد؛ DB عادی/سرور تغییر نمی‌کند. |
+| BE24_FULL_ACCEPTANCE | `FAIL` | محدودیت‌های قبلی v6، تنظیم عملیاتی و قرارداد خارجی همچنان باقی‌اند. |
+
+OpenAPI زنده در `/openapi.json` فقط چهار UserRole آموزشی دارد و Actor.role اجباری است؛ مسیر اعلام‌شدهٔ `/api/v1/openapi.json`404 داد. این شاهد، مانع خارجی D11 را قطعی می‌کند؛ تصمیم جدید Product یا مجوز فعال‌سازی Service Auth نیست. AI/Knowledge Service Auth هر دو DISABLED و تعداد تصمیم‌های باز Product/Legal همان۱۲ است.
+
+Commit کد `bba4545b9c1b32db804a20953a410347b8439b4e`؛ Restore و Final Release Build با۰ Warning/Error موفق، Final Regression=۱۳۲۵ Unit +۱۹۲۲ Integration +۱۴ Architecture =۳۲۶۱ Passed، Failed/Skipped=0 و۱۱۴ تست Zibal پاس است.۴۲ تست مرتبط جدیدند. Migration جدید۰ و pending model changes وجود ندارد. Snapshot:۴۳۶ path/۴۹۲ operation/۷۸۰ schema،۱۴۹ جدول/۷۳ Migration؛ SHA256=`98541362177563580f24c70be9bc98311df085db83dfe6448622156309c71b46`. فقط دو فلگ عمومی UseServiceAuthentication صریح شدند؛ private config/SMS/AI قبلی ثابت و Runtime خاموش ماند. موفقیت محلی به معنی پذیرش زندهٔ Personal Chat یا Deploy نیست.

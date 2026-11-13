@@ -1,6 +1,6 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-11-13` با مبنای Git `source@1804f402be32e4d776216c17fcd76555fc5cf29f` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-11-13` با مبنای Git `source@bba4545b9c1b32db804a20953a410347b8439b4e` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
 پوشش: **492 عملیات HTTP، 436 مسیر متمایز، 91 Controller و 780 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
@@ -340,7 +340,7 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiChatResult](#contract-AiChatResult)<br>`application/json`: [AiChatResult](#contract-AiChatResult)<br>`text/json`: [AiChatResult](#contract-AiChatResult) |
-| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. Personal Chat: AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED؛ مرز upstream و بدون مصرف. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
@@ -22096,6 +22096,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `AI_CONTEXT_NOT_ALLOWED` | 403 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_FEATURE_DISABLED` | 503 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_INVALID_REQUEST` | 400 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
+| `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` | 409 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_RATE_LIMITED` | 429 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_RESPONSE_INVALID` | 502 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_SERVICE_FORBIDDEN` | 503 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |

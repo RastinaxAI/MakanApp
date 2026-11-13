@@ -1,6 +1,6 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
-> وضعیت جدید در بخش «نهایی‌سازی مدیر و Provisioning آموزشگاه» انتهای همین سند است. گزارش‌های تاریخ‌دار قبلی با Commit و محدودیت همان مرحله نگه داشته شده‌اند؛ D01 و D17 اکنون بسته‌اند. قرارداد جاری: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
+> آخرین بخش «BE-19 — Personal AI و Personal Knowledge/RAG» است: [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، مرز خارجی Chat و پذیرش مستقل Context/Commerce/Knowledge. گزارش «نهایی‌سازی مدیر و Provisioning آموزشگاه» و گزارش‌های تاریخ‌دار قبلی با Commit و محدودیت همان مرحله حفظ شده‌اند؛ D01 و D17 بسته‌اند. قرارداد School: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
 
 تاریخ `2026-11-12`؛ مبنا `e5bd3eae658991585ca09f581f6236351857b3b8`، شاخهٔ `feature/product-v6-backend-alignment`. مرجع نیاز: Product Architecture v6، شرح Backend Tasks v6 و override همین Task. سند محصول هدف است؛ این گزارش فقط Source، تست و محدودیت واقعی را بیان می‌کند.
 
@@ -460,3 +460,119 @@ SQLهای تولیدشده در `.artifacts/school-finalization-20261113-d9f4938
 ### ۱۶. مرحلهٔ بعد
 
 Admin طبق راهنمای تجاری، دو خدمت را با قیمت و شرایط مصوب همان محیط تنظیم کند؛ سپس Backup/Migration و پذیرش عملیاتی سرور در Task مجاز جدا انجام شود. تغییر مدیر نهایی یا گسترش مدارک/قواعد حقوقی تصمیم جدا می‌خواهد. فعال‌سازی AI یا PersonalClass academics و حذف واقعی حساب نباید با این کار مخلوط شوند.
+
+## BE-19 — Personal AI و Personal Knowledge/RAG؛ 2026-11-13
+
+این بخش نتیجهٔ مرحلهٔ مستقل بعد از School Finalization است؛ مبنای شروع `fc5b297d20cc1cb97fc3b75a1762427bf81e419e`. گزارش‌های پیشین با شواهد تاریخی خود حفظ می‌شوند. **BE19_AI_GATEWAY=PARTIAL**؛ مرز Generic Personal Chat به قرارداد خارجی وابسته است و با تست داخلی PASS اعلام نمی‌شود. [Handoff کامل](PERSONAL_AI_FRONTEND_HANDOFF_FA.md).
+
+### ۱. خلاصهٔ مرحله
+
+قبل از این مرحله، Assistant Context و Knowledge شخصی وجود داشتند، اما Executor عمومی به actor سازمانی وابسته بود و Chat شخصی صرفاً403 نقش می‌داد. اکنون Intent شخصیِ بدون Role، دامنهٔ Personal و انتخاب Payer در همان Executor/Commerce قابل اعتبارسنجی‌اند؛ API Chat برای حساب عادی، مانع واقعی upstream را با409 مشخص و بدون تماس/هزینه اعلام می‌کند. Knowledge/RAG شخصی موجود reuse و با پذیرش مستقل Context/Quota/Concurrency تقویت شد. Client خارجی جدید، نقش جعلی و موتور سهمیهٔ موازی ساخته نشد.
+
+### ۲. معماری
+
+Domain تغییر نکرد؛ مدل تجاری و SQL موجود حقیقت رزرو هستند. Application شامل `PersonalAiChatIntent`، قرارداد مشترک حداقلی `IAiInvocationRequest`، کنترل Scope/Payer و سنجهٔ اجرای Use Case است. Infrastructure/client/تنظیمات provider تغییر نکردند؛ adapter واقعی Knowledge در تست با transport کنترل‌شده اجرا می‌شود. Api فقط نگاشت خطا و OpenAPI را دقیق‌تر کرد؛ Controllerها thin و بدون منطق تازه ماندند. جهت وابستگی Domain ← Application ← Infrastructure و Api به Composition Root فعلی حفظ شد.
+
+### ۳. فایل‌های مهم ایجادشده
+
+| مسیر | مسئولیت و دلیل | نکتهٔ آموزشی |
+|---|---|---|
+| `MakanApp.Application/Ai/PersonalAiChatIntent.cs` | Intent داخلی حساب عادی با Scope تهی و مرز صریح قرارداد خارجی | مدل داخلی نباید برای تطبیق با DTO خارجی، Role آموزشی جعل کند. |
+| `MakanApp.Application/Ai/AiExecutionTelemetry.cs` | شمار و latency اجرای Use Case با labelهای محدود | واحد اجرای Application با HTTP transport و واحد مصرف مالی یکی نیست. |
+| `tests/MakanApp.UnitTests/Ai/PersonalAiInvocationTests.cs` | هویت/Scope/Payer/fingerprint و عدم نشت tag | آزمون pure rule نیازی به SQL یا Provider ندارد. |
+| `tests/MakanApp.IntegrationTests/PersonalAiAcceptanceTests.cs` | حساب عادی و Executor با ledger واقعی SQL | delegate کنترل‌شده، پذیرش قرارداد wire واقعی نیست. |
+| `tests/MakanApp.IntegrationTests/PersonalKnowledgeAcceptanceTests.cs` | HTTP/adapter/SQL برای ACL جاری و RAG شخصی | reauthorization و رقابت باید فراتر از Mock یک service بررسی شوند. |
+| `docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md` | قرارداد عملی، خطا، Retry و محدودیت خارجی | Handoff باید مرز target و implementation را آشکار کند. |
+
+### ۴. فایل‌های مهم تغییرکرده
+
+`AiServiceContracts`، request پایه را به شناسه/Correlation محدود و actor wire را در `IAiServiceRequest` نگه می‌دارد؛ DTOهای خارجی قبلی تغییر نکردند. `AiInvocationContracts` و `AiInvocationExecutor` Personal را فقط با هویت همین حساب/نشست، Scope تهی و Payer مجاز می‌پذیرند؛ branch سازمانی و الگوریتم fingerprint سازمانی حفظ‌اند. `AiChatService` نقش عمومی اختراع نمی‌کند و پیش از Reserve خطای Contract می‌دهد. `AssistantContextResolver` همان limitation را از constant مشترک می‌گیرد.
+
+`KnowledgeIntegrationService` فقط سنجهٔ کمینهٔ Retrieve/RAG را اضافه می‌کند؛ hashing/pinning، رزرو و سازگاری عملیات قبلی عوض نمی‌شوند. `GlobalExceptionHandler` کد limitation را409 می‌کند. `AiInvocationOperationTransformer` پیش‌فرض Payer و محدودیت Chat را توضیح می‌دهد. تست‌های قبلی Personal/Revoked با انتخاب مستقل Assistant و ExpectedVersion واقعی اصلاح شدند؛ تست Telemetry حمل‌ونقل فقط instrumentهای `makan.ai.client.*` را رصد می‌کند تا metric موازیِ اجرای Application را اشتباه جزو transport حساب نکند. allowlistهای حساس تضعیف نشدند.
+
+Audit تنظیم پایه یک اختلاف با سیاست مصوب نشان داد: `UseServiceAuthentication` در JSON وجود نداشت و fallback قدیمی Business AI برابرtrue بود. فقط `AiService:UseServiceAuthentication=false` و `AiKnowledge:UseServiceAuthentication=false` در `MakanApp.Api/appsettings.json` صریح شدند؛ Test/Production آن‌ها را از پایه می‌گیرند. هیچ مقدار خصوصی، Provider، timeout، Runtime Enabled یا default کد legacy عوض نشد؛ دو Unit Test مستقل Test/Production این Binding و خاموش‌ماندن Runtime را کنترل می‌کنند. فایل‌های خصوصی Development/Test/Production و credentialها byte-identical باقی می‌مانند. Backup پایه نیز حفظ شده و مقایسهٔ ساختاری JSON ثابت می‌کند اختلاف فقط همین دو فلگ است.
+
+### ۵. جریان واقعی اجرا
+
+```text
+Chat HTTP → AiController → AiChatService
+→ AiSourceSelectionService → AssistantContextResolver
+→ PersonalAiChatIntent + AiInvocationContext
+→ PersonalAiChatContract.EnsureSupported
+→ GlobalExceptionHandler → 409؛ بدون Provider/Reserve
+
+Knowledge HTTP → KnowledgeIntegrationController → KnowledgeIntegrationService
+→ KnowledgeAuthorizationService → AssistantContextResolver + EfEducationalSourceStore
+→ AiSourceSelectionOperation pin + CommercialSubscriptionService
+→ EfCommercialStore / SQL Server UsageReservation
+→ AiKnowledgeClient → Retrieve → بازبینی ACL → RAG → Consumed
+→ بازبینی مجدد ACL → Result → HTTP Response
+```
+
+در پذیرش داخلی Executor، `PersonalAiChatIntent` به `AiInvocationExecutor` داده می‌شود و invoke delegate ساختگی است؛ این Endpoint تازه یا اتصال واقعی Personal Chat نیست. همان ReserveForAssistant و Finalize موجود استفاده می‌شوند.
+
+### ۶. دیتابیس
+
+Migration جدید ایجاد نشد و جدول/ستون/constraint تغییر نکرد. `AssistantContextSelection` به User/Session، pin منبع به User/Operation/نسخهٔ دقیق و UsageReservation به Owner/Consumer/Context/Payer/hash متصل می‌مانند. unique/transaction موجود رقابت دو رزرو و Retry را کنترل می‌کند؛ شبکه داخل transaction رزرو اجرا نمی‌شود. حالت‌های Reserved، Consumed، Released و Unknown عوض نشده‌اند. دیتابیس‌های اصلی `MakanApp` و `MakanApp_Test` و سرور تغییر نمی‌کنند.
+
+### ۷. Endpointها
+
+Endpoint تازه‌ای اضافه نشد. `PUT /api/v1/ai/assistant-context` با Kind/ClientOperationId و برای تغییر با ExpectedVersion، انتخاب همین Session را ذخیره می‌کند؛ Role/Membership فقط selector هستند. `POST /api/v1/ai/chat` با Message/ConversationId/OperationId و Headerهای موجود، برای Personal فعلاً409 Contract می‌دهد. مسیرهای نقش‌محور همچنان مجوز جاری سازمان/دانش‌آموز/والد/مدرس/مدیر می‌خواهند.
+
+`POST sources/{id}/versions/{version}/knowledge/ingest` و `GET .../status` آماده‌بودن نسخهٔ دقیق را کنترل می‌کنند؛ `POST /api/v1/ai/knowledge/retrieve` evidence و `POST /api/v1/ai/knowledge/rag/answer` پاسخ grounded می‌دهند. Knowledge از Payer و ClientOperationId در body استفاده می‌کند. Backend authentication نشست، ACL current، حق تجاری و readiness اجباری‌اند.404 منبع نامجاز را conceal،409 نسخه/Context/intent/نتیجهٔ نامعلوم و422 Query نامعتبر را مشخص می‌کند. جزئیات کامل Request/Response/UX در Handoff آمده است.
+
+### ۸. مفاهیم فنی استفاده‌شده
+
+تفکیک identity از role، Actor سازمانی از intent شخصی، انتخاب per-session از Workspace، Payer از data authorization، fingerprint از requestId، و measurement اجرای Use Case از شمار HTTP. Retry امن به معنی حفظ OperationId و عدم تکرار اثر است؛ بازگرداندن دوبارهٔ متن خصوصی با idempotency یکی نیست.
+
+### ۹. تصمیم‌های طراحی
+
+قرارداد زندهٔ `/openapi.json` فقط Student/Parent/Teacher/Manager و Actor.role اجباری دارد؛ آدرس اعلام‌شدهٔ `/api/v1/openapi.json`404 بود. به‌جای تغییر سرویس خارجی، ارسال Student جعلی یا فرض enum تازه، مرز409 صریح شد. SHA256 سند دریافت‌شده `fc6bf405aefcc2232e0e35503fbee43fd82313d785fe41658bd474f8ad61277b` است. این مانع D11 خارجی است و تصمیم محصولی تازه نیست.
+
+Knowledge شخصی قرارداد role-free موجود دارد و مستقل تست می‌شود؛ legacy selectedSourceIds در Business Chat هنوز RetrievalAvailable=false است. تغییر هش Knowledge یا Payer پیش‌فرض ذخیره‌شده برای عملیات قبلی انجام نشد تا replayهای قبلی نشکنند. Service Authentication هر دو سرویس خاموش باقی ماند؛ Authentication حساب Backend حذف نشد. درخواست حذف حساب request-only است و قانون اجرا/retention تازه حدس زده نشد.
+
+### ۱۰. تست‌ها
+
+Unitهای جدید، foreign actor/session/user و هر selector سازمانی در Personal، Scope تهی، نبود Role wire، Payer Individual/Trial/ممنوعیت Organization، fingerprint و label امن/failure سنجه را می‌سنجند. تست Chat حساب عادی باید limitation بگیرد و Provider را نخواند.
+
+Integrationهای Personal AI با SQL واقعی، ledger Individual، Trial صریح، فقدان Subscription، سهمیهٔ صفر، replay completed، payload conflict، رقابت یک intent، Unknown بدون retry و Released پیش از invocation را ثابت می‌کنند؛ تغییر School Workspace یا Session دیگر Context شخصی را عوض نمی‌کند. Integrationهای Knowledge از adapter واقعی و transport کنترل‌شده استفاده می‌کنند: owner شخصی بدون نقش، scope ingest بدون org/class، empty BusinessContext، نبود Authorization سرویس، Individual/Trial، رقابت RAG، تغییر Context حین Retrieval، حساب suspended، منبع archived و منع منبع سازمانی در Personal.
+
+پذیرش صریح هر۱۱ Endpoint آموزشی با حساب عادیِ دارای اشتراک Individual، منع Role-specific را بدون وابستگی به فقدان اشتراک می‌سنجد؛ هیچ Reserve یا تماس Provider نباید رخ دهد.
+
+تست‌های قبلی Source Selection، cross-user/class/organization، Library، readiness، Role-specific AI، lifecycle و Lost ACK حفظ‌اند. Architectureهای موجود جهت Onion را بررسی می‌کنند؛ هیچ تستی غیرفعال یا با انتظار success جعلی جایگزین نشده است.
+
+### ۱۱. Validation
+
+Clean و Restore موفق شدند؛ Final Release Build با **۰ Warning و۰ Error** پاس شد. Final Full Regression: **۱۳۲۵ Unit +۱۹۲۲ Integration +۱۴ Architecture =۳۲۶۱ Passed**، Failed=0 و Skipped=0. نسبت به baseline۳۲۱۹، تعداد۴۲ تست مرتبط اضافه شد:۱۷ Unit و۲۵ Integration. همهٔ۱۱۴ تست Zibal نیز در همین مجموعه پاس شدند. هیچ تستی حذف یا غیرفعال نشد؛ فایل‌های۱۴۹۹گانهٔ C# از Manifest نهایی تا پایان Build/Test و بازبینی Commit ثابت ماندند.
+
+Migration جدید صفر است و `has-pending-model-changes` هیچ اختلافی نشان نداد. SQL فقط دیتابیس خودکار و ایزولهٔ تست بود؛ `MakanApp`، `MakanApp_Test` و سرور تغییر نکردند. Snapshot نهایی۴۳۶ path،۴۹۲ operation،۷۸۰ schema،۹۱ Controller،۱۴۹ جدول و۷۳ Migration دارد؛ SHA256 OpenAPI: `98541362177563580f24c70be9bc98311df085db83dfe6448622156309c71b46`. Snapshot بدون DB/Hosted Worker/SMS/AI استخراج شد؛۱۳ تست ابزار مستندات و اعتبارسنجی لینک/Enum/مرجع API پاس شدند.
+
+سه شکست اولیهٔ انتظار/آماده‌سازی تست با کد واقعی Subscription/ExpectedVersion/Assistant مستقل تطبیق یافتند؛۷۵ Integration متمرکز و۱۱ پذیرش Role پس از اصلاح پاس شدند. برخورد listener تست transport با metric جدید در دور کامل اولیه شناسایی شد؛ listener به instrumentهای متعلق به همان transport محدود و کل دور نهایی دوباره اجرا شد. اعداد subsetها به۳۲۶۱ دوباره اضافه نمی‌شوند.
+
+### ۱۲. Git
+
+مبدأ `fc5b297d20cc1cb97fc3b75a1762427bf81e419e`، شاخه `feature/product-v6-backend-alignment`، remote `origin` و upstream=`origin/feature/product-v6-backend-alignment` است. Commit کد **`bba4545b9c1b32db804a20953a410347b8439b4e`** با پیام `feat(ai): isolate personal execution and commerce boundaries` شامل۲۰ فایل مرتبط Application/Api/Test و دو فلگ عمومی است؛ پس از موفقیت نهایی Build/Test و بازبینی Cached Diff ثبت شد.
+
+سه فایل untracked AI، سه appsettings خصوصی و سه فایل ملی‌پیامک عیناً با SHA256 حفظ شدند. Backup هر۱۰ فایل اولیه، شامل تنظیم پایه، سالم ماند؛ مقایسهٔ JSON پایه فقط دو فلگ مصوب را متفاوت نشان داد. Secret واقعی در افزوده‌های staged پیدا نشد. اسناد با پیام `docs(ai): hand off personal assistant and knowledge contracts` جدا ثبت می‌شوند؛ SHA نهایی اسناد و نتیجهٔ واقعی Push/fetch/live remote verification در پاسخ پایان Task درج می‌شود تا hash خودِ Commit در همان سند حدس زده نشود. Merge main و Deploy اجرا نمی‌شوند.
+
+### ۱۳. محدودیت‌های فعلی
+
+Generic Personal Chat برابر `BLOCKED_EXTERNAL_CONTRACT` و BE19 برابرPARTIAL است؛ Actor عمومی یا role-free upstream لازم است. تست موفق کنترل‌شدهٔ Knowledge، پذیرش زندهٔ Provider/Production نیست. BE24 کل v6 همچنانFAIL و۱۲ تصمیم باز Product/Legal برقرارند. Library AI، quota مشترک خانواده، حذف واقعی/retention، Store billing و PersonalClass AI/Academic gates خودکار فعال نشده‌اند. تنظیمات خصوصی، timeout، retry، JWT، SMS و Production تغییر نکردند.
+
+### ۱۴. نکات آموزشی
+
+1. داشتن Subscription مجوز دادهٔ آموزشی یا Role ایجاد نمی‌کند.
+2. Context مستقل نشست را با تغییر Workspace هم‌زمان بازنویسی نکنید.
+3. Contract خارجی را از OpenAPI واقعی اثبات کنید؛ enum داخلی یا سند هدف، شاهد پشتیبانی wire نیست.
+4. Retry و concurrent duplicate را با reservation/transaction در SQL بسنجید، نه فقط شمار Mock.
+5. شکست پس از آغاز Generation با شکست پیش از آن متفاوت است؛ Unknown را به Released حدسی تبدیل نکنید.
+6. cardinality محدود و allowlist tag، مشاهده‌پذیری را بدون prompt/UserId ممکن می‌کند.
+7. ExpectedVersion و source version بخشی از مجوز/هم‌زمانی‌اند، نه صرفاً جزئیات UI.
+
+### ۱۵. مسیر پیشنهادی مطالعه
+
+`AssistantContextResolver` → `AiChatService` → `PersonalAiChatIntent` → `AiInvocationContext`/`AiInvocationExecutor` → `CommercialSubscriptionService` و Store رزرو موجود → `KnowledgeAuthorizationService` → `KnowledgeIntegrationService` → `AiKnowledgeClient` → تست‌های Personal و تست‌های Source Selection → Handoff.
+
+### ۱۶. مرحلهٔ بعد
+
+مالک سرویس AI قرارداد Actor عمومی/role-free Personal را در upstream تصویب و منتشر کند؛ سپس adapter wire و پاسخ‌سنجی روی همان قرارداد واقعی و پذیرش زندهٔ مستقل انجام شود. Service Auth، سهمیهٔ خانواده، Library و آموزش PersonalClass نباید برای عبور از این blocker فعال یا بازطراحی شوند.

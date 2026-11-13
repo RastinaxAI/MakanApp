@@ -2,7 +2,7 @@
 
 > قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است: مدیر اولیه صریحاً در Approval انتخاب می‌شود؛ زنجیرهٔ Order/Payment/Outbox به Provisioning مرحله‌ای و دعوت مدیر متصل است. تنظیم قیمت واقعی همچنان نیازمند Admin است. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.
 
-بازبینی `2026-11-13` با مبنای Git `source@1804f402be32e4d776216c17fcd76555fc5cf29f` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-11-13` با مبنای Git `source@bba4545b9c1b32db804a20953a410347b8439b4e` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
 پوشش جاری: 492 عملیات HTTP در 436 مسیر، 91 Controller، 780 schema، 149 جدول و 73 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 

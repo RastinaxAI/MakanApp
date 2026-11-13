@@ -1,5 +1,7 @@
 # تحویل قرارداد Backend v6 به Frontend
 
+> افزودهٔ `2026-11-13`: [قرارداد Personal AI و Knowledge/RAG](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) انتخاب Assistant مستقل، Payer فردی/Trial، منابع شخصی، Retry و خطاهای جاری را مشخص می‌کند. Generic Personal Chat تا پشتیبانی Actor عمومی upstream،409 `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` و بدون هزینه است؛ Knowledge شخصی مسیر مستقل دارد. نقش آموزشی، Organization جعلی یا Service JWT تازه ساخته نمی‌شود.
+
 بازبینی `2026-11-12`؛ Source مبنا `e5bd3eae658991585ca09f581f6236351857b3b8` به‌همراه تغییرات شاخهٔ `feature/product-v6-backend-alignment`. این سند در مخزن Backend است؛ هیچ Frontend تغییر نکرده است. قرارداد کامل فیلدها و literalهای Enum در [مرجع API](../backend-api-reference.md) و [قرارداد مشترک](../frontend-contract/README.md) ثبت می‌شود. وجود API با آمادگی عملیاتی Provider یا مجوز محصول برابر نیست.
 
 ## هویت، Bio و تغییر شماره
