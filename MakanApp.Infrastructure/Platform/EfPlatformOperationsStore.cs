@@ -745,6 +745,8 @@ public sealed class EfPlatformOperationsStore(
             .SingleOrDefaultAsync(cancellationToken);
         if (existing is not null)
         {
+            if (existing.SchoolApplicationId.HasValue)
+                throw Error(PlatformErrorCodes.ProvisioningConflict, "درخواست تأسیس پرداخت‌شده به سیاست مدیر اولیه نیاز دارد و از مسیر عمومی قابل تغییر نیست.");
             if (!existing.Matches(
                     command.OrganizationName,
                     command.PlanVersionId,
@@ -1467,7 +1469,7 @@ public sealed class EfPlatformOperationsStore(
         item.FailureCode,
         item.CreatedAtUtc,
         item.UpdatedAtUtc,
-        Version(item.RowVersion));
+        Version(item.RowVersion)) { SchoolApplicationId = item.SchoolApplicationId, SourceOrderId = item.SourceOrderId };
 
     private static PlatformInvitationResult MapInvitation(Invitation item, bool replayed) => new(
         item.Id,

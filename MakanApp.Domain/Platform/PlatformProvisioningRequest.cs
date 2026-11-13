@@ -22,6 +22,8 @@ public sealed class PlatformProvisioningRequest
     }
 
     public Guid Id { get; private set; }
+    public Guid? SchoolApplicationId { get; private set; }
+    public Guid? SourceOrderId { get; private set; }
     public string ClientOperationId { get; private set; } = string.Empty;
     public Guid RequestedByUserId { get; private set; }
     public string OrganizationName { get; private set; } = string.Empty;
@@ -97,6 +99,17 @@ public sealed class PlatformProvisioningRequest
         PlanVersionId == planVersionId && InitialManagerUserId == initialManagerUserId &&
         SubscriptionEndsAtUtc == subscriptionEndsAtUtc && InvitationExpiresAtUtc == invitationExpiresAtUtc;
 
+    public static PlatformProvisioningRequest AwaitSchoolManagerPolicy(Guid schoolApplicationId, Guid orderId, Guid applicantUserId,
+        string schoolName, Guid planVersionId, DateTime now)
+    {
+        if (schoolApplicationId == Guid.Empty || orderId == Guid.Empty) throw new ArgumentException("مرجع پرداخت و درخواست لازم است.");
+        var request = Create("school-payment:" + orderId.ToString("N"), applicantUserId, schoolName, planVersionId, null, null, null,
+            "پرداخت تأیید شد؛ انتخاب مدیر اولیه نیازمند سیاست مصوب است", now);
+        request.SchoolApplicationId = schoolApplicationId; request.SourceOrderId = orderId;
+        request.MarkNeedsAttention("INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED", now);
+        return request;
+    }
+
     public void MarkOrganizationCreated(Guid organizationId, DateTime updatedAtUtc)
     {
         EnsureIdentifier(organizationId, nameof(organizationId));
@@ -146,6 +159,8 @@ public sealed class PlatformProvisioningRequest
     public void Resume(DateTime updatedAtUtc)
     {
         EnsureUtc(updatedAtUtc, nameof(updatedAtUtc));
+        if (SchoolApplicationId.HasValue && !InitialManagerUserId.HasValue)
+            throw new InvalidOperationException("سیاست مدیر اولیهٔ درخواست تأسیس هنوز تعیین نشده است.");
         if (Status != PlatformProvisioningStatus.NeedsAttention)
         {
             return;

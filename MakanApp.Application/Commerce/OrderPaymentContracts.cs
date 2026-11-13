@@ -6,7 +6,11 @@ public sealed record CreateOrderCommand(
     Guid PlanVersionId,
     Guid ClientOperationId,
     CommercialOrderPurpose Purpose = CommercialOrderPurpose.Purchase,
-    Guid? SubscriptionId = null);
+    Guid? SubscriptionId = null)
+{
+    public Guid? SchoolApplicationId { get; init; }
+    public long? SchoolApplicationVersion { get; init; }
+}
 
 public sealed record InitiatePaymentCommand(Guid ClientOperationId);
 
@@ -52,6 +56,7 @@ public sealed record OrderDto(
     OrderFulfillmentState FulfillmentState,
     IReadOnlyCollection<PaymentAttemptDto> PaymentAttempts)
 {
+    public Guid? SchoolApplicationId { get; init; }
     public decimal PriceToman => Amount / 10m;
     public string DisplayCurrency => "TOMAN";
 }

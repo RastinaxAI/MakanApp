@@ -48,6 +48,13 @@ public sealed partial class Order
     public Guid PurchaserUserId { get; private set; }
     public Guid? OrganizationId { get; private set; }
     public Guid PlanVersionId { get; private set; }
+    public Guid? SchoolApplicationId { get; private set; }
+    public void BindSchoolApplication(Guid applicationId)
+    {
+        if (applicationId == Guid.Empty || SchoolApplicationId.HasValue || OrganizationId.HasValue || Status != OrderStatus.PendingPayment || HasCommercialTerms)
+            throw new InvalidOperationException("پیوند درخواست تأسیس به سفارش معتبر نیست.");
+        SchoolApplicationId = applicationId;
+    }
     public string? ProductTitleSnapshot { get; private set; }
 
     public void CaptureProductTitle(string title)

@@ -19,6 +19,9 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     : DbContext(options)
 {
     public DbSet<SchoolApplication> SchoolApplications => Set<SchoolApplication>();
+    public DbSet<SchoolApplicationHistory> SchoolApplicationHistories => Set<SchoolApplicationHistory>();
+    public DbSet<SchoolEstablishmentOffering> SchoolEstablishmentOfferings => Set<SchoolEstablishmentOffering>();
+    public DbSet<SchoolOfferingOperation> SchoolOfferingOperations => Set<SchoolOfferingOperation>();
     public DbSet<SchoolApplicationRevision> SchoolApplicationRevisions => Set<SchoolApplicationRevision>();
     public DbSet<SchoolApplicationDocument> SchoolApplicationDocuments => Set<SchoolApplicationDocument>();
     public DbSet<SchoolApplicationDecision> SchoolApplicationDecisions => Set<SchoolApplicationDecision>();
@@ -174,7 +177,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         var foundationUtcTypes = new HashSet<Type> {
             typeof(AddressBookEntry), typeof(ContactSyncDevice), typeof(ContactSyncOperation), typeof(AccountDeletionRequest), typeof(PhoneChangeRequest),
             typeof(MakanApp.Domain.Support.SupportTicket), typeof(MakanApp.Domain.Support.SupportTicketMessage),
-            typeof(SchoolApplication), typeof(SchoolApplicationRevision), typeof(SchoolApplicationDecision), typeof(SchoolApplicationOperation),
+            typeof(SchoolApplication), typeof(SchoolApplicationRevision), typeof(SchoolApplicationDecision), typeof(SchoolApplicationOperation), typeof(SchoolApplicationHistory),
             typeof(MakanApp.Domain.Intelligence.AssistantContextSelection)
         };
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType.Namespace == "MakanApp.Domain.Commerce"
@@ -206,7 +209,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
 
     private void EnsureAdminAuditIsAppendOnly()
     {
-        if (ChangeTracker.Entries().Any(e => e.Entity is SchoolApplicationRevision or SchoolApplicationDecision or SchoolApplicationOperation or
+        if (ChangeTracker.Entries().Any(e => e.Entity is SchoolApplicationRevision or SchoolApplicationDecision or SchoolApplicationOperation or SchoolApplicationHistory or SchoolOfferingOperation or
             ContactSyncOperation or MakanApp.Domain.Support.SupportTicketOperation or MakanApp.Domain.Support.SupportTicketMessage && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("نسخه، تصمیم، پیام و رسیدهای عملیاتی این foundation فقط قابل افزودن هستند.");
         if (ChangeTracker.Entries().Any(e => e.Entity is Payment or PaymentAttemptEvent && e.State is EntityState.Modified or EntityState.Deleted))

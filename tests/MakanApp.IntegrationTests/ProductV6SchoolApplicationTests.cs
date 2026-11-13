@@ -25,7 +25,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
     [Theory]
     [InlineData(SchoolApplicationKind.LegalOrganization)]
     [InlineData(SchoolApplicationKind.IndividualTeacher)]
-    public async Task ProductV6SchoolDraftIsVersionedPrivateIdempotentAndDoesNotGuessSubmissionPolicy(SchoolApplicationKind kind)
+    public async Task ProductV6SchoolDraftIsVersionedPrivateIdempotentAndRequiresExplicitSubmissionData(SchoolApplicationKind kind)
     {
         var admin = await AdminAsync(); var actor = await ActorAsync(); var other = await ActorAsync();
         var file = await CaseFileAsync(actor);
@@ -45,7 +45,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         using var stale = await actor.Client.PutAsJsonAsync($"/api/v1/school-applications/{created.Id}", update with { ClientOperationId = Guid.NewGuid() }, Json);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var submit = await actor.Client.PostAsJsonAsync($"/api/v1/school-applications/{created.Id}/submit", new SchoolApplicationActionCommand(Guid.NewGuid(), revised.Version), Json);
-        Assert.Equal(HttpStatusCode.Conflict, submit.StatusCode); Assert.Equal(SchoolApplicationErrorCodes.ProductDecisionRequired, await ProblemAsync(submit));
+        Assert.Equal(HttpStatusCode.BadRequest, submit.StatusCode); Assert.Equal(SchoolApplicationErrorCodes.SubmissionIncomplete, await ProblemAsync(submit));
         await WithDb(async db => {
             Assert.Equal(2, await db.SchoolApplicationRevisions.CountAsync(r => r.ApplicationId == created.Id));
             Assert.Equal(SchoolApplicationStatus.Draft, (await db.SchoolApplications.SingleAsync(a => a.Id == created.Id)).Status);

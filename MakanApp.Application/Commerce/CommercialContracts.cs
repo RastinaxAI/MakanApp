@@ -60,6 +60,7 @@ public sealed record CommercialQuoteDto(CommercialOrderPurpose Purpose, Guid Pla
     IReadOnlyList<CommercialQuotaDto> EffectiveQuotas, bool AutoRenew)
 {
     public bool PaymentAvailable { get; init; }
+    public Guid? SchoolApplicationId { get; init; }
     public string? PaymentUnavailableCode { get; init; }
     public DateTime ExpiresAtUtc { get; init; }
     public bool PreviewOnly => true;

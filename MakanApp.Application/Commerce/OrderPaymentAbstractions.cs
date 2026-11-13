@@ -79,6 +79,7 @@ public sealed record OrderPaymentSnapshot(
     OrderFulfillmentState FulfillmentState,
     IReadOnlyCollection<PaymentAttemptSnapshot> PaymentAttempts)
 {
+    public Guid? SchoolApplicationId { get; init; }
     public string? ProductTitleSnapshot { get; init; }
     public CommercialOrderPurpose Purpose { get; init; }
     public DateTime? BillingAnchorUtc { get; init; }
@@ -156,7 +157,9 @@ public interface IOrderPaymentStore
         DateTime createdAtUtc,
         CancellationToken cancellationToken,
         CommercialOrderPurpose purpose = CommercialOrderPurpose.Purchase,
-        Guid? targetSubscriptionId = null);
+        Guid? targetSubscriptionId = null,
+        Guid? schoolApplicationId = null,
+        long? schoolApplicationVersion = null);
 
     Task<OrderPaymentSnapshot?> GetOrderAsync(
         Guid? organizationId,

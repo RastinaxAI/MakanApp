@@ -26,6 +26,8 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
                 "([Status] = 3 AND [PaidAtUtc] IS NULL AND [CancelledAtUtc] IS NOT NULL)");
         });
         builder.HasKey(order => order.Id);
+        builder.HasOne<MakanApp.Domain.Organization.SchoolApplication>().WithMany().HasForeignKey(o => o.SchoolApplicationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(o => o.SchoolApplicationId).IsUnique().HasFilter("[SchoolApplicationId] IS NOT NULL AND [Status] <> 3");
         builder.Property(order => order.ProductTitleSnapshot).HasMaxLength(200);
         builder.Property(order => order.Amount).HasPrecision(18, 2);
         builder.Property(order => order.Currency)

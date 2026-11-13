@@ -20,7 +20,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
         foreach (var plan in plans)
         {
             var version = await db.PlanVersions.AsNoTracking().Include(v => v.Price).Include(v => v.Entitlements).Include(v => v.QuotaDefinitions)
-                .Where(v => v.PlanId == plan.Id && v.Status == PlanVersionStatus.Published && v.PublishedAtUtc <= utcNow)
+                .Where(v => v.PlanId == plan.Id && v.Status == PlanVersionStatus.Published && v.PublishedAtUtc <= utcNow
+                    && !db.SchoolEstablishmentOfferings.Any(o => o.PlanVersionId == v.Id) && !db.SchoolOfferingOperations.Any(o => o.PlanVersionId == v.Id))
                 .OrderByDescending(v => v.VersionNumber).FirstOrDefaultAsync(ct);
             if (version is not null && version.ValidatePublication(plan.Audience).Count == 0)
                 result.Add(new CommercialPlanDto(plan.Id, version.Id, plan.Code, plan.DisplayName, plan.Audience, version.VersionNumber,
@@ -32,7 +33,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
 
     public async Task<CommercialSummaryDto> SummaryAsync(SubscriptionOwner owner, DateTime utcNow, CancellationToken ct)
     {
-        var pending = await db.Orders.AsNoTracking().AnyAsync(o => o.Status == OrderStatus.PendingPayment &&
+        var pending = await db.Orders.AsNoTracking().AnyAsync(o => o.Status == OrderStatus.PendingPayment && o.SchoolApplicationId == null &&
             (owner.Type == SubscriptionOwnerType.Individual ? o.OrganizationId == null && o.PurchaserUserId == owner.Id : o.OrganizationId == owner.Id), ct);
         var subscription = await CurrentAsync(owner, utcNow, ct);
         subscription ??= await db.Subscriptions.AsNoTracking().Where(s => s.OwnerType == owner.Type && s.OwnerId == owner.Id && s.StartsAtUtc <= utcNow)

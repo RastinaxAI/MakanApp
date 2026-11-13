@@ -65,7 +65,7 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
             var applications = from document in dbContext.SchoolApplicationDocuments join app in dbContext.SchoolApplications on document.ApplicationId equals app.Id
                                where document.FileAssetId == fileAsset.Id select app;
             return await applications.AnyAsync(a => a.ApplicantUserId == accessContext.UserId, cancellationToken) ||
-                await applications.AnyAsync(a => a.Status != MakanApp.Domain.Organization.SchoolApplicationStatus.Draft, cancellationToken) &&
+                await applications.AnyAsync(a => a.Status != MakanApp.Domain.Organization.SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null, cancellationToken) &&
                 await platformPermissions.HasPermissionAsync(accessContext.UserId, MakanApp.Domain.Platform.PlatformPermissionKeys.SchoolApplicationsRead, cancellationToken);
         }
         if (await IsSupportTicketBoundAsync(fileAsset.Id, cancellationToken))

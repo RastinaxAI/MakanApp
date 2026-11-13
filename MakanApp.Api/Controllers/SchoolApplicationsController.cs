@@ -1,5 +1,6 @@
 using MakanApp.Api.Authentication;
 using MakanApp.Application.Organization;
+using MakanApp.Application.Commerce;
 using MakanApp.Domain.Organization;
 using MakanApp.Domain.Platform;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +23,17 @@ public sealed class SchoolApplicationsController(SchoolApplicationService servic
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<SchoolApplicationResult>> Update(Guid id, UpdateSchoolApplicationCommand command, CancellationToken ct) => Ok(await service.UpdateAsync(Actor(), id, command, ct));
     [HttpPost("{id:guid}/submit")]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<SchoolApplicationResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<SchoolApplicationResult>> Submit(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.SubmitAsync(Actor(), id, command, ct));
+    [HttpPost("{id:guid}/cancel")]
+    public async Task<ActionResult<SchoolApplicationResult>> Cancel(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.CancelAsync(Actor(), id, command, ct));
+    [HttpGet("{id:guid}/history")]
+    public async Task<ActionResult<SchoolApplicationHistoryPage>> History(Guid id, CancellationToken ct, [FromQuery] int page = 1, [FromQuery] int pageSize = 50) =>
+        Ok(await service.HistoryAsync(Actor(), id, false, page, pageSize, ct));
+    [HttpPost("{id:guid}/quote")]
+    public async Task<ActionResult<CommercialQuoteDto>> Quote(Guid id, SchoolApplicationCommerceCommand command, CancellationToken ct) => Ok(await service.QuoteAsync(Actor(), id, command, ct));
+    [HttpPost("{id:guid}/orders")]
+    public async Task<ActionResult<CreateOrderResult>> Order(Guid id, SchoolApplicationCommerceCommand command, CancellationToken ct) => Ok(await service.OrderAsync(Actor(), id, command, ct));
 }
 
 [ApiController, Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsRead), Route("api/admin/v1/school-applications")]
@@ -39,4 +49,12 @@ public sealed class PlatformSchoolApplicationsController(SchoolApplicationServic
     public async Task<ActionResult<SchoolApplicationResult>> StartReview(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.ReviewAsync(Actor(), id, command, true, ct));
     [HttpPost("{id:guid}/decisions"), Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsReview)]
     public async Task<ActionResult<SchoolApplicationResult>> Decide(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.ReviewAsync(Actor(), id, command, false, ct));
+    [HttpGet("{id:guid}/history")]
+    public async Task<ActionResult<SchoolApplicationHistoryPage>> History(Guid id, CancellationToken ct, [FromQuery] int page = 1, [FromQuery] int pageSize = 50) =>
+        Ok(await service.HistoryAsync(Actor(), id, true, page, pageSize, ct));
+    [HttpPut("offerings/{kind}"), Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsReview), Authorize(Policy = PlatformPermissionKeys.CommerceManage)]
+    public async Task<ActionResult<SchoolOfferingResult>> Offering(SchoolApplicationKind kind, SchoolOfferingCommand command, CancellationToken ct) =>
+        Ok(await service.ConfigureOfferingAsync(Actor(), kind, command, ct));
+    [HttpGet("offerings"), Authorize(Policy = PlatformPermissionKeys.CommerceManage)]
+    public async Task<ActionResult<IReadOnlyList<SchoolOfferingResult>>> Offerings(CancellationToken ct) => Ok(await service.OfferingsAsync(Actor(), ct));
 }

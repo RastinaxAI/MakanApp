@@ -11,11 +11,21 @@ public sealed partial class EfOrderPaymentStore
     {
         var owner = order.OrganizationId.HasValue ? SubscriptionOwner.Organization(order.OrganizationId.Value) : SubscriptionOwner.Individual(order.PurchaserUserId);
         var plan = await dbContext.Plans.FromSqlInterpolated($"SELECT * FROM [commerce].[Plans] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={version.PlanId}").SingleAsync(ct);
-        if (!Enum.IsDefined(purpose) || plan.Audience != owner.Type || version.ValidatePublication(owner.Type).Count != 0
+        var audience = order.SchoolApplicationId.HasValue ? SubscriptionOwnerType.Organization : owner.Type;
+        if (!order.SchoolApplicationId.HasValue && (await dbContext.SchoolEstablishmentOfferings.AnyAsync(o => o.PlanVersionId == version.Id, ct)
+            || await dbContext.SchoolOfferingOperations.AnyAsync(o => o.PlanVersionId == version.Id, ct)))
+            throw EfCommercialStore.Error(CommerceErrorCodes.PlanNotPurchasable);
+        if (!Enum.IsDefined(purpose) || plan.Audience != audience || version.ValidatePublication(audience).Count != 0
             || purpose == CommercialOrderPurpose.Purchase && !plan.NewPurchaseAvailable)
             throw EfCommercialStore.Error(CommerceErrorCodes.PlanNotPurchasable);
-        var current = await commerce.CurrentAsync(owner, now, ct);
         var expires = now.AddMinutes(commercialOptions.Value.QuoteLifetimeMinutes);
+        if (order.SchoolApplicationId.HasValue)
+        {
+            if (purpose != CommercialOrderPurpose.Purchase || targetId.HasValue) throw EfCommercialStore.Error(CommerceErrorCodes.OrderInvalid);
+            order.SetCommercialTerms(purpose, null, null, now, 0, expires, version.Price!.Amount);
+            return;
+        }
+        var current = await commerce.CurrentAsync(owner, now, ct);
         if (purpose == CommercialOrderPurpose.Purchase)
         {
             if (targetId.HasValue || current is { CommercialControlEnabled: true }) throw EfCommercialStore.Error(CommerceErrorCodes.OrderInvalid);

@@ -2838,6 +2838,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid?>("SchoolApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -2852,6 +2855,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("ExpectedPreviousPlanVersionId");
 
                     b.HasIndex("PlanVersionId");
+
+                    b.HasIndex("SchoolApplicationId")
+                        .IsUnique()
+                        .HasFilter("[SchoolApplicationId] IS NOT NULL AND [Status] <> 3");
 
                     b.HasIndex("TargetSubscriptionId");
 
@@ -3298,6 +3305,66 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_PlanVersionPrices_Currency", "[Currency] = 'IRR'");
                         });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SchoolEstablishmentOffering", b =>
+                {
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Kind");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.ToTable("SchoolEstablishmentOfferings", "commerce", t =>
+                        {
+                            t.HasCheckConstraint("CK_SchoolOfferings_KindVersion", "[Kind] IN (1,2) AND [Version]>0");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SchoolOfferingOperation", b =>
+                {
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ClientOperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<long>("OfferingVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("PlanVersionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ActorUserId", "ClientOperationId");
+
+                    b.HasIndex("PlanVersionId");
+
+                    b.ToTable("SchoolOfferingOperations", "commerce");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Commerce.Subscription", b =>
@@ -7779,11 +7846,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("SchoolApplications", "organization", t =>
                         {
+                            t.HasCheckConstraint("CK_SchoolApplications_Capacities", "([StudentCapacity] IS NULL OR [StudentCapacity]>=0) AND ([TeacherCapacity] IS NULL OR [TeacherCapacity]>=0)");
+
                             t.HasCheckConstraint("CK_SchoolApplications_Kind", "[Kind] IN (1,2)");
 
-                            t.HasCheckConstraint("CK_SchoolApplications_Status", "[Status] IN (1,2,3,4,5,6)");
+                            t.HasCheckConstraint("CK_SchoolApplications_Status", "[Status] IN (1,2,3,4,5,6,7)");
 
-                            t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status]=1 OR [SubmittedPolicyVersion] IS NOT NULL");
+                            t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status] IN (1,7) OR [SubmittedPolicyVersion] IS NOT NULL");
 
                             t.HasCheckConstraint("CK_SchoolApplications_Version", "[Revision] > 0 AND [Version] >= [Revision]");
                         });
@@ -7847,6 +7916,49 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("FileAssetId");
 
                     b.ToTable("SchoolApplicationDocuments", "organization");
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("ActorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("ApplicationId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("SchoolApplicationHistory", "organization");
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationOperation", b =>
@@ -8263,6 +8375,12 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid?>("SchoolApplicationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SourceOrderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -8290,6 +8408,14 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("PlanVersionId");
 
                     b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("SchoolApplicationId")
+                        .IsUnique()
+                        .HasFilter("[SchoolApplicationId] IS NOT NULL");
+
+                    b.HasIndex("SourceOrderId")
+                        .IsUnique()
+                        .HasFilter("[SourceOrderId] IS NOT NULL");
 
                     b.HasIndex("SubscriptionId");
 
@@ -10272,6 +10398,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplication", null)
+                        .WithMany()
+                        .HasForeignKey("SchoolApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
                         .WithMany()
                         .HasForeignKey("TargetSubscriptionId")
@@ -10344,6 +10475,30 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithOne("Price")
                         .HasForeignKey("MakanApp.Domain.Commerce.PlanVersionPrice", "PlanVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SchoolEstablishmentOffering", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Commerce.SchoolOfferingOperation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Commerce.PlanVersion", null)
+                        .WithMany()
+                        .HasForeignKey("PlanVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -11822,6 +11977,21 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationHistory", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplication", null)
+                        .WithMany()
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationOperation", b =>
                 {
                     b.HasOne("MakanApp.Domain.Identity.User", null)
@@ -11896,6 +12066,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("RequestedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Organization.SchoolApplication", null)
+                        .WithMany()
+                        .HasForeignKey("SchoolApplicationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.Order", null)
+                        .WithMany()
+                        .HasForeignKey("SourceOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Commerce.Subscription", null)
                         .WithMany()

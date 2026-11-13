@@ -12,15 +12,19 @@ public sealed partial class EfOrderPaymentStore
         await using var tx = await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var owner = organizationId.HasValue ? SubscriptionOwner.Organization(organizationId.Value) : SubscriptionOwner.Individual(userId);
         await commerce.LockOwnerAsync(owner, ct);
-        var version = await commerce.VersionAsync(command.PlanVersionId, ct);
+        var planVersionId = command.SchoolApplicationId.HasValue
+            ? await ResolveSchoolPlanAsync(userId, command.SchoolApplicationId.Value, command.SchoolApplicationVersion, organizationId, now, ct, false)
+            : command.PlanVersionId;
+        var version = await commerce.VersionAsync(planVersionId, ct);
         if (!version.IsPublished || version.Price is null) throw EfCommercialStore.Error(CommerceErrorCodes.PlanNotPurchasable);
         var order = Order.Create(userId, organizationId, version, Guid.NewGuid(), new byte[32], now);
+        if (command.SchoolApplicationId.HasValue) order.BindSchoolApplication(command.SchoolApplicationId.Value);
         await SetCommercialOrderTermsAsync(order, version, command.Purpose, command.SubscriptionId, now, ct);
         var quotas = new List<CommercialQuotaDto>();
         var current = command.SubscriptionId.HasValue ? await dbContext.Subscriptions.AsNoTracking().SingleAsync(s => s.Id == command.SubscriptionId, ct) : null;
         foreach (var quota in version.QuotaDefinitions)
         {
-            var consumed = QuotaKinds.For(quota.Key) == QuotaKind.CurrentCapacity ? await commerce.CapacityAsync(owner, quota.Key, ct) : 0;
+            var consumed = !order.SchoolApplicationId.HasValue && QuotaKinds.For(quota.Key) == QuotaKind.CurrentCapacity ? await commerce.CapacityAsync(owner, quota.Key, ct) : 0;
             long reserved = 0;
             var limit = quota.Limit;
             if (command.Purpose == CommercialOrderPurpose.Upgrade && current is not null)
@@ -35,7 +39,7 @@ public sealed partial class EfOrderPaymentStore
                     limit = await ProjectedLimitAsync(current, version, quota.Key, now, ct);
             }
             var available = quota.Key is not (QuotaKey.SourceCount or QuotaKey.AssignmentFileBytes)
-                && (quota.Key != QuotaKey.StorageBytes || owner.Type == SubscriptionOwnerType.Organization);
+                && (quota.Key != QuotaKey.StorageBytes || owner.Type == SubscriptionOwnerType.Organization || order.SchoolApplicationId.HasValue);
             quotas.Add(new CommercialQuotaDto(quota.Key, QuotaKinds.For(quota.Key), QuotaKinds.Unit(quota.Key), limit, consumed, reserved,
                 available && limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
                 limit.HasValue && (consumed > limit || reserved > limit.Value - consumed), version.WarningPercent)
@@ -47,7 +51,7 @@ public sealed partial class EfOrderPaymentStore
             : CommercialPeriods.MonthlyBoundary(order.BillingAnchorUtc!.Value, order.BillingPeriodIndex + 1, version.Calendar!.Value);
         await tx.CommitAsync(ct);
         return new CommercialQuoteDto(command.Purpose, version.Id, command.SubscriptionId, order.Amount / 10m, "TOMAN", effective, end,
-            quotas, false) { ExpiresAtUtc = order.TermsExpireAtUtc!.Value,
+            quotas, false) { SchoolApplicationId = order.SchoolApplicationId, ExpiresAtUtc = order.TermsExpireAtUtc!.Value,
                 StartsUponVerifiedPayment = command.Purpose == CommercialOrderPurpose.Purchase
                     || command.Purpose == CommercialOrderPurpose.Renewal && order.BillingPeriodIndex == 0 && order.BillingAnchorUtc == order.CreatedAtUtc };
     }

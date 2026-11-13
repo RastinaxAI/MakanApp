@@ -89,7 +89,9 @@ public sealed class ZibalPaymentMigrationAcceptanceTests(MakanAppWebApplicationF
     private static async Task AssertHistoryAndSchemaAsync(MakanDbContext db, LegacyPayment legacy)
     {
         db.ChangeTracker.Clear();
-        var order = await db.Orders.AsNoTracking().SingleAsync(o => o.Id == legacy.OrderId);
+        // این تست عمداً در schema زیبال متوقف می‌شود؛ ستون مرجع آموزشگاه هنوز وجود ندارد.
+        var order = await db.Orders.AsNoTracking().Where(o => o.Id == legacy.OrderId)
+            .Select(o => new { o.Status, o.Amount, o.ProductTitleSnapshot }).SingleAsync();
         var attempt = await db.PaymentAttempts.AsNoTracking().SingleAsync(a => a.Id == legacy.AttemptId);
         var payment = await db.Payments.AsNoTracking().SingleAsync(p => p.Id == legacy.PaymentId);
         Assert.Equal(OrderStatus.Paid, order.Status); Assert.Equal(PaymentAttemptStatus.Succeeded, attempt.Status);
@@ -100,7 +102,7 @@ public sealed class ZibalPaymentMigrationAcceptanceTests(MakanAppWebApplicationF
         Assert.Equal(0, await db.PaymentAttemptEvents.CountAsync());
         Assert.Equal(1, await db.Orders.CountAsync()); Assert.Equal(1, await db.Payments.CountAsync()); Assert.Equal(1, await db.PaymentAttempts.CountAsync());
         Assert.Equal(65, (await db.Database.GetAppliedMigrationsAsync()).Count());
-        // ??? ???? ????? ?? ?????? Zibal ????????? migration??? v6 ???? ???? pending ?????.
+        // Migrationهای پس از زیبال باید در این آزمون تاریخی pending بمانند.
         Assert.Equal(db.Database.GetMigrations().SkipWhile(m => m != Target).Skip(1), await db.Database.GetPendingMigrationsAsync());
         Assert.False(db.Database.HasPendingModelChanges());
         Assert.Equal(2, Convert.ToInt32(await ScalarAsync(db, """

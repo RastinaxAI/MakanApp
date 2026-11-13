@@ -18,7 +18,7 @@ public sealed partial class OrderPaymentService(
     public async Task<CommercialQuoteDto> QuoteAsync(Guid userId, Guid sessionId, CreateOrderCommand command, CancellationToken cancellationToken,
         SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
-        if (command.PlanVersionId == Guid.Empty || !Enum.IsDefined(command.Purpose)) throw Error(CommerceErrorCodes.OrderInvalid, "درخواست پیش‌فاکتور معتبر نیست.");
+        ValidateOrderCommand(command, ownerType);
         var organizationId = await ResolveOwnerOrganizationAsync(userId, sessionId, ownerType, cancellationToken);
         var quote = await store.QuoteAsync(userId, organizationId, command, UtcNow(), cancellationToken);
         return quote with { PaymentAvailable = paymentGateway.IsConfigured,
@@ -31,7 +31,8 @@ public sealed partial class OrderPaymentService(
         CancellationToken cancellationToken,
         SubscriptionOwnerType ownerType = SubscriptionOwnerType.Organization)
     {
-        if (command.PlanVersionId == Guid.Empty || command.ClientOperationId == Guid.Empty)
+        ValidateOrderCommand(command, ownerType);
+        if (command.ClientOperationId == Guid.Empty)
         {
             throw Error(CommerceErrorCodes.OrderInvalid, "شناسه نسخه پلن و عملیات سفارش الزامی است.");
         }
@@ -46,10 +47,12 @@ public sealed partial class OrderPaymentService(
             organizationId,
             command.PlanVersionId,
             command.ClientOperationId,
-            Hash($"order|{ownerType}|{organizationId:N}|{command.PlanVersionId:N}|{command.Purpose}|{command.SubscriptionId:N}"),
+            Hash(command.SchoolApplicationId.HasValue
+                ? $"school-order|{command.SchoolApplicationId:N}|{command.SchoolApplicationVersion}"
+                : $"order|{ownerType}|{organizationId:N}|{command.PlanVersionId:N}|{command.Purpose}|{command.SubscriptionId:N}"),
             UtcNow(),
             cancellationToken,
-            command.Purpose, command.SubscriptionId);
+            command.Purpose, command.SubscriptionId, command.SchoolApplicationId, command.SchoolApplicationVersion);
         return result.Status switch
         {
             CreateOrderStoreStatus.Created or CreateOrderStoreStatus.Replayed =>
@@ -378,7 +381,16 @@ public sealed partial class OrderPaymentService(
             order.CreatedAtUtc,
             order.PaidAtUtc,
             order.FulfillmentState,
-            order.PaymentAttempts.Select(MapAttempt).ToArray());
+            order.PaymentAttempts.Select(MapAttempt).ToArray()) { SchoolApplicationId = order.SchoolApplicationId };
+
+    private static void ValidateOrderCommand(CreateOrderCommand command, SubscriptionOwnerType ownerType)
+    {
+        var valid = command.SchoolApplicationId.HasValue
+            ? command.SchoolApplicationId != Guid.Empty && command.SchoolApplicationVersion is > 0 && command.PlanVersionId == Guid.Empty
+                && ownerType == SubscriptionOwnerType.Individual && command.Purpose == CommercialOrderPurpose.Purchase && command.SubscriptionId is null
+            : command.PlanVersionId != Guid.Empty && command.SchoolApplicationVersion is null && Enum.IsDefined(command.Purpose);
+        if (!valid) throw Error(CommerceErrorCodes.OrderInvalid, "درخواست تجاری معتبر نیست.");
+    }
 
     private static OrderListItemDto MapListItem(OrderPaymentSnapshot order) =>
         new(

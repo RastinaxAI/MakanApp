@@ -215,6 +215,7 @@ public sealed partial class EfPlatformCommerceOperationsStore
     private static MakanApp.Application.Commerce.OrderFulfillmentState FinanceFulfillment(Order order, bool activated) =>
         order.Status != OrderStatus.Paid ? MakanApp.Application.Commerce.OrderFulfillmentState.NotStarted :
         activated ? MakanApp.Application.Commerce.OrderFulfillmentState.SubscriptionActivated :
+        order.SchoolApplicationId.HasValue ? MakanApp.Application.Commerce.OrderFulfillmentState.ProvisioningPending :
         order.OrganizationId.HasValue || order.HasCommercialTerms ? MakanApp.Application.Commerce.OrderFulfillmentState.SubscriptionActivationPending :
         MakanApp.Application.Commerce.OrderFulfillmentState.ProvisioningPending;
 

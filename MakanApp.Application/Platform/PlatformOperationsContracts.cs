@@ -113,7 +113,11 @@ public sealed record PlatformProvisioningItem(
     string? FailureCode,
     DateTime CreatedAtUtc,
     DateTime UpdatedAtUtc,
-    string Version);
+    string Version)
+{
+    public Guid? SchoolApplicationId { get; init; }
+    public Guid? SourceOrderId { get; init; }
+}
 
 public sealed record PlatformProvisioningPage(
     IReadOnlyCollection<PlatformProvisioningItem> Items,

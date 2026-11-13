@@ -12,9 +12,10 @@ public sealed class SchoolApplicationConfiguration : IEntityTypeConfiguration<Sc
     {
         b.ToTable("SchoolApplications", "organization", t => {
             t.HasCheckConstraint("CK_SchoolApplications_Kind", "[Kind] IN (1,2)");
-            t.HasCheckConstraint("CK_SchoolApplications_Status", "[Status] IN (1,2,3,4,5,6)");
+            t.HasCheckConstraint("CK_SchoolApplications_Status", "[Status] IN (1,2,3,4,5,6,7)");
+            t.HasCheckConstraint("CK_SchoolApplications_Capacities", "([StudentCapacity] IS NULL OR [StudentCapacity]>=0) AND ([TeacherCapacity] IS NULL OR [TeacherCapacity]>=0)");
             t.HasCheckConstraint("CK_SchoolApplications_Version", "[Revision] > 0 AND [Version] >= [Revision]");
-            t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status]=1 OR [SubmittedPolicyVersion] IS NOT NULL");
+            t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status] IN (1,7) OR [SubmittedPolicyVersion] IS NOT NULL");
         });
         b.HasKey(a => a.Id); b.Property(a => a.RowVersion).IsRowVersion();
         b.Property(a => a.SchoolName).HasMaxLength(200); b.Property(a => a.LegalEntityName).HasMaxLength(200);
@@ -22,6 +23,17 @@ public sealed class SchoolApplicationConfiguration : IEntityTypeConfiguration<Sc
         b.Property(a => a.DegreeField).HasMaxLength(500); b.Property(a => a.SubmittedPolicyVersion).HasMaxLength(100);
         b.HasOne<User>().WithMany().HasForeignKey(a => a.ApplicantUserId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(a => new { a.ApplicantUserId, a.UpdatedAtUtc }); b.HasIndex(a => new { a.Status, a.UpdatedAtUtc });
+    }
+}
+public sealed class SchoolApplicationHistoryConfiguration : IEntityTypeConfiguration<SchoolApplicationHistory>
+{
+    public void Configure(EntityTypeBuilder<SchoolApplicationHistory> b)
+    {
+        b.ToTable("SchoolApplicationHistory", "organization"); b.HasKey(h => h.Id);
+        b.Property(h => h.Action).HasMaxLength(100); b.Property(h => h.Reason).HasMaxLength(2000);
+        b.HasOne<SchoolApplication>().WithMany().HasForeignKey(h => h.ApplicationId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(h => h.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasIndex(h => new { h.ApplicationId, h.Version }).IsUnique();
     }
 }
 public sealed class SchoolApplicationRevisionConfiguration : IEntityTypeConfiguration<SchoolApplicationRevision>

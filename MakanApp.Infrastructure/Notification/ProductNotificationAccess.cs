@@ -19,7 +19,7 @@ public sealed class ProductNotificationAccess(MakanDbContext db, IPlatformPermis
         return source.Where(n =>
             (n.ResourceType != NotificationResourceType.SupportTicket || db.SupportTickets.Any(t => t.Id == n.ResourceId && (t.OwnerUserId == user || support))) &&
             (n.ResourceType != NotificationResourceType.SchoolApplication || db.SchoolApplications.Any(a => a.Id == n.ResourceId &&
-                (a.ApplicantUserId == user || schools && a.Status != SchoolApplicationStatus.Draft))) &&
+                (a.ApplicantUserId == user || schools && a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null))) &&
             (n.ResourceType != NotificationResourceType.Order || orders.Any(o => o.Id == n.ResourceId)) &&
             (n.ResourceType != NotificationResourceType.Membership || db.Memberships.Any(m => m.Id == n.ResourceId && m.UserId == user)) &&
             (n.ResourceType != NotificationResourceType.OrganizationInvitation || db.Invitations.Any(i => i.Id == n.ResourceId && i.DestinationUserId == user &&
@@ -34,7 +34,7 @@ public sealed class ProductNotificationAccess(MakanDbContext db, IPlatformPermis
                     await db.SupportTickets.AnyAsync(t => t.Id == id, ct) && await permissions.HasPermissionAsync(user, PlatformPermissionKeys.SupportRead, ct);
             case NotificationResourceType.SchoolApplication:
                 return await db.SchoolApplications.AnyAsync(a => a.Id == id && a.ApplicantUserId == user, ct) ||
-                    await db.SchoolApplications.AnyAsync(a => a.Id == id && a.Status != SchoolApplicationStatus.Draft, ct) &&
+                    await db.SchoolApplications.AnyAsync(a => a.Id == id && a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null, ct) &&
                     await permissions.HasPermissionAsync(user, PlatformPermissionKeys.SchoolApplicationsRead, ct);
             case NotificationResourceType.Order:
                 return await ReadableOrders(user).AnyAsync(o => o.Id == id, ct);

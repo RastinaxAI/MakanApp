@@ -26,7 +26,9 @@ public sealed partial class EfOrderPaymentStore(
         DateTime createdAtUtc,
         CancellationToken cancellationToken,
         CommercialOrderPurpose purpose = CommercialOrderPurpose.Purchase,
-        Guid? targetSubscriptionId = null)
+        Guid? targetSubscriptionId = null,
+        Guid? schoolApplicationId = null,
+        long? schoolApplicationVersion = null)
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
@@ -37,9 +39,9 @@ public sealed partial class EfOrderPaymentStore(
             .SingleOrDefaultAsync(cancellationToken);
         if (existing is not null)
         {
-            var matches = FixedEquals(existing.RequestPayloadHash, requestPayloadHash)
+            var matches = existing.SchoolApplicationId == schoolApplicationId && (FixedEquals(existing.RequestPayloadHash, requestPayloadHash)
                 || !existing.HasCommercialTerms && purpose == CommercialOrderPurpose.Purchase && targetSubscriptionId is null
-                    && existing.PlanVersionId == planVersionId && existing.OrganizationId == organizationId;
+                    && existing.PlanVersionId == planVersionId && existing.OrganizationId == organizationId);
             var snapshot = matches
                 ? await CreateSnapshotAsync(existing, cancellationToken)
                 : null;
@@ -49,6 +51,8 @@ public sealed partial class EfOrderPaymentStore(
                 snapshot);
         }
 
+        if (schoolApplicationId.HasValue)
+            planVersionId = await ResolveSchoolPlanAsync(purchaserUserId, schoolApplicationId.Value, schoolApplicationVersion, organizationId, createdAtUtc, cancellationToken);
         var planVersion = await dbContext.PlanVersions
             .Include(version => version.Price).Include(version => version.Entitlements).Include(version => version.QuotaDefinitions)
             .SingleOrDefaultAsync(version => version.Id == planVersionId, cancellationToken);
@@ -65,10 +69,13 @@ public sealed partial class EfOrderPaymentStore(
             clientOperationId,
             requestPayloadHash,
             createdAtUtc);
+        if (schoolApplicationId.HasValue) order.BindSchoolApplication(schoolApplicationId.Value);
         var productTitle = await dbContext.Plans.Where(p => p.Id == planVersion.PlanId).Select(p => p.DisplayName).SingleAsync(cancellationToken);
         order.CaptureProductTitle(productTitle);
         await SetCommercialOrderTermsAsync(order, planVersion, purpose, targetSubscriptionId, createdAtUtc, cancellationToken);
         dbContext.Orders.Add(order);
+        if (order.SchoolApplicationId.HasValue)
+            productNotifications?.SchoolUpdated(clientOperationId, order.SchoolApplicationId.Value, purchaserUserId);
         if (order.Amount == 0)
         {
             order.MarkPaid(createdAtUtc);
@@ -610,6 +617,7 @@ public sealed partial class EfOrderPaymentStore(
             FulfillmentState(order, activated),
             attempts)
         {
+            SchoolApplicationId = order.SchoolApplicationId,
             ProductTitleSnapshot = order.ProductTitleSnapshot, Purpose = order.Purpose,
             BillingAnchorUtc = order.BillingAnchorUtc, BillingPeriodIndex = order.BillingPeriodIndex
         };
@@ -642,7 +650,7 @@ public sealed partial class EfOrderPaymentStore(
             return OrderFulfillmentState.NotStarted;
         }
 
-        if (!order.OrganizationId.HasValue && !order.HasCommercialTerms)
+        if (order.SchoolApplicationId.HasValue || !order.OrganizationId.HasValue && !order.HasCommercialTerms)
         {
             return OrderFulfillmentState.ProvisioningPending;
         }

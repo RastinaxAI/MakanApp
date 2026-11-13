@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Commerce;
 
 public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, EfCommercialStore commerce, TimeProvider timeProvider,
-    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime)
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime, MakanApp.Infrastructure.Notification.ProductNotificationWriter? notifications = null)
     : ISubscriptionActivationHandler
 {
     public async Task HandleAsync(SubscriptionActivationRequested payload, CancellationToken ct)
@@ -16,6 +16,23 @@ public sealed class EfSubscriptionActivationHandler(MakanDbContext dbContext, Ef
             throw new InvalidOperationException("سفارش معتبر تسویه‌شده برای فعال‌سازی لازم است.");
         var owner = order.OrganizationId.HasValue ? SubscriptionOwner.Organization(order.OrganizationId.Value) : SubscriptionOwner.Individual(order.PurchaserUserId);
         await commerce.LockOwnerAsync(owner, ct);
+        if (order.SchoolApplicationId.HasValue)
+        {
+            var app = await dbContext.SchoolApplications.SingleAsync(a => a.Id == order.SchoolApplicationId && a.ApplicantUserId == order.PurchaserUserId, ct);
+            if (app.Status != MakanApp.Domain.Organization.SchoolApplicationStatus.Approved) throw new InvalidOperationException("درخواست تأسیس تأییدشده لازم است.");
+            if (!await dbContext.PlatformProvisioningRequests.AnyAsync(p => p.SourceOrderId == order.Id, ct))
+            {
+                dbContext.PlatformProvisioningRequests.Add(MakanApp.Domain.Platform.PlatformProvisioningRequest.AwaitSchoolManagerPolicy(
+                    app.Id, order.Id, app.ApplicantUserId, app.SchoolName!, order.PlanVersionId, timeProvider.GetUtcNow().UtcDateTime));
+                notifications?.SchoolUpdated(order.Id, app.Id, app.ApplicantUserId);
+                dbContext.AdminAuditLogs.Add(MakanApp.Domain.Platform.AdminAuditLog.Create(null, null, null,
+                    "school_application.ProvisioningAwaitingPolicy", "SchoolApplication", app.Id.ToString(), null,
+                    "پرداخت تأییدشده محفوظ است؛ آماده‌سازی به سیاست مدیر اولیه نیاز دارد", timeProvider.GetUtcNow().UtcDateTime,
+                    "school-order:" + order.Id.ToString("N"), MakanApp.Domain.Platform.AdminAuditResult.Succeeded, null, null));
+            }
+            // پرداخت محفوظ است؛ بدون سیاست مدیر اولیه، ساخت سازمان یا اشتراک فردی مجاز نیست.
+            return;
+        }
         if (await dbContext.Subscriptions.AnyAsync(s => s.SourceOrderId == order.Id, ct)
             || await dbContext.SubscriptionAmendments.AnyAsync(a => a.OrderId == order.Id, ct)) return;
         var version = await commerce.VersionAsync(order.PlanVersionId, ct);

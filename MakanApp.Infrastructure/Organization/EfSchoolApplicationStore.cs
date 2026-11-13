@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Organization;
 
-public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorAccess actors, IPlatformPermissionResolver permissions,
+public sealed partial class EfSchoolApplicationStore(MakanDbContext db, CommercialActorAccess actors, IPlatformPermissionResolver permissions,
     IFileAssetBoundAccessResolver files, IIdentitySecurity security, AddressBookProtection protection, TimeProvider clock,
     MakanApp.Infrastructure.Notification.ProductNotificationWriter notifications) : ISchoolApplicationStore
 {
@@ -55,27 +55,27 @@ public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorA
                 throw Error(SchoolApplicationErrorCodes.Conflict);
             if (start) app.StartReview(Now()); else app.Decide(command.Decision!.Value, Now());
             db.SchoolApplicationDecisions.Add(SchoolApplicationDecision.Create(app, actor.UserId, command.ApplicantFeedback?.Trim() ?? "بررسی آغاز شد", Now()));
-            Complete(actor, app, command.ClientOperationId, hash, start ? "school_application.ReviewStarted" : "school_application.Decided");
+            Complete(actor, app, command.ClientOperationId, hash, start ? "school_application.ReviewStarted" : "school_application." + app.Status, command.ApplicantFeedback?.Trim());
             // تصمیم بررسی، پرداخت یا ساخت Organization نیست؛ هیچ Membership یا RoleAssignment ساخته نمی‌شود.
             await db.SaveChangesAsync(ct);
         }
-        var result = await Map(app, null, ct); await tx.CommitAsync(ct); return result;
+        var result = await Map(app, null, ct, true); await tx.CommitAsync(ct); return result;
     }
     public async Task<SchoolApplicationResult> ReadAsync(SchoolApplicationActor actor, Guid id, bool reviewer, int? revision, CancellationToken ct)
     {
         await actors.EnsureAsync(actor.UserId, actor.SessionId, ct); if (reviewer) await Reviewer(actor, false, ct);
         var app = await db.SchoolApplications.AsNoTracking().SingleOrDefaultAsync(a => a.Id == id &&
-            (reviewer ? a.Status != SchoolApplicationStatus.Draft : a.ApplicantUserId == actor.UserId), ct) ?? throw Error(SchoolApplicationErrorCodes.NotFound);
-        return await Map(app, revision, ct);
+            (reviewer ? a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null : a.ApplicantUserId == actor.UserId), ct) ?? throw Error(SchoolApplicationErrorCodes.NotFound);
+        return await Map(app, revision, ct, reviewer);
     }
     public async Task<SchoolApplicationPage> PageAsync(SchoolApplicationActor actor, bool reviewer, SchoolApplicationStatus? status, int page, int pageSize, CancellationToken ct)
     {
         await actors.EnsureAsync(actor.UserId, actor.SessionId, ct); if (reviewer) await Reviewer(actor, false, ct);
-        var query = db.SchoolApplications.AsNoTracking().Where(a => reviewer ? a.Status != SchoolApplicationStatus.Draft : a.ApplicantUserId == actor.UserId);
+        var query = db.SchoolApplications.AsNoTracking().Where(a => reviewer ? a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null : a.ApplicantUserId == actor.UserId);
         if (status.HasValue) query = query.Where(a => a.Status == status.Value);
         var total = await query.CountAsync(ct);
         var rows = await query.OrderByDescending(a => a.UpdatedAtUtc).ThenBy(a => a.Id).Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(ct);
-        var results = new List<SchoolApplicationResult>(); foreach (var app in rows) results.Add(await Map(app, null, ct));
+        var results = new List<SchoolApplicationResult>(); foreach (var app in rows) results.Add(await Map(app, null, ct, reviewer));
         return new(results, total, page, pageSize);
     }
     private async Task Revision(SchoolApplicationActor actor, SchoolApplication app, IReadOnlyCollection<SchoolDocumentInput>? documents, CancellationToken ct)
@@ -94,7 +94,7 @@ public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorA
             file.Retain(Now()); db.SchoolApplicationDocuments.Add(SchoolApplicationDocument.Create(app.Id, app.Revision, file.Id, document.Kind.Trim()));
         }
     }
-    private async Task<SchoolApplicationResult> Map(SchoolApplication app, int? requestedRevision, CancellationToken ct)
+    private async Task<SchoolApplicationResult> Map(SchoolApplication app, int? requestedRevision, CancellationToken ct, bool reviewer = false)
     {
         var revision = requestedRevision ?? app.Revision;
         SchoolApplicationDraftData data;
@@ -109,8 +109,24 @@ public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorA
             .Select(d => new SchoolDocumentInput(d.FileAssetId, d.Kind)).ToArrayAsync(ct);
         var decisions = await db.SchoolApplicationDecisions.AsNoTracking().Where(d => d.ApplicationId == app.Id).OrderByDescending(d => d.OccurredAtUtc).ThenBy(d => d.Id).Take(100)
             .Select(d => new SchoolApplicationDecisionResult(d.Id, d.Revision, d.Status, d.ApplicantFeedback, d.OccurredAtUtc)).ToArrayAsync(ct);
-        return new(app.Id, app.Kind, app.Status, revision, app.Version, data, docs, decisions, false,
-            SchoolApplicationErrorCodes.ProductDecisionRequired, app.CreatedAtUtc, app.UpdatedAtUtc);
+        var currentRevision = revision == app.Revision;
+        IReadOnlyList<string> missing = currentRevision ? app.SubmissionRequirements(docs.Select(d => d.Kind)) : [];
+        var progress = await Progress(app, ct);
+        return new(app.Id, app.Kind, app.Status, revision, app.Version, data, docs, decisions, currentRevision && app.CanEdit && missing.Count == 0,
+            app.CanEdit && missing.Count != 0 ? SchoolApplicationErrorCodes.SubmissionIncomplete : null, app.CreatedAtUtc, app.UpdatedAtUtc)
+        {
+            CanEdit = currentRevision && app.CanEdit, CanCancel = currentRevision && app.CanCancel, MissingRequirements = missing, Progress = progress,
+            ApplicantUserId = reviewer ? app.ApplicantUserId : null,
+            NextAction = !currentRevision ? "ReadCurrentRevision" : app.Status switch
+            {
+                SchoolApplicationStatus.Draft => missing.Count == 0 ? "Submit" : "CompleteDraft",
+                SchoolApplicationStatus.NeedsChanges => "ReviseAndResubmit",
+                SchoolApplicationStatus.Submitted or SchoolApplicationStatus.UnderReview => "WaitForReview",
+                SchoolApplicationStatus.Approved => progress.ProvisioningState == "Completed" ? "Ready" : progress.PaymentState == "Paid" ? "AwaitProvisioning" :
+                    progress.OrderId.HasValue ? "Pay" : progress.CommercialState == "Configured" ? "RequestQuote" : "WaitForCommercialConfiguration",
+                _ => "None"
+            }
+        };
     }
     private async Task LockActor(SchoolApplicationActor actor, CancellationToken ct)
     {
@@ -119,7 +135,7 @@ public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorA
     }
     private async Task<SchoolApplication> Locked(SchoolApplicationActor actor, Guid id, bool reviewer, CancellationToken ct) =>
         await db.SchoolApplications.FromSqlInterpolated($"SELECT * FROM [organization].[SchoolApplications] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={id}")
-            .SingleOrDefaultAsync(a => reviewer ? a.Status != SchoolApplicationStatus.Draft : a.ApplicantUserId == actor.UserId, ct) ?? throw Error(SchoolApplicationErrorCodes.NotFound);
+            .SingleOrDefaultAsync(a => reviewer ? a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null : a.ApplicantUserId == actor.UserId, ct) ?? throw Error(SchoolApplicationErrorCodes.NotFound);
     private async Task Reviewer(SchoolApplicationActor actor, bool write, CancellationToken ct)
     {
         if (!await permissions.HasPermissionAsync(actor.UserId, PlatformPermissionKeys.SchoolApplicationsRead, ct) ||
@@ -131,10 +147,11 @@ public sealed class EfSchoolApplicationStore(MakanDbContext db, CommercialActorA
         if (receipt is not null && (receipt.Fingerprint != hash || app.HasValue && receipt.ApplicationId != app)) throw Error(SchoolApplicationErrorCodes.Conflict);
         return receipt;
     }
-    private void Complete(SchoolApplicationActor actor, SchoolApplication app, Guid operation, string hash, string action)
+    private void Complete(SchoolApplicationActor actor, SchoolApplication app, Guid operation, string hash, string action, string? reason = null)
     {
-        if ((action is "school_application.ReviewStarted" or "school_application.Decided") && actor.UserId != app.ApplicantUserId)
+        if (action is not ("school_application.Created" or "school_application.Revised"))
             notifications.SchoolUpdated(operation, app.Id, app.ApplicantUserId);
+        db.SchoolApplicationHistories.Add(SchoolApplicationHistory.Create(app, actor.UserId, action, reason, Now()));
         db.SchoolApplicationOperations.Add(SchoolApplicationOperation.Create(actor.UserId, operation, app.Id, hash, Now()));
         db.AdminAuditLogs.Add(AdminAuditLog.Create(actor.UserId, null, actor.SessionId, action, "SchoolApplication", app.Id.ToString(), null,
             "عملیات نسخه‌دار درخواست تأسیس توسط عامل مجاز", Now(), actor.CorrelationId, AdminAuditResult.Succeeded, null, null));

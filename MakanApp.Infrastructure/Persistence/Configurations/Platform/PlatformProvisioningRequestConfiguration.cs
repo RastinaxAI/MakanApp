@@ -16,6 +16,10 @@ public sealed class PlatformProvisioningRequestConfiguration
                 "CK_ProvisioningRequests_Status",
                 "[Status] BETWEEN 1 AND 6"));
         builder.HasKey(item => item.Id);
+        builder.HasOne<MakanApp.Domain.Organization.SchoolApplication>().WithMany().HasForeignKey(p => p.SchoolApplicationId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Order>().WithMany().HasForeignKey(p => p.SourceOrderId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(p => p.SchoolApplicationId).IsUnique().HasFilter("[SchoolApplicationId] IS NOT NULL");
+        builder.HasIndex(p => p.SourceOrderId).IsUnique().HasFilter("[SourceOrderId] IS NOT NULL");
         builder.Property(item => item.ClientOperationId)
             .HasMaxLength(PlatformProvisioningRequest.MaximumClientOperationIdLength)
             .IsRequired();

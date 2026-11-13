@@ -1,7 +1,7 @@
 namespace MakanApp.Domain.Organization;
 
 public enum SchoolApplicationKind { LegalOrganization = 1, IndividualTeacher = 2 }
-public enum SchoolApplicationStatus { Draft = 1, Submitted = 2, UnderReview = 3, NeedsChanges = 4, Rejected = 5, Approved = 6 }
+public enum SchoolApplicationStatus { Draft = 1, Submitted = 2, UnderReview = 3, NeedsChanges = 4, Rejected = 5, Approved = 6, Cancelled = 7 }
 public sealed record SchoolApplicationDraftData(string? SchoolName, string? LegalEntityName, string? TeachingHistory,
     string? WorkSamples, string? DegreeField, int? StudentCapacity, int? TeacherCapacity);
 
@@ -35,18 +35,48 @@ public sealed class SchoolApplication
     {
         if (Status is not (SchoolApplicationStatus.Draft or SchoolApplicationStatus.NeedsChanges)) throw new InvalidOperationException("این وضعیت قابل اصلاح نیست.");
         EnsureUtc(now);
-        SchoolName = Text(data.SchoolName, 200); LegalEntityName = Text(data.LegalEntityName, 200);
-        TeachingHistory = Text(data.TeachingHistory, 4000); WorkSamples = Text(data.WorkSamples, 4000); DegreeField = Text(data.DegreeField, 500);
-        // Draft مقدار صریح فرم را نگه می‌دارد؛ requiredness و دامنهٔ ظرفیت Submit هنوز تصمیم مصوب ندارد.
+        if (data.StudentCapacity is < 0 || data.TeacherCapacity is < 0) throw new ArgumentException("ظرفیت منفی مجاز نیست.");
+        var schoolName = Text(data.SchoolName, 200); var legalName = Text(data.LegalEntityName, 200);
+        var teachingHistory = Text(data.TeachingHistory, 4000); var workSamples = Text(data.WorkSamples, 4000); var degreeField = Text(data.DegreeField, 500);
+        SchoolName = schoolName; LegalEntityName = legalName; TeachingHistory = teachingHistory; WorkSamples = workSamples; DegreeField = degreeField;
         StudentCapacity = data.StudentCapacity; TeacherCapacity = data.TeacherCapacity;
         Revision++; Version++; UpdatedAtUtc = now;
     }
     public SchoolApplicationDraftData DraftData() => new(SchoolName, LegalEntityName, TeachingHistory, WorkSamples, DegreeField, StudentCapacity, TeacherCapacity);
-    public void Submit(string approvedPolicyVersion, DateTime now)
+    public void Submit(string approvedPolicyVersion, DateTime now, IEnumerable<string> documentKinds)
     {
         if (Status is not (SchoolApplicationStatus.Draft or SchoolApplicationStatus.NeedsChanges) || string.IsNullOrWhiteSpace(approvedPolicyVersion)) throw new InvalidOperationException("ارسال درخواست مجاز نیست.");
+        if (SubmissionRequirements(documentKinds).Count != 0) throw new ArgumentException("اطلاعات و مدارک ارسال کامل نیست.");
         EnsureUtc(now); SubmittedPolicyVersion = approvedPolicyVersion; Status = SchoolApplicationStatus.Submitted; Version++; UpdatedAtUtc = now;
     }
+    public IReadOnlyList<string> SubmissionRequirements(IEnumerable<string> documentKinds)
+    {
+        var missing = new List<string>();
+        if (SchoolName is null) missing.Add(nameof(SchoolName));
+        if (!StudentCapacity.HasValue) missing.Add(nameof(StudentCapacity));
+        if (!TeacherCapacity.HasValue) missing.Add(nameof(TeacherCapacity));
+        var kinds = documentKinds.ToHashSet(StringComparer.Ordinal);
+        if (Kind == SchoolApplicationKind.LegalOrganization)
+        {
+            if (LegalEntityName is null) missing.Add(nameof(LegalEntityName));
+            if (!kinds.Overlaps(["License", "OrganizationDocument"])) missing.Add("LegalDocument");
+        }
+        else
+        {
+            if (TeachingHistory is null) missing.Add(nameof(TeachingHistory));
+            if (WorkSamples is null) missing.Add(nameof(WorkSamples));
+            if (!kinds.Contains("Degree")) missing.Add("DegreeDocument");
+        }
+        return missing;
+    }
+    public void Cancel(DateTime now)
+    {
+        if (Status is not (SchoolApplicationStatus.Draft or SchoolApplicationStatus.Submitted or SchoolApplicationStatus.UnderReview or SchoolApplicationStatus.NeedsChanges))
+            throw new InvalidOperationException("درخواست نهایی قابل لغو نیست.");
+        EnsureUtc(now); Status = SchoolApplicationStatus.Cancelled; Version++; UpdatedAtUtc = now;
+    }
+    public bool CanCancel => Status is SchoolApplicationStatus.Draft or SchoolApplicationStatus.Submitted or SchoolApplicationStatus.UnderReview or SchoolApplicationStatus.NeedsChanges;
+    public bool CanEdit => Status is SchoolApplicationStatus.Draft or SchoolApplicationStatus.NeedsChanges;
     public void StartReview(DateTime now)
     {
         if (Status != SchoolApplicationStatus.Submitted) throw new InvalidOperationException("درخواست قابل شروع بررسی نیست.");
