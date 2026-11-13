@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@b7ac095c3f5c0175254edadd6d5ef35f7b24215d`؛ بازبینی `2026-11-13`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@1804f402be32e4d776216c17fcd76555fc5cf29f`؛ بازبینی `2026-11-13`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**149 جدول، 1583 ستون، 396 FK، 456 index مستقل از key و 407 CHECK؛ 72 Migration.**
+**149 جدول، 1592 ستون، 403 FK، 463 index مستقل از key و 407 CHECK؛ 73 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -114,6 +114,7 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 70 | 20261112160026_ExtendProductNotificationTargets | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112160026_ExtendProductNotificationTargets.cs) |
 | 71 | 20261112165826_AddVerifiedPhoneChangeRequests | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112165826_AddVerifiedPhoneChangeRequests.cs) |
 | 72 | 20261113065124_CompleteSchoolEstablishmentWorkflow | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113065124_CompleteSchoolEstablishmentWorkflow.cs) |
+| 73 | 20261113103326_FinalizeSchoolManagerAndPaidProvisioning | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113103326_FinalizeSchoolManagerAndPaidProvisioning.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -6188,8 +6189,11 @@ Entity: `MakanApp.Domain.Organization.SchoolApplicationDecision`؛ مالک نگ
 |---|---|---|---|---|
 | ApplicantFeedback | `nvarchar(2000)` | خیر | خیر | Never |
 | ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| ApplicationVersion | `bigint` | بله | خیر | Never |
+| FinalInitialManagerUserId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+| ProposedInitialManagerUserId | `uniqueidentifier` | بله | خیر | Never |
 | ReviewerUserId | `uniqueidentifier` | خیر | خیر | Never |
 | Revision | `int` | خیر | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
@@ -6204,6 +6208,8 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_SchoolApplicationDecisions_FinalInitialManagerUserId | FinalInitialManagerUserId | False | — |
+| IX_SchoolApplicationDecisions_ProposedInitialManagerUserId | ProposedInitialManagerUserId | False | — |
 | IX_SchoolApplicationDecisions_ReviewerUserId | ReviewerUserId | False | — |
 | IX_SchoolApplicationDecisions_ApplicationId_OccurredAtUtc | ApplicationId, OccurredAtUtc | False | — |
 | IX_SchoolApplicationDecisions_ApplicationId_Revision | ApplicationId, Revision | False | — |
@@ -6212,6 +6218,8 @@ Indexها:
 
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
+| FinalInitialManagerUserId | identity.Users | Id | Restrict |
+| ProposedInitialManagerUserId | identity.Users | Id | Restrict |
 | ReviewerUserId | identity.Users | Id | Restrict |
 | ApplicationId, Revision | organization.SchoolApplicationRevisions | ApplicationId, Number | Restrict |
 
@@ -6254,8 +6262,10 @@ Entity: `MakanApp.Domain.Organization.SchoolApplicationHistory`؛ مالک نگ�
 | Action | `nvarchar(100)` | خیر | خیر | Never |
 | ActorUserId | `uniqueidentifier` | خیر | خیر | Never |
 | ApplicationId | `uniqueidentifier` | خیر | خیر | Never |
+| FinalInitialManagerUserId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | OccurredAtUtc | `datetime2` | خیر | خیر | Never |
+| ProposedInitialManagerUserId | `uniqueidentifier` | بله | خیر | Never |
 | Reason | `nvarchar(2000)` | بله | خیر | Never |
 | Revision | `int` | خیر | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
@@ -6272,6 +6282,8 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | IX_SchoolApplicationHistory_ActorUserId | ActorUserId | False | — |
+| IX_SchoolApplicationHistory_FinalInitialManagerUserId | FinalInitialManagerUserId | False | — |
+| IX_SchoolApplicationHistory_ProposedInitialManagerUserId | ProposedInitialManagerUserId | False | — |
 | IX_SchoolApplicationHistory_ApplicationId_Version | ApplicationId, Version | True | — |
 
 روابط:
@@ -6280,6 +6292,8 @@ Indexها:
 |---|---|---|---|
 | ActorUserId | identity.Users | Id | Restrict |
 | ApplicationId | organization.SchoolApplications | Id | Restrict |
+| FinalInitialManagerUserId | identity.Users | Id | Restrict |
+| ProposedInitialManagerUserId | identity.Users | Id | Restrict |
 
 ### organization.SchoolApplicationOperations
 
@@ -6344,7 +6358,10 @@ Entity: `MakanApp.Domain.Organization.SchoolApplication`؛ مالک نگاشت: 
 | ApplicantUserId | `uniqueidentifier` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2` | خیر | خیر | Never |
 | DegreeField | `nvarchar(500)` | بله | خیر | Never |
+| FinalInitialManagerUserId | `uniqueidentifier` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| InitialManagerConfirmedAtUtc | `datetime2` | بله | خیر | Never |
+| InitialManagerConfirmedByUserId | `uniqueidentifier` | بله | خیر | Never |
 | Kind | `int` | خیر | خیر | Never |
 | LegalEntityName | `nvarchar(200)` | بله | خیر | Never |
 | Revision | `int` | خیر | خیر | Never |
@@ -6369,6 +6386,8 @@ Indexها:
 
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
+| IX_SchoolApplications_FinalInitialManagerUserId | FinalInitialManagerUserId | False | — |
+| IX_SchoolApplications_InitialManagerConfirmedByUserId | InitialManagerConfirmedByUserId | False | — |
 | IX_SchoolApplications_ApplicantUserId_UpdatedAtUtc | ApplicantUserId, UpdatedAtUtc | False | — |
 | IX_SchoolApplications_Status_UpdatedAtUtc | Status, UpdatedAtUtc | False | — |
 
@@ -6377,6 +6396,8 @@ Indexها:
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | ApplicantUserId | identity.Users | Id | Restrict |
+| FinalInitialManagerUserId | identity.Users | Id | Restrict |
+| InitialManagerConfirmedByUserId | identity.Users | Id | Restrict |
 
 CHECKها:
 
@@ -6617,6 +6638,7 @@ Entity: `MakanApp.Domain.Platform.PlatformProvisioningRequest`؛ مالک نگا
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
 | SchoolApplicationId | `uniqueidentifier` | بله | خیر | Never |
 | SourceOrderId | `uniqueidentifier` | بله | خیر | Never |
+| SourcePaymentId | `uniqueidentifier` | بله | خیر | Never |
 | Status | `int` | خیر | خیر | Never |
 | SubscriptionEndsAtUtc | `datetime2(7)` | بله | خیر | Never |
 | SubscriptionId | `uniqueidentifier` | بله | خیر | Never |
@@ -6635,11 +6657,12 @@ Indexها:
 | UX_ProvisioningRequests_ClientOperationId | ClientOperationId | True | — |
 | IX_ProvisioningRequests_InitialManagerUserId | InitialManagerUserId | False | — |
 | IX_ProvisioningRequests_ManagerInvitationId | ManagerInvitationId | False | — |
-| IX_ProvisioningRequests_OrganizationId | OrganizationId | False | — |
+| IX_ProvisioningRequests_OrganizationId | OrganizationId | True | [SchoolApplicationId] IS NOT NULL AND [OrganizationId] IS NOT NULL |
 | IX_ProvisioningRequests_PlanVersionId | PlanVersionId | False | — |
 | IX_ProvisioningRequests_RequestedByUserId | RequestedByUserId | False | — |
 | IX_ProvisioningRequests_SchoolApplicationId | SchoolApplicationId | True | [SchoolApplicationId] IS NOT NULL |
 | IX_ProvisioningRequests_SourceOrderId | SourceOrderId | True | [SourceOrderId] IS NOT NULL |
+| IX_ProvisioningRequests_SourcePaymentId | SourcePaymentId | True | [SourcePaymentId] IS NOT NULL |
 | IX_ProvisioningRequests_SubscriptionId | SubscriptionId | False | — |
 | IX_ProvisioningRequests_Status_UpdatedAtUtc | Status, UpdatedAtUtc | False | — |
 
@@ -6654,6 +6677,7 @@ Indexها:
 | RequestedByUserId | identity.Users | Id | Restrict |
 | SchoolApplicationId | organization.SchoolApplications | Id | Restrict |
 | SourceOrderId | commerce.Orders | Id | Restrict |
+| SourcePaymentId | commerce.Payments | Id | Restrict |
 | SubscriptionId | commerce.Subscriptions | Id | Restrict |
 
 CHECKها:

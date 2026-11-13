@@ -1,6 +1,6 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
-> به‌روزرسانی آموزشگاه `2026-11-13` در بخش [تکمیل درخواست آموزشگاه](#تکمیل-درخواست-آموزشگاه--2026-11-13) همین سند است. بخش اولیهٔ تاریخ‌دار زیر گزارش مرحلهٔ قبلی و Commit خودش است؛ محدودیت قدیمی D01 با این Task بسته شده است. قرارداد جاری: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) و [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md).
+> وضعیت جدید در بخش «نهایی‌سازی مدیر و Provisioning آموزشگاه» انتهای همین سند است. گزارش‌های تاریخ‌دار قبلی با Commit و محدودیت همان مرحله نگه داشته شده‌اند؛ D01 و D17 اکنون بسته‌اند. قرارداد جاری: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
 
 تاریخ `2026-11-12`؛ مبنا `e5bd3eae658991585ca09f581f6236351857b3b8`، شاخهٔ `feature/product-v6-backend-alignment`. مرجع نیاز: Product Architecture v6، شرح Backend Tasks v6 و override همین Task. سند محصول هدف است؛ این گزارش فقط Source، تست و محدودیت واقعی را بیان می‌کند.
 
@@ -324,3 +324,139 @@ Remote/upstream جاری `origin/feature/product-v6-backend-alignment` است. �
 ### ۱۶. مرحلهٔ بعد
 
 قیمت/PlanVersion/Quota معتبر دو خدمت با مجوز Admin ثبت و سیاست انتخاب مدیر اولیه تصویب شود. سپس همین intent/Order موجود، بدون شارژ دوم و با دعوت/پذیرش واقعی مدیر، تا Organization/Subscription/Ready تکمیل و پذیرش شود. فعال‌سازی PersonalClass academics، تغییر AI یا حذف واقعی حساب جزو این کار نیست.
+
+## نهایی‌سازی مدیر و Provisioning آموزشگاه
+
+مبنای این بخش `d9f493858b1ae3d1badceb6818d56aa1e34bb1cd` و پرامپت School Application Finalization مورخ `2026-11-13` است؛ محدودیت‌های گزارش قبلی دربارهٔ D17 مربوط به تحویل قبلی‌اند. Commit Runtime: `1804f402be32e4d776216c17fcd76555fc5cf29f`؛ کد این Commit همان نسخهٔ آزمون نهایی است.
+
+### ۱. خلاصه مرحله
+
+پیش از این مرحله، Submit/Review/Quote/Order/Zibal و intent پایدار پرداخت‌شده وجود داشت، اما انتخاب مدیر اولیه مصوب نبود و سازمان/اشتراک/دعوت ساخته نمی‌شد. اکنون Reviewer هنگام Approval حساب نهایی را صریح انتخاب می‌کند و Paid از Outbox موجود به همان Provisioning مرحله‌ای می‌رسد. متقاضی فقط مدیر پیشنهادی است؛ انتخاب دیگری مجاز است و متقاضی خودکار Membership نمی‌گیرد. قیمت واقعی Production همچنان Configuration است؛ دادهٔ تجاری حدسی ساخته نشده است.
+
+### ۲. معماری
+
+Domain در `SchoolApplication` انتخاب نهایی و immutability را حفظ می‌کند؛ `SchoolInitialManagerPolicy` eligibility حساب فعال با پروفایل کامل را تعریف می‌کند. `PlatformProvisioningRequest` correlation و checkpointهای موجود را نگه می‌دارد. Domain وابستگی EF/HTTP ندارد.
+
+Application در `SchoolApplicationService` ورودی/نشست و قراردادهای خواندن و بازیابی را تعریف می‌کند. `ISchoolProvisioningWorkHandler` port هماهنگی کار durable است؛ سیستم Provisioning دوم نیست. Infrastructure همان `EfPlatformOperationsStore` را با partial اختصاصی، SQL lock/transaction و Outbox موجود توسعه می‌دهد. Api فقط دو action مدیریتی و نگاشت خطای پایدار را اضافه می‌کند. جهت وابستگی Onion و .NET9/EF9/SQL Server/Controller/Modular Monolith تغییر نکرده‌اند.
+
+### ۳. فایل‌های مهم ایجادشده
+
+| مسیر | مسئولیت و دلیل | نکتهٔ آموزشی |
+|---|---|---|
+| `MakanApp.Domain/Organization/SchoolInitialManagerPolicy.cs` | eligibility مشترک انتخاب مدیر | نقش قبلی سازمانی شرط ایجاد onboarding نیست؛ وضعیت جاری حساب مهم است |
+| `MakanApp.Application/Platform/ISchoolProvisioningWorkHandler.cs` | قرارداد ثبت intent، صف‌بندی بازیابی و اجرای work | port، وابستگی Application به Worker/EF را حذف می‌کند |
+| `MakanApp.Infrastructure/Platform/EfPlatformOperationsStore.SchoolProvisioning.cs` | اتصال Paid به همان درخواست و مرحله‌های موجود | payload فقط RequestId دارد؛ منبع حقیقت دوباره از SQL خوانده می‌شود |
+| `MakanApp.Infrastructure/Platform/SchoolProvisioningOptions.cs` | مدت دعوت مدیر با default۷ و validation۱..۳۰ روز | policy قابل تنظیم است و با دعوت Messenger/Guardian مشترک فرض نشده است |
+| `MakanApp.Infrastructure/Organization/EfSchoolApplicationStore.Recovery.cs` | تکمیل انتخاب خالی Legacy و retry مجاز | recovery نمی‌تواند Paid بسازد، پلن/قیمت عوض کند یا مدیر نهایی را جایگزین کند |
+| `tests/MakanApp.UnitTests/SchoolInitialManagerTests.cs` | قواعد انتخاب/تاریخچه/مهلت/fingerprint | آزمون خالص بدون SQL برای state transition و سازگاری قرارداد |
+| `tests/MakanApp.IntegrationTests/SchoolInitialManagerProvisioningTests.cs` | انتخاب جایگزین، شکست واقعی SaveChanges، دو Worker و repair | failure injection باید پس از checkpoint واقعی باشد، نه صرفاً Mock کل قابلیت |
+| `docs/product-v6/SCHOOL_COMMERCIAL_CONFIGURATION_FA.md` | مراحل واقعی Catalog/قیمت/Publish/نگاشت | واحد قیمت در DTOهای مختلف را از روی نام endpoint حدس نزنید |
+
+Migration و Designer جدید نیز در `MakanApp.Infrastructure/Persistence/Migrations/20261113103326_FinalizeSchoolManagerAndPaidProvisioning*` هستند.
+
+### ۴. فایل‌های مهم تغییرکرده
+
+`SchoolApplication.cs` مدیر پیشنهادیِ مشتق از متقاضی، مدیر نهایی، تأییدکننده و UTC را دارد؛ Decision/History انتخاب واقعی را همراه revision/version نگه می‌دارند. `SchoolApplicationService.cs` انتخاب صریح را هنگام Approved لازم می‌داند؛ NeedsChanges/Rejected مدیر نمی‌خواهند. فیلد اختیاری مدیر در حالت null از serialization داخلی حذف می‌شود تا fingerprint رسیدهای قبلی عملیاتِ بدون مدیر تغییر نکند.
+
+`EfSchoolApplicationStore` حساب انتخابی و permission/version را در تراکنش بررسی می‌کند؛ deadlock دو Reviewer که حساب یکدیگر را انتخاب می‌کنند، به Conflict۴۰۹ِ بدون اثر تبدیل می‌شود. Workflow/progress اطلاعات Plan/Order/Payment/Provisioning/دعوت و failure را جدا می‌دهند. `EfOrderPaymentStore` eligibility مدیر را در Quote/Order بازبینی و وضعیت Receipt و فهرست سفارش را با Provisioning همسو می‌کند.
+
+`EfSubscriptionActivationHandler` فقط برای سفارش آموزشگاه به port موجودِ جدید متصل می‌شود؛ مسیر عادی اشتراک حفظ است. `EfPlatformOperationsStore.cs` همان مراحل سازمان/اشتراک/دعوت/تکمیل را برای actor سیستمی نیز اجرا می‌کند؛ session جعلی ساخته نمی‌شود. اشتراک آموزشگاه از `Subscription.CreateMonthly` و PlanVersion پرداخت‌شده ساخته می‌شود و Legacy نامحدود نیست. `OutboxDispatcher.cs` همان processor/claim/retry/fence را reuse می‌کند؛ dispatcher یا جدول موازی وجود ندارد. DI همهٔ portهای Platform را به همان instance scoped متصل می‌کند.
+
+### ۵. جریان اجرای قابلیت
+
+```text
+HTTP تصمیم → PlatformSchoolApplicationsController.Decide
+→ SchoolApplicationService.ReviewAsync → EfSchoolApplicationStore.ReviewLockedAsync
+→ SchoolInitialManagerPolicy / SchoolApplication.Decide
+→ SQL Server: manager + Decision + History + operation + audit
+
+HTTP Quote/Order → SchoolApplicationService → OrderPaymentService
+→ EfOrderPaymentStore.ResolveSchoolPlanAsync → Published PlanVersion → frozen Order
+→ Zibal callback → server Verify موجود → Payment + Paid + Outbox
+→ OutboxProcessor → EfSubscriptionActivationHandler
+→ ISchoolProvisioningWorkHandler.PreparePaidOrderAsync
+→ PlatformProvisioningRequest + school.provisioning-requested.v1 در همان تراکنش
+→ Commit → OutboxProcessor → EfPlatformOperationsStore.HandleAsync
+→ EnsureOrganizationStageAsync → EnsureSubscriptionStageAsync
+→ EnsureManagerInvitationStageAsync → EnsureProvisioningCompletedAsync
+→ SQL Server + Result/progress → HTTP Response
+
+مدیر منتخب → POST /api/v1/invitations/{id}/accept
+→ جریان موجود رضایت/Invitation → Membership + RoleAssignment
+```
+
+### ۶. دیتابیس
+
+Migration جدید۹ ستون nullable اضافه می‌کند: سه ستون انتخاب/تأیید مدیر در `organization.SchoolApplications`؛ Proposed/Final در `SchoolApplicationHistory`؛ Proposed/Final/ApplicationVersion در `SchoolApplicationDecisions`؛ و `SourcePaymentId` در `platform.ProvisioningRequests`. nullable بودن برای نگه‌داشتن تاریخچهٔ قدیمی است؛ انتخاب متقاضی یا تاریخ تأیید به‌صورت حدسی backfill نمی‌شود. انتخاب پیشنهادی root محاسبه‌شده است و ستون تکراری ندارد.
+
+FKهای جدید با Restrict به User/Payment هستند. unique index موجود SchoolApplicationId/SourceOrderId درخواست حفظ می‌شود؛ SourcePaymentId نیز filtered unique است. index OrganizationId برای درخواست‌های School به unique filtered تبدیل می‌شود؛ داده یا جدول حذف نمی‌شود. FKهای Organization/Subscription/Invitation و unique SourceOrderId اشتراک قبلی حفظ‌اند. Rowversionهای موجود تغییر ماهیت نمی‌دهند و History همچنان append-only است.
+
+هر مرحله request را با `UPDLOCK,HOLDLOCK` و Serializable می‌گیرد، ref ساخته‌شده را در همان commit ثبت و tracker را پاک می‌کند. Worker دوم ref همان مرحله را می‌بیند و اثر تازه نمی‌سازد. ثبت intent/work با تراکنش Outbox فعلی اتمیک است؛ مرحله‌های طولانی به تراکنش پیام متصل نشده‌اند. هیچ تماس شبکه داخل این مرحله‌های SQL نیست. SQL delta و cumulative فقط تولید و در DB disposable آزموده می‌شوند؛ دیتابیس‌های عادی/سرور تغییر نمی‌کنند.
+
+### ۷. Endpointها
+
+| Method / Route | ورودی و خروجی | validation / authorization / خطا |
+|---|---|---|
+| `POST /api/admin/v1/school-applications/{id}/decisions` | ActionCommand با `initialManagerUserId` برای Approved؛ SchoolApplicationResult | نشست فعال، SchoolRead+Review، reason، ExpectedVersion، حساب فعال/پروفایل کامل؛ مدیر نامعتبر۴۰۰، stale۴۰۹ |
+| `POST /api/admin/v1/school-applications/{id}/initial-manager/confirm` | SchoolInitialManagerCommand؛ detail جاری | فقط Approved قدیمی با Final=null، Read+Review+ProvisioningManage؛ تعویض انتخاب ثبت‌شده۴۰۹ |
+| `POST /api/admin/v1/school-applications/{id}/provisioning/retry` | SchoolProvisioningRetryCommand؛ detail جاری | Paid تأییدشده، همان permissionها، reason/version/operation؛ بدون ورودی پلن/مدیر/قیمت؛ unpaid۴۰۹ |
+| `POST /api/v1/school-applications/{id}/quote` و `/orders` | SchoolApplicationCommerceCommand؛ Quote/CreateOrderResult | مالک پرونده، Approved، مدیر معتبر، نسخه و نگاشت معتبر؛ صاحب دیگر۴۰۴، تنظیم ناموجود۴۰۹ |
+| `GET /api/v1/school-applications/{id}` و GET مدیریتی متناظر | detail/progress با Plan/Payment/refs/failure | owner یا permission جاری؛ ReviewerId فقط در projection مجاز Admin |
+
+خواندن History، پرداخت/Verify/Receipt و Accept Invitation همان قراردادهای موجودند. مقادیر `ProvisioningCompleted` و `ProvisioningNeedsAttention` به OrderFulfillmentState اضافه شده‌اند. `Paid` با failure مالی یکی نیست و `ContactSupportForProvisioning` کاربر را به پرداخت دوباره هدایت نمی‌کند.
+
+### ۸. مفاهیم فنی استفاده‌شده
+
+Transactional Outbox، claim lease/fencing موجود، idempotency مبتنی بر operation/fingerprint، checkpoint، قفل SQL و unique filtered index، optimistic ExpectedVersion/rowversion، Options Pattern و audit سیستمی بدون session جعلی استفاده شدند. این پیاده‌سازی exactly-once بودن تحویل event را فرض نمی‌کند؛ اثر تجاری تکرارپذیر و محدود به یک ref است.
+
+### ۹. تصمیم‌های طراحی
+
+به‌جای Provisioning دوم یا transaction واحد برای تمام مراحل، همان درخواست و مرحله‌های commitشوندهٔ Platform reuse شدند؛ در عوض بازیابی باید checkpoint و failure را صریح مدیریت کند. به‌جای عضویت خام، Invitation موجود حفظ شد؛ متقاضی ممکن است مدیر نباشد و انتخاب مدیر جای رضایت خودش را نمی‌گیرد. مهلت دعوت در اولین ساخت از config محاسبه می‌شود و retry آن را تمدید نمی‌کند. قیمت/Quota واقعی از دادهٔ مصوب Catalog می‌آیند؛ fixture ساختگی تجاری Seed واقعی نیست.
+
+Legacy Approved فاقد مدیر، بدون backfill باقی می‌ماند و فقط انتخاب خالی را می‌توان صریح تکمیل کرد؛ تغییر مدیر نهایی Deferred است. درخواست حذفِ هنوز فاقد اجرای قانونی، وضعیت FinalDeletion ساخته‌شده از حدس نیست. در بازیابی، Paid تغییر نمی‌کند؛ حتی اگر دورهٔ پرداخت‌شده پایان یافته باشد، قرارداد/تاریخ تازه حدس زده نمی‌شود و بررسی تجاری لازم است.
+
+### ۱۰. تست‌ها
+
+Unitهای `SchoolInitialManagerTests` الزام مدیر و Reviewer، نبود mutation ناقص، انتخاب متقاضی/جایگزین، تاریخچهٔ واقعی، immutability، عدم انتساب در NeedsChanges/Rejected، eligibility منفی، deadline ثابت، recovery ref و حفظ شکل fingerprint قبلی را می‌سنجند.
+
+Integrationهای جدید/تکمیل‌شده HTTP و SQL واقعی دارند: مدیر گمشده/ناموجود/ناقص/معلق، تکمیل محدود Legacy، دو Reviewer مستقل با مدیرهای متفاوت و انتخاب متقابل، انتخاب B بدون عضویت خودکار A، پذیرش دعوت idempotent، اعتبار تجاری و سهمیه‌های واقعی، تعلیق مدیر پس از Paid، شکست SaveChanges بعد از سازمان/اشتراک، حفظ NeedsAttention در replay intent، repair audited، Receipt/list همسو، دو Worker و حفظ شناسه‌ها. آزمون زیبال برای هر حالت۱۰ callback تکراری و۱۰ Verify دارد؛ Payment/intent یکتا و paid محفوظ می‌مانند. adapter زیبال واقعی با HTTP stub کنترل‌شده استفاده شده و تماس مالی واقعی وجود ندارد.
+
+Migration acceptance، Fresh و upgrade با Script idempotent تا Migration جدید و replay دوباره را می‌سنجد؛ Draft/Approved قدیمی، rowversion و انتخاب خالی حفظ می‌شوند و ظرفیت/قیمت/تاریخچه/مدیر حدسی ساخته نمی‌شود. Architectureهای موجود جهت Onion را کنترل می‌کنند؛ تست صرفاً برای افزایش شمار ساخته نشده است.
+
+### ۱۱. Validation
+
+Clean و Restore اولیه و Restore نهایی موفق شدند. Release Build نهایی موفق با `Warnings=0` و `Errors=0` بود. Final Full Regression: **۱۳۰۸ Unit +۱۸۹۷ Integration +۱۴ Architecture =۳۲۱۹ Passed**؛ Failed=0 و Skipped=0. source hash تمام۱۴۹۴ فایل C# از زمان Final Build/Test تا بازبینی Commit ثابت ماند.
+
+۱۱۴ تست مرتبط با Zibal در مجموعهٔ نهایی پاس شدند. پیش از دور نهایی،۱۶۲ Integration هدفمند School/Zibal،۳۸ Unit مرتبط و۴ سناریوی نهایی recovery/مرز Worker پاس شدند؛ این‌ها subset پذیرش‌اند و به شمار۳۲۱۹ دوباره اضافه نمی‌شوند. دور اولیهٔ Integration نیز۱۸۹۲ تست و Unit/Architecture اولیه۱۳۰۷/۱۴ پاس داشت؛ اصلاحات نهایی روی دور کامل نهایی سنجیده شدند.
+
+دو تست School Migration، Fresh و upgrade و replay Script idempotent تا `20261113103326_FinalizeSchoolManagerAndPaidProvisioning` را روی LocalDB GUID/disposable پاس کردند؛ `has-pending-model-changes` هیچ اختلافی نداشت. Migration جدید۱ مورد است؛ اجرای آن روی `MakanApp`، `MakanApp_Test` یا سرور **NOT_RUN** است. Source/EF9/SQL Server ثابت‌اند.
+
+Snapshot نهایی:۴۳۶ path،۴۹۲ operation،۷۸۰ schema،۹۱ Controller،۱۴۹ جدول و۷۳ Migration؛ بدون SQL/Hosted Worker/SMS/AI استخراج شد. SHA256 OpenAPI: `ba5e08f0108fe8593e72b0b3c0874a18c7170a10166bd39a32eb656edcd57912`.
+
+SQLهای تولیدشده در `.artifacts/school-finalization-20261113-d9f4938/` هستند: `school-finalization-idempotent.sql` برای۷۲→۷۳، SHA256=`008904663c240e866cf8381060fdbd6b717972069aa9e74dc03429190045be32`؛ و `product-v6-from-zibal-idempotent.sql` برای۶۵→۷۳، SHA256=`6b6cbde5578849e2320559d781fa8b7133a2e419bbcd97a3c1f467df94bb42a0`. هیچ Connection String یا Secret در SQL نیست.۱۳ تست ابزار اسناد و کنترل لینک هفت سند مرتبط نیز پاس شدند.
+
+### ۱۲. Git
+
+مبدأ `d9f493858b1ae3d1badceb6818d56aa1e34bb1cd`، شاخهٔ `feature/product-v6-backend-alignment` و remote `origin` با upstream=`origin/feature/product-v6-backend-alignment` است. پیام Runtime: `feat(schools): finalize initial manager and provisioning policy`. Commit Runtime: `1804f402be32e4d776216c17fcd76555fc5cf29f` شامل۳۱ فایل C# مرتبط است؛ مدل تولیدشدهٔ EF با اختلاف مدل قبلی نیز جدا بررسی شد. اسناد با پیام `docs(schools): finalize commercial and provisioning handoff` در Commit جدا نهایی می‌شوند؛ SHA نهایی و نتیجهٔ واقعی Push/fetch/remote verification در پاسخ پایان Task ثبت می‌شود تا hash خودِ Commit اسناد در همان فایل حدس زده نشود. Merge main و Deploy اجرا نمی‌شوند. سه فایل AI قبلی، private configها و adapter ملی‌پیامک از staging خارج و با backup/hash محافظت شده‌اند؛ هیچ secret واقعی در staged diff کد پیدا نشد.
+
+### ۱۳. محدودیت‌های فعلی
+
+قیمت/PlanVersion/Quota مصوب Production هنوز نیازمند ثبت Admin است و `BLOCKED_CONFIGURATION` باقی می‌ماند؛ صحت کد/E2E تست با تنظیم واقعی محیط یکسان نیست. تغییر مدیر نهایی پس از Approval، اصلاح/بازگشایی تصمیم نهایی، refund، Store billing، اجرای حذف حساب و تصمیم‌های دیگر v6 در این Task ساخته نشده‌اند. BE24 به دلیل سایر محدودیت‌های هدف کامل محصول PASS نمی‌شود. هیچ IIS/سرور/DB عادی، SMS واقعی یا AI runtime در این Task اجرا/فعال نشده است.
+
+### ۱۴. نکات آموزشی
+
+1. «مدیر پیشنهادی»، «مدیر نهایی»، «دعوت»، «Membership» و «RoleAssignment» پنج مفهوم متفاوت‌اند.
+2. Paid حقیقت مالی است؛ شکست provision نباید آن را بازگرداند یا کاربر را دوباره شارژ کند.
+3. exactly-once اثر با constraint و قفل/checkpoint حاصل می‌شود؛ به exactly-once event delivery تکیه نکنید.
+4. payload کمینهٔ Outbox، دادهٔ authoritative را از SQL دوباره resolve می‌کند و اطلاعات خصوصی را تکثیر نمی‌کند.
+5. nullable migration برای Legacy می‌تواند درست‌تر از backfill حدسی باشد؛ guard مسیر تازه و repair صریح لازم دارد.
+6. افزودن فیلد اختیاری DTO می‌تواند fingerprint قبلی را بشکند؛ serialization داخلی هم بخشی از compatibility است.
+7. واحد قیمت Create Version ریال و Update Draft تومان است؛ نام DTO و validation منبع حقیقت‌اند.
+
+### ۱۵. مسیر پیشنهادی مطالعه
+
+`SchoolApplicationsController` → `SchoolApplicationService` → `SchoolApplication` و `SchoolInitialManagerPolicy` → `EfSchoolApplicationStore`/Recovery/Workflow → `EfOrderPaymentStore.SchoolApplications` → `EfSubscriptionActivationHandler` → `ISchoolProvisioningWorkHandler` → `EfPlatformOperationsStore.SchoolProvisioning` و مرحله‌های فایل اصلی → Configuration/Migration → `SchoolInitialManagerTests` → `SchoolInitialManagerProvisioningTests` → آزمون Zibal/Migration.
+
+### ۱۶. مرحلهٔ بعد
+
+Admin طبق راهنمای تجاری، دو خدمت را با قیمت و شرایط مصوب همان محیط تنظیم کند؛ سپس Backup/Migration و پذیرش عملیاتی سرور در Task مجاز جدا انجام شود. تغییر مدیر نهایی یا گسترش مدارک/قواعد حقوقی تصمیم جدا می‌خواهد. فعال‌سازی AI یا PersonalClass academics و حذف واقعی حساب نباید با این کار مخلوط شوند.

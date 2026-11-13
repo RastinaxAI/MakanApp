@@ -326,7 +326,7 @@ def write_frontend(inventory, api, baseline, date):
                   capability_table.replace('(messaging/', '(../messaging/'),
                   'Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.', '']
     if (ROOT / 'docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md').exists():
-        lines[2:2] = ['> قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است: Submit آموزشگاه فعال و تجارت به Order/Payment/Outbox موجود متصل است؛ تنظیم قیمت واقعی و سیاست مدیر اولیه پیش‌نیاز آماده‌سازی نهایی‌اند. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.', '']
+        lines[2:2] = ['> قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است: مدیر اولیه صریحاً در Approval انتخاب می‌شود؛ زنجیرهٔ Order/Payment/Outbox به Provisioning مرحله‌ای و دعوت مدیر متصل است. تنظیم قیمت واقعی همچنان نیازمند Admin است. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.', '']
     (ROOT / 'docs/frontend-contract/README.md').write_text('\n'.join(lines), encoding='utf-8')
 
 

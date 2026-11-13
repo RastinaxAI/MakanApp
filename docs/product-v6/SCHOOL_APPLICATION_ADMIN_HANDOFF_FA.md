@@ -8,6 +8,7 @@
 - شروع بررسی و تصمیم: Read بالا به‌علاوهٔ `platform.school_applications.review`.
 - خواندن نگاشت تجاری: Read و `platform.commerce.manage`.
 - تغییر نگاشت: هر سه permission بالا، نشست معتبر و حساب فعال.
+- تکمیل مدیر ثبت‌نشدهٔ Legacy و درخواست بازیابی Provisioning: Read + Review + `platform.provisioning.manage`؛ تصمیم مالی دستی یا تغییر مدیر نهایی مجاز نیست.
 - PlatformOwner موجود این مجوزها را دارد؛ Support، Organization Manager یا Teacher به‌صورت ضمنی Reviewer نیستند. revocation در درخواست/خواندن فایل دوباره رعایت می‌شود.
 - Draft و Draft لغوشدهٔ هرگز Submitنشده برای Reviewer مخفی‌اند. مدارک پرونده منبع دسترسی‌اند؛ uploader بودنِ حساب دیگر یا دانستن FileId مجوز نیست.
 
@@ -23,6 +24,8 @@
 | POST | `/{id}/decisions` | فقط UnderReview؛ NeedsChanges/Rejected/Approved |
 | GET | `/offerings` | نگاشت‌های صریح موجود و Version؛ بدون default فرضی |
 | PUT | `/offerings/{kind}` | نگاشت server-owned نوع پرونده به Published PlanVersion |
+| POST | `/{id}/initial-manager/confirm` | فقط Approved قدیمی با انتخاب مدیرِ خالی؛ ExpectedVersion، reason، operation و حساب واجد شرایط لازم‌اند |
+| POST | `/{id}/provisioning/retry` | فقط Paid تأییدشده؛ ادامهٔ checkpointهای موجود، بدون ورودی قیمت/پلن/مدیر |
 
 Routeهای نسبی از `/api/admin/v1/school-applications` شروع می‌شوند. تاریخچهٔ قدیمی قبل از این Migration بازسازی حدسی نمی‌شود؛ revisionها و تصمیم‌های قبلی همچنان موجودند، history تازه از عملیات واقعی بعد از ارتقا نوشته می‌شود.
 
@@ -35,13 +38,18 @@ Request شروع بررسی و تصمیم همان `SchoolApplicationActionComma
   "clientOperationId": "33333333-3333-4333-8333-333333333333",
   "expectedVersion": 3,
   "applicantFeedback": "دلیل روشن و قابل نمایش به متقاضی",
-  "decision": "Approved"
+  "decision": "Approved",
+  "initialManagerUserId": "66666666-6666-4666-8666-666666666666"
 }
 ```
 
 در `/review` فیلد `decision` لازم نیست؛ دلیل در `applicantFeedback` برای **تمام** اقدامات بررسی الزامی است و تا۲۰۰۰ کاراکتر مطابق قرارداد موجود پذیرفته می‌شود. این فیلد یادداشت محرمانهٔ داخلی نیست و به متقاضی نمایش داده می‌شود. رونوشت مدارک یا اطلاعات حساس را در آن قرار ندهید.
 
 `NeedsChanges` همان پرونده را قابل اصلاح می‌کند. متقاضی فرم/مدارک را در revision تازه اصلاح و resubmit می‌کند؛ Reviewer بررسی را روی نسخهٔ جاری دوباره آغاز می‌کند. `Rejected` نهایی است و پرداخت/Provisioning ندارد. `Approved` فقط تصمیم پرونده است و Organization/Subscription/نقش/دعوت/Payment ایجاد نمی‌کند.
+
+`proposedInitialManagerUserId` برابر متقاضی است و تأیید ضمنی نیست. Reviewer باید در همان درخواست Approved، متقاضی یا حساب فعالِ دارای پروفایل کامل دیگری را صریحاً انتخاب کند. نیاز به Membership یا نقش Manager قبلی نیست. حذف فیزیکی/نبود حساب یا تعلیق و پروفایل ناقص رد می‌شوند؛ درخواست حذفِ فعلاً بدون اجرای حقوقی، حذف نهایی حساب فرض نشده است. برای NeedsChanges/Rejected/شروع بررسی، مدیر ارسال نشود. انتخاب نهایی با reviewer، دلیل، UTC، revision و version در Decision/History ثبت می‌شود؛ دو انتخاب هم‌زمان تنها یک برنده دارند.
+
+انتخاب نهایی با Edit معمولی عوض نمی‌شود. `POST_APPROVAL_MANAGER_CHANGE=DEFERRED` است. مسیر `initial-manager/confirm` فقط انتخاب خالیِ پروندهٔ Approved قدیمی را با `{clientOperationId,expectedVersion,initialManagerUserId,reason}` تکمیل می‌کند؛ انتخاب قبلی را جایگزین نمی‌کند. اگر قبلاً Paid است، همان intent را تکمیل و صف‌بندی می‌کند؛ پرداخت تازه لازم نیست. مسیر retry فقط `{clientOperationId,expectedVersion,reason}` می‌گیرد؛ تکرار همان operation نسخه/تاریخچه/کار اضافه نمی‌سازد.
 
 نسخهٔ stale یا تصمیم هم‌زمان ۴۰۹ می‌دهد؛ detail را refresh کنید و تصمیم تازه را با شناسهٔ operation تازه ثبت کنید. Retry همان operation و همان payload تصمیم/History/اعلان دوم نمی‌سازد. برای اصلاح تصمیم تأییدشده یا لغوشده مسیر تازه‌ای اختراع نشده است.
 
@@ -80,11 +88,15 @@ Quote/Order با همان Commerce موجود ساخته می‌شوند؛ corre
 | `Configured` | نگاشت ثبت شده؛ شرایط قابل خرید هنگام Quote/Order دوباره validate می‌شوند |
 | `FrozenOnOrder` | نسخه و مبلغ روی Order ثبت شده؛ تغییر بعدی نگاشت مبلغ قدیمی را تغییر نمی‌دهد |
 | `PaidAwaitingProvisioning` | Order تسویه شده و intent durable در Outbox موجود منتظر اجراست |
-| `BlockedManagerPolicy` | درخواست موجود Platform به پرونده/Order متصل شده؛ مدیر اولیه هنوز سیاست مصوب ندارد |
+| `BlockedManagerPolicy` | فقط پروندهٔ Legacy فاقد تأیید صریح مدیر؛ از مسیر محدود confirm تکمیل شود |
+| `NeedsAttention` | Paid محفوظ؛ شکست مرحله و شناسه‌های قبلی قابل پیگیری‌اند؛ recovery مجاز لازم است |
+| `Completed` | سازمان، اشتراک تجاری و دعوت مدیر ساخته شده‌اند؛ پذیرش دعوت جداست |
 
-Worker همان `EfSubscriptionActivationHandler` روی Outbox موجود است؛ برای Order تأسیس به‌جای اعطای اشتراک فردی، `PlatformProvisioningRequest` موجود با `SchoolApplicationId/SourceOrderId` ایجاد می‌کند. unique index و قفل مالک از intent دوم جلوگیری می‌کنند. خرابی Worker پرداخت را برنمی‌گرداند و Retry، شارژ دوم ایجاد نمی‌کند.
+`EfSubscriptionActivationHandler` در تراکنش Outbox موجود، همان `PlatformProvisioningRequest` را با `SchoolApplicationId/SourceOrderId/SourcePaymentId` و مدیر نهایی ثبت می‌کند. کار `school.provisioning-requested.v1` توسط همان `OutboxProcessor`، خارج از تراکنش پیام و با تراکنش‌های کوتاهِ مرحله‌ای `EfPlatformOperationsStore` اجرا می‌شود. سازمان، اشتراک ماهانهٔ معتبر از پلن پرداخت‌شده و دعوت موجودِ سازمانی reuse می‌شوند. unique index و قفل درخواست مانع اثر تکراری‌اند؛ تحویل exactly-once فرض نمی‌شود. هر مرحله شناسهٔ خودش را commit می‌کند و شکست بعدی آن‌ها را حذف نمی‌کند. Paid هیچ‌گاه به Pending/درخواست پرداخت مجدد برنمی‌گردد.
 
-**سیاست مدیر اولیه هنوز باز است.** متقاضی یا یک User ساختگی به‌صورت خودکار Manager نمی‌شود. intent با `INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED` در NeedsAttention محفوظ است. مسیر عمومی Provisioning حق resume/تغییر این intent را ندارد. در این تحویل Organization/Subscription/دعوت مدیر ساخته نمی‌شوند؛ صفحهٔ Admin نباید وضعیت را Ready نشان دهد. پس از تصمیم مصوب، باید همین intent/Order frozen با جریان مدیریتی مجاز تکمیل شود؛ Payment یا Provisioning موازی ساخته نشود.
+انقضای دعوت فقط Backend-owned است: `Provisioning:InitialManagerInvitationLifetimeDays`، پیش‌فرض فنی ۷ روز و محدودهٔ معتبر۱..۳۰، از زمان اولین ساخت دعوت. این گزینه با دعوت Messaging یا Guardian مشترک نیست. Retry، deadline قبلی را تمدید نمی‌کند. Membership و RoleAssignment پس از پذیرش صریح از `POST /api/v1/invitations/{id}/accept` ساخته می‌شوند.
+
+سیاست مدیر اولیه بسته شده است؛ انتساب خودکار متقاضی همچنان ممنوع است. فقط پرونده‌های قدیمیِ فاقد انتخاب با `INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED` متوقف می‌مانند تا مسیر مجاز confirm اجرا شود. مسیر عمومی Provisioning حق تغییر manager/plan/شرایط همین intent را ندارد. Ready فقط از وضعیت Completed واقعی می‌آید.
 
 فقط Order منقضی بدون PaymentAttempt با operation تازه جایگزین می‌شود؛ سفارش دارای تلاش بانکی، حتی نتیجهٔ نامطمئن، باید از recovery موجود پیگیری شود. حذف/Cancel پرداخت موفق یا تغییر سررسید تجاری به‌صورت حدسی مجاز نیست.
 
@@ -96,4 +108,4 @@ Create/Revision/Submit/Cancel/Review/Decision و نگاشت تجاری audit م�
 
 ## پذیرش عملیاتی باقی‌مانده
 
-تست‌های محلی از LocalDB disposable و Zibal کنترل‌شده استفاده می‌کنند؛ هیچ تماس واقعی مالی/SMS/AI یا Deploy انجام نشده است. پیش از عرضهٔ تجاری، نگاشت واقعی دو خدمت و سیاست مدیر اولیه تصویب و ثبت شوند. تصمیم correction پس از Approval، دسته‌بندی دقیق مدارک و هر الزام سخت‌گیرانه‌تر ظرفیت جدا می‌مانند. Migration/SQL این مرحله فقط پس از Backup و مجوز محیط هدف اجرا شود؛ این Task روی `MakanApp`، `MakanApp_Test` یا سرور اجرا نمی‌کند.
+تست‌های محلی از LocalDB disposable و Zibal کنترل‌شده استفاده می‌کنند؛ هیچ تماس واقعی مالی/SMS/AI یا Deploy انجام نشده است. پیش از عرضهٔ تجاری، نگاشت واقعی دو خدمت طبق [راهنمای تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md) ثبت شود؛ قیمت واقعی حدس زده نشده است. سیاست مدیر اولیه مصوب و پیاده است. تصمیم جایگزینی مدیر/Correction پس از Approval، دسته‌بندی دقیق مدارک و هر الزام سخت‌گیرانه‌تر ظرفیت جدا می‌مانند. Migration/SQL این مرحله فقط پس از Backup و مجوز محیط هدف اجرا شود؛ این Task روی `MakanApp`، `MakanApp_Test` یا سرور اجرا نمی‌کند.

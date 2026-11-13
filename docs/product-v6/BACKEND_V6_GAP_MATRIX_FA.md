@@ -1,6 +1,6 @@
 # ماتریس تطبیق Backend با Product v6
 
-> وضعیت جاری آموزشگاه پس از پرامپت تکمیلی `2026-11-13` در [جدول تکمیل آموزشگاه](#بهروزرسانی-آموزشگاه--2026-11-13) انتهای سند است؛ ردیف‌های Audit و تحویل قبلی با تاریخ و Commit خود حفظ شده‌اند.
+> وضعیت جاری در بخش «نهایی‌سازی انتخاب مدیر و آماده‌سازی» انتهای سند است. ردیف‌های Audit و تحویل قبلی با تاریخ و Commit خود حفظ شده‌اند؛ D01 و D17 اکنون بسته‌اند. تنظیم تجاری واقعی Production و محدودیت‌های دیگر v6 جدا هستند.
 
 مبنای Audit پیش از تغییر Runtime: `e5bd3eae658991585ca09f581f6236351857b3b8`، تاریخ `2026-11-12`، شاخهٔ کاری `feature/product-v6-backend-alignment`. سه فایل untracked قبلی AI و تنظیمات خصوصی با Backup/هش محافظت شده‌اند. این سند وضعیت اولیه است؛ نتیجهٔ اجرای تغییرات و ارزیابی نهایی جدا ثبت می‌شوند.
 
@@ -308,3 +308,23 @@ Snapshot تازهٔ محلی: 403 path، 454 operation، 732 schema، 82 Control
 | BE24_FULL_ACCEPTANCE | `FAIL` در هدف کامل Product v6 | موفقیت تست محلی یا همین پرونده، تصمیم‌های باز/پذیرش عملیاتی سایر حوزه‌ها را نمی‌بندد |
 
 Migration `20261113065124_CompleteSchoolEstablishmentWorkflow` افزودنی است و فقط روی disposable SQL آزموده شده است. جدول تجاری، پروندهٔ تاریخی یا مدیر ساختگی Seed نشده؛ `MakanApp`، `MakanApp_Test` و سرور تغییر نکرده‌اند. feature gateهای BE25 و Service Auth هر دو سرویس AI خاموش و تنظیمات/SMS/AI قبلی محفوظ‌اند. Commit کد `b7ac095c3f5c0175254edadd6d5ef35f7b24215d`؛ منبع آخر۱۲۹۸ Unit +۱۸۸۴ Integration +۱۴ Architecture =۳۱۹۶ PASS، صفر Failed/Skipped و صفر Build Warning/Error دارد.۱۱۴ تست Zibal و Fresh/Upgrade/replay SQL در regression پاس شدند. این موفقیت محلی، دو blocker تنظیم قیمت/مدیر و BE24 را به PASS تبدیل نمی‌کند.
+
+## نهایی‌سازی انتخاب مدیر و آماده‌سازی
+
+مبنا `d9f493858b1ae3d1badceb6818d56aa1e34bb1cd` و پرامپت School Application Finalization در `2026-11-13` است؛ جدول قبلی وضعیت تحویل قبلی را نشان می‌دهد. [گزارش آموزشی](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md)، [تحویل Admin](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [راهنمای تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md) مرجع جزئیات جاری‌اند.
+
+| بخش | وضعیت پیاده‌سازی و شاهد | محدودیت محیط/محصول |
+|---|---|---|
+| انتخاب مدیر | `PASS` در آزمون متمرکز | متقاضی فقط proposed؛ Approval نیازمند انتخاب صریح حساب فعالِ دارای پروفایل کامل؛ مدیر جایگزین، history/audit و رقابت دو Reviewer آزموده‌اند |
+| Commercial mapping / Quote / Order | `PASS` در آزمون متمرکز برای هر دو نوع | Published PlanVersion و قیمت سرور؛ قیمت/Quota/دورهٔ واقعی Production هنوز `BLOCKED_CONFIGURATION` و Seed حدسی ممنوع |
+| Zibal / Payment / Outbox | `PASS` در آزمون کنترل‌شده | callback معادل Paid نیست؛ Server Verify و Payment موجود؛ تست۱۰ callback تکراری و۱۰ Verify بدون Payment/intent دوم |
+| Provisioning سازمان/اشتراک/دعوت | `PASS` در آزمون متمرکز | همان PlatformProvisioningRequest و stageها، همان Outbox؛ اشتراک معتبر ماهانه، SourcePaymentId و دعوت با expiry سرور؛ Membership فقط پس از Accept |
+| Recovery / Concurrency | `PASS` در آزمون متمرکز | شکست بعد از ایجاد اشتراک، intent قدیمی Paid و intent هنوز ساخته‌نشده، دو Worker، شناسه‌های ثابت، Receipt/list صحیح و بدون پرداخت مجدد؛ Worker School درخواست عمومی Platform را اجرا نمی‌کند |
+| Migration | `20261113103326_FinalizeSchoolManagerAndPaidProvisioning` | nullable و بدون backfill مدیر/دادهٔ تجاری؛ unique/FK و Fresh/Upgrade/replay فقط SQL disposable؛ اجرای عادی/سرور `NOT_RUN` |
+| BE03_SCHOOL_APPLICATION_IMPLEMENTATION | `PASS` | Commit Runtime=`1804f402be32e4d776216c17fcd76555fc5cf29f`، E2E کنترل‌شده و Regression کامل پاس |
+| BE03_SCHOOL_APPLICATION | `PASS` در کد/پذیرش محلی | آمادگی کد/تست از تنظیم واقعی محیط جداست؛ Production هنوز نیازمند قرارداد مصوب است |
+| BE24_FULL_ACCEPTANCE | `FAIL` | حذف واقعی/retention، shared multi-child quota، Store billing، گزارش/restore مستقل، گسترش Parent، Generic Personal AI و پذیرش عملیاتی Provider/سرور هنوز جدا یا محدودند |
+
+Final Release Build با۰ Warning/۰ Error و Restore موفق بود؛ Final Tests=۱۳۰۸ Unit +۱۸۹۷ Integration +۱۴ Architecture =۳۲۱۹ Passed، Failed/Skipped=0؛۱۱۴ تست Zibal و دو تست School Migration در مجموعهٔ نهایی پاس شدند. Snapshot جدید۴۳۶ path/۴۹۲ operation/۷۸۰ schema،۱۴۹ جدول و۷۳ Migration دارد؛ OpenAPI SHA256=`ba5e08f0108fe8593e72b0b3c0874a18c7170a10166bd39a32eb656edcd57912`. `PRODUCTION_COMMERCIAL_CONFIGURATION=BLOCKED_CONFIGURATION`، `BE24_FULL_ACCEPTANCE=FAIL`؛ هیچ نتیجهٔ محلی، Deploy یا پرداخت واقعی ادعا نمی‌کند.
+
+D17 بسته شد و۱۲ تصمیم Product/Legal باز باقی‌اند. تکمیل انتخاب خالیِ Legacy، تعویض مدیر نهایی نیست؛ `POST_APPROVAL_MANAGER_CHANGE=DEFERRED` حفظ می‌شود. AI/Knowledge Service Auth و PersonalClass Assignment/Exam پیش‌فرض خاموش، MeliPayamak و private configها دست‌نخورده‌اند. Merge main و Deploy اجرا نمی‌شوند.

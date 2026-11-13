@@ -10,10 +10,10 @@ Account/Session → Draft → Upload/Bind → Submit → UnderReview
 → Rejected / Approved
 Approved → نگاشت تجاری سرور → Quote → Order → Zibal → Server Verify
 → Paid → Outbox موجود → PlatformProvisioningRequest موجود
-→ BlockedManagerPolicy
+→ Organization → Commercial Subscription → Initial Manager Invitation → Ready
 ```
 
-ساخت نهایی Organization/Subscription/دعوت مدیر در این مرحله بسته به تصمیم مدیر اولیه است. متقاضی به‌صورت ضمنی مدیر نمی‌شود. `Approved` به معنی `Paid` و `Paid` به معنی آماده‌بودن آموزشگاه نیست. `Ready` فقط پس از تکمیل واقعی Provisioning معتبر است؛ در پیاده‌سازی فعلی، intent درخواست تأسیس تا تعیین سیاست مدیر اولیه تکمیل نمی‌شود.
+متقاضی فقط مدیر **پیشنهادی** است. Reviewer هنگام Approval باید `initialManagerUserId` را صریحاً برابر حساب متقاضی یا حساب واجد شرایط دیگری قرار دهد. حساب انتخابی باید موجود، فعال و دارای پروفایل کامل باشد؛ عضویت/نقش سازمانی قبلی لازم نیست. Approval بدون انتخاب مدیر نامعتبر است. `Approved` به معنی `Paid` و `Paid` به معنی آماده‌بودن آموزشگاه نیست. `Ready` پس از ساخت سازمان، اعمال اشتراک تجاری و ایجاد دعوت مدیر از مسیر موجود برقرار می‌شود؛ پذیرش دعوت، اقدام جداگانهٔ خود مدیر است. متقاضیِ دیگری به‌صورت خودکار Membership دریافت نمی‌کند.
 
 نگاشت تجاری هیچ دادهٔ پیش‌فرض ندارد. پس از Migration، Platform باید نسخهٔ منتشرشدهٔ معتبر و اختصاصی خدمت حقوقی/مدرس حقیقی را صریحاً تنظیم کند. نبود نگاشت پاسخ `409 SCHOOL_APPLICATION_COMMERCIAL_TERMS_UNAVAILABLE` دارد؛ Frontend نباید قیمت یا PlanVersion بسازد.
 
@@ -91,10 +91,15 @@ Update شامل `clientOperationId`, `expectedVersion`, `data`, `documents?` ا�
 | `RequestQuote` | پیش‌نمایش شرایط معتبر سرور دریافت شود |
 | `Pay` | Order جاری را از Commerce بخوانید و پرداخت را ادامه دهید |
 | `AwaitProvisioning` | پرداخت دوباره درخواست نشود؛ وضعیت آماده‌سازی خوانده شود |
+| `ContactSupportForProvisioning` | Paid محفوظ است؛ بازیابی مجاز Platform لازم است، پرداخت تازه نسازید |
+| `WaitForInitialManagerConfirmation` | پروندهٔ تأییدشدهٔ قدیمی هنوز انتخاب صریح مدیر ندارد |
+| `Ready` | سازمان/اشتراک/دعوت ساخته شده‌اند؛ مدیر باید دعوت موجود را بپذیرد |
 | `ReadCurrentRevision` | snapshot تاریخی readonly؛ برای اقدام، نسخهٔ جاری را بخوانید |
 | `None` | اقدام خودکار بعدی نداریم؛ وضعیت نهایی و دلیل امن نمایش داده شود |
 
-`progress` وضعیت تجاری، `orderId/paymentState` و وضعیت/شناسهٔ Provisioning و در آینده شناسهٔ Organization/Subscription تکمیل‌شده را جدا می‌دهد. `BlockedManagerPolicy` یعنی پرداخت محفوظ و نیازمند سیاست مدیر اولیه؛ خطای درگاه نیست. اطلاعات Reviewer در پاسخ مالک حداقل است؛ `applicantUserId` فقط در projection مجاز Admin پر می‌شود.
+`progress` شامل وضعیت تجاری، `planCode/planVersionId/amount/currency`، `orderId/paymentState/paymentId`، وضعیت و شناسهٔ Provisioning، `organizationId/subscriptionId/managerInvitationId/managerInvitationExpiresAtUtc/failureCode` است. `proposedInitialManagerUserId/finalInitialManagerUserId/initialManagerConfirmedAtUtc` در detail هستند؛ شناسهٔ Reviewer فقط در projection مجاز Admin برمی‌گردد. `BlockedManagerPolicy` فقط حالت سازگار پروندهٔ Legacy فاقد انتخاب مدیر است؛ دیگر تصمیم محصولی باز نیست. تکمیل انتخابِ خالی مسیر Admin دارد؛ جایگزینی مدیر نهایی پیاده نشده است.
+
+`NeedsAttention` با Pending/Completed فرق دارد و نباید به Pay هدایت شود. Retry یکسان، سازمان/اشتراک/دعوت جدید یا تمدید موعد دعوت ایجاد نمی‌کند. `OrderFulfillmentState` برای درخواست آموزشگاه علاوه بر `ProvisioningPending`، مقادیر `ProvisioningCompleted` و `ProvisioningNeedsAttention` دارد. از وجود Subscription به‌تنهایی تکمیل onboarding را استنتاج نکنید.
 
 هنگام loading دکمهٔ تکراری نسازید؛ empty فهرست با failure یکی نیست. ۴۰۹ نسخه نیازمند refresh همان پرونده است؛ خطای شبکه نیازمند Retry همان operation است. اعلان موجود `SchoolApplicationUpdated` متن عمومی و target داخلی دارد؛ Client باید detail را دوباره از سرور بگیرد، نه از متن اعلان نتیجهٔ مالی بسازد.
 
@@ -123,6 +128,7 @@ Callback زیبال همان مسیر integration موجود است؛ بازگش
 |---|---|---|
 | ۴۰۰ | `SCHOOL_APPLICATION_INVALID` | فرمت/محدودهٔ ورودی اصلاح شود |
 | ۴۰۰ | `SCHOOL_APPLICATION_SUBMISSION_INCOMPLETE` | detail و missingRequirements خوانده شود |
+| ۴۰۰ | `SCHOOL_APPLICATION_INITIAL_MANAGER_INVALID` | انتخاب صریح، فعال‌بودن و تکمیل پروفایل مدیر بررسی شود |
 | ۴۰۱ | قرارداد احراز هویت موجود | نشست معتبر لازم است؛ حساب معلق نیز در pipeline نشست رد می‌شود |
 | ۴۰۳ | `SCHOOL_APPLICATION_PERMISSION_REQUIRED` | عملیات Platform/تجاری مجاز نیست |
 | ۴۰۴ | `SCHOOL_APPLICATION_NOT_FOUND` / `SCHOOL_APPLICATION_FILE_UNAVAILABLE` | وجود resource خصوصی استنتاج نشود |
@@ -132,4 +138,4 @@ Callback زیبال همان مسیر integration موجود است؛ بازگش
 
 کدهای پایدار Commerce/Storage/Identity نیز بدون تغییر برقرارند. `ProblemDetails` و correlation پاسخ را برای پشتیبانی نگه دارید؛ Token، مدرک، request body خصوصی یا اطلاعات بانکی را در analytics/log ثبت نکنید. همان operation با payload متفاوت conflict است. Retry موفق Submit/Review/Cancel رویداد و اعلان تکراری ایجاد نمی‌کند؛ پاسخ جزئیات می‌تواند نمای جاری پرونده باشد، نه snapshot قدیمیِ عین response.
 
-محدودیت فعلی: نگاشت/قیمت واقعی بیرون از تست تنظیم نشده و سیاست مدیر اولیه تصمیم باز است. این سند پذیرش روی سرور، پرداخت واقعی یا آموزشگاه آماده را اعلام نمی‌کند.
+محدودیت فعلی: نگاشت/قیمت واقعی Production هنوز نیازمند تنظیم مصوب است؛ سیاست مدیر اولیه بسته و زنجیرهٔ Provisioning پیاده شده است. جایگزینی مدیر نهایی پس از Approval خارج از این تحویل است. این سند پذیرش روی سرور یا پرداخت واقعی را اعلام نمی‌کند.
