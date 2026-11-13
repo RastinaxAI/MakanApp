@@ -512,7 +512,7 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     }
 
     [Fact]
-    public async Task Chat_PersonalOrRevokedWorkspace_IsDeniedWithoutCallingAi()
+    public async Task Chat_PersonalContractUnavailableOrRevokedWorkspace_NeverCallsAi()
     {
         using var client = factory.CreateClient();
         var user = await CreateAuthenticatedUserAsync(client);
@@ -522,9 +522,9 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
             "/api/v1/ai/chat",
             new SendAiChatCommand("پرسش", null),
             JsonOptions);
-        Assert.Equal(HttpStatusCode.Forbidden, personalResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, personalResponse.StatusCode);
         Assert.Equal(
-            AiServiceErrorCodes.ContextNotAllowed,
+            AiServiceErrorCodes.PersonalContextContractRequired,
             await ReadProblemCodeAsync(personalResponse));
         Assert.Null(factory.AiService.LastRequest);
 
@@ -534,6 +534,11 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
             organizationId,
             OrganizationRole.Manager);
         await SelectWorkspaceAsync(client, membership.MembershipId, OrganizationRole.Manager);
+        var currentAssistant = (await client.GetFromJsonAsync<AssistantContextResult>("/api/v1/ai/assistant-context", JsonOptions))!;
+        using (var chosen = await client.PutAsJsonAsync("/api/v1/ai/assistant-context",
+            new SelectAssistantContextCommand(MakanApp.Domain.Intelligence.AssistantDataContextKind.Organization,
+                Guid.NewGuid(), membership.MembershipId, OrganizationRole.Manager, ExpectedVersion: currentAssistant.Version), JsonOptions))
+            chosen.EnsureSuccessStatusCode();
         await factory.EndMembershipAsync(membership.MembershipId);
         using var revokedResponse = await client.PostAsJsonAsync(
             "/api/v1/ai/chat",

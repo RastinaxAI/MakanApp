@@ -81,6 +81,7 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
     {
         runtime.EnsureEnabled(); ValidateQuery(command, correlation);
         var context = await authorization.ResolveAsync(user, session, command.Sources, command.Payer, ct);
+        using var measurement = AiExecutionTelemetry.Begin("knowledge_retrieve", context.Actor.Organization?.WorkspaceType ?? MakanApp.Domain.Organization.WorkspaceType.Personal, command.Payer);
         await RequireEntitlementAsync(context, ct);
         await authorization.PinAsync(context, command.ClientOperationId, new { Action = "retrieve", command.Query, command.MaxResults, command.IncludeQuotePreview }, ct);
         await EnsureReadyAsync(context, correlation, ct);
@@ -88,6 +89,7 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
         var result = await client.RetrieveAsync(new(Guid.NewGuid().ToString("N"), correlation, command.Query,
             context.Versions, command.MaxResults, command.IncludeQuotePreview), ct);
         await authorization.ReauthorizeAsync(context, ct);
+        measurement.Succeeded();
         return result;
     }
 
@@ -95,6 +97,7 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
     {
         runtime.EnsureEnabled(); ValidateQuery(command, correlation);
         var context = await authorization.ResolveAsync(user, session, command.Sources, command.Payer, ct);
+        using var measurement = AiExecutionTelemetry.Begin("knowledge_rag", context.Actor.Organization?.WorkspaceType ?? MakanApp.Domain.Organization.WorkspaceType.Personal, command.Payer);
         var payload = new { Action = "rag", command.Query, command.MaxResults, command.IncludeQuotePreview, command.Language };
         await authorization.PinAsync(context, command.ClientOperationId, payload, ct);
         // همان ledger و واحد SimpleText موجود استفاده می‌شود؛ قیمت/پرداخت یا ledger موازی ساخته نمی‌شود.
@@ -131,6 +134,7 @@ public sealed class KnowledgeIntegrationService(KnowledgeAuthorizationService au
         await Finish(UsageReservationStatus.Consumed);
         // نتیجهٔ معتبر مصرف شده است؛ revoke هم‌زمان اجازهٔ انتشار متن به Client نمی‌دهد.
         await authorization.ReauthorizeAsync(context, ct);
+        measurement.Succeeded();
         return result;
 
         async Task Finish(UsageReservationStatus status)

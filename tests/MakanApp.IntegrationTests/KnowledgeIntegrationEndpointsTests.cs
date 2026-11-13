@@ -33,6 +33,8 @@ public sealed partial class MessagingEndpointsTests
         using var response = await client.GetAsync("/openapi/v1.json"); response.EnsureSuccessStatusCode();
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement; var paths = root.GetProperty("paths");
+        Assert.Contains(AiServiceErrorCodes.PersonalContextContractRequired,
+            paths.GetProperty("/api/v1/ai/chat").GetProperty("post").GetProperty("description").GetString());
         var retrieve = paths.GetProperty("/api/v1/ai/knowledge/retrieve").GetProperty("post");
         if (retrieve.TryGetProperty("parameters", out var parameters))
             Assert.DoesNotContain(parameters.EnumerateArray(), value => value.GetProperty("name").GetString() == "X-AI-Operation-Id");
@@ -232,12 +234,14 @@ public sealed partial class MessagingEndpointsTests
         public ConcurrentDictionary<(Guid, int), (string Hash, string Title)> Staged { get; } = new();
         public ConcurrentDictionary<(Guid, int), string> States { get; } = new();
         public List<KnowledgeSourceVersion[]> Allowlists { get; } = [];
+        public List<KnowledgeScope> IngestScopes { get; } = [];
         public int Calls { get; private set; }
         public int RagCalls { get; private set; }
         public bool LoseRagResponse { get; set; }
         public Func<Task>? BeforeRetrievalResponse { get; set; }
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
+            Assert.Null(request.Headers.Authorization);
             Calls++;
             var path = request.RequestUri!.AbsolutePath; var parts = path.Split('/');
             if (path.Contains("/sources/", StringComparison.Ordinal))
@@ -247,6 +251,7 @@ public sealed partial class MessagingEndpointsTests
                 {
                     var content = Assert.IsType<MultipartFormDataContent>(request.Content).ToArray();
                     var metadata = (await content[0].ReadFromJsonAsync<KnowledgeIngestMetadata>(cancellationToken: ct))!;
+                    IngestScopes.Add(metadata.Scope);
                     Assert.Equal(metadata.ContentHash, Convert.ToHexStringLower(SHA256.HashData(await content[1].ReadAsByteArrayAsync(ct))));
                     var created = Staged.TryAdd(key, (metadata.ContentHash, metadata.Title));
                     if (Staged[key].Hash != metadata.ContentHash) return KnowledgeResponse(409, new { error = new { code = KnowledgeErrorCodes.VersionConflict } });
@@ -270,6 +275,7 @@ public sealed partial class MessagingEndpointsTests
                 return KnowledgeResponse(200, new KnowledgeRetrieveResponse(requestId, correlation, "Ok", [new(source.SourceId, source.Version, 1, "chunk-1", "Synthetic knowledge evidence", citation)]));
             }
             RagCalls++;
+            Assert.Empty(root.GetProperty("businessContext").EnumerateArray());
             if (LoseRagResponse) throw new HttpRequestException("خطای ساختگی انتقال؛ بدنهٔ خصوصی ثبت نشود.");
             return KnowledgeResponse(200, new KnowledgeRagResponse(requestId, correlation, "Ok", "Synthetic claim.", [new("Synthetic claim.", [citation])], [citation]));
         }

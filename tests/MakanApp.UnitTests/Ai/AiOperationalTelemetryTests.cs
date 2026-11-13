@@ -83,7 +83,9 @@ public sealed class AiOperationalTelemetryTests
         using var listener = new MeterListener();
         listener.InstrumentPublished = (instrument, meterListener) =>
         {
-            if (instrument.Meter.Name == "MakanApp.AiService") meterListener.EnableMeasurementEvents(instrument);
+            // این آزمون allowlist سنجهٔ transport را کنترل می‌کند؛ اجرای Use Case سنجه و آزمون مستقل دارد.
+            if (instrument.Meter.Name == "MakanApp.AiService" && instrument.Name.StartsWith("makan.ai.client.", StringComparison.Ordinal))
+                meterListener.EnableMeasurementEvents(instrument);
         };
         listener.SetMeasurementEventCallback<long>((instrument, _, tags, _) => measurements.Add((instrument.Name, tags.ToArray())));
         listener.SetMeasurementEventCallback<double>((instrument, _, tags, _) => measurements.Add((instrument.Name, tags.ToArray())));

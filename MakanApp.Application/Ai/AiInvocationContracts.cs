@@ -19,7 +19,7 @@ public interface IAiInvocationExecutor
     Task<TResponse> ExecuteAsync<TRequest, TResponse>(Guid userId, Guid sessionId, TRequest request,
         Func<TRequest, CancellationToken, Task<TResponse>> invoke, Func<CancellationToken, Task> reauthorize,
         AiInvocationOptions? options, CancellationToken ct)
-        where TRequest : IAiServiceRequest where TResponse : class, IAiServiceResponse;
+        where TRequest : IAiInvocationRequest where TResponse : class, IAiServiceResponse;
 }
 public static class AiInvocationErrorCodes
 {
@@ -30,6 +30,30 @@ public static class AiInvocationErrorCodes
 }
 public static class AiInvocationContext
 {
+    public static void EnsurePersonal(MakanApp.Application.Organization.AccessContext context, Guid user, Guid session)
+    {
+        if (context.WorkspaceType != MakanApp.Domain.Organization.WorkspaceType.Personal || context.UserId != user ||
+            context.ActorId != user || context.SessionId != session || context.OrganizationId.HasValue || context.MembershipId.HasValue ||
+            context.ActiveRole.HasValue || context.SubjectOrganizationPersonId.HasValue || context.AssistantClassId.HasValue)
+            throw new AiServiceException(AiServiceErrorCodes.ContextNotAllowed, "زمینهٔ شخصی باید فقط متعلق به همین حساب و نشست باشد.");
+    }
+
+    public static MakanApp.Application.Commerce.AiQuotaPreflightCommand CommerceContext(
+        MakanApp.Application.Organization.AccessContext context, AiPayerSelection? payer)
+    {
+        if (payer.HasValue && !Enum.IsDefined(payer.Value))
+            throw new AiServiceException(AiServiceErrorCodes.InvalidRequest, "انتخاب پرداخت‌کننده معتبر نیست.");
+        if (context.WorkspaceType == MakanApp.Domain.Organization.WorkspaceType.Personal)
+        {
+            EnsurePersonal(context, context.UserId, context.SessionId);
+            if (payer == AiPayerSelection.Organization) throw MakanApp.Application.Commerce.CommercialSubscriptionService.Denied();
+            return new(CommerceContextType.Personal, context.UserId, payer ?? AiPayerSelection.Individual);
+        }
+        if (context.WorkspaceType != MakanApp.Domain.Organization.WorkspaceType.Organization || !context.OrganizationId.HasValue || !context.MembershipId.HasValue)
+            throw new AiServiceException(AiServiceErrorCodes.ContextNotAllowed, "زمینهٔ سازمانی معتبر لازم است.");
+        return new(CommerceContextType.Organization, context.OrganizationId, payer);
+    }
+
     public static void EnsureSame(object expectedScope, object currentScope)
     {
         if (expectedScope.GetType() != currentScope.GetType() ||

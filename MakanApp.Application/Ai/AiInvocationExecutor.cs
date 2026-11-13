@@ -15,22 +15,30 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
     public async Task<TResponse> ExecuteAsync<TRequest, TResponse>(Guid userId, Guid sessionId, TRequest request,
         Func<TRequest, CancellationToken, Task<TResponse>> invoke, Func<CancellationToken, Task> reauthorize,
         AiInvocationOptions? options, CancellationToken ct)
-        where TRequest : IAiServiceRequest where TResponse : class, IAiServiceResponse
+        where TRequest : IAiInvocationRequest where TResponse : class, IAiServiceResponse
     {
         runtime.EnsureEnabled();
         var command = AiInvocationOptions.Resolve(options);
         var context = await contexts.ResolveAsync(userId, sessionId, ct);
-        if (context.WorkspaceType != WorkspaceType.Organization || context.OrganizationId is null || context.MembershipId is null ||
-            request.Actor.UserId != userId.ToString("D") || request.Actor.Role != context.ActiveRole?.ToString())
-            throw Denied();
-        var document = JsonSerializer.SerializeToElement(request, request.GetType(), JsonOptions);
-        if (!document.TryGetProperty("scope", out var scope) ||
-            !scope.TryGetProperty("organizationId", out var org) || !scope.TryGetProperty("schoolId", out var school) ||
-            org.GetString() != context.OrganizationId.Value.ToString("D") || school.GetString() != org.GetString())
-            throw Denied();
-        if (context.AssistantClassId.HasValue && (!scope.TryGetProperty("classId", out var classroom) || classroom.GetString() != context.AssistantClassId.Value.ToString("D")))
-            throw Denied();
-        var quotaContext = new AiQuotaPreflightCommand(CommerceContextType.Organization, context.OrganizationId, command.Payer);
+        using var measurement = AiExecutionTelemetry.Begin(request is AiChatRequest or PersonalAiChatIntent ? "chat" : "role_specific", context.WorkspaceType, command.Payer);
+        if (context.WorkspaceType == WorkspaceType.Personal)
+        {
+            AiInvocationContext.EnsurePersonal(context, userId, sessionId);
+            if (request is not PersonalAiChatIntent personal) throw Denied();
+            personal.EnsureScope(userId);
+        }
+        else
+        {
+            if (context.WorkspaceType != WorkspaceType.Organization || context.OrganizationId is null || context.MembershipId is null ||
+                request is not IAiServiceRequest serviceRequest || serviceRequest.Actor.UserId != userId.ToString("D") || serviceRequest.Actor.Role != context.ActiveRole?.ToString())
+                throw Denied();
+            var document = JsonSerializer.SerializeToElement(request, request.GetType(), JsonOptions);
+            if (!document.TryGetProperty("scope", out var scope) ||
+                !scope.TryGetProperty("organizationId", out var org) || !scope.TryGetProperty("schoolId", out var school) ||
+                org.GetString() != context.OrganizationId.Value.ToString("D") || school.GetString() != org.GetString()) throw Denied();
+            if (context.AssistantClassId.HasValue && (!scope.TryGetProperty("classId", out var classroom) || classroom.GetString() != context.AssistantClassId.Value.ToString("D"))) throw Denied();
+        }
+        var quotaContext = AiInvocationContext.CommerceContext(context, command.Payer);
         var hash = Fingerprint(request, context);
         // Reserve موجود، replay را پیش از بررسی دوبارهٔ مانده تشخیص می‌دهد؛ آخرین سهمیه نیز retry-safe است.
         // بررسی Preflight اتمیکِ نهایی در همان transaction کوتاه Reserve انجام می‌شود.
@@ -67,6 +75,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
         // خطای ثبت نتیجهٔ قطعی نباید به تلاش برای بازنویسی Consumed به Unknown تبدیل شود.
         // قطع اتصال Client نیز ثبت مصرف پاسخ معتبر را لغو نمی‌کند.
         await Finish(UsageReservationStatus.Consumed, "ai_response_validated");
+        measurement.Succeeded();
         return response;
 
         async Task Finish(UsageReservationStatus status, string reason)
@@ -76,7 +85,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
         }
     }
 
-    public static byte[] Fingerprint(IAiServiceRequest request, AccessContext context)
+    public static byte[] Fingerprint(IAiInvocationRequest request, AccessContext context)
     {
         var payload = JsonSerializer.SerializeToNode(request, request.GetType(), JsonOptions)!.AsObject();
         // شناسه/Correlation و گزارش‌های متغیر سرور، هویت intent کاربر نیستند؛ در log یا receipt هم ذخیره نمی‌شوند.

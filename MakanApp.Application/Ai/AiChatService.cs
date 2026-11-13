@@ -27,6 +27,17 @@ public sealed class AiChatService(
             userId,
             sessionId,
             cancellationToken);
+        if (context.WorkspaceType == WorkspaceType.Personal)
+        {
+            var personal = PersonalAiChatIntent.Create(userId, sessionId, context, correlationId, command);
+            personal.EnsureScope(userId);
+            var payer = AiInvocationOptions.Resolve(invocation, command.OperationId).Payer;
+            using var measurement = AiExecutionTelemetry.Begin("chat", context.WorkspaceType, payer);
+            _ = AiInvocationContext.CommerceContext(context, payer);
+            // مرز wire پیش از Reserve بسته است؛ intent معتبر با نقش آموزشی جعلی ارسال نمی‌شود.
+            measurement.ContractBlocked();
+            PersonalAiChatContract.EnsureSupported();
+        }
         EnsureOrganizationRole(context);
 
         Guid? learnerId = context.SubjectOrganizationPersonId;

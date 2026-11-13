@@ -47,7 +47,7 @@ public sealed class AiChatServiceTests
     }
 
     [Fact]
-    public async Task ChatAsync_PersonalWorkspace_IsDeniedBeforeClientCall()
+    public async Task ChatAsync_PersonalWorkspaceWithDifferentActor_IsDeniedBeforeClientCall()
     {
         var context = new AccessContext(
             Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), WorkspaceType.Personal,
@@ -66,6 +66,22 @@ public sealed class AiChatServiceTests
             CancellationToken.None));
 
         Assert.Equal(AiServiceErrorCodes.ContextNotAllowed, error.Code);
+        Assert.Null(client.Request);
+    }
+
+    [Fact]
+    public async Task ChatAsync_OrdinaryPersonalAccount_ReportsUpstreamContractBoundaryWithoutInventingRole()
+    {
+        var user = Guid.NewGuid();
+        var context = new AccessContext(user, user, Guid.NewGuid(), WorkspaceType.Personal, null, null, null, null);
+        var client = new RecordingClient();
+        var service = new AiChatService(new StubContextResolver(context), new StubScopeStore(), client,
+            new NoSourceSelection(), new DirectInvocation());
+
+        var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(user, context.SessionId,
+            "personal-contract", new SendAiChatCommand("پرسش شخصی", null), default));
+
+        Assert.Equal(AiServiceErrorCodes.PersonalContextContractRequired, error.Code);
         Assert.Null(client.Request);
     }
 
@@ -194,7 +210,7 @@ public sealed class AiChatServiceTests
     {
         public Task<TResponse> ExecuteAsync<TRequest,TResponse>(Guid u, Guid session, TRequest request,
             Func<TRequest,CancellationToken,Task<TResponse>> invoke, Func<CancellationToken,Task> reauthorize,
-            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiServiceRequest where TResponse:class,IAiServiceResponse => invoke(request,ct);
+            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiInvocationRequest where TResponse:class,IAiServiceResponse => invoke(request,ct);
     }
 
 }

@@ -3,10 +3,14 @@ using System.Text.Json.Serialization;
 
 namespace MakanApp.Application.Ai;
 
-public interface IAiServiceRequest
+public interface IAiInvocationRequest
 {
     string RequestId { get; }
     string? CorrelationId { get; }
+}
+
+public interface IAiServiceRequest : IAiInvocationRequest
+{
     AiActor Actor { get; }
 }
 

@@ -190,6 +190,7 @@ public sealed class GlobalExceptionHandler(
             AiInvocationErrorCodes.Unknown => StatusCodes.Status409Conflict,
             AiInvocationErrorCodes.Failed => StatusCodes.Status409Conflict,
             AiServiceErrorCodes.ContextNotAllowed => StatusCodes.Status403Forbidden,
+            AiServiceErrorCodes.PersonalContextContractRequired => StatusCodes.Status409Conflict,
             AiServiceErrorCodes.RateLimited => StatusCodes.Status429TooManyRequests,
             AiServiceErrorCodes.ResponseInvalid => StatusCodes.Status502BadGateway,
             AiServiceErrorCodes.ServiceTimeout => StatusCodes.Status504GatewayTimeout,
