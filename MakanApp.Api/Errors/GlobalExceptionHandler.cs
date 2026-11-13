@@ -326,7 +326,7 @@ public sealed class GlobalExceptionHandler(
             MessagingErrorCodes.ReportMessageNotFound => StatusCodes.Status404NotFound,
             MessagingErrorCodes.ReportIdempotencyConflict => StatusCodes.Status409Conflict,
             AssistantContextErrorCodes.Conflict => StatusCodes.Status409Conflict,
-            SchoolApplicationErrorCodes.Invalid or SchoolApplicationErrorCodes.SubmissionIncomplete => StatusCodes.Status400BadRequest,
+            SchoolApplicationErrorCodes.Invalid or SchoolApplicationErrorCodes.SubmissionIncomplete or SchoolApplicationErrorCodes.InitialManagerInvalid => StatusCodes.Status400BadRequest,
             SchoolApplicationErrorCodes.NotFound or SchoolApplicationErrorCodes.FileUnavailable => StatusCodes.Status404NotFound,
             SchoolApplicationErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
             SchoolApplicationErrorCodes.Conflict or SchoolApplicationErrorCodes.ProductDecisionRequired or SchoolApplicationErrorCodes.CommercialTermsUnavailable or SchoolApplicationErrorCodes.NotApproved => StatusCodes.Status409Conflict,

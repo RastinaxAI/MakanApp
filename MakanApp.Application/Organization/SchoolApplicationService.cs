@@ -14,14 +14,23 @@ public static class SchoolApplicationErrorCodes
     public const string SubmissionIncomplete = "SCHOOL_APPLICATION_SUBMISSION_INCOMPLETE";
     public const string CommercialTermsUnavailable = "SCHOOL_APPLICATION_COMMERCIAL_TERMS_UNAVAILABLE";
     public const string NotApproved = "SCHOOL_APPLICATION_NOT_APPROVED";
+    public const string InitialManagerInvalid = "SCHOOL_APPLICATION_INITIAL_MANAGER_INVALID";
 }
 public sealed class SchoolApplicationException(string code) : Exception("عملیات درخواست تأسیس با وضعیت، نسخه یا مجوز جاری سازگار نیست.") { public string Code { get; } = code; }
 public sealed record SchoolApplicationActor(Guid UserId, Guid SessionId, string CorrelationId);
 public sealed record SchoolDocumentInput(Guid FileAssetId, string Kind);
 public sealed record CreateSchoolApplicationCommand(Guid ClientOperationId, SchoolApplicationKind Kind, SchoolApplicationDraftData Data, IReadOnlyCollection<SchoolDocumentInput>? Documents = null);
 public sealed record UpdateSchoolApplicationCommand(Guid ClientOperationId, long ExpectedVersion, SchoolApplicationDraftData Data, IReadOnlyCollection<SchoolDocumentInput>? Documents = null);
-public sealed record SchoolApplicationActionCommand(Guid ClientOperationId, long ExpectedVersion, string? ApplicantFeedback = null, SchoolApplicationStatus? Decision = null);
-public sealed record SchoolApplicationDecisionResult(Guid Id, int Revision, SchoolApplicationStatus Status, string ApplicantFeedback, DateTime OccurredAtUtc);
+public sealed record SchoolApplicationActionCommand(Guid ClientOperationId, long ExpectedVersion, string? ApplicantFeedback = null, SchoolApplicationStatus? Decision = null,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] Guid? InitialManagerUserId = null);
+public sealed record SchoolInitialManagerCommand(Guid ClientOperationId, long ExpectedVersion, Guid InitialManagerUserId, string Reason);
+public sealed record SchoolProvisioningRetryCommand(Guid ClientOperationId, long ExpectedVersion, string Reason);
+public sealed record SchoolApplicationDecisionResult(Guid Id, int Revision, SchoolApplicationStatus Status, string ApplicantFeedback, DateTime OccurredAtUtc)
+{
+    public long? ApplicationVersion { get; init; }
+    public Guid? ProposedInitialManagerUserId { get; init; }
+    public Guid? FinalInitialManagerUserId { get; init; }
+}
 public sealed record SchoolApplicationResult(Guid Id, SchoolApplicationKind Kind, SchoolApplicationStatus Status, int Revision, long Version,
     SchoolApplicationDraftData Data, IReadOnlyCollection<SchoolDocumentInput> Documents, IReadOnlyCollection<SchoolApplicationDecisionResult> Decisions,
     bool CanSubmit, string? SubmissionLimitation, DateTime CreatedAtUtc, DateTime UpdatedAtUtc)
@@ -32,11 +41,29 @@ public sealed record SchoolApplicationResult(Guid Id, SchoolApplicationKind Kind
     public string NextAction { get; init; } = "None";
     public Guid? ApplicantUserId { get; init; }
     public SchoolApplicationProgress? Progress { get; init; }
+    public Guid ProposedInitialManagerUserId { get; init; }
+    public Guid? FinalInitialManagerUserId { get; init; }
+    public DateTime? InitialManagerConfirmedAtUtc { get; init; }
+    public Guid? InitialManagerConfirmedByUserId { get; init; }
 }
 public sealed record SchoolApplicationProgress(string CommercialState, Guid? OrderId, string? PaymentState,
-    string ProvisioningState, Guid? ProvisioningRequestId, Guid? OrganizationId, Guid? SubscriptionId);
+    string ProvisioningState, Guid? ProvisioningRequestId, Guid? OrganizationId, Guid? SubscriptionId)
+{
+    public string? PlanCode { get; init; }
+    public Guid? PlanVersionId { get; init; }
+    public decimal? Amount { get; init; }
+    public string? Currency { get; init; }
+    public Guid? PaymentId { get; init; }
+    public Guid? ManagerInvitationId { get; init; }
+    public DateTime? ManagerInvitationExpiresAtUtc { get; init; }
+    public string? FailureCode { get; init; }
+}
 public sealed record SchoolApplicationHistoryResult(Guid Id, string Action, int Revision, long Version,
-    SchoolApplicationStatus Status, string? Reason, DateTime OccurredAtUtc, Guid? ActorUserId);
+    SchoolApplicationStatus Status, string? Reason, DateTime OccurredAtUtc, Guid? ActorUserId)
+{
+    public Guid? ProposedInitialManagerUserId { get; init; }
+    public Guid? FinalInitialManagerUserId { get; init; }
+}
 public sealed record SchoolApplicationHistoryPage(IReadOnlyList<SchoolApplicationHistoryResult> Items, int Total, int Page, int PageSize);
 public sealed record SchoolApplicationCommerceCommand(Guid ClientOperationId, long ExpectedVersion);
 public sealed record SchoolOfferingCommand(Guid ClientOperationId, long ExpectedVersion, Guid PlanVersionId, string Reason);
@@ -53,6 +80,8 @@ public interface ISchoolApplicationStore
     Task<SchoolApplicationHistoryPage> HistoryAsync(SchoolApplicationActor actor, Guid id, bool reviewer, int page, int pageSize, CancellationToken ct);
     Task<SchoolOfferingResult> ConfigureOfferingAsync(SchoolApplicationActor actor, SchoolApplicationKind kind, SchoolOfferingCommand command, CancellationToken ct);
     Task<IReadOnlyList<SchoolOfferingResult>> OfferingsAsync(SchoolApplicationActor actor, CancellationToken ct);
+    Task<SchoolApplicationResult> ConfirmInitialManagerAsync(SchoolApplicationActor actor, Guid id, SchoolInitialManagerCommand command, CancellationToken ct);
+    Task<SchoolApplicationResult> RetryProvisioningAsync(SchoolApplicationActor actor, Guid id, SchoolProvisioningRetryCommand command, CancellationToken ct);
 }
 public sealed class SchoolApplicationService(ISchoolApplicationStore store, CommercialActorAccess actors, IOrderPaymentService orders)
 {
@@ -82,8 +111,24 @@ public sealed class SchoolApplicationService(ISchoolApplicationStore store, Comm
         Action(command);
         if (string.IsNullOrWhiteSpace(command.ApplicantFeedback) || command.ApplicantFeedback.Length > 2000 ||
             !start && command.Decision is not (SchoolApplicationStatus.NeedsChanges or SchoolApplicationStatus.Approved or SchoolApplicationStatus.Rejected)) throw Invalid();
+        if (!start && command.Decision == SchoolApplicationStatus.Approved && (!command.InitialManagerUserId.HasValue || command.InitialManagerUserId == Guid.Empty))
+            throw new SchoolApplicationException(SchoolApplicationErrorCodes.InitialManagerInvalid);
+        if ((start || command.Decision != SchoolApplicationStatus.Approved) && command.InitialManagerUserId.HasValue) throw Invalid();
         return await store.ReviewAsync(actor, id, command, start, ct);
     }
+    public async Task<SchoolApplicationResult> ConfirmInitialManagerAsync(SchoolApplicationActor actor, Guid id, SchoolInitialManagerCommand command, CancellationToken ct)
+    {
+        await Ensure(actor, ct); Repair(command.ClientOperationId, command.ExpectedVersion, command.Reason);
+        if (command.InitialManagerUserId == Guid.Empty) throw Invalid();
+        return await store.ConfirmInitialManagerAsync(actor, id, command, ct);
+    }
+    public async Task<SchoolApplicationResult> RetryProvisioningAsync(SchoolApplicationActor actor, Guid id, SchoolProvisioningRetryCommand command, CancellationToken ct)
+    {
+        await Ensure(actor, ct); Repair(command.ClientOperationId, command.ExpectedVersion, command.Reason);
+        return await store.RetryProvisioningAsync(actor, id, command, ct);
+    }
+    private static void Repair(Guid operation, long version, string reason)
+    { if (operation == Guid.Empty || version < 1 || string.IsNullOrWhiteSpace(reason) || reason.Length > 500) throw Invalid(); }
     public async Task<SchoolApplicationResult> ReadAsync(SchoolApplicationActor actor, Guid id, bool reviewer, int? revision, CancellationToken ct)
     { await Ensure(actor, ct); if (revision is <= 0) throw Invalid(); return await store.ReadAsync(actor, id, reviewer, revision, ct); }
     public async Task<SchoolApplicationPage> PageAsync(SchoolApplicationActor actor, bool reviewer, SchoolApplicationStatus? status, int page, int pageSize, CancellationToken ct)

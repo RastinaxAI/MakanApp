@@ -11,10 +11,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Platform;
 
-public sealed class EfPlatformOperationsStore(
+public sealed partial class EfPlatformOperationsStore(
     MakanDbContext dbContext,
     TimeProvider timeProvider,
-    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IPlatformOperationsStore
+    MakanApp.Application.Outbox.IOutbox outbox,
+    Microsoft.Extensions.Options.IOptions<SchoolProvisioningOptions> schoolOptions,
+    MakanApp.Infrastructure.Messaging.OfficialSpaceEventWriter? officialSpaces = null, MakanApp.Infrastructure.Notification.ProductNotificationWriter? productNotifications = null) : IPlatformOperationsStore, ISchoolProvisioningWorkHandler
 {
     public async Task<PlatformOrganizationPage> GetOrganizationsAsync(
         PlatformOrganizationQuery query,
@@ -801,7 +803,7 @@ public sealed class EfPlatformOperationsStore(
 
     private async Task EnsureOrganizationStageAsync(
         Guid requestId,
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
@@ -813,11 +815,12 @@ public sealed class EfPlatformOperationsStore(
             return;
         }
 
+        await ValidateSchoolDependenciesAsync(request, cancellationToken);
         var organization = MakanApp.Domain.Organization.Organization.Create(
             request.OrganizationName,
-            actor.OccurredAtUtc);
+            (actor?.OccurredAtUtc ?? SchoolNow()));
         dbContext.Organizations.Add(organization);
-        request.MarkOrganizationCreated(organization.Id, actor.OccurredAtUtc);
+        request.MarkOrganizationCreated(organization.Id, (actor?.OccurredAtUtc ?? SchoolNow()));
         dbContext.AdminAuditLogs.Add(await CreateAuditAsync(
             actor,
             "platform.organization.create",
@@ -836,7 +839,7 @@ public sealed class EfPlatformOperationsStore(
 
     private async Task EnsureSubscriptionStageAsync(
         Guid requestId,
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
@@ -848,11 +851,12 @@ public sealed class EfPlatformOperationsStore(
             return;
         }
 
+        await ValidateSchoolDependenciesAsync(request, cancellationToken);
         var planVersionId = request.PlanVersionId
             ?? throw Error(PlatformErrorCodes.ProvisioningConflict, "نسخه پلن در درخواست ثبت نشده است.");
         var organizationId = request.OrganizationId
             ?? throw Error(PlatformErrorCodes.ProvisioningConflict, "سازمان provisioning هنوز ساخته نشده است.");
-        var planVersion = await dbContext.PlanVersions.SingleOrDefaultAsync(
+        var planVersion = await dbContext.PlanVersions.Include(v => v.Price).Include(v => v.Entitlements).Include(v => v.QuotaDefinitions).SingleOrDefaultAsync(
             item => item.Id == planVersionId,
             cancellationToken);
         if (planVersion is null || !planVersion.IsPublished)
@@ -872,15 +876,22 @@ public sealed class EfPlatformOperationsStore(
                 "سازمان از قبل اشتراک فعال دارد.");
         }
 
-        var subscription = Subscription.CreatePending(
-            organizationId,
-            planVersion,
-            actor.OccurredAtUtc,
-            AsUtc(request.SubscriptionEndsAtUtc),
-            actor.OccurredAtUtc);
-        subscription.Activate(actor.OccurredAtUtc);
+        Subscription subscription;
+        if (request.SchoolApplicationId.HasValue)
+        {
+            var paidOrder = await dbContext.Orders.SingleAsync(o => o.Id == request.SourceOrderId, cancellationToken);
+            subscription = Subscription.CreateMonthly(SubscriptionOwner.Organization(organizationId), planVersion,
+                AsUtc(paidOrder.PaidAtUtc)!.Value, paidOrder.BillingPeriodIndex, SchoolNow(), paidOrder.Id, true);
+            if (subscription.EndsAtUtc <= SchoolNow()) throw new InvalidOperationException("دورهٔ پرداخت‌شده پایان یافته است؛ بازیابی نیازمند بررسی قرارداد است.");
+        }
+        else
+        {
+            subscription = Subscription.CreatePending(organizationId, planVersion, actor!.OccurredAtUtc,
+                AsUtc(request.SubscriptionEndsAtUtc), actor.OccurredAtUtc);
+            subscription.Activate(actor.OccurredAtUtc);
+        }
         dbContext.Subscriptions.Add(subscription);
-        request.MarkSubscriptionAssigned(subscription.Id, actor.OccurredAtUtc);
+        request.MarkSubscriptionAssigned(subscription.Id, (actor?.OccurredAtUtc ?? SchoolNow()));
         dbContext.AdminAuditLogs.Add(await CreateAuditAsync(
             actor,
             "platform.provisioning.subscription.assign",
@@ -898,7 +909,7 @@ public sealed class EfPlatformOperationsStore(
 
     private async Task EnsureManagerInvitationStageAsync(
         Guid requestId,
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
@@ -912,6 +923,7 @@ public sealed class EfPlatformOperationsStore(
 
         var organizationId = request.OrganizationId
             ?? throw Error(PlatformErrorCodes.ProvisioningConflict, "سازمان provisioning هنوز ساخته نشده است.");
+        await ValidateSchoolDependenciesAsync(request, cancellationToken);
         var managerUserId = request.InitialManagerUserId
             ?? throw Error(PlatformErrorCodes.ProvisioningConflict, "مدیر اولیه در درخواست ثبت نشده است.");
         if (!await dbContext.Users.AnyAsync(
@@ -927,17 +939,19 @@ public sealed class EfPlatformOperationsStore(
             cancellationToken);
         if (invitation is null)
         {
+            if (request.SchoolApplicationId.HasValue)
+                request.SetSchoolInvitationExpiry(SchoolNow().AddDays(schoolOptions.Value.InitialManagerInvitationLifetimeDays), SchoolNow());
             invitation = Invitation.Create(
                 organizationId,
                 managerUserId,
-                actor.UserId,
+                actor?.UserId ?? request.RequestedByUserId,
                 OrganizationRole.Manager,
-                actor.OccurredAtUtc,
+                (actor?.OccurredAtUtc ?? SchoolNow()),
                 AsUtc(request.InvitationExpiresAtUtc)!.Value);
             dbContext.Invitations.Add(invitation);
         }
 
-        request.MarkManagerInvitationCreated(invitation.Id, actor.OccurredAtUtc);
+        request.MarkManagerInvitationCreated(invitation.Id, (actor?.OccurredAtUtc ?? SchoolNow()));
         dbContext.AdminAuditLogs.Add(await CreateAuditAsync(
             actor,
             "platform.provisioning.manager-invitation.create",
@@ -955,7 +969,7 @@ public sealed class EfPlatformOperationsStore(
 
     private async Task EnsureProvisioningCompletedAsync(
         Guid requestId,
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         CancellationToken cancellationToken)
     {
         await using var transaction = await BeginSerializableAsync(cancellationToken);
@@ -967,7 +981,24 @@ public sealed class EfPlatformOperationsStore(
             return;
         }
 
-        request.Complete(actor.OccurredAtUtc);
+        await ValidateSchoolDependenciesAsync(request, cancellationToken);
+        if (request.SchoolApplicationId.HasValue)
+        {
+            var subscription = await dbContext.Subscriptions.SingleOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken);
+            var invitation = await dbContext.Invitations.SingleOrDefaultAsync(i => i.Id == request.ManagerInvitationId, cancellationToken);
+            if (subscription is null || subscription.SourceOrderId != request.SourceOrderId || subscription.OrganizationId != request.OrganizationId ||
+                !subscription.CommercialControlEnabled || !subscription.IsEffectiveAt(SchoolNow()) ||
+                invitation is null || invitation.OrganizationId != request.OrganizationId || invitation.DestinationUserId != request.InitialManagerUserId ||
+                invitation.Role != OrganizationRole.Manager || invitation.Status is not (InvitationStatus.Pending or InvitationStatus.Accepted) ||
+                invitation.Status == InvitationStatus.Pending && invitation.ExpiresAtUtc <= SchoolNow())
+                throw new InvalidOperationException("اشتراک و دعوت معتبر پیش‌نیاز آماده‌شدن آموزشگاه هستند.");
+        }
+        request.Complete((actor?.OccurredAtUtc ?? SchoolNow()));
+        if (request.SchoolApplicationId.HasValue)
+        {
+            var applicant = await dbContext.SchoolApplications.Where(a => a.Id == request.SchoolApplicationId).Select(a => a.ApplicantUserId).SingleAsync(cancellationToken);
+            productNotifications?.SchoolUpdated(request.Id, request.SchoolApplicationId.Value, applicant);
+        }
         dbContext.AdminAuditLogs.Add(await CreateAuditAsync(
             actor,
             "platform.provisioning.complete",
@@ -986,7 +1017,7 @@ public sealed class EfPlatformOperationsStore(
     private async Task MarkProvisioningNeedsAttentionAsync(
         Guid requestId,
         string failureCode,
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         CancellationToken cancellationToken)
     {
         dbContext.ChangeTracker.Clear();
@@ -994,7 +1025,7 @@ public sealed class EfPlatformOperationsStore(
         var request = await LockProvisioningAsync(requestId, cancellationToken);
         if (request.Status != PlatformProvisioningStatus.Completed)
         {
-            request.MarkNeedsAttention(failureCode, actor.OccurredAtUtc);
+            request.MarkNeedsAttention(failureCode, (actor?.OccurredAtUtc ?? SchoolNow()));
             dbContext.AdminAuditLogs.Add(await CreateAuditAsync(
                 actor,
                 "platform.provisioning.needs-attention",
@@ -1425,7 +1456,7 @@ public sealed class EfPlatformOperationsStore(
         dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
     private async Task<AdminAuditLog> CreateAuditAsync(
-        PlatformActorContext actor,
+        PlatformActorContext? actor,
         string action,
         string targetType,
         string targetId,
@@ -1435,21 +1466,21 @@ public sealed class EfPlatformOperationsStore(
         string? after,
         CancellationToken cancellationToken)
     {
-        var personId = await dbContext.Users.AsNoTracking()
+        var personId = actor is null ? null : await dbContext.Users.AsNoTracking()
             .Where(item => item.Id == actor.UserId)
             .Select(item => item.PersonId)
             .SingleAsync(cancellationToken);
         return AdminAuditLog.Create(
-            actor.UserId,
+            actor?.UserId,
             personId,
-            actor.SessionId,
+            actor?.SessionId,
             action,
             targetType,
             targetId,
             organizationId,
             reason,
-            actor.OccurredAtUtc,
-            actor.CorrelationId,
+            actor?.OccurredAtUtc ?? SchoolNow(),
+            actor?.CorrelationId ?? "school-provisioning:" + targetId,
             AdminAuditResult.Succeeded,
             before,
             after);

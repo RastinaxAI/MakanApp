@@ -12,6 +12,8 @@ public sealed partial class EfOrderPaymentStore
             .SingleOrDefaultAsync(a => a.ApplicantUserId == user, ct) ?? throw new SchoolApplicationException(SchoolApplicationErrorCodes.NotFound);
         if (organizationId.HasValue || app.Version != expectedVersion) throw new SchoolApplicationException(SchoolApplicationErrorCodes.Conflict);
         if (app.Status != SchoolApplicationStatus.Approved) throw new SchoolApplicationException(SchoolApplicationErrorCodes.NotApproved);
+        var manager = await dbContext.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={app.FinalInitialManagerUserId}").AsNoTracking().SingleOrDefaultAsync(ct);
+        if (!SchoolInitialManagerPolicy.IsEligible(manager)) throw new SchoolApplicationException(SchoolApplicationErrorCodes.InitialManagerInvalid);
         if (creating)
         {
             var previous = await dbContext.Orders.SingleOrDefaultAsync(o => o.SchoolApplicationId == applicationId && o.Status != MakanApp.Domain.Commerce.OrderStatus.Cancelled, ct);

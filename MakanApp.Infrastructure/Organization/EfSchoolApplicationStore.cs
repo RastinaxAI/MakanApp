@@ -11,12 +11,13 @@ using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace MakanApp.Infrastructure.Organization;
 
 public sealed partial class EfSchoolApplicationStore(MakanDbContext db, CommercialActorAccess actors, IPlatformPermissionResolver permissions,
     IFileAssetBoundAccessResolver files, IIdentitySecurity security, AddressBookProtection protection, TimeProvider clock,
-    MakanApp.Infrastructure.Notification.ProductNotificationWriter notifications) : ISchoolApplicationStore
+    MakanApp.Infrastructure.Notification.ProductNotificationWriter notifications, ISchoolProvisioningWorkHandler provisioning) : ISchoolApplicationStore
 {
     public async Task<SchoolApplicationResult> CreateAsync(SchoolApplicationActor actor, CreateSchoolApplicationCommand command, CancellationToken ct)
     {
@@ -46,6 +47,13 @@ public sealed partial class EfSchoolApplicationStore(MakanDbContext db, Commerci
     }
     public async Task<SchoolApplicationResult> ReviewAsync(SchoolApplicationActor actor, Guid id, SchoolApplicationActionCommand command, bool start, CancellationToken ct)
     {
+        try { return await ReviewLockedAsync(actor, id, command, start, ct); }
+        // دو بازبین می‌توانند حساب یکدیگر را انتخاب کنند؛ قربانی deadlock اثر ثبت‌شده‌ای ندارد و باید Conflict بگیرد.
+        catch (Exception exception) when (exception is SqlException { Number: 1205 } or DbUpdateException { InnerException: SqlException { Number: 1205 } })
+        { throw Error(SchoolApplicationErrorCodes.Conflict); }
+    }
+    private async Task<SchoolApplicationResult> ReviewLockedAsync(SchoolApplicationActor actor, Guid id, SchoolApplicationActionCommand command, bool start, CancellationToken ct)
+    {
         await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         await LockActor(actor, ct); await Reviewer(actor, true, ct);
         var app = await Locked(actor, id, true, ct); var hash = Hash(actor, $"review:{id}:{start}", command);
@@ -53,7 +61,8 @@ public sealed partial class EfSchoolApplicationStore(MakanDbContext db, Commerci
         {
             if (app.Version != command.ExpectedVersion || (start ? app.Status != SchoolApplicationStatus.Submitted : app.Status != SchoolApplicationStatus.UnderReview))
                 throw Error(SchoolApplicationErrorCodes.Conflict);
-            if (start) app.StartReview(Now()); else app.Decide(command.Decision!.Value, Now());
+            if (!start && command.Decision == SchoolApplicationStatus.Approved) await EligibleManager(command.InitialManagerUserId, ct);
+            if (start) app.StartReview(Now()); else app.Decide(command.Decision!.Value, Now(), command.InitialManagerUserId, actor.UserId);
             db.SchoolApplicationDecisions.Add(SchoolApplicationDecision.Create(app, actor.UserId, command.ApplicantFeedback?.Trim() ?? "بررسی آغاز شد", Now()));
             Complete(actor, app, command.ClientOperationId, hash, start ? "school_application.ReviewStarted" : "school_application." + app.Status, command.ApplicantFeedback?.Trim());
             // تصمیم بررسی، پرداخت یا ساخت Organization نیست؛ هیچ Membership یا RoleAssignment ساخته نمی‌شود.
@@ -108,7 +117,8 @@ public sealed partial class EfSchoolApplicationStore(MakanDbContext db, Commerci
         var docs = await db.SchoolApplicationDocuments.AsNoTracking().Where(d => d.ApplicationId == app.Id && d.Revision == revision)
             .Select(d => new SchoolDocumentInput(d.FileAssetId, d.Kind)).ToArrayAsync(ct);
         var decisions = await db.SchoolApplicationDecisions.AsNoTracking().Where(d => d.ApplicationId == app.Id).OrderByDescending(d => d.OccurredAtUtc).ThenBy(d => d.Id).Take(100)
-            .Select(d => new SchoolApplicationDecisionResult(d.Id, d.Revision, d.Status, d.ApplicantFeedback, d.OccurredAtUtc)).ToArrayAsync(ct);
+            .Select(d => new SchoolApplicationDecisionResult(d.Id, d.Revision, d.Status, d.ApplicantFeedback, d.OccurredAtUtc)
+            { ApplicationVersion = d.ApplicationVersion, ProposedInitialManagerUserId = d.ProposedInitialManagerUserId, FinalInitialManagerUserId = d.FinalInitialManagerUserId }).ToArrayAsync(ct);
         var currentRevision = revision == app.Revision;
         IReadOnlyList<string> missing = currentRevision ? app.SubmissionRequirements(docs.Select(d => d.Kind)) : [];
         var progress = await Progress(app, ct);
@@ -117,12 +127,16 @@ public sealed partial class EfSchoolApplicationStore(MakanDbContext db, Commerci
         {
             CanEdit = currentRevision && app.CanEdit, CanCancel = currentRevision && app.CanCancel, MissingRequirements = missing, Progress = progress,
             ApplicantUserId = reviewer ? app.ApplicantUserId : null,
+            ProposedInitialManagerUserId = app.ProposedInitialManagerUserId, FinalInitialManagerUserId = app.FinalInitialManagerUserId,
+            InitialManagerConfirmedAtUtc = app.InitialManagerConfirmedAtUtc,
+            InitialManagerConfirmedByUserId = reviewer ? app.InitialManagerConfirmedByUserId : null,
             NextAction = !currentRevision ? "ReadCurrentRevision" : app.Status switch
             {
                 SchoolApplicationStatus.Draft => missing.Count == 0 ? "Submit" : "CompleteDraft",
                 SchoolApplicationStatus.NeedsChanges => "ReviseAndResubmit",
                 SchoolApplicationStatus.Submitted or SchoolApplicationStatus.UnderReview => "WaitForReview",
-                SchoolApplicationStatus.Approved => progress.ProvisioningState == "Completed" ? "Ready" : progress.PaymentState == "Paid" ? "AwaitProvisioning" :
+                SchoolApplicationStatus.Approved => progress.ProvisioningState == "Completed" ? "Ready" : progress.PaymentState == "Paid" ?
+                    (progress.ProvisioningState is "NeedsAttention" or "BlockedManagerPolicy" ? "ContactSupportForProvisioning" : "AwaitProvisioning") : !app.FinalInitialManagerUserId.HasValue ? "WaitForInitialManagerConfirmation" :
                     progress.OrderId.HasValue ? "Pay" : progress.CommercialState == "Configured" ? "RequestQuote" : "WaitForCommercialConfiguration",
                 _ => "None"
             }
@@ -132,6 +146,11 @@ public sealed partial class EfSchoolApplicationStore(MakanDbContext db, Commerci
     {
         _ = await db.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={actor.UserId}").AsNoTracking().Select(u => u.Id).SingleAsync(ct);
         await actors.EnsureAsync(actor.UserId, actor.SessionId, ct);
+    }
+    private async Task EligibleManager(Guid? id, CancellationToken ct)
+    {
+        var manager = await db.Users.FromSqlInterpolated($"SELECT * FROM [identity].[Users] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={id}").AsNoTracking().SingleOrDefaultAsync(ct);
+        if (!SchoolInitialManagerPolicy.IsEligible(manager)) throw Error(SchoolApplicationErrorCodes.InitialManagerInvalid);
     }
     private async Task<SchoolApplication> Locked(SchoolApplicationActor actor, Guid id, bool reviewer, CancellationToken ct) =>
         await db.SchoolApplications.FromSqlInterpolated($"SELECT * FROM [organization].[SchoolApplications] WITH (UPDLOCK,HOLDLOCK) WHERE [Id]={id}")

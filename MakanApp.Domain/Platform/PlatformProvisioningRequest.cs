@@ -24,6 +24,7 @@ public sealed class PlatformProvisioningRequest
     public Guid Id { get; private set; }
     public Guid? SchoolApplicationId { get; private set; }
     public Guid? SourceOrderId { get; private set; }
+    public Guid? SourcePaymentId { get; private set; }
     public string ClientOperationId { get; private set; } = string.Empty;
     public Guid RequestedByUserId { get; private set; }
     public string OrganizationName { get; private set; } = string.Empty;
@@ -108,6 +109,37 @@ public sealed class PlatformProvisioningRequest
         request.SchoolApplicationId = schoolApplicationId; request.SourceOrderId = orderId;
         request.MarkNeedsAttention("INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED", now);
         return request;
+    }
+
+    public static PlatformProvisioningRequest ForPaidSchool(Guid applicationId, Guid orderId, Guid paymentId,
+        Guid reviewerId, Guid managerId, string schoolName, Guid planVersionId, DateTime now)
+    {
+        EnsureIdentifier(applicationId, nameof(applicationId)); EnsureIdentifier(orderId, nameof(orderId));
+        var request = Create("school-payment:" + orderId.ToString("N"), reviewerId, schoolName, planVersionId, null, null, null,
+            "آماده‌سازی درخواست تأسیس پس از تأیید مدیر و پرداخت بانکی", now);
+        request.SchoolApplicationId = applicationId; request.SourceOrderId = orderId;
+        request.ConfirmSchoolManager(managerId, reviewerId, paymentId, now);
+        return request;
+    }
+
+    public void ConfirmSchoolManager(Guid managerId, Guid reviewerId, Guid paymentId, DateTime now)
+    {
+        EnsureUtc(now, nameof(now)); EnsureIdentifier(managerId, nameof(managerId)); EnsureIdentifier(reviewerId, nameof(reviewerId));
+        EnsureIdentifier(paymentId, nameof(paymentId));
+        if (!SchoolApplicationId.HasValue || !SourceOrderId.HasValue ||
+            InitialManagerUserId.HasValue && InitialManagerUserId != managerId || SourcePaymentId.HasValue && SourcePaymentId != paymentId ||
+            !InitialManagerUserId.HasValue && (OrganizationId.HasValue || SubscriptionId.HasValue || ManagerInvitationId.HasValue))
+            throw new InvalidOperationException("انتخاب منجمد مدیر یا مرجع پرداخت قابل جایگزینی نیست.");
+        InitialManagerUserId = managerId; RequestedByUserId = reviewerId; SourcePaymentId = paymentId;
+        Resume(now);
+    }
+
+    public void SetSchoolInvitationExpiry(DateTime expiresAtUtc, DateTime now)
+    {
+        if (!SchoolApplicationId.HasValue || !InitialManagerUserId.HasValue || ManagerInvitationId.HasValue)
+            throw new InvalidOperationException("زمان دعوت فقط پیش از ایجاد دعوت آموزشگاه تعیین می‌شود.");
+        EnsureUtc(now, nameof(now)); EnsureOptionalFutureUtc(expiresAtUtc, now, nameof(expiresAtUtc));
+        InvitationExpiresAtUtc ??= expiresAtUtc;
     }
 
     public void MarkOrganizationCreated(Guid organizationId, DateTime updatedAtUtc)

@@ -23,7 +23,9 @@ public enum OrderFulfillmentState
     NotStarted = 1,
     SubscriptionActivationPending = 2,
     SubscriptionActivated = 3,
-    ProvisioningPending = 4
+    ProvisioningPending = 4,
+    ProvisioningCompleted = 5,
+    ProvisioningNeedsAttention = 6
 }
 
 public sealed record PaymentAttemptDto(

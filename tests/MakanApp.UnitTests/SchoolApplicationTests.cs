@@ -20,7 +20,7 @@ public sealed class SchoolApplicationTests
         app.Submit("approved-policy", now, documents); app.StartReview(now); app.Decide(SchoolApplicationStatus.NeedsChanges, now);
         app.UpdateDraft(app.DraftData() with { StudentCapacity = 38 }, now);
         Assert.Equal(38, app.StudentCapacity); Assert.Equal(0, app.TeacherCapacity); Assert.Equal(3, app.Revision);
-        app.Submit("approved-policy", now, documents); app.StartReview(now); app.Decide(SchoolApplicationStatus.Approved, now);
+        app.Submit("approved-policy", now, documents); app.StartReview(now); app.Decide(SchoolApplicationStatus.Approved, now, app.ApplicantUserId, Guid.NewGuid());
         Assert.Throws<InvalidOperationException>(() => app.UpdateDraft(new(null, null, null, null, null, null, null), now));
         Assert.Throws<InvalidOperationException>(() => app.Decide(SchoolApplicationStatus.NeedsChanges, now));
         Assert.Throws<InvalidOperationException>(() => app.Cancel(now));

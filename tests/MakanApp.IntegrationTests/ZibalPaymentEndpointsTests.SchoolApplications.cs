@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using MakanApp.Application.Commerce;
+using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Commerce;
@@ -22,6 +23,8 @@ public sealed partial class ZibalPaymentEndpointsTests
         var stub = new ZibalStub(); using var host = Host(stub: stub, failActivationOnce: failOnce);
         using var owner = Client(host); using var admin = Client(host);
         var ownerId = await AuthenticateAsync(owner); var adminId = await AuthenticateAsync(admin);
+        using var profile = await owner.PatchAsJsonAsync("/api/v1/me/profile", new CompleteProfileCommand("School", "Manager", null, "zschool." + Guid.NewGuid().ToString("N")[..20]), JsonOptions);
+        profile.EnsureSuccessStatusCode();
         await factory.ResetPlatformIamAsync(); await factory.BootstrapPlatformOwnerAsync(adminId);
         using var form = new MultipartFormDataContent();
         var bytes = new ByteArrayContent("synthetic school license"u8.ToArray()); bytes.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
@@ -32,7 +35,7 @@ public sealed partial class ZibalPaymentEndpointsTests
                 new("مدرسه آزمون زیبال", "مؤسسه ساختگی", null, null, null, 0, 0), [new(file.Id, "License")]), JsonOptions));
         app = await ReadAsync<SchoolApplicationResult>(await owner.PostAsJsonAsync($"/api/v1/school-applications/{app.Id}/submit", new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version), JsonOptions));
         app = await ReadAsync<SchoolApplicationResult>(await admin.PostAsJsonAsync($"/api/admin/v1/school-applications/{app.Id}/review", new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "شروع بررسی آزمون"), JsonOptions));
-        app = await ReadAsync<SchoolApplicationResult>(await admin.PostAsJsonAsync($"/api/admin/v1/school-applications/{app.Id}/decisions", new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تأیید آزمون", SchoolApplicationStatus.Approved), JsonOptions));
+        app = await ReadAsync<SchoolApplicationResult>(await admin.PostAsJsonAsync($"/api/admin/v1/school-applications/{app.Id}/decisions", new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تأیید آزمون", SchoolApplicationStatus.Approved, ownerId), JsonOptions));
         Guid planVersionId = default; long mappingVersion = 0;
         await WithDb(async db => {
             var now = factory.Clock.GetUtcNow().UtcDateTime;
@@ -52,8 +55,13 @@ public sealed partial class ZibalPaymentEndpointsTests
         Assert.Equal(31000, created.Order.Amount); Assert.Equal(planVersionId, created.Order.PlanVersionId); Assert.Equal(app.Id, created.Order.SchoolApplicationId);
         var attempt = await ReadAsync<InitiatePaymentResult>(await owner.PostAsJsonAsync($"/api/v1/commerce/personal/orders/{created.Order.OrderId}/payments", new InitiatePaymentCommand(Guid.NewGuid()), JsonOptions));
         _activationFailureTarget = created.Order.OrderId;
-        using var callback = await owner.GetAsync(Callback(attempt.PaymentAttempt)); Assert.Equal(HttpStatusCode.SeeOther, callback.StatusCode);
-        using var repeated = await owner.GetAsync(Callback(attempt.PaymentAttempt)); Assert.Equal(HttpStatusCode.SeeOther, repeated.StatusCode);
+        for (var index = 0; index < 10; index++)
+        {
+            using var callback = await owner.GetAsync(Callback(attempt.PaymentAttempt));
+            Assert.Equal(HttpStatusCode.SeeOther, callback.StatusCode);
+        }
+        var verifications = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => owner.PostAsync(VerifyRoute(attempt.PaymentAttempt), null)));
+        foreach (var verification in verifications) { verification.EnsureSuccessStatusCode(); verification.Dispose(); }
         var receipt = await ReadAsync<PaymentReceiptDto>(await owner.GetAsync($"/api/v1/commerce/personal/orders/{created.Order.OrderId}/receipt"));
         Assert.Equal(31000, receipt.Amount); Assert.Equal(OrderFulfillmentState.ProvisioningPending, receipt.FulfillmentState);
         await using (var scope = host.Services.CreateAsyncScope())
@@ -72,10 +80,12 @@ public sealed partial class ZibalPaymentEndpointsTests
         Assert.Equal(1, stub.RequestCount); Assert.Equal(1, stub.VerifyCount);
         await WithDb(async db => {
             var intent = Assert.Single(await db.PlatformProvisioningRequests.Where(p => p.SchoolApplicationId == app.Id).ToArrayAsync());
-            Assert.Equal(created.Order.OrderId, intent.SourceOrderId); Assert.Equal("INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED", intent.FailureCode);
-            Assert.Null(intent.OrganizationId); Assert.Null(intent.InitialManagerUserId);
+            Assert.Equal(created.Order.OrderId, intent.SourceOrderId); Assert.Null(intent.FailureCode);
+            Assert.NotNull(intent.OrganizationId); Assert.Equal(ownerId, intent.InitialManagerUserId);
+            Assert.Equal(MakanApp.Domain.Platform.PlatformProvisioningStatus.Completed, intent.Status);
+            Assert.NotNull(intent.ManagerInvitationId); Assert.NotNull(intent.SourcePaymentId);
             Assert.Equal(1, await db.Payments.CountAsync(p => p.OrderId == created.Order.OrderId));
-            Assert.False(await db.Subscriptions.AnyAsync(s => s.SourceOrderId == created.Order.OrderId));
+            Assert.Equal(1, await db.Subscriptions.CountAsync(s => s.SourceOrderId == created.Order.OrderId));
             Assert.False(await db.Memberships.AnyAsync(m => m.UserId == ownerId));
         });
     }

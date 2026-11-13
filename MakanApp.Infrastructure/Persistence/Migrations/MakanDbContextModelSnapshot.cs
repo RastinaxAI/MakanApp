@@ -7791,6 +7791,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Guid?>("FinalInitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("InitialManagerConfirmedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("InitialManagerConfirmedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Kind")
                         .HasColumnType("int");
 
@@ -7840,6 +7849,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FinalInitialManagerUserId");
+
+                    b.HasIndex("InitialManagerConfirmedByUserId");
+
                     b.HasIndex("ApplicantUserId", "UpdatedAtUtc");
 
                     b.HasIndex("Status", "UpdatedAtUtc");
@@ -7872,8 +7885,17 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<long?>("ApplicationVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("FinalInitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ProposedInitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ReviewerUserId")
                         .HasColumnType("uniqueidentifier");
@@ -7885,6 +7907,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FinalInitialManagerUserId");
+
+                    b.HasIndex("ProposedInitialManagerUserId");
 
                     b.HasIndex("ReviewerUserId");
 
@@ -7935,8 +7961,14 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ApplicationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("FinalInitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ProposedInitialManagerUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(2000)
@@ -7954,6 +7986,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActorUserId");
+
+                    b.HasIndex("FinalInitialManagerUserId");
+
+                    b.HasIndex("ProposedInitialManagerUserId");
 
                     b.HasIndex("ApplicationId", "Version")
                         .IsUnique();
@@ -8381,6 +8417,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("SourceOrderId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("SourcePaymentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -8403,7 +8442,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ManagerInvitationId");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("OrganizationId")
+                        .IsUnique()
+                        .HasFilter("[SchoolApplicationId] IS NOT NULL AND [OrganizationId] IS NOT NULL");
 
                     b.HasIndex("PlanVersionId");
 
@@ -8416,6 +8457,10 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasIndex("SourceOrderId")
                         .IsUnique()
                         .HasFilter("[SourceOrderId] IS NOT NULL");
+
+                    b.HasIndex("SourcePaymentId")
+                        .IsUnique()
+                        .HasFilter("[SourcePaymentId] IS NOT NULL");
 
                     b.HasIndex("SubscriptionId");
 
@@ -11945,10 +11990,30 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ApplicantUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("FinalInitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("InitialManagerConfirmedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationDecision", b =>
                 {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("FinalInitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ProposedInitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MakanApp.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("ReviewerUserId")
@@ -11990,6 +12055,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ApplicationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("FinalInitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("ProposedInitialManagerUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("MakanApp.Domain.Organization.SchoolApplicationOperation", b =>
@@ -12075,6 +12150,11 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.HasOne("MakanApp.Domain.Commerce.Order", null)
                         .WithMany()
                         .HasForeignKey("SourceOrderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Commerce.Payment", null)
+                        .WithMany()
+                        .HasForeignKey("SourcePaymentId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Commerce.Subscription", null)

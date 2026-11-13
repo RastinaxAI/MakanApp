@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using MakanApp.Application.Commerce;
+using MakanApp.Application.Identity;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Platform;
 using MakanApp.Domain.Commerce;
@@ -19,14 +20,19 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         return await PostAsync<SchoolApplicationResult>(actor.Client, "/api/v1/school-applications", new CreateSchoolApplicationCommand(Guid.NewGuid(), kind,
             new("مدرسه آزمون", "مؤسسه آزمون", "سابقه آزمون", "نمونه آزمون", null, 0, 0), [new(file.Id, kind == SchoolApplicationKind.LegalOrganization ? "License" : "Degree")]));
     }
-    private Task<SchoolApplicationResult> SchoolAction(TestActor actor, SchoolApplicationResult app, string action, string? reason = null, SchoolApplicationStatus? decision = null) =>
+    private Task<SchoolApplicationResult> SchoolAction(TestActor actor, SchoolApplicationResult app, string action, string? reason = null, SchoolApplicationStatus? decision = null, Guid? managerId = null) =>
         PostAsync<SchoolApplicationResult>(actor.Client, $"/api/{(action is "review" or "decisions" ? "admin/" : "")}v1/school-applications/{app.Id}/{action}",
-            new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, reason, decision));
+            new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, reason, decision, managerId));
+    private static async Task CompleteSchoolManagerAsync(TestActor actor)
+    {
+        using var response = await actor.Client.PatchAsJsonAsync("/api/v1/me/profile", new CompleteProfileCommand("School", "Manager", null, "school." + Guid.NewGuid().ToString("N")[..20]), Json);
+        response.EnsureSuccessStatusCode();
+    }
     private async Task<SchoolApplicationResult> ApprovedSchoolAsync(TestActor owner, TestActor admin, SchoolApplicationKind kind = SchoolApplicationKind.LegalOrganization)
     {
-        var app = await SchoolDraftAsync(owner, kind);
+        await CompleteSchoolManagerAsync(owner); var app = await SchoolDraftAsync(owner, kind);
         app = await SchoolAction(owner, app, "submit"); app = await SchoolAction(admin, app, "review", "شروع بررسی آزمون");
-        return await SchoolAction(admin, app, "decisions", "تأیید آزمون", SchoolApplicationStatus.Approved);
+        return await SchoolAction(admin, app, "decisions", "تأیید آزمون", SchoolApplicationStatus.Approved, owner.UserId);
     }
 
     [Theory]
@@ -56,7 +62,8 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         app = (await update.Content.ReadFromJsonAsync<SchoolApplicationResult>(Json))!;
         Assert.Equal(2, app.Revision); Assert.Equal(file, Assert.Single(app.Documents).FileAssetId);
         app = await SchoolAction(owner, app, "submit"); app = await SchoolAction(admin, app, "review", "بررسی نسخه جدید");
-        var decision = new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تأیید پس از اصلاح", SchoolApplicationStatus.Approved);
+        await CompleteSchoolManagerAsync(owner);
+        var decision = new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تأیید پس از اصلاح", SchoolApplicationStatus.Approved, owner.UserId);
         app = await PostAsync<SchoolApplicationResult>(admin.Client, $"/api/admin/v1/school-applications/{app.Id}/decisions", decision);
         var duplicate = await PostAsync<SchoolApplicationResult>(admin.Client, $"/api/admin/v1/school-applications/{app.Id}/decisions", decision);
         Assert.Equal(app.Version, duplicate.Version); Assert.False(app.CanEdit); Assert.False(app.CanCancel);
@@ -87,8 +94,9 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         await WithDb(async db => Assert.Equal(1, await db.SchoolApplicationRevisions.CountAsync(r => r.ApplicationId == app.Id)));
     }
 
-    [Fact]
-    public async Task SchoolApplicationConcurrentDecisionsHaveOneWinnerAndNoDuplicateHistory()
+    [Theory]
+    [InlineData(false)] [InlineData(true)]
+    public async Task SchoolApplicationConcurrentDecisionsHaveOneWinnerAndNoDuplicateHistory(bool crossReviewerTargets)
     {
         var admin = await AdminAsync(); var owner = await ActorAsync(); var app = await SchoolDraftAsync(owner);
         var otherReviewer = await ActorAsync();
@@ -96,9 +104,11 @@ public sealed partial class CommercialSubscriptionEndpointsTests
             new GrantPlatformRoleCommand(otherReviewer.UserId, PlatformRoleKeys.PlatformOwner, "دومین بازبین مستقل آزمون رقابت"), Json);
         grant.EnsureSuccessStatusCode();
         app = await SchoolAction(owner, app, "submit"); app = await SchoolAction(admin, app, "review", "شروع بررسی");
-        var actions = new[] { (Actor: admin, Decision: SchoolApplicationStatus.Approved), (Actor: otherReviewer, Decision: SchoolApplicationStatus.Rejected) };
+        await CompleteSchoolManagerAsync(owner); await CompleteSchoolManagerAsync(otherReviewer); await CompleteSchoolManagerAsync(admin);
+        var actions = new[] { (Actor: admin, Manager: crossReviewerTargets ? otherReviewer.UserId : owner.UserId),
+            (Actor: otherReviewer, Manager: crossReviewerTargets ? admin.UserId : otherReviewer.UserId) };
         var responses = await Task.WhenAll(actions.Select(a => a.Actor.Client.PostAsJsonAsync($"/api/admin/v1/school-applications/{app.Id}/decisions",
-            new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تصمیم هم‌زمان آزمون", a.Decision), Json)));
+            new SchoolApplicationActionCommand(Guid.NewGuid(), app.Version, "تصمیم هم‌زمان آزمون", SchoolApplicationStatus.Approved, a.Manager), Json)));
         Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK); Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
         foreach (var response in responses) response.Dispose();
         await WithDb(async db => { Assert.Equal(2, await db.SchoolApplicationDecisions.CountAsync(d => d.ApplicationId == app.Id)); Assert.Equal(4, await db.SchoolApplicationHistories.CountAsync(h => h.ApplicationId == app.Id)); });
@@ -211,16 +221,27 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         Assert.Equal("Paid", pending.Progress!.PaymentState); Assert.Equal("PaidAwaitingProvisioning", pending.Progress.ProvisioningState);
         await factory.DrainNotificationOutboxAsync(); await factory.DrainNotificationOutboxAsync();
         var paid = await GetAsync<SchoolApplicationResult>(owner.Client, $"/api/v1/school-applications/{app.Id}");
-        Assert.Equal("BlockedManagerPolicy", paid.Progress!.ProvisioningState); Assert.NotNull(paid.Progress.ProvisioningRequestId);
-        Assert.Null(paid.Progress.OrganizationId); Assert.Null(paid.Progress.SubscriptionId);
+        Assert.Equal("Completed", paid.Progress!.ProvisioningState); Assert.NotNull(paid.Progress.ProvisioningRequestId);
+        Assert.NotNull(paid.Progress.OrganizationId); Assert.NotNull(paid.Progress.SubscriptionId); Assert.NotNull(paid.Progress.ManagerInvitationId);
+        Assert.Equal("Ready", paid.NextAction); Assert.Equal(owner.UserId, paid.FinalInitialManagerUserId);
+        Assert.Equal("IRR", paid.Progress.Currency); Assert.Equal(23000, paid.Progress.Amount); Assert.Equal(version, paid.Progress.PlanVersionId);
+        var commercial = await GetAsync<CommercialSummaryDto>(admin.Client, $"/api/admin/v1/commerce/organizations/{paid.Progress.OrganizationId}/subscription");
+        Assert.True(commercial.HasVerifiedCommercialContract); Assert.True(commercial.CommercialControlEnabled);
+        Assert.True(commercial.Entitlements[EntitlementKey.Academic]); Assert.Equal(version, commercial.PlanVersionId);
+        Assert.Equal(5, commercial.Quotas.Single(q => q.Key == QuotaKey.ActiveLearners).Limit);
         await WithDb(async db => {
             Assert.Equal(1, await db.Orders.CountAsync(o => o.SchoolApplicationId == app.Id));
             Assert.True(await db.AdminAuditLogs.AnyAsync(a => a.Action == "school_offering.Configured" && a.ActorUserId == admin.UserId && a.Reason == mapping.Reason));
             Assert.Equal(1, await db.Payments.CountAsync(p => p.OrderId == created.Order.OrderId));
             Assert.Equal(1, await db.PlatformProvisioningRequests.CountAsync(p => p.SchoolApplicationId == app.Id && p.SourceOrderId == created.Order.OrderId));
-            Assert.False(await db.Subscriptions.AnyAsync(s => s.SourceOrderId == created.Order.OrderId));
+            var subscription = Assert.Single(await db.Subscriptions.Where(s => s.SourceOrderId == created.Order.OrderId).ToArrayAsync());
+            Assert.True(subscription.CommercialControlEnabled); Assert.NotNull(subscription.EndsAtUtc); Assert.Equal(version, subscription.PlanVersionId);
+            Assert.Equal(paid.Progress.OrganizationId, subscription.OrganizationId);
             Assert.Equal(1, await db.Memberships.CountAsync(m => m.UserId == owner.UserId));
         });
+        using var accept = await owner.Client.PostAsync($"/api/v1/invitations/{paid.Progress.ManagerInvitationId}/accept", null); accept.EnsureSuccessStatusCode();
+        using var acceptRetry = await owner.Client.PostAsync($"/api/v1/invitations/{paid.Progress.ManagerInvitationId}/accept", null); acceptRetry.EnsureSuccessStatusCode();
+        await WithDb(async db => Assert.Equal(1, await db.Memberships.CountAsync(m => m.UserId == owner.UserId && m.OrganizationId == paid.Progress.OrganizationId)));
     }
 
     [Theory]

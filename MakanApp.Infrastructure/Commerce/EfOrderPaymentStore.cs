@@ -141,13 +141,16 @@ public sealed partial class EfOrderPaymentStore(
             .ToHashSetAsync(cancellationToken);
         activatedOrders.UnionWith(await dbContext.SubscriptionAmendments.Where(a => orderIds.Contains(a.OrderId))
             .Select(a => a.OrderId).ToArrayAsync(cancellationToken));
+        var schoolStates = await dbContext.PlatformProvisioningRequests.AsNoTracking()
+            .Where(p => p.SourceOrderId.HasValue && orderIds.Contains(p.SourceOrderId.Value))
+            .ToDictionaryAsync(p => p.SourceOrderId!.Value, p => p.Status, cancellationToken);
 
         return orders.Select(order => MapOrder(
             order,
             attempts.Where(attempt => attempt.OrderId == order.Id)
                 .Select(attempt => MapAttempt(attempt, order))
                 .ToArray(),
-            activatedOrders.Contains(order.Id))).ToArray();
+            activatedOrders.Contains(order.Id), schoolStates.TryGetValue(order.Id, out var state) ? state : null)).ToArray();
     }
 
     public async Task<CreatePaymentAttemptStoreResult> CreatePaymentAttemptAsync(
@@ -594,16 +597,20 @@ public sealed partial class EfOrderPaymentStore(
                             .AsNoTracking()
                             .AnyAsync(subscription => subscription.SourceOrderId == order.Id, cancellationToken)
                          || await dbContext.SubscriptionAmendments.AnyAsync(a => a.OrderId == order.Id, cancellationToken));
+        var schoolStatus = order.SchoolApplicationId.HasValue
+            ? await dbContext.PlatformProvisioningRequests.Where(p => p.SourceOrderId == order.Id)
+                .Select(p => (MakanApp.Domain.Platform.PlatformProvisioningStatus?)p.Status).SingleOrDefaultAsync(cancellationToken)
+            : null;
         return MapOrder(
             order,
             attempts.Select(attempt => MapAttempt(attempt, order)).ToArray(),
-            activated);
+            activated, schoolStatus);
     }
 
     private static OrderPaymentSnapshot MapOrder(
         Order order,
         IReadOnlyCollection<PaymentAttemptSnapshot> attempts,
-        bool activated) =>
+        bool activated, MakanApp.Domain.Platform.PlatformProvisioningStatus? schoolStatus = null) =>
         new(
             order.Id,
             order.PurchaserUserId,
@@ -614,7 +621,7 @@ public sealed partial class EfOrderPaymentStore(
             order.Currency,
             order.CreatedAtUtc,
             order.PaidAtUtc,
-            FulfillmentState(order, activated),
+            FulfillmentState(order, activated, schoolStatus),
             attempts)
         {
             SchoolApplicationId = order.SchoolApplicationId,
@@ -643,14 +650,21 @@ public sealed partial class EfOrderPaymentStore(
             VerifiedAtUtc = attempt.VerifiedAtUtc
         };
 
-    private static OrderFulfillmentState FulfillmentState(Order order, bool activated)
+    private static OrderFulfillmentState FulfillmentState(Order order, bool activated, MakanApp.Domain.Platform.PlatformProvisioningStatus? schoolStatus)
     {
         if (order.Status != OrderStatus.Paid)
         {
             return OrderFulfillmentState.NotStarted;
         }
 
-        if (order.SchoolApplicationId.HasValue || !order.OrganizationId.HasValue && !order.HasCommercialTerms)
+        if (order.SchoolApplicationId.HasValue)
+            return schoolStatus switch
+            {
+                MakanApp.Domain.Platform.PlatformProvisioningStatus.Completed => OrderFulfillmentState.ProvisioningCompleted,
+                MakanApp.Domain.Platform.PlatformProvisioningStatus.NeedsAttention => OrderFulfillmentState.ProvisioningNeedsAttention,
+                _ => OrderFulfillmentState.ProvisioningPending
+            };
+        if (!order.OrganizationId.HasValue && !order.HasCommercialTerms)
         {
             return OrderFulfillmentState.ProvisioningPending;
         }

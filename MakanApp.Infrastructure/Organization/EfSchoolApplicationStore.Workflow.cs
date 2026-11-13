@@ -41,7 +41,8 @@ public sealed partial class EfSchoolApplicationStore
         var total = await query.CountAsync(ct);
         var items = await query.OrderByDescending(h => h.OccurredAtUtc).ThenByDescending(h => h.Version).ThenBy(h => h.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(h => new SchoolApplicationHistoryResult(h.Id, h.Action, h.Revision, h.Version, h.Status, h.Reason, h.OccurredAtUtc, reviewer ? h.ActorUserId : null)).ToArrayAsync(ct);
+            .Select(h => new SchoolApplicationHistoryResult(h.Id, h.Action, h.Revision, h.Version, h.Status, h.Reason, h.OccurredAtUtc, reviewer ? h.ActorUserId : null)
+            { ProposedInitialManagerUserId = h.ProposedInitialManagerUserId, FinalInitialManagerUserId = h.FinalInitialManagerUserId }).ToArrayAsync(ct);
         return new(items, total, page, pageSize);
     }
 
@@ -50,9 +51,18 @@ public sealed partial class EfSchoolApplicationStore
         var order = await db.Orders.AsNoTracking().SingleOrDefaultAsync(o => o.SchoolApplicationId == app.Id && o.Status != MakanApp.Domain.Commerce.OrderStatus.Cancelled, ct);
         var request = await db.PlatformProvisioningRequests.AsNoTracking().SingleOrDefaultAsync(p => p.SchoolApplicationId == app.Id, ct);
         var configured = await db.SchoolEstablishmentOfferings.AnyAsync(o => o.Kind == app.Kind, ct);
+        var versionId = order?.PlanVersionId ?? await db.SchoolEstablishmentOfferings.Where(o => o.Kind == app.Kind).Select(o => (Guid?)o.PlanVersionId).SingleOrDefaultAsync(ct);
+        var terms = await db.PlanVersions.AsNoTracking().Where(v => v.Id == versionId)
+            .Join(db.Plans, v => v.PlanId, p => p.Id, (v, p) => new { p.Code, v.Price }).SingleOrDefaultAsync(ct);
+        var payment = order is null ? null : await db.Payments.AsNoTracking().SingleOrDefaultAsync(p => p.OrderId == order.Id, ct);
         return new(order is not null ? "FrozenOnOrder" : configured ? "Configured" : "BlockedConfiguration", order?.Id, order?.Status.ToString(),
             request?.FailureCode == "INITIAL_SCHOOL_MANAGER_POLICY_REQUIRED" ? "BlockedManagerPolicy" : request?.Status.ToString() ??
                 (order?.Status == MakanApp.Domain.Commerce.OrderStatus.Paid ? "PaidAwaitingProvisioning" : "NotStarted"),
-            request?.Id, request?.OrganizationId, request?.SubscriptionId);
+            request?.Id, request?.OrganizationId, request?.SubscriptionId)
+        {
+            PlanCode = terms?.Code, PlanVersionId = versionId, Amount = order?.Amount ?? terms?.Price?.Amount,
+            Currency = (order?.Currency ?? terms?.Price?.Currency)?.ToString().ToUpperInvariant(), PaymentId = payment?.Id,
+            ManagerInvitationId = request?.ManagerInvitationId, ManagerInvitationExpiresAtUtc = request?.InvitationExpiresAtUtc, FailureCode = request?.FailureCode
+        };
     }
 }

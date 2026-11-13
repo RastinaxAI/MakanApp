@@ -18,6 +18,9 @@ public sealed class SchoolApplicationConfiguration : IEntityTypeConfiguration<Sc
             t.HasCheckConstraint("CK_SchoolApplications_SubmissionPolicy", "[Status] IN (1,7) OR [SubmittedPolicyVersion] IS NOT NULL");
         });
         b.HasKey(a => a.Id); b.Property(a => a.RowVersion).IsRowVersion();
+        b.Ignore(a => a.ProposedInitialManagerUserId);
+        b.HasOne<User>().WithMany().HasForeignKey(a => a.FinalInitialManagerUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(a => a.InitialManagerConfirmedByUserId).OnDelete(DeleteBehavior.Restrict);
         b.Property(a => a.SchoolName).HasMaxLength(200); b.Property(a => a.LegalEntityName).HasMaxLength(200);
         b.Property(a => a.TeachingHistory).HasMaxLength(4000); b.Property(a => a.WorkSamples).HasMaxLength(4000);
         b.Property(a => a.DegreeField).HasMaxLength(500); b.Property(a => a.SubmittedPolicyVersion).HasMaxLength(100);
@@ -33,6 +36,8 @@ public sealed class SchoolApplicationHistoryConfiguration : IEntityTypeConfigura
         b.Property(h => h.Action).HasMaxLength(100); b.Property(h => h.Reason).HasMaxLength(2000);
         b.HasOne<SchoolApplication>().WithMany().HasForeignKey(h => h.ApplicationId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<User>().WithMany().HasForeignKey(h => h.ActorUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(h => h.ProposedInitialManagerUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(h => h.FinalInitialManagerUserId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(h => new { h.ApplicationId, h.Version }).IsUnique();
     }
 }
@@ -63,6 +68,8 @@ public sealed class SchoolApplicationDecisionConfiguration : IEntityTypeConfigur
         b.ToTable("SchoolApplicationDecisions", "organization"); b.HasKey(d => d.Id); b.Property(d => d.ApplicantFeedback).HasMaxLength(2000);
         b.HasOne<SchoolApplicationRevision>().WithMany().HasForeignKey(d => new { d.ApplicationId, d.Revision }).HasPrincipalKey(r => new { r.ApplicationId, r.Number }).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<User>().WithMany().HasForeignKey(d => d.ReviewerUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(d => d.ProposedInitialManagerUserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<User>().WithMany().HasForeignKey(d => d.FinalInitialManagerUserId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(d => new { d.ApplicationId, d.OccurredAtUtc });
     }
 }

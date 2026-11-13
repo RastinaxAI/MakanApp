@@ -18,6 +18,9 @@ public sealed class PlatformProvisioningRequestConfiguration
         builder.HasKey(item => item.Id);
         builder.HasOne<MakanApp.Domain.Organization.SchoolApplication>().WithMany().HasForeignKey(p => p.SchoolApplicationId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Order>().WithMany().HasForeignKey(p => p.SourceOrderId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Payment>().WithMany().HasForeignKey(p => p.SourcePaymentId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(p => p.SourcePaymentId).IsUnique().HasFilter("[SourcePaymentId] IS NOT NULL");
+        builder.HasIndex(p => p.OrganizationId).IsUnique().HasFilter("[SchoolApplicationId] IS NOT NULL AND [OrganizationId] IS NOT NULL");
         builder.HasIndex(p => p.SchoolApplicationId).IsUnique().HasFilter("[SchoolApplicationId] IS NOT NULL");
         builder.HasIndex(p => p.SourceOrderId).IsUnique().HasFilter("[SourceOrderId] IS NOT NULL");
         builder.Property(item => item.ClientOperationId)

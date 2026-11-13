@@ -97,7 +97,13 @@ public static class DependencyInjection
         services.AddScoped<IPlatformPermissionResolver>(serviceProvider =>
             serviceProvider.GetRequiredService<PlatformIamService>());
         services.AddScoped<IPlatformBootstrapService, PlatformBootstrapService>();
-        services.AddScoped<IPlatformOperationsStore, EfPlatformOperationsStore>();
+        services.AddOptions<SchoolProvisioningOptions>()
+            .Bind(configuration.GetSection(SchoolProvisioningOptions.SectionName))
+            .Validate(o => o.InitialManagerInvitationLifetimeDays is >= 1 and <= 30,
+                "مدت دعوت مدیر اولیه باید بین ۱ تا ۳۰ روز باشد.").ValidateOnStart();
+        services.AddScoped<EfPlatformOperationsStore>();
+        services.AddScoped<IPlatformOperationsStore>(sp => sp.GetRequiredService<EfPlatformOperationsStore>());
+        services.AddScoped<ISchoolProvisioningWorkHandler>(sp => sp.GetRequiredService<EfPlatformOperationsStore>());
         services.AddScoped<IPlatformOperationsService, PlatformOperationsService>();
         services.AddScoped<IPlatformEducationSafetyStore, EfPlatformEducationSafetyStore>();
         services.AddScoped<IPlatformEducationSafetyService, PlatformEducationSafetyService>();

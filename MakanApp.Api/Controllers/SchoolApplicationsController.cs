@@ -49,6 +49,12 @@ public sealed class PlatformSchoolApplicationsController(SchoolApplicationServic
     public async Task<ActionResult<SchoolApplicationResult>> StartReview(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.ReviewAsync(Actor(), id, command, true, ct));
     [HttpPost("{id:guid}/decisions"), Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsReview)]
     public async Task<ActionResult<SchoolApplicationResult>> Decide(Guid id, SchoolApplicationActionCommand command, CancellationToken ct) => Ok(await service.ReviewAsync(Actor(), id, command, false, ct));
+    [HttpPost("{id:guid}/initial-manager/confirm"), Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsReview), Authorize(Policy = PlatformPermissionKeys.ProvisioningManage)]
+    public async Task<ActionResult<SchoolApplicationResult>> ConfirmInitialManager(Guid id, SchoolInitialManagerCommand command, CancellationToken ct) =>
+        Ok(await service.ConfirmInitialManagerAsync(Actor(), id, command, ct));
+    [HttpPost("{id:guid}/provisioning/retry"), Authorize(Policy = PlatformPermissionKeys.SchoolApplicationsReview), Authorize(Policy = PlatformPermissionKeys.ProvisioningManage)]
+    public async Task<ActionResult<SchoolApplicationResult>> RetryProvisioning(Guid id, SchoolProvisioningRetryCommand command, CancellationToken ct) =>
+        Ok(await service.RetryProvisioningAsync(Actor(), id, command, ct));
     [HttpGet("{id:guid}/history")]
     public async Task<ActionResult<SchoolApplicationHistoryPage>> History(Guid id, CancellationToken ct, [FromQuery] int page = 1, [FromQuery] int pageSize = 50) =>
         Ok(await service.HistoryAsync(Actor(), id, true, page, pageSize, ct));
