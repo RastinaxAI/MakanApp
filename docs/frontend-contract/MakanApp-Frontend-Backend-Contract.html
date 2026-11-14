@@ -1593,7 +1593,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#heading-1389">کدهای خطای تعریف‌شده</a></li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ a639319b70d7c07db3588cd91d674aed339c1756</code><br>تاریخ بازبینی: <code>2026-11-14</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code><br>تاریخ بازبینی: <code>2026-11-15</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
 <li><a href="#heading-1">قرارداد مشترک انتقال و مجوز</a></li>
 <li><a href="#heading-2">ورود، نشست و OTP</a></li>
@@ -3174,8 +3174,8 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <blockquote>
 <p>قراردادهای تازه در <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">تحویل v6</a>، <a href="../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md">Personal AI</a> و <a href="../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md">درخواست آموزشگاه</a> است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.</p>
 </blockquote>
-<p>بازبینی <code>2026-11-14</code> با مبنای Git <code>source@a639319b70d7c07db3588cd91d674aed339c1756</code> و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.</p>
-<p>پوشش جاری: 494 عملیات HTTP در 438 مسیر، 91 Controller، 783 schema، 151 جدول و 74 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.</p>
+<p>بازبینی <code>2026-11-15</code> با مبنای Git <code>source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code> و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.</p>
+<p>پوشش جاری: 494 عملیات HTTP در 438 مسیر، 91 Controller، 783 schema، 151 جدول و 75 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.</p>
 <ul>
 <li><a href="MakanApp-Frontend-Backend-Contract.html">HTML مستقل</a> و <a href="MakanApp-Frontend-Backend-Contract.pdf">PDF</a>: قرارداد جاری و کاتالوگ کامل API.</li>
 <li><a href="../backend-api-reference.html">مرجع Markdown قراردادها</a>، <a href="../backend-api-guide.html">راهنمای جریان کد</a>، <a href="../database-current-structure.html">ساختار دیتابیس</a>.</li>
@@ -3214,7 +3214,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p>SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرجع پیام و read-state هستند. TypingChanged و PresenceChanged hint گذرا با TTL و privacy جاری‌اند، نه Message/Delta. handler فقط Bearer header می‌خواند؛ browser از LongPolling و withCredentials:false طبق allowlist میزبان استفاده کند. reconnect نیازمند ثبت دوباره subscriptionهای لازم و replay حساب از cursor ذخیره‌شده است؛ Delta گفتگو نیز مستقل حفظ شده است. backplane و ephemeral state مشترک چند instance فراهم نیست.</p>
 <h2 id="heading-7">گزارش، اعلان و تجارت</h2>
 <p>چهار داشبورد نقش‌محور، گزارش‌های filtered/paginated و export خصوصی CSV با Queued/Processing/Completed/Failed وجود دارند. مجوز ایجاد، worker و download دوباره بررسی می‌شود؛ job pending را فایل آماده نمایش ندهید.</p>
-<p>اعلان داخلی، outbox، preferences و device lifecycle موجودند. Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.</p>
+<p>اعلان داخلی، outbox، preferences و device lifecycle موجودند. BE-16 دعوت/Join پیام‌رسان و Review/Invite/Join/Transfer/Membership/State کلاس مستقل را روی همان Outbox پوشش می‌دهد؛ همهٔ Pushها با makan://notifications/{notificationId} و GET /api/v1/notifications/{notificationId}/target باز می‌شوند. Resolver مجوز جاری را دوباره می‌سنجد و workspace/role/child قدیمی را restore نمی‌کند؛ target منقضی یا نامجاز404 است. <a href="../product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md">قرارداد اعلان و Deep Link</a>. Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.</p>
 <p>Plan/PlanVersion/Subscription/Entitlement/Quota و Order/PaymentAttempt/verification lifecycle موجودند؛ gateway واقعی unavailable است. callback یا UI هرگز پرداخت را بدون تأیید server موفق اعلام نمی‌کند؛ refund/reconcile دستی ساختگی نسازید.</p>
 <h2 id="heading-8">اشتراک Individual/Organization و PersonalClass</h2>
 <p>GET /commerce/catalog با audience، GET /commerce/personal/subscription و organization/subscription و Quote/Order هر مالک را مصرف کنید. Manager فقط سازمان جاری و Platform فقط با permission مرکزی مجاز است؛ خرید نقش یا دادهٔ آموزشی را مجاز نمی‌کند. Order تازه201/replay200، قیمت نمایشی تومان و مبنای فعلی درگاه IRR است؛ gateway واقعی unavailable است. Quote حق ایجاد نمی‌کند.</p>
@@ -3307,7 +3307,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tbody>
 </table></div>
 <p>Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.</p>
-<p>بازبینی <code>2026-11-14</code> با مبنای Git <code>source@a639319b70d7c07db3588cd91d674aed339c1756</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
+<p>بازبینی <code>2026-11-15</code> با مبنای Git <code>source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
 <p>پوشش: <strong>494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema</strong>. Health، Swagger و Hub در این شمارش نیستند.</p>
 <p>این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.</p>
 <h2 id="heading-17">قرارداد مشترک و مرزهای امنیتی</h2>
@@ -54894,7 +54894,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p><a id="contract-NotificationResourceType"></a></p>
 <h3 id="heading-981">NotificationResourceType</h3>
 <p>CLR واقعی: <code>MakanApp.Domain.Notification.NotificationResourceType</code>؛ Flags: False</p>
-<p>literalهای JSON واقعی MVC: <code>["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication"]</code></p>
+<p>literalهای JSON واقعی MVC: <code>["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication", "ConversationInvitation", "ConversationJoinRequest", "PersonalClassRequest", "PersonalClassInvitation", "PersonalClassJoinRequest", "PersonalClassManagerTransfer", "PersonalClassMembership", "PersonalClass"]</code></p>
 <p>نوع خام OpenAPI: <code>string</code>؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.</p>
 <p><a id="contract-NotificationTargetResult"></a></p>
 <h3 id="heading-982">NotificationTargetResult</h3>
@@ -54943,7 +54943,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p><a id="contract-NotificationType"></a></p>
 <h3 id="heading-983">NotificationType</h3>
 <p>CLR واقعی: <code>MakanApp.Domain.Notification.NotificationType</code>؛ Flags: False</p>
-<p>literalهای JSON واقعی MVC: <code>["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated"]</code></p>
+<p>literalهای JSON واقعی MVC: <code>["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated", "ConversationInvitation", "ConversationJoinRequestUpdated", "PersonalClassRequestUpdated", "PersonalClassInvitation", "PersonalClassJoinRequestUpdated", "PersonalClassManagerTransferUpdated", "PersonalClassMembershipChanged", "PersonalClassStateChanged"]</code></p>
 <p>نوع خام OpenAPI: <code>string</code>؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.</p>
 <p><a id="contract-NotificationUnreadCount"></a></p>
 <h3 id="heading-984">NotificationUnreadCount</h3>

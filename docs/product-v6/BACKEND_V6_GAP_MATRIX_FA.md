@@ -1,5 +1,7 @@
 # ماتریس تطبیق Backend با Product v6
 
+> وضعیت جاری اعلان‌ها در بخش «BE-16 — Notifications / Deep Link / Delivery» انتهای سند و [ماتریس رویدادها](NOTIFICATION_EVENT_COVERAGE_FA.md) است؛ ردیف‌های PARTIAL قدیمی، Audit تاریخی با مبنای همان روز هستند. Provider واقعی از کامل‌بودن implementation جدا گزارش می‌شود.
+
 > وضعیت جاری BE19 در بخش «Personal AI Activation — 2026-11-14» انتهای سند است؛ بخش Personal AI روز قبل و ردیف‌های School/Audit با Commit تاریخی خود حفظ‌اند. Actor رسمی Personal اکنون در upstream و Backend پشتیبانی می‌شود. تنظیم تجاری Production و سایر محدودیت‌های v6 جدا هستند.
 
 مبنای Audit پیش از تغییر Runtime: `e5bd3eae658991585ca09f581f6236351857b3b8`، تاریخ `2026-11-12`، شاخهٔ کاری `feature/product-v6-backend-alignment`. سه فایل untracked قبلی AI و تنظیمات خصوصی با Backup/هش محافظت شده‌اند. این سند وضعیت اولیه است؛ نتیجهٔ اجرای تغییرات و ارزیابی نهایی جدا ثبت می‌شوند.
@@ -404,3 +406,27 @@ D11 بسته است و از ابتدا در۱۲ تصمیم Product/Legal شمر�
 | BE25 Proposed academics | `DEFERRED_APPROVED` | هر دو Gate آموزشی PersonalClass خاموش و engine/سوابق محفوظ‌اند. |
 
 D15/D16 گسترش‌های بعدی مدرسه و D18 اصلاح/بازگشایی پس از تصمیم نهایی‌اند؛ Submit و Provisioning مصوب جاری را مسدود نمی‌کنند. در این مرحله فقط مانع D11 بسته شد و هیچ تصمیم Product دیگر یا پذیرش عملیاتیِ انجام‌نشده، موفق فرض نشده است.
+
+## BE-16 — Notifications / Deep Link / Delivery — 2026-11-15
+
+این بخش وضعیت جاری اعلان‌هاست و ردیف‌های PARTIAL قدیمی، تاریخچهٔ همان Audit هستند. مبنا=`76acf2024f51d39412d0d6f842f24afb5f26425a`؛ Commit کد=`f4f4d9feb6184d62e033adfb612e86587fb3c3f6` روی شاخهٔ Feature ثبت، Push و با tracked remote تطبیق شد. [ماتریس رویداد](NOTIFICATION_EVENT_COVERAGE_FA.md)، [قرارداد کلاینت](NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [گزارش کامل](NOTIFICATION_DEVELOPER_REPORT_FA.md) و [Runbook](../operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) شواهد دامنه را تفکیک می‌کنند.
+
+| محور | وضعیت واقعی | شاهد و محدودیت |
+|---|---|---|
+| Message/Reply/Mention، Silent/Muted و revoke | `PASS` | Producer و delivery موجود reuse و regression شدند؛ wire link پیام نیز NotificationId canonical است |
+| Request/Invitation و PersonalClass | `PASS` | دعوت/Join گفتگو و Review/Invite/Join/Transfer/Membership/State کلاس روی Outbox موجود؛ rollback/retry واقعی SQL |
+| Membership/Role | `PASS` | یک تغییر منطقی هنگام پایان نقش قدیم+افزودن نقش تازه؛ no-op و rollback receipt تکراری نمی‌سازند |
+| Assignment/Exam/Release/Guardian | `PASS` | Recipient معتبر و current Enrollment/Role/Membership/Class/Guardian؛ Target404 و Push Suppressed بعد از revoke |
+| Payment/Support/SchoolApplication | `PASS` | verify معتبر؛ callback بدون proof صفر Paid؛ retry یک receipt؛ متن/دلیل خصوصی در Notification/Outbox/Push نیست |
+| Preferences/Quiet Hours/Device/Retry/Recovery | `PASS` | کانال بیرونی مستقل از in-app؛ version-aware invalid registration؛ claim/fencing/cancellation موجود |
+| Deep Link/IDOR/Workspace | `PASS` | فقط `makan://notifications/{id}`، Resolver مجدد و owner404؛ context قدیمی restore نمی‌شود |
+| BE22 integration | `PASS` | freeze/deletion جلوی ثبت/تحویل بیرونی را می‌گیرد؛ lifecycle و دادهٔ قبلی حفظ‌اند |
+| `BE16_NOTIFICATIONS_IMPLEMENTATION` / `BE16_NOTIFICATIONS` | `PASS` / `PASS` | طبق scope مصوب، نبود credential عملیاتی implementation را PARTIAL نمی‌کند |
+| `PRODUCTION_PUSH_RUNTIME` | `BLOCKED_CONFIGURATION` | فایل‌های خصوصی محلی Provider=Unavailable و VAPID/FCM کامل ندارند؛ تنظیم سرور مشاهده نشده است |
+| `PRODUCTION_NOTIFICATION_SMS` | `BLOCKED_CONFIGURATION` | Provider عمومی Unavailable؛ OTP ملی‌پیامک جدا و byte-identical است |
+| `LIVE_WEB_PUSH` / `LIVE_FCM_PUSH` | `NOT_RUN` / `NOT_RUN` | فقط Provider/HTTP کنترل‌شده و SQL محلی؛ دریافت دستگاه واقعی ادعا نمی‌شود |
+| `BE24_FULL_ACCEPTANCE` | `FAIL` | همان12 تصمیم Product/Legal و پذیرش عملیاتیِ مستقل حفظ‌اند |
+
+Clean/Restore و Build نهایی موفق با0 Warning/0 Error؛ دو دور کامل پس از اصلاح و نهایی هرکدام1346 Unit +2018 Integration +14 Architecture =3378 PASS، صفر Failed/Skipped؛ هر117 تست Zibal موفق‌اند. دور کامل اول چهار fixture نامعتبر Recovery داشت که بدون تغییر assertion/timeout، با منبع آموزشی واقعی اصلاح شدند؛ هیچ Realtime timeout در این Task مشاهده نشد. جزئیات/زمان/TRX در گزارش مرحله محفوظ است.
+
+Migration واقعی `20261114183321_ExtendProductNotificationCoverage` فقط دو CHECK موجود را گسترش می‌دهد؛ Fresh/Upgrade، حفظ receipt قدیمی و Down guard برای receipt/envelope جدید روی LocalDB GUID موقت پاس‌اند. روی `MakanApp`، `MakanApp_Test` یا سرور اجرا نشد. مدل EF معلق نیست. Snapshot کد438 path،494 operation،783 schema،151 جدول و75 Migration دارد؛ main merge و Deployment انجام نشده‌اند. تنظیمات خصوصی، Storage، سه فایل dirty قبلی AI و کد/تنظیم ملی‌پیامک حفظ شدند.

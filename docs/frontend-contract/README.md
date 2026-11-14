@@ -2,9 +2,9 @@
 
 > قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [Personal AI](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.
 
-بازبینی `2026-11-14` با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-11-15` با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-پوشش جاری: 494 عملیات HTTP در 438 مسیر، 91 Controller، 783 schema، 151 جدول و 74 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 494 عملیات HTTP در 438 مسیر، 91 Controller، 783 schema، 151 جدول و 75 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
@@ -69,7 +69,7 @@ SignalR تغییر پایدار را اعلان می‌کند؛ SQL/Delta مرج
 
 چهار داشبورد نقش‌محور، گزارش‌های filtered/paginated و export خصوصی CSV با Queued/Processing/Completed/Failed وجود دارند. مجوز ایجاد، worker و download دوباره بررسی می‌شود؛ job pending را فایل آماده نمایش ندهید.
 
-اعلان داخلی، outbox، preferences و device lifecycle موجودند. Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.
+اعلان داخلی، outbox، preferences و device lifecycle موجودند. BE-16 دعوت/Join پیام‌رسان و Review/Invite/Join/Transfer/Membership/State کلاس مستقل را روی همان Outbox پوشش می‌دهد؛ همهٔ Pushها با makan://notifications/{notificationId} و GET /api/v1/notifications/{notificationId}/target باز می‌شوند. Resolver مجوز جاری را دوباره می‌سنجد و workspace/role/child قدیمی را restore نمی‌کند؛ target منقضی یا نامجاز404 است. [قرارداد اعلان و Deep Link](../product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md). Web Push/VAPID و FCM HTTP v1 با Notifications:PushProvider=WebPushAndFcm پیاده شده‌اند؛ ثبت device، dispatch یا پذیرش provider به معنی رسیدن به دستگاه نیست. P1_PUSH_RUNTIME_PENDING برقرار است؛ SMS عمومی اعلان همچنان unavailable و از OTP ملی‌پیامک جداست.
 
 Plan/PlanVersion/Subscription/Entitlement/Quota و Order/PaymentAttempt/verification lifecycle موجودند؛ gateway واقعی unavailable است. callback یا UI هرگز پرداخت را بدون تأیید server موفق اعلام نمی‌کند؛ refund/reconcile دستی ساختگی نسازید.
 

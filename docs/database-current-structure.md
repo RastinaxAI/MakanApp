@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756`؛ بازبینی `2026-11-14`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6`؛ بازبینی `2026-11-15`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**151 جدول، 1625 ستون، 406 FK، 467 index مستقل از key و 421 CHECK؛ 74 Migration.**
+**151 جدول، 1625 ستون، 406 FK، 467 index مستقل از key و 421 CHECK؛ 75 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -116,6 +116,7 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 72 | 20261113065124_CompleteSchoolEstablishmentWorkflow | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113065124_CompleteSchoolEstablishmentWorkflow.cs) |
 | 73 | 20261113103326_FinalizeSchoolManagerAndPaidProvisioning | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113103326_FinalizeSchoolManagerAndPaidProvisioning.cs) |
 | 74 | 20261114140323_AddAccountDeletionLifecycle | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261114140323_AddAccountDeletionLifecycle.cs) |
+| 75 | 20261114183321_ExtendProductNotificationCoverage | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261114183321_ExtendProductNotificationCoverage.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -5973,8 +5974,8 @@ CHECKها:
 |---|---|
 | CK_Notifications_Category | `[Category] IN (1, 2, 3)` |
 | CK_Notifications_ReadAt | `[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]` |
-| CK_Notifications_ResourceType | `[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)` |
-| CK_Notifications_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)` |
+| CK_Notifications_ResourceType | `[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)` |
+| CK_Notifications_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)` |
 
 ### notification.PushDeviceRegistrations
 

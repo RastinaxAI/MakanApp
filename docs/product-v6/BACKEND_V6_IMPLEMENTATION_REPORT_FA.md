@@ -1,5 +1,7 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
+> افزودهٔ BE-16: [گزارش توسعه‌دهندهٔ اعلان](NOTIFICATION_DEVELOPER_REPORT_FA.md)، [Handoff کلاینت](NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [پوشش رویدادها](NOTIFICATION_EVENT_COVERAGE_FA.md) و [Runbook](../operations/NOTIFICATION_PUSH_RUNBOOK_FA.md). نتیجهٔ واقعی Full/Final در گزارش همان مرحله ثبت می‌شود؛ Push واقعی یا Deploy از تست محلی استنتاج نمی‌شود.
+
 > افزودهٔ جاری BE-22 مورخ `2026-11-14` است: [گزارش توسعه‌دهنده](ACCOUNT_DELETION_DEVELOPER_REPORT_FA.md)، [قرارداد](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [ماتریس داده](ACCOUNT_DELETION_DATA_MATRIX_FA.md). بخش‌های قبل با Commit و نتیجهٔ تاریخی خود حفظ شده‌اند؛ خاموش‌بودن اجرای Production با شکست implementation یکی نیست.
 
 > آخرین بخش «Personal AI Activation — 2026-11-14» است: [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، Actor رسمی Personal و پذیرش واقعی Backend→AI Production. بخش BE19 مورخ2026-11-13 و گزارش‌های School با Commit/محدودیت تاریخی خود حفظ‌اند؛ مانع upstream آن روز با release تازه برطرف شده است. قرارداد School: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
@@ -688,3 +690,13 @@ Runtime پیش‌فرض/فایل خصوصی فعال نشده و Backend Deploy 
 ### ۱۶. مرحلهٔ بعد
 
 در Task انتشار جدا، Runtime و BaseUrl همان محیط با تنظیم خصوصی مصوب فعال و بستهٔ Backend پس از Backup/Validation مستقر شود. UI فقط Backend را صدا بزند و true/null بودن metadata را از وضعیت اشتراک/Feature Disabled جدا کند. Library، حذف واقعی، سهمیهٔ خانواده یا آموزش PersonalClass به این انتشار اضافه نشوند.
+
+## BE-16 — اعلان، مقصد مجاز و تحویل — 2026-11-15
+
+Commit کد `f4f4d9feb6184d62e033adfb612e86587fb3c3f6` با پیام `feat(notifications): complete event coverage and target authorization` شامل38فایل ثبت و به `origin/feature/product-v6-backend-alignment` Push و پس از fetch تأیید شد. گزارش آموزشی16بخشی، فایل‌ها/جریان واقعی/SQL/Endpoint/تست/تصمیم/محدودیت و Git در [گزارش BE-16](NOTIFICATION_DEVELOPER_REPORT_FA.md) است؛ [ماتریس رویداد](NOTIFICATION_EVENT_COVERAGE_FA.md) هر Producer/Recipient/Target/ACL را نام می‌برد.
+
+foundation موجود Notification/Outbox/Preferences/Devices/WebPush/FCM/Recovery reuse شد. هشت Type/Resource افزوده، دعوت و Join پیام‌رسان و چرخهٔ مصوب کلاس مستقل را پوشش می‌دهند. Role replacement یک event منطقی دارد. Deep Link پیام نیز به NotificationId canonical منتقل شد؛ Resolver و Worker، Enrollment/Role/Membership/Class/Guardian و دسترسی Resource جاری را دوباره می‌سنجند. old receipt مجوز قدیمی را احیا نمی‌کند. Scope/Role/Child به‌صورت ضمنی تغییر نمی‌کند و اطلاعات خصوصی در wire payload نیست.
+
+2 Unit و53 Integration تازه؛ دو دور کامل اصلاح‌شده و نهایی هرکدام3378 PASS با صفر Failed/Skipped، شامل117 تست Zibal. Build نهایی صفر Warning/Error دارد. چهار failure اولیهٔ Full ناشی از fixture با AssignmentId تصادفی بود؛ fixture درست شد و assertion/timeout باقی ماند. Realtime timeout مشاهده نشد. Migration افزودنی فقط دو CHECK دارد، Fresh/Upgrade/rollback guard در SQL ایزوله قبول و DB عادی untouched است. جزئیات واقعی validation در گزارش مستقل همین مرحله آمده است.
+
+`BE16_NOTIFICATIONS_IMPLEMENTATION=PASS` و `BE16_NOTIFICATIONS=PASS`؛ `PRODUCTION_PUSH_RUNTIME=BLOCKED_CONFIGURATION` و `PRODUCTION_NOTIFICATION_SMS=BLOCKED_CONFIGURATION`. Live WebPush/FCM اجرا نشد و دریافت واقعی، Deploy یا بسته‌شدن BE24 ادعا نمی‌شود. OTP ملی‌پیامک، Private Config/Storage، AI ناتمام و12 تصمیم Product/Legal تغییر نکردند. [Handoff](NOTIFICATION_FRONTEND_HANDOFF_FA.md) و [Runbook](../operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) مسیر کار عملیاتیِ بعدی را مشخص می‌کنند.

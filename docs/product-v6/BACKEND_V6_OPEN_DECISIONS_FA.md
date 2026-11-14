@@ -40,6 +40,12 @@
 
 شمار تصمیم‌های باز Product/Legal در جدول بالا: **۱۲**؛ D01/D02/D12/D17 بسته یا تأیید شده‌اند، D07 به‌صورت مصوب Deferred و D11 اکنون CLOSED است. D11 از ابتدا در این۱۲ مورد شمرده نمی‌شد، پس بسته‌شدن آن شمار را به۱۱ کاهش نمی‌دهد. D15/D16 محدودیت‌های توسعهٔ آینده‌اند و Submit جاری را نمی‌بندند. آماده‌نبودن credential/device برای Push نیز تصمیم محصولی تازه نیست.
 
+### BE-16 — پیکربندی Push و اعلان عمومی
+
+پوشش Workflowهای موجود، target جاری و adapterهای WebPush/FCM از runtime جدا هستند. `Notifications:PushProvider=Unavailable` و `Notifications:SmsProvider=Unavailable` در Test/Production خصوصی محلی حفظ شدند؛ VAPID/FCM و device واقعی برای smoke آماده نیستند. `PRODUCTION_PUSH_RUNTIME=BLOCKED_CONFIGURATION`، `PRODUCTION_NOTIFICATION_SMS=BLOCKED_CONFIGURATION` و هر دو Live Push برابر `NOT_RUN` هستند. این مانع تنظیم/محیط است و تصمیم محصولی تازه یا دلیل بازکردن سیاست‌های مصوب نیست.
+
+شمار تصمیم‌های باز همان12 باقی است؛ BE24 همچنان FAIL. Notification permission حساب، کلاس، Guardian و Block/Privacy موجود را تغییر نمی‌دهد؛ Host مالی و مدرس بدون grant تازه صاحب اختیار نمی‌شوند. ReviewRequired، OTP ملی‌پیامک، AI runtime و Gateهای BE25 در این مرحله تغییر نکرده‌اند. جریان دقیق کلاینت و اجرای smoke مجاز در [Handoff](NOTIFICATION_FRONTEND_HANDOFF_FA.md) و [Runbook](../operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) آمده است.
+
 ## تنظیم تجاری آموزشگاه
 
 `SCHOOL_APPLICATION_COMMERCIAL_TERMS=BLOCKED_CONFIGURATION`: هیچ قیمت، دوره یا Quota واقعی Seed نشده است. API نگاشت server-owned دو نوع پرونده به PlanVersion منتشرشدهٔ اختصاصی و معتبر موجود است؛ Platform باید دادهٔ مصوب را با permission تجاری صریح ثبت کند. این نیاز Configuration است و به شمار تصمیم‌های Product/Legal اضافه نشده است. تست‌ها فقط با دادهٔ ساختگی و درگاه کنترل‌شده انجام می‌شوند. سیاست مدیر اولیه D17 بسته شده است. مراحل واقعی تنظیم در [راهنمای تجاری آموزشگاه](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md) آمده‌اند.

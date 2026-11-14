@@ -1577,7 +1577,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#heading-1373">کدهای خطای تعریف‌شده</a></li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>مرجع کامل API و قراردادهای ماکان</h1><p class="subtitle">قرارداد انتقال، قواعد و مسیر کد هر عملیات</p><p class="edition">نسخه بررسی: <code>main @ a639319b70d7c07db3588cd91d674aed339c1756</code><br>تاریخ بازبینی: <code>2026-11-14</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>مرجع کامل API و قراردادهای ماکان</h1><p class="subtitle">قرارداد انتقال، قواعد و مسیر کد هر عملیات</p><p class="edition">نسخه بررسی: <code>main @ f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code><br>تاریخ بازبینی: <code>2026-11-15</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
 <li><a href="#heading-1">قرارداد مشترک و مرزهای امنیتی</a></li>
 <li><a href="#heading-2">رفتار جاری فراتر از schema</a></li>
@@ -3139,7 +3139,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </ul>
 </div>
 </section><h1 id="endpoint-api">مرجع جاری Endpointها و قراردادهای API ماکان</h1>
-<p>بازبینی <code>2026-11-14</code> با مبنای Git <code>source@a639319b70d7c07db3588cd91d674aed339c1756</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
+<p>بازبینی <code>2026-11-15</code> با مبنای Git <code>source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
 <p>پوشش: <strong>494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema</strong>. Health، Swagger و Hub در این شمارش نیستند.</p>
 <p>این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.</p>
 <h2 id="heading-1">قرارداد مشترک و مرزهای امنیتی</h2>
@@ -54726,7 +54726,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p><a id="contract-NotificationResourceType"></a></p>
 <h3 id="heading-965">NotificationResourceType</h3>
 <p>CLR واقعی: <code>MakanApp.Domain.Notification.NotificationResourceType</code>؛ Flags: False</p>
-<p>literalهای JSON واقعی MVC: <code>["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication"]</code></p>
+<p>literalهای JSON واقعی MVC: <code>["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication", "ConversationInvitation", "ConversationJoinRequest", "PersonalClassRequest", "PersonalClassInvitation", "PersonalClassJoinRequest", "PersonalClassManagerTransfer", "PersonalClassMembership", "PersonalClass"]</code></p>
 <p>نوع خام OpenAPI: <code>string</code>؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.</p>
 <p><a id="contract-NotificationTargetResult"></a></p>
 <h3 id="heading-966">NotificationTargetResult</h3>
@@ -54775,7 +54775,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <p><a id="contract-NotificationType"></a></p>
 <h3 id="heading-967">NotificationType</h3>
 <p>CLR واقعی: <code>MakanApp.Domain.Notification.NotificationType</code>؛ Flags: False</p>
-<p>literalهای JSON واقعی MVC: <code>["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated"]</code></p>
+<p>literalهای JSON واقعی MVC: <code>["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated", "ConversationInvitation", "ConversationJoinRequestUpdated", "PersonalClassRequestUpdated", "PersonalClassInvitation", "PersonalClassJoinRequestUpdated", "PersonalClassManagerTransferUpdated", "PersonalClassMembershipChanged", "PersonalClassStateChanged"]</code></p>
 <p>نوع خام OpenAPI: <code>string</code>؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.</p>
 <p><a id="contract-NotificationUnreadCount"></a></p>
 <h3 id="heading-968">NotificationUnreadCount</h3>

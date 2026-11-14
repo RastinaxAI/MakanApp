@@ -1,6 +1,6 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-11-14` با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-11-15` با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
 پوشش: **494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
@@ -17024,7 +17024,7 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 
 CLR واقعی: `MakanApp.Domain.Notification.NotificationResourceType`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication"]`
+literalهای JSON واقعی MVC: `["Assignment", "SubmissionAttempt", "Exam", "ExamAttempt", "Conversation", "OrganizationInvitation", "Membership", "Order", "SupportTicket", "SchoolApplication", "ConversationInvitation", "ConversationJoinRequest", "PersonalClassRequest", "PersonalClassInvitation", "PersonalClassJoinRequest", "PersonalClassManagerTransfer", "PersonalClassMembership", "PersonalClass"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
@@ -17045,7 +17045,7 @@ object
 
 CLR واقعی: `MakanApp.Domain.Notification.NotificationType`؛ Flags: False
 
-literalهای JSON واقعی MVC: `["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated"]`
+literalهای JSON واقعی MVC: `["AssignmentPublished", "AssignmentGradeReleased", "ExamPublished", "ExamGradeReleased", "MessageReceived", "MessageReply", "MessageMention", "OrganizationInvitation", "MembershipChanged", "OrderPaid", "SupportUpdated", "SchoolApplicationUpdated", "ConversationInvitation", "ConversationJoinRequestUpdated", "PersonalClassRequestUpdated", "PersonalClassInvitation", "PersonalClassJoinRequestUpdated", "PersonalClassManagerTransferUpdated", "PersonalClassMembershipChanged", "PersonalClassStateChanged"]`
 
 نوع خام OpenAPI: `string`؛ اختلاف integer/String: در این snapshot دیده نشد؛ قید use case و Flags جدا بررسی شود.
 
