@@ -11,6 +11,7 @@ internal sealed class LiveAiObservation : IDisposable
     public Guid OrganizationId { get; set; }
     public Guid ForeignOrganizationId { get; set; }
     public string ExpectedRole { get; set; } = string.Empty;
+    public Guid? ExpectedUserId { get; set; }
     public Guid? ExpectedStudentId { get; set; }
     public Guid? ExpectedClassId { get; set; }
     public int OutgoingCalls { get; private set; }
@@ -31,8 +32,8 @@ internal sealed class LiveAiObservation : IDisposable
             if (instrument.Meter.Name == "MakanApp.AiService")
                 listener.EnableMeasurementEvents(instrument);
         };
-        _listener.SetMeasurementEventCallback<long>((_, _, tags, _) => CheckTags(tags));
-        _listener.SetMeasurementEventCallback<double>((_, _, tags, _) => CheckTags(tags));
+        _listener.SetMeasurementEventCallback<long>((instrument, _, tags, _) => CheckTags(instrument.Name, tags));
+        _listener.SetMeasurementEventCallback<double>((instrument, _, tags, _) => CheckTags(instrument.Name, tags));
         _listener.Start();
     }
 
@@ -40,12 +41,14 @@ internal sealed class LiveAiObservation : IDisposable
     public void ForbidPayload(params string[] values) => _forbiddenPayload.AddRange(values);
     public bool IsSafe(string value) => !_forbidden.Any(item => value.Contains(item, StringComparison.Ordinal));
 
-    private void CheckTags(ReadOnlySpan<KeyValuePair<string, object?>> tags)
+    private void CheckTags(string instrument, ReadOnlySpan<KeyValuePair<string, object?>> tags)
     {
         Measurements++;
         foreach (var tag in tags)
         {
-            MetricsSafe &= tag.Key is "operation" or "outcome" or "error.code";
+            MetricsSafe &= instrument.StartsWith("makan.ai.execution.", StringComparison.Ordinal)
+                ? tag.Key is "operation" or "contextKind" or "payerKind" or "result"
+                : tag.Key is "operation" or "outcome" or "error.code";
             MetricsSafe &= tag.Value is string value && IsSafe(value) && value.Length <= 64;
         }
     }
@@ -63,9 +66,16 @@ internal sealed class LiveAiObservation : IDisposable
         var scope = root.GetProperty("scope");
         var valid = IsSafe(body) && !_forbiddenPayload.Any(value => body.Contains(value, StringComparison.Ordinal)) &&
             !body.Contains(ForeignOrganizationId.ToString("D"), StringComparison.Ordinal) &&
-            root.GetProperty("actor").GetProperty("role").GetString() == ExpectedRole &&
-            scope.GetProperty("organizationId").GetGuid() == OrganizationId &&
-            scope.GetProperty("schoolId").GetGuid() == OrganizationId;
+            root.GetProperty("actor").GetProperty("role").GetString() == ExpectedRole;
+        if (ExpectedUserId.HasValue) valid &= root.GetProperty("actor").GetProperty("userId").GetGuid() == ExpectedUserId;
+        if (ExpectedRole == "Personal")
+        {
+            valid &= new[] { "organizationId", "schoolId", "classId", "studentId" }.All(key => scope.GetProperty(key).ValueKind == JsonValueKind.Null);
+            var context = root.GetProperty("context");
+            valid &= new[] { "subjects", "grades", "homeworks", "exams", "activity" }.All(key => context.GetProperty(key).GetArrayLength() == 0);
+        }
+        else
+            valid &= scope.GetProperty("organizationId").GetGuid() == OrganizationId && scope.GetProperty("schoolId").GetGuid() == OrganizationId;
         if (ExpectedStudentId.HasValue)
             valid &= scope.GetProperty("studentId").GetGuid() == ExpectedStudentId;
         if (ExpectedClassId.HasValue)

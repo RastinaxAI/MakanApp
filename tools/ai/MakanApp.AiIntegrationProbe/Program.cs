@@ -37,7 +37,7 @@ internal static class LiveAiProgram
             allowRemoteHttps && allowWireGuard ||
             (!selectedArgs.SequenceEqual(["--run-live"]) && !authorizationOnly && !serviceAuthOnly && !evidenceOnly &&
              operation is not ("focused_three" or "parent_child_summary" or "remaining_roles" or
-                 "remaining_managers" or "manager_student_insight")))
+                 "remaining_managers" or "manager_student_insight" or "personal_chat")))
         {
             Console.WriteLine("اجرای واقعی فقط با --run-live و انتخاب صریح محیط مجاز است.");
             return 2;
@@ -71,6 +71,8 @@ internal static class LiveAiProgram
             };
             if (options.TimeoutSeconds is < 1 or > AiServiceOptions.MaximumTimeoutSeconds)
                 throw new InvalidOperationException("LIVE_AI_TIMEOUT_INVALID");
+            if (operation == "personal_chat" && options.UseServiceAuthentication)
+                throw new InvalidOperationException("PERSONAL_LIVE_REQUIRES_DISABLED_SERVICE_AUTH");
             if (options.UseServiceAuthentication)
                 _ = await credentials.GetCredentialAsync(CancellationToken.None);
             EvidenceOutput.WriteLine(JsonSerializer.Serialize(new
@@ -87,7 +89,7 @@ internal static class LiveAiProgram
                 return 0;
             }
 
-            using var factory = new MakanAppWebApplicationFactory();
+            using var factory = operation == "personal_chat" ? MakanAppWebApplicationFactory.CreateKnowledgeProbe() : new MakanAppWebApplicationFactory();
             using var observation = new LiveAiObservation();
             observation.UseServiceAuthentication = options.UseServiceAuthentication;
             observation.Forbid(authentication.CurrentKey);
@@ -126,8 +128,11 @@ internal static class LiveAiProgram
                 {
                     Converters = { new JsonStringEnumConverter() }
                 };
-                await new LiveAiScenario(factory, application, observation, jsonOptions, options.TimeoutSeconds, evidence)
-                    .RunAsync(evidenceOnly ? "failure_evidence" : operation, authorizationOnly);
+                if (operation == "personal_chat")
+                    await new LivePersonalAiScenario(factory, application, observation, jsonOptions).RunAsync();
+                else
+                    await new LiveAiScenario(factory, application, observation, jsonOptions, options.TimeoutSeconds, evidence)
+                        .RunAsync(evidenceOnly ? "failure_evidence" : operation, authorizationOnly);
             }
             finally
             {
