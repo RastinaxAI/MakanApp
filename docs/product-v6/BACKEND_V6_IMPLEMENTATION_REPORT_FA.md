@@ -1,5 +1,7 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
+> افزودهٔ جاری BE-22 مورخ `2026-11-14` است: [گزارش توسعه‌دهنده](ACCOUNT_DELETION_DEVELOPER_REPORT_FA.md)، [قرارداد](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [ماتریس داده](ACCOUNT_DELETION_DATA_MATRIX_FA.md). بخش‌های قبل با Commit و نتیجهٔ تاریخی خود حفظ شده‌اند؛ خاموش‌بودن اجرای Production با شکست implementation یکی نیست.
+
 > آخرین بخش «Personal AI Activation — 2026-11-14» است: [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، Actor رسمی Personal و پذیرش واقعی Backend→AI Production. بخش BE19 مورخ2026-11-13 و گزارش‌های School با Commit/محدودیت تاریخی خود حفظ‌اند؛ مانع upstream آن روز با release تازه برطرف شده است. قرارداد School: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
 
 تاریخ `2026-11-12`؛ مبنا `e5bd3eae658991585ca09f581f6236351857b3b8`، شاخهٔ `feature/product-v6-backend-alignment`. مرجع نیاز: Product Architecture v6، شرح Backend Tasks v6 و override همین Task. سند محصول هدف است؛ این گزارش فقط Source، تست و محدودیت واقعی را بیان می‌کند.

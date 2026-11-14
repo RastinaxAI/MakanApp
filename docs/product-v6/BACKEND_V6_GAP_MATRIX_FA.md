@@ -221,12 +221,12 @@ Snapshot تازهٔ محلی: 403 path، 454 operation، 732 schema، 82 Control
 ## BE-22 — Security / Privacy / Deletion
 
 - Requirement: current resource ACL، audit، consent و حذف با retention صریح.
-- Current Implementation / Evidence: session/permission/rowversion/audit/outbox و تست‌های `PlatformAuthorization*` موجودند؛ Account Deletion lifecycle وجود ندارد.
-- Status: `PARTIAL`.
-- Gap / Required Change: foundation درخواست/وضعیت/ممیزی حذف و قرارداد revoke؛ هیچ حذف فیزیکی/ناشناس‌سازی حدسی یا نگهداری مالی حدسی اجرا نشود.
-- Tests Needed: IDOR، revoke، correlation/no leak، retry/نسخه و حفاظت دادهٔ مالی/مدرسه/دفترچه.
-- Migration Needed: برای درخواست و state، افزودنی.
-- Product Decision Needed: `PRODUCT_LEGAL_DECISION_REQUIRED` برای دوره‌های جداگانهٔ Identity/Contacts/Messaging/Education/Documents/Payments/Audit/AI؛ اجرای حذف وابسته به این تصمیم است.
+- Current Implementation / Evidence: `AccountDeletionRequest/AccountDeletionStep`، `AccountDeletionWorkflow`، `AccountDeletionProcessor`، lifecycleهای ماژول‌ها و `AccountDeletionKnowledgePurger`؛ هشت checkpoint، claim/fencing و audit پایدار.
+- Status: `PASS` برای implementation/پذیرش محلی؛ فعال‌سازی Production برابر `BLOCKED_CONFIGURATION` و Full Regression این مرحله جدا گزارش می‌شود.
+- Tests: واحد state/lease/هویت/مالکیت، SQL request/concurrency/آخرین مدیر/دفترچه/پیام/آموزش/مالی/Knowledge/recovery و Fresh/Upgrade؛ Live Knowledge Delete برابر `NOT_RUN` است.
+- Migration: `20261114140323_AddAccountDeletionLifecycle`، فقط پذیرش SQL disposable؛ هیچ اجرای سرور یا دیتابیس عادی انجام نشده است.
+- Product/Legal: semantics اقدام‌ها تعیین شده؛ D04 فقط مدت‌ها/مهلت رسمی و legal hold/Backup را باز نگه می‌دارد. default حذف خاموش و مهلت null است؛ مالی/آموزش/پیام/Support/Moderation/Audit حفظ‌اند.
+- Contract: [Handoff حذف حساب](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md)، [ماتریس داده](ACCOUNT_DELETION_DATA_MATRIX_FA.md) و [Runbook](../operations/ACCOUNT_DELETION_RUNBOOK_FA.md).
 
 ## BE-23 — Operations
 
@@ -285,7 +285,7 @@ Snapshot تازهٔ محلی: 403 path، 454 operation، 732 schema، 82 Control
 | BE-19 AI gateway | `PARTIAL` | Assistant context مستقل، current ACL، class/source pin و payer جدا پیاده؛ Generic Personal به Upstream سازگار وابسته؛ Service Auth هر دو سرویس خاموش، PersonalClass AI اضافه نشده. |
 | BE-20 Platform Admin | `PASS` برای بنیادهای جدید | پنج permission و صف/عملیات پروندهٔ مجاز؛ PlatformOwner/Support موجود reuse، School Manager privilege تازه نمی‌گیرد. |
 | BE-21 Moderation/Support | `PARTIAL` در چرخهٔ کامل محصول | Moderation/Safety قبلی محفوظ؛ Create/Read/Reply/Assign/Resolve/File ACL Support پیاده؛ reopen نهایی و تأیید media اختراع نشدند. |
-| BE-22 Security/Deletion | `PARTIAL` / `BLOCKED_PRODUCT_DECISION` | ACL/نسخه/audit/consent و درخواست/صف حذف موجود؛ execution/retention در D04 قانونی باز، حذف/تاریخ حدسی نداریم. |
+| BE-22 Security/Deletion | `PASS` implementation محلی | workflow هشت‌مرحله‌ای، freeze/anonymize، دفترچه، Knowledge و recovery؛ Production غیرفعال و مدت‌های D04 نیازمند تنظیم رسمی‌اند. |
 | BE-23 Operations | `PARTIAL` در پذیرش عملیاتی | Migrationهای افزودنی و config/Storage جدا محفوظ؛ Backup/ring/Push/سرور در این Task اجرا یا پذیرش نشده‌اند. |
 | BE-24 Full acceptance | `PARTIAL` / `BLOCKED_PRODUCT_DECISION` | Full Regression محلی هر دو دور۳۱۵۷/۳۱۵۷ PASS است؛ پذیرش کل هدف Product، خصوصاً School end-to-end در سناریوی۹۱، به D01 و اتصال تجاری بعدی وابسته است و PASS اعلام نمی‌شود. |
 | BE-25 Proposed academics | `DEFERRED_APPROVED` | Assignment/Exam پیش‌فرض false؛ Gate مرکزی برای generic path، capabilities، worker، Realtime و Notification؛ engine و تاریخچه باقی‌اند. |
@@ -398,7 +398,7 @@ D11 بسته است و از ابتدا در۱۲ تصمیم Product/Legal شمر�
 | BE19 AI gateway | `PASS` در کد، Regression و پذیرش واقعی Personal | Actor رسمی و Scope تهی دیگر blocker نیستند؛ Runtime/Deploy محیط هدف جداست. |
 | BE20 Platform Admin | `PASS` در بنیاد مصوب جاری | Permission/Audit و مرز School Manager تغییر نکردند. |
 | BE21 Moderation/Support | `PARTIAL` در چرخهٔ کامل | Reopen تیکت در D10 باز؛ بستن پروندهٔ Moderation، تأیید رسانه نیست. |
-| BE22 Security/Deletion | `PARTIAL` / `BLOCKED_PRODUCT_DECISION` | اجرای حذف و retention در D04 نیازمند تصمیم Product/Legal است. |
+| BE22 Security/Deletion | `PASS` implementation محلی | semantics مصوب BE-22 اجرا شده؛ فعال‌سازی Production `BLOCKED_CONFIGURATION` و مدت‌ها نیازمند تصمیم رسمی‌اند. |
 | BE23 Operations | `PARTIAL` در پذیرش محیط هدف | Deploy، Backup/Restore، keyring و پذیرش واقعی Push/سرور در این Task انجام نشدند. |
 | BE24 Full acceptance | `FAIL` | موانع فوق با رفع Personal AI بسته نمی‌شوند. |
 | BE25 Proposed academics | `DEFERRED_APPROVED` | هر دو Gate آموزشی PersonalClass خاموش و engine/سوابق محفوظ‌اند. |

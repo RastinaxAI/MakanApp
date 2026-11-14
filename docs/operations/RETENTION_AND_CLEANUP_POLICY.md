@@ -1,6 +1,49 @@
 # سیاست نگه‌داری و پاک‌سازی محدود
 
-## موجودی افزودهٔ جاری — ۲۰۲۶-۱۰-۳۰
+## موجودی جاری و استثنای مصوب BE-22 — ۲۰۲۶-۱۱-۱۴
+
+مدل جاری۱۵۱ جدول و۷۴ Migration تا `20261114140323_AddAccountDeletionLifecycle` دارد؛ این شمارش از metadata گرفته شده و شاهد اعمال schema روی سرور نیست. جدول‌های بخش PH-6 پایین، موجودی تاریخی‌اند. [فرهنگ جاری SQL](../database-current-structure.md) مرجع ستون/کلید/Index است.
+
+همهٔ جدول‌های این موجودی خارج از purge عمومی‌اند؛ قواعد محدود قدیمیِ transient/TTL و طبقه‌بندی L/P همچنان با scope خود معتبرند. استثنای جدید فقط **workflow صریح حذف حساب BE-22** است و دورهٔ حقوقی یا reaper تازه ایجاد نمی‌کند. خاموش‌بودن `AccountDeletion:ExecutionEnabled` و `GracePeriodHours=null` پیش‌فرض است؛ هیچ مقدار Production حدس زده نشده است.
+
+<!-- BE22-INVENTORY:BEGIN -->
+| Schema | تعداد | Tableها؛ پیش‌فرض `DO_NOT_AUTO_DELETE` در cleanup عمومی |
+|---|---|---|
+| `academic` | 18 | `AcademicPeriods`, `Attendance`, `AttendanceRevisions`, `ClassLessonAttachments`, `ClassLessons`, `Classes`, `Courses`, `Enrollments`, `PersonalClassAcademicGrants`, `PersonalClassInvitations`, `PersonalClassJoinRequests`, `PersonalClassManagerTransfers`, `PersonalClassParticipants`, `PersonalClassRequests`, `PersonalClasses`, `ScheduleRules`, `Sessions`, `TeacherAssignments` |
+| `assessment` | 20 | `AnswerRevisionAttachments`, `AnswerRevisions`, `AssignmentRecipients`, `AssignmentVersionAttachments`, `AssignmentVersions`, `Assignments`, `EvaluationRevisions`, `ExamAttemptQuestions`, `ExamAttempts`, `ExamFinalAnswers`, `ExamGradeReleases`, `ExamGradeRevisions`, `ExamQuestionGrades`, `ExamVersions`, `Exams`, `GradeReleases`, `QuestionOptions`, `QuestionVersions`, `SubmissionAttachments`, `SubmissionAttempts` |
+| `commerce` | 15 | `Orders`, `PaymentAttemptEvents`, `PaymentAttempts`, `Payments`, `PlanEntitlements`, `PlanQuotaDefinitions`, `PlanVersionPrices`, `PlanVersions`, `Plans`, `SchoolEstablishmentOfferings`, `SchoolOfferingOperations`, `SubscriptionAmendments`, `Subscriptions`, `UsageLedger`, `UsageReservations` |
+| `guardian` | 1 | `GuardianRelations` |
+| `identity` | 10 | `AccountDeletionRequests`, `AccountDeletionSteps`, `CommunicationAgeVerifications`, `OtpChallenges`, `Persons`, `PhoneChangeRequests`, `RefreshTokens`, `UserCredentials`, `UserSessions`, `Users` |
+| `intelligence` | 1 | `AssistantContextSelections` |
+| `knowledge` | 5 | `AccountDeletionKnowledgePurges`, `AiSourceSelectionOperations`, `AiSourceSelectionPins`, `EducationalSourceVersions`, `EducationalSources` |
+| `messaging` | 52 | `AbuseReports`, `AcademicActivityDeliveries`, `AcademicActivityPublications`, `AddressBookEntries`, `ChangeEvents`, `ChatFolders`, `ContactDeviceBindings`, `ContactPhones`, `ContactSyncDevices`, `ContactSyncOperations`, `ContactSyncStates`, `ConversationChecklistItems`, `ConversationChecklistPersonalStates`, `ConversationChecklists`, `ConversationInitialTargets`, `ConversationInvitations`, `ConversationInviteLinks`, `ConversationJoinRequests`, `ConversationMemberRestrictions`, `ConversationOwnershipTransfers`, `ConversationParticipants`, `ConversationPins`, `ConversationPollOptions`, `ConversationPollSelections`, `ConversationPollVotes`, `ConversationPolls`, `ConversationQuizAnswers`, `ConversationTopics`, `ConversationUserStates`, `Conversations`, `FolderConversationOverrides`, `MessageAttachments`, `MessageMentions`, `MessageReactions`, `MessageRevisions`, `MessageUserVisibilities`, `Messages`, `MessagingPrivacySettings`, `ModerationActions`, `ModerationCases`, `ModerationEvidenceAttachments`, `OfficialSpaceProvisions`, `PersonalCommunicationGrants`, `RealtimeOutbox`, `SafetyIncidents`, `SavedMessageLabels`, `SavedMessageOrganizations`, `ScheduledMessageAttachments`, `ScheduledMessageMentions`, `ScheduledMessages`, `UserBlocks`, `UserContacts` |
+| `notification` | 4 | `NotificationDeliveryAttempts`, `NotificationPreferences`, `Notifications`, `PushDeviceRegistrations` |
+| `organization` | 12 | `Invitations`, `MembershipManagementOperations`, `Memberships`, `OrganizationPersons`, `Organizations`, `RoleAssignments`, `SchoolApplicationDecisions`, `SchoolApplicationDocuments`, `SchoolApplicationHistory`, `SchoolApplicationOperations`, `SchoolApplicationRevisions`, `SchoolApplications` |
+| `platform` | 7 | `AdminAuditLogs`, `OutboxMessages`, `PlatformPermissions`, `PlatformRoleAssignments`, `PlatformRolePermissions`, `PlatformRoles`, `ProvisioningRequests` |
+| `reports` | 1 | `ReportExportJobs` |
+| `storage` | 1 | `FileAssets` |
+| `support` | 4 | `SupportTicketAttachments`, `SupportTicketMessages`, `SupportTicketOperations`, `SupportTickets` |
+<!-- BE22-INVENTORY:END -->
+
+استثنای داده‌ای BE-22 برای v6:
+
+| جدول/دسته | عمل صریح مجاز در درخواست حذف |
+|---|---|
+| Users/Persons | حفظ root/FK و ناشناس‌سازی جاری؛ User مسدود و غیرقابل Reactivate |
+| UserCredentials/PhoneChangeRequests | حذف Mobile Credential فقط پس از جداکردن FK و خنثی‌کردن TargetPhone؛ تاریخچهٔ امنیتی حفظ |
+| AddressBookEntries/ContactPhones/ContactDeviceBindings/ContactSyncOperations/ContactSyncDevices/ContactSyncStates | حذف فقط دادهٔ Owner؛ ترتیب FK رعایت شود. دادهٔ دیگران فقط unlink/version و محتوای خصوصی آنان حفظ شود. |
+| PersonalClass Requests/Participants/Invitations/JoinRequests/Transfers/AcademicGrants | حفظ تاریخچه؛ End عضویت و محافظ Manager مسئول؛ flag آموزشی تغییر نکند. |
+| Memberships/RoleAssignments/PlatformRoleAssignments/GuardianRelations | پایان دسترسی بدون حذف تاریخچه؛ محافظ آخرین مدیر/Owner و مسئول پروندهٔ Paid |
+| SchoolApplications/Revisions/Documents/Decisions/Operations/Histories و Provisioning | حفظ پرونده/شواهد/تصمیم؛ فقط درخواست قابل لغو بدون Order به Cancel می‌رود و History می‌گیرد. |
+| SupportTickets/Messages/Attachments/Operations | حفظ تحت ACL؛ حذف عمومی یا دسترسی حساب تازه با شمارهٔ قبلی ممنوع |
+| EducationalSources/Versions | فقط Personal متعلق به User، Archive و حذف Knowledge؛ منابع Class/Organization/Library به‌دلیل CreatedBy حذف نشوند. |
+| AccountDeletionRequests/Steps و AccountDeletionKnowledgePurges | رسید، checkpoint، claim، نسخه و نتیجهٔ قطعی حفظ؛ نه TTL یا حذف خودکار جدید |
+| AssistantContextSelections و وضعیت خصوصی پیام/folder/label/preference | فقط metadata خصوصی Owner پاک؛ بدنهٔ مشترک/رسید/replay/Block حفظ |
+| Subscriptions/Orders/Payments/Attempts/Events/UsageReservations/UsageLedger و AI pins | اشتراک Individual با Domain Cancel؛ تاریخچه و Reserved/Unknown حفظ، بدون refund یا force-release |
+
+جزئیات تمام دسته‌ها، از عکس و bytes تا شواهد Moderation و Backup در [ماتریس حذف](../product-v6/ACCOUNT_DELETION_DATA_MATRIX_FA.md) است. Completed به‌معنی حذف تاریخچهٔ مالی/آموزشی/پیام/Support/Audit یا اثبات purge Backup/provider history نیست. [Runbook حذف](ACCOUNT_DELETION_RUNBOOK_FA.md) توقف، resume مجاز، مرز Restore و مجوزهای مستقل را توضیح می‌دهد. Generic cleanup، TerminalCleanup، keyring، replay و legal hold با این استثنا خودکار فعال نشده‌اند.
+
+## موجودی افزودهٔ تاریخی — ۲۰۲۶-۱۰-۳۰
 
 فرهنگ جاری SQL دارای113 جدول و55 migration تا AddExamAnswerAttachments است. جدول پایین موجودی تاریخی PH-6 است؛ شش جدول تازه همگی DO_NOT_AUTO_DELETE هستند:
 
@@ -31,7 +74,7 @@ AnswerRevisionAttachments و فایل Retained آن guard حذف‌اند؛ Deta
 | C | `CONFIGURABLE_SAFE_TRANSIENT_DATA` | فقط دادهٔ فنی قطعاً بلااستفاده با guard و config صریح |
 | A | `APPROVED_EXISTING_RETENTION` | TTL یا cleanup فنی موجود، نه سیاست حقوقی تازه |
 
-## موجودی کامل جدول‌های SQL
+## موجودی تاریخی PH-6 جدول‌های SQL
 
 نام‌ها عین mapping فعلی‌اند. دستهٔ یک جدول را به همهٔ فایل‌ها یا رابطه‌های آن تعمیم ندهید.
 

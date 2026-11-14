@@ -5,7 +5,7 @@
 | شناسه | موضوع | وضعیت | رفتار تا تعیین تکلیف |
 |---|---|---|---|
 | V6-D03 | مدت نگه‌داری Tombstone و رسیدهای Sync دفترچه و اثر حذف از دفترچهٔ اصلی گوشی بر cloud | `PRODUCT_DECISION_REQUIRED` | عدد TTL، purge یا حذف ابری خودکار از نبود مخاطب در snapshot گوشی اختراع نشود؛ Delete صریح cloud شناسه را Tombstone می‌کند و دستگاه قدیمی حق احیایش را ندارد. |
-| V6-D04 | Retention/استثنا و روش اجرای حذف Identity، Contacts، Messaging، دادهٔ آموزشی، مدارک مدرسه، مالی، Audit و AI/vector | `PRODUCT_LEGAL_DECISION_REQUIRED` | ثبت و پیگیری درخواست ممکن است؛ زمان اجرا، anonymization یا حذف خودکار فعال نشود. |
+| V6-D04 | مدت‌های رسمی retention/legal hold/Backup و مهلت عملیاتیِ حذف حساب | `PRODUCT_LEGAL_CONFIGURATION_REQUIRED` | semantics حذف در BE-22 مصوب و پیاده شده است؛ فعال‌سازی Production تا `ExecutionEnabled` و مهلت صریح بسته می‌ماند. زمان حقوقی، purge تاریخچه یا Backup حدس زده نشود. |
 | V6-D05 | اشتراک Student/Parent: چند فرزند، pooling/splitting، تعداد والد و پایان رابطه | `PRODUCT_DECISION_REQUIRED` | هویت/نشست/پیام/دفترچه/رسیدها جدا بمانند؛ سهمیه یا انتقال مالکیت حدسی ایجاد نشود. |
 | V6-D06 | Billing مربوط به iOS | `PRODUCT_DECISION_REQUIRED` | روش پرداخت یا bypass سیاست Store فرض نشود. |
 | V6-D08 | دامنهٔ گزارش آموزشی مستقل PersonalClass در محصول نهایی | `PRODUCT_DECISION_REQUIRED` | گزارش سازمانی فعال بماند؛ گزارش پیشنهادی مستقل به‌صورت خودکار فعال نشود. |
@@ -20,7 +20,7 @@
 ## مواردی که باز نیستند
 
 - V6-D01 با پرامپت School Establishment مورخ `2026-11-13` بسته شد: فیلد/مدرک لازم هر دو نوع و دو ظرفیت نامنفی مشخص‌اند؛ Submit واقعی، NeedsChanges/resubmit، لغو و History فعال‌اند. الزامات جزئی در [Handoff آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است.
-- V6-D17 با پرامپت School Application Finalization بسته شد: متقاضی فقط مدیر پیشنهادی است؛ Reviewer هنگام Approval متقاضی یا حساب واجد شرایط دیگری را صریحاً انتخاب می‌کند. عضویت/نقش قبلی لازم نیست. انتخاب در History/Decision ثبت و پس از Approval immutable است. پروندهٔ قدیمیِ فاقد انتخاب، مسیر محدود و audited برای تکمیل دارد؛ جایگزینی مدیر نهایی همچنان `POST_APPROVAL_MANAGER_CHANGE=DEFERRED` و بخشی از D18 است. درخواست حذفِ فعلاً بدون اجرای مصوب، حساب حذف‌شده فرض نمی‌شود.
+- V6-D17 با پرامپت School Application Finalization بسته شد: متقاضی فقط مدیر پیشنهادی است؛ Reviewer هنگام Approval متقاضی یا حساب واجد شرایط دیگری را صریحاً انتخاب می‌کند. عضویت/نقش قبلی لازم نیست. انتخاب در History/Decision ثبت و پس از Approval immutable است. پروندهٔ قدیمیِ فاقد انتخاب، مسیر محدود و audited برای تکمیل دارد؛ جایگزینی مدیر نهایی همچنان `POST_APPROVAL_MANAGER_CHANGE=DEFERRED` و بخشی از D18 است. ثبت درخواست حذف به‌تنهایی حساب را حذف‌شده نمی‌کند؛ هنگام اجرای BE-22، وابستگی مدیر پروندهٔ Paid تا انتقال مسئولیت مصوب، حذف را در NeedsAttention نگه می‌دارد.
 - V6-D02 تصویب شد: نشست فعال + OTP واقعی شمارهٔ جدید؛ تغییر اتمیک، حفظ UserId/نشست جاری و ابطال سایر نشست‌ها و Refreshهایشان. Mock ورود در تغییر شماره پذیرفته نمی‌شود.
 - V6-D12 تصویب شد: LinkAccount فقط reference خصوصی مالک است؛ پروفایل و Block جاری بررسی می‌شوند و مجوز Direct/ContactsAudience یا تغییر هویتی/سازمانی نمی‌سازد.
 - V6-D07 برابر `DEFERRED_APPROVED` است: BE-25 پیشنهادی، هر دو Gate پیش‌فرض false و engine/سوابق محفوظ؛ فعال‌سازی نهایی Task بعدی است.

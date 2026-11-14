@@ -1,8 +1,8 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36`؛ بازبینی `2026-11-14`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756`؛ بازبینی `2026-11-14`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**149 جدول، 1592 ستون، 403 FK، 463 index مستقل از key و 407 CHECK؛ 73 Migration.**
+**151 جدول، 1625 ستون، 406 FK، 467 index مستقل از key و 421 CHECK؛ 74 Migration.**
 
 ## مفاهیم و مرزها
 
@@ -27,9 +27,9 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | assessment | 20 |
 | commerce | 15 |
 | guardian | 1 |
-| identity | 9 |
+| identity | 10 |
 | intelligence | 1 |
-| knowledge | 4 |
+| knowledge | 5 |
 | messaging | 52 |
 | notification | 4 |
 | organization | 12 |
@@ -115,6 +115,7 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 71 | 20261112165826_AddVerifiedPhoneChangeRequests | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261112165826_AddVerifiedPhoneChangeRequests.cs) |
 | 72 | 20261113065124_CompleteSchoolEstablishmentWorkflow | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113065124_CompleteSchoolEstablishmentWorkflow.cs) |
 | 73 | 20261113103326_FinalizeSchoolManagerAndPaidProvisioning | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113103326_FinalizeSchoolManagerAndPaidProvisioning.cs) |
+| 74 | 20261114140323_AddAccountDeletionLifecycle | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261114140323_AddAccountDeletionLifecycle.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -2861,12 +2862,25 @@ Entity: `MakanApp.Domain.Identity.AccountDeletionRequest`؛ مالک نگاشت:
 
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| ClaimedUntilUtc | `datetime2` | بله | خیر | Never |
+| ClaimToken | `uniqueidentifier` | بله | خیر | Never |
 | ClientOperationId | `uniqueidentifier` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2` | بله | خیر | Never |
+| ConsecutiveFailures | `int` | خیر | خیر | Never |
+| FailureCode | `nvarchar(100)` | بله | خیر | Never |
+| FailureStep | `int` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| LastAttemptAtUtc | `datetime2` | بله | خیر | Never |
+| NextAttemptAtUtc | `datetime2` | بله | خیر | Never |
 | PolicyStatus | `nvarchar(64)` | خیر | خیر | Never |
+| PolicyVersion | `nvarchar(64)` | خیر | خیر | OnAdd |
 | RequestedAtUtc | `datetime2` | خیر | خیر | Never |
 | RequestedBySessionId | `uniqueidentifier` | خیر | خیر | Never |
 | RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| ScheduledExecutionAtUtc | `datetime2` | بله | خیر | Never |
+| StartedAtUtc | `datetime2` | بله | خیر | Never |
+| Status | `int` | خیر | خیر | OnAdd |
 | UserId | `uniqueidentifier` | خیر | خیر | Never |
 
 کلیدها:
@@ -2874,6 +2888,7 @@ Entity: `MakanApp.Domain.Identity.AccountDeletionRequest`؛ مالک نگاشت:
 | نام | نوع | ستون‌ها |
 |---|---|---|
 | PK_AccountDeletionRequests | PK | Id |
+| AK_AccountDeletionRequests_Id_UserId | Alternate Key | Id, UserId |
 
 Indexها:
 
@@ -2882,6 +2897,7 @@ Indexها:
 | IX_AccountDeletionRequests_UserId | UserId | True | — |
 | IX_AccountDeletionRequests_RequestedBySessionId_UserId | RequestedBySessionId, UserId | False | — |
 | IX_AccountDeletionRequests_UserId_ClientOperationId | UserId, ClientOperationId | True | — |
+| IX_AccountDeletionRequests_Status_ScheduledExecutionAtUtc_ClaimedUntilUtc_NextAttemptAtUtc | Status, ScheduledExecutionAtUtc, ClaimedUntilUtc, NextAttemptAtUtc | False | — |
 
 روابط:
 
@@ -2894,7 +2910,48 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_AccountDeletionRequests_Policy | `[PolicyStatus] = N'PRODUCT_LEGAL_DECISION_REQUIRED'` |
+| CK_AccountDeletionRequests_Attempts | `[AttemptCount]>=0 AND [ConsecutiveFailures]>=0` |
+| CK_AccountDeletionRequests_Claim | `([ClaimToken] IS NULL AND [ClaimedUntilUtc] IS NULL) OR ([Status]=3 AND [ClaimToken] IS NOT NULL AND [ClaimedUntilUtc] IS NOT NULL)` |
+| CK_AccountDeletionRequests_Completed | `([Status]=5 AND [CompletedAtUtc] IS NOT NULL AND [StartedAtUtc] IS NOT NULL AND [CompletedAtUtc]>=[StartedAtUtc]) OR ([Status]<>5 AND [CompletedAtUtc] IS NULL)` |
+| CK_AccountDeletionRequests_Policy | `[PolicyStatus] IN (N'PRODUCT_LEGAL_DECISION_REQUIRED',N'EXECUTION_DISABLED',N'EXECUTION_SCHEDULED',N'EXECUTION_COMPLETED')` |
+| CK_AccountDeletionRequests_Schedule | `([Status]=1 AND [ScheduledExecutionAtUtc] IS NULL) OR ([Status]<>1 AND [ScheduledExecutionAtUtc] IS NOT NULL AND [ScheduledExecutionAtUtc]>=[RequestedAtUtc])` |
+| CK_AccountDeletionRequests_Status | `[Status] IN (1,2,3,4,5)` |
+
+### identity.AccountDeletionSteps
+
+Entity: `MakanApp.Domain.Identity.AccountDeletionStep`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2` | بله | خیر | Never |
+| FailureCode | `nvarchar(100)` | بله | خیر | Never |
+| RequestId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| StartedAtUtc | `datetime2` | بله | خیر | Never |
+| Status | `int` | خیر | خیر | Never |
+| Step | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AccountDeletionSteps | PK | RequestId, Step |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| RequestId | identity.AccountDeletionRequests | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AccountDeletionSteps_Attempts | `[AttemptCount]>=0` |
+| CK_AccountDeletionSteps_Completed | `([Status]=3 AND [StartedAtUtc] IS NOT NULL AND [CompletedAtUtc] IS NOT NULL AND [CompletedAtUtc]>=[StartedAtUtc]) OR ([Status]<>3 AND [CompletedAtUtc] IS NULL)` |
+| CK_AccountDeletionSteps_Status | `[Status] IN (1,2,3,4)` |
+| CK_AccountDeletionSteps_Step | `[Step] BETWEEN 1 AND 8` |
 
 ### identity.CommunicationAgeVerifications
 
@@ -3005,7 +3062,7 @@ Entity: `MakanApp.Domain.Identity.PhoneChangeRequest`؛ مالک نگاشت: [EF
 | CodeHash | `varbinary(32)` | خیر | خیر | Never |
 | CompletedAtUtc | `datetime2` | بله | خیر | Never |
 | CreatedAtUtc | `datetime2` | خیر | خیر | Never |
-| CredentialId | `uniqueidentifier` | خیر | خیر | Never |
+| CredentialId | `uniqueidentifier` | بله | خیر | Never |
 | CredentialVersion | `varbinary(8)` | خیر | خیر | Never |
 | ExpiresAtUtc | `datetime2` | خیر | خیر | Never |
 | FailedAttempts | `int` | خیر | خیر | Never |
@@ -3049,6 +3106,7 @@ CHECKها:
 |---|---|
 | CK_PhoneChangeRequests_Attempts | `[FailedAttempts] >= 0 AND [MaxFailedAttempts] > 0 AND [FailedAttempts] <= [MaxFailedAttempts]` |
 | CK_PhoneChangeRequests_Completed | `([State] = 3 AND [CompletedAtUtc] IS NOT NULL) OR ([State] <> 3 AND [CompletedAtUtc] IS NULL)` |
+| CK_PhoneChangeRequests_DetachedCredential | `[CredentialId] IS NOT NULL OR [State] IN (3,4)` |
 | CK_PhoneChangeRequests_Expiry | `[ExpiresAtUtc] > [CreatedAtUtc]` |
 | CK_PhoneChangeRequests_Hash | `[State] IN (1,4) OR (DATALENGTH([CodeHash]) = 32 AND DATALENGTH([Salt]) >= 16)` |
 | CK_PhoneChangeRequests_State | `[State] IN (1,2,3,4)` |
@@ -3137,10 +3195,12 @@ Entity: `MakanApp.Domain.Identity.User`؛ مالک نگاشت: [EF Configuration
 | ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
 |---|---|---|---|---|
 | AccountStatus | `int` | خیر | خیر | Never |
+| AnonymizedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Bio | `nvarchar(500)` | بله | خیر | Never |
 | CommunicationAgeCategory | `int` | خیر | خیر | Never |
 | CommunicationAgeVerificationStatus | `int` | خیر | خیر | Never |
 | CreatedAtUtc | `datetime2(7)` | خیر | خیر | Never |
+| DeletionStartedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | MessagingRestrictedUntilUtc | `datetime2(7)` | بله | خیر | Never |
 | NormalizedUsername | `nvarchar(32)` | بله | خیر | Never |
@@ -3179,7 +3239,9 @@ CHECKها:
 |---|---|
 | CK_Users_AccountStatus | `[AccountStatus] IN (1, 2)` |
 | CK_Users_AgeVerificationStatus | `[CommunicationAgeVerificationStatus] IN (0,1,2)` |
+| CK_Users_Anonymized | `[AnonymizedAtUtc] IS NULL OR ([DeletionStartedAtUtc] IS NOT NULL AND [AnonymizedAtUtc]>=[DeletionStartedAtUtc] AND [Bio] IS NULL AND [ProfilePhotoFileAssetId] IS NULL)` |
 | CK_Users_CommunicationAgeCategory | `[CommunicationAgeCategory] IN (0, 1, 2)` |
+| CK_Users_Deletion | `[DeletionStartedAtUtc] IS NULL OR [AccountStatus]=2` |
 | CK_Users_Suspension | `([AccountStatus] = 1 AND [SuspendedAtUtc] IS NULL) OR ([AccountStatus] = 2 AND [SuspendedAtUtc] IS NOT NULL)` |
 
 ### identity.UserSessions
@@ -3273,6 +3335,51 @@ CHECKها:
 |---|---|
 | CK_AssistantContextSelections_Kind | `[Kind] IN (1,2,3)` |
 | CK_AssistantContextSelections_Scope | `([Kind]=1 AND [OrganizationId] IS NULL AND [MembershipId] IS NULL AND [Role] IS NULL AND [SubjectOrganizationPersonId] IS NULL AND [ClassId] IS NULL) OR ([Kind]=2 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NULL) OR ([Kind]=3 AND [OrganizationId] IS NOT NULL AND [MembershipId] IS NOT NULL AND [Role] IS NOT NULL AND [ClassId] IS NOT NULL)` |
+
+### knowledge.AccountDeletionKnowledgePurges
+
+Entity: `MakanApp.Domain.Knowledge.AccountDeletionKnowledgePurge`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| AttemptCount | `int` | خیر | خیر | Never |
+| CommandRequestId | `nvarchar(32)` | خیر | خیر | Never |
+| CompletedAtUtc | `datetime2` | بله | خیر | Never |
+| LastAttemptAtUtc | `datetime2` | بله | خیر | Never |
+| Outcome | `nvarchar(32)` | بله | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RequestId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SourceId | `uniqueidentifier` | خیر | خیر | Never |
+| Version | `int` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AccountDeletionKnowledgePurges | PK | RequestId, SourceId, Version |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AccountDeletionKnowledgePurges_CommandRequestId | CommandRequestId | True | — |
+| IX_AccountDeletionKnowledgePurges_RequestId_OwnerUserId | RequestId, OwnerUserId | False | — |
+| IX_AccountDeletionKnowledgePurges_SourceId_Version | SourceId, Version | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| RequestId, OwnerUserId | identity.AccountDeletionRequests | Id, UserId | Restrict |
+| SourceId, Version | knowledge.EducationalSourceVersions | SourceId, Number | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AccountDeletionKnowledgePurges_Attempts | `[AttemptCount]>=0 AND [Version]>0` |
+| CK_AccountDeletionKnowledgePurges_Outcome | `([CompletedAtUtc] IS NULL AND [Outcome] IS NULL) OR ([CompletedAtUtc] IS NOT NULL AND [Outcome] IS NOT NULL AND [Outcome] IN (N'Deleted',N'NotIngested'))` |
 
 ### knowledge.AiSourceSelectionOperations
 

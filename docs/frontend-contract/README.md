@@ -2,9 +2,9 @@
 
 > قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [Personal AI](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.
 
-بازبینی `2026-11-14` با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-11-14` با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
-پوشش جاری: 492 عملیات HTTP در 436 مسیر، 91 Controller، 780 schema، 149 جدول و 73 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
+پوشش جاری: 494 عملیات HTTP در 438 مسیر، 91 Controller، 783 schema، 151 جدول و 74 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
 - [HTML مستقل](MakanApp-Frontend-Backend-Contract.html) و [PDF](MakanApp-Frontend-Backend-Contract.pdf): قرارداد جاری و کاتالوگ کامل API.
 - [مرجع Markdown قراردادها](../backend-api-reference.md)، [راهنمای جریان کد](../backend-api-guide.md)، [ساختار دیتابیس](../database-current-structure.md).
@@ -18,6 +18,8 @@
 - تمام listها یک شکل paging ندارند؛ پارامتر، بدنه، status و schema دقیق هر عملیات در مرجع جاری است. validation کسب‌وکاری فراتر از nullable/required در OpenAPI اجرا می‌شود.
 
 DOC-CONTRACT-01 در نسخهٔ مبنا CLOSED_IN_CODE_AND_LOCAL_CONTRACT_TESTS است؛ اختلاف integer/String قبلی در snapshot جاری دیده نشد. OpenAPI با serializer رشته‌ای MVC هم‌تراز شده است؛ literalهای زیر از همان CLR/JsonOptions استخراج می‌شوند. این نتیجه شاهد انتشار OpenAPI روی سرور نیست؛ named Flags همهٔ ترکیب‌های مجاز یا ورودی‌های مجاز use case را تعریف نمی‌کند.
+
+حذف حساب receipt و هشت checkpoint پایدار دارد؛ اجرا پیش‌فرض خاموش و بدون مهلت حدسی است. در Freeze همهٔ نشست‌ها، حتی requester، revoke می‌شوند؛ از 401، Completed نتیجه نگیرید. پیام/آموزش/مالی حفظ، دفترچهٔ مالک پاک و لینک حساب در دفترچهٔ دیگران بدون حذف نام/شمارهٔ آن‌ها جدا می‌شود. [قرارداد کامل و وضعیت‌ها](../product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [ماتریس داده](../product-v6/ACCOUNT_DELETION_DATA_MATRIX_FA.md).
 
 ## ورود، نشست و OTP
 

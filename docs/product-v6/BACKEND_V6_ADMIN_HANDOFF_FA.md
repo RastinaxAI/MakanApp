@@ -39,7 +39,7 @@ School Manager به‌واسطهٔ نقش سازمانی این permissionها �
 
 ## صف حذف حساب و تغییر شماره
 
-`GET /api/admin/v1/privacy/deletion-requests?page=1&pageSize=50` تنها شناسه/وضعیت/زمان درخواست را نشان می‌دهد. هیچ Execute/Anonymize endpoint یا زمان‌بندی وجود ندارد. `PRODUCT_LEGAL_DECISION_REQUIRED` به‌معنی درخواست ثبت‌شده و اجرای غیرفعال است؛ سیاست‌های مالی، Audit، پیام، آموزش، اسناد و AI باید پیش از حذف تصویب شوند. زمان نگه‌داری یا استثنا با SQL/تنظیم حدسی تعیین نشود.
+`GET /api/admin/v1/privacy/deletion-requests?page=1&pageSize=50` و `GET .../{requestId}` با Read، وضعیت و checkpointهای امن را نشان می‌دهند. `POST .../{requestId}/retry` علاوه بر Read به `platform.privacy_requests.manage` نیاز دارد که فقط برای Owner seed شده است؛ بدنه `clientOperationId/expectedVersion` است. فقط NeedsAttention ادامه می‌یابد؛ Force Complete و اجرای SQL دستی نداریم. Worker با gate و مهلت صریح کار می‌کند و Production پیش‌فرض غیرفعال است. محافظ آخرین مدیر/مالک و مدیر نهایی پروندهٔ Paid حفظ است. [قرارداد](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [Runbook](../operations/ACCOUNT_DELETION_RUNBOOK_FA.md) مرجع جاری‌اند.
 
 تغییر شماره متعلق به صاحب حساب و OTP واقعی شمارهٔ جدید است؛ Admin راه میان‌بر Credential ندارد. موفقیت `identity.PhoneChanged` و تلاش ناموفق `identity.PhoneChangeVerificationFailed` با شناسهٔ درخواست، Actor/Session و correlation ثبت می‌شوند؛ شماره، OTP، Hash یا Token در Audit نیست. UserId، پروفایل، عضویت‌ها و تاریخچه حفظ و سایر نشست‌ها/Refreshها باطل می‌شوند. تحویل نامطمئن SMS با همان OperationId resend نمی‌شود؛ آماده‌نبودن provider واقعی پاسخ503 دارد، حتی اگر Mock Login فعال باشد.
 

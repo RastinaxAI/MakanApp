@@ -47,8 +47,8 @@ Inbox حساب، Contacts، دفترچه و PersonalClass با تغییر School
 | `GET /api/v1/support/tickets` | فقط پرونده‌های مالک؛ `status?`, `page`, `pageSize` تا۱۰۰ |
 | `GET /api/v1/support/tickets/{id}` | پیام‌ها تا۱۰۰؛ ادامه با `afterMessageVersion=nextMessageVersion` و `hasMoreMessages` |
 | `POST /api/v1/support/tickets/{id}/messages` | `clientOperationId`, `expectedVersion`, `body`, `fileAssetIds?`؛ تعارض۴۰۹، پروندهٔ غیرمجاز۴۰۴ |
-| `POST /api/v1/me/deletion-request` | `clientOperationId`؛ ۲۰۲ ثبت درخواست با `executionEnabled=false` و بدون تاریخ اجرای حدسی |
-| `GET /api/v1/me/deletion-request` | وضعیت موجود یا۲۰۴؛ حالت `PRODUCT_LEGAL_DECISION_REQUIRED` به معنی حذف انجام‌شده نیست |
+| `POST /api/v1/me/deletion-request` | `clientOperationId`؛ ۲۰۲ رسید idempotent؛ Requested/Scheduled مطابق flag و مهلت صریح سرور، بدون زمان حدسی |
+| `GET /api/v1/me/deletion-request` | وضعیت lifecycle یا۲۰۴؛ پس از Freeze نشست باطل می‌شود و۴۰۱ به‌معنی Completed نیست؛ [قرارداد کامل](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) |
 | `GET /api/v1/notifications/{id}/target` | target تایپ‌شده، `apiRoute`, `resourceId`, `requiredOrganizationId?` پس از بررسی مجدد ACL؛ URL آزاد نیست |
 
 Reply روی تیکت Resolved بازگشایی نمی‌کند. Support اجازهٔ مرور دفترچه/پیام خصوصی نمی‌دهد. اعلان عمومی فقط خبر به‌روزرسانی است و متن تیکت/مدرک در Push نمایش داده نمی‌شود. برای target آموزشی، زمینهٔ سازمان/نقش/فرزند صحیح از مسیر معمول انتخاب شود؛ target خودش Workspace را تغییر نمی‌دهد. دسترسی هدف ممکن است بعداً لغو و پاسخ۴۰۴ شود؛ آن را قابل‌دورزدن با Route قدیمی فرض نکنید. Push واقعی هنوز نیازمند credential/device و پذیرش Runtime است.

@@ -1,8 +1,8 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-11-14` با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-11-14` با مبنای Git `source@a639319b70d7c07db3588cd91d674aed339c1756` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
-پوشش: **492 عملیات HTTP، 436 مسیر متمایز، 91 Controller و 780 schema**. Health، Swagger و Hub در این شمارش نیستند.
+پوشش: **494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
 این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.
 
@@ -19,6 +19,8 @@
 [راهنمای جریان‌ها](backend-api-guide.md)، [قرارداد Backoffice](platform/BACKOFFICE_FRONTEND_HANDOFF.md)، [سیاست Child Safety](architecture/GAP_05_MESSENGER_CHILD_SAFETY.md)، [استقرار](production/DEPLOYMENT_IIS.md).
 
 ## رفتار جاری فراتر از schema
+
+حذف حساب اکنون lifecycle پایدار Requested/Scheduled/Processing/NeedsAttention/Completed دارد. AccountDeletion پیش‌فرض خاموش و مهلت null است؛ فعال‌سازی به تنظیم صریح نیاز دارد. همهٔ نشست‌ها در freeze باطل می‌شوند و 401 اثبات Completed نیست. Detail/Retry مدیریتی permission مستقل دارند؛ تاریخچهٔ مشترک، آموزش، مالی و شواهد حذف عمومی نمی‌شوند. [قرارداد حذف حساب](product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [Runbook](operations/ACCOUNT_DELETION_RUNBOOK_FA.md).
 
 قرارداد OTP یکسان است ولی رفتار از Otp:Enabled/Otp:AllowMockAuthentication می‌آید: Production/Staging فقط true/false و Mock فقط در Development/Test/Testing با false/true. در Mock challenge واقعی ساخته نمی‌شود و مالکیت شماره ثابت نمی‌شود؛ نشست و مجوز منابع همچنان واقعی‌اند. راهنمای OTP و نمونه ورود را در [راهنمای بک‌اند](backend-api-guide.md#identity) بخوانید.
 
@@ -96,7 +98,7 @@ Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و Clien
 | PhoneChange | 2 | [PhoneChangeController](../MakanApp.Api/Controllers/PhoneChangeController.cs) |
 | PlatformCommerce | 7 | [PlatformCommerceController](../MakanApp.Api/Controllers/PlatformCommerceController.cs) |
 | PlatformCommercialContracts | 8 | [PlatformCommercialContractsController](../MakanApp.Api/Controllers/PlatformCommercialContractsController.cs) |
-| PlatformDeletionRequests | 1 | [PlatformDeletionRequestsController](../MakanApp.Api/Controllers/AccountDeletionController.cs) |
+| PlatformDeletionRequests | 3 | [PlatformDeletionRequestsController](../MakanApp.Api/Controllers/AccountDeletionController.cs) |
 | PlatformEducation | 6 | [PlatformEducationController](../MakanApp.Api/Controllers/PlatformEducationController.cs) |
 | PlatformFinance | 2 | [PlatformFinanceController](../MakanApp.Api/Controllers/PlatformFinanceController.cs) |
 | PlatformIam | 5 | [PlatformIamController](../MakanApp.Api/Controllers/PlatformIamController.cs) |
@@ -8435,6 +8437,51 @@ policy: `platform.privacy_requests.read`
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
+### GET /api/admin/v1/privacy/deletion-requests/{requestId}
+
+کد واقعی: [PlatformDeletionRequestsController.Detail](../MakanApp.Api/Controllers/AccountDeletionController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.privacy_requests.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.AccountDeletionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: ندارد.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountDeletionDetail](#contract-AccountDeletionDetail)<br>`application/json`: [AccountDeletionDetail](#contract-AccountDeletionDetail)<br>`text/json`: [AccountDeletionDetail](#contract-AccountDeletionDetail) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### POST /api/admin/v1/privacy/deletion-requests/{requestId}/retry
+
+کد واقعی: [PlatformDeletionRequestsController.Retry](../MakanApp.Api/Controllers/AccountDeletionController.cs).
+
+احراز هویت: نشست Bearer معتبر؛ مجوز نهایی منبع در Application بررسی می‌شود.
+
+policy: `platform.privacy_requests.manage`، `platform.privacy_requests.read`
+
+وابستگی‌های واقعی Controller: `MakanApp.Application.Identity.AccountDeletionService`
+
+| پارامتر | محل | الزام در schema | نوع |
+|---|---|---|---|
+| `requestId` | path | بله | string / uuid |
+
+بدنه درخواست: `application/json`: [RetryAccountDeletionCommand](#contract-RetryAccountDeletionCommand)<br>`text/json`: [RetryAccountDeletionCommand](#contract-RetryAccountDeletionCommand)<br>`application/*+json`: [RetryAccountDeletionCommand](#contract-RetryAccountDeletionCommand)؛ required
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | OK | `text/plain`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`application/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult)<br>`text/json`: [AccountDeletionStatusResult](#contract-AccountDeletionStatusResult) |
+| 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
 
 ## PlatformEducation
 
@@ -12392,6 +12439,16 @@ object
 | `conversation` | [MessagingRealtimeNotification](#contract-MessagingRealtimeNotification) | بله | خیر/تصریح نشده | — |
 | `invalidation` | [RealtimeInvalidation](#contract-RealtimeInvalidation) | بله | خیر/تصریح نشده | — |
 
+<a id="contract-AccountDeletionDetail"></a>
+### AccountDeletionDetail
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `item` | [AccountDeletionQueueItem](#contract-AccountDeletionQueueItem) | بله | خیر/تصریح نشده | — |
+| `steps` | آرایه از [AccountDeletionStepResult](#contract-AccountDeletionStepResult) | بله | خیر/تصریح نشده | — |
+
 <a id="contract-AccountDeletionPage"></a>
 ### AccountDeletionPage
 
@@ -12426,6 +12483,27 @@ object
 | `status` | string | بله | خیر/تصریح نشده | — |
 | `executionEnabled` | boolean | بله | خیر/تصریح نشده | — |
 | `scheduledExecutionAtUtc` | string / date-time | بله | بله | — |
+| `policyVersion` | string | خیر | خیر/تصریح نشده | — |
+| `startedAtUtc` | string / date-time | خیر | بله | — |
+| `completedAtUtc` | string / date-time | خیر | بله | — |
+| `attemptCount` | integer / int32 | خیر | خیر/تصریح نشده | — |
+| `safeFailureCode` | string | خیر | بله | — |
+| `failureStep` | string | خیر | بله | — |
+| `version` | string | خیر | خیر/تصریح نشده | — |
+
+<a id="contract-AccountDeletionStepResult"></a>
+### AccountDeletionStepResult
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `step` | string | بله | خیر/تصریح نشده | — |
+| `status` | string | بله | خیر/تصریح نشده | — |
+| `attemptCount` | integer / int32 | بله | خیر/تصریح نشده | — |
+| `startedAtUtc` | string / date-time | بله | بله | — |
+| `completedAtUtc` | string / date-time | بله | بله | — |
+| `safeFailureCode` | string | بله | بله | — |
 
 <a id="contract-AccountInboxPageResult"></a>
 ### AccountInboxPageResult
@@ -19946,6 +20024,16 @@ object
 |---|---|---|---|---|
 | `username` | string | بله | بله | — |
 | `phoneNumber` | string | بله | بله | — |
+
+<a id="contract-RetryAccountDeletionCommand"></a>
+### RetryAccountDeletionCommand
+
+object
+
+| فیلد | نوع | required | nullable | قید منتشرشده |
+|---|---|---|---|---|
+| `clientOperationId` | string / uuid | بله | خیر/تصریح نشده | — |
+| `expectedVersion` | string | بله | خیر/تصریح نشده | — |
 
 <a id="contract-ReviewPersonalClassRequestCommand"></a>
 ### ReviewPersonalClassRequestCommand
