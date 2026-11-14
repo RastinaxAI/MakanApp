@@ -269,12 +269,13 @@ public sealed class NotificationWorkerRecoveryTests(WorkerRecoverySqlFixture sql
             var organization = Organization.Create("سازمان تست بازیابی", _clock.Now); organizationId = organization.Id;
             db.AddRange(organization, Membership.CreateActive(user.Id, organization.Id, _clock.Now));
         }
+        var source = await NotificationAcademicFixture.CreateAsync(db, user.Id, organizationId, NotificationType.AssignmentPublished, _clock.Now);
         var ids = new List<Guid>();
         for (var index = 0; index < count; index++)
         {
             var createdAtUtc = _clock.Now.AddMinutes(-5).AddTicks(index);
             var notification = DomainNotification.Create(Guid.NewGuid(), user.Id, organizationId, NotificationCategory.Educational,
-                NotificationType.AssignmentPublished, "اعلان تست", "بازیابی پایدار", NotificationResourceType.Assignment, Guid.NewGuid(), createdAtUtc);
+                NotificationType.AssignmentPublished, "اعلان تست", "بازیابی پایدار", NotificationResourceType.Assignment, source.ResourceId, createdAtUtc);
             var attempt = NotificationDeliveryAttempt.Schedule(notification.Id, NotificationDeliveryChannel.Push, device.Id.ToString("N"), createdAtUtc, createdAtUtc);
             if (exhaustedFirst && index == 0)
                 for (var abandoned = 0; abandoned < 3; abandoned++)

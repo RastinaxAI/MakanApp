@@ -77,7 +77,8 @@ public sealed class EfNotificationStore(MakanDbContext dbContext, PersonalClassA
         Guid notificationId,
         Guid userId,
         CancellationToken cancellationToken) =>
-        await (await resourceAccess.FilterAsync(Visible(userId), userId, cancellationToken)).SingleOrDefaultAsync(
+        // AsNoTracking یک subquery نیز می‌تواند tracking کل query مرکب را تغییر دهد؛ mutation باید صریحاً tracked باشد.
+        await (await resourceAccess.FilterAsync(Visible(userId), userId, cancellationToken)).AsTracking().SingleOrDefaultAsync(
             notification => notification.Id == notificationId &&
                             notification.RecipientUserId == userId,
             cancellationToken);

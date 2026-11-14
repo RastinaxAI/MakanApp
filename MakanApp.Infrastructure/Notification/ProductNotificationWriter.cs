@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MakanApp.Infrastructure.Notification;
 
 // فقط Storeهای مالک، پیش از Save موجود این writer را فراخوانی می‌کنند؛ hook عمومی DbContext ساخته نمی‌شود.
-public sealed class ProductNotificationWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock)
+public sealed partial class ProductNotificationWriter(MakanDbContext db, IOutbox outbox, TimeProvider clock)
 {
     public async Task CaptureOrganizationAsync(CancellationToken ct)
     {
@@ -27,14 +27,19 @@ public sealed class ProductNotificationWriter(MakanDbContext db, IOutbox outbox,
             else if (entry.Entity is Membership member && changedMemberships.Contains(member.Id))
                 Emit("membership:" + member.Status, member.Id, member.RowVersion, member.UserId, NotificationType.MembershipChanged,
                     NotificationResourceType.Membership, member.Id, "تغییر دسترسی", "وضعیت دسترسی سازمانی شما تغییر کرده است.");
-            else if (entry.Entity is RoleAssignment role && !changedMemberships.Contains(role.MembershipId) &&
-                (entry.State == EntityState.Added || entry.Property(nameof(RoleAssignment.Status)).IsModified))
-            {
-                var membership = db.Memberships.Local.SingleOrDefault(m => m.Id == role.MembershipId) ??
-                    await db.Memberships.AsNoTracking().SingleAsync(m => m.Id == role.MembershipId, ct);
-                Emit("role:" + role.Status, role.Id, role.RowVersion, membership.UserId, NotificationType.MembershipChanged,
-                    NotificationResourceType.Membership, membership.Id, "تغییر دسترسی", "وضعیت نقش سازمانی شما تغییر کرده است.");
-            }
+        }
+        // پایان نقش قدیمی و ایجاد نقش تازه، یک تغییر منطقیِ عضویت است؛ دو اعلان مستقل نمی‌سازد.
+        var roles = entries.Where(e => e.Entity is RoleAssignment role && !changedMemberships.Contains(role.MembershipId) &&
+                (e.State == EntityState.Added || e.Property(nameof(RoleAssignment.Status)).IsModified || e.Property(nameof(RoleAssignment.Role)).IsModified))
+            .Select(e => (RoleAssignment)e.Entity).GroupBy(r => r.MembershipId);
+        foreach (var group in roles)
+        {
+            var membership = db.Memberships.Local.SingleOrDefault(m => m.Id == group.Key) ??
+                await db.Memberships.AsNoTracking().SingleAsync(m => m.Id == group.Key, ct);
+            var fingerprint = string.Join(";", group.OrderBy(r => r.Id).Select(r => $"{r.Id:N}:{r.Role}:{r.Status}:{Convert.ToHexString(r.RowVersion)}"));
+            Emit("membership-roles", membership.Id, SHA256.HashData(Encoding.UTF8.GetBytes(fingerprint)), membership.UserId,
+                NotificationType.MembershipChanged, NotificationResourceType.Membership, membership.Id,
+                "تغییر دسترسی", "وضعیت نقش سازمانی شما تغییر کرده است.");
         }
     }
     public void CapturePaidOrders()

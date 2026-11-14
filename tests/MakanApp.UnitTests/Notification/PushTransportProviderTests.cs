@@ -122,7 +122,7 @@ public sealed class PushTransportProviderTests
         Assert.Equal(delivery.PushToken, message.GetProperty("token").GetString());
         Assert.Equal(delivery.NotificationId.ToString("N"), message.GetProperty("android").GetProperty("notification").GetProperty("tag").GetString());
         Assert.Equal(delivery.NotificationId.ToString("N"), message.GetProperty("apns").GetProperty("headers").GetProperty("apns-collapse-id").GetString());
-        Assert.Equal($"makan://conversations/{delivery.ConversationId:D}", message.GetProperty("data").GetProperty("deepLink").GetString());
+        Assert.Equal($"makan://notifications/{delivery.NotificationId:D}", message.GetProperty("data").GetProperty("deepLink").GetString());
         var payload = Encoding.UTF8.GetString(handler.Body!);
         Assert.DoesNotContain("private-body-never-send", payload);
         Assert.DoesNotContain("private-title-never-send", payload);

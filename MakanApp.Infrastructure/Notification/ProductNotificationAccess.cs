@@ -8,7 +8,7 @@ using DomainNotification = MakanApp.Domain.Notification.Notification;
 
 namespace MakanApp.Infrastructure.Notification;
 
-public sealed class ProductNotificationAccess(MakanDbContext db, IPlatformPermissionResolver permissions, TimeProvider clock)
+public sealed partial class ProductNotificationAccess(MakanDbContext db, IPlatformPermissionResolver permissions, TimeProvider clock)
 {
     public async Task<IQueryable<DomainNotification>> FilterAsync(IQueryable<DomainNotification> source, Guid user, CancellationToken ct)
     {
@@ -16,7 +16,7 @@ public sealed class ProductNotificationAccess(MakanDbContext db, IPlatformPermis
         var schools = await permissions.HasPermissionAsync(user, PlatformPermissionKeys.SchoolApplicationsRead, ct);
         var now = clock.GetUtcNow().UtcDateTime;
         var orders = ReadableOrders(user);
-        return source.Where(n =>
+        return FilterWorkflowResources(source, user, now).Where(n =>
             (n.ResourceType != NotificationResourceType.SupportTicket || db.SupportTickets.Any(t => t.Id == n.ResourceId && (t.OwnerUserId == user || support))) &&
             (n.ResourceType != NotificationResourceType.SchoolApplication || db.SchoolApplications.Any(a => a.Id == n.ResourceId &&
                 (a.ApplicantUserId == user || schools && a.Status != SchoolApplicationStatus.Draft && a.SubmittedPolicyVersion != null))) &&
@@ -44,7 +44,7 @@ public sealed class ProductNotificationAccess(MakanDbContext db, IPlatformPermis
                 var now = clock.GetUtcNow().UtcDateTime;
                 return await db.Invitations.AnyAsync(i => i.Id == id && i.DestinationUserId == user && i.Status == InvitationStatus.Pending &&
                     i.ExpiresAtUtc > now && db.Organizations.Any(o => o.Id == i.OrganizationId && o.Status == OrganizationStatus.Active), ct);
-            default: return true;
+            default: return await AllowsWorkflowAsync(user, type, id, ct);
         }
     }
     private IQueryable<MakanApp.Domain.Commerce.Order> ReadableOrders(Guid user) => db.Orders.Where(o => o.PurchaserUserId == user &&

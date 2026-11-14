@@ -28,6 +28,9 @@ public sealed partial class NotificationDeliveryProcessor
         var preference = await preferenceResolver.ResolveAsync(notification.RecipientUserId, notification.OrganizationId,
             NotificationPreferencePolicy.Map(notification.Type), ct);
         if (!preference.ScopeAvailable) return Suppress(NotificationDeliveryFailureReason.OrganizationAccessRevoked);
+        // عضویت سازمان به‌تنهایی مجوز نمره/آزمون نیست؛ دورهٔ عضویت، Enrollment، release و Guardian جاری دوباره سنجیده می‌شوند.
+        if (!await AcademicNotificationAccessQuery.AllowsDeliveryAsync(dbContext, notification, nowUtc, ct))
+            return Suppress(NotificationDeliveryFailureReason.ResourceAccessRevoked);
         if (attempt.Channel == NotificationDeliveryChannel.Push && !preference.PushEnabled ||
             attempt.Channel == NotificationDeliveryChannel.Sms && !preference.SmsEnabled)
             return Suppress(NotificationDeliveryFailureReason.SuppressedByPreference);

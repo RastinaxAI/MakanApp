@@ -13,5 +13,13 @@ public enum NotificationType
     MembershipChanged = 9,
     OrderPaid = 10,
     SupportUpdated = 11,
-    SchoolApplicationUpdated = 12
+    SchoolApplicationUpdated = 12,
+    ConversationInvitation = 13,
+    ConversationJoinRequestUpdated = 14,
+    PersonalClassRequestUpdated = 15,
+    PersonalClassInvitation = 16,
+    PersonalClassJoinRequestUpdated = 17,
+    PersonalClassManagerTransferUpdated = 18,
+    PersonalClassMembershipChanged = 19,
+    PersonalClassStateChanged = 20
 }

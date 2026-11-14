@@ -99,6 +99,7 @@ public sealed partial class EfPersonalClassStore
                 if (remaining == PersonalClassLocalRoles.None) previous.End(now, "ManagementTransferred");
                 else previous.ChangeRoles(remaining, previous.DelegatedCapabilities);
                 // قید یکتای مدیر ابتدا در همان تراکنش آزاد می‌شود؛ هیچ وضعیت میانی Commit نمی‌شود.
+                await notifications.CapturePersonalClassesAsync(ct);
                 await realtime.CapturePersonalClassesAsync(ct);
                 await db.SaveChangesAsync(ct);
             }

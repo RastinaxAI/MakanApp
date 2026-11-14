@@ -193,7 +193,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         factory.Clock.SetUtcNow(nowUtc);
         try
         {
-            var intent = CreateIntent(user.User.Id, null, NotificationType.AssignmentPublished, nowUtc);
+            var intent = await CreateIntentAsync(user.User.Id, null, NotificationType.AssignmentPublished, nowUtc);
             _ = await factory.EnqueueNotificationAsync(intent);
             _ = await factory.DrainNotificationOutboxAsync();
             var notificationId = await factory.GetNotificationIdAsync(intent.EventId, user.User.Id);
@@ -224,7 +224,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         factory.Clock.SetUtcNow(nowUtc);
         try
         {
-            var intent = CreateIntent(
+            var intent = await CreateIntentAsync(
                 user.User.Id, null, NotificationType.AssignmentGradeReleased, nowUtc);
             _ = await factory.EnqueueNotificationAsync(intent);
             _ = await factory.DrainNotificationOutboxAsync();
@@ -264,8 +264,8 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         factory.Clock.SetUtcNow(nowUtc);
         try
         {
-            var aIntent = CreateIntent(user.User.Id, organizationA, NotificationType.ExamGradeReleased, nowUtc);
-            var bIntent = CreateIntent(user.User.Id, organizationB, NotificationType.ExamGradeReleased, nowUtc);
+            var aIntent = await CreateIntentAsync(user.User.Id, organizationA, NotificationType.ExamGradeReleased, nowUtc);
+            var bIntent = await CreateIntentAsync(user.User.Id, organizationB, NotificationType.ExamGradeReleased, nowUtc);
             _ = await factory.EnqueueNotificationAsync(aIntent);
             _ = await factory.EnqueueNotificationAsync(bIntent);
             _ = await factory.DrainNotificationOutboxAsync();
@@ -315,7 +315,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         factory.Clock.SetUtcNow(nowUtc);
         try
         {
-            var intent = CreateIntent(user.User.Id, null, NotificationType.AssignmentGradeReleased, nowUtc);
+            var intent = await CreateIntentAsync(user.User.Id, null, NotificationType.AssignmentGradeReleased, nowUtc);
             _ = await factory.EnqueueNotificationAsync(intent);
             _ = await factory.DrainNotificationOutboxAsync();
             var notificationId = await factory.GetNotificationIdAsync(intent.EventId, user.User.Id);
@@ -360,7 +360,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
             factory.NotificationDeliveryProvider.Reset();
             factory.NotificationDeliveryProvider.PushResult = DeliveryProviderResult.Transient(
                 NotificationDeliveryFailureReason.ProviderUnavailable);
-            var transient = CreateIntent(user.User.Id, null, NotificationType.ExamPublished, nowUtc);
+            var transient = await CreateIntentAsync(user.User.Id, null, NotificationType.ExamPublished, nowUtc);
             _ = await factory.EnqueueNotificationAsync(transient);
             _ = await factory.DrainNotificationOutboxAsync();
             var transientId = await factory.GetNotificationIdAsync(transient.EventId, user.User.Id);
@@ -379,7 +379,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
             factory.NotificationDeliveryProvider.Reset();
             factory.NotificationDeliveryProvider.PushResult = DeliveryProviderResult.Permanent(
                 NotificationDeliveryFailureReason.ProviderRejected);
-            var permanent = CreateIntent(
+            var permanent = await CreateIntentAsync(
                 user.User.Id, null, NotificationType.ExamPublished,
                 factory.Clock.GetUtcNow().UtcDateTime);
             _ = await factory.EnqueueNotificationAsync(permanent);
@@ -394,7 +394,7 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
 
             factory.NotificationDeliveryProvider.Reset();
             factory.NotificationDeliveryProvider.PushWaitsForCancellation = true;
-            var timeout = CreateIntent(
+            var timeout = await CreateIntentAsync(
                 user.User.Id, null, NotificationType.ExamPublished,
                 factory.Clock.GetUtcNow().UtcDateTime);
             _ = await factory.EnqueueNotificationAsync(timeout);
@@ -481,29 +481,12 @@ public sealed class NotificationPreferenceEndpointsTests(MakanAppWebApplicationF
         string? expectedRowVersion = null) =>
         new(push, sms, quiet, start, end, timeZoneId, expectedRowVersion);
 
-    private static NotificationIntent CreateIntent(
+    private Task<NotificationIntent> CreateIntentAsync(
         Guid userId,
         Guid? organizationId,
         NotificationType type,
         DateTime occurredAtUtc) =>
-        new(
-            Guid.NewGuid(),
-            organizationId,
-            NotificationCategory.Educational,
-            type,
-            type is NotificationType.AssignmentPublished
-                ? NotificationResourceType.Assignment
-                : type is NotificationType.ExamPublished
-                    ? NotificationResourceType.Exam
-                    : type is NotificationType.AssignmentGradeReleased
-                        ? NotificationResourceType.SubmissionAttempt
-                        : NotificationResourceType.ExamAttempt,
-            Guid.NewGuid(),
-            occurredAtUtc,
-            [new NotificationRecipientIntent(
-                userId,
-                "اعلان آموزشی داخلی",
-                "بدنه داخلی شامل جزئیات خصوصی آزمون و نمره نیست.")]);
+        factory.CreateDeliveryAcademicIntentAsync(userId, organizationId, type, occurredAtUtc);
 
     private static string Token() => $"test-device-token-{Guid.NewGuid():N}";
 

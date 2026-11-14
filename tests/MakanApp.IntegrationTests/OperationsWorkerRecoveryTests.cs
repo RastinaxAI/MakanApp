@@ -383,10 +383,12 @@ public sealed partial class OperationsWorkerRecoveryTests(WorkerRecoverySqlFixtu
         var session = UserSession.Create(user.Id, RandomNumberGenerator.GetBytes(32), _clock.Now, _clock.Now.AddHours(1));
         var device = PushDeviceRegistration.Create(user.Id, session.Id, PushDevicePlatform.Android,
             $"worker-recovery-test-{Guid.NewGuid():N}", RandomNumberGenerator.GetBytes(32), _clock.Now);
+        db.AddRange(user, session, device); await db.SaveChangesAsync();
+        var source = await NotificationAcademicFixture.CreateAsync(db, user.Id, null, NotificationType.AssignmentPublished, _clock.Now);
         var notification = DomainNotification.Create(Guid.NewGuid(), user.Id, null, NotificationCategory.Educational,
-            NotificationType.AssignmentPublished, "اعلان تست", "بازیابی ثبت نتیجه", NotificationResourceType.Assignment, Guid.NewGuid(), _clock.Now);
+            NotificationType.AssignmentPublished, "اعلان تست", "بازیابی ثبت نتیجه", NotificationResourceType.Assignment, source.ResourceId, _clock.Now);
         var attempt = NotificationDeliveryAttempt.Schedule(notification.Id, NotificationDeliveryChannel.Push, device.Id.ToString("N"), _clock.Now, _clock.Now);
-        db.AddRange(user, session, device, notification, attempt); await db.SaveChangesAsync(); return attempt.Id;
+        db.AddRange(notification, attempt); await db.SaveChangesAsync(); return attempt.Id;
     }
 
     private sealed class RecoveryClock : TimeProvider

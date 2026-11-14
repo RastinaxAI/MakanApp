@@ -77,6 +77,14 @@ public static class NotificationOutboxContract
         NotificationType.OrderPaid => "notification.order-paid.v1",
         NotificationType.SupportUpdated => "notification.support-updated.v1",
         NotificationType.SchoolApplicationUpdated => "notification.school-application-updated.v1",
+        NotificationType.ConversationInvitation => "notification.conversation-invitation.v1",
+        NotificationType.ConversationJoinRequestUpdated => "notification.conversation-join-request-updated.v1",
+        NotificationType.PersonalClassRequestUpdated => "notification.personal-class-request-updated.v1",
+        NotificationType.PersonalClassInvitation => "notification.personal-class-invitation.v1",
+        NotificationType.PersonalClassJoinRequestUpdated => "notification.personal-class-join-request-updated.v1",
+        NotificationType.PersonalClassManagerTransferUpdated => "notification.personal-class-manager-transfer-updated.v1",
+        NotificationType.PersonalClassMembershipChanged => "notification.personal-class-membership-changed.v1",
+        NotificationType.PersonalClassStateChanged => "notification.personal-class-state-changed.v1",
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };
 }

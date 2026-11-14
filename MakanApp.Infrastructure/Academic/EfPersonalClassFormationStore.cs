@@ -18,7 +18,7 @@ namespace MakanApp.Infrastructure.Academic;
 
 public sealed class EfPersonalClassFormationStore(MakanDbContext db, CommercialActorAccess actors,
     IPlatformPermissionResolver permissions, EfCommercialStore commerce, OfficialSpaceEventWriter spaces,
-    RealtimeInvalidationWriter realtime) : IPersonalClassFormationStore
+    RealtimeInvalidationWriter realtime, MakanApp.Infrastructure.Notification.ProductNotificationWriter notifications) : IPersonalClassFormationStore
 {
     public async Task<PersonalClassRequestDto> CreateAsync(PersonalClassActor actor, CreatePersonalClassRequestCommand command, DateTime now, CancellationToken ct)
     {
@@ -131,6 +131,7 @@ public sealed class EfPersonalClassFormationStore(MakanDbContext db, CommercialA
             else db.PersonalClassManagerTransfers.Add(PersonalClassManagerTransfer.Create(entity.Id, actor.UserId, null, finalManager,
                 r.ClientOperationId, command.Reason, now));
             spaces.RequestPersonalClassPair(entity.Id, now);
+            await notifications.CapturePersonalClassesAsync(ct);
             await realtime.CapturePersonalClassesAsync(ct);
             // نخست کلاس درج می‌شود؛ رابطهٔ برگشتی Approved فقط پس از وجود FK معتبر برقرار می‌شود.
             await db.SaveChangesAsync(ct);
@@ -138,6 +139,7 @@ public sealed class EfPersonalClassFormationStore(MakanDbContext db, CommercialA
         }
         else r.Decide(command.Decision, actor.UserId, command.Reason, now);
         Audit(actor, r.Id, command.Decision.ToString(), command.Reason, now);
+        await notifications.CapturePersonalClassesAsync(ct);
         await realtime.CapturePersonalClassesAsync(ct); await db.SaveChangesAsync(ct); await tx.CommitAsync(ct);
         return Map(r, actor.UserId);
     }

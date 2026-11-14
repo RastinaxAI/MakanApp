@@ -14,7 +14,7 @@ public sealed record PushWirePayload(string NotificationId, string? Conversation
             delivery.Type.HasValue && Enum.IsDefined(delivery.Type.Value) ? delivery.Type.Value.ToString() : "Notification",
             isMessage ? "پیام جدید" : "اعلان جدید",
             isMessage ? "پیام جدیدی در ماکان دارید." : "اعلان جدیدی در ماکان دارید.",
-            conversationId.HasValue ? $"makan://conversations/{conversationId:D}" : $"makan://notifications/{delivery.NotificationId:D}",
+            $"makan://notifications/{delivery.NotificationId:D}",
             delivery.NotificationId.ToString("N"));
     }
 }

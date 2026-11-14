@@ -15,8 +15,11 @@ public static class NotificationPreferencePolicy
             NotificationPreferenceCategory.Results,
         NotificationType.MessageReceived or NotificationType.MessageReply or NotificationType.MessageMention =>
             NotificationPreferenceCategory.Messages,
-        NotificationType.OrganizationInvitation => NotificationPreferenceCategory.Invitations,
-        NotificationType.MembershipChanged or NotificationType.OrderPaid or NotificationType.SupportUpdated or NotificationType.SchoolApplicationUpdated =>
+        NotificationType.OrganizationInvitation or NotificationType.ConversationInvitation or NotificationType.ConversationJoinRequestUpdated or
+            NotificationType.PersonalClassInvitation or NotificationType.PersonalClassJoinRequestUpdated or NotificationType.PersonalClassManagerTransferUpdated =>
+            NotificationPreferenceCategory.Invitations,
+        NotificationType.MembershipChanged or NotificationType.OrderPaid or NotificationType.SupportUpdated or NotificationType.SchoolApplicationUpdated or
+            NotificationType.PersonalClassRequestUpdated or NotificationType.PersonalClassMembershipChanged or NotificationType.PersonalClassStateChanged =>
             NotificationPreferenceCategory.ServiceUpdates,
         _ => throw new ArgumentOutOfRangeException(nameof(type))
     };

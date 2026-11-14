@@ -248,6 +248,7 @@ public sealed partial class EfMessagingStore
     {
         try
         {
+            await productNotifications.CaptureMessagingInvitationsAsync(cancellationToken);
             realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
         }

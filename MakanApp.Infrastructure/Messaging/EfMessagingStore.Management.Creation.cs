@@ -134,6 +134,7 @@ public sealed partial class EfMessagingStore
                 dbContext.ConversationInitialTargets.Add(ConversationInitialTarget.Create(conversation.Id, targetUserId, outcome, invitation));
             }
 
+            await productNotifications.CaptureMessagingInvitationsAsync(cancellationToken);
             realtime.CaptureMessaging();
             await dbContext.SaveChangesAsync(cancellationToken);
             await AppendChangeAsync(

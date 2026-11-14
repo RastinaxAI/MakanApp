@@ -21,7 +21,8 @@ public sealed class PersonalClassOptions
 
 public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercialStore commerce, IOptions<PersonalClassOptions> options,
     RealtimeInvalidationWriter realtime, OfficialSpaceEventWriter spaces, EfOfficialSpacesStore officialSpaces,
-    CommercialActorAccess actors, TimeProvider clock, MakanApp.Application.Assessment.PersonalClassAcademicFeatures features) : IPersonalClassStore, IPersonalClassLifecycleStore
+    CommercialActorAccess actors, TimeProvider clock, MakanApp.Application.Assessment.PersonalClassAcademicFeatures features,
+    MakanApp.Infrastructure.Notification.ProductNotificationWriter notifications) : IPersonalClassStore, IPersonalClassLifecycleStore
 {
     public Task<PersonalClassDto> CreateAsync(Guid host, CreatePersonalClassCommand command, DateTime now, CancellationToken ct) =>
         throw Error(AcademicErrorCodes.PersonalClassReviewRequired, "برای تشکیل تازه ابتدا درخواست را ثبت و ارسال کنید.");
@@ -151,6 +152,7 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
     }
     private async Task SaveClass(PersonalClass c, DateTime now, CancellationToken ct)
     {
+        await notifications.CapturePersonalClassesAsync(ct);
         await realtime.CapturePersonalClassesAsync(ct);
         if (c.FormationRequestId.HasValue || await db.OfficialSpaceProvisions.AnyAsync(p => p.PersonalClassId == c.Id, ct))
             spaces.PersonalClassChanged(c.Id, now);

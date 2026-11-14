@@ -14,11 +14,12 @@ using DomainNotification = MakanApp.Domain.Notification.Notification;
 namespace MakanApp.Infrastructure.Notification;
 
 public sealed class EfNotificationTargetResolver(MakanDbContext db, ProductNotificationAccess access, IAccessContextResolver contexts,
-    IAssignmentService assignments, IExamService exams, IEvaluationService evaluations, IExamGradingService grades) : INotificationTargetResolver
+    IAssignmentService assignments, IExamService exams, IEvaluationService evaluations, IExamGradingService grades, TimeProvider clock) : INotificationTargetResolver
 {
     public async Task<NotificationTargetResult?> ResolveAsync(Guid user, Guid session, DomainNotification notification, CancellationToken ct)
     {
         if (!await access.AllowsAsync(user, notification.ResourceType, notification.ResourceId, ct)) return null;
+        if (!await AcademicNotificationAccessQuery.AllowsDeliveryAsync(db, notification, clock.GetUtcNow().UtcDateTime, ct)) return null;
         var id = notification.ResourceId;
         var requiredOrganization = notification.OrganizationId;
         string? route;
@@ -36,6 +37,18 @@ public sealed class EfNotificationTargetResolver(MakanDbContext db, ProductNotif
                     route = org.HasValue ? $"/api/v1/commerce/orders/{id:D}" : $"/api/v1/commerce/personal/orders/{id:D}"; break;
                 case NotificationResourceType.Membership: route = "/api/v1/workspaces/snapshot"; break;
                 case NotificationResourceType.OrganizationInvitation: route = "/api/v1/invitations"; break;
+                case NotificationResourceType.ConversationInvitation: route = "/api/v1/messaging/invitations"; break;
+                case NotificationResourceType.ConversationJoinRequest:
+                    var join = await db.ConversationJoinRequests.AsNoTracking().SingleAsync(r => r.Id == id, ct);
+                    route = join.UserId == user ? "/api/v1/messaging/join-requests" : $"/api/v1/conversations/{join.ConversationId:D}/join-requests"; break;
+                case NotificationResourceType.PersonalClassRequest: route = $"/api/v1/personal-class-requests/{id:D}"; break;
+                case NotificationResourceType.PersonalClassInvitation: route = "/api/v1/personal-classes/invitations/page"; break;
+                case NotificationResourceType.PersonalClassJoinRequest:
+                    var classJoin = await db.PersonalClassJoinRequests.AsNoTracking().SingleAsync(j => j.Id == id, ct);
+                    route = classJoin.UserId == user ? "/api/v1/personal-classes/join-requests" : $"/api/v1/personal-classes/join-requests?classId={classJoin.PersonalClassId:D}"; break;
+                case NotificationResourceType.PersonalClassManagerTransfer: route = "/api/v1/personal-classes/manager-transfers"; break;
+                case NotificationResourceType.PersonalClassMembership: route = "/api/v1/personal-classes/page"; break;
+                case NotificationResourceType.PersonalClass: route = $"/api/v1/personal-classes/{id:D}"; break;
                 case NotificationResourceType.Conversation:
                     if (!await AccountInboxAccessQuery.Conversations(db, user).AnyAsync(c => c.Id == id, ct)) return null;
                     route = $"/api/v1/conversations/{id:D}"; break;

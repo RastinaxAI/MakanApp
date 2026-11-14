@@ -7379,9 +7379,9 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Notifications_ReadAt", "[ReadAtUtc] IS NULL OR [ReadAtUtc] >= [CreatedAtUtc]");
 
-                            t.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)");
+                            t.HasCheckConstraint("CK_Notifications_ResourceType", "[ResourceType] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)");
 
-                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)");
+                            t.HasCheckConstraint("CK_Notifications_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)");
                         });
                 });
 

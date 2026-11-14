@@ -22,7 +22,8 @@ public sealed partial class EfMessagingStore(
     TimeProvider timeProvider,
     WorkerTelemetry telemetry,
     ILogger<EfMessagingStore> logger,
-    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime) :
+    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter realtime,
+    MakanApp.Infrastructure.Notification.ProductNotificationWriter productNotifications) :
     IMessagingStore,
     IConversationManagementStore,
     IMessagingSafetyStore,
