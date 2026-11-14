@@ -1,8 +1,8 @@
 # تحویل Personal AI و Personal Knowledge/RAG
 
-تاریخ: `2026-11-13`؛ مبنای شروع: `fc5b297d20cc1cb97fc3b75a1762427bf81e419e`، شاخهٔ `feature/product-v6-backend-alignment`.
+بازبینی: `2026-11-14`؛ مبنای Activation: `a5e24e43b2d458adf532648212caab5bdceee0b2`، شاخهٔ `feature/product-v6-backend-alignment`.
 
-**وضعیت: BE19_AI_GATEWAY=PARTIAL.** حساب عادیِ فعال، بدون نقش سازمانی، مجاز به انتخاب Assistant شخصی و استفادهٔ مجاز از Knowledge/RAG شخصی است. Generic Personal Chat تا اصلاح قرارداد خارجی `BLOCKED_EXTERNAL_CONTRACT` است؛ موفقیت تست کنترل‌شدهٔ Backend، پذیرش واقعی سرویس مستقر محسوب نمی‌شود.
+**وضعیت: BE19_AI_GATEWAY=PASS.** حساب عادیِ فعال، بدون نقش سازمانی، با Actor رسمی `Personal` از Generic Chat و مسیرهای مجاز Knowledge/RAG استفاده می‌کند. پذیرش واقعی HTTP Backend محلی → AI Production با پاسخ200، Scope تهی، Individual و یک مصرف موفق انجام شد. Final Regression=1325 Unit +1930 Integration +14 Architecture =3269 PASS، Failed/Skipped=0 و Build صفر Warning/Error است؛114 تست Zibal نیز پاس‌اند. کد و Probe در `31fe34c6dde4526badc43d43e62b8ba185ee6f36` ثبت‌اند. Backend Test/Production Deploy نشده است.
 
 ## سه انتخاب مستقل
 
@@ -32,18 +32,22 @@ Content-Type: application/json
 
 نام فیلدها و enum نهایی در OpenAPI مرجع‌اند. برای تغییر انتخاب موجود، `expectedVersion` را از `version` آخرین پاسخ بفرستید؛ حذف یا کهنگی آن می‌تواند `409 ASSISTANT_CONTEXT_CONFLICT` بدهد. ورودی Organization/Membership/Role برای Personal ارسال نشود. در Organization/Class، انتخاب صریح Membership/Role/Class فقط selector است و سرور مجوز جاری را بررسی می‌کند. اگر انتخابی وجود نداشته باشد، رفتار سازگاری موجود، زمینهٔ فعلی را یک بار تثبیت می‌کند؛ برای UX قابل پیش‌بینی انتخاب را صریح کنید.
 
-پاسخ Personal فعلاً `upstreamContextSupported=false` و `limitation=AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` دارد. این limitation مربوط به **Business Generic Chat** است؛ به معنی منع Knowledge/RAG شخصی نیست.
+پاسخ Personal اکنون `upstreamContextSupported=true` و `limitation=null` دارد. این مقدار سازگاری قرارداد upstream است؛ روشن‌بودن Runtime، داشتن اشتراک/سهمیه یا مجوز هر منبع را تضمین نمی‌کند. کلاینت محدودیت قدیمی «Personal AI unavailable» را بر اساس قرارداد قبلی نمایش ندهد؛ همچنان فقط Backend را فراخوانی کند.
 
-## Generic Chat و مانع خارجی
+## Generic Chat شخصی
 
 قرارداد فعلی: `POST /api/v1/ai/chat` با `message`، `conversationId` اختیاری، `operationId` اختیاری و `selectedSourceIds` اختیاری. Headerهای موجود:
 
 - `X-AI-Operation-Id`: UUID ثابت intent؛ اگر `operationId` در body هم هست، هر دو یکسان باشند.
 - `X-AI-Payer`: `Individual`، `FreeTrial` یا `Organization`؛ در Personal مقدار Organization خطای `COMMERCE_CONTEXT_NOT_ALLOWED` می‌دهد.
 
-در Personal بدون منبع انتخابی، پاسخ فعلی **409 / AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED** است؛ هیچ تماس Provider، رزرو یا مصرفی ایجاد نمی‌شود. نقش Student/Parent/Teacher/Manager یا سازمان جعلی برای عبور از این مرز ارسال نمی‌شود. Intent داخلی `PersonalAiChatIntent` نقش wire ندارد و Endpoint/Actor خارجی جدید نیست.
+در Personal بدون منبع انتخابی، Backend پس از مجوز جاری و رزرو معتبر همان Commerce موجود، `PersonalAiChatIntent` را به `AiChatRequest` با `actor.role=Personal` و `actor.userId` حساب احرازشده تبدیل می‌کند. `organizationId/schoolId/classId/studentId` تهی و هر پنج مجموعهٔ Context خالی‌اند؛ Workspace مدرسه در wire قرار نمی‌گیرد. نتیجهٔ موفق200 است. نقش Personal فقط Actor قرارداد AI است و نقش سازمانی یا `User.Role` تازه نیست.
 
-شاهد قرارداد در `2026-11-13`: آدرس اعلام‌شدهٔ `/api/v1/openapi.json` برابر404؛ [OpenAPI واقعی AI](https://195.177.255.98/openapi.json) برابر200 و `UserRole` فقط شامل چهار نقش آموزشی فوق است. `Actor.role` الزامی است. SHA256 سند دریافت‌شده: `fc6bf405aefcc2232e0e35503fbee43fd82313d785fe41658bd474f8ad61277b`. تا تأیید قرارداد role-free یا Actor عمومی در همان سرویس، Chat شخصی فعال تلقی نشود.
+شاهد زنده در `2026-11-14`: [OpenAPI واقعی AI](https://195.177.255.98/openapi.json)200 و `UserRole` شامل Student/Parent/Teacher/Manager/**Personal** است. SHA256 سند: `58559cd3903c051fa2b8e12e08c67523576f309dd6d791e39145eda5d61dbfdc`. Health/Ready هر دو200 هستند. Commit اعلام‌شدهٔ مالک AI برابر `5735598ec9978bae7662164c3d3dc24b3445b8cd` و release=`personal-5735598ec997` است؛ HTTP عمومی hash انتشار را ارائه نکرد، پس انتساب SHA به release از handoff مالک و سازگاری رفتار از اجرای واقعی است. وضعیت مسدود گزارش `2026-11-13` تاریخی و برطرف شده است.
+
+پذیرش واقعی با همان API Backend، Payer پیش‌فرض Individual، حساب ساختگیِ فاقد Membership در SQL GUID ایزوله و AI Production انجام شد: HTTP Backend/AI=200، alias=`education-fast`، زمان کل Backend≈46.8s، requestId=`efe44b0cfee14d849ce99147ba341345` و correlationId=`personal-live-4f348f38a2144c35a5d7638e7aa0e421`. Retry همان intent برابر409، تعداد تماس AI=1، رزرو=1 و مصرف=1 بود. هیچ دادهٔ تجاری Production برای این پذیرش ساخته یا تغییر نکرد؛ SMS و Service JWT واقعی ارسال نشدند. timeout تنظیمی35s تغییر نکرد؛ زمان کل Backend شامل SQL و orchestration هم هست.
+
+تیم AI، Business Acceptance=23/23، Live Personal/Invalid Scope/Invalid Role/Student و NEW_FAILURES=0 را گزارش کرده است؛ pytest عمومی upstream برابر1303 Passed/31 Failed تاریخی و `UPSTREAM_AI_FULL_PYTEST_ZERO_FAILURES=NO` است. این اعداد از handoff هستند؛ pytest مخزن AI در این Task اجرا یا پاک گزارش نشده است.
 
 Organization Generic Chat همچنان scope/actor سازمانی معتبر می‌خواهد. تحلیل دانش‌آموز، برنامهٔ مطالعه، توضیح تکلیف/آزمون، خلاصهٔ والد و عملیات Teacher/Manager عمومی نشده‌اند؛ خرید اشتراک Individual یا انتخاب Personal این محدودیت‌ها را حذف نمی‌کند.
 
@@ -94,7 +98,7 @@ Organization/Class source حتی برای Teacher/Manager دارای Workspace �
 | `AI_OPERATION_PREVIOUSLY_FAILED` | عملیات قبلاً Released شده؛ همان intent دوباره اجرا نمی‌شود. |
 | `COMMERCE_USAGE_CONFLICT` / `AI_SOURCE_OPERATION_CONFLICT` | همان شناسه با قصد، Payer یا نسخهٔ متفاوت استفاده شده؛ به‌جای Retry کور، ورودی/Context بررسی شود. |
 | `AI_SOURCE_CONTEXT_MISMATCH` /403/404 | انتخاب/مجوز جاری تغییر کرده؛ خروجی خصوصی نمایش داده نشود و Context/منابع دوباره resolve شوند. |
-| `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` | پیام محدودیت سرویس نمایش داده شود؛ Role/Organization جعلی یا Retry مداوم ساخته نشود. |
+| Feature Disabled | Runtime محیط خاموش است؛ فعال‌بودن قرارداد Personal مجوز bypass Runtime یا Retry مداوم نیست. |
 
 شکست پیش از Generation رزرو را Released می‌کند؛ پاسخ موفق Consumed است؛ قطع انتقال پس از شروع Generation می‌تواند Unknown باشد. SQL مرجع نهایی است؛ رزرو موازی و ledger جدید ساخته نشده‌اند. Trial سهمیهٔ جدا و صریح دارد و با اشتراک Individual یکی نیست.
 
@@ -106,4 +110,4 @@ Service Authentication هر دو مسیر AI و Knowledge **DISABLED** ماند�
 
 سنجه‌های `makan.ai.execution.results` و `makan.ai.execution.duration` در Meter موجود `MakanApp.AiService` با tagهای محدود `operation/contextKind/payerKind/result`، Use Case را از سنجه‌های transport جدا می‌کنند. شکست یا مرز قرارداد success ثبت نمی‌شود. Correlation و OperationId برای پیگیری خطا استفاده شوند؛ متن خصوصی در گزارش خطا کپی نشود.
 
-پذیرش این مرحله: Backend HTTP + SQL ایزوله + adapter واقعی Knowledge با transport کنترل‌شده. پذیرش زندهٔ Personal Chat یا Deploy سرور انجام نشده است. آمار نهایی Build/Test و Git در [گزارش پیاده‌سازی](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md) و پاسخ نهایی این مرحله ثبت می‌شود.
+پذیرش Personal Chat از HTTP Backend تا AI Production واقعی انجام شد؛ Knowledge/RAG با HTTP adapter و transport کنترل‌شده Regression می‌شود. Deploy Backend انجام نشده است. ابزار موجود با `--run-live --operation personal_chat --allow-remote-https`، Origin مصوبِ تنظیم‌شده و `AiService:UseServiceAuthentication=false` اجرا می‌شود؛ raw prompt/answer/token چاپ نمی‌شوند. آمار نهایی Build/Test و Git در [گزارش پیاده‌سازی](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md) و پاسخ نهایی ثبت می‌شود.

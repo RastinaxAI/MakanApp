@@ -1588,7 +1588,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#heading-1384">کدهای خطای تعریف‌شده</a></li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ bba4545b9c1b32db804a20953a410347b8439b4e</code><br>تاریخ بازبینی: <code>2026-11-13</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ 31fe34c6dde4526badc43d43e62b8ba185ee6f36</code><br>تاریخ بازبینی: <code>2026-11-14</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
 <li><a href="#heading-1">قرارداد مشترک انتقال و مجوز</a></li>
 <li><a href="#heading-2">ورود، نشست و OTP</a></li>
@@ -3162,9 +3162,9 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </div>
 </section><h1 id="backend-web-mobile">قرارداد جاری مصرف Backend برای Web و Mobile</h1>
 <blockquote>
-<p>قراردادهای تازه در <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">تحویل v6</a> و <a href="../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md">درخواست آموزشگاه</a> است: مدیر اولیه صریحاً در Approval انتخاب می‌شود؛ زنجیرهٔ Order/Payment/Outbox به Provisioning مرحله‌ای و دعوت مدیر متصل است. تنظیم قیمت واقعی همچنان نیازمند Admin است. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.</p>
+<p>قراردادهای تازه در <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">تحویل v6</a>، <a href="../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md">Personal AI</a> و <a href="../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md">درخواست آموزشگاه</a> است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.</p>
 </blockquote>
-<p>بازبینی <code>2026-11-13</code> با مبنای Git <code>source@bba4545b9c1b32db804a20953a410347b8439b4e</code> و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.</p>
+<p>بازبینی <code>2026-11-14</code> با مبنای Git <code>source@31fe34c6dde4526badc43d43e62b8ba185ee6f36</code> و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.</p>
 <p>پوشش جاری: 492 عملیات HTTP در 436 مسیر، 91 Controller، 780 schema، 149 جدول و 73 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.</p>
 <ul>
 <li><a href="MakanApp-Frontend-Backend-Contract.html">HTML مستقل</a> و <a href="MakanApp-Frontend-Backend-Contract.pdf">PDF</a>: قرارداد جاری و کاتالوگ کامل API.</li>
@@ -3225,7 +3225,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <h2 id="heading-12">AI و قابلیت‌های وابسته</h2>
 <p>۱۲ API عمومی AI از Backend و Bearer نشست موجود مصرف می‌شوند؛ AiService:Enabled پیش‌فرض false است. URL خصوصی AI، JWT سرویس و کلید Provider به client داده نمی‌شوند. سرور پیش از network، context مجاز نقش/سازمان/فرزند/کلاس را می‌سازد و پاسخ v1 را از نظر requestId/correlationId، فیلد ناشناخته و شناسه‌های مستند در همان context بررسی می‌کند.</p>
 <p>بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.</p>
-<p>AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal تا Contract سازگار Upstream محدود است و PersonalClass AI اضافه نشده. این Task فقط transport کنترل‌شده را تست می‌کند و نتیجهٔ health/Fake-AI شاهد Provider یا Cutover واقعی نیست. <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">قرارداد v6</a>.</p>
+<p>AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal با Actor رسمی Personal و scope تهی فعال است؛ PersonalClass AI اضافه نشده. پذیرش Backend محلی→AI Production با HTTP200 و یک مصرف انجام شده؛ Deploy Backend یا پذیرش تمام Providerها از آن نتیجه نمی‌شود. <a href="../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md">قرارداد شخصی</a>.</p>
 <h2 id="heading-13">میزبانی و smoke</h2>
 <p>Swagger/OpenAPI در Production/Staging پیش‌فرض خاموش و با Swagger:Enabled=true فعال است؛ Test طبق Program آن‌ها را منتشر می‌کند. Cors:AllowAnyOrigin انتخاب مستقل از محیط است؛ base و نمونه Test/Production فعلی true با AllowedHosts=* هستند. true از AllowAnyOrigin/Header/Method و بدون credentials استفاده می‌کند؛ false فهرست معتبر لازم دارد. REST با credentials:omit و SignalR با LongPolling و withCredentials:false، نه query-token؛ موفقیت Postman رفتار مرورگر نیست. <a href="../production/CORS_CONFIGURATION_FA.md">قرارداد CORS</a>.</p>
 <p>/health و /health/live فقط liveness و /health/ready config/SQL/Storage را می‌سنجد؛ probe و ring اختصاصی MFA حذف شده‌اند؛ Data Protection استاندارد host از cursor حساب حفاظت می‌کند و پایداری کلیدهایش مستقل از readiness بررسی می‌شود. provider اختیاری core را نمی‌بندد. مدل snapshot اثبات applied migration روی سرور نیست.</p>
@@ -3296,7 +3296,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tbody>
 </table></div>
 <p>Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.</p>
-<p>بازبینی <code>2026-11-13</code> با مبنای Git <code>source@bba4545b9c1b32db804a20953a410347b8439b4e</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
+<p>بازبینی <code>2026-11-14</code> با مبنای Git <code>source@31fe34c6dde4526badc43d43e62b8ba185ee6f36</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
 <p>پوشش: <strong>492 عملیات HTTP، 436 مسیر متمایز، 91 Controller و 780 schema</strong>. Health، Swagger و Hub در این شمارش نیستند.</p>
 <p>این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.</p>
 <h2 id="heading-17">قرارداد مشترک و مرزهای امنیتی</h2>
@@ -3313,7 +3313,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <h2 id="heading-18">رفتار جاری فراتر از schema</h2>
 <p>قرارداد OTP یکسان است ولی رفتار از Otp:Enabled/Otp:AllowMockAuthentication می‌آید: Production/Staging فقط true/false و Mock فقط در Development/Test/Testing با false/true. در Mock challenge واقعی ساخته نمی‌شود و مالکیت شماره ثابت نمی‌شود؛ نشست و مجوز منابع همچنان واقعی‌اند. راهنمای OTP و نمونه ورود را در <a href="../backend-api-guide.html#identity">راهنمای بک‌اند</a> بخوانید.</p>
 <p>عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.</p>
-<p>AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. طبق override جاری، AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند؛ شواهد تاریخی JWT الزام فعال Runtime نیستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal تا قرارداد سازگار Upstream محدود است. <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">قرارداد v6</a>.</p>
+<p>AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal با Actor رسمی Personal، scope تهی و رزرو معتبر فعال است. <a href="../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md">قرارداد شخصی و پذیرش واقعی</a>.</p>
 <p>پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده‌اند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست‌های date-only/null، عکس Bearer، visibility Draft و رضایت والد در <a href="../backend-api-guide.html">راهنما</a> و <a href="../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md">قرارداد مدرسه</a> توضیح داده شده‌اند.</p>
 <p>اشتراک Individual/Organization و بنیاد PersonalClass اکنون موجودند؛ خرید نقش نمی‌سازد، Legacy قبل از قرارداد معتبر Admin قفل تازه نمی‌گیرد و AI Runtime فعال نیست. <a href="../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md">قرارداد کاربر</a> و <a href="../product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md">Admin</a>.</p>
 <p>Replay حساب در GET /api/v1/realtime/changes با bootstrap/cursor و ClientInvalidated افزوده شده است؛ Snapshot و مجوز read جاری مرجع‌اند. <a href="../product/REALTIME_EVENT_CONTRACT_FA.md">قرارداد Event</a>.</p>
@@ -4333,7 +4333,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tr>
 <tr>
 <td>409</td>
-<td>Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. Personal Chat: AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED؛ مرز upstream و بدون مصرف.</td>
+<td>Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود.</td>
 <td><code>application/problem+json</code>: <a href="#contract-MakanProblemDetails">MakanProblemDetails</a></td>
 </tr>
 <tr>
@@ -73703,11 +73703,6 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <tr>
 <td><code>AI_INVALID_REQUEST</code></td>
 <td>400</td>
-<td><a href="../../MakanApp.Application/Ai/AiServiceErrorCodes.cs">AiServiceErrorCodes</a></td>
-</tr>
-<tr>
-<td><code>AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED</code></td>
-<td>409</td>
 <td><a href="../../MakanApp.Application/Ai/AiServiceErrorCodes.cs">AiServiceErrorCodes</a></td>
 </tr>
 <tr>

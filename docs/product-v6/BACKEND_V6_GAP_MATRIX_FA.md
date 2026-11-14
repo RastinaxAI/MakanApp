@@ -1,6 +1,6 @@
 # ماتریس تطبیق Backend با Product v6
 
-> وضعیت جاری BE19 در بخش «Personal AI و Knowledge/RAG» انتهای سند و وضعیت School در «نهایی‌سازی انتخاب مدیر و آماده‌سازی» است. ردیف‌های تاریخی با تاریخ و Commit خود حفظ شده‌اند؛ D01 و D17 بسته‌اند. تنظیم تجاری واقعی Production و محدودیت‌های دیگر v6 جدا هستند.
+> وضعیت جاری BE19 در بخش «Personal AI Activation — 2026-11-14» انتهای سند است؛ بخش Personal AI روز قبل و ردیف‌های School/Audit با Commit تاریخی خود حفظ‌اند. Actor رسمی Personal اکنون در upstream و Backend پشتیبانی می‌شود. تنظیم تجاری Production و سایر محدودیت‌های v6 جدا هستند.
 
 مبنای Audit پیش از تغییر Runtime: `e5bd3eae658991585ca09f581f6236351857b3b8`، تاریخ `2026-11-12`، شاخهٔ کاری `feature/product-v6-backend-alignment`. سه فایل untracked قبلی AI و تنظیمات خصوصی با Backup/هش محافظت شده‌اند. این سند وضعیت اولیه است؛ نتیجهٔ اجرای تغییرات و ارزیابی نهایی جدا ثبت می‌شوند.
 
@@ -349,3 +349,58 @@ D17 بسته شد و۱۲ تصمیم Product/Legal باز باقی‌اند. تک
 OpenAPI زنده در `/openapi.json` فقط چهار UserRole آموزشی دارد و Actor.role اجباری است؛ مسیر اعلام‌شدهٔ `/api/v1/openapi.json`404 داد. این شاهد، مانع خارجی D11 را قطعی می‌کند؛ تصمیم جدید Product یا مجوز فعال‌سازی Service Auth نیست. AI/Knowledge Service Auth هر دو DISABLED و تعداد تصمیم‌های باز Product/Legal همان۱۲ است.
 
 Commit کد `bba4545b9c1b32db804a20953a410347b8439b4e`؛ Restore و Final Release Build با۰ Warning/Error موفق، Final Regression=۱۳۲۵ Unit +۱۹۲۲ Integration +۱۴ Architecture =۳۲۶۱ Passed، Failed/Skipped=0 و۱۱۴ تست Zibal پاس است.۴۲ تست مرتبط جدیدند. Migration جدید۰ و pending model changes وجود ندارد. Snapshot:۴۳۶ path/۴۹۲ operation/۷۸۰ schema،۱۴۹ جدول/۷۳ Migration؛ SHA256=`98541362177563580f24c70be9bc98311df085db83dfe6448622156309c71b46`. فقط دو فلگ عمومی UseServiceAuthentication صریح شدند؛ private config/SMS/AI قبلی ثابت و Runtime خاموش ماند. موفقیت محلی به معنی پذیرش زندهٔ Personal Chat یا Deploy نیست.
+
+## Personal AI Activation — 2026-11-14
+
+Baseline=`a5e24e43b2d458adf532648212caab5bdceee0b2`؛ [قرارداد جاری](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [گزارش آموزشی/Validation](BACKEND_V6_IMPLEMENTATION_REPORT_FA.md). محدودیت upstream در بخش2026-11-13 تاریخی است.
+
+| معیار | وضعیت فعلی | شاهد |
+|---|---|---|
+| Upstream Personal Actor | `PASS` | OpenAPI زنده شاملPersonal؛ HTTP Backend→AI Production با Actor رسمی پذیرفته شد. release طبق handoff مالک `personal-5735598ec997` و Commit=`5735598ec9978bae7662164c3d3dc24b3445b8cd` است. |
+| Backend Personal activation | `PASS` | `PersonalAiChatContract.ToServiceRequest` و `AiChatService`؛ همان Executor/Commerce؛ UpstreamContextSupported=true، Limitation=null. |
+| Empty Scope / School independence | `PASS` در پذیرش متمرکز و guard واقعی | چهار selector تهی، Context خالی، بدون Role/Organization جعلی؛ نقش/سازمان School و Session دیگر scope شخصی را عوض نمی‌کنند. |
+| Payer / quota / idempotency | `PASS` در پذیرش متمرکز؛ Individual واقعی موفق | Trial صریح، Organization ممنوع، عدم تماس پیش از Reserve، duplicate هم‌زمان/Completed/Unknown و یک مصرف. |
+| Role-specific / Organization | `PASS` در Regression نهایی | همان چهار Role سازمانی و۱۱ منع حساب فاقد نقش محفوظ‌اند. |
+| Sources / Knowledge | `PASS` در Regression نهایی | ACL جاری و APIهای Knowledge موجود عوض نشدند؛ legacy selectedSourceIds در Business Chat همچنان retrieval ندارد. RAG زنده در این Task دوباره اجرا نشد. |
+| Live Backend E2E | `PASS` | Backend200/AI200، requestId=`efe44b0cfee14d849ce99147ba341345`، correlation=`personal-live-4f348f38a2144c35a5d7638e7aa0e421`، modelAlias=education-fast؛ calls/reservation/consumption=1، replay409 و بدون تماس دوم. |
+| Service Auth / private config | `DISABLED` و محفوظ | هر دو Service Auth false، هیچ JWT/CurrentKey requirement یا config خصوصی/SMS/provider/timeout تغییر نکرد. |
+| Upstream full pytest | `NO` برای zero failures | handoff تیم AI:1303 Passed/31 Failed تاریخی، NEW_FAILURES=0 و Business23/23؛ pytest AI اینجا اجرا نشده و پاک گزارش نمی‌شود. |
+| Migration | `0` | EF pending model changes ندارد؛ SQL عادی/سرور تغییر نکرد. |
+| BE19_AI_GATEWAY | `PASS` | مانع Actor بسته، Backend→AI Production شخصی موفق و Full Regression=3269 Passed، Failed/Skipped=0. |
+| BE24_FULL_ACCEPTANCE | `FAIL` | سایر تصمیم‌های Product/Legal، حذف/retention، quota مشترک، Store billing، حدود Parent/PersonalClass و پذیرش عملیاتی کل محصول هنوز جدا هستند. |
+
+D11 بسته است و از ابتدا در۱۲ تصمیم Product/Legal شمرده نمی‌شد؛ شمار جاری۱۲ است. Runtime پیش‌فرض/Backend Deployment فعال نشده‌اند. نخستین Full Regression پس از۱۴ timeout دریافت SignalR برای تشخیص متوقف شد؛۱۴ سناریو مستقل و سپس کل۱۹۳۰ Integration در دور نهایی پاس شدند. کد Realtime یا timeout تست‌ها تغییر نکرد و علت قطعی دور اول اثبات نشد. Final Release Build صفر Warning/Error، Unit=1325، Integration=1930، Architecture=14، Total=3269 و Failed/Skipped=0 است؛۱۱۴ تست Zibal هم پاس‌اند. کد/Probe=`31fe34c6dde4526badc43d43e62b8ba185ee6f36`؛ Snapshot۴۳۶ path/۴۹۲ operation/۷۸۰ schema/۱۴۹ جدول/۷۳ Migration و SHA256=`5e317c540ce2a13dd1b26f94dd847b858e6242eb3d9fa56c8607feaee737a42c`.
+
+### بازسنجی BE01 تا BE25 پس از رفع مانع Actor
+
+این جدول حدود تحویل جاری را با تغییر همین مرحله بازسنجی می‌کند؛ جای پذیرش سرور، دستگاه یا کل هدف Product را نمی‌گیرد. ردیف‌های قبلی، Audit و اجرای تاریخ خودشان هستند. نتیجهٔ نهایی Regression در گزارش همین مرحله ثبت می‌شود.
+
+| بخش | وضعیت کد و حدود تحویل | مانع باقی‌مانده برای هدف کامل |
+|---|---|---|
+| BE01 Contract audit | `PASS` در قرارداد جاری | Snapshot نهایی از همین سورس استخراج می‌شود؛ اثبات Deploy نیست. |
+| BE02 Identity/Profile | `PASS` در قرارداد جاری | Bio، phone-change واقعی، نشست و Context قبلی حفظ‌اند؛ حذف اجرایی در BE22 جداست. |
+| BE03 School application | `PASS` در پیاده‌سازی و پذیرش محلی قبلی | قرارداد/قیمت/Quota واقعی Production همچنان باید صریحاً توسط Admin ثبت شود؛ تصمیم مدیر اولیه D17 بسته است. |
+| BE04 Organization/Guardian | `PASS` در سیاست مصوب جاری | توسعهٔ عضویت والدِ target در D14 باز است؛ دسترسی به Direct خصوصی از Guardian ساخته نمی‌شود. |
+| BE05 Academic core | `PASS` برای سازمان | آموزش مستقل پیشنهادی از هستهٔ سازمانی جداست. |
+| BE06 Assignments | `PASS` برای سازمان | Gate آموزشی PersonalClass خاموش باقی است. |
+| BE07 Exams | `PASS` برای سازمان | Gate آموزشی PersonalClass خاموش باقی است. |
+| BE08 Reports | `PARTIAL` در هدف کامل | دامنهٔ گزارش مستقل PersonalClass در D08 باز است؛ گزارش سازمانی موجود است. |
+| BE09 PersonalClass lifecycle | `PARTIAL` در هدف کامل | Restore/Reopen در D09 باز است. |
+| BE10 PersonalClass membership | `PASS` در سیاست جاری | ظرفیت/دعوت/Join/مدیر آخر قبلی حفظ‌اند؛ نقش یا قرارداد تجاری تازه‌ای ساخته نشد. |
+| BE11 Official spaces | `PARTIAL` در هدف کامل | گسترش Parent در D14 باز است؛ ACL منبع جاری حفظ می‌شود. |
+| BE12 Account messaging | `PASS` در قرارداد مصوب جاری | رفتار مستقل از Role مدرسه حفظ است؛ تصمیم پیشنهادی D13 سیاست جاری را عوض نمی‌کند. |
+| BE13 Group/Channel | `PASS` در قرارداد مصوب جاری | دعوت هفت‌روزه و امکانات موجود محفوظ‌اند؛ سیاست target در D13 جداست. |
+| BE14 Address Book v2 | `PARTIAL` در چرخهٔ کامل | TTL/OS-delete در D03 باز و پذیرش پایداری keyring محیط هدف جداست. |
+| BE15 Files/Library | `PARTIAL` | دانلود عادی Library و رسانهٔ ReviewRequired با محدودیت مصوب حفظ‌اند؛ تأیید رسانه اختراع نشد. |
+| BE16 Notifications | `PARTIAL` | Push Runtime/دستگاه هنوز pending و پوشش همهٔ دعوت‌ها مستقل از این Task است. |
+| BE17 Commerce catalog | `PARTIAL` در هدف کامل | سهمیهٔ مشترک چندفرزند D05 و تنظیم قرارداد واقعی محیط هدف باز/عملیاتی‌اند. |
+| BE18 Payments | `PARTIAL` در هدف کامل | Zibal موجود حفظ است؛ CafeBazaar/Myket نیازمند قرارداد رسمی verification و mapping، iOS در D06 باز و Refund خارج scope است. |
+| BE19 AI gateway | `PASS` در کد، Regression و پذیرش واقعی Personal | Actor رسمی و Scope تهی دیگر blocker نیستند؛ Runtime/Deploy محیط هدف جداست. |
+| BE20 Platform Admin | `PASS` در بنیاد مصوب جاری | Permission/Audit و مرز School Manager تغییر نکردند. |
+| BE21 Moderation/Support | `PARTIAL` در چرخهٔ کامل | Reopen تیکت در D10 باز؛ بستن پروندهٔ Moderation، تأیید رسانه نیست. |
+| BE22 Security/Deletion | `PARTIAL` / `BLOCKED_PRODUCT_DECISION` | اجرای حذف و retention در D04 نیازمند تصمیم Product/Legal است. |
+| BE23 Operations | `PARTIAL` در پذیرش محیط هدف | Deploy، Backup/Restore، keyring و پذیرش واقعی Push/سرور در این Task انجام نشدند. |
+| BE24 Full acceptance | `FAIL` | موانع فوق با رفع Personal AI بسته نمی‌شوند. |
+| BE25 Proposed academics | `DEFERRED_APPROVED` | هر دو Gate آموزشی PersonalClass خاموش و engine/سوابق محفوظ‌اند. |
+
+D15/D16 گسترش‌های بعدی مدرسه و D18 اصلاح/بازگشایی پس از تصمیم نهایی‌اند؛ Submit و Provisioning مصوب جاری را مسدود نمی‌کنند. در این مرحله فقط مانع D11 بسته شد و هیچ تصمیم Product دیگر یا پذیرش عملیاتیِ انجام‌نشده، موفق فرض نشده است.

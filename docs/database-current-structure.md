@@ -1,6 +1,6 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@bba4545b9c1b32db804a20953a410347b8439b4e`؛ بازبینی `2026-11-13`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36`؛ بازبینی `2026-11-14`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
 **149 جدول، 1592 ستون، 403 FK، 463 index مستقل از key و 407 CHECK؛ 73 Migration.**
 

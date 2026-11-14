@@ -1,6 +1,6 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
-بازبینی `2026-11-13` با مبنای Git `source@bba4545b9c1b32db804a20953a410347b8439b4e` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
+بازبینی `2026-11-14` با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
 پوشش: **492 عملیات HTTP، 436 مسیر متمایز، 91 Controller و 780 schema**. Health، Swagger و Hub در این شمارش نیستند.
 
@@ -24,7 +24,7 @@
 
 عملیات مدیریتی health/jobs/notifications همان routeها را دارند؛ PlatformJobOperations.Queues جزئیات صف را اضافه می‌کند و PlatformNotificationOperations شمارش/سن و failureهای اخیر را می‌دهد. FileCleanup صرفاً وضعیت Enabled/Disabled تنظیمی است. HTTP 200 عملیات مدیریتی به‌تنهایی به معنی سالم‌بودن همه dependencyها نیست.
 
-AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. طبق override جاری، AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند؛ شواهد تاریخی JWT الزام فعال Runtime نیستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal تا قرارداد سازگار Upstream محدود است. [قرارداد v6](product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).
+AI v1 پاسخ را پیش از خروج از Backend به‌صورت strict و grounded بررسی می‌کند؛ body خام عبور نمی‌کند و retry خودکار POST وجود ندارد. AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication هر دو false هستند. انتخاب Assistant، School Workspace و Payer جدا هستند؛ Generic Personal با Actor رسمی Personal، scope تهی و رزرو معتبر فعال است. [قرارداد شخصی و پذیرش واقعی](product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md).
 
 پروفایل self دارای DOB nullable و ProfilePhoto است؛ Directory/roster/Guardian consent و Class Lesson به مدرسه اضافه شده‌اند. request/response دقیق هر operation پایین از metadata فعلی آمده؛ سیاست‌های date-only/null، عکس Bearer، visibility Draft و رضایت والد در [راهنما](backend-api-guide.md) و [قرارداد مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) توضیح داده شده‌اند.
 
@@ -340,7 +340,7 @@ policy: `platform.audit.read`
 | HTTP status | معنا | بدنه |
 |---|---|---|
 | 200 | OK | `text/plain`: [AiChatResult](#contract-AiChatResult)<br>`application/json`: [AiChatResult](#contract-AiChatResult)<br>`text/json`: [AiChatResult](#contract-AiChatResult) |
-| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. Personal Chat: AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED؛ مرز upstream و بدون مصرف. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 409 | Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 401 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 403 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 
@@ -22096,7 +22096,6 @@ literalهای JSON واقعی MVC: `["Personal", "Organization"]`
 | `AI_CONTEXT_NOT_ALLOWED` | 403 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_FEATURE_DISABLED` | 503 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_INVALID_REQUEST` | 400 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
-| `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED` | 409 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_RATE_LIMITED` | 429 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_RESPONSE_INVALID` | 502 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |
 | `AI_SERVICE_FORBIDDEN` | 503 | [AiServiceErrorCodes](../MakanApp.Application/Ai/AiServiceErrorCodes.cs) |

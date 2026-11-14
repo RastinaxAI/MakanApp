@@ -1,6 +1,6 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
-> آخرین بخش «BE-19 — Personal AI و Personal Knowledge/RAG» است: [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، مرز خارجی Chat و پذیرش مستقل Context/Commerce/Knowledge. گزارش «نهایی‌سازی مدیر و Provisioning آموزشگاه» و گزارش‌های تاریخ‌دار قبلی با Commit و محدودیت همان مرحله حفظ شده‌اند؛ D01 و D17 بسته‌اند. قرارداد School: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
+> آخرین بخش «Personal AI Activation — 2026-11-14» است: [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md)، Actor رسمی Personal و پذیرش واقعی Backend→AI Production. بخش BE19 مورخ2026-11-13 و گزارش‌های School با Commit/محدودیت تاریخی خود حفظ‌اند؛ مانع upstream آن روز با release تازه برطرف شده است. قرارداد School: [Frontend آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [Admin آموزشگاه](SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](SCHOOL_COMMERCIAL_CONFIGURATION_FA.md).
 
 تاریخ `2026-11-12`؛ مبنا `e5bd3eae658991585ca09f581f6236351857b3b8`، شاخهٔ `feature/product-v6-backend-alignment`. مرجع نیاز: Product Architecture v6، شرح Backend Tasks v6 و override همین Task. سند محصول هدف است؛ این گزارش فقط Source، تست و محدودیت واقعی را بیان می‌کند.
 
@@ -576,3 +576,113 @@ Generic Personal Chat برابر `BLOCKED_EXTERNAL_CONTRACT` و BE19 برابرP
 ### ۱۶. مرحلهٔ بعد
 
 مالک سرویس AI قرارداد Actor عمومی/role-free Personal را در upstream تصویب و منتشر کند؛ سپس adapter wire و پاسخ‌سنجی روی همان قرارداد واقعی و پذیرش زندهٔ مستقل انجام شود. Service Auth، سهمیهٔ خانواده، Library و آموزش PersonalClass نباید برای عبور از این blocker فعال یا بازطراحی شوند.
+
+## Personal AI Activation — 2026-11-14
+
+مبنای این مرحله `a5e24e43b2d458adf532648212caab5bdceee0b2` و شاخهٔ `feature/product-v6-backend-alignment` است. محدودیت Actor در بخش روز قبل تاریخی است؛ قرارداد جاری و جریان Client در [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) آمده‌اند.
+
+### ۱. خلاصهٔ مرحله
+
+پیش از این مرحله، Context/Intent/Commerce شخصی پیاده بودند ولی Chat عمداً پیش از رزرو409 می‌داد. upstream اکنون Actor رسمی Personal را پشتیبانی می‌کند. نگهبان قدیمی حذف و تبدیل Intent به درخواست v1 کامل شد؛ حساب عادی بدون Membership از همان HTTP Backend تا AI Production، پاسخ200 گرفت. رزرو و مصرف دقیقاً یک بار و Retry همان intent برابر409 بدون تماس AI دوم بود.
+
+### ۲. معماری
+
+تغییر Runtime در Application، ساخت actor/scope و انتخاب همان Executor است؛ Controller، Domain، EF/Infrastructure و Commerce تغییر نکردند. Api فقط Metadata OpenAPI و نگاشت خطای منقضی‌شده را به‌روز می‌کند. ابزار C# موجود سناریوی پذیرش واقعی را اجرا می‌کند؛ هیچ Debug Endpoint یا سیستم AI/Quota موازی ساخته نشد. وابستگی Domain ← Application ← Infrastructure و Composition Root قبلی حفظ است.
+
+### ۳. فایل‌های مهم ایجادشده
+
+`tools/ai/MakanApp.AiIntegrationProbe/LivePersonalAiScenario.cs` تنها فایل C# جدید است: ساخت حساب فاقد نقش در SQL GUID ایزوله، ایجاد قرارداد تجاری ساختگیِ معتبر، فراخوانی HTTP Backend، کنترل نتیجه و ledger و Retry. راز، OTP، JWT و متن پاسخ فقط در حافظه استفاده می‌شوند. نکتهٔ آموزشی: موفقیت مستقیم AI جای عبور از Authentication/Context/Commerce Backend را نمی‌گیرد.
+
+### ۴. فایل‌های مهم تغییرکرده
+
+- `MakanApp.Application/Ai/PersonalAiChatIntent.cs`: Intent داخلی حفظ و `PersonalAiChatContract.ToServiceRequest` با Role دقیق Personal افزوده شد؛ Scope/Context دوباره کنترل می‌شوند و ConversationId قرارداد قبلی حفظ می‌شود.
+- `MakanApp.Application/Ai/AiChatService.cs`: شاخهٔ شخصی همان `IAiInvocationExecutor` را با callback ساخت wire و reauthorization حساب/نشست/Context فراخوانی می‌کند. شاخهٔ سازمانی همان Actor و Scope قبلی را می‌سازد؛ mapper پاسخ مشترک شد.
+- `AssistantContextResolver`: Personal با UpstreamContextSupported=true و Limitation=null برمی‌گردد؛ وضعیت قرارداد با Runtime/اشتراک یکسان نیست.
+- `AiServiceErrorCodes`، `GlobalExceptionHandler` و `AiExecutionTelemetry`: کد و مسیر blocked_upstream_contract که دیگر تولید نمی‌شوند حذف شدند؛ سایر mappingها و سنجه‌ها حفظ‌اند.
+- `AiInvocationOperationTransformer`: شرح Chat فعال، Payer و مرزهای Source را دقیق می‌کند.
+- تست‌های Personal/Assistant/OpenAPI و `ControlledAiV1Server`: انتظار409 قدیمی با Actor رسمی و تماس کنترل‌شده جایگزین شد؛ Student/Parent/Teacher/Manager محفوظ‌اند.
+- `tools/ai/MakanApp.AiIntegrationProbe/Program.cs` و `LiveAiObservation.cs`: انتخاب صریح personal_chat، الزام Service Auth خاموش، Factory GUID موجود و guardِ Scope/Actor/Telemetry شخصی. عملیات قدیمی خودکار اجرا نمی‌شوند.
+- template `tools/docs/sync_repository_docs.py`: متن جاریِ محدودیت رفع‌شده را دوباره تولید نمی‌کند؛ گزارش‌های تاریخی بازنویسی نمی‌شوند.
+
+### ۵. جریان واقعی
+
+```text
+HTTP POST /api/v1/ai/chat → AiController → AiChatService
+→ AiSourceSelectionService.GuardAsync → AssistantContextResolver
+→ PersonalAiChatIntent.Create → AiInvocationExecutor
+→ AiInvocationContext.CommerceContext → CommercialSubscriptionService.ReserveForAssistantAsync
+→ SQL Server UsageReservation/ledger → Commit کوتاه رزرو
+→ بازبینی حساب/نشست/Context → PersonalAiChatContract.ToServiceRequest
+→ AiServiceClient.ChatAsync → HTTPS Production AI /api/v1/ai/chat
+→ strict response/grounding/metadata validation → Consumed در SQL
+→ AiChatResult → HTTP 200
+```
+
+Frontend فقط Backend را صدا می‌زند؛ Role، UserId و Scope upstream را Backend می‌سازد. هیچ تماس طولانی AI داخل transaction رزرو قرار نگرفت.
+
+### ۶. دیتابیس
+
+Migration، جدول، ستون، FK/index/constraint یا rowversion جدید وجود ندارد. همان UsageReservation و UsageLedgerEntry، Owner/Consumer/Personal Context/OperationId/hash را نگه می‌دارند. Outcomeهای Reserved/Consumed/Released/Unknown و قفل و یکتایی SQL تغییر نکردند. همان Intent با RequestId/Correlation تازه hash منطقی ثابتی دارد؛ Role wire به hash داخلی اضافه نشده تا identity intent بی‌دلیل عوض نشود.
+
+پذیرش واقعی فقط در SQL LocalDB تازه با prefix موجود `MakanApp_KnowledgeProbe_` و پسوند GUID بود؛ reuse این helper صرفاً برای isolation است، نه RAG یا تولید دادهٔ Production. دیتابیس پس از اجرا طبق Factory حذف شد. `MakanApp`، `MakanApp_Test` و سرور Backend/AI تغییر نکردند.
+
+### ۷. Endpointها
+
+Endpoint جدیدی نیست. `PUT /api/v1/ai/assistant-context` همان Kind/ClientOperationId/ExpectedVersion را دارد و metadata پشتیبانی Personal اکنون true/null است. `POST /api/v1/ai/chat` همان Message/ConversationId/OperationId/SelectedSourceIds و Headerهای `X-AI-Operation-Id` و `X-AI-Payer` را دارد. Message غیرخالی تا4000، شناسه عملیات معتبر و header/body سازگار لازم‌اند. نشست/حساب فعال و Payer/سهمیه مجاز اجباری‌اند.
+
+Personal: Individual پیش‌فرض، FreeTrial صریح، Organization403. نبود قرارداد/سهمیه همان خطای Commerce را می‌دهد و AI خوانده نمی‌شود. Completed/InProgress/Unknown/Failed همان409ها، ورودی نامعتبر400، RateLimit429، پاسخ نامعتبر502، unavailable503 و timeout504 حفظ‌اند. Actor=Personal هیچ مجوز Student/Parent/Teacher/Manager ایجاد نمی‌کند. selectedSourceIds legacy همچنان RetrievalUnavailable دارد؛ Knowledge/RAG عملی از API موجود خودش استفاده می‌کند.
+
+### ۸. مفاهیم استفاده‌شده
+
+مرز intent و wire DTO، authorization جاری، Scope کمینه، Payer مستقل، transaction کوتاه رزرو، response validation، idempotency منطقی و پذیرش واقعی از HTTP Backend. Contract support از Feature Enabled و دسترسی تجاری جداست.
+
+### ۹. تصمیم‌های طراحی
+
+تبدیل Role به Student، حدس User یا تغییر enum سازمانی کنار گذاشته شد؛ مقدار رسمی Personal در همان v1 استفاده می‌شود. پایهٔ Context/Commerce/Knowledge بازنویسی نشد. Backend client و timeout/retry/provider configuration تغییر نکردند. Service Auth هر دو سرویس false و هیچ JWT/CurrentKey requirement تازه ایجاد نشد.
+
+OpenAPI/Health/Ready عمومی200 بودند؛ Role Personal زنده و SHA256 سند=`58559cd3903c051fa2b8e12e08c67523576f309dd6d791e39145eda5d61dbfdc`. Commit/release طبق handoff مالک AI به‌ترتیب `5735598ec9978bae7662164c3d3dc24b3445b8cd` و `personal-5735598ec997` است؛ HTTP hash انتشار را نشان نداد. تیم AI Business=23/23، Live Personal/Invalid Scope/Invalid Role/Student و NEW_FAILURES=0 گزارش کرده است؛ pytest=1303 Passed/31 Failed تاریخی، پس Full Pytest upstream پاک گزارش نمی‌شود. آن تست‌ها در این مخزن اجرا نشده‌اند.
+
+### ۱۰. تست‌ها و شواهد
+
+Unitهای موجود اکنون Mapper رسمی، Scope تهی، UserId سرور و رد scope آلوده را می‌سنجند. هشت Integration جدید، HTTP/SQL برای نبود قرارداد/سهمیه/Organization payer، Trial و Retry، duplicate هم‌زمان، Timeout/Unknown، تغییر Role/Organization با Assistant شخصی و Session مستقل و serializer/validator HTTP واقعی با AI کنترل‌شده را اثبات می‌کنند.۱۱ منع Endpoint آموزشی و چهار Role سازمانی قبلی محفوظ‌اند؛ Knowledge/source ACL از تست‌های موجود استفاده می‌کنند. Architectureهای موجود جهت Onion را می‌سنجند.
+
+Live Probe با حساب عادی و قرارداد Individual فقط در SQL آزمایشی، Backend200/AI200 و metadata=`education-fast` گرفت. requestId=`efe44b0cfee14d849ce99147ba341345`، correlationId=`personal-live-4f348f38a2144c35a5d7638e7aa0e421`، زمان کل≈46780.9ms؛ timeout تنظیمی35s ثابت بود و orchestration/SQL در زمان کل حساب می‌شوند. Scope/Context خالی، Authorization سرویس غایب، aiCalls=1، reservation=1، consume=1 و replay409 بدون تماس دوم ثبت شدند. پاسخ خصوصی چاپ یا ذخیره نشد.
+
+اولین اجرای ابزار در helper خواندن OTP ساختگی از میزبان پایه متوقف شد؛ helper به میزبان واقعی همان درخواست متصل شد و اجرای پذیرفته‌شده فقط یک تماس Production داشت. هیچ Authentication برنامه تغییر نکرد.
+
+### ۱۱. Validation
+
+Clean/Restore، Build اولیه و Final Release Build و Build نهایی ابزار با۰ Warning/Error موفق‌اند؛۲۸ Unit و۱۱۸ Integration متمرکز پاس شدند. Final Tests:۱۳۲۵ Unit +۱۹۳۰ Integration +۱۴ Architecture =۳۲۶۹ Passed، Failed=0 و Skipped=0، exit=0. هشت مورد Integration به baseline۳۲۶۱ افزوده شده‌اند.۱۱۴ تست Zibal، شامل۶۸ Unit و۴۶ Integration، در TRX نهایی Passed هستند؛ این پذیرش کنترل‌شدهٔ کد است، نه پرداخت واقعی Production. EF هیچ pending model change نشان نداد و Migration جدید۰ است. پذیرش واقعی Personal exit=0 بود.
+
+اولین اجرای Full Regression پس از۱۴ timeout در دریافت SignalR برای تشخیص متوقف شد و یک اجرای کامل موفق شمرده نشد. همان۱۴ سناریو در فرایند تازه،۱۵ثانیه و بدون شکست پاس شدند؛ سپس اجرای کامل بدون Probe هم‌زمان، با همین سورس ثابت، در Integration حدود۳۲دقیقه‌و۱۰ثانیه و با۱۹۳۰/۱۹۳۰ موفق پایان یافت. هیچ timeout یا تستی تضعیف/حذف و هیچ کد Realtime تغییر نکرد. علت قطعی timeoutهای دور اول اثبات نشده و ادعای رفع یک باگ Realtime از این نتیجه نمی‌شود.
+
+Snapshot نهایی از `31fe34c6dde4526badc43d43e62b8ba185ee6f36` بدون SQL/Worker/SMS/AI استخراج شد:۴۳۶ path،۴۹۲ operation،۹۱ Controller،۷۸۰ schema،۱۴۹ جدول و۷۳ Migration؛ OpenAPI SHA256=`5e317c540ce2a13dd1b26f94dd847b858e6242eb3d9fa56c8607feaee737a42c`. Source hash همهٔ۱۵۰۰ فایل C# اعتبارسنجی‌شده یکسان است. `BE19_AI_GATEWAY=PASS` و `BE24_FULL_ACCEPTANCE=FAIL`؛ رفع Actor شخصی سایر موانع Product/عملیاتی را نمی‌بندد.
+
+همگام‌سازی اسناد و Validation آن موفق‌اند:۴۹۲ operation/۷۸۰ schema/۱۴۹ جدول/۷۳ Migration،۲۰۰ ورودی inventory، لینک شکسته و اختلاف Enum/OpenAPI صفر. HTML/PDF راهنما، مرجع API، دیتابیس و قرارداد مصرف Backend به‌ترتیب۷۹/۷۹۳/۲۳۵/۸۰۱صفحه دارند؛ hash منبع HTML و bookmark کنترل شد و صفحهٔ خالی یا متن خارج صفحه ندارند. نسخهٔ HTML/PDF دیتابیس طبق ignore قبلی محلی است.۱۳ تست ابزار مستندات نیز پاس‌اند و جدا از عدد۳۲۶۹ تست .NET شمرده می‌شوند.
+
+### ۱۲. Git
+
+Baseline=`a5e24e43b2d458adf532648212caab5bdceee0b2`، branch=`feature/product-v6-backend-alignment` و upstream=`origin/feature/product-v6-backend-alignment` پیش از تغییر برابر بودند. Runtime و تست‌های متناظر در `5329a2b4851661ec8eb9e9861af763d331ff54aa` با پیام `feat(ai): activate upstream personal chat contract` ثبت شدند؛۱۵ فایل. ابزار پذیرش در `31fe34c6dde4526badc43d43e62b8ba185ee6f36` با پیام `test(ai): complete personal backend-to-ai acceptance` ثبت شد؛۳ فایل. اسناد مرتبط با پیام `docs(ai): close personal chat integration blocker` ثبت می‌شوند؛ hash نهایی و نتیجهٔ واقعی Push/Remote verification در خروجی نهایی Task ارائه می‌شود.
+
+Remote=`origin` با نشانی `https://github.com/RastinaxAI/MakanApp.git` و همان upstream feature است.۱۰ فایلِ تنظیمات/ملی‌پیامک/AI قبلی Backup و SHA256 دارند و تغییر نکرده‌اند. staged diff هر Commit فقط فایل‌های مرتبط را دارد و کنترل نشت مقدار خصوصی موفق است. سه فایل untracked قبلی `tools/ai/provider_diagnostic.py`، `run_exact_ai.py` و `test_provider_diagnostic.py` محفوظ و خارج Commit هستند. Merge main و Backend Deployment برابر NOT_RUN هستند.
+
+### ۱۳. محدودیت‌های فعلی
+
+Runtime پیش‌فرض/فایل خصوصی فعال نشده و Backend Deploy نشده است؛ این پذیرش از Backend محلی با وابستگی Production AI بود. Library، PersonalClass AI/Academic gates، سهمیهٔ خانواده، حذف اجرایی/retention، Store billing و محدودیت‌های Product قبلی تغییر نکرده‌اند. BE24 با رفع یک مانع BE19 خودکارPASS نمی‌شود. selectedSourceIds legacy با مسیر Knowledge یکی نیست. شمار۱۲ تصمیم Product/Legal حفظ است؛ D11 خارجی در آن شمار نبود و اکنون بسته است.
+
+### ۱۴. نکات آموزشی
+
+1. مقدار رسمی Actor خارجی را با نقش سازمانی Domain اشتباه نگیرید.
+2. Context را از وضعیت جاریِ نشست resolve و پیش از network دوباره مجاز کنید.
+3. رزرو باید قبل از Provider باشد؛ accounting بعد از پاسخ جای آن را نمی‌گیرد.
+4. Retry همان intent می‌تواند409 بدهد و همچنان retry-safe باشد؛ نگه‌داری پاسخ خصوصی تصمیم جداست.
+5. در E2E مشتق‌شده از WebApplicationFactory، کنترل OTP باید از همان Host درخواست خوانده شود.
+6. PASS قرارداد/پذیرش Business با صفرشکست‌بودن کل pytest upstream یا Deploy Backend یکسان نیست.
+
+### ۱۵. مسیر پیشنهادی مطالعه
+
+`AiController` → `AiChatService` → `PersonalAiChatIntent/PersonalAiChatContract` → `AiInvocationExecutor` و `AiInvocationContext` → Commerce/Store رزرو موجود → `AiServiceClient` و response grounding → `PersonalAiAcceptanceTests` → `AiV1ControlledTransportTests` → `LivePersonalAiScenario` → Handoff.
+
+### ۱۶. مرحلهٔ بعد
+
+در Task انتشار جدا، Runtime و BaseUrl همان محیط با تنظیم خصوصی مصوب فعال و بستهٔ Backend پس از Backup/Validation مستقر شود. UI فقط Backend را صدا بزند و true/null بودن metadata را از وضعیت اشتراک/Feature Disabled جدا کند. Library، حذف واقعی، سهمیهٔ خانواده یا آموزش PersonalClass به این انتشار اضافه نشوند.

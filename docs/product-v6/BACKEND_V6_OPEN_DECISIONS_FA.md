@@ -1,6 +1,6 @@
 # تصمیم‌های باز Product v6
 
-تاریخ بررسی: `2026-11-13`. مبنا: Product v6، شرح وظایف v6 و پرامپت مصوب School Establishment. این فهرست مجوز فعال‌سازی قابلیت پیشنهادی نیست.
+تاریخ بررسی: `2026-11-14`. مبنا: Product v6، تصمیم‌های مصوب قبلی و handoff فعال‌سازی Personal AI. این فهرست مجوز فعال‌سازی قابلیت پیشنهادی نیست.
 
 | شناسه | موضوع | وضعیت | رفتار تا تعیین تکلیف |
 |---|---|---|---|
@@ -36,9 +36,9 @@
 
 تا دریافت قرارداد رسمی قابل استناد و mapping مصوب package/product/environment و تنظیمات خصوصی، پذیرش واقعی CafeBazaar/Myket گزارش نمی‌شود. از SDKهای غیررسمی برای حدس endpoint، وضعیت خرید یا اعطای Subscription استفاده نمی‌شود. Zibal موجود و زنجیرهٔ Order→Payment→Outbox حفظ می‌شوند.
 
-V6-D11 مانع سازگاری Upstream است، نه مجوز ساخت Role/Organization جعلی. بررسی زندهٔ `2026-11-13`: مسیر اعلام‌شدهٔ `/api/v1/openapi.json`404 ولی [OpenAPI واقعی](https://195.177.255.98/openapi.json)200 بود؛ `UserRole` فقط Student/Parent/Teacher/Manager و `Actor.role` اجباری است. SHA256 سند: `fc6bf405aefcc2232e0e35503fbee43fd82313d785fe41658bd474f8ad61277b`. Generic Chat شخصی با409 `AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED`، بدون Provider/Reserve، جدا از Knowledge شخصی گزارش می‌شود. قرارداد role-free یا actor عمومی واقعی upstream لازم است. [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و گزارش BE19، intent/Commerce داخلی و پذیرش Knowledge با transport کنترل‌شده را از پذیرش زندهٔ Chat جدا می‌کنند. `BE19_AI_GATEWAY=PARTIAL`؛ Service Auth هر دو سرویس تغییر نمی‌کند و این مانع به شمار تصمیم‌های Product/Legal افزوده نشده است.
+**V6-D11 — CLOSED در `2026-11-14`.** مانع Actor عمومی رفع شد: [OpenAPI زنده](https://195.177.255.98/openapi.json) اکنون Role دقیق `Personal` را دارد و Backend همان Actor را با Scope تهی می‌سازد. قرارداد `v1` و release اعلام‌شدهٔ مالک `personal-5735598ec997`، Commit=`5735598ec9978bae7662164c3d3dc24b3445b8cd` است؛ endpoint عمومی hash انتشار را افشا نمی‌کند. Backend محلی→AI Production با HTTP200، Individual و یک مصرف و replay بدون فراخوانی دوم پذیرفته شد. وضعیت مسدود `2026-11-13` در گزارش‌های آن روز تاریخی است؛ دیگر تصمیم باز یا مانع اجرایی جاری نیست. [Handoff شخصی](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) شواهد و محدودیت‌های Runtime/Deploy را تفکیک می‌کند. Service Auth هر دو سرویس DISABLED است. pytest گزارش‌شدهٔ upstream شامل31 شکست تاریخی است؛ NEW_FAILURES=0 و Business Acceptance=23/23 گزارش شده، نه Full Pytest پاک.
 
-شمار تصمیم‌های باز Product/Legal در جدول بالا: **۱۲**؛ D01/D02/D12/D17 بسته یا تأیید شده‌اند، D07 به‌صورت مصوب Deferred است و D11 مانع Contract/Configuration جداست. D15/D16 محدودیت‌های توسعهٔ آینده‌اند و Submit جاری را نمی‌بندند. آماده‌نبودن credential/device برای Push نیز تصمیم محصولی تازه نیست.
+شمار تصمیم‌های باز Product/Legal در جدول بالا: **۱۲**؛ D01/D02/D12/D17 بسته یا تأیید شده‌اند، D07 به‌صورت مصوب Deferred و D11 اکنون CLOSED است. D11 از ابتدا در این۱۲ مورد شمرده نمی‌شد، پس بسته‌شدن آن شمار را به۱۱ کاهش نمی‌دهد. D15/D16 محدودیت‌های توسعهٔ آینده‌اند و Submit جاری را نمی‌بندند. آماده‌نبودن credential/device برای Push نیز تصمیم محصولی تازه نیست.
 
 ## تنظیم تجاری آموزشگاه
 

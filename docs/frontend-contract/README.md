@@ -1,8 +1,8 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-> قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است: مدیر اولیه صریحاً در Approval انتخاب می‌شود؛ زنجیرهٔ Order/Payment/Outbox به Provisioning مرحله‌ای و دعوت مدیر متصل است. تنظیم قیمت واقعی همچنان نیازمند Admin است. Gate آموزشی PersonalClass و Service Auth هر دو سرویس AI خاموش و Generic Personal AI محدود است. سیاست مصوب Messaging در 2026-11-01 مرجع رفتار جاری است.
+> قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [Personal AI](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.
 
-بازبینی `2026-11-13` با مبنای Git `source@bba4545b9c1b32db804a20953a410347b8439b4e` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
+بازبینی `2026-11-14` با مبنای Git `source@31fe34c6dde4526badc43d43e62b8ba185ee6f36` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.
 
 پوشش جاری: 492 عملیات HTTP در 436 مسیر، 91 Controller، 780 schema، 149 جدول و 73 Migration. فهرست کامل کارت‌های HTTP و DTOها در HTML/PDF همین تحویل ضمیمه شده است.
 
@@ -110,7 +110,7 @@ Moderation case-scoped است؛ permission/claim/escalation/session و reason ق
 
 بودجهٔ پیش‌فرض AiService:TimeoutSeconds برابر ۳۵ ثانیه و محدودهٔ تنظیم ۱..۱۸۰ است؛ client retry خودکار عمومی نسازد. 429 با AI_RATE_LIMITED، 503/خطای مدل یا اتصال با AI_SERVICE_UNAVAILABLE، 504 با AI_SERVICE_TIMEOUT و schema/grounding نامعتبر با AI_RESPONSE_INVALID نگاشت می‌شود؛ متن خام خطای Provider نمایش داده نمی‌شود. AI_CONTEXT_NOT_ALLOWED پیش از تماس خارجی 403 است؛ AI_FEATURE_DISABLED برابر 503 است. public Retry-After تضمین نشده است.
 
-AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal تا Contract سازگار Upstream محدود است و PersonalClass AI اضافه نشده. این Task فقط transport کنترل‌شده را تست می‌کند و نتیجهٔ health/Fake-AI شاهد Provider یا Cutover واقعی نیست. [قرارداد v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md).
+AiService:UseServiceAuthentication و AiKnowledge:UseServiceAuthentication طبق override مالک false هستند؛ کلید/JWT تازه لازم نیست. Assistant context مستقل و در هر اجرا مجاز می‌شود؛ Payer مجوز داده نیست. Generic Personal با Actor رسمی Personal و scope تهی فعال است؛ PersonalClass AI اضافه نشده. پذیرش Backend محلی→AI Production با HTTP200 و یک مصرف انجام شده؛ Deploy Backend یا پذیرش تمام Providerها از آن نتیجه نمی‌شود. [قرارداد شخصی](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md).
 
 ## میزبانی و smoke
 
