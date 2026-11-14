@@ -22,10 +22,9 @@ public sealed class AiInvocationOperationTransformer : IOpenApiOperationTransfor
         operation.Responses.TryAdd("409", new OpenApiResponse { Description = "Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود." });
         if (route == "api/v1/ai/chat")
         {
-            operation.Description = (operation.Description ?? "") + " زمینهٔ Personal به نقش سازمانی نیاز ندارد؛ اما قرارداد زندهٔ AI هنوز actor عمومی ندارد. " +
-                "تا سازگارشدن upstream، درخواست Personal با 409 و AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED، بدون تماس AI یا مصرف سهمیه متوقف می‌شود. " +
+            operation.Description = (operation.Description ?? "") + " زمینهٔ Personal با Actor رسمی Personal و scope تهی به سرویس AI v1 ارسال می‌شود؛ نقش سازمانی لازم نیست. " +
+                "Assistant مستقل از School Workspace است. Individual پیش‌فرض و FreeTrial صریح است؛ Organization در Personal مجاز نیست. رزرو معتبر پیش از تماس AI لازم است. " +
                 "برای منابع شخصی آماده از APIهای موجود Knowledge Retrieve/RAG استفاده شود؛ selectedSourceIds در Chat هنوز AI_SOURCE_RETRIEVAL_NOT_AVAILABLE می‌دهد.";
-            operation.Responses["409"].Description += " Personal Chat: AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED؛ مرز upstream و بدون مصرف.";
         }
         foreach (var response in operation.Responses.Values)
         {

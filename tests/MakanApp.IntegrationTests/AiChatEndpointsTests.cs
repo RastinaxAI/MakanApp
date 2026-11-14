@@ -512,21 +512,22 @@ public sealed partial class AiChatEndpointsTests(MakanAppWebApplicationFactory f
     }
 
     [Fact]
-    public async Task Chat_PersonalContractUnavailableOrRevokedWorkspace_NeverCallsAi()
+    public async Task Chat_PersonalUsesOfficialContractAndRevokedOrganizationCannotCallAi()
     {
         using var client = factory.CreateClient();
         var user = await CreateAuthenticatedUserAsync(client);
         UseBearerToken(client, user.AccessToken);
+        client.DefaultRequestHeaders.Add("X-AI-Payer", "FreeTrial");
 
         using var personalResponse = await client.PostAsJsonAsync(
             "/api/v1/ai/chat",
             new SendAiChatCommand("پرسش", null),
             JsonOptions);
-        Assert.Equal(HttpStatusCode.Conflict, personalResponse.StatusCode);
-        Assert.Equal(
-            AiServiceErrorCodes.PersonalContextContractRequired,
-            await ReadProblemCodeAsync(personalResponse));
-        Assert.Null(factory.AiService.LastRequest);
+        personalResponse.EnsureSuccessStatusCode();
+        Assert.Equal("Personal", factory.AiService.LastRequest!.Actor.Role);
+        Assert.Equal(new AiScope(null, null, null, null), factory.AiService.LastRequest.Scope);
+        factory.AiService.Reset();
+        client.DefaultRequestHeaders.Remove("X-AI-Payer");
 
         var organizationId = await factory.CreateOrganizationAsync(NewName("AI Revoked"));
         var membership = await factory.CreateMembershipAsync(

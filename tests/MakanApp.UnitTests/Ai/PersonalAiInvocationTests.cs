@@ -97,11 +97,16 @@ public sealed class PersonalAiInvocationTests
     }
 
     [Fact]
-    public void UnsupportedLiveContractIsExplicitAndCannotGenerateEducationalRole()
+    public void SupportedPersonalContractMapsOnlyOfficialActorAndEmptyScope()
     {
-        Assert.False(PersonalAiChatContract.IsSupported);
-        Assert.Equal(AiServiceErrorCodes.PersonalContextContractRequired,
-            Assert.Throws<AiServiceException>(PersonalAiChatContract.EnsureSupported).Code);
+        var context = Context(); var intent = Intent(context);
+        Assert.True(PersonalAiChatContract.IsSupported);
+        var request = PersonalAiChatContract.ToServiceRequest(intent);
+        Assert.Equal(new AiActor(context.UserId.ToString("D"), "Personal"), request.Actor);
+        Assert.Equal(new AiScope(null, null, null, null), request.Scope);
+        Assert.Equal(intent.RequestId, request.RequestId); Assert.Equal(intent.CorrelationId, request.CorrelationId);
+        Assert.Equal("fa", request.Message.Language); Assert.Equal(AiAuthorizedContext.Empty, request.Context);
+        Assert.Throws<AiServiceException>(() => PersonalAiChatContract.ToServiceRequest(intent with { Scope = new("foreign", null, null, null) }));
     }
 
     [Fact]

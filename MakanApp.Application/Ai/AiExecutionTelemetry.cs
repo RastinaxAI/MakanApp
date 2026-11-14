@@ -33,7 +33,6 @@ public static class AiExecutionTelemetry
         private bool _disposed;
         internal Measurement(string operation, string context, string payer) => (_operation, _context, _payer) = (operation, context, payer);
         public void Succeeded() => _result = "success";
-        public void ContractBlocked() => _result = "blocked_upstream_contract";
         public void Dispose()
         {
             if (_disposed) return;

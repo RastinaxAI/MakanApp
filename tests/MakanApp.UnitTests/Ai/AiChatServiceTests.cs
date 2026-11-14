@@ -70,7 +70,7 @@ public sealed class AiChatServiceTests
     }
 
     [Fact]
-    public async Task ChatAsync_OrdinaryPersonalAccount_ReportsUpstreamContractBoundaryWithoutInventingRole()
+    public async Task ChatAsync_OrdinaryPersonalAccount_UsesOfficialPersonalActorWithoutSchoolScope()
     {
         var user = Guid.NewGuid();
         var context = new AccessContext(user, user, Guid.NewGuid(), WorkspaceType.Personal, null, null, null, null);
@@ -78,11 +78,13 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(new StubContextResolver(context), new StubScopeStore(), client,
             new NoSourceSelection(), new DirectInvocation());
 
-        var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(user, context.SessionId,
-            "personal-contract", new SendAiChatCommand("پرسش شخصی", null), default));
+        var result = await service.ChatAsync(user, context.SessionId,
+            "personal-contract", new SendAiChatCommand("پرسش شخصی", null), default);
 
-        Assert.Equal(AiServiceErrorCodes.PersonalContextContractRequired, error.Code);
-        Assert.Null(client.Request);
+        Assert.Equal("پاسخ", result.Answer.Text);
+        Assert.Equal(new AiActor(user.ToString("D"), "Personal"), client.Request!.Actor);
+        Assert.Equal(new AiScope(null, null, null, null), client.Request.Scope);
+        Assert.Equal(AiAuthorizedContext.Empty, client.Request.Context);
     }
 
     [Fact]

@@ -33,7 +33,7 @@ public sealed partial class MessagingEndpointsTests
         using var response = await client.GetAsync("/openapi/v1.json"); response.EnsureSuccessStatusCode();
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = document.RootElement; var paths = root.GetProperty("paths");
-        Assert.Contains(AiServiceErrorCodes.PersonalContextContractRequired,
+        Assert.Contains("Personal",
             paths.GetProperty("/api/v1/ai/chat").GetProperty("post").GetProperty("description").GetString());
         var retrieve = paths.GetProperty("/api/v1/ai/knowledge/retrieve").GetProperty("post");
         if (retrieve.TryGetProperty("parameters", out var parameters))

@@ -78,7 +78,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
         using var selected = await actor.Client.PutAsJsonAsync("/api/v1/ai/assistant-context", new SelectAssistantContextCommand(AssistantDataContextKind.Personal, Guid.NewGuid()), Json);
         selected.EnsureSuccessStatusCode(); var result = (await selected.Content.ReadFromJsonAsync<AssistantContextResult>(Json))!;
-        Assert.False(result.UpstreamContextSupported); Assert.Equal("AI_PERSONAL_CONTEXT_UPSTREAM_CONTRACT_REQUIRED", result.Limitation);
+        Assert.True(result.UpstreamContextSupported); Assert.Null(result.Limitation);
         await using var scope = factory.Services.CreateAsyncScope();
         var assistant = await scope.ServiceProvider.GetRequiredService<AssistantContextResolver>().ResolveAsync(actor.UserId, actor.SessionId, default);
         var school = await scope.ServiceProvider.GetRequiredService<IAccessContextResolver>().ResolveAsync(actor.UserId, actor.SessionId, default);

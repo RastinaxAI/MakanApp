@@ -14,6 +14,27 @@ namespace MakanApp.IntegrationTests;
 public sealed class AiV1ControlledTransportTests
 {
     [Fact]
+    public async Task PersonalContractUsesRealHttpSerializerAndValidatorWithoutServiceCredentials()
+    {
+        await using var server = await ControlledAiV1Server.StartAsync(requireServiceAuthentication: false);
+        using var http = new HttpClient();
+        var options = new AiServiceOptions { Enabled = true, BaseUrl = server.BaseUrl, UseServiceAuthentication = false };
+        var client = new AiServiceClient(http, new HmacAiServiceCredentialProvider(new(), TimeProvider.System),
+            options, new AiServiceCircuitBreaker(options, TimeProvider.System));
+        var user = Guid.NewGuid(); var session = Guid.NewGuid();
+        var context = new MakanApp.Application.Organization.AccessContext(user, user, session,
+            MakanApp.Domain.Organization.WorkspaceType.Personal, null, null, null, null);
+        var request = PersonalAiChatContract.ToServiceRequest(PersonalAiChatIntent.Create(user, session, context,
+            "controlled-personal", new("پرسش ساختگی", null)));
+        var result = await client.ChatAsync(request, default);
+        Assert.Equal(request.RequestId, result.RequestId); Assert.Equal(request.CorrelationId, result.CorrelationId);
+        var sent = Assert.Single(server.Requests);
+        Assert.Equal("Personal", sent["actor"]!["role"]!.GetValue<string>());
+        foreach (var key in new[] { "organizationId", "schoolId", "classId", "studentId" }) Assert.Null(sent["scope"]![key]);
+        Assert.Equal(200, Assert.Single(server.Events).Status); Assert.Equal("education-fast", result.Metadata.ModelAlias);
+    }
+
+    [Fact]
     public async Task AllTwelveOperationsSupportExplicitNoAuthContractWithNoSigningKey()
     {
         await using var server = await ControlledAiV1Server.StartAsync(requireServiceAuthentication: false);

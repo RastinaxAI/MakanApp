@@ -14,6 +14,104 @@ namespace MakanApp.IntegrationTests;
 
 public sealed partial class CommercialSubscriptionEndpointsTests
 {
+    [Fact]
+    public async Task PersonalChatRoleAndOrganizationSwitchesNeverChangeItsScopeOrAnotherSession()
+    {
+        factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        await SubscribeAsync(SubscriptionOwner.Individual(actor.UserId), await PlanAsync(SubscriptionOwnerType.Individual, ai: 20));
+        var a = await factory.CreateOrganizationAsync("مدرسه اول آزمون Personal");
+        var b = await factory.CreateOrganizationAsync("مدرسه دوم آزمون Personal");
+        var first = await factory.CreateMembershipAsync(actor.UserId, a, OrganizationRole.Student);
+        await WithDb(async db =>
+        {
+            db.RoleAssignments.Add(RoleAssignment.CreateActive(first.MembershipId, OrganizationRole.Teacher, DateTime.UtcNow));
+            await db.SaveChangesAsync();
+        });
+        var second = await factory.CreateMembershipAsync(actor.UserId, b, OrganizationRole.Teacher);
+        foreach (var workspace in new[] { (first.MembershipId, OrganizationRole.Student), (first.MembershipId, OrganizationRole.Teacher), (second.MembershipId, OrganizationRole.Teacher) })
+        {
+            await SelectAsync(actor, workspace.MembershipId, workspace.Item2);
+            using var response = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", new SendAiChatCommand("پرسش شخصی ساختگی", null), Json);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(new AiActor(actor.UserId.ToString("D"), "Personal"), factory.AiService.LastRequest!.Actor);
+            Assert.Equal(new AiScope(null, null, null, null), factory.AiService.LastRequest.Scope);
+        }
+        var other = await AnotherDeviceAsync(actor);
+        using (var selected = await other.Client.PutAsJsonAsync("/api/v1/ai/assistant-context",
+            new SelectAssistantContextCommand(AssistantDataContextKind.Organization, Guid.NewGuid(), first.MembershipId, OrganizationRole.Teacher), Json)) selected.EnsureSuccessStatusCode();
+        other.Client.DefaultRequestHeaders.Add("X-AI-Payer", "Individual");
+        using (var organization = await other.Client.PostAsJsonAsync("/api/v1/ai/chat", new SendAiChatCommand("پرسش سازمانی ساختگی", null), Json)) organization.EnsureSuccessStatusCode();
+        Assert.Equal("Teacher", factory.AiService.LastRequest!.Actor.Role); Assert.Equal(a.ToString("D"), factory.AiService.LastRequest.Scope.OrganizationId);
+        using (var personal = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", new SendAiChatCommand("ادامه شخصی ساختگی", null), Json)) personal.EnsureSuccessStatusCode();
+        Assert.Equal("Personal", factory.AiService.LastRequest!.Actor.Role); Assert.Equal(new AiScope(null, null, null, null), factory.AiService.LastRequest.Scope);
+    }
+
+    [Theory]
+    [InlineData("missing", HttpStatusCode.Conflict, CommerceErrorCodes.SubscriptionInactive)]
+    [InlineData("exhausted", HttpStatusCode.Conflict, CommerceErrorCodes.QuotaExceeded)]
+    [InlineData("organization", HttpStatusCode.Forbidden, CommerceErrorCodes.ContextNotAllowed)]
+    public async Task PersonalChatCommercialDenialNeverInvokesOrReserves(string mode, HttpStatusCode status, string code)
+    {
+        factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        if (mode != "missing") await SubscribeAsync(SubscriptionOwner.Individual(actor.UserId),
+            await PlanAsync(SubscriptionOwnerType.Individual, ai: mode == "exhausted" ? 0 : 10));
+        if (mode == "organization") actor.Client.DefaultRequestHeaders.Add("X-AI-Payer", "Organization");
+        var operation = Guid.NewGuid();
+        using var response = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", new SendAiChatCommand("پرسش ساختگی", null) { OperationId = operation }, Json);
+        Assert.Equal(status, response.StatusCode); Assert.Equal(code, await ProblemAsync(response));
+        Assert.Equal(0, factory.AiService.ProviderCallCount);
+        await WithDb(async db => Assert.False(await db.UsageReservations.AnyAsync(r => r.OperationId == operation)));
+    }
+
+    [Fact]
+    public async Task PersonalChatExplicitTrialInvokesWithoutSubscriptionAndCompletedRetryNeverChargesAgain()
+    {
+        factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        actor.Client.DefaultRequestHeaders.Add("X-AI-Payer", "FreeTrial");
+        var command = new SendAiChatCommand("پرسش ساختگی trial", null) { OperationId = Guid.NewGuid() };
+        using (var response = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", command, Json)) response.EnsureSuccessStatusCode();
+        using (var replay = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", command, Json))
+        { Assert.Equal(HttpStatusCode.Conflict, replay.StatusCode); Assert.Equal(AiInvocationErrorCodes.Completed, await ProblemAsync(replay)); }
+        Assert.Equal(1, factory.AiService.ProviderCallCount); Assert.Equal("Personal", factory.AiService.LastRequest!.Actor.Role);
+        await WithDb(async db =>
+        {
+            var reservation = await db.UsageReservations.SingleAsync(r => r.OperationId == command.OperationId);
+            Assert.True(reservation.IsTrial); Assert.Null(reservation.SubscriptionId); Assert.Equal(UsageReservationStatus.Consumed, reservation.Status);
+        });
+    }
+
+    [Fact]
+    public async Task PersonalChatConcurrentHttpRetryInvokesAndConsumesOnlyOnce()
+    {
+        factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        await SubscribeAsync(SubscriptionOwner.Individual(actor.UserId), await PlanAsync(SubscriptionOwnerType.Individual));
+        var command = new SendAiChatCommand("پرسش هم‌زمان ساختگی", null) { OperationId = Guid.NewGuid() };
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => actor.Client.PostAsJsonAsync("/api/v1/ai/chat", command, Json)));
+        try
+        {
+            Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
+            Assert.Equal(3, responses.Count(r => r.StatusCode == HttpStatusCode.Conflict)); Assert.Equal(1, factory.AiService.ProviderCallCount);
+        }
+        finally { foreach (var response in responses) response.Dispose(); }
+        await WithDb(async db => Assert.Equal(UsageReservationStatus.Consumed,
+            (await db.UsageReservations.SingleAsync(r => r.OperationId == command.OperationId)).Status));
+    }
+
+    [Fact]
+    public async Task PersonalChatTimeoutKeepsUnknownAndSameHttpIntentNeverRetriesProvider()
+    {
+        factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        await SubscribeAsync(SubscriptionOwner.Individual(actor.UserId), await PlanAsync(SubscriptionOwnerType.Individual));
+        factory.AiService.FailNext(new AiServiceException(AiServiceErrorCodes.ServiceTimeout, "timeout ساختگی"));
+        var command = new SendAiChatCommand("پرسش timeout ساختگی", null) { OperationId = Guid.NewGuid() };
+        using (var failed = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", command, Json)) Assert.Equal(HttpStatusCode.GatewayTimeout, failed.StatusCode);
+        using (var replay = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat", command, Json))
+        { Assert.Equal(HttpStatusCode.Conflict, replay.StatusCode); Assert.Equal(AiInvocationErrorCodes.Unknown, await ProblemAsync(replay)); }
+        Assert.Equal(1, factory.AiService.ProviderCallCount);
+        await WithDb(async db => Assert.Equal(UsageReservationStatus.Unknown,
+            (await db.UsageReservations.SingleAsync(r => r.OperationId == command.OperationId)).Status));
+    }
+
     private static async Task ChoosePersonalAsync(TestActor actor)
     {
         using var response = await actor.Client.PutAsJsonAsync("/api/v1/ai/assistant-context",
@@ -37,19 +135,25 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         Task.FromResult(new AiChatResponse(intent.RequestId, intent.CorrelationId, null, new("پاسخ ساختگی داخلی"), [], [], [], [], new("test-only", 1)));
 
     [Fact]
-    public async Task PersonalAiOrdinaryAccountGetsExplicitContractBoundaryWithoutChargeOrFakeRole()
+    public async Task PersonalAiOrdinaryAccountInvokesOfficialPersonalContractAndConsumesIndividualOnce()
     {
         factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
+        await SubscribeAsync(SubscriptionOwner.Individual(actor.UserId), await PlanAsync(SubscriptionOwnerType.Individual));
         var operation = Guid.NewGuid();
         using var response = await actor.Client.PostAsJsonAsync("/api/v1/ai/chat",
             new SendAiChatCommand("پرسش عادی", null) { OperationId = operation }, Json);
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Contains(AiServiceErrorCodes.PersonalContextContractRequired, await response.Content.ReadAsStringAsync());
-        Assert.Null(factory.AiService.LastRequest);
+        response.EnsureSuccessStatusCode();
+        var sent = Assert.IsType<AiChatRequest>(factory.AiService.LastRequest);
+        Assert.Equal(new AiActor(actor.UserId.ToString("D"), "Personal"), sent.Actor);
+        Assert.Equal(new AiScope(null, null, null, null), sent.Scope);
+        Assert.Equal(AiAuthorizedContext.Empty, sent.Context);
+        Assert.Equal(1, factory.AiService.ProviderCallCount);
         await WithDb(async db =>
         {
             Assert.False(await db.Memberships.AnyAsync(m => m.UserId == actor.UserId));
-            Assert.False(await db.UsageReservations.AnyAsync(r => r.OperationId == operation));
+            var reservation = await db.UsageReservations.SingleAsync(r => r.OperationId == operation);
+            Assert.Equal(UsageReservationStatus.Consumed, reservation.Status);
+            Assert.Equal(actor.UserId, reservation.OwnerId); Assert.False(reservation.IsTrial);
         });
     }
 

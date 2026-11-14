@@ -76,9 +76,13 @@ public sealed class ControlledAiV1Server : IAsyncDisposable
         var role = actor["role"]?.GetValue<string>();
         var expected = operation.StartsWith("teachers/") ? "Teacher" : operation.StartsWith("managers/") ? "Manager"
             : operation.StartsWith("parents/") ? "Parent" : operation == "chat" ? role : "Student";
-        if (role != expected || role is not ("Student" or "Parent" or "Teacher" or "Manager") ||
-            scope["organizationId"]?.GetValue<string>() != scope["schoolId"]?.GetValue<string>() ||
-            string.IsNullOrWhiteSpace(scope["organizationId"]?.GetValue<string>()))
+        var personal = operation == "chat" && role == "Personal";
+        var validScope = personal
+            ? new[] { "organizationId", "schoolId", "classId", "studentId" }.All(key => scope[key] is null)
+            : role is "Student" or "Parent" or "Teacher" or "Manager" &&
+                scope["organizationId"]?.GetValue<string>() == scope["schoolId"]?.GetValue<string>() &&
+                !string.IsNullOrWhiteSpace(scope["organizationId"]?.GetValue<string>());
+        if (role != expected || !validScope)
         { await Failure(422, "AI_INVALID_CONTEXT"); return; }
         _requests.Enqueue(body.DeepClone().AsObject());
         if (RedirectLocation is not null) { http.Response.Redirect(RedirectLocation); return; }

@@ -30,13 +30,14 @@ public sealed class AiChatService(
         if (context.WorkspaceType == WorkspaceType.Personal)
         {
             var personal = PersonalAiChatIntent.Create(userId, sessionId, context, correlationId, command);
-            personal.EnsureScope(userId);
-            var payer = AiInvocationOptions.Resolve(invocation, command.OperationId).Payer;
-            using var measurement = AiExecutionTelemetry.Begin("chat", context.WorkspaceType, payer);
-            _ = AiInvocationContext.CommerceContext(context, payer);
-            // مرز wire پیش از Reserve بسته است؛ intent معتبر با نقش آموزشی جعلی ارسال نمی‌شود.
-            measurement.ContractBlocked();
-            PersonalAiChatContract.EnsureSupported();
+            var personalResponse = await invocationExecutor.ExecuteAsync(userId, sessionId, personal,
+                (intent, token) => client.ChatAsync(PersonalAiChatContract.ToServiceRequest(intent), token), async token =>
+                {
+                    var current = await accessContextResolver.ResolveAsync(userId, sessionId, token);
+                    AiInvocationContext.EnsurePersonal(current, userId, sessionId);
+                    AiInvocationContext.EnsureSame(context, current);
+                }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
+            return Result(personalResponse);
         }
         EnsureOrganizationRole(context);
 
@@ -75,7 +76,10 @@ public sealed class AiChatService(
                 await scopeStore.GetActiveLearnerOrganizationPersonIdAsync(current.OrganizationId!.Value, userId, token) != learnerId)
                 throw ContextNotAllowed();
         }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
-        return new AiChatResult(
+        return Result(response);
+    }
+
+    private static AiChatResult Result(AiChatResponse response) => new(
             response.RequestId,
             response.CorrelationId,
             response.ConversationId,
@@ -84,7 +88,6 @@ public sealed class AiChatService(
             response.Risks,
             response.Recommendations,
             response.Sources);
-    }
 
     private static void Validate(SendAiChatCommand command, string correlationId)
     {

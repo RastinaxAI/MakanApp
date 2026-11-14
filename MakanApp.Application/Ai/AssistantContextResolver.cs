@@ -81,5 +81,5 @@ public sealed class AssistantContextResolver(IAccessContextResolver schoolContex
     private static SelectAssistantContextCommand ToCommand(AssistantContextSelection s) => new(s.Kind, s.LastClientOperationId, s.MembershipId, s.Role, s.SubjectOrganizationPersonId, s.ClassId);
     private static AssistantContextResult Map(AssistantContextSelection s) => new(s.Kind, s.OrganizationId, s.MembershipId, s.Role, s.SubjectOrganizationPersonId,
         s.ClassId, s.SelectedAtUtc, Convert.ToBase64String(s.RowVersion), s.Kind != AssistantDataContextKind.Personal || PersonalAiChatContract.IsSupported,
-        s.Kind == AssistantDataContextKind.Personal ? AiServiceErrorCodes.PersonalContextContractRequired : null);
+        null);
 }

@@ -2,7 +2,7 @@ using MakanApp.Application.Organization;
 
 namespace MakanApp.Application.Ai;
 
-// این مدل intent داخلی است، نه DTO سرویس AI؛ تا تصویب قرارداد Personal هیچ role روی wire ساخته نمی‌شود.
+// intent داخلی از DTO سرویس جدا می‌ماند؛ تبدیل wire فقط با قرارداد رسمی Personal انجام می‌شود.
 public sealed record PersonalAiChatIntent(string RequestId, string? CorrelationId, Guid UserId, Guid? ConversationId,
     AiScope Scope, AiMessage Message, AiAuthorizedContext Context) : IAiInvocationRequest
 {
@@ -23,8 +23,14 @@ public sealed record PersonalAiChatIntent(string RequestId, string? CorrelationI
 
 public static class PersonalAiChatContract
 {
-    // OpenAPI زندهٔ ۲۰۲۶-۱۱-۱۳ فقط Student/Parent/Teacher/Manager را تعریف می‌کند؛ این مقدار فلگ قابل bypass نیست.
-    public static bool IsSupported => false;
-    public static void EnsureSupported() => throw new AiServiceException(AiServiceErrorCodes.PersonalContextContractRequired,
-        "قرارداد سرویس AI هنوز actor عمومیِ حساب شخصی را پشتیبانی نمی‌کند؛ هیچ نقش جایگزین یا مصرفی ایجاد نشد.");
+    public const string ActorRole = "Personal";
+    // قرارداد v1 مستقر در personal-5735598ec997 این Actor را با scope تهی پشتیبانی می‌کند.
+    public static bool IsSupported => true;
+
+    public static AiChatRequest ToServiceRequest(PersonalAiChatIntent intent)
+    {
+        intent.EnsureScope(intent.UserId);
+        return new(intent.RequestId, intent.CorrelationId, intent.ConversationId?.ToString("N"),
+            new(intent.UserId.ToString("D"), ActorRole), intent.Scope, intent.Message, intent.Context);
+    }
 }
