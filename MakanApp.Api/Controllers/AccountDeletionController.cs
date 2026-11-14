@@ -26,4 +26,14 @@ public sealed class PlatformDeletionRequestsController(AccountDeletionService se
     [HttpGet]
     public async Task<ActionResult<AccountDeletionPage>> Queue(CancellationToken ct, [FromQuery] int page = 1, [FromQuery] int pageSize = 50) =>
         Ok(await service.PageAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), page, pageSize, ct));
+
+    [HttpGet("{requestId:guid}")]
+    [ProducesResponseType<AccountDeletionDetail>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AccountDeletionDetail>> Detail(Guid requestId, CancellationToken ct) =>
+        Ok(await service.DetailAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), requestId, ct));
+
+    [HttpPost("{requestId:guid}/retry"), Authorize(Policy = PlatformPermissionKeys.PrivacyRequestsManage)]
+    [ProducesResponseType<AccountDeletionStatusResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AccountDeletionStatusResult>> Retry(Guid requestId, RetryAccountDeletionCommand command, CancellationToken ct) =>
+        Ok(await service.RetryAsync(AuthenticatedSession.GetUserId(User), AuthenticatedSession.GetSessionId(User), requestId, command, ct));
 }

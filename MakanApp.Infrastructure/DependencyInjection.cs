@@ -407,6 +407,22 @@ public static class DependencyInjection
         services.AddScoped<MakanApp.Application.Support.SupportTicketService>();
         services.AddScoped<IAccountDeletionStore, EfAccountDeletionStore>();
         services.AddScoped<AccountDeletionService>();
+        services.AddOptions<AccountDeletionOptions>().Bind(configuration.GetSection(AccountDeletionOptions.SectionName))
+            .Validate(o => o.IsValid(), "اجرای حذف حساب نیازمند مهلت صریح و معتبر است.").ValidateOnStart();
+        services.AddSingleton(sp => sp.GetRequiredService<IOptions<AccountDeletionOptions>>().Value);
+        services.AddScoped<IIdentityAccountDeletionLifecycle, IdentityAccountDeletionLifecycle>();
+        services.AddScoped<IOrganizationAccountDeletionLifecycle, OrganizationAccountDeletionLifecycle>();
+        services.AddScoped<IPersonalClassAccountDeletionLifecycle, PersonalClassAccountDeletionLifecycle>();
+        services.AddScoped<IPlatformAccountDeletionLifecycle, PlatformAccountDeletionLifecycle>();
+        services.AddScoped<IGuardianAccountDeletionLifecycle, GuardianAccountDeletionLifecycle>();
+        services.AddScoped<INotificationAccountDeletionLifecycle, NotificationAccountDeletionLifecycle>();
+        services.AddScoped<IMessagingAccountDeletionLifecycle, MessagingAccountDeletionLifecycle>();
+        services.AddScoped<IAiAccountDeletionLifecycle, AiAccountDeletionLifecycle>();
+        services.AddScoped<ICommerceAccountDeletionLifecycle, CommerceAccountDeletionLifecycle>();
+        services.AddScoped<IAccountDeletionKnowledgePurger, AccountDeletionKnowledgePurger>();
+        services.AddScoped<AccountDeletionWorkflow>();
+        services.AddScoped<AccountDeletionProcessor>();
+        services.AddHostedService<AccountDeletionDispatcher>();
         services.AddScoped<ISchoolApplicationStore, EfSchoolApplicationStore>();
         services.AddScoped<SchoolApplicationService>();
         AddOtpDeliveryProvider(services, configuration, environmentName, otpBypass, authentication);

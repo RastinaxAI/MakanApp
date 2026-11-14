@@ -85,6 +85,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             {
                 ["ConnectionStrings:MakanDatabase"] = _instanceConnectionString,
                 ["Sms:Provider"] = "Development",
+                ["AccountDeletion:ExecutionEnabled"] = _accountDeletionProbe ? "true" : "false",
+                ["AccountDeletion:GracePeriodHours"] = _accountDeletionProbe ? "0" : null,
                 ["Identity:Otp:MaxRequestsPerWindow"] = "5",
                 ["Identity:Session:AccessLifetimeSeconds"] = "86400",
                 ["Identity:Session:RefreshLifetimeSeconds"] = "2592000",
@@ -109,6 +111,8 @@ public sealed partial class MakanAppWebApplicationFactory :
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<RealtimeBoundaryGate>();
+            var deletionDispatcher = services.FirstOrDefault(d => d.ServiceType == typeof(IHostedService) && d.ImplementationType == typeof(AccountDeletionDispatcher));
+            if (deletionDispatcher is not null) services.Remove(deletionDispatcher);
             services.AddDbContext<MakanDbContext>((provider, options) =>
                 options.AddInterceptors(provider.GetRequiredService<RealtimeBoundaryGate>()));
             // کلید cursor فقط در حافظهٔ fixture است؛ keyring شخصی توسعه‌دهنده لمس نمی‌شود.

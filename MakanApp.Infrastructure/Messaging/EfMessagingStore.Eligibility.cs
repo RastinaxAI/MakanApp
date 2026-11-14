@@ -161,8 +161,13 @@ public sealed partial class EfMessagingStore
 
     private async Task<SafeMessagingIdentityRecord> LoadSafeIdentityAsync(
         Guid userId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowRetainedDeletion = false)
     {
+        // فقط نمایش تاریخی پس از مجوز خواندن منبع؛ این مسیر در Send/Create/Discovery فراخوانی نمی‌شود.
+        if (allowRetainedDeletion && await dbContext.Users.AnyAsync(u => u.Id == userId && u.DeletionStartedAtUtc != null &&
+                u.AccountStatus == UserAccountStatus.Suspended, cancellationToken))
+            return new(userId, User.CreateDeletedUsername(userId), Person.DeletedDisplayName, null);
         var user = await LoadUserSnapshotAsync(userId, cancellationToken);
         if (user is null)
         {
@@ -182,21 +187,23 @@ public sealed partial class EfMessagingStore
             return new Dictionary<Guid, SafeMessagingIdentityRecord>();
         }
 
-        return await (from user in dbContext.Users.AsNoTracking()
+        var rows = await (from user in dbContext.Users.AsNoTracking()
                       join person in dbContext.Persons.AsNoTracking() on user.PersonId equals person.Id
                       join file in MakanApp.Infrastructure.Identity.ProfilePhotoQuery.ReadyImages(dbContext)
                           on user.ProfilePhotoFileAssetId equals file.Id into photos
                       from file in photos.DefaultIfEmpty()
                       where userIds.Contains(user.Id) && (!requireActive || user.AccountStatus == UserAccountStatus.Active) && user.PersonId != null &&
                             user.Username != null && user.ProfileCompletedAtUtc != null
-                      select new SafeMessagingIdentityRecord(
-                          user.Id,
-                          user.Username!,
-                          person.DisplayName ?? person.FirstName + " " + person.LastName,
-                          file != null && file.UploadedByUserId == user.Id
-                              ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null))
+                      select new {
+                          user.Id, user.Username, user.DeletionStartedAtUtc,
+                          DisplayName = person.DisplayName ?? person.FirstName + " " + person.LastName,
+                          Photo = file != null && file.UploadedByUserId == user.Id
+                              ? new MakanApp.Application.Identity.ProfilePhotoResult(file.Id, file.ContentType) : null })
             .TagWith("MessagingSafeIdentityBatch")
-            .ToDictionaryAsync(identity => identity.UserId, cancellationToken);
+            .ToArrayAsync(cancellationToken);
+        return rows.ToDictionary(row => row.Id, row => row.DeletionStartedAtUtc.HasValue
+            ? new SafeMessagingIdentityRecord(row.Id, User.CreateDeletedUsername(row.Id), Person.DeletedDisplayName, null)
+            : new SafeMessagingIdentityRecord(row.Id, row.Username!, row.DisplayName, row.Photo));
     }
 
     private Task<UserMessagingSnapshot?> LoadUserSnapshotAsync(

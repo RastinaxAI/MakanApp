@@ -10,7 +10,7 @@ public sealed class PhoneChangeRequest
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public Guid SessionId { get; private set; }
-    public Guid CredentialId { get; private set; }
+    public Guid? CredentialId { get; private set; }
     public byte[] CredentialVersion { get; private set; } = [];
     public Guid ClientOperationId { get; private set; }
     public string TargetPhone { get; private set; } = string.Empty;
@@ -55,4 +55,9 @@ public sealed class PhoneChangeRequest
         State = PhoneChangeState.Completed; CompletedAtUtc = now;
     }
     public void Supersede() { if (State is PhoneChangeState.Preparing or PhoneChangeState.Ready) State = PhoneChangeState.Superseded; }
+
+    public void DetachForAccountDeletion()
+    {
+        Supersede(); CredentialId = null; TargetPhone = "account-deleted";
+    }
 }

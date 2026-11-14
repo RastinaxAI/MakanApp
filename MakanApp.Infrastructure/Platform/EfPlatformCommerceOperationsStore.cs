@@ -28,6 +28,7 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
     private readonly AiServiceOptions _aiServiceOptions;
     private readonly TimeProvider _timeProvider;
     private readonly TerminalFileCleanupOptions _cleanupOptions;
+    private readonly MakanApp.Application.Identity.AccountDeletionOptions _deletionOptions;
 
     public EfPlatformCommerceOperationsStore(
         MakanDbContext dbContext,
@@ -38,7 +39,8 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
         IStorageReadinessProbe storageReadinessProbe,
         AiServiceOptions aiServiceOptions,
         TimeProvider timeProvider,
-        TerminalFileCleanupOptions cleanupOptions)
+        TerminalFileCleanupOptions cleanupOptions,
+        MakanApp.Application.Identity.AccountDeletionOptions? deletionOptions = null)
     {
         _dbContext = dbContext;
         _commerceStore = commerceStore;
@@ -49,6 +51,7 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
         _aiServiceOptions = aiServiceOptions;
         _timeProvider = timeProvider;
         _cleanupOptions = cleanupOptions;
+        _deletionOptions = deletionOptions ?? new();
     }
 
     public async Task<PlatformNotificationOperations> GetNotificationOperationsAsync(
@@ -188,7 +191,9 @@ public sealed partial class EfPlatformCommerceOperationsStore : IPlatformCommerc
             new PlatformDependencyHealth("Push", ProviderAvailability(_pushProvider),
                 "وابستگی اختیاری؛ پیکربندی adapter اثبات دریافت اعلان روی دستگاه نیست."),
             new PlatformDependencyHealth("FileCleanup", _cleanupOptions.Enabled ? "Enabled" : "Disabled",
-                "وضعیت تنظیم مکانیزم محدود bytes terminal است، نه اثبات حذف موفق یا مجوز purge عمومی.")
+                "وضعیت تنظیم مکانیزم محدود bytes terminal است، نه اثبات حذف موفق یا مجوز purge عمومی."),
+            new PlatformDependencyHealth("AccountDeletion", _deletionOptions.ExecutionEnabled ? "Enabled" : "Disabled",
+                "وضعیت تنظیم اجرای حذف حساب است؛ پیشرفت واقعی فقط از صف حریم خصوصی خوانده می‌شود.")
         };
         return new PlatformSystemHealth(
             nowUtc,

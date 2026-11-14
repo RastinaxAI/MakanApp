@@ -17,6 +17,7 @@ public sealed class WorkerTelemetry : IDisposable
     public const string OperationalMetrics = nameof(OperationalMetrics);
     public const string FileCleanup = nameof(FileCleanup);
     public const string ExamDeadline = nameof(ExamDeadline);
+    public const string AccountDeletion = nameof(AccountDeletion);
     public const string Other = nameof(Other);
 
     private readonly TimeProvider _timeProvider;
@@ -139,7 +140,7 @@ public sealed class WorkerTelemetry : IDisposable
     private static string NormalizeWorker(string? worker) => worker switch
     {
         IntegrationOutbox or MessagingRealtimeOutbox or NotificationDelivery or ScheduledMessage or
-            ReportExport or MessagingEphemeral or OperationalMetrics or FileCleanup or ExamDeadline => worker,
+            ReportExport or MessagingEphemeral or OperationalMetrics or FileCleanup or ExamDeadline or AccountDeletion => worker,
         _ => Other
     };
 

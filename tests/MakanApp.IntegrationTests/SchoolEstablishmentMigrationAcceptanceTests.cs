@@ -31,9 +31,9 @@ public sealed class SchoolEstablishmentMigrationAcceptanceTests(MakanAppWebAppli
         {
             var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync(baseline ? "20261112165826_AddVerifiedPhoneChangeRequests" : null);
-            var now = DateTime.UtcNow; var owner = User.Create(now); db.Users.Add(owner);
+            var now = DateTime.UtcNow; var owner = User.Create(now);
+            await LegacyAcademicMigrationFixture.InsertAsync(db, owner);
             var app = SchoolApplication.Create(owner.Id, SchoolApplicationKind.LegalOrganization, new("پیش‌نویس قبلی", null, null, null, null, null, null), now);
-            await db.SaveChangesAsync();
             // fixture قدیمی فقط ستون‌های همان migration را می‌نویسد؛ مدل جدید نباید روی schema قبلی Insert شود.
             await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO [organization].[SchoolApplications] ([Id],[ApplicantUserId],[Kind],[Status],[Revision],[Version],[SchoolName],[CreatedAtUtc],[UpdatedAtUtc]) VALUES ({app.Id},{owner.Id},{(int)app.Kind},{(int)app.Status},{app.Revision},{app.Version},{app.SchoolName},{now},{now})");
             var version = await db.Database.SqlQuery<byte[]>($"SELECT [RowVersion] AS [Value] FROM [organization].[SchoolApplications] WHERE [Id]={app.Id}").SingleAsync();

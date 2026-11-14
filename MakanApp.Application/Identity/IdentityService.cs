@@ -121,7 +121,7 @@ public sealed partial class IdentityService(
         }
         else
         {
-            user = await store.GetUserAsync(credential.UserId, cancellationToken)
+            user = await store.GetUserForUpdateAsync(credential.UserId, cancellationToken)
                 ?? throw new InvalidOperationException("کاربر مرتبط با روش ورود پیدا نشد.");
         }
 

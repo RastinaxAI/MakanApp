@@ -55,7 +55,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         var owner = await ActorAsync(); var other = await ActorAsync(); var command = new RequestAccountDeletionCommand(Guid.NewGuid());
         var request = await PostAsync<AccountDeletionStatusResult>(owner.Client, "/api/v1/me/deletion-request", command);
         var retry = await PostAsync<AccountDeletionStatusResult>(owner.Client, "/api/v1/me/deletion-request", command);
-        Assert.Equal(request.Id, retry.Id); Assert.Equal("PRODUCT_LEGAL_DECISION_REQUIRED", request.Status);
+        Assert.Equal(request.Id, retry.Id); Assert.Equal("Requested", request.Status);
         Assert.False(request.ExecutionEnabled); Assert.Null(request.ScheduledExecutionAtUtc);
         using var unrelated = await other.Client.GetAsync("/api/v1/me/deletion-request");
         Assert.Equal(HttpStatusCode.NoContent, unrelated.StatusCode);

@@ -30,7 +30,7 @@ public sealed class GlobalExceptionHandler(
     private static readonly FrozenSet<string> SafeErrorCodes = new[]
     {
         typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(KnowledgeErrorCodes), typeof(CommerceErrorCodes),
-        typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(MessagingErrorCodes),
+        typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(AccountDeletionErrorCodes), typeof(MessagingErrorCodes),
         typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
         typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
         typeof(DetailedReportErrorCodes), typeof(ReportExportErrorCodes), typeof(RealtimeErrorCodes), typeof(AddressBookErrorCodes), typeof(SupportErrorCodes), typeof(AssistantContextErrorCodes), typeof(SchoolApplicationErrorCodes), typeof(PhoneChangeErrorCodes)
@@ -202,6 +202,8 @@ public sealed class GlobalExceptionHandler(
             IdentityErrorCodes.SessionNotFound => StatusCodes.Status404NotFound,
             IdentityErrorCodes.AccountSuspended => StatusCodes.Status403Forbidden,
             IdentityErrorCodes.UsernameAlreadyExists => StatusCodes.Status409Conflict,
+            AccountDeletionErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            AccountDeletionErrorCodes.Conflict or AccountDeletionErrorCodes.ExecutionDisabled => StatusCodes.Status409Conflict,
             IdentityErrorCodes.OtpAlreadyUsed => StatusCodes.Status409Conflict,
             IdentityErrorCodes.OtpExpired => StatusCodes.Status410Gone,
             IdentityErrorCodes.OtpTooManyAttempts => StatusCodes.Status429TooManyRequests,

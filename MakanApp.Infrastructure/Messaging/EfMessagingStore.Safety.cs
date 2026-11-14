@@ -220,7 +220,7 @@ public sealed partial class EfMessagingStore
         {
             results.Add(new BlockedUserStoreRecord(
                 block,
-                await LoadSafeIdentityAsync(block.BlockedUserId, cancellationToken)));
+                await LoadSafeIdentityAsync(block.BlockedUserId, cancellationToken, allowRetainedDeletion: true)));
         }
 
         return results;

@@ -116,7 +116,7 @@ public sealed partial class EfMessagingStore
         var identities = new Dictionary<Guid, SafeMessagingIdentityRecord>();
         foreach (var senderId in senderIds)
         {
-            identities[senderId] = await LoadSafeIdentityAsync(senderId, cancellationToken);
+            identities[senderId] = await LoadSafeIdentityAsync(senderId, cancellationToken, allowRetainedDeletion: true);
         }
 
         var attachmentRows = await (
@@ -161,7 +161,7 @@ public sealed partial class EfMessagingStore
         {
             identities.TryAdd(
                 mentionedUserId,
-                await LoadSafeIdentityAsync(mentionedUserId, cancellationToken));
+                await LoadSafeIdentityAsync(mentionedUserId, cancellationToken, allowRetainedDeletion: true));
         }
 
         var mentions = mentionRows

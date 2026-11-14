@@ -79,5 +79,9 @@
       "Microsoft.EntityFrameworkCore.Database.Command": "Warning"
     }
   },
-  "AllowedHosts": "*"
+  "AllowedHosts": "*",
+  "AccountDeletion": {
+    "ExecutionEnabled": false,
+    "GracePeriodHours": null
+  }
 }

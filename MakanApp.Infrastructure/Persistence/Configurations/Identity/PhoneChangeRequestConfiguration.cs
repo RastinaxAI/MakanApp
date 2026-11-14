@@ -10,6 +10,7 @@ public sealed class PhoneChangeRequestConfiguration : IEntityTypeConfiguration<P
     {
         b.ToTable("PhoneChangeRequests", "identity", t => {
             t.HasCheckConstraint("CK_PhoneChangeRequests_State", "[State] IN (1,2,3,4)");
+            t.HasCheckConstraint("CK_PhoneChangeRequests_DetachedCredential", "[CredentialId] IS NOT NULL OR [State] IN (3,4)");
             t.HasCheckConstraint("CK_PhoneChangeRequests_Attempts", "[FailedAttempts] >= 0 AND [MaxFailedAttempts] > 0 AND [FailedAttempts] <= [MaxFailedAttempts]");
             t.HasCheckConstraint("CK_PhoneChangeRequests_Expiry", "[ExpiresAtUtc] > [CreatedAtUtc]");
             t.HasCheckConstraint("CK_PhoneChangeRequests_Hash", "[State] IN (1,4) OR (DATALENGTH([CodeHash]) = 32 AND DATALENGTH([Salt]) >= 16)");

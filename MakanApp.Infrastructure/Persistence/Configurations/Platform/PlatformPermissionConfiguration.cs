@@ -22,6 +22,7 @@ public sealed class PlatformPermissionConfiguration : IEntityTypeConfiguration<P
             Permission(PlatformCatalogIds.SupportReadPermission, PlatformPermissionKeys.SupportRead, "مشاهدهٔ پرونده‌های پشتیبانی"),
             Permission(PlatformCatalogIds.SupportManagePermission, PlatformPermissionKeys.SupportManage, "پاسخ و مدیریت پروندهٔ پشتیبانی"),
             Permission(PlatformCatalogIds.PrivacyRequestsReadPermission, PlatformPermissionKeys.PrivacyRequestsRead, "مشاهدهٔ وضعیت درخواست‌های حریم خصوصی"),
+            Permission(PlatformCatalogIds.PrivacyRequestsManagePermission, PlatformPermissionKeys.PrivacyRequestsManage, "ادامهٔ کنترل‌شدهٔ اجرای درخواست حذف حساب"),
             Permission(PlatformCatalogIds.AccessPermission, PlatformPermissionKeys.Access, "Access platform backoffice"),
             Permission(PlatformCatalogIds.RolesReadPermission, PlatformPermissionKeys.RolesRead, "Read platform role catalog and assignments"),
             Permission(PlatformCatalogIds.RolesManagePermission, PlatformPermissionKeys.RolesManage, "Manage platform role assignments"),

@@ -28,6 +28,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
     public DbSet<SchoolApplicationOperation> SchoolApplicationOperations => Set<SchoolApplicationOperation>();
     public DbSet<MakanApp.Domain.Intelligence.AssistantContextSelection> AssistantContextSelections => Set<MakanApp.Domain.Intelligence.AssistantContextSelection>();
     public DbSet<AccountDeletionRequest> AccountDeletionRequests => Set<AccountDeletionRequest>();
+    public DbSet<AccountDeletionStep> AccountDeletionSteps => Set<AccountDeletionStep>();
+    public DbSet<MakanApp.Domain.Knowledge.AccountDeletionKnowledgePurge> AccountDeletionKnowledgePurges => Set<MakanApp.Domain.Knowledge.AccountDeletionKnowledgePurge>();
     public DbSet<PhoneChangeRequest> PhoneChangeRequests => Set<PhoneChangeRequest>();
     public DbSet<MakanApp.Domain.Support.SupportTicket> SupportTickets => Set<MakanApp.Domain.Support.SupportTicket>();
     public DbSet<MakanApp.Domain.Support.SupportTicketMessage> SupportTicketMessages => Set<MakanApp.Domain.Support.SupportTicketMessage>();
@@ -175,7 +177,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         var utcConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
             value => value, value => DateTime.SpecifyKind(value, DateTimeKind.Utc));
         var foundationUtcTypes = new HashSet<Type> {
-            typeof(AddressBookEntry), typeof(ContactSyncDevice), typeof(ContactSyncOperation), typeof(AccountDeletionRequest), typeof(PhoneChangeRequest),
+            typeof(AddressBookEntry), typeof(ContactSyncDevice), typeof(ContactSyncOperation), typeof(AccountDeletionRequest), typeof(AccountDeletionStep), typeof(MakanApp.Domain.Knowledge.AccountDeletionKnowledgePurge), typeof(PhoneChangeRequest),
             typeof(MakanApp.Domain.Support.SupportTicket), typeof(MakanApp.Domain.Support.SupportTicketMessage),
             typeof(SchoolApplication), typeof(SchoolApplicationRevision), typeof(SchoolApplicationDecision), typeof(SchoolApplicationOperation), typeof(SchoolApplicationHistory),
             typeof(MakanApp.Domain.Intelligence.AssistantContextSelection)

@@ -58,6 +58,7 @@ public static class PlatformPermissionKeys
     public const string SupportRead = "platform.support.read";
     public const string SupportManage = "platform.support.manage";
     public const string PrivacyRequestsRead = "platform.privacy_requests.read";
+    public const string PrivacyRequestsManage = "platform.privacy_requests.manage";
 
     public static readonly IReadOnlyCollection<string> Step15A =
     [
@@ -95,7 +96,7 @@ public static class PlatformPermissionKeys
         PersonalClassesRead,
         PersonalClassesReview,
         PersonalClassesAcademicPermissions,
-        SchoolApplicationsRead, SchoolApplicationsReview, SupportRead, SupportManage, PrivacyRequestsRead
+        SchoolApplicationsRead, SchoolApplicationsReview, SupportRead, SupportManage, PrivacyRequestsRead, PrivacyRequestsManage
     ];
 }
 
@@ -106,6 +107,7 @@ public static class PlatformCatalogIds
     public static readonly Guid SupportReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000032");
     public static readonly Guid SupportManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000033");
     public static readonly Guid PrivacyRequestsReadPermission = Guid.Parse("20000000-0000-0000-0000-000000000034");
+    public static readonly Guid PrivacyRequestsManagePermission = Guid.Parse("20000000-0000-0000-0000-000000000035");
     public static readonly Guid PlatformOwnerRole = Guid.Parse("10000000-0000-0000-0000-000000000001");
     public static readonly Guid OperationsRole = Guid.Parse("10000000-0000-0000-0000-000000000002");
     public static readonly Guid SupportRole = Guid.Parse("10000000-0000-0000-0000-000000000003");

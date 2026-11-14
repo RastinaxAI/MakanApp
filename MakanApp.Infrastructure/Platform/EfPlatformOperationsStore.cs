@@ -639,6 +639,8 @@ public sealed partial class EfPlatformOperationsStore(
         }
         else
         {
+            if (user.DeletionStartedAtUtc.HasValue)
+                throw Error(PlatformErrorCodes.QueryInvalid, "حساب واردشده به اجرای حذف قابل فعال‌سازی مجدد نیست.");
             user.Reactivate(actor.OccurredAtUtc);
         }
 

@@ -11,6 +11,8 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users", "identity", table =>
         {
+            table.HasCheckConstraint("CK_Users_Deletion", "[DeletionStartedAtUtc] IS NULL OR [AccountStatus]=2");
+            table.HasCheckConstraint("CK_Users_Anonymized", "[AnonymizedAtUtc] IS NULL OR ([DeletionStartedAtUtc] IS NOT NULL AND [AnonymizedAtUtc]>=[DeletionStartedAtUtc] AND [Bio] IS NULL AND [ProfilePhotoFileAssetId] IS NULL)");
             table.HasCheckConstraint("CK_Users_AgeVerificationStatus", "[CommunicationAgeVerificationStatus] IN (0,1,2)");
             table.HasCheckConstraint(
                 "CK_Users_CommunicationAgeCategory",
@@ -30,6 +32,8 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.UpdatedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.ProfileCompletedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.SuspendedAtUtc).HasColumnType("datetime2(7)");
+        builder.Property(user => user.DeletionStartedAtUtc).HasColumnType("datetime2(7)");
+        builder.Property(user => user.AnonymizedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.MessagingRestrictedUntilUtc).HasColumnType("datetime2(7)");
         builder.Property(user => user.RowVersion).IsRowVersion();
 

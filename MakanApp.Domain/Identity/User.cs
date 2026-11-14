@@ -3,6 +3,7 @@ namespace MakanApp.Domain.Identity;
 public sealed class User
 {
     public const int MaximumBioLength = 500;
+    public const string DeletedUsernamePrefix = "$del_";
     private User()
     {
     }
@@ -25,13 +26,15 @@ public sealed class User
     public DateTime? MessagingRestrictedUntilUtc { get; private set; }
     public UserAccountStatus AccountStatus { get; private set; }
     public DateTime? SuspendedAtUtc { get; private set; }
+    public DateTime? DeletionStartedAtUtc { get; private set; }
+    public DateTime? AnonymizedAtUtc { get; private set; }
     public DateTime? ProfileCompletedAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? UpdatedAtUtc { get; private set; }
     public byte[] RowVersion { get; private set; } = [];
 
     public bool IsProfileComplete =>
-        PersonId.HasValue && !string.IsNullOrWhiteSpace(Username);
+        !AnonymizedAtUtc.HasValue && PersonId.HasValue && !string.IsNullOrWhiteSpace(Username);
 
     public static User Create(DateTime createdAtUtc) =>
         new(Guid.NewGuid(), createdAtUtc);
@@ -76,6 +79,8 @@ public sealed class User
 
     public void Reactivate(DateTime reactivatedAtUtc)
     {
+        if (DeletionStartedAtUtc.HasValue)
+            throw new InvalidOperationException("حساب واردشده به اجرای حذف قابل فعال‌سازی مجدد نیست.");
         if (reactivatedAtUtc.Kind != DateTimeKind.Utc)
         {
             throw new ArgumentException("زمان فعال‌سازی حساب باید UTC باشد.", nameof(reactivatedAtUtc));
@@ -128,10 +133,45 @@ public sealed class User
         string normalizedUsername,
         DateTime updatedAtUtc)
     {
+        if (DeletionStartedAtUtc.HasValue) throw new InvalidOperationException("پروفایل حساب در حال حذف قابل تغییر نیست.");
         PersonId = personId;
         Username = username;
         NormalizedUsername = normalizedUsername;
         UpdatedAtUtc = updatedAtUtc;
         ProfileCompletedAtUtc ??= updatedAtUtc;
+    }
+
+    public void BeginAccountDeletion(DateTime now)
+    {
+        if (now.Kind != DateTimeKind.Utc) throw new ArgumentException("زمان باید UTC باشد.");
+        Suspend(now); DeletionStartedAtUtc ??= now;
+    }
+
+    public void Anonymize(DateTime now)
+    {
+        if (now.Kind != DateTimeKind.Utc || !DeletionStartedAtUtc.HasValue || now < DeletionStartedAtUtc || AccountStatus != UserAccountStatus.Suspended)
+            throw new InvalidOperationException("حساب ابتدا باید برای حذف مسدود شده باشد.");
+        if (AnonymizedAtUtc.HasValue) return;
+        Username = CreateDeletedUsername(Id); NormalizedUsername = Username.ToUpperInvariant();
+        Bio = null; ProfilePhotoFileAssetId = null;
+        CommunicationAgeCategory = CommunicationAgeCategory.Unknown;
+        CommunicationAgeVerificationStatus = CommunicationAgeVerificationStatus.Unverified;
+        AnonymizedAtUtc = now; UpdatedAtUtc = now;
+    }
+
+    public static string CreateDeletedUsername(Guid userId)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("شناسهٔ حساب لازم است.", nameof(userId));
+        // این پیشوند در ورودی عمومی username مجاز نیست؛ Base32 تمام ۱۲۸ بیت شناسه را بدون برخورد نگه می‌دارد.
+        const string alphabet = "0123456789abcdefghjkmnpqrstvwxyz";
+        var suffix = new System.Text.StringBuilder(26); var buffer = 0; var bits = 0;
+        foreach (var value in userId.ToByteArray())
+        {
+            buffer = (buffer << 8) | value; bits += 8;
+            while (bits >= 5) { bits -= 5; suffix.Append(alphabet[(buffer >> bits) & 31]); }
+            buffer &= (1 << bits) - 1;
+        }
+        if (bits > 0) suffix.Append(alphabet[(buffer << (5 - bits)) & 31]);
+        return DeletedUsernamePrefix + suffix;
     }
 }

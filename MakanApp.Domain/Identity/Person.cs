@@ -2,6 +2,9 @@ namespace MakanApp.Domain.Identity;
 
 public sealed class Person
 {
+    public const string DeletedFirstName = "حساب";
+    public const string DeletedLastName = "حذف‌شده";
+    public const string DeletedDisplayName = "حساب حذف‌شده";
     private Person()
     {
     }
@@ -57,5 +60,12 @@ public sealed class Person
 
         DateOfBirth = dateOfBirth;
         UpdatedAtUtc = updatedAtUtc;
+    }
+
+    public void Anonymize(DateTime now)
+    {
+        if (now.Kind != DateTimeKind.Utc) throw new ArgumentException("زمان باید UTC باشد.");
+        FirstName = DeletedFirstName; LastName = DeletedLastName; DisplayName = DeletedDisplayName;
+        DateOfBirth = null; UpdatedAtUtc = now;
     }
 }
