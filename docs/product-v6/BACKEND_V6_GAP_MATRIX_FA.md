@@ -1,5 +1,15 @@
 # ماتریس تطبیق Backend با Product v6
 
+> نتیجهٔ جاری BE-15 در [گزارش توسعه‌دهنده](FILES_LIBRARY_DEVELOPER_REPORT_FA.md) و
+> [ماتریس فایل/منبع](FILES_LIBRARY_ACCESS_MATRIX_FA.md) ثبت می‌شود؛ ردیف تاریخی BE-15 پایین
+> به Audit همان مبنا مربوط است. Library policy-disabled با نقص implementation یکسان نیست.
+> نتیجهٔ نهایی جاری: `BE15_FILES_LIBRARY_IMPLEMENTATION=PASS` و
+> `BE15_FILES_LIBRARY=PASS_CURRENT_POLICY`؛ 3388 تست موفق، صفر Failed/Skipped و Build بدون Warning/Error.
+> شش Timeout Realtime در دور اول پنهان نشده‌اند؛ Full نهایی شامل2026 Integration موفق است.
+> Commit کد/تست=`d0b2c3085b12a07798c7f3f70f16e20146d68458`؛ Push و تطبیق مستقیم Remote موفق‌اند.
+> Library public download/AI همچنان PRODUCT_POLICY_DISABLED، تأیید رسانه PRODUCT_DECISION_REQUIRED،
+> purge Ready برابر POLICY_PENDING و شمار تصمیم‌های Product/Legal همان12 است؛ BE24 همچنان FAIL.
+
 > وضعیت جاری اعلان‌ها در بخش «BE-16 — Notifications / Deep Link / Delivery» انتهای سند و [ماتریس رویدادها](NOTIFICATION_EVENT_COVERAGE_FA.md) است؛ ردیف‌های PARTIAL قدیمی، Audit تاریخی با مبنای همان روز هستند. Provider واقعی از کامل‌بودن implementation جدا گزارش می‌شود.
 
 > وضعیت جاری BE19 در بخش «Personal AI Activation — 2026-11-14» انتهای سند است؛ بخش Personal AI روز قبل و ردیف‌های School/Audit با Commit تاریخی خود حفظ‌اند. Actor رسمی Personal اکنون در upstream و Backend پشتیبانی می‌شود. تنظیم تجاری Production و سایر محدودیت‌های v6 جدا هستند.

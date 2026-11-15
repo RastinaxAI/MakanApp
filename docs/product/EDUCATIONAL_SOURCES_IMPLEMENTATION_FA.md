@@ -1,5 +1,11 @@
 # بنیاد منابع آموزشی
 
+> این گزارش تاریخچهٔ Foundation است. در BE-15 مورخ2026-11-15، رفتار Hidden مستقیم که در بخش۶
+> ثبت شده اصلاح شد: کاربر عادی دیگر metadata Hidden را با SourceId نمی‌بیند. فهرست binding و
+> hold ایمنی نیز سخت‌تر شدند. [گزارش جاری](../product-v6/FILES_LIBRARY_DEVELOPER_REPORT_FA.md)
+> و [قرارداد جاری](../product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md) مرجع رفتار جدیدند؛
+> Library download/AI عادی و ReviewRequired همچنان سیاست بستهٔ قبلی را دارند.
+
 ## ۱. بازبینی وضعیت قبلی
 
 مبنای این مرحله `main@42c51a3` بود. تنها تغییرهای قبلی خارج از Git سه فایل `tools/ai/provider_diagnostic.py`، `tools/ai/run_exact_ai.py` و `tools/ai/test_provider_diagnostic.py` بودند؛ از این فایل‌ها و چهار تنظیم خصوصی اصلی، نسخه و Hash خصوصی گرفته شد. این مرحله آن‌ها را تغییر نمی‌دهد.

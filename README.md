@@ -4,6 +4,8 @@
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
 
+مسیر مطالعهٔ BE-15: [قرارداد فایل و منبع آموزشی](docs/product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md)، [ماتریس اتصال و مجوز جاری](docs/product-v6/FILES_LIBRARY_ACCESS_MATRIX_FA.md) و [گزارش توسعه‌دهنده و Validation](docs/product-v6/FILES_LIBRARY_DEVELOPER_REPORT_FA.md). شناسهٔ فایل مجوز دائمی دانلود نیست؛ Hidden برای خوانندهٔ عادی پنهان است و دانلود/AI عمومی Library و تأیید رسانهٔ ReviewRequired همچنان فعال نشده‌اند.
+
 مسیر مطالعهٔ BE-16: [قرارداد Notification و Deep Link](docs/product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [ماتریس رویداد و مجوز](docs/product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md)، [Runbook کانال‌های بیرونی](docs/operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) و [گزارش توسعه‌دهنده و نتیجهٔ واقعی Validation](docs/product-v6/NOTIFICATION_DEVELOPER_REPORT_FA.md). دریافت زندهٔ WebPush/FCM جدا از موفقیت implementation است؛ OTP ملی‌پیامک تغییر نکرده است.
 
 افزودهٔ BE-22: [حذف حساب و قرارداد API](docs/product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md)، [ماتریس نگه‌داری/پاک‌سازی](docs/product-v6/ACCOUNT_DELETION_DATA_MATRIX_FA.md) و [Runbook بازیابی](docs/operations/ACCOUNT_DELETION_RUNBOOK_FA.md). اجرای حذف پیش‌فرض خاموش و مهلت null است؛ User/Person و تاریخچه‌های مشترک حفظ، هویت جاری خنثی و دادهٔ خصوصیِ مصوب پاک می‌شوند. این مرحله Deploy، حذف زندهٔ Knowledge یا فعال‌سازی Production نیست.
@@ -11,6 +13,16 @@
 قرارداد جاری حساب عادی در [Personal AI و Knowledge/RAG](docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) است: Assistant و Payer از Workspace مدرسه جدا هستند. Generic Personal Chat با Actor رسمی Personal و Scope تهی به همان رزرو/AI v1 متصل است؛ پذیرش واقعی Backend محلی→AI Production با200 و یک مصرف انجام شد. Knowledge و ACL موجود مستقل‌اند؛ Service Auth دو سرویس false و Runtime پیش‌فرض/Backend Deployment دست‌نخورده‌اند.
 
 ## وضعیت جاری Product v6
+
+افزودهٔ BE-15 از مبنای `54d07d2`: **1348 Unit +2026 Integration +14 Architecture =3388 PASS**،
+صفر Failed/Skipped و117 تست Zibal موفق؛ Build نهایی صفر Warning/Error دارد. فهرست مشترک binding،
+guard حذف و reuse فایل، Scheduled retention/rowversion و جلوگیری از دورزدن Safety کامل شدند.
+`BE15_FILES_LIBRARY=PASS_CURRENT_POLICY`؛ دانلود/AI عمومی Library، تأیید ReviewRequired و purge
+فایل Ready فعال نشده‌اند. شش Realtime timeout دور اول و شکست Lookup دور دوم در گزارش مرحله
+ثبت‌اند؛ اجرای نهایی کامل موفق است و علت قطعی ناپایداری دور اول ادعا نمی‌شود.
+شمارش API/schema در پاراگراف بعد Snapshot مرحلهٔ BE-16 است؛ BE-15 قرارداد یا schema تازه ندارد.
+Commit کد/تست BE-15: `d0b2c3085b12a07798c7f3f70f16e20146d68458`؛ Push روی شاخهٔ
+`feature/product-v6-backend-alignment` و تطبیق Remote موفق‌اند. main و Deploy اجرا نشده‌اند.
 
 بازبینی `2026-11-15` از Commit کد و پذیرش `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6`، با مبنای BE-16 برابر `76acf20` و شاخهٔ `feature/product-v6-backend-alignment`: **494 عملیات، 438 مسیر، 91 Controller، 783 schema، 151 جدول و 75 Migration**. شمارش از میزبان مستندسازی بدون SQL/Worker/SMS/AI استخراج شده است؛ اعداد و نتیجهٔ مراحل پایین تاریخی‌اند.
 

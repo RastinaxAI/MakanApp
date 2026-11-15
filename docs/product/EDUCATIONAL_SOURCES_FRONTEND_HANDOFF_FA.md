@@ -90,7 +90,7 @@ createdByUserId, createdAtUtc, publishedAtUtc?, version, replayed
 - Archived: از catalog عادی مخاطب خارج است؛ تاریخچه و blob حذف نشده و ظرفیت فعلاً آزاد نمی‌شود.
 - AiReady/CanUseForAi: در این مرحله false؛ upload یا visibility عمومی entitlement AI ایجاد نمی‌کند.
 
-Library عادی فقط metadata دارد؛ `file=null` و `canDownload=false`. catalog Published/Public برای کاربر واردشده قابل مشاهده است؛ Hidden از list حذف می‌شود ولی reference Published، metadata معتبر را نگه می‌دارد. این رفتار اجازهٔ دانلود نمی‌دهد و مدل تجاری Library هنوز مشخص نشده است.
+Library عادی فقط metadata دارد؛ `file=null` و `canDownload=false`. طبق قرارداد جاری BE-15 مورخ2026-11-15، فقط Public/Active/Published برای کاربر واردشده قابل مشاهده است؛ Hidden هم در list و هم در reference مستقیم 404 می‌شود. دانلود و AI عادی Library همچنان policy-disabled هستند. [Handoff جاری فایل/منبع](../product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md) مرجع این اصلاح محدود است.
 
 ## ماتریس دسترسی
 

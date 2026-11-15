@@ -1,5 +1,17 @@
 # گزارش پیاده‌سازی و یادگیری Backend v6
 
+> افزودهٔ BE-15 مورخ `2026-11-15`: [گزارش فایل/منبع](FILES_LIBRARY_DEVELOPER_REPORT_FA.md)،
+> [قرارداد کلاینت](FILES_LIBRARY_FRONTEND_HANDOFF_FA.md) و [ماتریس ACL](FILES_LIBRARY_ACCESS_MATRIX_FA.md).
+> فهرست reference برای DELETE/Source/cleanup مشترک، Scheduled retained و version-fenced و
+> Hidden مستقیم برای عادی پنهان شده است. Library download/AI عادی و تأیید ReviewRequired فعال نشده‌اند.
+> نتیجهٔ نهایی BE-15:1348 Unit +2026 Integration +14 Architecture =3388 PASS، صفر Failed/Skipped؛
+> هر117 تست Zibal موفق و Build نهایی صفر Warning/Error است. شش Realtime timeout دور نخست و
+> یک Timeout Lookup دور دوم، همراه با تفکیک علت اثبات‌شده از احتمال، در گزارش مرحله حفظ‌اند.
+> `BE15_FILES_LIBRARY=PASS_CURRENT_POLICY`؛ Migration جدید0 و BE24 همچنان FAIL است.
+> Commit کد/تست `d0b2c3085b12a07798c7f3f70f16e20146d68458`، شامل28 فایل با پیام
+> `feat(storage): harden bound file authorization and lifecycle`، به شاخهٔ tracked Push و
+> با fetch و ls-remote تأیید شد. مستندات جدا ثبت می‌شوند؛ main و Deploy اجرا نشدند.
+
 > افزودهٔ BE-16: [گزارش توسعه‌دهندهٔ اعلان](NOTIFICATION_DEVELOPER_REPORT_FA.md)، [Handoff کلاینت](NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [پوشش رویدادها](NOTIFICATION_EVENT_COVERAGE_FA.md) و [Runbook](../operations/NOTIFICATION_PUSH_RUNBOOK_FA.md). نتیجهٔ واقعی Full/Final در گزارش همان مرحله ثبت می‌شود؛ Push واقعی یا Deploy از تست محلی استنتاج نمی‌شود.
 
 > افزودهٔ جاری BE-22 مورخ `2026-11-14` است: [گزارش توسعه‌دهنده](ACCOUNT_DELETION_DEVELOPER_REPORT_FA.md)، [قرارداد](ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) و [ماتریس داده](ACCOUNT_DELETION_DATA_MATRIX_FA.md). بخش‌های قبل با Commit و نتیجهٔ تاریخی خود حفظ شده‌اند؛ خاموش‌بودن اجرای Production با شکست implementation یکی نیست.

@@ -1,5 +1,20 @@
 # سیاست نگه‌داری و پاک‌سازی محدود
 
+## افزودهٔ محدود BE-15 — ۲۰۲۶-۱۱-۱۵
+
+`FileAssetBindingQuery` فهرست واحد اتصال واقعی برای Storage، ساخت Source و TerminalCleanup
+است؛ SchoolApplicationDocument، SupportTicketAttachment و ScheduledMessageAttachment نیز
+نمی‌توانند از شکاف فهرست‌ها عبور کنند. DELETE حتی بدون RetainedAtUtc، فایل bound را با
+FILE_IN_USE رد می‌کند. Scheduled intent فایل را در transaction موجود retain و rowversion را
+تغییر می‌دهد؛ لغو/ارسال intent تاریخچهٔ attachment یا blob را purge نمی‌کند.
+
+مکانیزم cleanup، timestamp/cutoff، قفل، guard مسیر و پیش‌فرض خاموش همان قبلی است. Ready orphan
+پاک نمی‌شود؛ UnattachedExpiresAtUtc صرفاً metadata است. هیچ schema، TTL دانلود Report، retention
+حقوقی، reaper جدید یا workflow تأیید ReviewRequired در BE-15 ایجاد نشده است. موجودی جاری همان
+۱۵۱ جدول و۷۵ Migration تا ExtendProductNotificationCoverage است؛ اعداد پایین تاریخی‌اند.
+[ماتریس فایل/منبع](../product-v6/FILES_LIBRARY_ACCESS_MATRIX_FA.md) و
+[گزارش توسعه‌دهنده](../product-v6/FILES_LIBRARY_DEVELOPER_REPORT_FA.md) شواهد جاری را دارند.
+
 ## موجودی جاری و استثنای مصوب BE-22 — ۲۰۲۶-۱۱-۱۴
 
 مدل جاری۱۵۱ جدول و۷۴ Migration تا `20261114140323_AddAccountDeletionLifecycle` دارد؛ این شمارش از metadata گرفته شده و شاهد اعمال schema روی سرور نیست. جدول‌های بخش PH-6 پایین، موجودی تاریخی‌اند. [فرهنگ جاری SQL](../database-current-structure.md) مرجع ستون/کلید/Index است.
