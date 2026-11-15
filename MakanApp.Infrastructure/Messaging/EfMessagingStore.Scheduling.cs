@@ -24,7 +24,13 @@ public sealed partial class EfMessagingStore : IScheduledMessageStore
         }
         if (await dbContext.Messages.AnyAsync(m => m.ConversationId == conversationId && m.SenderUserId == userId && m.ClientMessageId == command.ClientMessageId, ct)) throw ScheduledReserved();
         await EnsureCanSendAdvancedAsync(conversation, actor, userId, context, command.Kind, now, ct);
-        await LoadAndValidateMessageReferencesAsync(conversation, actor, userId, command, ct);
+        var (files, _) = await LoadAndValidateMessageReferencesAsync(conversation, actor, userId, command, ct);
+        foreach (var file in files)
+        {
+            // اتصال intent نیز سابقهٔ رسمی است؛ حذف هم‌زمان با rowversion فایل fence می‌شود.
+            file.Retain(now);
+            dbContext.Entry(file).Property(item => item.Status).IsModified = true;
+        }
         if (await dbContext.ScheduledMessages.CountAsync(s => s.ConversationId == conversationId && s.UserId == userId && s.Status == ScheduledMessageStatus.Scheduled, ct)
             >= ScheduledMessage.MaximumPendingPerConversationSender) throw new MessagingException(MessagingErrorCodes.ScheduledInvalid, "تعداد پیام‌های در انتظار به سقف رسیده است.");
         ScheduledMessage scheduled;

@@ -1,6 +1,5 @@
 using System.Data;
 using MakanApp.Application.Storage;
-using MakanApp.Domain.Messaging;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Persistence;
@@ -125,18 +124,8 @@ public sealed class TerminalFileCleanupProcessor(
         return deleted ? "Deleted" : "AlreadyMissing";
     }
 
-    private async Task<bool> IsReferencedAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
-        await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.Users.AnyAsync(user => user.ProfilePhotoFileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.Conversations.AnyAsync(conversation => conversation.PhotoFileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.AnswerRevisionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.AssignmentVersionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.MessageAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.ModerationEvidenceAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.Set<ScheduledMessageAttachment>().AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.ReportExportJobs.AnyAsync(item => item.Id == fileAssetId || item.OutputFileAssetId == fileAssetId, cancellationToken);
+    private Task<bool> IsReferencedAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
+        FileAssetBindingQuery.IsBoundAsync(dbContext, fileAssetId, cancellationToken);
 
     private DateTime CutoffUtc()
     {

@@ -115,7 +115,12 @@ public sealed partial class MessagingEndpointsTests
     private OutboxProcessor ReplayProcessor(IServiceProvider services, IRealtimeInvalidationNotifier notifier) => new(
         services.GetRequiredService<MakanDbContext>(), services.GetRequiredService<INotificationDeliveryCoordinator>(),
         services.GetRequiredService<ISubscriptionActivationHandler>(), factory.Clock, services.GetRequiredService<WorkerTelemetry>(),
-        services.GetRequiredService<ILogger<OutboxProcessor>>(), notifier);
+        // همان composition میزبان؛ پیام‌های سایر workflowهای Fixture نباید به علت handler مفقود poison شوند.
+        services.GetRequiredService<ILogger<OutboxProcessor>>(), notifier,
+        services.GetService<MakanApp.Application.Messaging.IOfficialSpacesWorkHandler>(),
+        services.GetService<MakanApp.Application.Assessment.PersonalClassAcademicFeatures>(),
+        services.GetService<MakanApp.Infrastructure.Notification.ProductNotificationAccess>(),
+        services.GetService<MakanApp.Application.Platform.ISchoolProvisioningWorkHandler>());
 
     private sealed class CallbackInvalidationNotifier(Func<Guid, string, CancellationToken, Task> action) : IRealtimeInvalidationNotifier
     {

@@ -60,6 +60,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         var file = await PersonalFileAsync(s.Learner, s.Class.Id);
         var attached = await PostAsync<ExamAnswerReceiptDto>(s.Learner.Client, route + $"/answers/{descriptive.AttemptQuestionId}/attachments",
             new AttachExamAnswerFileCommand(file.Id, Guid.NewGuid(), lease.WriteLeaseVersion, null));
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, s.Learner.Client, file.Id);
         var device = await AnotherDeviceAsync(s.Learner);
         var transferred = await PostAsync<ExamWriteLeaseDto>(device.Client, route + "/write-lease/transfer", null);
         using (var staleWriter = await s.Learner.Client.PutAsJsonAsync(route + $"/answers/{objective.AttemptQuestionId}",

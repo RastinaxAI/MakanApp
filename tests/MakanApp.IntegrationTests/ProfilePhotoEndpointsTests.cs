@@ -191,6 +191,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
     {
         using var client = CreateAvatarClient(); _ = await CreateP0PersonalAccountAsync(client, null);
         var file = await UploadAvatarImageAsync(client); _ = await SetAvatarAsync(client, file.Id);
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, client, file.Id);
         var metadata = (await client.GetFromJsonAsync<FileAssetResult>($"/api/v1/files/{file.Id}", PolicyJson))!;
         await ErrorAsync(await client.DeleteAsync($"/api/v1/files/{file.Id}?expectedRowVersion={Uri.EscapeDataString(metadata.RowVersion)}"),
             HttpStatusCode.Conflict, StorageErrorCodes.FileInUse);

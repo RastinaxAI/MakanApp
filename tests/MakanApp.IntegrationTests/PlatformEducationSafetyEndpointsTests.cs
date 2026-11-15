@@ -235,6 +235,8 @@ public sealed class PlatformEducationSafetyEndpointsTests(MakanAppWebApplication
             $"/api/admin/v1/moderation/cases/{caseB:D}/evidence/files/{fileB.Id:D}");
         Assert.Equal(HttpStatusCode.NotFound, wrongCaseEvidence.StatusCode);
         Assert.Equal(HttpStatusCode.OK, validCaseEvidence.StatusCode);
+        Assert.True(validCaseEvidence.Headers.CacheControl?.NoStore);
+        Assert.Contains("Authorization", validCaseEvidence.Headers.Vary);
 
         using var ownerStartResponse = await ownerClient.PostAsJsonAsync(
             $"/api/admin/v1/moderation/cases/{caseB:D}/start-review",

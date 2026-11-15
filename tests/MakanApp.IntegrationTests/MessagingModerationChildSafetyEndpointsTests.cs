@@ -734,6 +734,7 @@ public sealed partial class MessagingEndpointsTests
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, blocked.StatusCode);
         Assert.Empty(await factory.GetMessagesAsync(direct.ConversationId));
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, senderClient, file.Id);
         Assert.Equal(1, await factory.CountModerationEvidenceAttachmentsAsync(moderationCase.Id));
         Assert.Equal(HttpStatusCode.NotFound, normalFileRead.StatusCode);
         Assert.Single(Assert.Single(factory.ContentSafetyProvider.Requests).Attachments);
@@ -867,6 +868,8 @@ public sealed partial class MessagingEndpointsTests
         using var revokedDownload = await ownerClient.GetAsync(evidenceRoute);
 
         Assert.Equal(HttpStatusCode.OK, ownerDownload.StatusCode);
+        Assert.True(ownerDownload.Headers.CacheControl?.NoStore);
+        Assert.Contains("Authorization", ownerDownload.Headers.Vary);
         Assert.Equal(HttpStatusCode.NotFound, outsiderDownload.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, revokedDownload.StatusCode);
     }

@@ -41,7 +41,8 @@ public sealed class EducationalSourceVersion
     {
         if (!Enum.IsDefined(status)) throw new ArgumentException("وضعیت اعتبارسنجی معتبر نیست.");
         // این متد مجوز عبور از ReviewRequired یا Rejected به‌صورت خودکار نیست.
-        if (SafetyStatus is SourceSafetyStatus.ReviewRequired or SourceSafetyStatus.Rejected && status == SourceSafetyStatus.FileValidated)
+        if (SafetyStatus is SourceSafetyStatus.ReviewRequired or SourceSafetyStatus.Rejected &&
+            status is SourceSafetyStatus.PendingValidation or SourceSafetyStatus.FileValidated)
             throw new InvalidOperationException("تصمیم Safety نیازمند فرایند مستقل مصوب است.");
         SafetyStatus = status;
     }

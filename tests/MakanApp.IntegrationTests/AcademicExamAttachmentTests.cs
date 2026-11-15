@@ -41,6 +41,7 @@ public sealed partial class ExamEndpointsTests
                 var metadata = Assert.Single(answer.Attachments);
                 Assert.Equal(file.Id, metadata.FileAssetId);
                 Assert.True(metadata.CanDownload);
+                await FileLifecycleAssertions.BoundCannotDeleteAsync(_factory, s.Student, file.Id);
                 evidence.Stage = "TEACHER_DRAFT_DENIED";
                 using var draftDownload = await s.Teacher.GetAsync(metadata.DownloadPath);
                 Assert.Equal(HttpStatusCode.NotFound, draftDownload.StatusCode);

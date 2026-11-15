@@ -184,6 +184,7 @@ public sealed partial class MessagingEndpointsTests
         var file = await UploadPolicyImageAsync(ownerClient);
         using var put = await ownerClient.PutAsJsonAsync($"/api/v1/conversations/{group.ConversationId}/photo", new SetConversationPhotoCommand(file.Id, group.Version), JsonOptions);
         put.EnsureSuccessStatusCode(); var photo = (await put.Content.ReadFromJsonAsync<ConversationPhotoMutationResult>(JsonOptions))!; Assert.Equal(file.Id, photo.Photo!.FileAssetId);
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, ownerClient, file.Id);
         using (var pending = await targetClient.GetAsync(photo.Photo.DownloadUrl)) Assert.Equal(HttpStatusCode.NotFound, pending.StatusCode);
         (await targetClient.PostAsync($"/api/v1/messaging/invitations/{Assert.Single(group.InitialTargets).InvitationId}/accept", null)).EnsureSuccessStatusCode();
         using (var allowed = await targetClient.GetAsync(photo.Photo.DownloadUrl)) allowed.EnsureSuccessStatusCode();

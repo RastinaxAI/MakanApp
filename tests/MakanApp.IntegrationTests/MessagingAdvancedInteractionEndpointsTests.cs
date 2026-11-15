@@ -167,6 +167,7 @@ public sealed partial class MessagingEndpointsTests
                 Text = "caption",
                 AttachmentIds = [image.Id]
             });
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, setup.FirstClient, image.Id);
         var voice = await UploadFileAsync(setup.FirstClient, "audio/mpeg", "voice.mp3");
         var voiceMessage = await SendAdvancedMessageAsync(
             setup.FirstClient,

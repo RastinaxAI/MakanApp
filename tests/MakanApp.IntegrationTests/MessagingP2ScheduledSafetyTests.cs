@@ -139,7 +139,15 @@ public sealed partial class MessagingEndpointsTests
         try
         {
             var task = await ScheduleP2Async(setup.FirstClient, setup.ConversationId, new(now.AddMinutes(1), new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Kind = MessageKind.Image, AttachmentIds = [file.Id] }));
-            await factory.SetFileAssetStatusAsync(file.Id, MakanApp.Domain.Storage.FileAssetStatus.Deleted);
+            // خرابی خارجی فقط در SQL ایزوله تزریق می‌شود؛ مسیر عادی حق حذف فایل retained را ندارد.
+            await using (var scope = factory.Services.CreateAsyncScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+                await db.FileAssets.Where(f => f.Id == file.Id).ExecuteUpdateAsync(setters => setters
+                    .SetProperty(f => f.RetainedAtUtc, (DateTime?)null)
+                    .SetProperty(f => f.Status, MakanApp.Domain.Storage.FileAssetStatus.Deleted)
+                    .SetProperty(f => f.DeletedAtUtc, (DateTime?)factory.Clock.GetUtcNow().UtcDateTime));
+            }
             factory.Clock.SetUtcNow(now.AddMinutes(2)); await DispatchP2ScheduledAsync();
             Assert.Empty(await factory.GetMessagesAsync(setup.ConversationId)); Assert.Equal(ScheduledMessageStatus.Failed, (await ReadP2ScheduleAsync(setup.FirstClient, setup.ConversationId, task.Id)).Status);
         }

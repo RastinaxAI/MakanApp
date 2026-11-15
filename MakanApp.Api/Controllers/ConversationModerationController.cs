@@ -100,6 +100,8 @@ public sealed class ConversationModerationController(IModerationService moderati
             caseId,
             fileAssetId,
             cancellationToken);
+        Response.Headers.CacheControl = "private, no-store";
+        Response.Headers.Vary = "Authorization";
         return File(result.Content, result.ContentType, result.DownloadFileName, enableRangeProcessing: true);
     }
 }

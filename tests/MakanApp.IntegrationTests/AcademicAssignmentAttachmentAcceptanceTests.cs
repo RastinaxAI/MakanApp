@@ -48,6 +48,7 @@ public sealed partial class AssignmentEndpointsTests
             var reloaded = (await student.GetFromJsonAsync<SubmissionAttemptResult>($"/api/v1/academic/submission-attempts/{draft.Id}", JsonOptions))!;
             Assert.Equal(file.Id, Assert.Single(reloaded.Attachments).FileAssetId);
             Assert.True(string.IsNullOrEmpty(reloaded.AnswerText));
+            await FileLifecycleAssertions.BoundCannotDeleteAsync(_factory, student, file.Id);
             evidence.Stage = "FINAL_SUBMIT";
             _ = await SubmitAsync(student, reloaded);
             evidence.Stage = "TEACHER_READ";

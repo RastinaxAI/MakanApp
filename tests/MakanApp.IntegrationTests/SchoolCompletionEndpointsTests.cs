@@ -185,6 +185,7 @@ public sealed partial class PlatformAuthorizationRegressionTests
         var enrollment = await SchoolReadAsync<EnrollmentResult>(await mc.PostAsJsonAsync($"/api/v1/academic/classes/{k.ClassId}/enrollments", new EnrollLearnerCommand(s.OrganizationPersonId)), HttpStatusCode.Created);
         var file = await SchoolUploadAsync(tc);
         var lesson = await SchoolReadAsync<ClassLessonResult>(await SchoolDraftAsync(tc, k.ClassId, Guid.NewGuid(), [file.Id]), HttpStatusCode.Created);
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, tc, file.Id);
         var attachment = Assert.Single(lesson.Attachments); Assert.Equal("handout.txt", attachment.FileName); Assert.True(attachment.IsAvailable); Assert.NotNull(attachment.DownloadUrl);
         using var draftDownload = await sc.GetAsync($"/api/v1/files/{file.Id}/content"); Assert.Equal(HttpStatusCode.NotFound, draftDownload.StatusCode);
         _ = await SchoolReadAsync<ClassLessonResult>(await tc.PostAsJsonAsync($"/api/v1/academic/lessons/{lesson.Id}/publish", new PublishClassLessonCommand(lesson.Version)));

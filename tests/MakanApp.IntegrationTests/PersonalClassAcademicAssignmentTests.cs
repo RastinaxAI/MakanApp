@@ -72,6 +72,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         var s = await PersonalAcademicAsync();
         var authorFile = await PersonalFileAsync(s.Manager, s.Class.Id);
         var assignment = await PersonalAssignmentAsync(s, AssignmentDraft() with { AttachmentFileIds = [authorFile.Id] });
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, s.Manager.Client, authorFile.Id);
         using (var authorDownload = await s.Learner.Client.GetAsync($"/api/v1/files/{authorFile.Id}/content")) authorDownload.EnsureSuccessStatusCode();
         var attempt = await PostAsync<SubmissionAttemptResult>(s.Learner.Client, $"/api/v1/academic/assignments/{assignment.Id}/attempts", null);
         var route = $"/api/v1/academic/submission-attempts/{attempt.Id}";
@@ -99,6 +100,7 @@ public sealed partial class CommercialSubscriptionEndpointsTests
         var file = await PersonalFileAsync(s.Learner, s.Class.Id);
         attempt = await PostAsync<SubmissionAttemptResult>(s.Learner.Client, route + "/attachments", new AttachSubmissionFileCommand(file.Id, attempt.RowVersion));
         using (var draftContent = await s.Manager.Client.GetAsync($"/api/v1/files/{file.Id}/content")) Assert.Equal(HttpStatusCode.NotFound, draftContent.StatusCode);
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, s.Learner.Client, file.Id);
         var submit = new FinalSubmitAssignmentCommand(attempt.RowVersion);
         var receipt = await PostAsync<SubmissionReceipt>(s.Learner.Client, route + "/submit", submit);
         Assert.Equal(receipt, await PostAsync<SubmissionReceipt>(s.Learner.Client, route + "/submit", submit));

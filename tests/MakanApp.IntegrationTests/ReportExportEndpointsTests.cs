@@ -101,6 +101,8 @@ public sealed class ReportExportEndpointsTests(MakanAppWebApplicationFactory fac
         Assert.True(completed.DownloadAvailable);
         Assert.Equal(HttpStatusCode.OK, download.StatusCode);
         Assert.Equal("text/csv", download.Content.Headers.ContentType!.MediaType);
+        Assert.True(download.Headers.CacheControl?.NoStore);
+        Assert.Contains("Authorization", download.Headers.Vary);
         Assert.Contains(assignment.AssignmentId.ToString(), csv, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("'=HYPERLINK", csv);
         Assert.Contains("17.25", csv);
@@ -117,6 +119,7 @@ public sealed class ReportExportEndpointsTests(MakanAppWebApplicationFactory fac
         Assert.Equal(1, await factory.CountReportOutputFilesAsync(created.JobId));
         var persisted = await factory.GetReportExportJobAsync(created.JobId);
         Assert.Equal(created.JobId, persisted.OutputFileAssetId);
+        await FileLifecycleAssertions.BoundCannotDeleteAsync(factory, client, persisted.OutputFileAssetId!.Value);
 
         _ = await factory.CreateDashboardAssignmentAsync(
             organizationId,

@@ -167,10 +167,7 @@ public sealed class StorageService(
             throw Error(StorageErrorCodes.FileAlreadyDeleted, "فایل قبلاً حذف شده است.");
         }
 
-        if (fileAsset.RetainedAtUtc.HasValue || await boundAccessResolver.IsEducationalSourceBoundAsync(fileAsset.Id, cancellationToken) ||
-            await boundAccessResolver.IsProfilePhotoBoundAsync(fileAsset.Id, cancellationToken) ||
-            await boundAccessResolver.IsConversationPhotoBoundAsync(fileAsset.Id, cancellationToken) ||
-            await boundAccessResolver.IsSchoolLessonBoundAsync(fileAsset.Id, cancellationToken))
+        if (fileAsset.RetainedAtUtc.HasValue || await boundAccessResolver.IsBoundAsync(fileAsset.Id, cancellationToken))
         {
             throw Error(StorageErrorCodes.FileInUse, "فایل بخشی از یک سابقه رسمی است و قابل حذف نیست.");
         }

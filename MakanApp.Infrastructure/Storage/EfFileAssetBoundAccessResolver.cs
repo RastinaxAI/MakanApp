@@ -32,27 +32,8 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
     public Task<bool> IsSchoolLessonBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
         dbContext.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileAssetId, cancellationToken);
 
-    public async Task<bool> IsBoundAsync(
-        Guid fileAssetId,
-        CancellationToken cancellationToken) =>
-        await IsSupportTicketBoundAsync(fileAssetId, cancellationToken) ||
-        await IsSchoolApplicationBoundAsync(fileAssetId, cancellationToken) ||
-        await dbContext.EducationalSourceVersions.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.AssignmentVersionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await IsProfilePhotoBoundAsync(fileAssetId, cancellationToken) ||
-        await IsConversationPhotoBoundAsync(fileAssetId, cancellationToken) ||
-        await IsSchoolLessonBoundAsync(fileAssetId, cancellationToken) ||
-        await dbContext.SubmissionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.AnswerRevisionAttachments.AnyAsync(item => item.FileAssetId == fileAssetId, cancellationToken) ||
-        await dbContext.MessageAttachments.AnyAsync(
-            attachment => attachment.FileAssetId == fileAssetId,
-            cancellationToken) ||
-        await dbContext.ModerationEvidenceAttachments.AnyAsync(
-            evidence => evidence.FileAssetId == fileAssetId,
-            cancellationToken) ||
-        await dbContext.ReportExportJobs.AnyAsync(
-            job => job.Id == fileAssetId || job.OutputFileAssetId == fileAssetId,
-            cancellationToken);
+    public Task<bool> IsBoundAsync(Guid fileAssetId, CancellationToken cancellationToken) =>
+        FileAssetBindingQuery.IsBoundAsync(dbContext, fileAssetId, cancellationToken);
 
     public async Task<bool> CanReadBoundFileAsync(
         FileAsset fileAsset,
@@ -102,6 +83,15 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
             return true;
         }
 
+        // قصد زمان‌بندی‌شده خصوصی است؛ گیرنده پیش از ارسال از FileId مجوز نمی‌گیرد.
+        var actors = ReadableActors(accessContext);
+        if (await dbContext.Set<ScheduledMessageAttachment>().AnyAsync(attachment =>
+            attachment.FileAssetId == fileAsset.Id && dbContext.ScheduledMessages.Any(scheduled =>
+                scheduled.Id == attachment.ScheduledMessageId && scheduled.UserId == accessContext.UserId &&
+                actors.Any(actor => actor.ConversationId == scheduled.ConversationId)), cancellationToken)) return true;
+
+        // شاهدِ صرفاً Moderation از مسیر تخصصی پرونده با مجوز و Audit جاری خوانده می‌شود؛
+        // uploader یا داشتن FileId جای مجوز پرونده را نمی‌گیرد.
         return await dbContext.ReportExportJobs.AnyAsync(
             job =>
                 (job.Id == fileAsset.Id || job.OutputFileAssetId == fileAsset.Id) &&

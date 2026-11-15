@@ -16,7 +16,7 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class MessagingEndpointsTests
 {
     [Fact]
-    public async Task EducationalSourcesLibraryCatalogIsMetadataOnlyHiddenDoesNotBreakReferenceAndSchoolCannotManage()
+    public async Task EducationalSourcesLibraryCatalogIsMetadataOnlyHiddenRevokesReferenceAndSchoolCannotManage()
     {
         await factory.ResetPlatformIamAsync();
         using var owner = factory.CreateClient(); var ownerAccount = await CreateMessagingUserAsync(owner);
@@ -44,7 +44,7 @@ public sealed partial class MessagingEndpointsTests
             Assert.Equal(HttpStatusCode.NotFound, mutate.StatusCode);
         using (var hide = await owner.PutAsJsonAsync($"/api/v1/sources/{source.SourceId}/visibility", new SourceVisibilityCommand(SourceVisibility.Hidden, source.Version, "پنهان‌کردن"), JsonOptions))
             hide.EnsureSuccessStatusCode();
-        using var stable = await reader.GetAsync($"/api/v1/sources/{source.SourceId}?revision=1"); Assert.Equal(HttpStatusCode.OK, stable.StatusCode);
+        using var stable = await reader.GetAsync($"/api/v1/sources/{source.SourceId}?revision=1"); Assert.Equal(HttpStatusCode.NotFound, stable.StatusCode);
         await factory.ResetPlatformIamAsync();
     }
     [Fact]

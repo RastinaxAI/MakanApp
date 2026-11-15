@@ -39,7 +39,7 @@ public sealed partial class EfEducationalSourceStore(MakanDbContext db, EfCommer
     {
         if (await Writer(actor, source, ct)) return true;
         if (source.Status != EducationalSourceStatus.Active || !source.PublishedVersion.HasValue) return false;
-        if (source.Scope == EducationalSourceScope.Library) return true;
+        if (source.Scope == EducationalSourceScope.Library) return source.Visibility == SourceVisibility.Public;
         return source.Scope == EducationalSourceScope.Class && actor.Organization is { } context && context.OrganizationId == source.OrganizationId &&
             await school.CanStudyClassAsync(context, source.ClassId!.Value, ct);
     }
@@ -143,15 +143,9 @@ public sealed partial class EfEducationalSourceStore(MakanDbContext db, EfCommer
         if (file is null || file.PersonalClassId.HasValue || file.UploadedByUserId != actor.UserId || file.OrganizationId != source.OrganizationId ||
             file.Status is FileAssetStatus.Deleted or FileAssetStatus.Rejected ||
             file.ContentType is not ("application/pdf" or "image/jpeg" or "image/png" or "text/plain")) throw Error(SourceErrorCodes.NotAllowed);
-        if (await db.EducationalSourceVersions.AnyAsync(v => v.FileAssetId == fileId && v.SourceId != source.Id, ct) ||
+        if (await MakanApp.Infrastructure.Storage.FileAssetBindingQuery.IsBoundAsync(db, fileId, ct, source.Id) ||
             await db.EducationalSourceVersions.AnyAsync(v => v.FileAssetId == fileId &&
-                (v.SafetyStatus == SourceSafetyStatus.ReviewRequired || v.SafetyStatus == SourceSafetyStatus.Rejected), ct) ||
-            await db.ClassLessonAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
-            await db.AssignmentVersionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
-            await db.SubmissionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.AnswerRevisionAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
-            await db.MessageAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) || await db.ModerationEvidenceAttachments.AnyAsync(x => x.FileAssetId == fileId, ct) ||
-            await db.Users.AnyAsync(x => x.ProfilePhotoFileAssetId == fileId, ct) || await db.Conversations.AnyAsync(x => x.PhotoFileAssetId == fileId, ct) ||
-            await db.ReportExportJobs.AnyAsync(x => x.OutputFileAssetId == fileId || x.Id == fileId, ct))
+                (v.SafetyStatus == SourceSafetyStatus.ReviewRequired || v.SafetyStatus == SourceSafetyStatus.Rejected), ct))
             throw Error(SourceErrorCodes.NotAllowed);
         // نگهداری مرجع از حذف blob پس از Archive یا تعویض نسخه جلوگیری می‌کند.
         if (file.Status == FileAssetStatus.Ready) file.Retain(Now);

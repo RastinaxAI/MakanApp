@@ -40,6 +40,8 @@ public sealed class ReportsController(
     {
         var result = await reportExportService.DownloadAsync(UserId(), SessionId(), jobId, cancellationToken);
         Response.ContentLength = result.SizeBytes;
+        Response.Headers.CacheControl = "private, no-store";
+        Response.Headers.Vary = "Authorization";
         return File(result.Content, result.ContentType, result.DownloadFileName);
     }
 

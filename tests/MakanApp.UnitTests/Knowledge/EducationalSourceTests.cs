@@ -47,6 +47,16 @@ public sealed class EducationalSourceTests
         var version = Version(); version.RecordFileValidation(state);
         Assert.Throws<InvalidOperationException>(() => version.RecordFileValidation(SourceSafetyStatus.FileValidated));
     }
+    [Theory]
+    [InlineData(SourceSafetyStatus.Rejected)]
+    [InlineData(SourceSafetyStatus.ReviewRequired)]
+    public void SafetyHoldCannotBeResetToPendingAndThenLaunderedIntoApproval(SourceSafetyStatus state)
+    {
+        var version = Version(); version.RecordFileValidation(state);
+        Assert.Throws<InvalidOperationException>(() => version.RecordFileValidation(SourceSafetyStatus.PendingValidation));
+        Assert.Equal(state, version.SafetyStatus);
+        Assert.False(version.IsSourceReady(true));
+    }
     [Fact]
     public void PublishedRevisionCannotRewriteHistoricalMetadataAndNewRevisionKeepsSourceIdentity()
     {
