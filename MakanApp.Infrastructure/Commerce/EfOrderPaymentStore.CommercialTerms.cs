@@ -16,7 +16,8 @@ public sealed partial class EfOrderPaymentStore
             || await dbContext.SchoolOfferingOperations.AnyAsync(o => o.PlanVersionId == version.Id, ct)))
             throw EfCommercialStore.Error(CommerceErrorCodes.PlanNotPurchasable);
         if (!Enum.IsDefined(purpose) || plan.Audience != audience || version.ValidatePublication(audience).Count != 0
-            || purpose == CommercialOrderPurpose.Purchase && !plan.NewPurchaseAvailable)
+            || purpose == CommercialOrderPurpose.Purchase && !plan.NewPurchaseAvailable
+            || purpose == CommercialOrderPurpose.Renewal && !plan.RenewalAvailable)
             throw EfCommercialStore.Error(CommerceErrorCodes.PlanNotPurchasable);
         var expires = now.AddMinutes(commercialOptions.Value.QuoteLifetimeMinutes);
         if (order.SchoolApplicationId.HasValue)

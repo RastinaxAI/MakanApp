@@ -38,12 +38,10 @@ public sealed partial class EfOrderPaymentStore
                 if (QuotaKinds.For(quota.Key) == QuotaKind.PeriodicConsumption && limit.HasValue)
                     limit = await ProjectedLimitAsync(current, version, quota.Key, now, ct);
             }
-            var available = quota.Key is not (QuotaKey.SourceCount or QuotaKey.AssignmentFileBytes)
-                && (quota.Key != QuotaKey.StorageBytes || owner.Type == SubscriptionOwnerType.Organization || order.SchoolApplicationId.HasValue);
             quotas.Add(new CommercialQuotaDto(quota.Key, QuotaKinds.For(quota.Key), QuotaKinds.Unit(quota.Key), limit, consumed, reserved,
-                available && limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
+                limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
                 limit.HasValue && (consumed > limit || reserved > limit.Value - consumed), version.WarningPercent)
-                { CriticalWarningPercent = version.CriticalWarningPercent, IsUsageAvailable = available });
+                { CriticalWarningPercent = version.CriticalWarningPercent });
         }
         var effective = command.Purpose == CommercialOrderPurpose.Upgrade ? now
             : CommercialPeriods.MonthlyBoundary(order.BillingAnchorUtc!.Value, order.BillingPeriodIndex, version.Calendar!.Value);

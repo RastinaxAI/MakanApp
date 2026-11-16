@@ -4,7 +4,6 @@ using MakanApp.Domain.Academic;
 using MakanApp.Domain.Commerce;
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Platform;
-using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,7 +54,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
         {
             var proposed = await VersionAsync(subscription.ScheduledPlanVersionId.Value, ct);
             var proposedPlan = await db.Plans.AsNoTracking().SingleAsync(p => p.Id == proposed.PlanId, ct);
-            if (proposedPlan.Audience == owner.Type && (proposed.PlanId == plan.Id ? proposedPlan.RenewalAvailable : proposedPlan.NewPurchaseAvailable)) renewal = proposed;
+            if (proposedPlan.Audience == owner.Type && proposedPlan.RenewalAvailable
+                && (proposed.PlanId == plan.Id || proposedPlan.NewPurchaseAvailable)) renewal = proposed;
         }
         else if (plan.RenewalAvailable)
             renewal = await db.PlanVersions.AsNoTracking().Include(v => v.Price).Include(v => v.Entitlements).Include(v => v.QuotaDefinitions)
@@ -136,12 +136,10 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
                 .SumAsync(e => (long?)e.Amount, ct) ?? 0;
         var reserved = await db.UsageReservations.AsNoTracking().Where(r => r.SubscriptionId == subscription.Id && r.QuotaKey == key
             && (r.Status == UsageReservationStatus.Reserved || r.Status == UsageReservationStatus.Unknown)).SumAsync(r => (long?)r.Amount, ct) ?? 0;
-        var available = key is not QuotaKey.AssignmentFileBytes
-            && (key != QuotaKey.StorageBytes || subscription.OwnerType == SubscriptionOwnerType.Organization);
         return new CommercialQuotaDto(key, QuotaKinds.For(key), QuotaKinds.Unit(key), limit, consumed, reserved,
-            available && limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
+            limit.HasValue ? Math.Max(0, limit.Value - consumed - reserved) : null,
             limit.HasValue && (consumed > limit || reserved > limit.Value - consumed), version.WarningPercent)
-            { CriticalWarningPercent = version.CriticalWarningPercent, IsUsageAvailable = available };
+            { CriticalWarningPercent = version.CriticalWarningPercent };
     }
 
     public async Task<long> CapacityAsync(SubscriptionOwner owner, QuotaKey key, CancellationToken ct)
@@ -151,6 +149,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
             {
                 QuotaKey.ActiveClasses => await db.PersonalClasses.LongCountAsync(c => c.HostUserId == owner.Id && c.ArchivedAtUtc == null, ct),
                 QuotaKey.SourceCount => await db.EducationalSources.LongCountAsync(s => s.OwnerUserId == owner.Id && s.Scope == MakanApp.Domain.Knowledge.EducationalSourceScope.Personal, ct),
+                QuotaKey.StorageBytes => await FileCapacityAsync(owner, false, ct),
+                QuotaKey.AssignmentFileBytes => await FileCapacityAsync(owner, true, ct),
                 QuotaKey.ActiveLearners => await (from p in db.PersonalClassParticipants join c in db.PersonalClasses on p.PersonalClassId equals c.Id
                     where c.HostUserId == owner.Id && c.ArchivedAtUtc == null && p.EndedAtUtc == null &&
                         (p.LocalRoles & PersonalClassLocalRoles.Learner) != 0 select p.StudentUserId).Distinct().LongCountAsync(ct),
@@ -163,7 +163,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
             QuotaKey.ActiveLearners => await (from e in db.Enrollments join c in db.Classes on e.ClassId equals c.Id
                 where e.OrganizationId == owner.Id && e.Status == EnrollmentStatus.Active && e.EndedAtUtc == null
                     && c.Status == ClassStatus.Active && c.EndedAtUtc == null select e.LearnerOrganizationPersonId).Distinct().LongCountAsync(ct),
-            QuotaKey.StorageBytes => await db.FileAssets.Where(f => f.OrganizationId == owner.Id && f.Status == FileAssetStatus.Ready).SumAsync(f => (long?)f.SizeBytes, ct) ?? 0,
+            QuotaKey.StorageBytes => await FileCapacityAsync(owner, false, ct),
+            QuotaKey.AssignmentFileBytes => await FileCapacityAsync(owner, true, ct),
             _ => 0
         };
     }
@@ -193,7 +194,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
         var next = await VersionAsync(command.PlanVersionId, ct);
         var plan = await db.Plans.SingleAsync(p => p.Id == next.PlanId, ct);
         var previous = await VersionAsync(current.PlanVersionId, ct);
-        if (plan.Audience != owner.Type || next.Calendar != previous.Calendar || !(next.PlanId == previous.PlanId ? plan.RenewalAvailable : plan.NewPurchaseAvailable)
+        if (!next.IsPublished || plan.Audience != owner.Type || next.Calendar != previous.Calendar || !plan.RenewalAvailable
+            || next.PlanId != previous.PlanId && !plan.NewPurchaseAvailable
             || next.ValidatePublication().Count != 0) throw Error(CommerceErrorCodes.PlanNotPurchasable);
         tracked.ScheduleDowngrade(next, utcNow);
         db.AdminAuditLogs.Add(Audit(actorUserId, sessionId, "commerce.subscription.schedule-downgrade", tracked.Id, owner, command.Reason,
