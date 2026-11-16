@@ -1,5 +1,9 @@
 ﻿[CmdletBinding()]
-param([switch]$ConfirmLocalDisposableDatabase)
+param(
+    [switch]$ConfirmLocalDisposableDatabase,
+    [ValidateSet('Debug', 'Release')]
+    [string]$Configuration = 'Debug'
+)
 
 $ErrorActionPreference = 'Stop'
 if (-not $ConfirmLocalDisposableDatabase) { throw 'اجرای تست SQL ایزوله به تأیید صریح نیاز دارد.' }
@@ -9,6 +13,7 @@ $outputDirectory = Join-Path $repositoryRoot ('.artifacts/deployment/sql-regress
 $databases = New-Object 'System.Collections.Generic.List[string]'
 $checks = New-Object 'System.Collections.Generic.List[string]'
 $baselineId = '20261007075650_AddExamGradingAndRelease'
+$currentV6BaselineId = '20261113103326_FinalizeSchoolManagerAndPaidProvisioning'
 $ownerId = [Guid]::NewGuid().ToString('D')
 $adminId = [Guid]::NewGuid().ToString('D')
 $conversationId = [Guid]::NewGuid().ToString('D')
@@ -90,8 +95,10 @@ function Assert-LegacyData([string]$DatabaseName) {
 
 try {
     $exporter = Join-Path $PSScriptRoot 'export-migration-sql.ps1'
-    $fullMetadata = (& $exporter -NoBuild -OutputPath (Join-Path $outputDirectory 'full-safe.sql')) | ConvertFrom-Json
-    $baselineMetadata = (& $exporter -NoBuild -ToMigration $baselineId -OutputPath (Join-Path $outputDirectory 'baseline-safe.sql')) | ConvertFrom-Json
+    # آزمون باید همان اسمبلیِ Build انتخاب‌شده را مصرف کند؛ خروجی Debug قدیمی شاهد Release نیست.
+    $fullMetadata = (& $exporter -NoBuild -Configuration $Configuration -OutputPath (Join-Path $outputDirectory 'full-safe.sql')) | ConvertFrom-Json
+    $baselineMetadata = (& $exporter -NoBuild -Configuration $Configuration -ToMigration $baselineId -OutputPath (Join-Path $outputDirectory 'baseline-safe.sql')) | ConvertFrom-Json
+    $currentV6Metadata = (& $exporter -NoBuild -Configuration $Configuration -ToMigration $currentV6BaselineId -OutputPath (Join-Path $outputDirectory 'current-v6-safe.sql')) | ConvertFrom-Json
     $fullSql = [IO.File]::ReadAllText($fullMetadata.Output)
     $baselineSql = [IO.File]::ReadAllText($baselineMetadata.Output)
     $rawSql = [IO.File]::ReadAllText($fullMetadata.RawEfOutput)
@@ -123,6 +130,22 @@ try {
     Assert-LegacyData $upgrade
     Assert-Equal $messageVersion (Invoke-TestSql $upgrade "SELECT CONVERT(varchar(100), RowVersion, 1) FROM messaging.Messages WHERE Id='$messageId'" -Scalar) 'retry must not rewrite message'
     $checks.Add('upgrade_retry_preserves_data')
+
+    # مبدأ معتبر v6 نیز مستقل از مبدأ قدیمی آزموده می‌شود؛ داده صرفاً مصنوعی است، نه قرارداد تجاری حدسی.
+    $currentV6 = New-TestDatabase
+    Invoke-TestSql $currentV6 ([IO.File]::ReadAllText($currentV6Metadata.Output))
+    Assert-History $currentV6 $currentV6Metadata.MigrationCount $currentV6BaselineId
+    $syntheticUserId = [Guid]::NewGuid().ToString('D')
+    Invoke-TestSql $currentV6 @"
+INSERT INTO [identity].[Users] ([Id], [CreatedAtUtc], [AccountStatus], [CommunicationAgeVerificationStatus], [Bio])
+VALUES ('$syntheticUserId', SYSUTCDATETIME(), 1, 0, N'be23-synthetic-v6-user');
+"@
+    $syntheticBefore = Invoke-TestSql $currentV6 "SELECT CONCAT(Bio, N'|', CONVERT(nvarchar(33), CreatedAtUtc, 126), N'|', AccountStatus) FROM [identity].[Users] WHERE Id='$syntheticUserId'" -Scalar
+    Invoke-TestSql $currentV6 $fullSql
+    Assert-History $currentV6 $fullMetadata.MigrationCount $fullMetadata.LastMigration
+    Invoke-TestSql $currentV6 $fullSql
+    Assert-Equal $syntheticBefore (Invoke-TestSql $currentV6 "SELECT CONCAT(Bio, N'|', CONVERT(nvarchar(33), CreatedAtUtc, 126), N'|', AccountStatus) FROM [identity].[Users] WHERE Id='$syntheticUserId'" -Scalar) 'current v6 user preserved'
+    $checks.Add('upgrade_from_current_v6_with_synthetic_data_and_retry')
 
     $failure = New-TestDatabase
     Invoke-TestSql $failure $baselineSql
@@ -156,7 +179,7 @@ try {
     finally { $connection.Dispose() }
     $checks.Add('ambient_transaction_rejected_without_rollback')
 
-    $report = [ordered]@{ Passed=$checks.Count; Failed=0; Checks=@($checks); Databases=@($databases); Retained=$true; Target='LocalDB-only'; OutputDirectory=$outputDirectory; ScriptSha256=$fullMetadata.Sha256; MigrationCount=$fullMetadata.MigrationCount; LastMigration=$fullMetadata.LastMigration }
+    $report = [ordered]@{ Passed=$checks.Count; Failed=0; Checks=@($checks); Databases=@($databases); Retained=$true; Target='LocalDB-only'; Configuration=$Configuration; LegacyBaseline=$baselineId; CurrentV6Baseline=$currentV6BaselineId; OutputDirectory=$outputDirectory; ScriptSha256=$fullMetadata.Sha256; MigrationCount=$fullMetadata.MigrationCount; LastMigration=$fullMetadata.LastMigration }
     $json = $report | ConvertTo-Json -Depth 5
     [IO.File]::WriteAllText((Join-Path $outputDirectory 'test-report.json'), $json, (New-Object Text.UTF8Encoding($true)))
     $json

@@ -8,10 +8,12 @@ param(
     [Parameter(Mandatory, ParameterSetName = 'Backup')][string]$StorageRoot,
     [Parameter(Mandatory, ParameterSetName = 'Backup')][switch]$WritersStopped,
     [Parameter(ParameterSetName = 'Backup')][string]$SqlServiceIdentity,
+    [Parameter(ParameterSetName = 'Backup')][string]$DataProtectionRoot,
     [Parameter(Mandatory, ParameterSetName = 'Restore')][string]$TargetDatabase,
     [Parameter(Mandatory, ParameterSetName = 'Restore')][string]$TargetStorageRoot,
     [Parameter(Mandatory, ParameterSetName = 'Restore')][string]$ExpectedManifestHash,
-    [Parameter(Mandatory, ParameterSetName = 'Restore')][string]$MigrationListPath
+    [Parameter(Mandatory, ParameterSetName = 'Restore')][string]$MigrationListPath,
+    [Parameter(ParameterSetName = 'Restore')][string]$TargetDataProtectionRoot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -20,14 +22,15 @@ try {
     if ($Backup) {
         Invoke-MakanBackup -ConnectionEnvironmentVariable $ConnectionEnvironmentVariable `
             -StorageRoot $StorageRoot -BundlePath $BundlePath -ApplicationRoot $ApplicationRoot `
-            -WritersStopped:$WritersStopped -SqlServiceIdentity $SqlServiceIdentity | ConvertTo-Json -Depth 5
+            -WritersStopped:$WritersStopped -SqlServiceIdentity $SqlServiceIdentity `
+            -DataProtectionRoot $DataProtectionRoot | ConvertTo-Json -Depth 5
     }
     else {
         $migrations = @(Get-Content -LiteralPath $MigrationListPath -Encoding UTF8 | Where-Object { $_.Trim() })
         Invoke-MakanRestore -ConnectionEnvironmentVariable $ConnectionEnvironmentVariable `
             -TargetDatabase $TargetDatabase -TargetStorageRoot $TargetStorageRoot -BundlePath $BundlePath `
             -ApplicationRoot $ApplicationRoot -ExpectedManifestHash $ExpectedManifestHash `
-            -ExpectedMigrations $migrations | ConvertTo-Json -Depth 5
+            -ExpectedMigrations $migrations -TargetDataProtectionRoot $TargetDataProtectionRoot | ConvertTo-Json -Depth 5
     }
 }
 catch {

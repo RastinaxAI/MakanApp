@@ -1,7 +1,10 @@
 using System.Collections.Concurrent;
+using MakanApp.Application.Identity;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Reports.Exports;
 using MakanApp.Infrastructure.Messaging;
+using MakanApp.Infrastructure.Identity;
+using MakanApp.Infrastructure.Assessment;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Outbox;
@@ -24,6 +27,8 @@ public sealed class WorkerDispatcherLogSafetyTests
     [InlineData(typeof(ReportExportDispatcher))]
     [InlineData(typeof(ScheduledMessageDispatcher))]
     [InlineData(typeof(MessagingEphemeralDispatcher))]
+    [InlineData(typeof(AccountDeletionDispatcher))]
+    [InlineData(typeof(ExamDeadlineDispatcher))]
     public async Task WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes(Type dispatcherType)
     {
         using var logs = new CapturingLoggerProvider();
@@ -36,6 +41,9 @@ public sealed class WorkerDispatcherLogSafetyTests
         registrations.AddSingleton<IReportExportQueueSignal, ReportExportQueueSignal>();
         registrations.AddSingleton(new ReportExportOptions());
         registrations.AddSingleton(new NotificationDeliveryOptions());
+        // فقط در تست، خطای scope تزریق می‌شود؛ هیچ حذف حساب یا نهایی‌سازی واقعی اجرا نمی‌شود.
+        registrations.AddSingleton(new AccountDeletionOptions { ExecutionEnabled = true });
+        registrations.AddSingleton(new ExamDeadlineOptions());
         await using var services = registrations.BuildServiceProvider();
         using var dispatcher = (BackgroundService)ActivatorUtilities.CreateInstance(
             services,

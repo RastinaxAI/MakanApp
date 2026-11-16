@@ -15,6 +15,7 @@ using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Storage;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -115,9 +116,15 @@ public sealed partial class MakanAppWebApplicationFactory :
             if (deletionDispatcher is not null) services.Remove(deletionDispatcher);
             services.AddDbContext<MakanDbContext>((provider, options) =>
                 options.AddInterceptors(provider.GetRequiredService<RealtimeBoundaryGate>()));
-            // کلید cursor فقط در حافظهٔ fixture است؛ keyring شخصی توسعه‌دهنده لمس نمی‌شود.
-            services.AddSingleton<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(
-                new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider());
+            // فقط drill صریح Ring دیسکی مستقل دارد؛ fixture معمولی ring شخصی توسعه‌دهنده را لمس نمی‌کند.
+            if (_recoveryDataProtectionRoot is null)
+                services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
+            else
+            {
+                services.RemoveAll<IDataProtectionProvider>();
+                services.AddDataProtection().SetApplicationName("MakanApp.RecoveryDrill")
+                    .PersistKeysToFileSystem(new DirectoryInfo(_recoveryDataProtectionRoot));
+            }
             var operationalMetricsPublisher = services.FirstOrDefault(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(OperationalMetricsPublisher));
             if (operationalMetricsPublisher is not null) services.Remove(operationalMetricsPublisher);

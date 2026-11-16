@@ -174,7 +174,8 @@ function Invoke-MakanBackup {
         [Parameter(Mandatory)][string]$BundlePath,
         [Parameter(Mandatory)][string]$ApplicationRoot,
         [switch]$WritersStopped,
-        [string]$SqlServiceIdentity
+        [string]$SqlServiceIdentity,
+        [string]$DataProtectionRoot
     )
     if (-not $WritersStopped) { throw 'توقف همه writerها و workerها باید صریحاً تأیید شود.' }
     $script:RecoveryPhase = 'BACKUP_PREFLIGHT'
@@ -187,6 +188,16 @@ function Invoke-MakanBackup {
     if ($connection.DataSource -notlike '(localdb)\*' -and -not $SqlServiceIdentity) { throw 'identity سرویس SQL باید صریح مشخص شود.' }
     $database = $connection.InitialCatalog
     $beforeFiles = @(Get-RecoveryFiles $root)
+    $beforeKeys = @()
+    $keyRoot = $null
+    if ($DataProtectionRoot) {
+        $keyRoot = Get-RecoveryPath $DataProtectionRoot
+        if (-not (Test-Path -LiteralPath $keyRoot -PathType Container) -or
+            (Test-RecoveryOverlap $keyRoot $root) -or (Test-RecoveryOverlap $keyRoot $app) -or
+            (Test-RecoveryOverlap $keyRoot $bundle)) { throw 'محل Ring باید موجود، مستقل از برنامه، Storage و bundle باشد.' }
+        $beforeKeys = @(Get-RecoveryFiles $keyRoot)
+        if ($beforeKeys.Count -eq 0) { throw 'Ring خالی شاهد بازیابی protected state نیست.' }
+    }
     $assets = @(Get-RecoveryAssets $connection $database)
     [void](Test-RecoveryFiles $root $beforeFiles $assets)
     $migrations = @(Get-RecoveryMigrations $connection $database)
@@ -211,16 +222,30 @@ function Invoke-MakanBackup {
     if (($assets | ConvertTo-Json -Depth 5 -Compress) -cne ((Get-RecoveryAssets $connection $database) | ConvertTo-Json -Depth 5 -Compress)) {
         throw 'metadata فایل حین snapshot تغییر کرده است.'
     }
+    if ($keyRoot) {
+        $script:RecoveryPhase = 'KEY_RING_SNAPSHOT'
+        $keySnapshot = Join-Path $bundle 'key-ring'
+        [void][IO.Directory]::CreateDirectory($keySnapshot)
+        foreach ($file in $beforeKeys) {
+            $target = Resolve-RecoveryKey $keySnapshot $file.Key
+            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target))
+            [IO.File]::Copy((Resolve-RecoveryKey $keyRoot $file.Key), $target, $false)
+        }
+        [void](Test-RecoveryFiles $keySnapshot $beforeKeys @())
+        [void](Test-RecoveryFiles $keyRoot $beforeKeys @())
+    }
     $manifest = [ordered]@{
         Format = 1; SourceDatabase = $database
         BackupStartedAtUtc = $started.ToString('O'); CompletedAtUtc = [DateTime]::UtcNow.ToString('O')
         BackupSha256 = (Get-FileHash -LiteralPath $backupPath -Algorithm SHA256).Hash
         Migrations = @($migrations); Assets = @($assets); Files = @($beforeFiles)
     }
+    # Format1 برای backupهای قبلی معتبر می‌ماند؛ مقدار کلید داخل manifest قرار نمی‌گیرد.
+    if ($keyRoot) { $manifest['Format'] = 2; $manifest['KeyRingFiles'] = @($beforeKeys) }
     $manifestPath = Join-Path $bundle 'manifest.json'
     $script:RecoveryPhase = 'MANIFEST_WRITE'
     [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json -Depth 8), (New-Object Text.UTF8Encoding $false))
-    return [pscustomobject]@{ Result = 'BACKUP_VERIFIED'; ManifestSha256 = (Get-FileHash -LiteralPath $manifestPath).Hash; Files = $beforeFiles.Count }
+    return [pscustomobject]@{ Result = 'BACKUP_VERIFIED'; ManifestSha256 = (Get-FileHash -LiteralPath $manifestPath).Hash; Files = $beforeFiles.Count; ProtectionFiles = $beforeKeys.Count }
 }
 
 function Invoke-MakanRestore {
@@ -231,7 +256,8 @@ function Invoke-MakanRestore {
         [Parameter(Mandatory)][string]$ExpectedManifestHash,
         [Parameter(Mandatory)][string[]]$ExpectedMigrations,
         [Parameter(Mandatory)][string]$TargetStorageRoot,
-        [Parameter(Mandatory)][string]$ApplicationRoot
+        [Parameter(Mandatory)][string]$ApplicationRoot,
+        [string]$TargetDataProtectionRoot
     )
     Assert-RecoveryTarget $TargetDatabase
     $script:RecoveryPhase = 'RESTORE_PREFLIGHT'
@@ -245,7 +271,22 @@ function Invoke-MakanRestore {
     if ($ExpectedManifestHash -notmatch '^[A-Fa-f0-9]{64}\z' -or
         (Get-FileHash -LiteralPath $manifestPath).Hash -ne $ExpectedManifestHash) { throw 'digest مستقل manifest تطبیق ندارد.' }
     $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($manifest.Format -ne 1 -or $TargetDatabase -eq $manifest.SourceDatabase) { throw 'manifest یا مقصد معتبر نیست.' }
+    if ($manifest.Format -notin @(1, 2) -or $TargetDatabase -eq $manifest.SourceDatabase) { throw 'manifest یا مقصد معتبر نیست.' }
+    $keyTarget = $null
+    if ($manifest.Format -eq 2) {
+        $script:RecoveryPhase = 'RESTORE_PROTECTION_PREFLIGHT'
+        if (-not $TargetDataProtectionRoot -or @($manifest.KeyRingFiles).Count -eq 0) {
+            throw 'بستهٔ دارای Ring به مقصد مستقل و موجودی معتبر کلید نیاز دارد.'
+        }
+        $keyTarget = Get-RecoveryPath $TargetDataProtectionRoot
+        if ((Test-Path -LiteralPath $keyTarget) -or (Test-RecoveryOverlap $keyTarget $root) -or
+            (Test-RecoveryOverlap $keyTarget $bundle) -or
+            (Test-RecoveryOverlap $keyTarget (Get-RecoveryPath $ApplicationRoot))) {
+            throw 'مقصد Ring باید تازه و مستقل از برنامه، Storage و bundle باشد.'
+        }
+        [void](Test-RecoveryFiles (Get-RecoveryPath (Join-Path $bundle 'key-ring')) @($manifest.KeyRingFiles) @())
+    }
+    elseif ($TargetDataProtectionRoot) { throw 'بستهٔ قدیمی فاقد Ring است؛ بازیابی کلید نباید موفق فرض شود.' }
     if ($ExpectedMigrations.Count -eq 0 -or ($ExpectedMigrations -join "`n") -cne ($manifest.Migrations -join "`n")) {
         throw 'نسخه artifact و migrationهای snapshot سازگار نیستند؛ migration خودکار اجرا نمی‌شود.'
     }
@@ -285,9 +326,20 @@ function Invoke-MakanRestore {
         [IO.File]::Copy((Resolve-RecoveryKey (Join-Path $bundle 'files') $file.Key), $target, $false)
     }
     $integrity = Test-RecoveryFiles $root @($manifest.Files) $assets
+    $protectionFiles = 0
+    if ($keyTarget) {
+        $script:RecoveryPhase = 'KEY_RING_RESTORE_VERIFY'
+        New-RecoveryDirectory $keyTarget ''
+        foreach ($file in $manifest.KeyRingFiles) {
+            $target = Resolve-RecoveryKey $keyTarget $file.Key
+            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($target))
+            [IO.File]::Copy((Resolve-RecoveryKey (Join-Path $bundle 'key-ring') $file.Key), $target, $false)
+        }
+        $protectionFiles = (Test-RecoveryFiles $keyTarget @($manifest.KeyRingFiles) @()).Files
+    }
     return [pscustomobject]@{
         Result = 'RESTORE_VERIFIED'; StartedAtUtc = $started.ToString('O'); EndedAtUtc = [DateTime]::UtcNow.ToString('O')
-        Database = $TargetDatabase; Integrity = $integrity
+        Database = $TargetDatabase; Integrity = $integrity; ProtectionFiles = $protectionFiles
     }
 }
 

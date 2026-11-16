@@ -11,6 +11,7 @@ using MakanApp.Application.Messaging;
 using MakanApp.Application.Notification;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Reports.Exports;
+using MakanApp.Application.Realtime;
 using MakanApp.Application.Storage;
 using MakanApp.Domain.Academic;
 using MakanApp.Domain.Messaging;
@@ -21,6 +22,7 @@ using MakanApp.Domain.Reports;
 using MakanApp.Domain.Storage;
 using MakanApp.Infrastructure.Outbox;
 using MakanApp.Infrastructure.Persistence;
+using MakanApp.Infrastructure.Messaging;
 using MakanApp.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,13 +57,15 @@ public sealed class RecoveryDrillTests
         var runRoot = Path.Combine(Path.GetTempPath(), "MakanApp_RecoveryDrill_" + runId);
         var sourceStorage = Path.Combine(runRoot, "source-files");
         var targetStorage = Path.Combine(runRoot, "restored-files");
+        var sourceRing = Path.Combine(runRoot, "source-ring");
+        var restoredRing = Path.Combine(runRoot, "restored-ring");
         var bundle = Path.Combine(runRoot, "bundle");
         var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
         var originalConnection = Environment.GetEnvironmentVariable("ConnectionStrings__MakanDatabase");
         Directory.CreateDirectory(runRoot);
         try
         {
-            using var source = new MakanAppWebApplicationFactory(sourceDatabase, sourceStorage, key);
+            using var source = new MakanAppWebApplicationFactory(sourceDatabase, sourceStorage, key, sourceRing);
             await using (var scope = source.Services.CreateAsyncScope())
             {
                 // نام یکتا است؛ برخلاف fixture عادی هیچ DB حذف یا جایگزین نمی‌شود.
@@ -74,6 +78,15 @@ public sealed class RecoveryDrillTests
             using var parentClient = source.CreateClient();
             var manager = await AuthenticateAsync(source, client);
             var parent = await AuthenticateAsync(source, parentClient);
+            const string protectedValue = "Synthetic recovery protected state";
+            string protectedCursor;
+            string protectedContact;
+            await using (var scope = source.Services.CreateAsyncScope())
+            {
+                protectedCursor = scope.ServiceProvider.GetRequiredService<IRealtimeCursorProtector>().Protect(protectedValue);
+                protectedContact = scope.ServiceProvider.GetRequiredService<AddressBookProtection>()
+                    .Protect(manager.User.Id, "name", protectedValue);
+            }
             var organization = await source.CreateOrganizationAsync("Synthetic recovery school " + runId);
             var otherOrganization = await source.CreateOrganizationAsync("Synthetic other school " + runId);
             var academic = await source.CreateAcademicClassAsync(organization);
@@ -160,20 +173,40 @@ public sealed class RecoveryDrillTests
 
             var backup = await RunPowerShellAsync("Invoke-MakanRecovery.ps1", sourceConnection,
                 ["-Backup", "-ConnectionEnvironmentVariable", "MAKAN_RECOVERY_CONNECTION", "-BundlePath", bundle,
-                 "-ApplicationRoot", repository, "-StorageRoot", sourceStorage, "-WritersStopped"]);
+                 "-ApplicationRoot", repository, "-StorageRoot", sourceStorage, "-WritersStopped", "-DataProtectionRoot", sourceRing]);
             Assert.True(backup.ExitCode == 0, backup.Output);
             using var backupResult = JsonDocument.Parse(backup.Output);
             var manifestHash = backupResult.RootElement.GetProperty("ManifestSha256").GetString()!;
             Assert.Equal(3, backupResult.RootElement.GetProperty("Files").GetInt32());
+            Assert.True(backupResult.RootElement.GetProperty("ProtectionFiles").GetInt32() > 0);
             var restoreArguments = new[] { "-Restore", "-ConnectionEnvironmentVariable", "MAKAN_RECOVERY_CONNECTION", "-BundlePath", bundle,
                 "-ApplicationRoot", repository, "-TargetDatabase", targetDatabase, "-TargetStorageRoot", targetStorage,
-                "-ExpectedManifestHash", manifestHash, "-MigrationListPath", migrationList };
+                "-ExpectedManifestHash", manifestHash, "-MigrationListPath", migrationList,
+                "-TargetDataProtectionRoot", restoredRing };
+            // Ring ناقص یا مقصد نامشخص باید پیش از ایجاد دیتابیس رد شود؛ bytes کلید چاپ نمی‌شوند.
+            var missingRing = await RunPowerShellAsync("Invoke-MakanRecovery.ps1", sourceConnection, restoreArguments[..^2]);
+            Assert.NotEqual(0, missingRing.ExitCode);
+            Assert.Contains("RESTORE_PROTECTION_PREFLIGHT", missingRing.Output);
+            await AssertTargetDatabaseMissingAsync(sourceConnection, targetDatabase);
+            var snapshotKey = Directory.GetFiles(Path.Combine(bundle, "key-ring"), "*.xml").First();
+            var originalKey = await File.ReadAllBytesAsync(snapshotKey);
+            try
+            {
+                await File.WriteAllTextAsync(snapshotKey, "synthetic-corrupt-key-ring");
+                var corruptRing = await RunPowerShellAsync("Invoke-MakanRecovery.ps1", sourceConnection, restoreArguments);
+                Assert.NotEqual(0, corruptRing.ExitCode);
+                Assert.Contains("RESTORE_PROTECTION_PREFLIGHT", corruptRing.Output);
+                await AssertTargetDatabaseMissingAsync(sourceConnection, targetDatabase);
+            }
+            finally { await File.WriteAllBytesAsync(snapshotKey, originalKey); }
             var timer = Stopwatch.StartNew();
             var restore = await RunPowerShellAsync("Invoke-MakanRecovery.ps1", sourceConnection, restoreArguments);
             Assert.True(restore.ExitCode == 0, restore.Output);
             using var restoreResult = JsonDocument.Parse(restore.Output);
             Assert.Equal(3, restoreResult.RootElement.GetProperty("Integrity").GetProperty("Files").GetInt32());
             Assert.Equal(1, restoreResult.RootElement.GetProperty("Integrity").GetProperty("UnreferencedFiles").GetInt32());
+            Assert.Equal(backupResult.RootElement.GetProperty("ProtectionFiles").GetInt32(),
+                restoreResult.RootElement.GetProperty("ProtectionFiles").GetInt32());
             var repeated = await RunPowerShellAsync("Invoke-MakanRecovery.ps1", sourceConnection, restoreArguments);
             Assert.NotEqual(0, repeated.ExitCode);
 
@@ -185,11 +218,15 @@ public sealed class RecoveryDrillTests
                 Assert.Equal(HttpStatusCode.Unauthorized, (await wrongKeyClient.GetAsync("/api/v1/me")).StatusCode);
             }
 
-            using var restored = new MakanAppWebApplicationFactory(targetDatabase, targetStorage, key);
+            using var restored = new MakanAppWebApplicationFactory(targetDatabase, targetStorage, key, restoredRing);
             await using (var scope = restored.Services.CreateAsyncScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
                 Assert.Equal(sourceCounts.OrderBy(p => p.Key), (await ReadTableCountsAsync(db)).OrderBy(p => p.Key));
+                Assert.True(protectedValue == scope.ServiceProvider.GetRequiredService<IRealtimeCursorProtector>().Unprotect(protectedCursor),
+                    "نشانگر قبلی پس از بازیابی Ring باز نشد.");
+                Assert.True(protectedValue == scope.ServiceProvider.GetRequiredService<AddressBookProtection>()
+                    .Unprotect(manager.User.Id, "name", protectedContact), "دادهٔ محافظت‌شدهٔ دفترچه پس از بازیابی Ring باز نشد.");
                 Assert.Equal(migrations, (await db.Database.GetAppliedMigrationsAsync()).ToArray());
                 Assert.Empty(await db.Database.GetPendingMigrationsAsync());
                 Assert.Equal("Synthetic recovery message", (await db.Messages.SingleAsync(m => m.Id == message.MessageId)).Text);
@@ -228,7 +265,9 @@ public sealed class RecoveryDrillTests
                 CompletedAtUtc = DateTime.UtcNow, Migrations = migrations.Length, Tables = sourceCounts.Count,
                 Live = 200, Ready = 200, AuthorizedRead = 200, CrossOrganizationRead = 404,
                 GuardianRead = 200, UnrelatedChild = 404, RevokedGuardian = 403, ExistingSession = 200, WrongKey = 401, TestSafeOtp = "PASS",
-                Files = 3, OrphansPreserved = 1, ProductionEnvironment = false, Host = "ASP.NET Core TestServer"
+                Files = 3, OrphansPreserved = 1, ProductionEnvironment = false, Host = "ASP.NET Core TestServer",
+                ProtectionKeyFiles = restoreResult.RootElement.GetProperty("ProtectionFiles").GetInt32(),
+                ProtectedStateRestored = true, MissingOrCorruptRingRejectedBeforeDatabaseCreation = true
             }, new JsonSerializerOptions { WriteIndented = true }));
         }
         finally
@@ -236,6 +275,19 @@ public sealed class RecoveryDrillTests
             // شواهد، DBها و فایل‌های disposable حفظ می‌شوند؛ secret آزمایشی ذخیره نمی‌شود.
             Environment.SetEnvironmentVariable("ConnectionStrings__MakanDatabase", originalConnection);
         }
+    }
+
+    private static async Task AssertTargetDatabaseMissingAsync(string sourceConnection, string targetDatabase)
+    {
+        Assert.StartsWith("MakanApp_Recovery_Target_", targetDatabase);
+        var settings = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sourceConnection) { InitialCatalog = "master" };
+        Assert.StartsWith("(localdb)", settings.DataSource, StringComparison.OrdinalIgnoreCase);
+        await using var connection = new Microsoft.Data.SqlClient.SqlConnection(settings.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT DB_ID(@database)";
+        command.Parameters.AddWithValue("@database", targetDatabase);
+        Assert.True(await command.ExecuteScalarAsync() is DBNull, "بستهٔ نامعتبر نباید دیتابیس مقصد را بسازد.");
     }
 
     private static async Task<VerifyOtpResult> AuthenticateAsync(MakanAppWebApplicationFactory factory, HttpClient client)
