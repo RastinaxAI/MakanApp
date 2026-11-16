@@ -1,5 +1,38 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
+## BE-23 — وضعیت جاری و شواهد محلی
+
+Source مبنا `00bd8a9`،۷۵ Migration تا ExtendProductNotificationCoverage است؛ داده‌های جدید
+AddressBook، School Application/Provisioning، AccountDeletion و Notification همراه SQL و bytes
+متناظر backup می‌شوند. [گزارش BE-23](../product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md)
+نتیجهٔ واقعی Drill را ثبت می‌کند؛ عددهای پایین تاریخچهٔ خودشان‌اند.
+
+سه جزء SQL، Durable Storage و Data Protection Ring باید در نقطهٔ سازگار، پس از توقف writerها
+حفظ شوند. private config/Identity key و custody محافظ‌های Windows/certificate جداگانه و محرمانه
+backup شوند؛ Secret در manifest مشترک یا Git قرار نگیرد. مسیر Storage محیط‌ها جدا باقی بماند.
+
+وجود `.bak` یا موفقیت VERIFYONLY جای RESTORE و بررسی برنامه نیست. پس از restore، history،
+DBCC CHECKDB، metadata/hash/bytes، نشست و current ACL و بازشدن protected state قبلی سنجیده شوند.
+Ring با ApplicationName/purpose و identity/protector سازگار لازم است؛ ساخت Ring جدید راه بازیابی نیست.
+عوض‌کردن physical/content-root path ممکن است discriminator پیش‌فرض را عوض کند؛ مهاجرت path/identity
+نیازمند rehearsal مستقل است. Ring منسوخ MFA با مصرف جاری AddressBook/cursor یکسان فرض نشود.
+
+`LOCAL_RESTORE_DRILL` فقط با اجرای واقعی محلی گزارش می‌شود؛
+`PRODUCTION_RESTORE_DRILL=NOT_RUN` و
+`RPO_RTO=PRODUCT_OPERATIONS_DECISION_REQUIRED` باقی‌اند. زمان مشاهده‌شدهٔ یک Drill محلی SLA نیست.
+برای IIS و طرح بازگشت به [Manifest](../product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md) رجوع کنید؛
+Down migration خودکار یا overwrite مقصد موجود مجاز نیست.
+
+ابزار موجود دو ورودی اختیاری دارد: در Backup، `-DataProtectionRoot` و در Restore،
+`-TargetDataProtectionRoot`. اگر Ring درخواست شده باشد، root باید جدا از Storage، application و
+bundle باشد؛ مقصد Restore تازه و فاقد overlap است. Format2 فقط فهرست/hash/اندازه را در manifest
+می‌نویسد و bytes کلید را در زیرپوشهٔ خصوصی key-ring نگه می‌دارد. missing/corrupt Ring پیش از
+ساخت دیتابیس رد می‌شود؛ Format1 قدیمی بدون Ring خوانده می‌شود ولی بازیابی protected state را اثبات نمی‌کند.
+
+این گزینه‌ها setting جدید Backend یا احیای MFA نیستند. مسیر Ring واقعی و custody آن را اپراتور
+مشخص کند؛ ابزار محل Ring یا ApplicationName سرور را حدس نمی‌زند. محافظ DPAPI/certificate،
+Windows profile و کلیدهای محافظ مستقل همچنان برای انتقال بین ماشین/identity لازم‌اند.
+
 ## افزودهٔ بازیابی نسخهٔ جاری — ۲۰۲۶-۱۰-۳۰
 
 schema جاری55 migration تا AddExamAnswerAttachments و113 جدول دارد. UsageReservations، SubscriptionAmendments و PersonalClassها همراه کل دادهٔ Commerce backup می‌شوند؛ Job و reservation را جدا به نقطهٔ زمانی ناسازگار نبرید. policy سؤال و AnswerRevisionAttachments به bytes Retained آزمون وابسته‌اند؛ DB+Storage سازگار و کنترل مجوز پس از restore لازم است. Detach مجوز حذف فایل تاریخی نیست.

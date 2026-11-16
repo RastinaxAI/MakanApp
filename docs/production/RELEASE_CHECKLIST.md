@@ -1,5 +1,30 @@
 # Release Checklist
 
+## BE-23 — مرز جاری Product v6
+
+مبنا `00bd8a9` روی `feature/product-v6-backend-alignment`؛ موجودی جاری۷۵ Migration تا
+`20261114183321_ExtendProductNotificationCoverage` است. بخش‌های پایین تاریخچهٔ gateهای قبلی‌اند؛
+نتیجهٔ جاری در [گزارش BE-23](../product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) و
+[Manifest انتشار](../product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md) ثبت می‌شود.
+
+- [x] Source/branch/hash و TRX واقعی Full/Final بررسی شده‌اند؛ شکست یا Timeout میانی پنهان نشده است.
+- [x] SQL تحویلی روی Fresh و Upgrade مستقل آزموده شده و مدل EF معلق نیست؛ baseline سرور تا خواندن history، UNKNOWN است.
+- [x] Test/Production از profile درست، با فایل خصوصی متناظر، OTP متفاوت و Storage جدا ساخته شده‌اند؛ محتویات ZIP و Hash تأیید شده‌اند.
+- [x] هر دو خروجی در smoke کنترل‌شده بالا آمده‌اند؛ live/ready و مرز401/503 بدون اطلاعات خصوصی بررسی شده‌اند.
+- [ ] Snapshot سازگار DB/Storage/Ring و Identity key/هویت/protector/discriminator حفظ شده‌اند؛ publish کلید تولید/جایگزین نکرده است.
+- [ ] اصل artifact قبلی سرور و config سازگار برای rollback حفظ شده‌اند؛ کاندید محلی، نسخهٔ مستقر فرض نشده است.
+- [ ] migration principal از AppPool identity جدا و rollout فقط با طرح نگه‌داری و approval محیط هدف انجام می‌شود.
+
+خانه‌های مربوط به سرور با تست محلی تیک نمی‌خورند. وضعیت‌های مستقل جاری:
+`PRODUCTION_PUSH_RUNTIME=BLOCKED_CONFIGURATION`،
+`PRODUCTION_NOTIFICATION_SMS=BLOCKED_CONFIGURATION`،
+`PRODUCTION_ACCOUNT_DELETION_EXECUTION=BLOCKED_CONFIGURATION`،
+`RETENTION_DURATIONS=PRODUCT_LEGAL_CONFIGURATION_REQUIRED`،
+`SCHOOL_APPLICATION_COMMERCIAL_TERMS=BLOCKED_CONFIGURATION`،
+CafeBazaar/Myket وابسته به قرارداد/تنظیم و iOS وابسته به تصمیم Product هستند.
+Exporter/Alert و RPO/RTO هنوز پذیرش زیرساخت/عملیات می‌خواهند. Library و ReviewRequired با این checklist فعال نمی‌شوند.
+`MERGE_TO_MAIN=NOT_RUN` و `DEPLOYMENT=NOT_RUN` مرز خود این مأموریت‌اند.
+
 ## کنترل نسخهٔ ۲۰۲۶-۱۰-۳۰
 
 - [ ] binary/schema مربوط به e11d4ec و55 migration تا AddExamAnswerAttachments، history مقصد و SQL export تازه بررسی شده‌اند.

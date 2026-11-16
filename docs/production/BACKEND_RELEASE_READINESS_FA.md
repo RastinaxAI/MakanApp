@@ -1,5 +1,11 @@
 # گزارش و راهنمای آمادگی انتشار Backend
 
+> مرجع جاری عملیات Product v6: [گزارش BE-23](../product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md)
+> و [Manifest/Test/Production/SQL/Rollback](../product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md).
+> متن پایین گزارش تاریخی۲۰۲۶-۱۰-۲۲ است؛ شمار تست/جدول/Migration و اشارهٔ MFA آن را وضعیت جاری نگیرید.
+> شاخهٔ جاری feature/product-v6-backend-alignment و مبنای BE-23 برابر00bd8a9 است؛
+> این مرحله Deploy یا migration سرور نیست.
+
 تاریخ: `2026-10-22`؛ مخزن اصلی `D:\Project\MakanApp\MakanApp-Backend`.
 این گزارش اعتبارسنجی محلی کد و بسته است، نه اثبات استقرار IIS یا پذیرش زیرساخت Production.
 

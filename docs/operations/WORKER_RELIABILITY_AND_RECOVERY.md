@@ -1,5 +1,24 @@
 # قابلیت اطمینان و بازیابی Workerها
 
+## BE-23 — موجودی واقعی Product v6
+
+مبنای `00bd8a9` اکنون **۱۰ BackgroundService** دارد: هشت مورد تاریخی همین سند به‌علاوهٔ
+`ExamDeadlineDispatcher` و `AccountDeletionDispatcher`؛ handlerهای Payment/Provisioning
+مصرف‌کنندهٔ زیرساخت موجودند و worker موازی تازه‌ای ساخته نشده است.
+[گزارش BE-23](../product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) inventory، claim/lease،
+تست‌های recovery، shutdown و تکرار کنترل‌شدهٔ Realtime را ثبت می‌کند.
+
+AccountDeletion پیش‌فرض خاموش است؛ بدون فعال‌سازی مصوب، خاموش‌بودن آن شکست recovery نیست.
+ExamDeadline با batch/interval محدود و finalizer موجود کار می‌کند؛ token لغو به SQL و عملیات
+مربوط منتقل می‌شود. Ephemeral، Metrics و scanner cleanup صف durable با claim lease نیستند.
+cleanup Terminal همچنان خاموش است؛ BE-15 فهرست reference واقعی از جمله School/Support/Scheduled
+را مشترک کرده و اتصال/Retained مانع حذف است. تغییر سازوکار lease یا reset attempt در BE-23 مجاز نیست.
+
+آزمون‌های قبلی Realtime با ابزار `tools/production/test-realtime-release.ps1` در processهای تازه
+تکرار می‌شوند؛ نام/مدت/UTC/outcome و تمام TRXها حفظ می‌شوند. نبود بازتولید، root cause اثبات‌شده نیست.
+Full Regression بدون Probe موازی اجرا می‌شود. آزمون محلی معادل recycle/reboot IIS یا exactly-once
+شبکه نیست؛ Collector و alert delivery همچنان پذیرش واقعی می‌خواهند.
+
 ## افزودهٔ Realtime و رزرو تجاری — ۲۰۲۶-۱۰-۳۰
 
 شاخهٔ platform.realtime-invalidation.v1 در Outbox عمومی، ارسال شبکه را خارج transaction و با token/lease معتبر قبل و بعد انجام می‌دهد؛ crash پس از ارسال ممکن است همان EventId را تکرار کند. replay حساب از Outbox عمومی و Messaging/ChangeEvents موجود می‌خواند؛ worker یا جدول موازی تازه ندارد. StreamVersion با claim/retry تغییر می‌کند و dedup بر EventId است. پردازش‌شدن Outbox رسید همهٔ مرورگرها نیست. [Runbook اختصاصی](REALTIME_RUNBOOK_FA.md).

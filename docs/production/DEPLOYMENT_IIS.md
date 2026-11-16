@@ -1,5 +1,29 @@
 # استقرار MakanApp روی IIS
 
+## BE-23 — قرارداد انتشار جاری
+
+مبنای این مرحله `00bd8a9` روی feature/product-v6-backend-alignment است؛۷۵ Migration تا
+`20261114183321_ExtendProductNotificationCoverage` وجود دارد. تاریخچهٔ زیر نگه داشته شده است؛
+بسته‌ها و Hash جاری از [Manifest BE-23](../product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md) و
+نتیجهٔ پذیرش محلی از [گزارش عملیات](../product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) خوانده شوند.
+این مأموریت هیچ Deploy، restart IIS یا migration دیتابیس عادی/سرور انجام نمی‌دهد.
+
+TestIis محیط Test و OTP=false/true؛ ProductionIis محیط Production و OTP=true/false دارد.
+کانفیگ محیط مقابل، Development، Source/Test assembly و symbol توسعه نباید وارد ZIP شوند.
+فایل‌های واقعی خصوصی خالی یا با example جایگزین نمی‌شوند؛ بستهٔ حاوی credential محرمانه است.
+Databaseهای MakanApp_Test/MakanApp و Storageهای Test/Production جدا باقی بمانند.
+
+قبل از جایگزینی، publish فعلی، config خصوصی، SQL، Storage، Identity key و Ring/protector context
+را backup کنید. traffic/AppPool را در window مجاز متوقف، خروج process قبلی را تأیید و سپس
+فایل برنامه را جایگزین کنید؛ Storage و Ring خارج از publish هستند و overwrite/delete نمی‌شوند.
+Migration با principal جدا اجرا/بررسی، سپس AppPool شروع و live/ready و Smoke مجاز سنجیده شوند.
+App rollback به معنی Down migration نیست و artifact محلی قبلی، خودبه‌خود نسخهٔ مستقر سرور نیست.
+
+Data Protection استاندارد برای AddressBook و cursor فعال است؛ مسیر/ACL/profile/identity و
+ApplicationName/discriminator قبلی حفظ شوند. فقط جابه‌جایی XML، بازیابی بین ماشین/identity متفاوت
+را تضمین نمی‌کند. physical/content-root path جدید را بدون rehearsal به دادهٔ قبلی متصل نکنید.
+setting حذف‌شدهٔ MFA بازنمی‌گردد. custody واقعی Ring/Storage فعلاً OPERATIONAL_VALIDATION_PENDING است.
+
 ## مبنای جاری Realtime، اشتراک و پیوست پاسخ — ۲۰۲۶-۱۰-۳۰
 
 مبنای کد `main@e11d4ec`، 365 عملیات HTTP، 608 schema، 113 جدول و55 migration است؛ آخرین `20261030060025_AddExamAnswerAttachments`. سه migration پس از CompleteSchoolManagement به‌ترتیب AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments هستند. اولی مالکیت/دوره/رزرو و PersonalClass، دومی اتصال Export به رزرو و سومی policy سؤال و AnswerRevisionAttachments را می‌افزاید. از SQL export تازه و history واقعی مقصد استفاده کنید؛ بستهٔ قدیمی خودکار schema/binary جدید ندارد. در این بازبینی Publish/Deploy یا migration سرور اجرا نشده است.
