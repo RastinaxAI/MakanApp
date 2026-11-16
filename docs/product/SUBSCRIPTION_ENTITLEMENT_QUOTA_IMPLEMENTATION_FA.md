@@ -1,5 +1,10 @@
 # اشتراک، حق استفاده و سهمیه — پیاده‌سازی و قرارداد Backend
 
+> این سند بنیاد تاریخی۲۰۲۶-۱۰-۲۹ است. قرارداد جاری SourceCount و meterهای فایل، Availability و
+> مالکیت در [Handoff BE-17](../product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md) و
+> [گزارش Validation](../product-v6/COMMERCE_BE17_DEVELOPER_REPORT_FA.md) آمده است؛ placeholderهای
+> meter ناموجود در متن تاریخی، وضعیت جاری Quote/Summary نیستند.
+
 تاریخ: ۲۰۲۶/۱۰/۲۹
 
 وضعیت: پیاده‌سازی، regression کامل و تکرار نهایی Build/Test اصلاح Legacy مطابق تصمیم صریح مالک محصول موفق‌اند. فروش پلن پولی همچنان به تعیین مقادیر و شرایط Product و راه‌اندازی درگاه نیاز دارد؛ استقرار در این درخواست انجام نشده است.

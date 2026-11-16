@@ -17,6 +17,14 @@
 | V6-D16 | فیلدهای حقوقی و دسته‌بندی دقیق‌تر مدارک آموزشگاه | `PRODUCT_DECISION_REQUIRED` برای گسترش بعدی | حداقل فعلی حقوقی با License/OrganizationDocument و مدرس با Degree، سابقه و نمونه‌کار اجرا می‌شود؛ کد ملی/ثبت/مالیات یا زیرنوع مدرک الزامی حدس زده نشود. |
 | V6-D18 | Correction/Reopen پرونده بعد از Approved/Rejected/Cancelled | `PRODUCT_DECISION_REQUIRED` | فرم و شرایط تاریخی درجا mutate نشوند؛ چرخهٔ تازهٔ تأیید یا restore اختراع نشود. |
 
+## BE-17 — سیاست جاری و D05 باز
+
+BE-17 سیاست جاری مالکیت Individual/Organization را نهایی می‌کند؛ D05 همچنان
+PRODUCT_DECISION_REQUIRED است و Family/Shared Subscription یا pooling ساخته نمی‌شود.
+آزمون والد و دو فرزند جدایی Subscription/Usage/Order/Payment را می‌سنجد؛ پایان GuardianRelation
+مالکیت مالی را منتقل نمی‌کند. شمار تصمیم‌های باز همان۱۲ است. مرجع:
+[ماتریس Commerce](COMMERCE_PRODUCT_MATRIX_FA.md) و [گزارش BE-17](COMMERCE_BE17_DEVELOPER_REPORT_FA.md).
+
 ## مواردی که باز نیستند
 
 - V6-D01 با پرامپت School Establishment مورخ `2026-11-13` بسته شد: فیلد/مدرک لازم هر دو نوع و دو ظرفیت نامنفی مشخص‌اند؛ Submit واقعی، NeedsChanges/resubmit، لغو و History فعال‌اند. الزامات جزئی در [Handoff آموزشگاه](SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است.

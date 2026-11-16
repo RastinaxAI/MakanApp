@@ -8,6 +8,11 @@
 [Manifest بسته‌های Test/Production، SQL و rollback](docs/product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md).
 Publish محلی با Deploy و پذیرش Production یکی نیست؛ مقادیر خصوصی محیط‌ها و فایل‌های ناتمام AI محفوظ‌اند.
 
+قرارداد جاری BE-17: [Frontend/Admin Commerce](docs/product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md)،
+[ماتریس مالک/پرداخت‌کننده/سهمیه](docs/product-v6/COMMERCE_PRODUCT_MATRIX_FA.md) و
+[گزارش توسعه‌دهنده و Validation](docs/product-v6/COMMERCE_BE17_DEVELOPER_REPORT_FA.md).
+Individual فقط متعلق به همان User است؛ رابطهٔ Guardian اشتراک یا سهمیهٔ مشترک ایجاد نمی‌کند.
+
 مسیر مطالعهٔ BE-15: [قرارداد فایل و منبع آموزشی](docs/product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md)، [ماتریس اتصال و مجوز جاری](docs/product-v6/FILES_LIBRARY_ACCESS_MATRIX_FA.md) و [گزارش توسعه‌دهنده و Validation](docs/product-v6/FILES_LIBRARY_DEVELOPER_REPORT_FA.md). شناسهٔ فایل مجوز دائمی دانلود نیست؛ Hidden برای خوانندهٔ عادی پنهان است و دانلود/AI عمومی Library و تأیید رسانهٔ ReviewRequired همچنان فعال نشده‌اند.
 
 مسیر مطالعهٔ BE-16: [قرارداد Notification و Deep Link](docs/product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [ماتریس رویداد و مجوز](docs/product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md)، [Runbook کانال‌های بیرونی](docs/operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) و [گزارش توسعه‌دهنده و نتیجهٔ واقعی Validation](docs/product-v6/NOTIFICATION_DEVELOPER_REPORT_FA.md). دریافت زندهٔ WebPush/FCM جدا از موفقیت implementation است؛ OTP ملی‌پیامک تغییر نکرده است.
