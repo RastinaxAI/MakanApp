@@ -1,5 +1,189 @@
 # آمادگی Runtime محیط Test و گزارش توسعه‌دهنده
 
+## بازپذیرش AI/Knowledge محیط Test — 2026-11-18
+
+مبنای این بازپذیرش `f20cfcbbf381d1adde1ad1a9d3471ea9d064088e` روی
+`feature/product-v6-backend-alignment` است؛ HEAD و Remote پس از Fetch برابر بودند. بخش‌های
+پایین‌تر، گزارش مرحلهٔ قبلی از `f704a5c` را حفظ می‌کنند؛ شمارش این اجرا جدا ثبت می‌شود.
+
+### ۱. خلاصهٔ مرحله
+
+هدف، تأیید دوبارهٔ Runtime واقعی Test بدون تغییر Zibal یا Production است. تنظیم خصوصی Test
+از قبل صحیح بود؛ هیچ مقدار یا فلگی در آن بازنویسی نشد. Personal Chat و زنجیرهٔ Knowledge با
+Backend محلی، SQL/Storage ایزوله و adapter واقعی به سرویس مستقر دوباره موفق شدند.
+
+### ۲. معماری
+
+Domain/Application/Infrastructure/Api و ابزارها تغییر نکردند. ابزارهای موجود HTTP واقعی
+Controller/Application را با SQL Server موقت و client واقعی AI/Knowledge اجرا می‌کنند.
+وابستگی ابزار تست به fixture Integration وارد لایه‌های Onion محصول نشده است.
+
+### ۳. فایل‌های ایجادشده
+
+فایل جدیدی برای محصول یا تست ایجاد نشد. شواهد اجرا و Backup خصوصی در
+`.artifacts/test-ai-knowledge-20261118-f20cfcb` نگه‌داری می‌شوند و وارد Git نمی‌شوند.
+
+### ۴. فایل‌های تغییرکرده
+
+فقط همین سند و `docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md` با شاهد تازه به‌روز می‌شوند.
+هر۱۲ فایل محافظت‌شده و نسخهٔ Backup آن‌ها hash یکسان دارند؛ این بار حتی private Test و
+config عمومی نیز تغییر نکردند. Production، ملی‌پیامک و سه فایل unfinished AI محفوظ‌اند.
+
+### ۵. جریان اجرا
+
+Personal: `AiController` → `AiChatService` → `PersonalAiChatIntent` / `AiInvocationExecutor`
+→ `AiServiceClient` → AI → validation پاسخ → SQL UsageLedger → HTTP200.
+Knowledge: `KnowledgeIntegrationController` → `KnowledgeIntegrationService` /
+`KnowledgeAuthorizationService` → `AiKnowledgeClient` → AI → کنترل Source/Version و
+دفتر مصرف → پاسخ موجود. Backend session به AI ارسال نمی‌شود.
+
+### ۶. دیتابیس
+
+Migration، جدول، ستون، Index یا Constraint جدیدی ایجاد نشد. دیتابیس‌های عادی `MakanApp` و
+`MakanApp_Test` و دیتابیس سرور تغییر نکردند؛ Migrationهای موجود فقط روی دیتابیس disposable
+fixture اجرا شدند. منابع SQL/Storage موقت و فقط منبع QA ساخته‌شدهٔ همین پذیرش پاک‌سازی شدند.
+
+### ۷. Endpointها و پذیرش واقعی
+
+Endpoint جدیدی ساخته نشد؛ قراردادهای بخش۷ گزارش قبلی reuse شدند. در اجرای تازه:
+
+| بررسی | نتیجه |
+|---|---|
+| upstream `/api/v1/health` / `/api/v1/ready` |200 /200؛ TLS معتبر بدون bypass و redirect |
+| Personal `POST /api/v1/ai/chat` | Backend200 / AI200؛ modelAlias=`education-fast`؛ elapsed3281.6ms |
+| قرارداد پاسخ Personal | RequestId و CorrelationId منطبق، Answer غیرخالی و Language مطابق validator موجود Backend؛ محتوا در گزارش ذخیره نشد |
+| scope شخصی | role=`Personal`؛ چهار selector سازمان/مدرسه/کلاس/دانشجو تهی؛ نقش آموزشی جعلی0 |
+| مصرف Personal | reservation1، consumption1، reserve ledger1، AI call1؛ replay409 و مصرف دوم0 |
+| Startup میزبان `Test` | live200 / ready200؛ SQL/Storage ایزوله؛ درگاه غیرفعال |
+| Knowledge Ingest / Status |202 /200 و `Ready` با poll/timeout موجود |
+| Retrieve / RAG |200 /200؛ فقط SourceId/Version مجاز، grounding معتبر |
+| Knowledge usage / replay | consumed1 و RAG call1؛ replay409 |
+| حساب دیگر / cleanup |404 پیش از upstream؛ cleanup200 /`Deleted` فقط QA تازه؛ منابع قدیمی دست‌نخورده |
+
+Personal از fixture موجود `Testing` و Knowledge با private Test واقعی در میزبان صریح `Test`
+اجرا شدند. این شاهد از رایانهٔ توسعه به AI مستقر است؛ پذیرش IIS یا Windows Backend مقصد نیست.
+
+### ۸. مفاهیم فنی
+
+Availability دانش به فعال‌بودن هر دو Runtime وابسته است. Service Authentication دو سرویس
+همچنان disabled است؛ CurrentKey/CurrentKeyId مقداردهی نشدند و Service JWT، Bearer Service
+Token یا Authorization upstream فعال نشد. timeout35s و حدود content/response/poll ثابت‌اند.
+RequestId/CorrelationId برای پیگیری کافی‌اند؛ درخواست/پاسخ خصوصی و credential ثبت نمی‌شوند.
+
+### ۹. تصمیم طراحی
+
+تنظیم درست موجود حفظ شد و از Probe/fixture/testهای موجود استفاده شد؛ راهکار موازی و تست
+تکراری ساخته نشد. Zibal مطابق تصمیم مالک `Unavailable` ماند؛ Frontend Test هنوز ClientReturnUrl
+واقعی ندارد. Callback شناخته‌شدهٔ Backend جای URL کلاینت فرض نشده و تنظیم درگاه تغییر نکرد.
+
+### ۱۰. تست‌ها
+
+تست تازه یا تغییر Assertion لازم نبود. `PersonalAiInvocationTests.IntentCannotSmuggleSchoolOrStudentScope`
+هر چهار selector غیرتهی را رد می‌کند؛ `PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector`
+مرز هویت/نشست/عضویت/نقش را می‌سنجد. خطای جاری `AI_CONTEXT_NOT_ALLOWED` قبل از upstream است.
+
+`AiV1ControlledTransportTests` قراردادهای Student/Teacher/Parent/Manager را با HTTP/serializer
+واقعی و transport کنترل‌شده بررسی می‌کند؛ این Regression پذیرش زندهٔ نقش‌های سازمانی نیست.
+`AiV1CommerceEndpointsTests` مالک Individual/Organization، revoke و exactly-once را می‌سنجد.
+
+`KnowledgeForeignSourceIsConcealedBeforeHttpPinAndQuota` و
+`KnowledgeCrossOrganizationAndEndedTeacherAssignmentNeverExpandScope` از دسترسی حساب/سازمان
+دیگر جلوگیری می‌کنند. `KnowledgeRevocationDuringRetrievalConcealsReturnedPrivateEvidence`
+revoke حین پاسخ را می‌سنجد؛ `PersonalKnowledgeCurrentSourceAndAccountStateAreRecheckedBeforeOutbound`
+Archive/تعلیق را پیش از RAG رد می‌کند. `AiSourcesOperationConflictAndVersionPinningSurviveNewPublishedRevision`
+منبع Archived را در Chat رد می‌کند. هر۱۵ متد پذیرشِ لازم، شامل caseهای Theory، در TRX کامل
+اجرای متمرکز پیدا و Passed بودنشان تأیید شدند.
+
+### ۱۱. Validation
+
+| بررسی | نتیجهٔ این اجرا |
+|---|---|
+| Clean / Restore / Release Build |PASS /PASS /PASS؛ Warning0، Error0 |
+| Build هر دو Probe |PASS؛ بدون Warning/Error |
+| Real Personal / Knowledge |PASS /PASS؛ هرکدام یک اجرای کنترل‌شده |
+| Focused |1547 PASS؛695 Unit +845 Integration +7 Architecture؛ Failed/Skipped=0 |
+| Full regression |3461 PASS؛1377 Unit +2070 Integration +14 Architecture؛ Failed/Skipped=0 |
+| Final Release Build |PASS؛ Warning0، Error0 |
+| Final regression |3461 PASS؛1377 Unit +2070 Integration +14 Architecture؛ Failed/Skipped=0 |
+| EF pending model changes / Migration جدید |NO /0 |
+| Production AI / Knowledge configuration |UNCHANGED /UNCHANGED |
+| Zibal configuration / Provider |BLOCKED_CONFIGURATION /Unavailable؛ بدون تغییر |
+
+شمارش مرحلهٔ قبلی جای نتیجهٔ جدید قرار نگرفت. سه TRX کامل هر دور با SAX به‌صورت stream خوانده
+شدند؛ caseها، counters، SHA-256 و receipt خروج۱۲ فرمان با هم تطبیق یافتند. هر۱۵ متد پذیرش
+لازم در Focused و هر دو دور کامل Passed بودند. تمام۱۸۲۵ فایل tracked مبنا، به‌جز دو سند همین
+مرحله، hash اولیه دارند؛ هر۱۲ فایل محافظت‌شده و Backup آن‌ها نیز byte-for-byte یکسان‌اند.
+Store Billing، Push Runtime و PersonalClass Assignment/Exam همچنان Deferred و AccountDeletion
+execution خاموش‌اند. تست تازه، تغییر کد، تغییر config یا Migration جدید این مرحله0 است.
+
+```text
+TEST_AI_RUNTIME=PASS
+TEST_KNOWLEDGE_RUNTIME=PASS
+AI_SERVICE_AUTH=DISABLED
+KNOWLEDGE_SERVICE_AUTH=DISABLED
+PRODUCTION_AI_CONFIG=UNCHANGED
+PRODUCTION_KNOWLEDGE_CONFIG=UNCHANGED
+TEST_PAYMENTS_PROVIDER=Unavailable
+TEST_ZIBAL_CONFIGURATION=BLOCKED_CONFIGURATION
+CURRENT_RELEASE_CODE_GAPS=0
+CURRENT_RELEASE_CONFIGURATION_BLOCKERS=1
+CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY
+USER_INPUT_REQUIRED=Payments:Zibal:ClientReturnUrl
+```
+
+| حوزهٔ الزامی اجرای متمرکز | case موفق |
+|---|---:|
+| AI |404 |
+| Personal AI |46 |
+| Organization AI |93 |
+| Usage/Quota |70 |
+| Knowledge |140 |
+| Files/Sources |205 |
+| Configuration |121 |
+
+یک case ممکن است در چند حوزه باشد؛ جمع سطرها Total نیست. این شمارش از TRX و نگاشت متد/فایل
+Source استخراج شده است؛ تعداد مستقل برای هر Role یا اجرای زندهٔ سازمانی ادعا نمی‌شود.
+
+### ۱۲. Git
+
+فقط دو سند مرتبط باید stage شوند؛ private config، evidence و فایل‌های ناتمام AI خارج از
+Commit هستند. پیام مقرر `docs(operations): verify test ai and knowledge runtime` است؛ branch و
+upstream همان `feature/product-v6-backend-alignment` / `origin/feature/product-v6-backend-alignment`
+و remote=`origin` هستند. SHA، Push و remote verification پس از validation در گزارش نهایی
+ثبت می‌شوند؛ خود Commit نمی‌تواند SHA خودش را در فایل داخل Commit ثبت کند.
+
+### ۱۳. محدودیت‌ها
+
+زیبال تنها Configuration blocker Test است. سه پذیرش مقصد یعنی Smoke نسخهٔ نصب‌شده، اتصال
+از خود Backend مقصد به AI/Knowledge و Callback واقعی Test هنوز مستقل‌اند. Production تغییر
+نکرده و Deploy، Publish، main merge، Full-12 و پرداخت مالی در این Task اجرا نمی‌شوند.
+
+### ۱۴. نکات آموزشی
+
+1. تنظیمی که از قبل صحیح است، برای اثبات کارکرد نیاز به بازنویسی ندارد.
+2. پاسخ200 باید همراه با تطبیق قرارداد، scope، citations و دفتر مصرف بررسی شود.
+3. رد scope در Application پیش از شبکه نیز شاهد مؤثر حفاظت داده است؛ لایهٔ شاهد را روشن بنویسید.
+4. نقش سازمانی، scope داده و مالک مالی سه مفهوم جدا هستند.
+5. revoke حین retrieval نیز باید پاسخ خصوصی را پنهان کند؛ مجوز اولیه دائمی نیست.
+6. پذیرش زندهٔ محلی با پذیرش مسیر شبکه و IIS مقصد یکسان نیست.
+
+### ۱۵. مسیر مطالعه
+
+`AiController` → `AiChatService` → `PersonalAiChatIntent` → `AiInvocationExecutor` →
+`AiServiceClient.ValidateEnvelope/ValidateChatResponse` → `PersonalAiInvocationTests`؛ سپس
+`KnowledgeIntegrationController` → `KnowledgeIntegrationService` → `KnowledgeAuthorizationService`
+→ `AiKnowledgeClient` → `PersonalKnowledgeAcceptanceTests` / `KnowledgeIntegrationEndpointsTests`.
+ابزارهای موجود `LivePersonalAiScenario` و `TestRuntimeAcceptance` شاهد زنده را به این جریان متصل می‌کنند.
+
+### ۱۶. مرحلهٔ بعد
+
+AI/Knowledge نیازمند secret یا Service JWT جدید نیستند. تنها ورودی باقی‌ماندهٔ Test Payment
+نام `Payments:Zibal:ClientReturnUrl` است؛ مالک تأیید کرده Frontend Test هنوز آن را Deploy
+نکرده است. مقدار فرضی ساخته نمی‌شود و `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY`
+تا تکمیل و validation درگاه حفظ می‌شود. پس از آن، بسته/استقرار در Task صریح خودش انجام شود.
+
+---
+
 تاریخ `2026-11-17`؛ مبنا `f704a5c3a0a0c808335ce05f4c8f6863e04b2235`؛ شاخه
 `feature/product-v6-backend-alignment`. این گزارش پیگیری Configuration/Runtime پس از
 [Audit نهایی](../product-v6/FINAL_BE01_BE25_AUDIT_FA.md) است و Feature جدید محصول نیست.

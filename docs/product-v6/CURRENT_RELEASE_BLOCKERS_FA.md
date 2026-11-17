@@ -1,6 +1,7 @@
 # موانع و تصمیم آمادگی Release جاری
 
-تاریخ `2026-11-17`؛ پیگیری Runtime از Source پایه `f704a5c3a0a0c808335ce05f4c8f6863e04b2235`.
+به‌روزرسانی `2026-11-18`؛ بازپذیرش AI/Knowledge از Source پایه
+`f20cfcbbf381d1adde1ad1a9d3471ea9d064088e`؛ سابقهٔ پیگیری قبلی از `f704a5c` در گزارش محفوظ است.
 این سند وضعیت **قابل‌اثبات در مخزن اصلی و محیط اجرای محلی** را گزارش می‌کند؛ از نبود تنظیم
 محلی، دربارهٔ مقادیر واقعی سرور نتیجه‌گیری نمی‌کند. معیار محدوده در
 [Scope Freeze](CURRENT_RELEASE_SCOPE_FA.md) است؛ شواهد کد/تست در [Audit](FINAL_BE01_BE25_AUDIT_FA.md).
@@ -11,6 +12,17 @@
 |---|---|---|---|
 | CFG-01 | `BLOCKED_CONFIGURATION` | Test هنوز Provider=`Unavailable` دارد؛ چهار مقدار Merchant/Callback/ClientReturn/Allowlist در فایل خصوصی `MISSING` هستند | تنها ورودی نامعلوم `Payments:Zibal:ClientReturnUrl` است. Origin واقعی Backend Test در سند استقرار موجود است؛ Merchant تست و BaseUrl هم قرارداد صریح دارند. پس از دریافت URL واقعی کلاینت، مجموعهٔ تنظیمات درگاه باید یکجا کامل و `ZibalOptions.Validate("Test", true)` اجرا شود. مقدار ساختگی یا فعال‌سازی ناقص انجام نشد. |
 | CFG-02 | `CLOSED_LOCAL_TEST_RUNTIME` | هر دو Runtime در private Test فعال‌اند؛ BaseUrlها `CONFIGURED`؛ Personal Chat، Ingest/Ready/Retrieve/RAG واقعی موفق | هر دو Service Auth خاموش، timeout برابر35s و حدود پردازش ثابت‌اند. Startup در Environment=`Test` و Health/Ready در میزبان ایزوله200 شدند. این شاهد از Backend محلی به AI مستقر است؛ اتصال از IIS مقصد هنوز OP-02 است. |
+
+در بازپذیرش `2026-11-18`، Health/Ready مستقیم200، Personal Backend→AI200 با یک مصرف و
+replay409 و Knowledge Ingest/Ready/Retrieve/RAG دوباره موفق شدند؛ حساب دیگر404 گرفت و فقط
+QA تازه پاک‌سازی شد. هیچ فایل config تغییر نکرد. Focused برابر1547 PASS و هر دو Full/Final
+برابر3461 PASS با صفر Failed/Skipped و Warning/Error شدند. Scope rejection، نقش‌های سازمانی،
+Usage/Quota، ACL و Archive/Revoke با۱۵ متد پذیرش لازم در هر سه دور تأیید شدند؛
+`TEST_AI_RUNTIME=PASS` و `TEST_KNOWLEDGE_RUNTIME=PASS`. مرز دقیق شاهد و Backup/hash در
+[گزارش Runtime](../operations/TEST_RUNTIME_READINESS_FA.md) ثبت است.
+
+مالک صریحاً تأیید کرده ClientReturnUrl واقعی Frontend Test هنوز مشخص/Deploy نشده است؛ CFG-01
+عمداً باز می‌ماند. Callback شناخته‌شدهٔ Backend جای مقصد کلاینت نیست و Zibal در این Task تغییر نمی‌کند.
 
 تعداد مانع Configuration لازم برای Test Deploy اکنون **1** است؛ فیلدهای ناقص یک درگاه، چهار
 مانع جدا شمرده نمی‌شوند. نبود تنظیم Production در این شمارش وارد نمی‌شود. جزئیات اجرا،
