@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MakanApp.Application.Realtime;
+using MakanApp.Application.Organization;
 
 namespace MakanApp.Application.Messaging;
 
@@ -12,6 +13,9 @@ public sealed record AccountInboxPageResult(IReadOnlyList<ConversationSummaryRes
 
 public interface IAccountInboxStore
 {
+    Task<AccessContext?> ResolveReadContextAsync(Guid userId, Guid sessionId,
+        Guid conversationId, CancellationToken ct);
+
     Task<ConversationSummaryStoreRecord?> ReadConversationSummaryAsync(Guid userId,
         Guid conversationId, CancellationToken ct);
 
@@ -26,13 +30,23 @@ public sealed class AccountInboxService(IAccountInboxStore store, MessagingOpera
     private sealed record Cursor(string View, Guid UserId, Guid SessionId, string Filter,
         AccountInboxPosition Position, DateTime ExpiresAtUtc);
 
+    public async Task<AccessContext> ResolveReadContextAsync(Guid userId, Guid sessionId,
+        Guid conversationId, CancellationToken ct)
+    {
+        await contexts.PersonalAsync(userId, sessionId, ct);
+        // بافت خواندن از عضویت جاری همان گفتگو می‌آید؛ Workspace نشست و مجوز نوشتن تغییر نمی‌کنند.
+        var context = await store.ResolveReadContextAsync(userId, sessionId, conversationId, ct);
+        await contexts.PersonalAsync(userId, sessionId, ct);
+        return context ?? throw SummaryNotFound();
+    }
+
     public async Task<ConversationSummaryResult> ReadSummaryAsync(Guid userId, Guid sessionId,
         Guid conversationId, CancellationToken ct)
     {
         await contexts.PersonalAsync(userId, sessionId, ct);
         if (conversationId == Guid.Empty)
             throw SummaryNotFound();
-        // مجوز همان صندوق حساب است؛ این خواندن، بافت نشست یا مجوز محتوای کامل را تغییر نمی‌دهد.
+        // این مسیر فقط Summary می‌دهد و بافت انتخاب‌شدهٔ نشست را تغییر نمی‌دهد.
         var record = await store.ReadConversationSummaryAsync(userId, conversationId, ct);
         await contexts.PersonalAsync(userId, sessionId, ct);
         return record is null ? throw SummaryNotFound() : ConversationSummaryMapping.Map(record, clock.GetUtcNow().UtcDateTime);

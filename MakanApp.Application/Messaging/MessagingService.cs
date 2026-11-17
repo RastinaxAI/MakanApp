@@ -118,7 +118,7 @@ public sealed class MessagingService(
         ValidateConversationId(conversationId);
         var limit = ValidatePage(query.BeforeSequence, query.Limit);
         if (query.TopicId == Guid.Empty) throw Error(MessagingErrorCodes.TopicInvalid, "شناسه موضوع معتبر نیست.");
-        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
+        var context = await accountInbox.ResolveReadContextAsync(userId, sessionId, conversationId, cancellationToken);
         var page = await store.GetConversationMessagesAsync(
             userId,
             conversationId,
@@ -580,7 +580,7 @@ public sealed class MessagingService(
                 $"تعداد تغییرات هر صفحه باید بین 1 و {options.MaximumChangeLimit} باشد.");
         }
 
-        var context = await ResolveConversationContextAsync(userId, sessionId, conversationId, cancellationToken);
+        var context = await accountInbox.ResolveReadContextAsync(userId, sessionId, conversationId, cancellationToken);
         var page = await store.GetConversationChangesAsync(
             userId,
             conversationId,

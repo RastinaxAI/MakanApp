@@ -70,6 +70,8 @@ public sealed partial class MessagingEndpointsTests
         }
         else await factory.EndRoleAssignmentAsync(teacher.RoleAssignmentId);
         Assert.Empty(await resolver.GetActiveSessionIdsAsync(notification, member.UserId, now, default).ToTestArrayAsync());
-        Assert.Equal(HttpStatusCode.Forbidden, (await memberClient.GetAsync($"/api/v1/conversations/{conversation.ConversationId}/messages")).StatusCode);
+        using var history = await memberClient.GetAsync($"/api/v1/conversations/{conversation.ConversationId}/messages");
+        Assert.Equal(HttpStatusCode.NotFound, history.StatusCode);
+        Assert.Equal(MessagingErrorCodes.ConversationNotFound, await ReadProblemCodeAsync(history));
     }
 }

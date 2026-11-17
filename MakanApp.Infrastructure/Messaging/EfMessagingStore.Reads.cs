@@ -10,6 +10,10 @@ public sealed partial class EfMessagingStore : IAccountInboxStore
 {
     private const int LastMessagePreviewLength = 120;
 
+    public Task<AccessContext?> ResolveReadContextAsync(Guid userId, Guid sessionId,
+        Guid conversationId, CancellationToken ct) =>
+        AccountInboxAccessQuery.ResolveReadContextAsync(dbContext, userId, sessionId, conversationId, ct);
+
     public async Task<ConversationSummaryStoreRecord?> ReadConversationSummaryAsync(Guid userId,
         Guid conversationId, CancellationToken ct) =>
         (await ReadConversationsAsync(userId,

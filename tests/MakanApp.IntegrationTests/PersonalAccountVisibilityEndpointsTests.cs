@@ -66,7 +66,7 @@ public sealed partial class MessagingEndpointsTests
     }
 
     [Fact]
-    public async Task PersonalProjectionCannotAuthorizeAnOrganizationConversationFromAnotherContext()
+    public async Task AccountHistoryUsesActualOrganizationGrantWithoutBroadeningSelectedContextWrites()
     {
         using var actorClient = factory.CreateClient(); using var peerClient = factory.CreateClient();
         var actor = await CreateMessagingUserAsync(actorClient); var peer = await CreateMessagingUserAsync(peerClient);
@@ -76,11 +76,15 @@ public sealed partial class MessagingEndpointsTests
         await factory.CreateMembershipAsync(peer.UserId, orgB, OrganizationRole.Teacher);
         await SelectOrganizationAsync(actorClient, managerB.MembershipId, OrganizationRole.Manager);
         var chatB = await StartDirectAndReadAsync(actorClient, peer.UserId, ConversationScope.Organization);
+        var sent = await SendMessageAndReadAsync(actorClient, chatB.ConversationId, Guid.NewGuid(), "پیام مجاز سازمان ب");
         await SelectOrganizationAsync(actorClient, managerA.MembershipId, OrganizationRole.Manager);
-        using var denied = await actorClient.GetAsync($"/api/v1/conversations/{chatB.ConversationId}/messages");
-        Assert.Equal(HttpStatusCode.NotFound, denied.StatusCode);
+        var history = (await actorClient.GetFromJsonAsync<ConversationMessagePageResult>($"/api/v1/conversations/{chatB.ConversationId}/messages", JsonOptions))!;
+        Assert.Contains(history.Messages, m => m.MessageId == sent.MessageId);
         using var deniedSend = await SendMessageAsync(actorClient, chatB.ConversationId, Guid.NewGuid(), "دسترسی بین‌سازمانی ممنوع");
         Assert.False(deniedSend.IsSuccessStatusCode);
         Assert.Equal(orgA, (await actorClient.GetFromJsonAsync<AccessContext>("/api/v1/workspaces/current", JsonOptions))!.OrganizationId);
+        await factory.EndMembershipAsync(managerB.MembershipId);
+        using var revoked = await actorClient.GetAsync($"/api/v1/conversations/{chatB.ConversationId}/messages");
+        Assert.Equal(HttpStatusCode.NotFound, revoked.StatusCode);
     }
 }

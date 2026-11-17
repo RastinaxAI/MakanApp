@@ -17,7 +17,7 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class MessagingEndpointsTests
 {
     [Fact]
-    public async Task AccountSummarySurvivesWorkspaceSwitchWithoutGrantingHistoryFileOrHubAccess()
+    public async Task AccountSummaryAndHistorySurviveWorkspaceSwitchWithoutGrantingWriteFileOrHubAccess()
     {
         using var scenario = await CreateOfficialScenarioAsync();
         var pair = (await scenario.Teacher.GetFromJsonAsync<OfficialSpacesPairResult>(
@@ -37,13 +37,13 @@ public sealed partial class MessagingEndpointsTests
         await AssertFullAccessAsync();
         await SelectPersonalAsync(scenario.Teacher);
         await AssertSummaryAsync();
-        await AssertFullAccessDeniedAsync();
+        await AssertScopedWriteFileAndHubDeniedAsync();
 
         var otherOrganization = await factory.CreateOrganizationAsync(NewOrganizationName());
         var otherMembership = await factory.CreateMembershipAsync(scenario.TeacherId, otherOrganization, OrganizationRole.Teacher);
         await SelectOrganizationAsync(scenario.Teacher, otherMembership.MembershipId, OrganizationRole.Teacher);
         await AssertSummaryAsync();
-        await AssertFullAccessDeniedAsync();
+        await AssertScopedWriteFileAndHubDeniedAsync();
 
         await SelectOrganizationAsync(scenario.Teacher, membershipId, OrganizationRole.Teacher);
         await AssertFullAccessAsync();
@@ -69,10 +69,16 @@ public sealed partial class MessagingEndpointsTests
             await hub.InvokeAsync("UnsubscribeConversation", id);
         }
 
-        async Task AssertFullAccessDeniedAsync()
+        async Task AssertScopedWriteFileAndHubDeniedAsync()
         {
-            foreach (var path in new[] { route, route + "/messages" })
-            { using var response = await scenario.Teacher.GetAsync(path); Assert.Equal(HttpStatusCode.NotFound, response.StatusCode); }
+            using (var history = await scenario.Teacher.GetAsync(route + "/messages"))
+                Assert.Equal(HttpStatusCode.OK, history.StatusCode);
+            using (var changes = await scenario.Teacher.GetAsync(route + "/changes"))
+                Assert.Equal(HttpStatusCode.OK, changes.StatusCode);
+            using (var detail = await scenario.Teacher.GetAsync(route))
+                Assert.Equal(HttpStatusCode.NotFound, detail.StatusCode);
+            using var send = await SendMessageAsync(scenario.Teacher, id, Guid.NewGuid(), "ارسال خارج بافت مجاز نیست");
+            Assert.Equal(HttpStatusCode.NotFound, send.StatusCode);
             // مالک فایلِ هنوز متصل‌نشده شناخته شده است؛ قرارداد فعلی اختلاف scope را 403 می‌دهد.
             using var deniedFile = await scenario.Teacher.GetAsync($"/api/v1/files/{file.Id}/content");
             Assert.Equal(HttpStatusCode.Forbidden, deniedFile.StatusCode);

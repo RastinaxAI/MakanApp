@@ -2,12 +2,58 @@ using MakanApp.Application.Identity;
 using MakanApp.Application.Messaging;
 using MakanApp.Application.Organization;
 using MakanApp.Application.Realtime;
+using MakanApp.Domain.Organization;
 using Xunit;
 
 namespace MakanApp.UnitTests.Messaging;
 
 public sealed class AccountInboxSummaryTests
 {
+    [Fact]
+    public async Task HistoryReadContextRejectsInactiveSessionBeforeLookup()
+    {
+        var store = new SummaryStore { SessionActive = false };
+        var error = await Assert.ThrowsAsync<IdentityException>(() => Service(store).ResolveReadContextAsync(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), default));
+        Assert.Equal(IdentityErrorCodes.AuthRequired, error.Code);
+        Assert.Equal(0, store.ContextReads);
+    }
+
+    [Fact]
+    public async Task HistoryReadContextConcealsMissingCurrentConversationGrant()
+    {
+        var store = new SummaryStore();
+        var error = await Assert.ThrowsAsync<MessagingException>(() => Service(store).ResolveReadContextAsync(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), default));
+        Assert.Equal(MessagingErrorCodes.ConversationNotFound, error.Code);
+        Assert.Equal(1, store.ContextReads);
+        Assert.Equal(2, store.SessionChecks);
+    }
+
+    [Fact]
+    public async Task HistoryReadContextUsesAuthoritativeConversationContextWithoutSelectingWorkspace()
+    {
+        var user = Guid.NewGuid(); var session = Guid.NewGuid();
+        var expected = new AccessContext(user, user, session, WorkspaceType.Organization,
+            Guid.NewGuid(), Guid.NewGuid(), OrganizationRole.Teacher, null);
+        var store = new SummaryStore { ReadContext = expected };
+        Assert.Same(expected, await Service(store).ResolveReadContextAsync(user, session, Guid.NewGuid(), default));
+        Assert.Equal(1, store.ContextReads);
+        Assert.Equal(2, store.SessionChecks);
+    }
+
+    [Fact]
+    public async Task HistoryReadContextRechecksSessionAfterLookup()
+    {
+        var user = Guid.NewGuid(); var session = Guid.NewGuid();
+        var store = new SummaryStore { RevokeDuringRead = true,
+            ReadContext = new(user, user, session, WorkspaceType.Personal, null, null, null, null) };
+        var error = await Assert.ThrowsAsync<IdentityException>(() => Service(store).ResolveReadContextAsync(
+            user, session, Guid.NewGuid(), default));
+        Assert.Equal(IdentityErrorCodes.AuthRequired, error.Code);
+        Assert.Equal(1, store.ContextReads);
+    }
+
     [Fact]
     public async Task SummaryRejectsInactiveSessionBeforeResourceLookup()
     {
@@ -61,6 +107,8 @@ public sealed class AccountInboxSummaryTests
     {
         public bool SessionActive { get; set; } = true;
         public bool RevokeDuringRead { get; init; }
+        public AccessContext? ReadContext { get; init; }
+        public int ContextReads { get; private set; }
         public int Reads { get; private set; }
         public int SessionChecks { get; private set; }
         public Task<ConversationSummaryStoreRecord?> ReadConversationSummaryAsync(Guid userId, Guid conversationId, CancellationToken ct)
@@ -71,6 +119,12 @@ public sealed class AccountInboxSummaryTests
         }
         public Task<bool> HasActiveAccountSessionAsync(Guid userId, Guid sessionId, DateTime nowUtc, CancellationToken ct)
         { SessionChecks++; return Task.FromResult(SessionActive); }
+        public Task<AccessContext?> ResolveReadContextAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct)
+        {
+            ContextReads++;
+            if (RevokeDuringRead) SessionActive = false;
+            return Task.FromResult(ReadContext);
+        }
         public Task<bool> IsPersonalParticipantAsync(Guid userId, Guid conversationId, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<ConversationSummaryStoreRecord>> ReadAccountInboxAsync(Guid userId,
             ConversationListFilter filter, string? search, int limit, AccountInboxPosition? position, CancellationToken ct) => throw new NotSupportedException();
