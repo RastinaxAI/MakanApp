@@ -4,6 +4,15 @@
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
 
+مرجع نهایی محدودهٔ Release جاری: [Audit همهٔ BE01–BE25](docs/product-v6/FINAL_BE01_BE25_AUDIT_FA.md)،
+[قابلیت‌های داخل محدوده و Deferred](docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md) و
+[موانع واقعی Configuration/Operations](docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md)، از
+Source نهایی MKN-BE-001=`14b0271a9d3aea840e23413dacae5300fc68ebed`.
+Store Billing، Push Runtime، iOS، Family و PersonalClass Assignment/Exam طبق تصمیم مالک
+Deferred هستند؛ Zibal داخل محدوده است. آمادگی کد از آماده‌بودن تنظیمات مقصد و Deploy جداست.
+در فایل‌های خصوصی قابل‌مشاهده، درگاه Unavailable و AI/Knowledge خاموش‌اند؛ این ممیزی آن‌ها
+را فعال نمی‌کند و هیچ Secret یا تنظیم سرور را تغییر نمی‌دهد.
+
 مسیر عملیات BE-23: [گزارش آمادگی محلی](docs/product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) و
 [Manifest بسته‌های Test/Production، SQL و rollback](docs/product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md).
 Publish محلی با Deploy و پذیرش Production یکی نیست؛ مقادیر خصوصی محیط‌ها و فایل‌های ناتمام AI محفوظ‌اند.
@@ -26,6 +35,15 @@ Home از صندوق account-wide خوانده می‌شود؛ مجوز History 
 قرارداد جاری حساب عادی در [Personal AI و Knowledge/RAG](docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) است: Assistant و Payer از Workspace مدرسه جدا هستند. Generic Personal Chat با Actor رسمی Personal و Scope تهی به همان رزرو/AI v1 متصل است؛ پذیرش واقعی Backend محلی→AI Production با200 و یک مصرف انجام شد. Knowledge و ACL موجود مستقل‌اند؛ Service Auth دو سرویس false و Runtime پیش‌فرض/Backend Deployment دست‌نخورده‌اند.
 
 ## وضعیت جاری Product v6
+
+ممیزی نهایی `2026-11-17` از `14b0271` در [گزارش BE01–BE25](docs/product-v6/FINAL_BE01_BE25_AUDIT_FA.md):
+**1369 Unit +2068 Integration +14 Architecture =3451 PASS** در هر دو دور کامل؛ صفر
+Failed/Skipped،117 Zibal موفق و Build بدون Warning/Error. کد/تست/config تغییر نکرد؛
+438 path،494 operation،783 schema،91 Controller،151 جدول و75 Migration، Pending=NO.
+محدودهٔ Release Freeze شده و Full Future Product جداست؛ تنظیمات قابل‌مشاهدهٔ درگاه و
+AI/Knowledge هنوز آمادهٔ فعال‌سازی پذیرش کامل نیستند. نتیجهٔ تنظیم‌شده
+`NOT_READY_FOR_TEST_DEPLOY` است؛ Scope/Blockers مرز آن را توضیح می‌دهند.
+اعداد و statusهای افزوده‌های مراحل پایین، تاریخچهٔ همان Commit/تاریخ‌اند.
 
 افزودهٔ BE-15 از مبنای `54d07d2`: **1348 Unit +2026 Integration +14 Architecture =3388 PASS**،
 صفر Failed/Skipped و117 تست Zibal موفق؛ Build نهایی صفر Warning/Error دارد. فهرست مشترک binding،

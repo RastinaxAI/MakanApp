@@ -1,5 +1,45 @@
 # ماتریس تطبیق Backend با Product v6
 
+## FINAL CURRENT STATUS
+
+ممیزی نهایی `2026-11-17` از Source واقعیِ نهایی MKN-BE-001:
+`14b0271a9d3aea840e23413dacae5300fc68ebed`، شاخهٔ `feature/product-v6-backend-alignment`.
+مرجع جاری همهٔ BE01–BE25، [Audit نهایی](FINAL_BE01_BE25_AUDIT_FA.md)،
+[Scope Freeze](CURRENT_RELEASE_SCOPE_FA.md) و [موانع تنظیم/عملیات](CURRENT_RELEASE_BLOCKERS_FA.md)
+هستند. ردیف‌های `MISSING/PARTIAL/FAIL` قدیمی پایین، تاریخچهٔ مبنای همان مرحله‌اند؛
+وجودشان شاهد وضعیت جاری Source نیست و حذف نشده‌اند.
+
+BE01/02/03/04/05/06/07/08/10/16/19/22 از نظر implementation جاری پذیرفته می‌شوند؛
+BE09/11/12/13/14/15/17/20/21 طبق سیاست فعلی پذیرفته‌اند؛ BE18 فقط Zibal در محدودهٔ Release
+است؛ BE23 آمادگی محلی دارد و BE25 مصوب Deferred است. MKN-BE-001 تاریخچهٔ SQL و Inbox حساب
+را با fresh login/device،75 پیام/4 صفحه، reconnect، role/workspace switch و ACL جاری می‌سنجد؛
+Send/Download/Hub به‌واسطهٔ اصلاح History مجوز گسترده نگرفته‌اند.
+
+```text
+BE12=PASS_CURRENT_POLICY
+BE18_STORE_BILLING=DEFERRED_CURRENT_RELEASE
+BE24_FULL_PRODUCT_ACCEPTANCE=DEFERRED_PRODUCT_SCOPE
+BE25=DEFERRED_APPROVED
+PRODUCTION_PUSH_RUNTIME=DEFERRED_CURRENT_RELEASE
+LIBRARY_PUBLIC_DOWNLOAD=PRODUCT_POLICY_DISABLED
+LIBRARY_AI=PRODUCT_POLICY_DISABLED
+```
+
+Current Release Acceptance از Full Future Product جداست. در تنظیمات قابل‌مشاهدهٔ فعلی،
+Zibal انتخاب/کامل نشده و Runtime AI/Knowledge خاموش است؛ این دو CFG-01/02 هستند و نتیجهٔ
+نسخهٔ تنظیم‌شده `NOT_READY_FOR_TEST_DEPLOY` است، حتی وقتی کد/Regression سبز باشد.
+School sales و اجرای حذف Production پیش‌نیازهای مستقل و مشروط خود را دارند؛ Store Billing،
+Push واقعی، iOS، Family/Pooling، آموزش PersonalClass و Library policy-disabled شکست این
+Release شمرده نمی‌شوند.12 تصمیم باز و مرز current/future در Audit ثبت می‌شوند.
+هیچ config خصوصی، source، migration یا فایل unfinished AI در این ممیزی تغییر نکرد؛
+main و Deploy اجرا نشدند. Clean/Restore و هر دو Release Build موفق، صفر Warning/Error؛
+دو Full Regression، هرکدام1369 Unit +2068 Integration +14 Architecture =3451 PASS،
+صفر Failed/Skipped و117 Zibal موفق دارند. Realtime timeout/failure تازه0 مشاهده شد؛ علت
+تاریخی همچنان اثبات نشده است. Snapshot تازه438 path /494 operation /783 schema /91 Controller،
+151 جدول و75 Migration دارد؛ Pending Model Changes=NO. جزئیات شواهد و Git در Audit است.
+
+---
+
 > نتیجهٔ جاری BE-15 در [گزارش توسعه‌دهنده](FILES_LIBRARY_DEVELOPER_REPORT_FA.md) و
 > [ماتریس فایل/منبع](FILES_LIBRARY_ACCESS_MATRIX_FA.md) ثبت می‌شود؛ ردیف تاریخی BE-15 پایین
 > به Audit همان مبنا مربوط است. Library policy-disabled با نقص implementation یکسان نیست.
