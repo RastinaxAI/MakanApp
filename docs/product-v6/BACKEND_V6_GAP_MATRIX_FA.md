@@ -440,3 +440,27 @@ D15/D16 گسترش‌های بعدی مدرسه و D18 اصلاح/بازگشای
 Clean/Restore و Build نهایی موفق با0 Warning/0 Error؛ دو دور کامل پس از اصلاح و نهایی هرکدام1346 Unit +2018 Integration +14 Architecture =3378 PASS، صفر Failed/Skipped؛ هر117 تست Zibal موفق‌اند. دور کامل اول چهار fixture نامعتبر Recovery داشت که بدون تغییر assertion/timeout، با منبع آموزشی واقعی اصلاح شدند؛ هیچ Realtime timeout در این Task مشاهده نشد. جزئیات/زمان/TRX در گزارش مرحله محفوظ است.
 
 Migration واقعی `20261114183321_ExtendProductNotificationCoverage` فقط دو CHECK موجود را گسترش می‌دهد؛ Fresh/Upgrade، حفظ receipt قدیمی و Down guard برای receipt/envelope جدید روی LocalDB GUID موقت پاس‌اند. روی `MakanApp`، `MakanApp_Test` یا سرور اجرا نشد. مدل EF معلق نیست. Snapshot کد438 path،494 operation،783 schema،151 جدول و75 Migration دارد؛ main merge و Deployment انجام نشده‌اند. تنظیمات خصوصی، Storage، سه فایل dirty قبلی AI و کد/تنظیم ملی‌پیامک حفظ شدند.
+
+## MKN-BE-001 — بازبینی تاریخچهٔ حساب، ۲۰۲۶/۱۱/۱۷
+
+مبنا `b76e960`؛ مشکل مشخص `BACKEND_CONTEXT_AUTHORIZATION_BUG` بازتولید شد: Inbox مجاز
+سازمان الف در Workspace ب دیده می‌شد، ولی GET History با404 رد می‌شد. persistence/paging
+بازنویسی نشد؛ History و Delta اکنون همان AccountInboxAccessQuery فعلی را از port موجود reuse
+می‌کنند. Send/Management/File/Hub قرارداد مجوز قبلی را دارند؛ مجوز لغوشده یا منبع رسمی نامعتبر
+برای خواندن آینده404 می‌دهد. Personal Direct/Group/Channel/Saved مستقل از نقش مدرسه باقی می‌مانند.
+
+Regression متمرکز جاری224 Unit و681 Integration موفق، صفر Failed/Skipped؛ مجموعهٔ Architecture
+در فیلتر Messaging انتخاب نمی‌شود و نتیجهٔ کامل آن جدا در گزارش ثبت می‌شود. ارزیابی نهایی BE12
+و دو دور Full در [گزارش پذیرش](MESSENGER_HISTORY_FIX_REPORT_FA.md) ثبت می‌شوند.
+Migration/repair دیتابیس صفر است؛ main merge/Deployment و BE24 از این مرحله نتیجه نمی‌شوند.
+[قرارداد Frontend](MESSENGER_HISTORY_FRONTEND_HANDOFF_FA.md) مسیر account inbox را از فهرست scoped
+و invalidation را از History جدا می‌کند؛ وجود bug در UI بدون بررسی Frontend ادعا نشده است.
+
+نتیجهٔ نهایی MKN-BE-001: `MKN_BE_001=PASS` و `BE12_ACCOUNT_MESSAGING=PASS_CURRENT_POLICY`.
+دو دور کامل هرکدام1369 Unit +2068 Integration +14 Architecture =3451 PASS، صفر Failed/Skipped؛
+Final Build با0 Warning/0 Error و هر117 تست Zibal موفق است. دور نهاییِ متوقف‌شده هنگام
+تکمیل assertionهای SQL، NOT_COMPLETED است و در این دو نتیجه شمرده نمی‌شود؛7 سناریوی SQL
+تکمیلی نیز موفق‌اند. Realtime timeout/Lookup failure در دو دور کامل مشاهده نشد؛ علت ناپایداری
+تاریخی BE-15 با این نتیجه حل‌شده فرض نمی‌شود. `BE24_FULL_ACCEPTANCE=FAIL`، main merge و
+Deployment همچنان خارج این Task‌اند. SQL repair، Schema/Migration تازه و تغییر تنظیمات خصوصی انجام نشد.
+Source این اصلاح: `718451ff3eba1831bd6d18c1e9693713a415d817`؛ Commit کد/تست روی شاخهٔ feature Push و Fetch/verify شد.
