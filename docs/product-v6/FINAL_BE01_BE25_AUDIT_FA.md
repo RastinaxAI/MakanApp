@@ -1,14 +1,32 @@
 # ممیزی نهایی BE01–BE25 و پذیرش محدودهٔ Release جاری
 
-> ممیزی Source و دو دور کامل Regression پایان یافت؛ تغییرات این Task فقط مستندات‌اند.
-> تصمیم فعلی: `NOT_READY_FOR_TEST_DEPLOY` برای تنظیمات محلیِ بررسی‌شده؛ دو مانع CFG-01/02،
-> سلامت کد و قابلیت‌های Deferred را نقض نمی‌کنند.
+> پیگیری Runtime از `f704a5c` در [Test Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md)
+> ثبت است: CFG-02 با Personal Chat و Ingest/Ready/Retrieve/RAG واقعی از Backend محلی بسته شد.
+> Test هر دو Runtime را فعال و هر دو Service Auth را غیرفعال دارد؛ Production خصوصی محفوظ است.
+> تصمیم فعلی `NOT_READY_FOR_TEST_DEPLOY` فقط به CFG-01 وابسته است: URL واقعی بازگشت کلاینت
+> زیبال هنوز داده نشده. شمارش فعلی Code=0، Configuration=1، Operations Test=3 است.
+> جدول‌های BE و Regression پایین، سابقهٔ ممیزی قبل از این پیگیری را حفظ می‌کنند؛
+> شمارش اجرای جدید و تغییرات config/test/tool در گزارش Runtime ثبت می‌شود.
 
 تاریخ `2026-11-17`؛ مخزن اصلی `D:\Project\MakanApp\MakanApp-Backend`.
 Source پایه، Commit نهایی واقعی MKN-BE-001 است:
 `14b0271a9d3aea840e23413dacae5300fc68ebed`، شاخه
 `feature/product-v6-backend-alignment` و upstream همان شاخه در `origin`.
 پس از Fetch، HEAD محلی و remote برابر بودند؛ main ادغام نشد.
+
+## پیگیری Test Runtime پس از ممیزی
+
+در پیگیری `2026-11-17`، پیش‌فرض‌های موجود Knowledge در config عمومی صریح و فقط بخش‌های
+AI/Knowledge خصوصی Test با مقصد مصوب تکمیل شدند. Startup Test با SQL/Storage موقت، Health
+live/ready200، Personal Chat200، Knowledge Ingest202/Ready/Retrieve200/RAG200، replay409 و
+یک مصرف تأیید شد. حساب دیگر به Source دسترسی نداشت؛ فقط منبع مصنوعی تازهٔ همان اجرا
+پاک‌سازی شد. Service Auth، timeout35s و حدود پردازش حفظ شدند؛ Auth/JWT فعال نشد.
+
+Zibal implementation از configuration آن جداست. Provider فعلاً `Unavailable` ماند چون
+`Payments:Zibal:ClientReturnUrl` واقعی نامعلوم است. مجموعهٔ Merchant/Callback/Return/Allowlist
+به‌صورت ناقص فعال نشد؛ این یک blocker تنظیم Test است. Production Merchant، فعال‌سازی
+Production AI/Knowledge و چهار gate عملیاتی Production در شمارش Test وارد نمی‌شوند.
+در این پیگیری نیز main، Deploy، پرداخت مالی، SQL روی دیتابیس عادی و Migration جدید اجرا نشد.
 
 ## روش و حدود شاهد
 
@@ -349,11 +367,11 @@ OpenAPI؛ سپس قراردادها و تصمیم‌های مصوب. عنوان 
 | Persistence Evidence | `intelligence.AssistantContextSelections`، `knowledge.AiSourceSelectionPins/Operations`، EducationalSources و `commerce.UsageReservations/UsageLedger`؛ همان Operation پس از Consumed برابر409، بدون ذخیرهٔ پاسخ خصوصی/تماس و مصرف دوباره؛ Unknown به Retry کور تبدیل نمی‌شود |
 | Tests | [PersonalAiAcceptanceTests](../../tests/MakanApp.IntegrationTests/PersonalAiAcceptanceTests.cs)، [PersonalKnowledgeAcceptanceTests](../../tests/MakanApp.IntegrationTests/PersonalKnowledgeAcceptanceTests.cs)، [AiV1CommerceEndpointsTests](../../tests/MakanApp.IntegrationTests/AiV1CommerceEndpointsTests.cs)، [AiV1ControlledTransportTests](../../tests/MakanApp.IntegrationTests/AiV1ControlledTransportTests.cs) و Unit invocation/contract/error mapping |
 | Migration | `20261030152943_AddAiSourceSelectionPins`، `20261112151714_AddSupportPrivacyAndAssistantContexts` و `20261112152027_EnforceAssistantAndDeletionSessionOwnership`؛ جدید0 |
-| Runtime Dependency | SQL، upstream AI/Knowledge و configuration؛ Runtime محلی پیش‌فرض خاموش، CFG-02؛ هیچ Probe زنده، Full12 یا تماس Production در این ممیزی اجرا نشد |
+| Runtime Dependency | SQL، upstream AI/Knowledge و configuration؛ CFG-02 در پیگیری Runtime با private Test فعال و Personal Chat/Ingest/Ready/Retrieve/RAG واقعی بسته شد؛ Production Backend هنوز اجرا/Deploy نشده |
 | Product Decision | D11 بسته طبق قرارداد جاری Personal؛ `AiService:UseServiceAuthentication=false` و `AiKnowledge:UseServiceAuthentication=false` حفظ؛ Library AI همچنان policy-disabled؛ timeout35s دست‌نخورده |
-| Current Release Scope | IN SCOPE Gateway/Knowledge با قرارداد فعلی؛ شواهد live مورخ2026-11-14 در [Handoff](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) تاریخی‌اند و retest تازه معرفی نمی‌شوند |
-| Final Status | `PASS` برای Gateway/آزمون محلی؛ `BLOCKED_CONFIGURATION` برای فعال‌سازی مقصد فعلی |
-| Remaining Action | CFG-02 و آزمون از Backend مقصد؛ هیچ Service JWT/SigningKey تازه درخواست، چاپ، ذخیره یا لازم نمی‌شود |
+| Current Release Scope | IN SCOPE Gateway/Knowledge با قرارداد فعلی؛ شاهد تازهٔ2026-11-17 در [Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md) و شواهد قبلی در [Handoff](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) تفکیک شده‌اند |
+| Final Status | `PASS` برای implementation و Runtime محلی Test؛ Production=`OPERATIONAL_ACTIVATION_PENDING` |
+| Remaining Action | OP-02: آزمون از Backend مقصد پس از Deploy مجاز؛ هیچ Service JWT/SigningKey تازه درخواست، چاپ، ذخیره یا لازم نمی‌شود |
 
 ## BE20 — Platform Admin
 
@@ -421,7 +439,7 @@ OpenAPI؛ سپس قراردادها و تصمیم‌های مصوب. عنوان 
 | Product Decision | وضعیت `PASS_LOCAL_READINESS` جای Production acceptance نیست؛ backup موجود به‌تنهایی Restore proof نیست |
 | Current Release Scope | IN SCOPE آمادگی محلی؛ [Manifest تاریخی BE23](BE23_RELEASE_ARTIFACT_MANIFEST_FA.md) مربوط به Source=`52b596a` است، نه MKN/این HEAD؛ در این Audit ZIP/Publish/Deploy تازه ساخته نشد |
 | Final Status | `PASS_LOCAL_READINESS` |
-| Remaining Action | Ring/Storage/Production Restore/exporter=`OPERATIONAL_VALIDATION_PENDING`؛ دو Configuration لازم CFG-01/02 جدا؛ Source بعدی باید بستهٔ تازهٔ خود را داشته باشد |
+| Remaining Action | Ring/Storage/Production Restore/exporter=`OPERATIONAL_VALIDATION_PENDING`؛ CFG-01 تنها تنظیم ناقص Test است؛ بستهٔ بعدی باید از Source نهایی ساخته شود |
 
 ## BE24 — دو پذیرش مستقل
 
@@ -434,11 +452,11 @@ OpenAPI؛ سپس قراردادها و تصمیم‌های مصوب. عنوان 
 | Persistence Evidence |151 جدول و75 Migration؛ هیچ مدل acceptance یا receipt جدید ساخته نشد |
 | Tests | Full Regression و شمار suiteهای واقعی این گزارش؛ پذیرش سرور/خرید/Push/AI زنده اجرا نشده است |
 | Migration | جدید0؛ Pending=NO |
-| Runtime Dependency | دو Configurationِ دیده‌نشدهٔ لازم و هفت پذیرش عملیاتی جدا؛ server readiness از localhost نتیجه‌گیری نمی‌شود |
+| Runtime Dependency | اکنون یک تنظیم ناقص Zibal Test، سه پذیرش عملیاتی Test و چهار gate مستقل Production؛ server readiness از localhost نتیجه‌گیری نمی‌شود |
 | Product Decision | Freeze صریح Store/Push/iOS/Family/PersonalClass Academic و Library policy؛12 تصمیم Register به‌طور جدا طبقه‌بندی می‌شوند |
 | Current Release Scope | Full Future Product خارج از معیار جاری؛ Release جاری طبق Scope و Blockers سنجیده می‌شود |
-| Final Status | `BE24_FULL_PRODUCT_ACCEPTANCE=DEFERRED_PRODUCT_SCOPE`؛ این مقدار استثنای صریح پرامپت برای BE24 است. `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY` به‌دلیل CFG-01 و CFG-02 محلی |
-| Remaining Action | تنظیم خصوصیِ قابل تأیید دو قابلیت داخل محدوده، ساخت بستهٔ جدید و پذیرش Test؛ هیچ merge/deploy در این Task |
+| Final Status | `BE24_FULL_PRODUCT_ACCEPTANCE=DEFERRED_PRODUCT_SCOPE`؛ استثنای صریح BE24 محفوظ است. `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY` اکنون فقط به‌دلیل CFG-01 محلی است |
+| Remaining Action | تکمیل و validation تنظیم Zibal Test پس از دریافت ClientReturnUrl، سپس Task صریح ساخت بسته و پذیرش Test؛ merge/deploy انجام نشد |
 
 ## BE25 — PersonalClass Assignment / Exam
 
@@ -512,7 +530,7 @@ Constraint به معنی اجرای آن روی Production نیست. Integration
 ## Audit پیکربندی بدون افشای مقدار محرمانه
 
 JSON واقعی هر دو محیط parse شد؛16 بخش سطح اول،27 leaf key، schema و nested structure برابرند.
-پس از جایگزینی دقیق چهار مقدار مصوب، دو درخت JSON کامل برابر شدند؛ تفاوت‌ها فقط:
+در ممیزی مبنا، پس از جایگزینی دقیق چهار مقدار مصوب، دو درخت JSON کامل برابر شدند؛ تفاوت‌های آن مبنا فقط:
 
 ```text
 ConnectionStrings:MakanDatabase
@@ -525,10 +543,11 @@ Test، Mock OTP و Production، Real OTP دارند؛ Storage کاملاً جد�
 Identity.SecurityKey و MeliPayamakOtp.ServiceToken فقط به‌صورت boolean تأیید شد؛ مقدارشان
 چاپ، بازنویسی، خالی یا staged نشد. Safe config و hashهای محافظت‌شده در شواهد خصوصی‌اند.
 
-در تنظیم مؤثر فایل‌های محلی، Zibal unavailable/ناقص و AI/Knowledge خاموش‌اند؛ Service Auth هر
-دو false است. Gateهای `Features:PersonalClass` هر دو false و AccountDeletion Execution=false،
-GracePeriodHours=null باقی ماندند. هیچ override مرتبط در محیط همین فرایند دیده نشد. این
-ممیزی تنظیمات واقعی IIS/SQL/محیط سرور را ندیده و ادعای پیکربندی‌نشدن آن سرور نمی‌کند.
+در ممیزی مبنا، Zibal unavailable/ناقص و AI/Knowledge خاموش بودند. پیگیری Runtime فقط
+AI/Knowledge خصوصی Test را فعال کرد و schema مؤثر پس از ارث‌بری پایه برابر ماند؛ raw دو
+فایل محیط دیگر برابر فرض نمی‌شود. Production خصوصی همان هش اولیه را دارد. Service Auth
+هر دو false، Gateهای `Features:PersonalClass` هر دو false و AccountDeletion Execution=false،
+GracePeriodHours=null باقی‌اند. تنظیم واقعی IIS/SQL/سرور دیده نشده و دربارهٔ مقادیر آن ادعا نمی‌شود.
 
 ## نتیجهٔ Release جاری و مرز موانع
 
@@ -537,22 +556,25 @@ GracePeriodHours=null باقی ماندند. هیچ override مرتبط در م�
 Source در محدودهٔ جاری پیدا نشد که به fix کد نیاز داشته باشد.
 
 - `CURRENT_RELEASE_CODE_GAPS=0`: بر مبنای Source و دامنهٔ آزمون‌ها، نه ادعای کشف همهٔ خطاهای ممکن.
-- `CURRENT_RELEASE_CONFIGURATION_BLOCKERS=2`: CFG-01 زیبال و CFG-02 فعال‌سازی AI/Knowledge؛
-  محدوده و شاهد دقیق در [Blockers](CURRENT_RELEASE_BLOCKERS_FA.md) آمده است.
-- `CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=7`: OP-01..07 در Scope؛ چهار مورد آخر gateهای
-  Production هستند و به‌تنهایی نصب Test را مسدود نمی‌کنند.
+- `CURRENT_RELEASE_CONFIGURATION_BLOCKERS=1`: فقط CFG-01 زیبال؛ CFG-02 با شاهد واقعی محلی
+  بسته شد. مقدار مفقود دقیق و محدودهٔ شاهد در [Blockers](CURRENT_RELEASE_BLOCKERS_FA.md) آمده است.
+- `CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=3`: فقط OP-01..03 مربوط به Test؛ چهار gate
+  Production جدا باقی‌اند و در این شمارش یا مانع نصب اولیهٔ Test وارد نمی‌شوند.
 - `OPEN_PRODUCT_DECISIONS=12`: همان دوازده شناسهٔ Register؛ هیچ‌کدام با محدودهٔ Freezeشده
   فعلی، blocker تازهٔ Release نیستند.
 - `BE24_FULL_PRODUCT_ACCEPTANCE=DEFERRED_PRODUCT_SCOPE`: تکمیل آینده با پذیرش این Release
   یک status مبهم مشترک ندارد.
-- `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY`: فقط به دلیل نبود تنظیمِ قابل‌تأیید
-  دو قابلیت داخل محدوده در محیط محلیِ بررسی‌شده؛ این نتیجه failure کد، Store یا Push نیست.
+- `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY`: فقط به دلیل URL واقعی نامعلوم
+  `Payments:Zibal:ClientReturnUrl`؛ این نتیجه failure کد، Store یا Push نیست.
 
-پیش از ساخت/نصب بستهٔ پذیرش کامل Test، اپراتور باید تنظیم خصوصی معتبر همین دو مورد را
-آماده کند. رمز، Merchant، token یا Service JWT در چت/Git لازم نیست. School Sales تا تنظیم
+پیش از ساخت/نصب بستهٔ پذیرش کامل Test، اپراتور باید URL کلاینت را مشخص و تنظیم درگاه را
+کامل و validate کند. رمز، Merchant، token یا Service JWT در چت/Git لازم نیست. School Sales تا تنظیم
 قرارداد معتبر می‌تواند بسته بماند؛ حذف واقعی نیز طبق اجازهٔ مالک می‌تواند خاموش بماند.
 
-## گزارش آموزشی توسعه‌دهنده
+## گزارش آموزشی ممیزی مبنا
+
+این بخش نتیجهٔ Task ممیزی قبل از پیگیری Runtime است. گزارش آموزشی تغییرات/تست‌های جدید و
+Validation جاری در [Test Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md) قرار دارد.
 
 ### ۱. خلاصهٔ مرحله
 

@@ -25,15 +25,19 @@ LIBRARY_PUBLIC_DOWNLOAD=PRODUCT_POLICY_DISABLED
 LIBRARY_AI=PRODUCT_POLICY_DISABLED
 ```
 
-Current Release Acceptance از Full Future Product جداست. در تنظیمات قابل‌مشاهدهٔ فعلی،
-Zibal انتخاب/کامل نشده و Runtime AI/Knowledge خاموش است؛ این دو CFG-01/02 هستند و نتیجهٔ
-نسخهٔ تنظیم‌شده `NOT_READY_FOR_TEST_DEPLOY` است، حتی وقتی کد/Regression سبز باشد.
+Current Release Acceptance از Full Future Product جداست. پیگیری
+[Test Runtime](../operations/TEST_RUNTIME_READINESS_FA.md) از `f704a5c`، CFG-02 را با اتصال
+واقعی Personal Chat و Knowledge بست؛ دو Runtime در private Test فعال و Service Auth خاموش‌اند.
+Zibal به URL واقعی بازگشت کلاینت نیاز دارد؛ CFG-01 تنها مانع تنظیم Test و نتیجهٔ فعلی
+`NOT_READY_FOR_TEST_DEPLOY` است. شمارش عملیاتی Test=3 و چهار gate Production مستقل‌اند.
 School sales و اجرای حذف Production پیش‌نیازهای مستقل و مشروط خود را دارند؛ Store Billing،
 Push واقعی، iOS، Family/Pooling، آموزش PersonalClass و Library policy-disabled شکست این
 Release شمرده نمی‌شوند.12 تصمیم باز و مرز current/future در Audit ثبت می‌شوند.
-هیچ config خصوصی، source، migration یا فایل unfinished AI در این ممیزی تغییر نکرد؛
-main و Deploy اجرا نشدند. Clean/Restore و هر دو Release Build موفق، صفر Warning/Error؛
-دو Full Regression، هرکدام1369 Unit +2068 Integration +14 Architecture =3451 PASS،
+در ممیزی مبنا هیچ config خصوصی، source، migration یا فایل unfinished AI تغییر نکرد؛
+پیگیری Runtime، فقط config/test/tool/docs مرتبط را تغییر داد؛ دو دور کامل تازه هرکدام
+1377 Unit +2070 Integration +14 Architecture =3461 PASS، صفر Failed/Skipped و Warning/Error دارند.
+main و Deploy اجرا نشدند. در ممیزی مبنا، Clean/Restore و هر دو Release Build موفق، صفر Warning/Error؛
+دو Full Regression آن مبنا، هرکدام1369 Unit +2068 Integration +14 Architecture =3451 PASS،
 صفر Failed/Skipped و117 Zibal موفق دارند. Realtime timeout/failure تازه0 مشاهده شد؛ علت
 تاریخی همچنان اثبات نشده است. Snapshot تازه438 path /494 operation /783 schema /91 Controller،
 151 جدول و75 Migration دارد؛ Pending Model Changes=NO. جزئیات شواهد و Git در Audit است.

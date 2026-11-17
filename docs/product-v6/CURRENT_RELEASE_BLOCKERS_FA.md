@@ -1,6 +1,6 @@
 # موانع و تصمیم آمادگی Release جاری
 
-تاریخ `2026-11-17`؛ Source پایه `14b0271a9d3aea840e23413dacae5300fc68ebed`.
+تاریخ `2026-11-17`؛ پیگیری Runtime از Source پایه `f704a5c3a0a0c808335ce05f4c8f6863e04b2235`.
 این سند وضعیت **قابل‌اثبات در مخزن اصلی و محیط اجرای محلی** را گزارش می‌کند؛ از نبود تنظیم
 محلی، دربارهٔ مقادیر واقعی سرور نتیجه‌گیری نمی‌کند. معیار محدوده در
 [Scope Freeze](CURRENT_RELEASE_SCOPE_FA.md) است؛ شواهد کد/تست در [Audit](FINAL_BE01_BE25_AUDIT_FA.md).
@@ -9,17 +9,19 @@
 
 | شناسه | وضعیت | شاهد امن | اثر و اقدام دقیق |
 |---|---|---|---|
-| CFG-01 | `BLOCKED_CONFIGURATION` | در هر دو private config، Provider=`Unavailable`؛ Merchant/Callback/Return زیبال تعیین نشده؛ override محیط Payments هم دیده نشد | Zibal تنها درگاه داخل محدوده است. اپراتور باید `Payments:Provider=Zibal` و بخش معتبر `Payments:Zibal` را در تنظیم خصوصی مقصد فراهم کند؛ نتیجهٔ `ZibalOptions.Validate` و رفت‌وبرگشت واقعی درگاه بعداً بررسی شود. در Test فقط Merchant تستِ مجاز؛ Production Merchant واقعی و HTTPS لازم دارد. هیچ credential در Git/چت لازم نیست. |
-| CFG-02 | `BLOCKED_CONFIGURATION` | `AiService:Enabled=false`، `AiKnowledge:Enabled` فاقد مقدار فعال، BaseUrl دانش تعیین نشده و override محیط مرتبط دیده نشد | برای پذیرش فعال BE19، Runtime و URL مصوب هر دو سرویس باید در تنظیم خصوصی مقصد آماده شوند. هر دو `UseServiceAuthentication=false`، timeout35s، Source ACL و Quota حفظ شوند؛ فعال‌سازی یا تست زنده در این ممیزی اجرا نمی‌شود. |
+| CFG-01 | `BLOCKED_CONFIGURATION` | Test هنوز Provider=`Unavailable` دارد؛ چهار مقدار Merchant/Callback/ClientReturn/Allowlist در فایل خصوصی `MISSING` هستند | تنها ورودی نامعلوم `Payments:Zibal:ClientReturnUrl` است. Origin واقعی Backend Test در سند استقرار موجود است؛ Merchant تست و BaseUrl هم قرارداد صریح دارند. پس از دریافت URL واقعی کلاینت، مجموعهٔ تنظیمات درگاه باید یکجا کامل و `ZibalOptions.Validate("Test", true)` اجرا شود. مقدار ساختگی یا فعال‌سازی ناقص انجام نشد. |
+| CFG-02 | `CLOSED_LOCAL_TEST_RUNTIME` | هر دو Runtime در private Test فعال‌اند؛ BaseUrlها `CONFIGURED`؛ Personal Chat، Ingest/Ready/Retrieve/RAG واقعی موفق | هر دو Service Auth خاموش، timeout برابر35s و حدود پردازش ثابت‌اند. Startup در Environment=`Test` و Health/Ready در میزبان ایزوله200 شدند. این شاهد از Backend محلی به AI مستقر است؛ اتصال از IIS مقصد هنوز OP-02 است. |
 
-این دو مورد با Deferred Billing/Push جایگزین نشده‌اند. پذیرش کد و transport کنترل‌شده،
-`CONFIGURED` بودن مقصد را اثبات نمی‌کند. برای اعلام readiness تنظیم‌شده، فایل خصوصی مقصد یا
-شاهد امن override و validation آن لازم است؛ نیازی به افشای مقدار Secret نیست.
+تعداد مانع Configuration لازم برای Test Deploy اکنون **1** است؛ فیلدهای ناقص یک درگاه، چهار
+مانع جدا شمرده نمی‌شوند. نبود تنظیم Production در این شمارش وارد نمی‌شود. جزئیات اجرا،
+محدودیت شاهد و گزارش توسعه‌دهنده در [Test Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md) است.
 
 ## موارد مشروط که کل Release را مسدود نمی‌کنند
 
 | مورد | وضعیت | مرز |
 |---|---|---|
+| Zibal در Production | `BLOCKED_CONFIGURATION` | تنظیم واقعی Production آماده نیست؛ فایل خصوصی آن byte-for-byte حفظ شد. این مورد مانع مستقل Test Deploy نیست. |
+| AI/Knowledge در Production | `OPERATIONAL_ACTIVATION_PENDING` | Runtime خصوصی Production فعال نشد؛ موفقیت اجرای محلی Test به معنی فعال‌سازی آن نیست. |
 | قیمت/Plan واقعی فروش آموزشگاه | `BLOCKED_CONFIGURATION` | فقط School Sales؛ Workflow و Provisioning با دادهٔ تست و gateway کنترل‌شده قابل پذیرش‌اند. هیچ قیمت/تاریخ/Quota واقعی از روی نمونه ساخته نمی‌شود. |
 | اجرای حذف حساب | `BLOCKED_CONFIGURATION` | برای Release اول می‌تواند خاموش بماند؛ درخواست/پیگیری Privacy موجود است. |
 | Retention/Legal hold/Backup durations | `PRODUCT_LEGAL_CONFIGURATION_REQUIRED` | مانع فعال‌سازی اجرای حذف یا purge حقوقی، نه API درخواست حذف و دیگر قابلیت‌های این نسخه. |
@@ -30,15 +32,19 @@
 
 ## پذیرش‌های عملیاتی باقی‌مانده
 
-هفت مورد مجزای OP-01 تا OP-07 همان ترتیب بخش عملیاتی Scope هستند: Smoke نسخهٔ نصب‌شدهٔ Test،
-اتصال Backend مقصد به AI/Knowledge، Callback واقعی Zibal، Ring/Restart، Storage/ACL، Restore
-Production، و exporter/alert. هیچ‌کدام در این Audit به‌عنوان اجرای واقعی سرور PASS نمی‌شوند.
+سه پذیرش Test باقی است: OP-01 نسخهٔ نصب‌شده/Health/Smoke، OP-02 اتصال از Backend مقصد به
+AI/Knowledge، OP-03 رفت‌وبرگشت و Callback درگاه Test. اجرای محلی این Task، Deploy یا پذیرش
+همان Windows Server نیست. چهار پذیرش Production یعنی Ring/Restart، Storage/ACL، Restore و
+exporter/alert جدا باقی‌اند و در شمارش Test وارد نمی‌شوند.
 
 ```text
 PRODUCTION_DATA_PROTECTION_RING=OPERATIONAL_VALIDATION_PENDING
 PRODUCTION_STORAGE=OPERATIONAL_VALIDATION_PENDING
 PRODUCTION_RESTORE_DRILL=NOT_RUN
 PRODUCTION_OBSERVABILITY=OPERATIONAL_VALIDATION_PENDING
+CURRENT_RELEASE_CODE_GAPS=0
+CURRENT_RELEASE_CONFIGURATION_BLOCKERS=1
+CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=3
 MERGE_TO_MAIN=NOT_RUN
 DEPLOYMENT=NOT_RUN
 ```
@@ -46,11 +52,14 @@ DEPLOYMENT=NOT_RUN
 ## تصمیم
 
 با تنظیمات خصوصیِ قابل‌مشاهدهٔ فعلی، نتیجهٔ آمادگیِ نسخهٔ **تنظیم‌شده برای پذیرش همهٔ قابلیت‌های
-داخل محدوده** برابر `NOT_READY_FOR_TEST_DEPLOY` است: CFG-01 و CFG-02 هنوز آماده نیستند.
-این نتیجه ادعای خرابی Backend یا عدم امکان نصب باینری نیست؛ دو وابستگی الزامی پذیرش هنوز
-پیکربندی نشده‌اند. سلامت کد و Regression جدا در Audit گزارش می‌شود.
+داخل محدوده** برابر `NOT_READY_FOR_TEST_DEPLOY` است: CFG-01 به URL واقعی بازگشت کلاینت
+نیاز دارد؛ CFG-02 با شاهد واقعی محلی بسته شد. سلامت کد، Regression و استقرار مقصد ادعاهای
+جدا هستند. پرداخت مالی واقعی و Full-12 در این Task اجرا نشده‌اند.
 
-هیچ عدد تجاری، Secret، URL عملیاتی، timeout یا فلگ فعال‌سازی برای سبزکردن گزارش حدس زده یا
-تغییر داده نمی‌شود. اقدام بعدی فقط آماده‌کردن تنظیم خصوصی همین دو مورد، سپس ساخت بستهٔ جدید
-و پذیرش Test توسط اپراتور مجاز است. چهار gate عملیاتی Production و قابلیت‌های Deferred
-نباید به‌صورت blocker اضافیِ نصب Test شمرده شوند.
+هیچ عدد تجاری، Secret یا URL حدسی ساخته نشد. تنها فلگ‌های مصوب AI/Knowledge در فایل خصوصی
+Test فعال شدند؛ حدود پردازش و سایر مقادیر خصوصی محفوظ‌اند. اقدام بعدی دریافت URL واقعی،
+validation کامل درگاه و سپس Task صریح بسته/استقرار Test است.
+
+## USER_INPUT_REQUIRED
+
+`Payments:Zibal:ClientReturnUrl`

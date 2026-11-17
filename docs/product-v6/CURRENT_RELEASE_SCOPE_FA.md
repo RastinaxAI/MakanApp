@@ -1,7 +1,7 @@
 # محدودهٔ قطعی Release جاری Backend
 
-تاریخ: `2026-11-17`؛ مبنای Source: `14b0271a9d3aea840e23413dacae5300fc68ebed`،
-Commit نهایی MKN-BE-001 روی `feature/product-v6-backend-alignment`.
+تاریخ: `2026-11-17`؛ مبنای ممیزی `14b0271a9d3aea840e23413dacae5300fc68ebed` و مبنای
+پیگیری Runtime=`f704a5c3a0a0c808335ce05f4c8f6863e04b2235` روی `feature/product-v6-backend-alignment`.
 این سند تصمیم صریح مالک برای ممیزی نهایی BE01–BE25 را ثبت می‌کند. سند هدف محصول،
 شاهد کد، تست یا استقرار نیست. نتیجهٔ ممیزی و آمادگی نصب در
 [گزارش نهایی](FINAL_BE01_BE25_AUDIT_FA.md) و [موانع](CURRENT_RELEASE_BLOCKERS_FA.md) است.
@@ -65,16 +65,17 @@ LIBRARY_AI=PRODUCT_POLICY_DISABLED
 
 ## CONFIGURATION PENDING — تنظیم از پیاده‌سازی جداست
 
-بررسی این مرحله فقط فایل‌های محلی موجود، مقدار پیش‌فرض Options و نام overrideهای محیط همین
-فرآیند را پوشش می‌دهد؛ هیچ دیتابیس عادی یا تنظیم سرور خوانده/تغییر داده نشده است.
+پیگیری Runtime، فایل خصوصی Test را با URL مصوب AI/Knowledge تکمیل و در میزبان محلی
+Environment=`Test` با SQL/Storage ایزوله اجرا کرد. هیچ دیتابیس عادی یا تنظیم سرور تغییر نکرد.
+شاهد و روش تکرار در [گزارش Runtime](../operations/TEST_RUNTIME_READINESS_FA.md) است.
 
-- در هر دو فایل خصوصی، `Payments:Provider=Unavailable` است؛ Merchant/Callback/ClientReturn
-  زیبال کامل نیست. برای پذیرش پرداختِ داخل محدوده، تنظیم خصوصی معتبر مقصد لازم است.
-  تست adapter/SQL جای تنظیم و تماس واقعی درگاه را نمی‌گیرد.
-- `AiService:Enabled=false` و Runtime دانش خاموش است؛ `AiKnowledge:BaseUrl` در فایل‌های
-  قابل‌مشاهده تعیین نشده است. این موارد فعال‌سازی قابلیت‌های BE19 را می‌بندند، نه وجود Gateway
-  یا قرارداد Personal را. Service Authentication هر دو سرویس **false و دست‌نخورده** می‌ماند؛
-  درخواست JWT/کلید تازه لازم نیست و timeout موجود35s تغییر نمی‌کند.
+- در هر دو فایل خصوصی، `Payments:Provider=Unavailable` است. تنها ورودی نامعلوم برای تکمیل
+  Test، `Payments:Zibal:ClientReturnUrl` واقعی است؛ Callback از Origin مستند Backend و
+  allowlist از URL کلاینت استخراج خواهد شد. فعال‌سازی ناقص و پرداخت مالی انجام نشد.
+- در Test، هر دو `AiService:Enabled` و `AiKnowledge:Enabled` برابرtrue و BaseUrlها
+  `CONFIGURED` هستند؛ Personal Chat، Ingest/Ready/Retrieve/RAG واقعی موفق شدند. Service
+  Authentication هر دو **false** و timeout35s باقی‌اند؛ JWT/کلید فعال نشد. Production خصوصی
+  همچنان غیرفعال و `OPERATIONAL_ACTIVATION_PENDING` است.
 - `PRODUCTION_SCHOOL_COMMERCIAL_CONFIGURATION=BLOCKED_CONFIGURATION` تا ثبت دادهٔ
   واقعی و مصوب Offering/PlanVersion/Price/Quota است. این فقط فروش آموزشگاه را می‌بندد؛
   به‌تنهایی دلیل رد کل نسخه نیست. این ممیزی قیمت یا سهمیهٔ ساختگی Seed نمی‌کند.
@@ -82,7 +83,9 @@ LIBRARY_AI=PRODUCT_POLICY_DISABLED
   `PRODUCTION_ACCOUNT_DELETION_EXECUTION=BLOCKED_CONFIGURATION` و
   `RETENTION_DURATIONS=PRODUCT_LEGAL_CONFIGURATION_REQUIRED` مستقل از سلامت کد هستند.
 
-فایل‌های خصوصی خالی، بازنویسی یا وارد Git نمی‌شوند. Schema محیط‌ها یکسان است؛ تفاوت مصوب:
+هیچ مقدار خصوصی شناخته‌شده خالی یا وارد Git نشد. Production خصوصی byte-for-byte حفظ شد؛
+Test فقط در دو بخش AI/Knowledge تغییر کرد. Schema تنظیمات **مؤثر** پس از بارگذاری فایل پایه
+و override هر محیط یکسان است؛ برابری raw دو فایل override لازم نیست. تفاوت مصوب:
 
 | تنظیم | Test | Production |
 |---|---|---|
@@ -95,12 +98,13 @@ Mock در Production/Staging با Startup guard رد می‌شود. تغییر �
 
 ## OPERATIONAL VALIDATION PENDING — بعد از آماده‌سازی و نصب مجاز
 
-این ممیزی Deploy، Merge به main، خرید واقعی یا Migration روی دیتابیس‌های عادی اجرا نمی‌کند.
-پذیرش محلی به معنی پذیرش سرور نیست. این هفت کار عملیاتی جدا ثبت می‌شوند:
+این مرحله Deploy، Merge به main، خرید واقعی یا Migration روی دیتابیس‌های عادی اجرا نمی‌کند.
+پذیرش محلی به معنی پذیرش سرور نیست. سه مورد نخست، شمارش عملیاتی Test و چهار مورد آخر،
+شمارش مستقل Production هستند:
 
 1. استقرار نسخهٔ نهایی روی Test و بررسی Health/Ready، احراز هویت و Smoke قابلیت‌های داخل محدوده.
 2. اتصال واقعی همان Backend مقصد به AI/Knowledge با تنظیم مصوب، بدون تغییر قرارداد/Service Auth.
-3. رفت‌وبرگشت Zibal و Callback واقعی Test، سپس تنظیم و پذیرش جداگانهٔ Production.
+3. رفت‌وبرگشت Zibal و Callback واقعی Test؛ تنظیم و پذیرش Production جداست.
 4. پایداربودن Data Protection Ring، ACL و بازیابی/Restart با purposeهای واقعی.
 5. دسترسی Storage هویت IIS و جدایی کامل فایل‌های Test/Production.
 6. Restore واقعی Production روی محیط ایزوله با SQL، Storage و Key Ring؛ drill محلی جای آن نیست.
@@ -109,3 +113,8 @@ Mock در Production/Staging با Startup guard رد می‌شود. تغییر �
 چهار مورد آخر، gate عملیاتی Production هستند؛ برای نصب اولیهٔ Test به‌عنوان خطای implementation
 گزارش نمی‌شوند. بسته‌های تاریخی با Source قدیمی، بستهٔ تازهٔ این ممیزی محسوب نمی‌شوند.
 تولید/استقرار Release تازه باید پس از این Audit در Task صریح خود انجام شود.
+
+شمارش جاری: `CURRENT_RELEASE_CODE_GAPS=0`، `CURRENT_RELEASE_CONFIGURATION_BLOCKERS=1`،
+`CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=3`؛ تصمیم `NOT_READY_FOR_TEST_DEPLOY` فقط تا تکمیل
+تنظیم الزامی درگاه است. Store Billing/Push/PersonalClass Academic و gateهای Production
+به مانع اضافی نصب Test تبدیل نشده‌اند.

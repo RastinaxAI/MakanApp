@@ -11,6 +11,7 @@ using MakanApp.Infrastructure;
 using MakanApp.Infrastructure.Ai;
 using MakanApp.Infrastructure.Identity;
 using MakanApp.Infrastructure.Identity.Otp.MeliPayamak;
+using MakanApp.Infrastructure.Knowledge;
 using MakanApp.Infrastructure.Observability;
 using MakanApp.Infrastructure.Notification;
 using MakanApp.Infrastructure.Persistence;
@@ -73,13 +74,36 @@ public sealed class TestEnvironmentConfigurationTests : IDisposable
         baseline.SetBasePath(ApiDirectory()).AddJsonFile("appsettings.json");
         using var configuration = FileConfiguration();
 
-        foreach (var section in new[] { "AiService", "Reports", "Identity:Session", "Notifications:Delivery" })
+        foreach (var section in new[] { "AiService", "AiKnowledge", "Reports", "Identity:Session", "Notifications:Delivery" })
         {
             var expected = baseline.GetSection(section).AsEnumerable().OrderBy(item => item.Key).ToArray();
             var actual = configuration.GetSection(section).AsEnumerable().OrderBy(item => item.Key).ToArray();
             // فقط برابری بررسی می‌شود؛ هیچ مقدار بالقوهٔ محرمانه در پیام assertion چاپ نمی‌شود.
             Assert.True(expected.SequenceEqual(actual), $"تنظیم ارث‌رسیدهٔ {section} تغییر کرده است.");
         }
+    }
+
+    [Theory]
+    [InlineData("appsettings.Test.json")]
+    [InlineData("appsettings.Production.json.example")]
+    public void BothPublicProfilesExposeCompleteDisabledAiContractsWithoutServiceAuthentication(string profile)
+    {
+        using var configuration = new ConfigurationManager();
+        configuration.SetBasePath(ApiDirectory()).AddJsonFile("appsettings.json").AddJsonFile(profile);
+        foreach (var section in new[] { "Payments", "Payments:Zibal", "AiService", "AiService:Authentication", "AiKnowledge" })
+            Assert.True(configuration.GetSection(section).Exists(), $"بخش لازم {section} وجود ندارد.");
+        foreach (var key in new[] { "Enabled", "BaseUrl", "ContractVersion", "TimeoutSeconds", "MaximumContentBytes", "MaximumResponseBytes",
+            "StatusPollAttempts", "StatusPollIntervalMilliseconds", "StatusPollTimeoutSeconds", "UseServiceAuthentication" })
+            Assert.NotNull(configuration[$"AiKnowledge:{key}"]);
+        var ai = configuration.GetSection(AiServiceOptions.SectionName).Get<AiServiceOptions>()!;
+        var knowledge = configuration.GetSection(AiKnowledgeOptions.SectionName).Get<AiKnowledgeOptions>()!;
+        Assert.False(ai.Enabled);
+        Assert.False(knowledge.Enabled);
+        Assert.False(ai.UseServiceAuthentication);
+        Assert.False(knowledge.UseServiceAuthentication);
+        Assert.Equal("v1", ai.ContractVersion);
+        Assert.Equal("knowledge-v1", knowledge.ContractVersion);
+        Assert.True(AiKnowledgeOptions.IsValid(knowledge));
     }
 
     [Theory]

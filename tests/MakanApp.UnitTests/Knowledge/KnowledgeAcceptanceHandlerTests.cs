@@ -55,6 +55,43 @@ public sealed class KnowledgeAcceptanceHandlerTests
         Assert.Equal(0, inner.Calls);
     }
 
+    [Theory]
+    [InlineData("309f21bd-f81c-4d4c-b9bf-53c802824a93", 1, true)]
+    [InlineData("309f21bd-f81c-4d4c-b9bf-53c802824a93", 2, false)]
+    [InlineData("f428dc09-62ee-4123-9b72-52a932b6decc", 1, false)]
+    public async Task TestCleanupAllowsOnlyTheExactNewQaIdentity(string sourceId, int version, bool allowed)
+    {
+        var own = Guid.Parse("309f21bd-f81c-4d4c-b9bf-53c802824a93");
+        var inner = new CountingHandler();
+        using var client = new HttpClient(new KnowledgeAcceptanceHandler(inner, (id, number) => id == own && number == 1))
+            { BaseAddress = new("https://knowledge.example.test") };
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/v1/knowledge/sources/{sourceId}/versions/{version}/delete");
+        if (allowed)
+        {
+            using var response = await client.SendAsync(request);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal(1, inner.Calls);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() => client.SendAsync(request));
+            Assert.Equal(0, inner.Calls);
+        }
+    }
+
+    [Theory]
+    [InlineData("supersede")]
+    [InlineData("reindex")]
+    public async Task TestCleanupDoesNotAuthorizeOtherLifecycleCommands(string action)
+    {
+        var inner = new CountingHandler();
+        using var client = new HttpClient(new KnowledgeAcceptanceHandler(inner, (_, _) => true))
+            { BaseAddress = new("https://knowledge.example.test") };
+        using var request = new HttpRequestMessage(HttpMethod.Post, Source + action);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => client.SendAsync(request));
+        Assert.Equal(0, inner.Calls);
+    }
+
     private sealed class CountingHandler : HttpMessageHandler
     {
         public int Calls { get; private set; }

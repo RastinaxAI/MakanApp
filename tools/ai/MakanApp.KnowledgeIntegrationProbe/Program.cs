@@ -39,6 +39,8 @@ internal static class KnowledgeProbeProgram
 
     public static async Task<int> Main(string[] args)
     {
+        if (args.SequenceEqual(["--run-live", "--allow-remote-https", "--test-runtime"]))
+            return await TestRuntimeAcceptance.RunAsync();
         if (args.Length == 2 && args[0] == "--audit-local-pending") return await KnowledgePendingAudit.RunAsync(args[1]);
         if (!args.SequenceEqual(["--run-live", "--allow-remote-https"])) return 2;
         output = Console.Out; var originalError = Console.Error;
@@ -209,13 +211,14 @@ internal static class KnowledgeProbeProgram
         finally { Console.SetOut(output); Console.SetError(originalError); }
     }
 
-    private static async Task<(HttpClient Client, Guid Id)> CreateActor(WebApplicationFactory<global::Program> application, int number)
+    internal static async Task<(HttpClient Client, Guid Id)> CreateActor(WebApplicationFactory<global::Program> application, int number, bool mockOtp = false)
     {
         var client = application.CreateClient(); client.Timeout = TimeSpan.FromSeconds(75);
         var phone = "+9891300099" + number.ToString("D2");
         using var challengeResponse = await client.PostAsJsonAsync("/api/v1/auth/otp/challenges", new RequestOtpCommand(phone), Json);
         challengeResponse.EnsureSuccessStatusCode(); var challenge = (await challengeResponse.Content.ReadFromJsonAsync<RequestOtpResult>(Json))!;
-        var otp = application.Services.GetRequiredService<OtpProviderTestControl>().GetLatestCode(phone);
+        var otp = mockOtp ? RandomNumberGenerator.GetInt32(100000, 1000000).ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : application.Services.GetRequiredService<OtpProviderTestControl>().GetLatestCode(phone);
         using var verify = await client.PostAsJsonAsync("/api/v1/auth/otp/verify", new VerifyOtpCommand(challenge.ChallengeId, phone, otp), Json);
         verify.EnsureSuccessStatusCode(); var user = (await verify.Content.ReadFromJsonAsync<VerifyOtpResult>(Json))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", user.AccessToken);
@@ -223,7 +226,7 @@ internal static class KnowledgeProbeProgram
         profile.EnsureSuccessStatusCode(); return (client, user.User.Id);
     }
 
-    private static async Task Contract(MakanAppWebApplicationFactory factory, SubscriptionOwner owner)
+    internal static async Task Contract(MakanAppWebApplicationFactory factory, SubscriptionOwner owner)
     {
         await using var scope = factory.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>(); var now = DateTime.UtcNow;
         var plan = Plan.Create("knowledge-live." + Guid.NewGuid().ToString("N"), "قرارداد ساختگی QA؛ غیرقابل فروش", now.AddDays(-2), owner.Type);
@@ -236,7 +239,7 @@ internal static class KnowledgeProbeProgram
         db.Subscriptions.Add(Subscription.CreateMonthly(owner, version, now.AddHours(-1), 0, now, null, true)); await db.SaveChangesAsync();
     }
 
-    private static async Task<EducationalSourceResult> CreateSource(HttpClient client, byte[] bytes, string mime,
+    internal static async Task<EducationalSourceResult> CreateSource(HttpClient client, byte[] bytes, string mime,
         EducationalSourceScope scope = EducationalSourceScope.Personal, Guid? classId = null)
     {
         using var form = new MultipartFormDataContent(); var content = new ByteArrayContent(bytes); content.Headers.ContentType = new(mime);

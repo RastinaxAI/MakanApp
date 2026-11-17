@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Xunit;
 
 namespace MakanApp.UnitTests.Identity;
@@ -17,16 +18,38 @@ public sealed class TestConfigurationSchemaTests
     }
 
     [Fact]
-    public void AvailableRuntimeSettings_MatchBidirectionallyAndKeepEnvironmentSpecificOtp()
+    public void AvailableEffectiveRuntimeSettings_MatchBidirectionallyAndKeepEnvironmentSpecificOtp()
     {
-        using var production = ReadSettings(File.Exists(SettingsPath("appsettings.Production.json"))
+        using var production = ReadEffectiveSettings(File.Exists(SettingsPath("appsettings.Production.json"))
             ? "appsettings.Production.json" : "appsettings.Production.json.example");
-        using var test = ReadSettings(File.Exists(SettingsPath("appsettings.Test.json"))
+        using var test = ReadEffectiveSettings(File.Exists(SettingsPath("appsettings.Test.json"))
             ? "appsettings.Test.json" : "appsettings.Test.json.example");
-        // فقط ساختار و فلگ‌ها بررسی می‌شوند؛ مقدار خصوصی در assertion قرار نمی‌گیرد.
+        // میزبان فایل پایه و سپس override محیط را می‌خواند؛ مقدار خصوصی وارد assertion نمی‌شود.
         Assert.Equal(Shape(production.RootElement), Shape(test.RootElement));
         AssertOtp(production.RootElement, realOtp: true);
         AssertOtp(test.RootElement, realOtp: false);
+    }
+
+    [Fact]
+    public void RuntimeOverlay_RetainsInheritedKeysAndReplacesEnvironmentValues()
+    {
+        var settings = JsonNode.Parse("{\"Ai\":{\"Enabled\":false,\"TimeoutSeconds\":35},\"Otp\":{\"Enabled\":true}}")!.AsObject();
+        Overlay(settings, JsonNode.Parse("{\"Ai\":{\"Enabled\":true}}")!.AsObject());
+        Assert.True(settings["Ai"]!["Enabled"]!.GetValue<bool>());
+        Assert.Equal(35, settings["Ai"]!["TimeoutSeconds"]!.GetValue<int>());
+        Assert.True(settings["Otp"]!["Enabled"]!.GetValue<bool>());
+    }
+
+    [Theory]
+    [InlineData("{\"Ai\":{\"Extra\":true}}")]
+    [InlineData("{\"Ai\":{\"Enabled\":\"true\"}}")]
+    public void RuntimeOverlay_DoesNotHideExtraOrMistypedKeys(string environment)
+    {
+        using var baseline = JsonDocument.Parse("{\"Ai\":{\"Enabled\":false}}");
+        var settings = JsonNode.Parse(baseline.RootElement.GetRawText())!.AsObject();
+        Overlay(settings, JsonNode.Parse(environment)!.AsObject());
+        using var effective = JsonDocument.Parse(settings.ToJsonString());
+        Assert.False(Shape(baseline.RootElement).SequenceEqual(Shape(effective.RootElement)));
     }
 
     [Theory]
@@ -140,6 +163,24 @@ public sealed class TestConfigurationSchemaTests
     }
 
     private static JsonDocument ReadSettings(string fileName) => JsonDocument.Parse(File.ReadAllText(SettingsPath(fileName)));
+
+    private static JsonDocument ReadEffectiveSettings(string environmentFile)
+    {
+        var settings = JsonNode.Parse(File.ReadAllText(SettingsPath("appsettings.json")))!.AsObject();
+        Overlay(settings, JsonNode.Parse(File.ReadAllText(SettingsPath(environmentFile)))!.AsObject());
+        return JsonDocument.Parse(settings.ToJsonString());
+    }
+
+    private static void Overlay(JsonObject settings, JsonObject environment)
+    {
+        foreach (var property in environment)
+        {
+            if (settings[property.Key] is JsonObject inherited && property.Value is JsonObject replacement)
+                Overlay(inherited, replacement);
+            else
+                settings[property.Key] = property.Value?.DeepClone();
+        }
+    }
 
     private static string SettingsPath(string fileName)
     {
