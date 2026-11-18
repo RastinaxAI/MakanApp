@@ -12,10 +12,11 @@ public sealed class UsageReservationConfiguration : IEntityTypeConfiguration<Usa
         b.ToTable("UsageReservations", "commerce", t =>
         {
             t.HasCheckConstraint("CK_UsageReservations_Values", "[Amount]>0 AND [Status] BETWEEN 1 AND 4 AND [OwnerType] IN (1,2) AND [ContextType] BETWEEN 1 AND 3 AND [QuotaKey] BETWEEN 1 AND 7 AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc]");
-            t.HasCheckConstraint("CK_UsageReservations_Trial", "([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL)");
+            t.HasCheckConstraint("CK_UsageReservations_Trial", "([IsUnmetered]=0 AND (([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL))) OR ([IsUnmetered]=1 AND [IsTrial]=0 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1)");
             t.HasCheckConstraint("CK_UsageReservations_Finalization", "([Status] IN (1,4) AND [FinalizedAtUtc] IS NULL) OR ([Status] IN (2,3) AND [FinalizedAtUtc] IS NOT NULL)");
         });
         b.HasKey(r => r.Id);
+        b.Ignore(r => r.AccountingMode);
         b.HasAlternateKey(r => new { r.OwnerType, r.OwnerId, r.ConsumerUserId, r.Id });
         b.Property(r => r.PayloadHash).HasColumnType("binary(32)");
         b.Property(r => r.FinalizationReason).HasMaxLength(100);

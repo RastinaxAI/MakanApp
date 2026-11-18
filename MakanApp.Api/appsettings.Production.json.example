@@ -68,6 +68,7 @@
       "TimeToLiveSeconds": 3600
     }
   },
+  "AiUsage": { "Mode": "Unmetered" },
   "AiService": { "Enabled": false },
   "Storage": {
     "RootPath": "C:\\MakanAppData\\Production\\Storage"

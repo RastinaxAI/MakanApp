@@ -168,6 +168,9 @@ public static class DependencyInjection
         services.AddScoped<ICommercialStore>(p => p.GetRequiredService<EfCommercialStore>());
         services.AddScoped<CommercialSubscriptionService>();
         services.AddScoped<CommercialActorAccess>();
+        services.AddOptions<AiUsageOptions>().Bind(configuration.GetSection(AiUsageOptions.SectionName))
+            .Validate(o => Enum.IsDefined(o.Mode), "سیاست مصرف AI معتبر نیست.").ValidateOnStart();
+        services.AddSingleton(p => p.GetRequiredService<IOptions<AiUsageOptions>>().Value);
         services.AddScoped<CommercialAdminService>();
         services.AddScoped<ICommercialAdminStore, EfCommercialAdminStore>();
         services.AddOptions<CommercialOptions>().Bind(configuration.GetSection("Commerce"))

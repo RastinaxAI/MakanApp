@@ -61,6 +61,8 @@ internal static class LiveAiProgram
                     .SelectMany(i => i.GetIPProperties().UnicastAddresses).Any(a => a.Address.ToString() == "10.77.0.1"));
             var authentication = configuration.GetSection(AiServiceAuthenticationOptions.SectionName)
                 .Get<AiServiceAuthenticationOptions>() ?? new();
+            var usage = configuration.GetSection(AiUsageOptions.SectionName).Get<AiUsageOptions>() ?? new();
+            if (!Enum.IsDefined(usage.Mode)) throw new InvalidOperationException("LIVE_AI_USAGE_MODE_INVALID");
             var credentials = new HmacAiServiceCredentialProvider(authentication, TimeProvider.System);
             var options = new AiServiceOptions
             {
@@ -79,7 +81,7 @@ internal static class LiveAiProgram
             {
                 stage = "configuration", passed = true, AI_SERVICE_AUTH_ENABLED = options.UseServiceAuthentication,
                 baseUrl = target.GetLeftPart(UriPartial.Authority), options.TimeoutSeconds,
-                contractVersion = options.ContractVersion
+                contractVersion = options.ContractVersion, usageMode = usage.Mode.ToString()
             }));
             if (serviceAuthOnly)
             {
@@ -100,6 +102,7 @@ internal static class LiveAiProgram
                 services.RemoveAll<IAiServiceClient>();
                 services.RemoveAll<IAiServiceCredentialProvider>();
                 services.RemoveAll<AiServiceOptions>();
+                services.RemoveAll<AiUsageOptions>(); services.AddSingleton(usage);
                 services.RemoveAll<AiServiceCircuitBreaker>();
                 services.AddSingleton(options);
                 services.AddSingleton<IAiServiceCredentialProvider>(credentials);

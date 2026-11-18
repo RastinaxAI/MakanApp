@@ -10,10 +10,14 @@ public sealed partial class EfCommercialStore
 {
     public async Task<AiQuotaPreflightDto> PreflightAsync(CommercialContext context, DateTime utcNow, CancellationToken ct)
     {
+        if (context.Unmetered)
+            return new AiQuotaPreflightDto(AiPayerSelection.Individual, context.Owner.Type, context.Owner.Id,
+                "unmetered_operation", 1, null, null, true, null, false)
+                { UsageMode = MakanApp.Application.Ai.AiUsageMode.Unmetered };
         if (context.Trial)
         {
             var (start, end) = CommercialPeriods.TrialDay(utcNow);
-            var consumed = await db.UsageLedgerEntries.Where(e => e.SubscriptionId == null && e.OwnerType == SubscriptionOwnerType.Individual
+            var consumed = await db.UsageLedgerEntries.Where(e => !e.IsUnmetered && e.SubscriptionId == null && e.OwnerType == SubscriptionOwnerType.Individual
                 && e.OwnerId == context.ConsumerUserId && e.PeriodStartsAtUtc == start && e.QuotaKey == QuotaKey.AiTextRequests
                 && e.Status == UsageReservationStatus.Consumed).SumAsync(e => (long?)e.Amount, ct) ?? 0;
             var reserved = await db.UsageReservations.Where(r => r.IsTrial && r.ConsumerUserId == context.ConsumerUserId
@@ -61,7 +65,8 @@ public sealed partial class EfCommercialStore
         if (existing is not null)
         {
             if (existing.OwnerType != context.Owner.Type || existing.OwnerId != context.Owner.Id || existing.ContextType != context.ContextType
-                || existing.ContextId != context.ContextId || existing.QuotaKey != key || existing.IsTrial != context.Trial || !CryptographicOperations.FixedTimeEquals(existing.PayloadHash, hash))
+                || existing.ContextId != context.ContextId || existing.QuotaKey != key || existing.IsTrial != context.Trial
+                || existing.IsUnmetered != context.Unmetered || !CryptographicOperations.FixedTimeEquals(existing.PayloadHash, hash))
                 throw Error(CommerceErrorCodes.UsageConflict);
             if (tx is not null) await tx.CommitAsync(ct); return Map(existing, true);
         }
@@ -71,12 +76,22 @@ public sealed partial class EfCommercialStore
             if (!preflight.Allowed) throw Error(preflight.ErrorCode!);
         }
         else await RequireCapacityAsync(context.Owner, feature, key, 1, utcNow, ct);
-        var subscription = context.Trial ? null : await CurrentAsync(context.Owner, utcNow, ct);
-        var period = context.Trial ? CommercialPeriods.TrialDay(utcNow) : (subscription!.StartsAtUtc,
-            subscription.EndsAtUtc ?? throw Error(CommerceErrorCodes.TermsIncomplete));
-        var reservation = UsageReservation.Create(context.Owner, subscription?.Id, subscription?.PlanVersionId,
-            context.ConsumerUserId, context.ContextType, context.ContextId, key, period.Item1, period.Item2,
-            1, operationId, hash, context.Trial, utcNow);
+        UsageReservation reservation;
+        if (context.Unmetered)
+        {
+            if (context.Trial || key != QuotaKey.AiTextRequests || context.Owner != SubscriptionOwner.Individual(context.ConsumerUserId))
+                throw Error(CommerceErrorCodes.UsageInvalid);
+            reservation = UsageReservation.CreateUnmetered(context.ConsumerUserId, context.ContextType, context.ContextId, operationId, hash, utcNow);
+        }
+        else
+        {
+            var subscription = context.Trial ? null : await CurrentAsync(context.Owner, utcNow, ct);
+            var period = context.Trial ? CommercialPeriods.TrialDay(utcNow) : (subscription!.StartsAtUtc,
+                subscription.EndsAtUtc ?? throw Error(CommerceErrorCodes.TermsIncomplete));
+            reservation = UsageReservation.Create(context.Owner, subscription?.Id, subscription?.PlanVersionId,
+                context.ConsumerUserId, context.ContextType, context.ContextId, key, period.Item1, period.Item2,
+                1, operationId, hash, context.Trial, utcNow);
+        }
         db.UsageReservations.Add(reservation);
         db.UsageLedgerEntries.Add(UsageLedgerEntry.FromReservation(reservation, utcNow, "reserved"));
         realtime.CaptureCommerce();
@@ -103,5 +118,6 @@ public sealed partial class EfCommercialStore
     }
 
     private static UsageReservationDto Map(UsageReservation r, bool replayed) => new(r.Id, r.OperationId, r.OwnerType, r.OwnerId,
-        r.SubscriptionId, r.PlanVersionId, r.QuotaKey, r.Amount, r.PeriodStartsAtUtc, r.PeriodEndsAtUtc, r.Status, replayed);
+        r.SubscriptionId, r.PlanVersionId, r.QuotaKey, r.Amount, r.PeriodStartsAtUtc, r.PeriodEndsAtUtc, r.Status, replayed)
+        { AccountingMode = r.AccountingMode };
 }

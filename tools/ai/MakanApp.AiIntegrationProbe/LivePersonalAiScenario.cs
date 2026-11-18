@@ -41,8 +41,9 @@ internal sealed class LivePersonalAiScenario(MakanAppWebApplicationFactory facto
         var selected = (await selection.Content.ReadFromJsonAsync<AssistantContextResult>(json))!;
         Require(selected.UpstreamContextSupported && selected.Limitation is null, "PERSONAL_CONTEXT_NOT_SUPPORTED");
         Stage("personal_context_supported");
-        await CreateTestContractAsync(user.User.Id);
-        Stage("personal_test_contract_ready");
+        var unmetered = application.Services.GetRequiredService<AiUsageOptions>().IsUnmetered;
+        if (!unmetered) await CreateTestContractAsync(user.User.Id);
+        Stage(unmetered ? "personal_unmetered_no_contract" : "personal_test_contract_ready");
         var operation = Guid.NewGuid(); var correlation = "personal-live-" + Guid.NewGuid().ToString("N");
         client.DefaultRequestHeaders.Add("X-Correlation-ID", correlation);
         client.DefaultRequestHeaders.Add("X-AI-Operation-Id", operation.ToString("D"));
@@ -78,10 +79,14 @@ internal sealed class LivePersonalAiScenario(MakanAppWebApplicationFactory facto
         var reserves = await db.UsageLedgerEntries.CountAsync(l => l.ReservationId == reservation.Id && l.Status == UsageReservationStatus.Reserved);
         Require(reservation.Status == UsageReservationStatus.Consumed && reservation.OwnerType == SubscriptionOwnerType.Individual &&
             reservation.OwnerId == user.User.Id && consumes == 1 && reserves == 1 && !reservation.IsTrial, "LIVE_PERSONAL_LEDGER_NOT_SAFE");
+        Require(reservation.IsUnmetered == unmetered && (!unmetered || reservation.SubscriptionId is null &&
+            !await db.Subscriptions.AnyAsync(s => s.OwnerId == user.User.Id) &&
+            !await db.Orders.AnyAsync(o => o.PurchaserUserId == user.User.Id)), "LIVE_PERSONAL_ACCOUNTING_MODE_NOT_SAFE");
         Require(observation.MetricsSafe, "LIVE_PERSONAL_METRICS_NOT_SAFE");
         LiveAiProgram.EvidenceOutput.WriteLine(JsonSerializer.Serialize(new { stage = "personal_backend_acceptance", passed = true,
             reservationCount = 1, consumptionCount = consumes, reserveLedgerCount = reserves, replayStatus = (int)replay.StatusCode,
-            aiCalls = observation.OutgoingCalls, payer = "Individual", ordinaryAccount = true, metricsSafe = observation.MetricsSafe }));
+            aiCalls = observation.OutgoingCalls, accountingMode = reservation.AccountingMode.ToString(), noSubscription = unmetered,
+            ordinaryAccount = true, metricsSafe = observation.MetricsSafe }));
     }
 
     private async Task CreateTestContractAsync(Guid user)

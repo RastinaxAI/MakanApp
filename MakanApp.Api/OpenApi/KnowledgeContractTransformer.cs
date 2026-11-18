@@ -1,11 +1,12 @@
 using MakanApp.Application.Knowledge;
+using MakanApp.Application.Ai;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
 namespace MakanApp.Api.OpenApi;
 
-public sealed class KnowledgeContractTransformer : IOpenApiSchemaTransformer, IOpenApiOperationTransformer
+public sealed class KnowledgeContractTransformer(AiUsageOptions aiUsage) : IOpenApiSchemaTransformer, IOpenApiOperationTransformer
 {
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken ct)
     {
@@ -15,6 +16,9 @@ public sealed class KnowledgeContractTransformer : IOpenApiSchemaTransformer, IO
         if (type == typeof(KnowledgeRagResponse)) SetEnum("status", ["Ok", "InsufficientEvidence"]);
         if (type == typeof(KnowledgeQueryCommand))
         {
+            if (schema.Properties.TryGetValue("payer", out var payer)) payer.Description = aiUsage.IsUnmetered
+                ? "در Unmetered اختیاری و فقط برای سازگاری enum است؛ پرداخت، Subscription، سهمیه و انتخاب Payer لازم نیست."
+                : "انتخاب تجاری مستقل از ACL منبع؛ FreeTrial باید صریح باشد.";
             if (schema.Properties.TryGetValue("query", out var query)) { query.MinLength = 1; query.MaxLength = 4000; }
             if (schema.Properties.TryGetValue("sources", out var sources)) { sources.MinItems = 1; sources.MaxItems = 32; }
             if (schema.Properties.TryGetValue("maxResults", out var maximum)) { maximum.Minimum = 1; maximum.Maximum = 20; }
@@ -35,14 +39,17 @@ public sealed class KnowledgeContractTransformer : IOpenApiSchemaTransformer, IO
             !(route.StartsWith("api/v1/sources/", StringComparison.Ordinal) && route.Contains("/knowledge/", StringComparison.Ordinal))) return Task.CompletedTask;
         operation.Description = "نشست فعال، Context و SourceVersion دقیق در Backend بازبینی می‌شوند؛ Library بسته است. " +
             "Feature Gate باید فعال باشد. ClientOperationId در body کلید intent است؛ Headerهای Operation/Payer مسیر Business AI برای این API استفاده نمی‌شوند. " +
-            "RAG از سهمیهٔ SimpleText موجود استفاده می‌کند؛ replay تکمیل‌شده409 است و پاسخ خصوصی ذخیره نمی‌شود. " +
+            (aiUsage.IsUnmetered ? "در Unmetered شرط تجاری Subscription/Entitlement، سقف سهمیه و Trial و سقف محلی ai-chat اعمال نمی‌شود؛ رکورد عملیات پایدار، مصرف تجاری نیست. "
+                : "RAG از سهمیهٔ SimpleText موجود استفاده می‌کند. ") +
+            "replay تکمیل‌شده409 است و پاسخ خصوصی ذخیره نمی‌شود. " +
             "Citation مجوز نیست؛ پس از پاسخ نیز دسترسی دوباره بررسی می‌شود. Ingest و lifecycle به writer و ExpectedVersion جاری نیاز دارند.";
         operation.Responses ??= new();
         foreach (var (status, description) in new[]
         {
-            ("401", "نشست نامعتبر."), ("403", "مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد."),
-            ("404", "منبع ناموجود یا خارج از دسترسی جاری؛ concealment."), ("409", "نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است."),
-            ("422", "قرارداد Knowledge یا Query معتبر نیست."), ("429", "محدودیت درخواست حساب."),
+            ("401", "نشست نامعتبر."), ("403", aiUsage.IsUnmetered ? "مجوز منبع یا زمینه وجود ندارد." : "مجوز مدیریت منبع یا Entitlement تجاری وجود ندارد."),
+            ("404", "منبع ناموجود یا خارج از دسترسی جاری؛ concealment."),
+            ("409", aiUsage.IsUnmetered ? "نسخه/intent یا وضعیت پردازش ناسازگار است؛ منبع قابل استفاده نیست." : "نسخه/intent/وضعیت پردازش یا سهمیه ناسازگار است."),
+            ("422", "قرارداد Knowledge یا Query معتبر نیست."), ("429", aiUsage.IsUnmetered ? "سرویس بالادستی درخواست را محدود کرده است؛ Retry خودکار انجام نمی‌شود." : "محدودیت درخواست حساب یا بالادستی."),
             ("502", "پاسخ یا Citation معتبر و grounded نیست."), ("503", "Feature یا dependency آماده نیست."),
             ("504", "مهلت HTTP یا polling تمام شده است؛ retry خودکار وجود ندارد.")
         }) operation.Responses.TryAdd(status, new OpenApiResponse { Description = description, Content = new Dictionary<string, OpenApiMediaType>

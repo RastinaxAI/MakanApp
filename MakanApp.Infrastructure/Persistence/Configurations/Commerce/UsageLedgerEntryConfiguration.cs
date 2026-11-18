@@ -15,6 +15,7 @@ public sealed class UsageLedgerEntryConfiguration : IEntityTypeConfiguration<Usa
             table.HasCheckConstraint("CK_UsageLedger_Owner", "([OwnerType]=1 AND [OrganizationId] IS NULL) OR ([OwnerType]=2 AND [OrganizationId]=[OwnerId] AND [OrganizationId] IS NOT NULL)");
             table.HasCheckConstraint("CK_UsageLedger_Reservation", "[ReservationId] IS NULL OR ([ConsumerUserId] IS NOT NULL AND [ContextType] IS NOT NULL AND [ContextId] IS NOT NULL AND [PeriodStartsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc])");
             table.HasCheckConstraint("CK_UsageLedger_Amount", "[Amount] > 0");
+            table.HasCheckConstraint("CK_UsageLedger_Unmetered", "[IsUnmetered]=0 OR ([ReservationId] IS NOT NULL AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [ConsumerUserId] IS NOT NULL AND [QuotaKey]=5 AND [Amount]=1)");
         });
         builder.HasKey(entry => entry.Id);
         builder.Property(entry => entry.OccurredAtUtc).HasColumnType("datetime2(7)");

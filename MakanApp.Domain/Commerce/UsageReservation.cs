@@ -18,6 +18,9 @@ public sealed class UsageReservation
     public Guid OperationId { get; private set; }
     public byte[] PayloadHash { get; private set; } = [];
     public bool IsTrial { get; private set; }
+    public bool IsUnmetered { get; private set; }
+    public UsageAccountingMode AccountingMode => IsUnmetered ? UsageAccountingMode.Unmetered
+        : IsTrial ? UsageAccountingMode.FreeTrial : UsageAccountingMode.Commercial;
     public UsageReservationStatus Status { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? FinalizedAtUtc { get; private set; }
@@ -41,6 +44,24 @@ public sealed class UsageReservation
             PlanVersionId = versionId, ConsumerUserId = consumerUserId, ContextType = contextType, ContextId = contextId,
             QuotaKey = key, PeriodStartsAtUtc = start, PeriodEndsAtUtc = end, Amount = amount, OperationId = operationId,
             PayloadHash = hash.ToArray(), IsTrial = trial, Status = UsageReservationStatus.Reserved, CreatedAtUtc = utcNow
+        };
+    }
+
+    public static UsageReservation CreateUnmetered(Guid consumerUserId, CommerceContextType contextType,
+        Guid contextId, Guid operationId, byte[] hash, DateTime utcNow)
+    {
+        CommercialPeriods.RequireUtc(utcNow);
+        if (consumerUserId == Guid.Empty || contextId == Guid.Empty || operationId == Guid.Empty ||
+            hash is not { Length: 32 } || !Enum.IsDefined(contextType) || utcNow == DateTime.MaxValue)
+            throw new ArgumentException("عملیات نامحدود معتبر نیست.");
+        return new UsageReservation
+        {
+            Id = Guid.NewGuid(), OwnerType = SubscriptionOwnerType.Individual, OwnerId = consumerUserId,
+            ConsumerUserId = consumerUserId, ContextType = contextType, ContextId = contextId,
+            QuotaKey = QuotaKey.AiTextRequests, Amount = 1, OperationId = operationId, PayloadHash = hash.ToArray(),
+            // پنجرهٔ نامحدودِ ثبت عملیات است؛ دورهٔ سهمیه یا تاریخ Subscription ساخته نمی‌شود.
+            PeriodStartsAtUtc = utcNow, PeriodEndsAtUtc = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc),
+            IsUnmetered = true, IsTrial = false, Status = UsageReservationStatus.Reserved, CreatedAtUtc = utcNow
         };
     }
 

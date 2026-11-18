@@ -13,6 +13,7 @@ public sealed partial class UsageLedgerEntry
     public DateTime? PeriodEndsAtUtc { get; private set; }
     public UsageReservationStatus Status { get; private set; } = UsageReservationStatus.Consumed;
     public string? ReasonCode { get; private set; }
+    public bool IsUnmetered { get; private set; }
 
     public static UsageLedgerEntry FromReservation(UsageReservation reservation, DateTime utcNow, string reasonCode)
     {
@@ -28,7 +29,8 @@ public sealed partial class UsageLedgerEntry
             ContextType = reservation.ContextType, ContextId = reservation.ContextId,
             PeriodStartsAtUtc = reservation.PeriodStartsAtUtc, PeriodEndsAtUtc = reservation.PeriodEndsAtUtc,
             QuotaKey = reservation.QuotaKey, Amount = reservation.Amount, SourceOperationId = reservation.OperationId,
-            Status = reservation.Status, ReasonCode = reasonCode, OccurredAtUtc = utcNow
+            Status = reservation.Status, ReasonCode = reasonCode, OccurredAtUtc = utcNow,
+            IsUnmetered = reservation.IsUnmetered
         };
     }
 }

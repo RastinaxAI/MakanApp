@@ -166,7 +166,9 @@ builder.Services.AddRateLimiter(options =>
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 10)));
     options.AddPolicy("ai-chat", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
+        httpContext.RequestServices.GetRequiredService<AiUsageOptions>().IsUnmetered
+        ? RateLimitPartition.GetNoLimiter(GetAuthenticatedPartitionKey(httpContext))
+        : RateLimitPartition.GetFixedWindowLimiter(
             GetAuthenticatedPartitionKey(httpContext),
             _ => FixedWindow(builder.Environment, 20)));
     options.OnRejected = async (context, cancellationToken) =>

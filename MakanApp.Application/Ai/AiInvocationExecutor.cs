@@ -9,7 +9,7 @@ using MakanApp.Domain.Organization;
 namespace MakanApp.Application.Ai;
 
 public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce, IAccessContextResolver contexts,
-    IAiRuntimeAvailability runtime) : IAiInvocationExecutor
+    IAiRuntimeAvailability runtime, AiUsageOptions aiUsage) : IAiInvocationExecutor
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     public async Task<TResponse> ExecuteAsync<TRequest, TResponse>(Guid userId, Guid sessionId, TRequest request,
@@ -38,7 +38,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
                 org.GetString() != context.OrganizationId.Value.ToString("D") || school.GetString() != org.GetString()) throw Denied();
             if (context.AssistantClassId.HasValue && (!scope.TryGetProperty("classId", out var classroom) || classroom.GetString() != context.AssistantClassId.Value.ToString("D"))) throw Denied();
         }
-        var quotaContext = AiInvocationContext.CommerceContext(context, command.Payer);
+        var quotaContext = AiInvocationContext.CommerceContext(context, aiUsage.NormalizePayer(command.Payer));
         var hash = Fingerprint(request, context);
         // Reserve موجود، replay را پیش از بررسی دوبارهٔ مانده تشخیص می‌دهد؛ آخرین سهمیه نیز retry-safe است.
         // بررسی Preflight اتمیکِ نهایی در همان transaction کوتاه Reserve انجام می‌شود.

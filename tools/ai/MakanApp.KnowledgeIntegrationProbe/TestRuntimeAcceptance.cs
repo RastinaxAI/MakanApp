@@ -54,6 +54,8 @@ internal static class TestRuntimeAcceptance
             var configuration = new ConfigurationBuilder().AddJsonFile(baseFile).AddJsonFile(testFile).Build();
             var ai = configuration.GetSection(AiServiceOptions.SectionName).Get<AiServiceOptions>()!;
             var knowledge = configuration.GetSection(AiKnowledgeOptions.SectionName).Get<AiKnowledgeOptions>()!;
+            var usage = configuration.GetSection(AiUsageOptions.SectionName).Get<AiUsageOptions>() ?? new();
+            Require(Enum.IsDefined(usage.Mode), "TEST_AI_USAGE_MODE_INVALID");
             var otp = OtpAuthenticationOptions.Load(configuration, "Test");
             Require(!otp.Enabled && otp.AllowMockAuthentication, "AUTHORIZED_TEST_MOCK_REQUIRED");
             Require(ai.Enabled && knowledge.Enabled && !ai.UseServiceAuthentication && !knowledge.UseServiceAuthentication &&
@@ -67,7 +69,7 @@ internal static class TestRuntimeAcceptance
             zibal.Validate("Test", zibalSelected);
             Write(new { stage, passed = true, aiServiceAuth = false, knowledgeServiceAuth = false,
                 aiTimeoutSeconds = ai.TimeoutSeconds, knowledge.StatusPollAttempts, knowledge.StatusPollIntervalMilliseconds,
-                knowledge.StatusPollTimeoutSeconds, zibalConfigured = zibalSelected && zibal.IsComplete });
+                knowledge.StatusPollTimeoutSeconds, zibalConfigured = zibalSelected && zibal.IsComplete, usageMode = usage.Mode.ToString() });
 
             using var factory = MakanAppWebApplicationFactory.CreateKnowledgeProbe();
             string isolatedConnection;
@@ -139,6 +141,13 @@ internal static class TestRuntimeAcceptance
                 var source = await KnowledgeProbeProgram.CreateSource(client,
                     Encoding.UTF8.GetBytes("Synthetic QA only: planet Aster has three moons, named Luma, Neri and Osa."), "text/plain");
                 cleanupIdentities.TryAdd((source.SourceId, source.Revision), 0);
+                if (usage.IsUnmetered)
+                {
+                    // قرارداد فقط برای ایجاد فایل QA بود؛ AI با قرارداد لغوشده و بدون Entitlement فعال آزموده می‌شود.
+                    await using var scope = application.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
+                    (await db.Subscriptions.SingleAsync(s => s.OwnerId == actor.Id)).Cancel(factory.Clock.GetUtcNow().UtcDateTime);
+                    await db.SaveChangesAsync();
+                }
                 var ingestAccepted = false;
                 try
                 {
@@ -184,7 +193,10 @@ internal static class TestRuntimeAcceptance
                         var consumed = await db.UsageLedgerEntries.CountAsync(l => l.ReservationId == reservation.Id && l.Status == UsageReservationStatus.Consumed);
                         Require(reservation.OwnerType == SubscriptionOwnerType.Individual && reservation.OwnerId == actor.Id &&
                             reservation.Status == UsageReservationStatus.Consumed && consumed == 1 && ragCalls == 1 && !await db.Memberships.AnyAsync(), "PERSONAL_USAGE_NOT_SAFE");
-                        Write(new { stage = "test_personal_usage", passed = true, consumed, ragCalls, syntheticOrganizationRoles = 0 });
+                        Require(reservation.IsUnmetered == usage.IsUnmetered && (!usage.IsUnmetered || reservation.SubscriptionId is null &&
+                            !await db.Subscriptions.AnyAsync(s => s.OwnerId == actor.Id && s.Status == SubscriptionStatus.Active)), "KNOWLEDGE_ACCOUNTING_MODE_NOT_SAFE");
+                        Write(new { stage = "test_personal_usage", passed = true, consumed, ragCalls, syntheticOrganizationRoles = 0,
+                            accountingMode = reservation.AccountingMode.ToString(), noActiveSubscription = usage.IsUnmetered });
                     }
                     var other = await KnowledgeProbeProgram.CreateActor(application, 2, mockOtp: true);
                     using var otherClient = other.Client;

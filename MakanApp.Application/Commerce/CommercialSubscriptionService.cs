@@ -1,10 +1,12 @@
 using MakanApp.Application.Organization;
+using MakanApp.Application.Ai;
 using MakanApp.Domain.Commerce;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Commerce;
 
-public sealed class CommercialSubscriptionService(IAccessContextResolver accessResolver, CommercialActorAccess actors, ICommercialStore store, TimeProvider timeProvider)
+public sealed class CommercialSubscriptionService(IAccessContextResolver accessResolver, CommercialActorAccess actors, ICommercialStore store,
+    TimeProvider timeProvider, AiUsageOptions aiUsage)
 {
     public async Task<IReadOnlyList<CommercialPlanDto>> CatalogAsync(Guid userId, Guid sessionId, SubscriptionOwnerType audience, CancellationToken cancellationToken)
     {
@@ -31,7 +33,7 @@ public sealed class CommercialSubscriptionService(IAccessContextResolver accessR
     {
         var context = await ResolveContextAsync(userId, sessionId, command, cancellationToken);
         var result = await store.PreflightAsync(context, Now(), cancellationToken);
-        return result with { RequiresExplicitSelection = command.Payer is null && command.ContextType == CommerceContextType.Organization };
+        return result with { RequiresExplicitSelection = !aiUsage.IsUnmetered && command.Payer is null && command.ContextType == CommerceContextType.Organization };
     }
 
     public async Task<UsageReservationDto> ReserveSimpleTextAsync(Guid userId, Guid sessionId, ReserveUsageCommand command, CancellationToken cancellationToken)
@@ -89,6 +91,8 @@ public sealed class CommercialSubscriptionService(IAccessContextResolver accessR
             if (command.ContextId.HasValue && command.ContextId != userId) throw Denied();
             contextId = userId;
         }
+        if (aiUsage.IsUnmetered)
+            return new CommercialContext(userId, SubscriptionOwner.Individual(userId), command.ContextType, contextId, false, true);
         var payer = command.Payer ?? (command.ContextType == CommerceContextType.Organization ? AiPayerSelection.Organization : AiPayerSelection.Individual);
         if (payer == AiPayerSelection.Organization && command.ContextType != CommerceContextType.Organization) throw Denied();
         var owner = payer == AiPayerSelection.Organization ? SubscriptionOwner.Organization(contextId) : SubscriptionOwner.Individual(userId);

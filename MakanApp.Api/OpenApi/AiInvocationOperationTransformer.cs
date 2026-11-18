@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using MakanApp.Application.Ai;
 
 namespace MakanApp.Api.OpenApi;
 
-public sealed class AiInvocationOperationTransformer : IOpenApiOperationTransformer
+public sealed class AiInvocationOperationTransformer(AiUsageOptions aiUsage) : IOpenApiOperationTransformer
 {
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
@@ -17,13 +18,18 @@ public sealed class AiInvocationOperationTransformer : IOpenApiOperationTransfor
             Description = "شناسهٔ ثابت intent برای Retry؛ در صورت وجود OperationId در body باید یکسان باشد. حذف Header برای هر درخواست شناسهٔ تازه می‌سازد.",
             Schema = new OpenApiSchema { Type = "string", Format = "uuid" } });
         operation.Parameters.Add(new OpenApiParameter { Name = "X-AI-Payer", In = ParameterLocation.Header, Required = false,
-            Description = "Context از Assistant selection می‌آید: در Organization پیش‌فرض Organization و در Personal پیش‌فرض Individual است؛ FreeTrial صریح است. Payer مجوز داده را تغییر نمی‌دهد؛ Organization در Personal ممنوع و fallback خودکار بسته است.",
+            Description = aiUsage.IsUnmetered
+                ? "در Unmetered این Header اختیاری فقط از نظر syntax/enum بررسی می‌شود؛ Subscription، پرداخت، سهمیه یا انتخاب Payer لازم نیست و اثر تجاری ندارد. مجوز نشست، نقش، Context و Source مستقل باقی‌اند."
+                : "Context از Assistant selection می‌آید: در Organization پیش‌فرض Organization و در Personal پیش‌فرض Individual است؛ FreeTrial صریح است. Payer مجوز داده را تغییر نمی‌دهد؛ Organization در Personal ممنوع و fallback خودکار بسته است.",
             Schema = new OpenApiSchema { Type = "string", Enum = new List<IOpenApiAny> { new OpenApiString("Organization"), new OpenApiString("Individual"), new OpenApiString("FreeTrial") } } });
-        operation.Responses.TryAdd("409", new OpenApiResponse { Description = "Conflict عملیات/سهمیه؛ AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود." });
+        operation.Responses.TryAdd("409", new OpenApiResponse { Description = (aiUsage.IsUnmetered ? "تعارض عملیات؛ " : "تعارض عملیات/سهمیه؛ ") +
+            "AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود." });
         if (route == "api/v1/ai/chat")
         {
             operation.Description = (operation.Description ?? "") + " زمینهٔ Personal با Actor رسمی Personal و scope تهی به سرویس AI v1 ارسال می‌شود؛ نقش سازمانی لازم نیست. " +
-                "Assistant مستقل از School Workspace است. Individual پیش‌فرض و FreeTrial صریح است؛ Organization در Personal مجاز نیست. رزرو معتبر پیش از تماس AI لازم است. " +
+                (aiUsage.IsUnmetered
+                    ? "در Unmetered ورود و Context معتبر لازم است؛ Subscription/Entitlement تجاری، سهمیه، Trial روزانه و سقف محلی ai-chat اعمال نمی‌شوند. رکورد عملیات پایدار پیش از AI ثبت می‌شود و مصرف تجاری ندارد. "
+                    : "Assistant مستقل از School Workspace است. Individual پیش‌فرض و FreeTrial صریح است؛ Organization در Personal مجاز نیست. رزرو معتبر پیش از تماس AI لازم است. ") +
                 "برای منابع شخصی آماده از APIهای موجود Knowledge Retrieve/RAG استفاده شود؛ selectedSourceIds در Chat هنوز AI_SOURCE_RETRIEVAL_NOT_AVAILABLE می‌دهد.";
         }
         foreach (var response in operation.Responses.Values)

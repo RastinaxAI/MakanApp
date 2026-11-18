@@ -13,7 +13,7 @@ public sealed record KnowledgeAuthorizedSources(SourceActor Actor, IReadOnlyList
     IReadOnlyList<KnowledgeSourceVersion> Versions, AiQuotaPreflightCommand Commerce);
 
 public sealed class KnowledgeAuthorizationService(IAccountOperationContextResolver accounts, IAccessContextResolver contexts,
-    IEducationalSourceStore sources, IAiSourceSelectionStore pins)
+    IEducationalSourceStore sources, IAiSourceSelectionStore pins, AiUsageOptions aiUsage)
 {
     public async Task<KnowledgeAuthorizedSources> ResolveAsync(Guid user, Guid session,
         IReadOnlyList<KnowledgeSourceVersion>? requested, AiPayerSelection? payer, CancellationToken ct)
@@ -22,6 +22,7 @@ public sealed class KnowledgeAuthorizationService(IAccountOperationContextResolv
             requested.Any(x => x is null || x.SourceId == Guid.Empty || x.Version < 1) ||
             requested.Select(x => x.SourceId).Distinct().Count() != requested.Count || payer.HasValue && !Enum.IsDefined(payer.Value))
             throw new AiKnowledgeException(KnowledgeErrorCodes.InvalidRequest, 422);
+        payer = aiUsage.NormalizePayer(payer);
         var account = await accounts.PersonalAsync(user, session, ct);
         var current = await contexts.ResolveAsync(user, session, ct);
         var organization = current.WorkspaceType == WorkspaceType.Organization ? current : null;

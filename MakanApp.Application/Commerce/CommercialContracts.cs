@@ -46,14 +46,20 @@ public sealed record CommercialSummaryDto(SubscriptionOwnerType OwnerType, Guid 
 }
 public sealed record AiQuotaPreflightCommand(CommerceContextType ContextType, Guid? ContextId = null, AiPayerSelection? Payer = null);
 public sealed record CommercialContext(Guid ConsumerUserId, SubscriptionOwner Owner, CommerceContextType ContextType,
-    Guid ContextId, bool Trial);
+    Guid ContextId, bool Trial, bool Unmetered = false);
 public sealed record AiQuotaPreflightDto(AiPayerSelection Payer, SubscriptionOwnerType OwnerType, Guid OwnerId,
     string Unit, long Amount, long? Remaining, DateTime? PeriodEndsAtUtc, bool Allowed, string? ErrorCode,
-    bool RequiresExplicitSelection, bool AuthorizesEducationalData = false);
+    bool RequiresExplicitSelection, bool AuthorizesEducationalData = false)
+{
+    public MakanApp.Application.Ai.AiUsageMode UsageMode { get; init; } = MakanApp.Application.Ai.AiUsageMode.Commercial;
+}
 public sealed record ReserveUsageCommand(AiQuotaPreflightCommand Context, Guid OperationId, byte[] PayloadHash);
 public sealed record UsageReservationDto(Guid ReservationId, Guid OperationId, SubscriptionOwnerType OwnerType,
     Guid OwnerId, Guid? SubscriptionId, Guid? PlanVersionId, QuotaKey QuotaKey, long Amount,
-    DateTime PeriodStartsAtUtc, DateTime PeriodEndsAtUtc, UsageReservationStatus Status, bool Replayed);
+    DateTime PeriodStartsAtUtc, DateTime PeriodEndsAtUtc, UsageReservationStatus Status, bool Replayed)
+{
+    public UsageAccountingMode AccountingMode { get; init; } = UsageAccountingMode.Commercial;
+}
 public sealed record ScheduleDowngradeCommand(Guid PlanVersionId, string ExpectedVersion, string Reason);
 public sealed record CommercialQuoteDto(CommercialOrderPurpose Purpose, Guid PlanVersionId, Guid? SubscriptionId,
     decimal PriceToman, string DisplayCurrency, DateTime EffectiveAtUtc, DateTime PeriodEndsAtUtc,
