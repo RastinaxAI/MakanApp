@@ -48,7 +48,24 @@ public sealed record AiChatRequest(
     AiActor Actor,
     AiScope Scope,
     AiMessage Message,
-    AiAuthorizedContext Context) : IAiServiceRequest;
+    AiChatAuthorizedContext Context) : IAiServiceRequest
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<AiHistoryTurn>? History { get; init; }
+}
+
+public sealed record AiChatAuthorizedContext(
+    IReadOnlyCollection<IReadOnlyDictionary<string, JsonElement>> Subjects,
+    IReadOnlyCollection<IReadOnlyDictionary<string, JsonElement>> Grades,
+    IReadOnlyCollection<IReadOnlyDictionary<string, JsonElement>> Homeworks,
+    IReadOnlyCollection<IReadOnlyDictionary<string, JsonElement>> Exams,
+    IReadOnlyCollection<IReadOnlyDictionary<string, JsonElement>> Activity)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public AiAssistantProfile? AssistantProfile { get; init; }
+    public static implicit operator AiChatAuthorizedContext(AiAuthorizedContext value) =>
+        new(value.Subjects, value.Grades, value.Homeworks, value.Exams, value.Activity);
+}
 
 [JsonConverter(typeof(AiSeverityJsonConverter))]
 public enum AiSeverity

@@ -24,7 +24,7 @@ public sealed class AiChatServiceTests
         var resolver = new StubContextResolver(context);
         var scopeStore = new StubScopeStore { LearnerId = Guid.NewGuid() };
         var client = new RecordingClient();
-        var service = new AiChatService(resolver, scopeStore, client, new NoSourceSelection(), new DirectInvocation());
+        var service = new AiChatService(resolver, scopeStore, client, new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
 
         var result = await service.ChatAsync(
             context.UserId,
@@ -56,7 +56,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection(), new DirectInvocation());
+            client, new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -76,7 +76,7 @@ public sealed class AiChatServiceTests
         var context = new AccessContext(user, user, Guid.NewGuid(), WorkspaceType.Personal, null, null, null, null);
         var client = new RecordingClient();
         var service = new AiChatService(new StubContextResolver(context), new StubScopeStore(), client,
-            new NoSourceSelection(), new DirectInvocation());
+            new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
 
         var result = await service.ChatAsync(user, context.SessionId,
             "personal-contract", new SendAiChatCommand("پرسش شخصی", null), default);
@@ -84,7 +84,9 @@ public sealed class AiChatServiceTests
         Assert.Equal("پاسخ", result.Answer.Text);
         Assert.Equal(new AiActor(user.ToString("D"), "Personal"), client.Request!.Actor);
         Assert.Equal(new AiScope(null, null, null, null), client.Request.Scope);
-        Assert.Equal(AiAuthorizedContext.Empty, client.Request.Context);
+        Assert.Empty(client.Request.Context.Subjects);
+        Assert.Empty(client.Request.Context.Grades);
+        Assert.Null(client.Request.Context.AssistantProfile);
     }
 
     [Fact]
@@ -95,7 +97,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection(), new DirectInvocation());
+            client, new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -118,7 +120,7 @@ public sealed class AiChatServiceTests
         var service = new AiChatService(
             new StubContextResolver(context),
             new StubScopeStore(),
-            client, new NoSourceSelection(), new DirectInvocation());
+            client, new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
 
         var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(
             context.UserId,
@@ -129,6 +131,19 @@ public sealed class AiChatServiceTests
 
         Assert.Equal(AiServiceErrorCodes.InvalidRequest, error.Code);
         Assert.Null(client.Request);
+    }
+
+    [Fact]
+    public async Task ChatAsync_ClassSwitchAfterProviderIsDeniedEvenWhenClassIsHiddenFromJson()
+    {
+        var context = OrganizationContext(OrganizationRole.Teacher) with { AssistantClassId = Guid.NewGuid() };
+        var resolver = new StubContextResolver(context);
+        var client = new RecordingClient { AfterResponse = () => resolver.Current = context with { AssistantClassId = Guid.NewGuid() } };
+        var service = new AiChatService(resolver, new StubScopeStore(), client, new NoSourceSelection(), new DirectInvocation(), new MemoryAiConversations());
+        var error = await Assert.ThrowsAsync<AiServiceException>(() => service.ChatAsync(context.UserId, context.SessionId,
+            "class-context-race", new SendAiChatCommand("private class question", null), default));
+        Assert.Equal(AiServiceErrorCodes.ContextNotAllowed, error.Code);
+        Assert.NotNull(client.Request);
     }
 
     private static AccessContext OrganizationContext(
@@ -145,10 +160,11 @@ public sealed class AiChatServiceTests
 
     private sealed class StubContextResolver(AccessContext context) : IAccessContextResolver
     {
+        public AccessContext Current { get; set; } = context;
         public Task<AccessContext> ResolveAsync(
             Guid userId,
             Guid sessionId,
-            CancellationToken cancellationToken) => Task.FromResult(context);
+            CancellationToken cancellationToken) => Task.FromResult(Current);
     }
 
     private sealed class StubScopeStore : IAiScopeStore
@@ -168,6 +184,8 @@ public sealed class AiChatServiceTests
 
     private sealed class RecordingClient : IAiServiceClient
     {
+        public Action? AfterResponse { get; init; }
+        public IAsyncEnumerable<AiChatStreamEvent> StreamChatAsync(AiChatRequest request, CancellationToken ct) => throw new NotSupportedException();
         public AiChatRequest? Request { get; private set; }
 
         public Task<AiChatResponse> ChatAsync(
@@ -175,6 +193,7 @@ public sealed class AiChatServiceTests
             CancellationToken cancellationToken)
         {
             Request = request;
+            AfterResponse?.Invoke();
             return Task.FromResult(new AiChatResponse(
                 request.RequestId,
                 request.CorrelationId,
@@ -199,20 +218,26 @@ public sealed class AiChatServiceTests
         public Task<AiRoleInsightResponse> GetManagerClassInsightAsync(AiManagerClassInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<AiRoleInsightResponse> GetManagerStudentInsightAsync(AiManagerStudentInsightRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
-    private sealed class NoSourceSelection : IAiSourceSelectionService
+    private sealed class NoSourceSelection : IAiChatSources
     {
-        public Task GuardAsync(Guid u, Guid s, AiSourceOperation op, IReadOnlyCollection<Guid>? ids,
-            Guid? operationId, object payload, Guid? classId, Guid? assignmentId, CancellationToken ct)
-        { Assert.Empty(ids ?? []); return Task.CompletedTask; }
-        public Task<AiSourcePreflightResult> PreflightAsync(Guid u, Guid s, AiSourcePreflightCommand command, CancellationToken ct) =>
-            throw new NotSupportedException();
+        public Task ReauthorizeSelectionAsync(AiChatSourcePlan plan, CancellationToken ct) => Task.CompletedTask;
+        public Task<AiChatSourcePlan> PrepareAsync(Guid u, Guid s, Guid operation, byte[] hash, SendAiChatCommand command,
+            MakanApp.Domain.Commerce.AiPayerSelection? payer, CancellationToken ct)
+        { Assert.Empty(command.SelectedSourceIds ?? []); return Task.FromResult(new AiChatSourcePlan(AiChatMode.General, AiSourceIntent.General, null)); }
+        public Task ReauthorizeHistoryAsync(Guid u, Guid s, IReadOnlyList<MakanApp.Domain.Intelligence.AiConversationSourcePin> pins,
+            MakanApp.Domain.Commerce.AiPayerSelection? payer, CancellationToken ct) => Task.CompletedTask;
+        public Task<AiChatSourceAnswer> AnswerAsync(AiChatSourcePlan plan, string query, string request, string correlation, bool streaming, CancellationToken ct) =>
+            Task.FromResult(new AiChatSourceAnswer(null, new(AiChatProvenanceKind.General)));
     }
 
     private sealed class DirectInvocation : IAiInvocationExecutor
     {
         public Task<TResponse> ExecuteAsync<TRequest,TResponse>(Guid u, Guid session, TRequest request,
             Func<TRequest,CancellationToken,Task<TResponse>> invoke, Func<CancellationToken,Task> reauthorize,
-            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiInvocationRequest where TResponse:class,IAiServiceResponse => invoke(request,ct);
+            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiInvocationRequest where TResponse:class => invoke(request,ct);
+        public IAsyncEnumerable<AiChatStreamEvent> ExecuteStreamAsync<TRequest>(Guid u, Guid s, TRequest request,
+            Func<TRequest,CancellationToken,IAsyncEnumerable<AiChatStreamEvent>> invoke, Func<CancellationToken,Task> authorize,
+            AiInvocationOptions? options, CancellationToken ct) where TRequest:IAiInvocationRequest => invoke(request, ct);
     }
 
 }

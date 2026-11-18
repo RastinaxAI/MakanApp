@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MakanApp.Infrastructure.Ai;
 
-public sealed class AiServiceClient(
+public sealed partial class AiServiceClient(
     HttpClient httpClient,
     IAiServiceCredentialProvider credentialProvider,
     AiServiceOptions options,
@@ -27,12 +27,7 @@ public sealed class AiServiceClient(
         AiChatRequest request,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Message?.Text) ||
-            string.IsNullOrWhiteSpace(request.Message.Language) ||
-            request.Message.Language.Length > 6)
-        {
-            throw InvalidRequest();
-        }
+        request = ValidateAdaptiveRequest(request);
 
         return SendAsync<AiChatRequest, AiChatResponse>(
             "chat", "/api/v1/ai/chat", request, request.Actor.Role, ValidateChatResponse, cancellationToken);
@@ -375,10 +370,18 @@ public sealed class AiServiceClient(
             response.Recommendations is null || response.Sources is null ||
             !ValidInsights(response.Insights.Concat(response.Risks)) ||
             !ValidRecommendations(response.Recommendations) ||
-            !ValidSources(response.Sources))
+            !ValidSources(response.Sources) || response.Sources.Count != 0 &&
+                request.Context.Subjects.Count + request.Context.Grades.Count + request.Context.Homeworks.Count + request.Context.Exams.Count + request.Context.Activity.Count == 0 ||
+            !ValidGeneratedText(response.Answer.Text))
         {
             throw InvalidResponse();
         }
+    }
+
+    private static bool ValidGeneratedText(string text)
+    {
+        try { return MakanApp.Domain.Intelligence.AiConversationTurn.CharacterCount(text) <= MakanApp.Domain.Intelligence.AiConversationTurn.MaximumAssistantCharacters; }
+        catch (ArgumentException) { return false; }
     }
 
     private static void ValidateStudentAnalysisResponse(

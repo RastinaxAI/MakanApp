@@ -4,6 +4,10 @@ namespace MakanApp.IntegrationTests;
 
 public sealed class AiServiceTestControl
 {
+    public Func<CancellationToken, Task>? StreamGate { get; set; }
+    public Exception? StreamFailure { get; set; }
+    public bool StreamCanceled { get; set; }
+    public TaskCompletionSource StreamCancellation { get; private set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly object _sync = new();
     private AiChatRequest? _lastRequest;
     private IAiServiceRequest? _lastRoleRequest;
@@ -50,6 +54,8 @@ public sealed class AiServiceTestControl
             _nextException = null;
             ProviderCallCount = 0;
             Enabled = true;
+            StreamGate = null; StreamFailure = null; StreamCanceled = false;
+            StreamCancellation = new(TaskCreationOptions.RunContinuationsAsynchronously);
         }
     }
 
@@ -112,6 +118,21 @@ public sealed class TestAiRuntimeAvailability(AiServiceTestControl control) : IA
 
 public sealed class RecordingAiServiceClient(AiServiceTestControl control) : IAiServiceClient
 {
+    public async IAsyncEnumerable<AiChatStreamEvent> StreamChatAsync(AiChatRequest request,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested(); control.Execute(request);
+        yield return new AiChatStreamStart(request.RequestId, request.CorrelationId, request.ConversationId, "education-fast");
+        yield return new AiChatStreamDelta(1, "پاسخ ");
+        if (control.StreamGate is { } gate)
+        {
+            try { await gate(ct); }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { control.StreamCanceled = true; control.StreamCancellation.TrySetResult(); throw; }
+        }
+        if (control.StreamFailure is { } failure) throw failure;
+        yield return new AiChatStreamDelta(2, "آزمایشی");
+        yield return new AiChatStreamDone(request.RequestId, request.CorrelationId, request.ConversationId, new("education-fast", 1));
+    }
     public Task<AiChatResponse> ChatAsync(
         AiChatRequest request,
         CancellationToken cancellationToken)

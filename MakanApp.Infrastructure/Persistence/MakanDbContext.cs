@@ -18,6 +18,8 @@ namespace MakanApp.Infrastructure.Persistence;
 public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, TimeProvider? timeProvider = null)
     : DbContext(options)
 {
+    public DbSet<MakanApp.Domain.Intelligence.AiConversation> AiConversations => Set<MakanApp.Domain.Intelligence.AiConversation>();
+    public DbSet<MakanApp.Domain.Intelligence.AiConversationTurn> AiConversationTurns => Set<MakanApp.Domain.Intelligence.AiConversationTurn>();
     public DbSet<SchoolApplication> SchoolApplications => Set<SchoolApplication>();
     public DbSet<SchoolApplicationHistory> SchoolApplicationHistories => Set<SchoolApplicationHistory>();
     public DbSet<SchoolEstablishmentOffering> SchoolEstablishmentOfferings => Set<SchoolEstablishmentOffering>();

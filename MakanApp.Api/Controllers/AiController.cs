@@ -10,7 +10,7 @@ namespace MakanApp.Api.Controllers;
 [Authorize]
 [EnableRateLimiting("ai-chat")]
 [Route("api/v1/ai")]
-public sealed class AiController(
+public sealed partial class AiController(
     IAiChatService chatService,
     IAiRoleContextService roleContextService,
     IAiSourceSelectionService sourceSelection) : ControllerBase

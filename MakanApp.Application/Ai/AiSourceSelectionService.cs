@@ -7,7 +7,7 @@ namespace MakanApp.Application.Ai;
 
 public sealed class AiSourceSelectionService(IAccountOperationContextResolver accounts, IAccessContextResolver contexts,
     IStudentContextBuilder students, ITeacherClassContextBuilder teachers, IAiSourceAuthorizationService authorization,
-    IAiSourceSelectionStore selections, IAiScopeStore scopes) : IAiSourceSelectionService
+    IAiSourceSelectionStore selections, IAiScopeStore scopes, IKnowledgeRuntimeAvailability? knowledgeRuntime = null) : IAiSourceSelectionService
 {
     public async Task GuardAsync(Guid userId, Guid sessionId, AiSourceOperation operation,
         IReadOnlyCollection<Guid>? selectedSourceIds, Guid? operationId, object payload,
@@ -48,6 +48,15 @@ public sealed class AiSourceSelectionService(IAccountOperationContextResolver ac
         var ids = AiSourceSelection.Canonicalize(command.SelectedSourceIds);
         var context = await ResolveAsync(userId, sessionId, command, ct);
         var sources = await authorization.AuthorizeAsync(context, ids, null, ct);
+        if (command.Operation == AiSourceOperation.Chat && ids.Length != 0 && knowledgeRuntime is not null)
+        {
+            try
+            {
+                knowledgeRuntime.EnsureEnabled();
+                return new(true, true, ids.Length, null, "UseExistingCommercePreflight", sources.Select(s => s.SourceVersionId).ToArray());
+            }
+            catch (AiServiceException error) when (error.Code == AiServiceErrorCodes.FeatureDisabled) { }
+        }
         // این بررسی فقط خواندنی است؛ ناتوانی Retrieval باید پیش از Commerce مشخص شود.
         return new(true, false, ids.Length, ids.Length == 0 ? null : AiSourceErrorCodes.RetrievalUnavailable,
             ids.Length == 0 ? "UseExistingCommercePreflight" : "NotEvaluatedRetrievalUnavailable",

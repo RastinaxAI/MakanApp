@@ -1,123 +1,99 @@
+using System.Runtime.CompilerServices;
+using System.Text;
 using MakanApp.Application.Organization;
+using MakanApp.Domain.Intelligence;
 using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Ai;
 
-public sealed class AiChatService(
-    IAccessContextResolver accessContextResolver,
-    IAiScopeStore scopeStore,
-    IAiServiceClient client,
-    IAiSourceSelectionService sourceSelection,
-    IAiInvocationExecutor invocationExecutor) : IAiChatService
+public sealed partial class AiChatService(IAccessContextResolver accessContextResolver, IAiScopeStore scopeStore,
+    IAiServiceClient client, IAiChatSources sources, IAiInvocationExecutor invocationExecutor,
+    IAiConversationStore conversations) : IAiChatService
 {
-    private const int MaximumMessageLength = 4_000;
-
-    public async Task<AiChatResult> ChatAsync(
-        Guid userId,
-        Guid sessionId,
-        string correlationId,
-        SendAiChatCommand command,
-        CancellationToken cancellationToken,
-        AiInvocationOptions? invocation = null)
+    public async Task<AiChatResult> ChatAsync(Guid userId, Guid sessionId, string correlationId, SendAiChatCommand command,
+        CancellationToken cancellationToken, AiInvocationOptions? invocation = null)
     {
-        Validate(command, correlationId);
-        await sourceSelection.GuardAsync(userId, sessionId, AiSourceOperation.Chat, command.SelectedSourceIds,
-            command.OperationId ?? invocation?.OperationId, new { Message = command.Message.Trim(), command.ConversationId }, null, null, cancellationToken);
-        var context = await accessContextResolver.ResolveAsync(
-            userId,
-            sessionId,
-            cancellationToken);
-        if (context.WorkspaceType == WorkspaceType.Personal)
+        var prepared = await Prepare(userId, sessionId, correlationId, command, invocation, false, cancellationToken);
+        return await invocationExecutor.ExecuteAsync(userId, sessionId, prepared.Intent, async (_, ct) =>
         {
-            var personal = PersonalAiChatIntent.Create(userId, sessionId, context, correlationId, command);
-            var personalResponse = await invocationExecutor.ExecuteAsync(userId, sessionId, personal,
-                (intent, token) => client.ChatAsync(PersonalAiChatContract.ToServiceRequest(intent), token), async token =>
-                {
-                    var current = await accessContextResolver.ResolveAsync(userId, sessionId, token);
-                    AiInvocationContext.EnsurePersonal(current, userId, sessionId);
-                    AiInvocationContext.EnsureSame(context, current);
-                }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
-            return Result(personalResponse);
-        }
-        EnsureOrganizationRole(context);
-
-        Guid? learnerId = context.SubjectOrganizationPersonId;
-        if (context.ActiveRole == OrganizationRole.Student)
-        {
-            learnerId = await scopeStore.GetActiveLearnerOrganizationPersonIdAsync(
-                context.OrganizationId!.Value,
-                context.UserId,
-                cancellationToken);
-            if (!learnerId.HasValue)
+            await Reauthorize(prepared, ct);
+            var grounded = await sources.AnswerAsync(prepared.Sources, prepared.Wire.Message.Text,
+                prepared.Wire.RequestId, correlationId, false, ct);
+            AiChatResult result;
+            if (grounded.Answer is { } rag)
+                result = new(rag.RequestId, rag.CorrelationId, prepared.Wire.ConversationId, new(rag.Answer), [], [], [], [])
+                    { Provenance = grounded.Provenance, Citations = rag.Citations };
+            else
             {
-                throw ContextNotAllowed();
+                await Reauthorize(prepared, ct);
+                var response = await client.ChatAsync(prepared.Wire, ct);
+                result = new(response.RequestId, response.CorrelationId, response.ConversationId, response.Answer,
+                    response.Insights, response.Risks, response.Recommendations, response.Sources) { Provenance = grounded.Provenance };
+            }
+            await Complete(prepared, result.Answer.Text, grounded.Answer is null ? [] : Pins(prepared.Sources), ct);
+            return result;
+        }, ct => Reauthorize(prepared, ct), prepared.Options, cancellationToken);
+    }
+
+    public async IAsyncEnumerable<AiChatStreamEvent> StreamChatAsync(Guid userId, Guid sessionId, string correlationId,
+        SendAiChatCommand command, [EnumeratorCancellation] CancellationToken cancellationToken, AiInvocationOptions? invocation = null)
+    {
+        var prepared = await Prepare(userId, sessionId, correlationId, command, invocation, true, cancellationToken);
+        await foreach (var item in invocationExecutor.ExecuteStreamAsync(userId, sessionId, prepared.Intent,
+            (_, ct) => Generate(prepared, correlationId, ct), ct => Reauthorize(prepared, ct), prepared.Options, cancellationToken))
+            yield return item;
+    }
+
+    private async IAsyncEnumerable<AiChatStreamEvent> Generate(Prepared prepared, string correlation,
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        // RAG رسمی knowledge-v1 جریان ندارد؛ فقط مسیر General می‌تواند SSE واقعی تولید کند.
+        var routing = await sources.AnswerAsync(prepared.Sources, prepared.Wire.Message.Text, prepared.Wire.RequestId, correlation, true, ct);
+        await Reauthorize(prepared, ct);
+        var text = new StringBuilder(); var count = 0;
+        await foreach (var item in client.StreamChatAsync(prepared.Wire, ct))
+        {
+            await Reauthorize(prepared, ct);
+            if (item is AiChatStreamDelta delta)
+            {
+                count += AiConversationTurn.CharacterCount(delta.Text);
+                if (count > AiConversationTurn.MaximumAssistantCharacters) throw Invalid();
+                text.Append(delta.Text);
+            }
+            if (item is AiChatStreamStart start) yield return start with { Provenance = routing.Provenance };
+            else
+            {
+                if (item is AiChatStreamDone) await Complete(prepared, text.ToString(), [], ct);
+                yield return item;
             }
         }
-
-        var request = new AiChatRequest(
-            Guid.NewGuid().ToString("N"),
-            correlationId,
-            command.ConversationId?.ToString("N"),
-            new AiActor(context.UserId.ToString("D"), context.ActiveRole!.Value.ToString()),
-            new AiScope(
-                context.OrganizationId!.Value.ToString("D"),
-                context.OrganizationId.Value.ToString("D"),
-                context.AssistantClassId?.ToString("D"),
-                learnerId?.ToString("D")),
-            new AiMessage(command.Message.Trim()),
-            AiAuthorizedContext.Empty);
-
-        var response = await invocationExecutor.ExecuteAsync(userId, sessionId, request, client.ChatAsync, async token =>
-        {
-            var current = await accessContextResolver.ResolveAsync(userId, sessionId, token);
-            EnsureOrganizationRole(current);
-            AiInvocationContext.EnsureSame(context, current);
-            if (current.ActiveRole == OrganizationRole.Student &&
-                await scopeStore.GetActiveLearnerOrganizationPersonIdAsync(current.OrganizationId!.Value, userId, token) != learnerId)
-                throw ContextNotAllowed();
-        }, AiInvocationOptions.Resolve(invocation, command.OperationId), cancellationToken);
-        return Result(response);
     }
 
-    private static AiChatResult Result(AiChatResponse response) => new(
-            response.RequestId,
-            response.CorrelationId,
-            response.ConversationId,
-            response.Answer,
-            response.Insights,
-            response.Risks,
-            response.Recommendations,
-            response.Sources);
-
-    private static void Validate(SendAiChatCommand command, string correlationId)
+    public async Task<AiConversationHistoryResult> HistoryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(command.Message) ||
-            command.Message.Trim().Length > MaximumMessageLength ||
-            string.IsNullOrWhiteSpace(correlationId) ||
-            correlationId.Length > 128)
-        {
-            throw new AiServiceException(
-                AiServiceErrorCodes.InvalidRequest,
-                "درخواست گفت‌وگوی هوش مصنوعی معتبر نیست.");
-        }
+        var context = await accessContextResolver.ResolveAsync(userId, sessionId, ct);
+        var learner = await Learner(context, userId, sessionId, ct);
+        var result = await conversations.ReadHistoryAsync(userId, conversationId, null, AiConversationIdentity.Fingerprint(context, learner),
+            async (state, token) =>
+            {
+                await EnsureCurrent(context, learner, userId, sessionId, token);
+                await sources.ReauthorizeHistoryAsync(userId, sessionId, state.SourcePins, null, token);
+            }, ct);
+        return new(result.State.ConversationId.ToString("N"), result.History);
     }
 
-    private static void EnsureOrganizationRole(AccessContext context)
-    {
-        if (context.WorkspaceType != WorkspaceType.Organization ||
-            !context.OrganizationId.HasValue ||
-            !context.MembershipId.HasValue ||
-            context.ActiveRole is not (
-                OrganizationRole.Student or
-                OrganizationRole.Parent or
-                OrganizationRole.Teacher or
-                OrganizationRole.Manager))
-        {
-            throw ContextNotAllowed();
-        }
-    }
-
-    private static AiServiceException ContextNotAllowed() => new(
-        AiServiceErrorCodes.ContextNotAllowed,
-        "بافت سازمانی فعلی برای استفاده از هوش مصنوعی مجاز نیست.");
+    private Task Reauthorize(Prepared prepared, CancellationToken ct) => prepared.Authorize(prepared.Conversation, ct);
+    private Task Complete(Prepared prepared, string answer, IReadOnlyList<AiConversationSourcePin> pins, CancellationToken ct) =>
+        conversations.CompleteAsync(prepared.Context.UserId, prepared.Conversation.ConversationId, prepared.Options.OperationId!.Value, prepared.Binding,
+            prepared.Wire.Message.Text, answer, pins, async (state, token) =>
+            {
+                await prepared.Authorize(state, token);
+                await sources.ReauthorizeHistoryAsync(prepared.Context.UserId, prepared.Context.SessionId, pins, prepared.Options.Payer, token);
+            }, ct);
+    private static AiConversationSourcePin[] Pins(AiChatSourcePlan plan) => plan.Versions.OrderBy(x => x.SourceId).Select(x => new AiConversationSourcePin(x.SourceId, x.Version)).ToArray();
+    private static AiServiceException Invalid() => new(AiServiceErrorCodes.InvalidRequest, "درخواست گفت‌وگوی AI معتبر نیست.");
+    private static AiServiceException Denied() => new(AiServiceErrorCodes.ContextNotAllowed, "زمینهٔ مجاز و جاری لازم است.");
+    private sealed record Prepared(AccessContext Context, byte[] Binding, AiInvocationOptions Options,
+        AiConversationState Conversation, AiChatRequest Wire, IAiInvocationRequest Intent, AiChatSourcePlan Sources,
+        Func<AiConversationState, CancellationToken, Task> Authorize);
 }

@@ -1,5 +1,10 @@
 # ماکان‌اپ — MakanApp Backend
 
+Adaptive Assistant v1 از پایهٔ `95cef1b`: [قرارداد Chat/Profile/History/Streaming](docs/product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md)
+شامل History مستقل AI با مالک/Context جاری، SSE واقعی و SourceVersion دقیق است. مسیر
+RAG فقط غیرجریانی است. AI نامحدود و Service Auth خاموش حفظ‌اند؛ هیچ تست، SQL یا Deploy
+روی سرور Backend در این مرحله انجام نمی‌شود. شمارش‌های مراحل پایین تاریخی‌اند.
+
 این مخزن فقط Backend ماکان را نگه می‌دارد. ساختار فعلی یک Modular Monolith با Onion Architecture روی ASP.NET Core و .NET 9 است. Persistence بر Entity Framework Core 9 و Microsoft SQL Server بنا شده است. Frontend در این workspace وجود ندارد.
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.

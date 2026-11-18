@@ -238,6 +238,7 @@ public sealed partial class MessagingEndpointsTests
         public int Calls { get; private set; }
         public int RagCalls { get; private set; }
         public bool LoseRagResponse { get; set; }
+        public bool EmptyEvidence { get; set; }
         public Func<Task>? BeforeRetrievalResponse { get; set; }
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
@@ -272,6 +273,7 @@ public sealed partial class MessagingEndpointsTests
             if (path.EndsWith("/retrieve", StringComparison.Ordinal))
             {
                 if (BeforeRetrievalResponse is not null) await BeforeRetrievalResponse();
+                if (EmptyEvidence) return KnowledgeResponse(200, new KnowledgeRetrieveResponse(requestId, correlation, "Empty", []));
                 return KnowledgeResponse(200, new KnowledgeRetrieveResponse(requestId, correlation, "Ok", [new(source.SourceId, source.Version, 1, "chunk-1", "Synthetic knowledge evidence", citation)]));
             }
             RagCalls++;

@@ -1,5 +1,12 @@
 # AI نامحدود و پرداخت Deferred در نسخهٔ جاری
 
+> تکمیل Adaptive v1 از پایهٔ `95cef1b`: [قرارداد جاری](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md)
+> Profile اختیاری، History خصوصی و SSE را اضافه می‌کند و policy تجاری این سند را تغییر
+> نمی‌دهد. دفتر عملیات پاسخ را cache نمی‌کند؛ **History مستقل و فقط زوج کامل** اکنون متن
+> مجاز را برای ادامهٔ Conversation نگه می‌دارد. بنابراین «پاسخ خصوصی ذخیره نمی‌شود» در
+> بخش تاریخی زیر فقط دربارهٔ receipt/ledger است. Account Deletion موجود History را پاک
+> می‌کند؛ retention خودکار نیازمند `PRODUCT_RETENTION_DECISION_REQUIRED` است.
+
 تاریخ تصمیم مالک: `2026-11-18`؛ Source پایه
 `d397d73c5f532f7492614e95925ceaa1850a8150`؛ شاخه `feature/product-v6-backend-alignment`.
 این تصمیم بر توضیحات تجاریِ انتشار جاری در اسناد قدیمی اولویت دارد؛ کد و دادهٔ Commercial حذف نمی‌شوند.

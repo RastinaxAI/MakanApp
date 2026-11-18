@@ -17,6 +17,29 @@ public sealed class KnowledgeAuthorizationService(IAccountOperationContextResolv
 {
     public async Task<KnowledgeAuthorizedSources> ResolveAsync(Guid user, Guid session,
         IReadOnlyList<KnowledgeSourceVersion>? requested, AiPayerSelection? payer, CancellationToken ct)
+        => await ResolveCoreAsync(user, session, requested, payer, false, ct);
+
+    public Task<KnowledgeAuthorizedSources> ResolveForChatAsync(Guid user, Guid session,
+        IReadOnlyList<KnowledgeSourceVersion> requested, AiPayerSelection? payer, CancellationToken ct) =>
+        ResolveCoreAsync(user, session, requested, payer, true, ct);
+
+    public async Task<IReadOnlyList<KnowledgeSourceVersion>> PublishedVersionsAsync(Guid user, Guid session,
+        IReadOnlyList<Guid> ids, CancellationToken ct)
+    {
+        var account = await accounts.PersonalAsync(user, session, ct);
+        var context = await contexts.ResolveAsync(user, session, ct);
+        var actor = new SourceActor(user, session, account, context.WorkspaceType == WorkspaceType.Organization ? context : null);
+        var versions = new List<KnowledgeSourceVersion>();
+        foreach (var id in ids)
+        {
+            var source = await sources.GetAsync(actor, id, null, ct);
+            versions.Add(new(id, source.PublishedVersion ?? source.Revision));
+        }
+        return versions;
+    }
+
+    private async Task<KnowledgeAuthorizedSources> ResolveCoreAsync(Guid user, Guid session,
+        IReadOnlyList<KnowledgeSourceVersion>? requested, AiPayerSelection? payer, bool allowPending, CancellationToken ct)
     {
         if (requested is null || requested.Count is < 1 or > AiSourceSelection.MaximumSources ||
             requested.Any(x => x is null || x.SourceId == Guid.Empty || x.Version < 1) ||
@@ -37,10 +60,13 @@ public sealed class KnowledgeAuthorizationService(IAccountOperationContextResolv
                 source.Scope is EducationalSourceScope.Class or EducationalSourceScope.Organization &&
                     (organization?.OrganizationId is null || organization.OrganizationId != source.OrganizationId))
                 throw new EducationalSourceException(SourceErrorCodes.NotFound);
-            if (source.Status != EducationalSourceStatus.Active || source.PublicationStatus != SourcePublicationStatus.Published ||
-                !source.SourceReady || !source.FileReady || source.SafetyStatus != SourceSafetyStatus.FileValidated ||
-                source.Revision != version.Version || !source.Capabilities.CanDownload)
+            if (source.Status != EducationalSourceStatus.Active)
                 throw new EducationalSourceException(SourceErrorCodes.NotReady);
+            if (!allowPending && (source.PublicationStatus != SourcePublicationStatus.Published ||
+                !source.SourceReady || !source.FileReady || source.SafetyStatus != SourceSafetyStatus.FileValidated ||
+                !source.Capabilities.CanDownload))
+                throw new EducationalSourceException(SourceErrorCodes.NotReady);
+            if (source.Revision != version.Version) throw new EducationalSourceException(SourceErrorCodes.NotFound);
             results.Add(source);
         }
         var quota = organization is null ? new AiQuotaPreflightCommand(CommerceContextType.Personal, user, payer)

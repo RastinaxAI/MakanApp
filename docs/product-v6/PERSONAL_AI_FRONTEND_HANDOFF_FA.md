@@ -1,5 +1,11 @@
 # تحویل Personal AI و Personal Knowledge/RAG
 
+**تکمیل Adaptive v1 از پایهٔ `95cef1b` در `2026-11-18`:** قرارداد جاری Chat شامل Profile
+اختیاری، History مالک/Context در SQL، Mode/SourceIntent و SSE واقعی است. مرجع اجرایی جدید:
+[تحویل Adaptive Assistant](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md). توضیحات پایین دربارهٔ
+نبود History و retrieval خاموش، مربوط به مرحلهٔ تاریخی قبلی‌اند و برای این Source معتبر نیستند.
+در این Task هیچ سرور Backend آزمایش یا Deploy نمی‌شود؛ نتیجهٔ جدید فقط از تست محلی است.
+
 **اصلاح جاری `2026-11-18` از پایهٔ `d397d73`:** در این Release، Mode=`Unmetered` است؛
 Login و Context/Source ACL لازم‌اند، اشتراک/Entitlement تجاری/پرداخت/Payer انتخابی لازم نیستند.
 Remaining=null یعنی unlimited؛ شمارندهٔ درخواست و UI خرید/QuotaExceeded نمایش داده نشود.
@@ -59,13 +65,20 @@ Content-Type: application/json
 
 Organization Generic Chat همچنان scope/actor سازمانی معتبر می‌خواهد. تحلیل دانش‌آموز، برنامهٔ مطالعه، توضیح تکلیف/آزمون، خلاصهٔ والد و عملیات Teacher/Manager عمومی نشده‌اند؛ خرید اشتراک Individual یا انتخاب Personal این محدودیت‌ها را حذف نمی‌کند.
 
-`conversationId` فقط شناسهٔ قرارداد موجود است؛ تاریخچهٔ Messenger، Direct خصوصی، Contacts یا Address Book به Context AI اضافه نمی‌شود. ذخیرهٔ تاریخچهٔ عمومی شخصی یا بازپخش متن پاسخ در این مرحله ساخته نشده است.
+`conversationId` اکنون شناسهٔ canonical در persistence مستقل AI است؛ زوج‌های کامل فقط برای
+مالک و بافت مجاز جاری، در پنجرهٔ۲۰/۴۰۰۰/۱۲۰۰۰ خوانده می‌شوند. Messenger، Direct خصوصی،
+Contacts یا Address Book وارد Context نمی‌شوند. Retry کامل‌شده همان409 را حفظ می‌کند؛
+API History خود مالک راه خواندن پنجرهٔ مجاز است، نه بازپخش پاسخ از دفتر عملیات.
 
 ## منابع شخصی و مسیر عملی Knowledge
 
 همان APIهای `sources` برای Upload/Create/Publish/Processing استفاده شوند. منبع قابل استفاده باید متعلق به همین حساب، Personal، Active، Published، SourceReady، FileReady و FileValidated باشد. version باید نسخهٔ دقیقِ انتخاب‌شده باشد؛ جدیدترین نسخه خودکار جایگزین نسخهٔ pinشده نمی‌شود. Library برای استفادهٔ AI باز نشده است.
 
-`POST /api/v1/ai/sources/preflight` فقط مجوز و آمادگی انتخاب را توضیح می‌دهد؛ فراخوانی AI یا مصرف سهمیه نمی‌سازد. مسیر legacyِ `selectedSourceIds` در Business Chat هنوز `retrievalAvailable=false` و `AI_SOURCE_RETRIEVAL_NOT_AVAILABLE` می‌دهد. این مسیر با API عملی Knowledge یکی نیست و موفقیت Preflight اثبات اجرای Retrieval نیست.
+`POST /api/v1/ai/sources/preflight` خواندنی و بدون Provider/مصرف است. برای Chat، در صورت
+فعال‌بودن Knowledge و منبع مجاز، قابلیت retrieval را اعلام می‌کند؛ موفقیت آن اثبات Ready
+بودن runtime هر نسخه نیست. `selectedSourceIds` در Chat اکنون به orchestration Knowledge
+وصل است؛ `selectedSources` نسخهٔ صریح می‌گیرد. Runtime خاموش همچنان RetrievalUnavailable
+و منبع ناآماده NotReady می‌دهد. قواعد Auto/SourceIntent/SourcesOnly در سند جدید مرجع‌اند.
 
 | Endpoint | Request اصلی | نتیجه |
 |---|---|---|

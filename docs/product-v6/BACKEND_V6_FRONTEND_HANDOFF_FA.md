@@ -1,5 +1,11 @@
 # تحویل قرارداد Backend v6 به Frontend
 
+> تکمیل `2026-11-18` از پایهٔ `95cef1b`: [Adaptive Assistant v1](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md)
+> مرجع جاری `POST /ai/chat`، `POST /ai/chat/stream` و History خود مالک است. Profile اختیاری
+> است؛ History از SQL مجاز می‌آید؛ Auto/SourceIntent و SourcesOnly نسخهٔ دقیق/ACL را حفظ
+> می‌کنند. RAG جریان رسمی ندارد. AI نامحدود، Service Auth خاموش و SourceCount مستقل
+> باقی‌اند. این مرحله Publish دو محیط دارد و هیچ Deploy یا تست Backend Server ندارد.
+
 > بازبینی `2026-11-14`: [قرارداد Personal AI و Knowledge/RAG](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) انتخاب مستقل Assistant، Payer فردی/Trial، منابع و Retry را مشخص می‌کند. Generic Personal Chat با Actor رسمی `Personal` و Scope تهی فعال است؛ پذیرش واقعی Backend→AI Production با200 و یک مصرف انجام شد. Knowledge مسیر مستقل موجود را حفظ می‌کند؛ نقش سازمانی یا Service JWT تازه ساخته نشده است. Backend Deploy نشده است.
 
 بازبینی `2026-11-12`؛ Source مبنا `e5bd3eae658991585ca09f581f6236351857b3b8` به‌همراه تغییرات شاخهٔ `feature/product-v6-backend-alignment`. این سند در مخزن Backend است؛ هیچ Frontend تغییر نکرده است. قرارداد کامل فیلدها و literalهای Enum در [مرجع API](../backend-api-reference.md) و [قرارداد مشترک](../frontend-contract/README.md) ثبت می‌شود. وجود API با آمادگی عملیاتی Provider یا مجوز محصول برابر نیست.

@@ -2,6 +2,7 @@ namespace MakanApp.Application.Ai;
 
 public interface IAiServiceClient
 {
+    IAsyncEnumerable<AiChatStreamEvent> StreamChatAsync(AiChatRequest request, CancellationToken cancellationToken);
     Task<AiChatResponse> ChatAsync(
         AiChatRequest request,
         CancellationToken cancellationToken);

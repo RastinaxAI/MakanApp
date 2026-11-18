@@ -29,7 +29,7 @@ public sealed class GlobalExceptionHandler(
     // فقط ثابت‌های catalogهای مورد اعتماد خوانده می‌شوند؛ metadata یا Code ورودی مجوز لاگ خام نیست.
     private static readonly FrozenSet<string> SafeErrorCodes = new[]
     {
-        typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(KnowledgeErrorCodes), typeof(CommerceErrorCodes),
+        typeof(AssessmentErrorCodes), typeof(AiServiceErrorCodes), typeof(AiConversationErrorCodes), typeof(KnowledgeErrorCodes), typeof(CommerceErrorCodes),
         typeof(AcademicErrorCodes), typeof(IdentityErrorCodes), typeof(AccountDeletionErrorCodes), typeof(MessagingErrorCodes),
         typeof(NotificationErrorCodes), typeof(NotificationPreferenceErrorCodes), typeof(OrganizationErrorCodes),
         typeof(PlatformErrorCodes), typeof(GuardianErrorCodes), typeof(StorageErrorCodes),
@@ -178,6 +178,9 @@ public sealed class GlobalExceptionHandler(
             RealtimeErrorCodes.Unavailable => StatusCodes.Status503ServiceUnavailable,
             IdentityErrorCodes.AuthRequired => StatusCodes.Status401Unauthorized,
             AiServiceErrorCodes.InvalidRequest => StatusCodes.Status400BadRequest,
+            AiConversationErrorCodes.NotFound => StatusCodes.Status404NotFound,
+            AiConversationErrorCodes.SourceBindingConflict or
+                AiConversationErrorCodes.StreamingNotSupported or AiConversationErrorCodes.InsufficientEvidence => StatusCodes.Status409Conflict,
             AiSourceErrorCodes.Invalid => StatusCodes.Status400BadRequest,
             AiSourceErrorCodes.NotFound => StatusCodes.Status404NotFound,
             AiSourceErrorCodes.NotAllowed => StatusCodes.Status403Forbidden,

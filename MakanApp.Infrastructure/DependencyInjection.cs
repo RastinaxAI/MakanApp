@@ -351,6 +351,8 @@ public static class DependencyInjection
                 client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<AiServiceOptions>().TimeoutSeconds))
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
         services.AddScoped<IAiScopeStore, EfAiScopeStore>();
+        services.AddScoped<IAiConversationStore, EfAiConversationStore>();
+        services.AddScoped<IAiChatSources, AiChatSources>();
         services.AddScoped<IAiChatService>(sp => ActivatorUtilities.CreateInstance<AiChatService>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<IAiInvocationExecutor>(sp => ActivatorUtilities.CreateInstance<AiInvocationExecutor>(sp, sp.GetRequiredService<AssistantContextResolver>()));
         services.AddScoped<IAiRuntimeAvailability, AiRuntimeAvailability>();

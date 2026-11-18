@@ -8,14 +8,14 @@ using MakanApp.Domain.Organization;
 
 namespace MakanApp.Application.Ai;
 
-public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce, IAccessContextResolver contexts,
+public sealed partial class AiInvocationExecutor(CommercialSubscriptionService commerce, IAccessContextResolver contexts,
     IAiRuntimeAvailability runtime, AiUsageOptions aiUsage) : IAiInvocationExecutor
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     public async Task<TResponse> ExecuteAsync<TRequest, TResponse>(Guid userId, Guid sessionId, TRequest request,
         Func<TRequest, CancellationToken, Task<TResponse>> invoke, Func<CancellationToken, Task> reauthorize,
         AiInvocationOptions? options, CancellationToken ct)
-        where TRequest : IAiInvocationRequest where TResponse : class, IAiServiceResponse
+        where TRequest : IAiInvocationRequest where TResponse : class
     {
         runtime.EnsureEnabled();
         var command = AiInvocationOptions.Resolve(options);
@@ -39,7 +39,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
             if (context.AssistantClassId.HasValue && (!scope.TryGetProperty("classId", out var classroom) || classroom.GetString() != context.AssistantClassId.Value.ToString("D"))) throw Denied();
         }
         var quotaContext = AiInvocationContext.CommerceContext(context, aiUsage.NormalizePayer(command.Payer));
-        var hash = Fingerprint(request, context);
+        var hash = command.IntentFingerprint ?? Fingerprint(request, context);
         // Reserve موجود، replay را پیش از بررسی دوبارهٔ مانده تشخیص می‌دهد؛ آخرین سهمیه نیز retry-safe است.
         // بررسی Preflight اتمیکِ نهایی در همان transaction کوتاه Reserve انجام می‌شود.
         var reservation = await commerce.ReserveForAssistantAsync(userId, sessionId,
@@ -64,7 +64,7 @@ public sealed class AiInvocationExecutor(CommercialSubscriptionService commerce,
         }
         catch (Exception error)
         {
-            var status = !invocationStarted || error is AiServiceException ai &&
+            var status = !invocationStarted || command.HasPartialOutput?.Invoke() != true && error is AiServiceException ai &&
                 (ai.Code is AiServiceErrorCodes.FeatureDisabled or AiServiceErrorCodes.InvalidRequest or AiServiceErrorCodes.ContextNotAllowed or
                     AiServiceErrorCodes.ServiceUnauthorized or AiServiceErrorCodes.ServiceForbidden or AiServiceErrorCodes.RateLimited ||
                  ai.Code == AiServiceErrorCodes.ServiceUnavailable && ai.UpstreamStatusCode == 503)

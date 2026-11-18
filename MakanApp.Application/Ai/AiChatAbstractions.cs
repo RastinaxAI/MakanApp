@@ -11,6 +11,9 @@ public interface IAiChatService
         SendAiChatCommand command,
         CancellationToken cancellationToken,
         AiInvocationOptions? invocation = null);
+    IAsyncEnumerable<AiChatStreamEvent> StreamChatAsync(Guid userId, Guid sessionId, string correlationId,
+        SendAiChatCommand command, CancellationToken cancellationToken, AiInvocationOptions? invocation = null);
+    Task<AiConversationHistoryResult> HistoryAsync(Guid userId, Guid sessionId, Guid conversationId, CancellationToken ct);
 }
 
 public interface IAiScopeStore

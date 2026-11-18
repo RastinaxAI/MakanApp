@@ -4,13 +4,20 @@ namespace MakanApp.Application.Ai;
 
 public sealed record AiInvocationOptions(Guid? OperationId = null, AiPayerSelection? Payer = null)
 {
+    // فقط use case داخلی آن را می‌سازد؛ ورودی HTTP یا اختیار جدید نیست.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public byte[]? IntentFingerprint { get; init; }
+    internal Func<bool>? HasPartialOutput { get; init; }
     public static AiInvocationOptions Resolve(AiInvocationOptions? options, Guid? bodyId = null)
     {
         if (bodyId == Guid.Empty || options?.OperationId == Guid.Empty ||
             bodyId.HasValue && options?.OperationId is Guid headerId && headerId != bodyId ||
             options?.Payer is { } payer && !Enum.IsDefined(payer))
             throw new AiServiceException(AiServiceErrorCodes.InvalidRequest, "شناسهٔ عملیات یا انتخاب پرداخت‌کننده معتبر نیست.");
-        return new(bodyId ?? options?.OperationId ?? Guid.NewGuid(), options?.Payer);
+        if (options?.IntentFingerprint is { Length: not 32 })
+            throw new AiServiceException(AiServiceErrorCodes.InvalidRequest, "اثر انگشت عملیات معتبر نیست.");
+        return new(bodyId ?? options?.OperationId ?? Guid.NewGuid(), options?.Payer)
+            { IntentFingerprint = options?.IntentFingerprint, HasPartialOutput = options?.HasPartialOutput };
     }
 }
 public interface IAiRuntimeAvailability { void EnsureEnabled(); }
@@ -19,7 +26,11 @@ public interface IAiInvocationExecutor
     Task<TResponse> ExecuteAsync<TRequest, TResponse>(Guid userId, Guid sessionId, TRequest request,
         Func<TRequest, CancellationToken, Task<TResponse>> invoke, Func<CancellationToken, Task> reauthorize,
         AiInvocationOptions? options, CancellationToken ct)
-        where TRequest : IAiInvocationRequest where TResponse : class, IAiServiceResponse;
+        where TRequest : IAiInvocationRequest where TResponse : class;
+    IAsyncEnumerable<AiChatStreamEvent> ExecuteStreamAsync<TRequest>(Guid userId, Guid sessionId, TRequest request,
+        Func<TRequest, CancellationToken, IAsyncEnumerable<AiChatStreamEvent>> invoke,
+        Func<CancellationToken, Task> reauthorize, AiInvocationOptions? options, CancellationToken ct)
+        where TRequest : IAiInvocationRequest;
 }
 public static class AiInvocationErrorCodes
 {

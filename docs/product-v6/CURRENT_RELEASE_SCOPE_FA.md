@@ -1,5 +1,12 @@
 # محدودهٔ قطعی Release جاری Backend
 
+به‌روزرسانی Adaptive Assistant v1 از پایهٔ `95cef1b` در `2026-11-18`:
+[Chat/Profile/History/SSE/Source orchestration](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) به BE19
+اضافه شده است. History از Messenger مستقل، متعلق به مالک/Context و فقط completed است.
+General stream واقعی است؛ RAG stream رسمی upstream وجود ندارد. Publication دو محیط
+مجاز است؛ هرگونه تست، SQL یا Deploy سرور Backend در این مرحله `NOT_RUN_BY_POLICY` است.
+Unmetered، Service Auth=false، Payments/Push Deferred و سیاست ذخیرهٔ Source حفظ می‌شوند.
+
 به‌روزرسانی سیاست مالک: `2026-11-18`؛ مبنای این تغییر
 `d397d73c5f532f7492614e95925ceaa1850a8150` روی `feature/product-v6-backend-alignment`.
 سیاست جاری [AI نامحدود](AI_UNMETERED_CURRENT_RELEASE_FA.md) بر توضیحات تجاری تاریخی اولویت دارد.

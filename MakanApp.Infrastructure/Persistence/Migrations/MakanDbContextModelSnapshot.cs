@@ -4396,6 +4396,106 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.ToTable("UserSessions", "identity");
                 });
 
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AiConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("ContextFingerprint")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("NextSequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SourcePins")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId", "UpdatedAtUtc", "Id");
+
+                    b.ToTable("AiConversations", "intelligence", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiConversations_Sequence", "[NextSequence] >= 1 AND [NextSequence] % 2 = 1");
+
+                            t.HasCheckConstraint("CK_AiConversations_Sources", "ISJSON([SourcePins]) = 1");
+                        });
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AiConversationTurn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("IntentHash")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Text")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "OwnerUserId");
+
+                    b.HasIndex("ConversationId", "Sequence")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerUserId", "OperationId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("AiConversationTurns", "intelligence", t =>
+                        {
+                            t.HasCheckConstraint("CK_AiConversationTurns_Completion", "([IsCompleted]=0 AND [Role]=1 AND [Text] IS NULL AND [CompletedAtUtc] IS NULL) OR ([IsCompleted]=1 AND [Text] IS NOT NULL AND DATALENGTH([Text])>0 AND [CompletedAtUtc] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_AiConversationTurns_RoleSequence", "([Role]=1 AND [Sequence]>0 AND [Sequence]%2=1) OR ([Role]=2 AND [Sequence]>0 AND [Sequence]%2=0)");
+
+                            t.HasCheckConstraint("CK_AiConversationTurns_TextBound", "[Text] IS NULL OR ([Role]=1 AND DATALENGTH([Text])<=16000) OR ([Role]=2 AND DATALENGTH([Text])<=131072)");
+                        });
+                });
+
             modelBuilder.Entity("MakanApp.Domain.Intelligence.AssistantContextSelection", b =>
                 {
                     b.Property<Guid>("SessionId")
@@ -10972,6 +11072,25 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AiConversation", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MakanApp.Domain.Intelligence.AiConversationTurn", b =>
+                {
+                    b.HasOne("MakanApp.Domain.Intelligence.AiConversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId", "OwnerUserId")
+                        .HasPrincipalKey("Id", "OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

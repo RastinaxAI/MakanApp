@@ -10,6 +10,11 @@ public sealed class AiInvocationOperationTransformer(AiUsageOptions aiUsage) : I
     public Task TransformAsync(OpenApiOperation operation, OpenApiOperationTransformerContext context, CancellationToken cancellationToken)
     {
         var route = context.Description.RelativePath?.Split('?')[0] ?? "";
+        if (route.StartsWith("api/v1/ai/conversations/", StringComparison.Ordinal))
+        {
+            operation.Description = "پنجرهٔ تاریخچهٔ کاملِ خود مالک در Assistant Context جاری؛ حداکثر ۲۰ turn و ۱۲۰۰۰ کاراکتر. مالک/بافت نامنطبق 404؛ revoke دسترسی آینده را قطع می‌کند. هیچ مسیر Admin یا تاریخچهٔ Messenger ندارد.";
+            return Task.CompletedTask;
+        }
         if (!route.StartsWith("api/v1/ai/", StringComparison.Ordinal) || route == "api/v1/ai/sources/preflight" ||
             route.StartsWith("api/v1/ai/knowledge/", StringComparison.Ordinal)) return Task.CompletedTask;
         operation.Parameters ??= new List<OpenApiParameter>();
@@ -24,13 +29,19 @@ public sealed class AiInvocationOperationTransformer(AiUsageOptions aiUsage) : I
             Schema = new OpenApiSchema { Type = "string", Enum = new List<IOpenApiAny> { new OpenApiString("Organization"), new OpenApiString("Individual"), new OpenApiString("FreeTrial") } } });
         operation.Responses.TryAdd("409", new OpenApiResponse { Description = (aiUsage.IsUnmetered ? "تعارض عملیات؛ " : "تعارض عملیات/سهمیه؛ ") +
             "AI_OPERATION_ALREADY_COMPLETED / IN_PROGRESS / OUTCOME_UNKNOWN / PREVIOUSLY_FAILED. پاسخ خصوصی AI cache نمی‌شود و Provider دوباره صدا زده نمی‌شود." });
-        if (route == "api/v1/ai/chat")
+        if (route is "api/v1/ai/chat" or "api/v1/ai/chat/stream")
         {
             operation.Description = (operation.Description ?? "") + " زمینهٔ Personal با Actor رسمی Personal و scope تهی به سرویس AI v1 ارسال می‌شود؛ نقش سازمانی لازم نیست. " +
                 (aiUsage.IsUnmetered
                     ? "در Unmetered ورود و Context معتبر لازم است؛ Subscription/Entitlement تجاری، سهمیه، Trial روزانه و سقف محلی ai-chat اعمال نمی‌شوند. رکورد عملیات پایدار پیش از AI ثبت می‌شود و مصرف تجاری ندارد. "
                     : "Assistant مستقل از School Workspace است. Individual پیش‌فرض و FreeTrial صریح است؛ Organization در Personal مجاز نیست. رزرو معتبر پیش از تماس AI لازم است. ") +
-                "برای منابع شخصی آماده از APIهای موجود Knowledge Retrieve/RAG استفاده شود؛ selectedSourceIds در Chat هنوز AI_SOURCE_RETRIEVAL_NOT_AVAILABLE می‌دهد.";
+                "Profile اختیاری فقط سبک پاسخ را تغییر می‌دهد. History از SQL متعلق به مالک و Context جاری ساخته می‌شود؛ history کلاینت مجوز یا حافظهٔ معتبر نیست. ConversationId پاسخ canonical است. Mode=General بدون Knowledge، Auto با SourceIntent صریح General مجاز به fallback شفاف، SourcesOnly بدون fallback است. selectedSources نسخهٔ دقیق و selectedSourceIds انتخاب اولیه را pin می‌کنند؛ تغییر نسخهٔ گفت‌وگوی grounded به گفت‌وگوی تازه نیاز دارد.";
+            if (route.EndsWith("/stream", StringComparison.Ordinal))
+            {
+                operation.Description += " SSE واقعی: start یک‌بار، delta با sequence متوالی از ۱، done موفق بدون متن تکراری، error شکست نهایی. EOF بدون terminal شکست است؛ قطع Client به upstream می‌رسد. RAG جریان رسمی ندارد و AI_SOURCE_STREAMING_NOT_SUPPORTED نیاز به chat غیرجریانی را اعلام می‌کند. پس از آغاز HTTP، error event معیار شکست است حتی با HTTP 200.";
+                operation.Responses["200"] = new OpenApiResponse { Description = "text/event-stream؛ موفقیت فقط با done معتبر است.", Content = new Dictionary<string, OpenApiMediaType> {
+                    ["text/event-stream"] = new() { Schema = new OpenApiSchema { Type = "string", Description = "event: start|delta|done|error و data: JSON؛ پس از هر event flush می‌شود." } } } };
+            }
         }
         foreach (var response in operation.Responses.Values)
         {
