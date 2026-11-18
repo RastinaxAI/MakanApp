@@ -1,5 +1,16 @@
 # قرارداد جاری Commerce برای Frontend — BE-17
 
+**سیاست انتشار `2026-11-18` از پایهٔ `d397d73`:** پرداخت‌های Runtime همه Deferred هستند و
+Provider هر دو محیط `Unavailable` می‌ماند. Purchase، Renew، Upgrade، Downgrade نیازمند
+پرداخت، Pay و Zibal redirect در flow قابل استفاده نمایش داده نشوند. School Quote → Payment
+→ Paid Provisioning نیز Deferred است؛ کد حذف و Provisioning رایگان حدسی ساخته نمی‌شود.
+Catalog/مدل‌ها/مالکیت/Regression زیر حفظ‌اند؛ توضیح فروش زنده برای انتشار آینده است.
+
+AI/Knowledge جاری از تجارت مستقل‌اند: Login و مجوز Context/Source لازم، Subscription،
+Entitlement تجاری، پرداخت، Quota، Trial و انتخاب Payer لازم نیستند. Remaining=null است و
+شمارنده/QuotaExceeded UI برای AI استفاده نمی‌شود. [قرارداد Unmetered](AI_UNMETERED_CURRENT_RELEASE_FA.md)
+و [Scope جاری](CURRENT_RELEASE_SCOPE_FA.md) بر توضیحات تجاری تاریخی پایین اولویت دارند.
+
 مبنا `f030ab7` روی `feature/product-v6-backend-alignment`؛ بازبینی `2026-11-16`.
 Source اعتبارسنجی: `3561610336e88b225da5463c959a640d4bcf9ae5`؛۳۴۲۵ تست موفق و Migration جدید صفر.
 این سند قرارداد Source است؛ وجود کد/تست، شاهد تنظیم Catalog یا پرداخت زندهٔ Production نیست.

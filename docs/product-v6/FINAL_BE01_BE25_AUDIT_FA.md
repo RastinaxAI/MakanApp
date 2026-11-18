@@ -1,12 +1,11 @@
 # ممیزی نهایی BE01–BE25 و پذیرش محدودهٔ Release جاری
 
-> پیگیری Runtime از `f704a5c` در [Test Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md)
-> ثبت است: CFG-02 با Personal Chat و Ingest/Ready/Retrieve/RAG واقعی از Backend محلی بسته شد.
-> Test هر دو Runtime را فعال و هر دو Service Auth را غیرفعال دارد؛ Production خصوصی محفوظ است.
-> تصمیم فعلی `NOT_READY_FOR_TEST_DEPLOY` فقط به CFG-01 وابسته است: URL واقعی بازگشت کلاینت
-> زیبال هنوز داده نشده. شمارش فعلی Code=0، Configuration=1، Operations Test=3 است.
-> جدول‌های BE و Regression پایین، سابقهٔ ممیزی قبل از این پیگیری را حفظ می‌کنند؛
-> شمارش اجرای جدید و تغییرات config/test/tool در گزارش Runtime ثبت می‌شود.
+> تصمیم جدید مالک `2026-11-18` از پایهٔ `d397d73`: پرداخت‌های Runtime و Paid Provisioning
+> آموزشگاه=`DEFERRED_CURRENT_RELEASE`؛ Provider هر دو محیط=`Unavailable`؛ ClientReturnUrl
+> ورودی یا blocker نسخهٔ جاری نیست. AI/Knowledge=`Unmetered` با ورود و مجوز جاری، بدون
+> اشتراک/Entitlement تجاری/Quota/Trial/سقف محلی ai-chat است. رکورد عملیات پایدار حفظ می‌شود.
+> [گزارش AI نامحدود](AI_UNMETERED_CURRENT_RELEASE_FA.md) مرجع شواهد جدید، Migration و
+> Regression این تغییر است. جدول‌ها و شمارش ممیزی اولیه در بخش‌های تاریخی حفظ شده‌اند.
 
 تاریخ `2026-11-17`؛ مخزن اصلی `D:\Project\MakanApp\MakanApp-Backend`.
 Source پایه، Commit نهایی واقعی MKN-BE-001 است:
@@ -22,9 +21,9 @@ live/ready200، Personal Chat200، Knowledge Ingest202/Ready/Retrieve200/RAG200�
 یک مصرف تأیید شد. حساب دیگر به Source دسترسی نداشت؛ فقط منبع مصنوعی تازهٔ همان اجرا
 پاک‌سازی شد. Service Auth، timeout35s و حدود پردازش حفظ شدند؛ Auth/JWT فعال نشد.
 
-Zibal implementation از configuration آن جداست. Provider فعلاً `Unavailable` ماند چون
+در پیگیری تاریخی، Zibal implementation از configuration آن جدا بود. Provider `Unavailable` ماند چون
 `Payments:Zibal:ClientReturnUrl` واقعی نامعلوم است. مجموعهٔ Merchant/Callback/Return/Allowlist
-به‌صورت ناقص فعال نشد؛ این یک blocker تنظیم Test است. Production Merchant، فعال‌سازی
+به‌صورت ناقص فعال نشد؛ **این blocker با سیاست جدید از نسخهٔ جاری خارج شده است**. Production Merchant، فعال‌سازی
 Production AI/Knowledge و چهار gate عملیاتی Production در شمارش Test وارد نمی‌شوند.
 در این پیگیری نیز main، Deploy، پرداخت مالی، SQL روی دیتابیس عادی و Migration جدید اجرا نشد.
 
@@ -350,26 +349,26 @@ OpenAPI؛ سپس قراردادها و تصمیم‌های مصوب. عنوان 
 | Persistence Evidence | `commerce.Orders/PaymentAttempts/Payments/PaymentAttemptEvents` و OutboxMessages؛ claim کوتاه برای network و transaction نهایی اتمیک؛ unique settlement/اثر تجاری از تکرار جلوگیری می‌کند |
 | Tests | [ZibalPaymentEndpointsTests](../../tests/MakanApp.IntegrationTests/ZibalPaymentEndpointsTests.cs)، [Zibal Acceptance](../../tests/MakanApp.IntegrationTests/ZibalPaymentEndpointsTests.Acceptance.cs)، [ZibalPaymentMigrationAcceptanceTests](../../tests/MakanApp.IntegrationTests/ZibalPaymentMigrationAcceptanceTests.cs) و Unit adapter/options؛117 case Zibal در baseline MKN موجود بود و در این ممیزی از TRX تازه سنجیده می‌شود |
 | Migration | `20261110081503_AddZibalPaymentIntegration` و Order/Payment foundation موجود؛ جدید0 |
-| Runtime Dependency | تنظیم معتبر [ZibalOptions](../../MakanApp.Infrastructure/Commerce/ZibalOptions.cs)، Provider و Callback قابل‌دسترسی؛ نبود آن CFG-01 است؛ آزمون محلی provider کنترل‌شده دارد |
-| Product Decision | Zibal داخل محدوده؛ CafeBazaar/Myket/iOS برای این Release Deferred؛ Task لغوشدهٔ BE18 Store به معنی پیاده‌سازی Store نیست |
-| Current Release Scope | IN SCOPE Zibal؛ `BE18_STORE_BILLING=DEFERRED_CURRENT_RELEASE`؛ هیچ Store receipt/intention/mapping تازه ساخته نشده |
-| Final Status | `PASS_CURRENT_RELEASE` برای implementation/test Zibal؛ `BLOCKED_CONFIGURATION` برای فعال‌سازی مقصد فعلی |
-| Remaining Action | CFG-01 و پذیرش Callback واقعی؛ `ZIBAL=PASS` در این گزارش، نتیجهٔ کد/تست است، نه تراکنش بانکی Production |
+| Runtime Dependency | ZibalOptions/Provider/Callback فقط برای Future Payment Release لازم‌اند؛ آزمون‌های محلی provider کنترل‌شده دارند |
+| Product Decision | همهٔ پرداخت‌ها، شامل Zibal/CafeBazaar/Myket/iOS در Runtime این Release Deferred هستند؛ کد حذف نشده است |
+| Current Release Scope | حفظ و Regression پیاده‌سازی؛ `CURRENT_RELEASE_PAYMENTS=DEFERRED_CURRENT_RELEASE`؛ CTAهای پرداخت پنهان و Provider=`Unavailable` |
+| Final Status | implementation/test=`PASS`؛ Runtime=`DEFERRED_CURRENT_RELEASE`؛ `TEST_ZIBAL_CONFIGURATION=NOT_REQUIRED_CURRENT_RELEASE` |
+| Remaining Action | تنظیم کامل و پذیرش Callback برای انتشار آیندهٔ پرداخت؛ `ZIBAL=PASS` شاهد تراکنش بانکی واقعی نیست |
 
 ## BE19 — AI Gateway / Knowledge
 
 | مورد | شاهد / نتیجه |
 |---|---|
-| Requirement | Actor شخصی/نقش سازمانی، Assistant Context، Payer مستقل، FreeTrial/Quota/Reservation، Source ACL، RAG، Retry و Unknown |
+| Requirement | Actor شخصی/نقش سازمانی، Assistant Context، Source ACL، RAG، Retry/Unknown؛ Unmetered بدون تجارت؛ FreeTrial/Quota فقط برای حالت Commercial محفوظ |
 | Current Implementation | [AiChatService](../../MakanApp.Application/Ai/AiChatService.cs)، AiRoleContextService، [AiInvocationExecutor](../../MakanApp.Application/Ai/AiInvocationExecutor.cs)، AiSourceSelectionService و [KnowledgeAuthorizationService](../../MakanApp.Application/Knowledge/KnowledgeAuthorizationService.cs)؛ Context/Source پیش و پس از تماس کنترل می‌شوند |
 | API Evidence | `POST /api/v1/ai/chat`، `/sources/preflight` و مسیرهای نقش؛ `GET/PUT /api/v1/ai/assistant-context`؛ `POST /api/v1/ai/knowledge/retrieve` و `/rag/answer`؛ عملیات ingest/status/delete نسخهٔ منبع موجود |
 | Domain Evidence | AssistantContextSelection، AiSourceSelectionPin/Operation، UsageReservation؛ Actor Personal بدون Org scope؛ مالک مالی Individual/Organization با داشتن Role یکسان فرض نمی‌شود |
 | Persistence Evidence | `intelligence.AssistantContextSelections`، `knowledge.AiSourceSelectionPins/Operations`، EducationalSources و `commerce.UsageReservations/UsageLedger`؛ همان Operation پس از Consumed برابر409، بدون ذخیرهٔ پاسخ خصوصی/تماس و مصرف دوباره؛ Unknown به Retry کور تبدیل نمی‌شود |
-| Tests | [PersonalAiAcceptanceTests](../../tests/MakanApp.IntegrationTests/PersonalAiAcceptanceTests.cs)، [PersonalKnowledgeAcceptanceTests](../../tests/MakanApp.IntegrationTests/PersonalKnowledgeAcceptanceTests.cs)، [AiV1CommerceEndpointsTests](../../tests/MakanApp.IntegrationTests/AiV1CommerceEndpointsTests.cs)، [AiV1ControlledTransportTests](../../tests/MakanApp.IntegrationTests/AiV1ControlledTransportTests.cs) و Unit invocation/contract/error mapping |
-| Migration | `20261030152943_AddAiSourceSelectionPins`، `20261112151714_AddSupportPrivacyAndAssistantContexts` و `20261112152027_EnforceAssistantAndDeletionSessionOwnership`؛ جدید0 |
+| Tests | PersonalAi/PersonalKnowledge/AiV1Commerce/AiV1Controlled موجود؛۳۷ case جدید policy/HTTP/role/Knowledge/migration در [گزارش Unmetered](AI_UNMETERED_CURRENT_RELEASE_FA.md)، همراه با Regression Commercial |
+| Migration | foundation قبلی محفوظ؛ `20261118065656_AddUnmeteredAiOperations` در این مرحله یک Migration افزایشی برای علامت‌گذاری عملیات بی‌مصرف تجاری؛ Fresh/Upgrade فقط روی SQL disposable |
 | Runtime Dependency | SQL، upstream AI/Knowledge و configuration؛ CFG-02 در پیگیری Runtime با private Test فعال و Personal Chat/Ingest/Ready/Retrieve/RAG واقعی بسته شد؛ Production Backend هنوز اجرا/Deploy نشده |
 | Product Decision | D11 بسته طبق قرارداد جاری Personal؛ `AiService:UseServiceAuthentication=false` و `AiKnowledge:UseServiceAuthentication=false` حفظ؛ Library AI همچنان policy-disabled؛ timeout35s دست‌نخورده |
-| Current Release Scope | IN SCOPE Gateway/Knowledge با قرارداد فعلی؛ شاهد تازهٔ2026-11-17 در [Runtime Readiness](../operations/TEST_RUNTIME_READINESS_FA.md) و شواهد قبلی در [Handoff](PERSONAL_AI_FRONTEND_HANDOFF_FA.md) تفکیک شده‌اند |
+| Current Release Scope | IN SCOPE Gateway/Knowledge با `AiUsage:Mode=Unmetered`؛ ورود و ACL لازم، Payer انتخابی لازم نیست؛ Subscription/Entitlement تجاری/Quota/Trial/سقف محلی ai-chat اعمال نمی‌شوند. پیش‌فرض کد Commercial و مسیر قدیمی قابل بازگشت است؛ [شاهد](AI_UNMETERED_CURRENT_RELEASE_FA.md) |
 | Final Status | `PASS` برای implementation و Runtime محلی Test؛ Production=`OPERATIONAL_ACTIVATION_PENDING` |
 | Remaining Action | OP-02: آزمون از Backend مقصد پس از Deploy مجاز؛ هیچ Service JWT/SigningKey تازه درخواست، چاپ، ذخیره یا لازم نمی‌شود |
 
@@ -497,7 +496,13 @@ ReviewRequired/Ready-orphan/Export TTL نیز حفظ می‌شوند؛ این م
 | V6-D16 | جزئیات حقوقی/دسته‌بندی تازهٔ مدارک School | خیر | بله، برای گسترش target | `PRODUCT_DECISION_REQUIRED`؛ حداقل فعلی دو نوع اجرا شده؛ شمارهٔ حقوقی تازه حدس نمی‌شود |
 | V6-D18 | Correction/Reopen پروندهٔ نهایی | خیر | بله | `PRODUCT_DECISION_REQUIRED`؛ Approved/Rejected/Cancelled درجا mutate یا restore نمی‌شود |
 
-## Snapshot نهایی قرارداد و دیتابیس
+## Snapshot ممیزی مبنا — سابقهٔ قبل از Unmetered
+
+Snapshot جاری پس از `d397d73`،438 path /494 operation /785 schema /91 Controller /151 جدول
+و76 Migration دارد؛ آخرین Migration=`20261118065656_AddUnmeteredAiOperations` و Pending=NO.
+شاهد جدید در `.artifacts/ai-unmetered-20261118-d397d73/snapshot` است و به دیتابیس وصل نشده است.
+اعداد و SHAهای جدول/SQL/ZIP پایین مربوط به ممیزی `14b0271` هستند؛ بسته یا SQL جدید این
+تغییر محسوب نمی‌شوند و نباید به جای Migration تازه برای استقرار بعدی استفاده شوند.
 
 | مقدار | نتیجهٔ تازه از ابزار موجود |
 |---|---|
@@ -527,7 +532,7 @@ SQL تولیدشده روی دیتابیس عادی یا سرور اجرا نش�
 `IX_AddressBookEntries_OwnerUserId_ServerVersion`. نام‌ها از مدل استخراج شده‌اند؛ صرف وجود
 Constraint به معنی اجرای آن روی Production نیست. Integration آن‌ها را روی SQL ایزوله می‌سنجد.
 
-## Audit پیکربندی بدون افشای مقدار محرمانه
+## Audit پیکربندی ممیزی مبنا — بدون افشای مقدار محرمانه
 
 JSON واقعی هر دو محیط parse شد؛16 بخش سطح اول،27 leaf key، schema و nested structure برابرند.
 در ممیزی مبنا، پس از جایگزینی دقیق چهار مقدار مصوب، دو درخت JSON کامل برابر شدند؛ تفاوت‌های آن مبنا فقط:
@@ -556,20 +561,20 @@ GracePeriodHours=null باقی‌اند. تنظیم واقعی IIS/SQL/سرور 
 Source در محدودهٔ جاری پیدا نشد که به fix کد نیاز داشته باشد.
 
 - `CURRENT_RELEASE_CODE_GAPS=0`: بر مبنای Source و دامنهٔ آزمون‌ها، نه ادعای کشف همهٔ خطاهای ممکن.
-- `CURRENT_RELEASE_CONFIGURATION_BLOCKERS=1`: فقط CFG-01 زیبال؛ CFG-02 با شاهد واقعی محلی
-  بسته شد. مقدار مفقود دقیق و محدودهٔ شاهد در [Blockers](CURRENT_RELEASE_BLOCKERS_FA.md) آمده است.
-- `CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=3`: فقط OP-01..03 مربوط به Test؛ چهار gate
+- `CURRENT_RELEASE_CONFIGURATION_BLOCKERS=0`: CFG-01 پرداخت Deferred است؛ CFG-02 با شاهد
+  واقعی محلی بسته شد. شرح و محدودهٔ شاهد در [Blockers](CURRENT_RELEASE_BLOCKERS_FA.md) آمده است.
+- `CURRENT_RELEASE_OPERATIONAL_VALIDATIONS=2`: OP-01 و OP-02 مربوط به Test؛ OP-03 پرداخت Deferred و چهار gate
   Production جدا باقی‌اند و در این شمارش یا مانع نصب اولیهٔ Test وارد نمی‌شوند.
 - `OPEN_PRODUCT_DECISIONS=12`: همان دوازده شناسهٔ Register؛ هیچ‌کدام با محدودهٔ Freezeشده
   فعلی، blocker تازهٔ Release نیستند.
 - `BE24_FULL_PRODUCT_ACCEPTANCE=DEFERRED_PRODUCT_SCOPE`: تکمیل آینده با پذیرش این Release
   یک status مبهم مشترک ندارد.
-- `CURRENT_RELEASE_ACCEPTANCE=NOT_READY_FOR_TEST_DEPLOY`: فقط به دلیل URL واقعی نامعلوم
-  `Payments:Zibal:ClientReturnUrl`؛ این نتیجه failure کد، Store یا Push نیست.
+- `CURRENT_RELEASE_ACCEPTANCE=READY_FOR_TEST_DEPLOY`: هر دو دور۳۴۹۸ تست و Smoke محدود واقعی موفق؛
+  `Payments:Zibal:ClientReturnUrl` دیگر مانع نیست و فقط در انتشار آیندهٔ پرداخت لازم است.
 
-پیش از ساخت/نصب بستهٔ پذیرش کامل Test، اپراتور باید URL کلاینت را مشخص و تنظیم درگاه را
-کامل و validate کند. رمز، Merchant، token یا Service JWT در چت/Git لازم نیست. School Sales تا تنظیم
-قرارداد معتبر می‌تواند بسته بماند؛ حذف واقعی نیز طبق اجازهٔ مالک می‌تواند خاموش بماند.
+پیش از نصب Test باید Source نهایی، Migration افزایشی و بسته در Task مجاز بعدی آماده شوند؛
+پرداخت برای این کار لازم نیست. رمز، Merchant، token یا Service JWT در چت/Git لازم نیست.
+School Paid Provisioning Deferred و اجرای حذف واقعی طبق اجازهٔ مالک می‌تواند خاموش بماند.
 
 ## گزارش آموزشی ممیزی مبنا
 

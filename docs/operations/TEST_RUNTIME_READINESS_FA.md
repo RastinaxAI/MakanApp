@@ -1,5 +1,29 @@
 # آمادگی Runtime محیط Test و گزارش توسعه‌دهنده
 
+## سیاست جاری پس از `d397d73` — 2026-11-18
+
+مرجع این مرحله [AI نامحدود و پرداخت Deferred](../product-v6/AI_UNMETERED_CURRENT_RELEASE_FA.md)
+است؛ نتیجهٔ تازهٔ Build/Regression و Smoke در همان سند ثبت می‌شود. پرداخت دیگر مانع نصب Test
+نیست؛ `Payments:Provider=Unavailable` در هر دو محیط باقی می‌ماند و Merchant/Callback/ClientReturn
+فقط در انتشار آیندهٔ پرداخت لازم‌اند. `USER_INPUT_REQUIRED=NONE` برای Current Release.
+
+در base و private Test/Production، `AiUsage:Mode=Unmetered` صریح است. فقط همین بخش جدید
+خصوصی تغییر کرده؛ همهٔ مقادیر دیگر، Secretها و تنظیمات MeliPayamak حفظ شده‌اند. Test همچنان
+AI/Knowledge روشن و Service Auth خاموش دارد؛ Production Runtime خاموش می‌ماند. timeout35s،
+محدودیت اندازه، Circuit Breaker و ACL محفوظ‌اند. عملیات نامحدود با همان Reservation/Ledger
+ذخیره می‌شود و هیچ Subscription/Order/Payment یا مصرف Quota ایجاد نمی‌کند.
+
+Probe شخصی در این Mode هیچ قرارداد ساختگی نمی‌سازد. Probe Knowledge فقط برای ایجاد فایل QA
+قرارداد مستقل Storage می‌سازد و **قبل از Ingest/Retrieve/RAG آن را لغو می‌کند**؛ رکورد AI بدون
+اشتراک فعال/Entitlement AI پذیرفته می‌شود. آزمایش ۲۵ درخواست فقط با Provider کنترل‌شده است.
+Private config و سه فایل unfinished AI هرگز وارد Commit نمی‌شوند. هیچ Deploy یا Migration
+روی `MakanApp`، `MakanApp_Test` یا سرور انجام نمی‌شود.
+
+## سابقهٔ مرحله‌های قبل از تغییر سیاست
+
+تمام گزارش‌ها، شمارش‌ها و CFG-01 بازِ پایین، شواهد تاریخیِ همان Commitهای نام‌برده‌اند؛
+وضعیت یا ورودی لازم برای نسخهٔ جاری محسوب نمی‌شوند. گزارش جدید و Scope/Blockers مرجع جاری‌اند.
+
 ## بازپذیرش AI/Knowledge محیط Test — 2026-11-18
 
 مبنای این بازپذیرش `f20cfcbbf381d1adde1ad1a9d3471ea9d064088e` روی

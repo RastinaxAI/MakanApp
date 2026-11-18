@@ -4,15 +4,24 @@
 
 اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
 
+سیاست جاری AI نامحدود از پایهٔ `d397d73`: هر دو دور کامل **1386 Unit +2098 Integration
++14 Architecture =3498 PASS**، Failed/Skipped=0 و Build بدون Warning/Error؛۳۷ تست تازه،
+۱۱۷ Zibal و۸۲ Realtime موفق. Migration افزایشی `AddUnmeteredAiOperations` روی SQL موقت
+Fresh/Upgrade پذیرفته شد؛ دیتابیس عادی/سرور تغییر نکرد. نتیجه `READY_FOR_TEST_DEPLOY` است؛
+Deploy یا Merge به main اجرا نشده است. [گزارش آموزشی و شواهد](docs/product-v6/AI_UNMETERED_CURRENT_RELEASE_FA.md).
+
 مرجع نهایی محدودهٔ Release جاری: [Audit همهٔ BE01–BE25](docs/product-v6/FINAL_BE01_BE25_AUDIT_FA.md)،
 [قابلیت‌های داخل محدوده و Deferred](docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md) و
 [موانع واقعی Configuration/Operations](docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md)، از
 Source نهایی MKN-BE-001=`14b0271a9d3aea840e23413dacae5300fc68ebed`.
 Store Billing، Push Runtime، iOS، Family و PersonalClass Assignment/Exam طبق تصمیم مالک
-Deferred هستند؛ Zibal داخل محدوده است. آمادگی کد از آماده‌بودن تنظیمات مقصد و Deploy جداست.
+Deferred هستند؛ طبق [سیاست جدید نسخهٔ جاری](docs/product-v6/AI_UNMETERED_CURRENT_RELEASE_FA.md)،
+Runtime همهٔ پرداخت‌ها از جمله Zibal و Paid Provisioning آموزشگاه هم Deferred است؛ کد و Regression آن‌ها حفظ می‌شود.
 پیگیری [Test Runtime](docs/operations/TEST_RUNTIME_READINESS_FA.md) از `f704a5c`، AI/Knowledge
 خصوصی Test را فعال و با اتصال واقعی محلی پذیرفت؛ Service Auth هر دو خاموش است. درگاه هنوز
-Unavailable است چون URL واقعی بازگشت کلاینت Test لازم است. Production خصوصی و تنظیم سرور تغییر نکرد.
+`Unavailable` است؛ URL بازگشت کلاینت فقط برای انتشار آیندهٔ پرداخت لازم است و blocker نصب Test نیست.
+AI با `AiUsage:Mode=Unmetered` به اشتراک/Entitlement تجاری/Quota/Trial یا سقف محلی ai-chat نیاز
+ندارد؛ ورود، Context و Source ACL و عملیات پایدار الزامی‌اند. فقط این Mode در هر دو private config اضافه شده است.
 
 مسیر عملیات BE-23: [گزارش آمادگی محلی](docs/product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) و
 [Manifest بسته‌های Test/Production، SQL و rollback](docs/product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md).
@@ -43,8 +52,8 @@ Failed/Skipped،117 Zibal موفق و Build بدون Warning/Error. کد/تست/
 438 path،494 operation،783 schema،91 Controller،151 جدول و75 Migration، Pending=NO.
 محدودهٔ Release Freeze شده و Full Future Product جداست. پیگیری Runtime پس از این ممیزی،
 AI/Knowledge Test را با Personal Chat و Ingest/Ready/Retrieve/RAG واقعی پذیرفت؛ نتیجهٔ جدید
-Regression در [گزارش Runtime](docs/operations/TEST_RUNTIME_READINESS_FA.md) است. یک مانع تنظیم
-زیبال باقی است و نتیجه `NOT_READY_FOR_TEST_DEPLOY`؛ سه پذیرش عملیاتی Test از چهار مورد Production جدا هستند.
+Regression در [گزارش Runtime](docs/operations/TEST_RUNTIME_READINESS_FA.md) است. سیاست تازه،
+مانع تنظیم زیبال را از Current Release خارج کرده است؛ دو پذیرش عملیاتی Test از چهار مورد Production جدا هستند.
 در پیگیری Runtime، هر دو دور کامل **1377 Unit +2070 Integration +14 Architecture =3461 PASS**
 شدند؛ Failed/Skipped و Warning/Error صفر،117 Zibal و82 Realtime موفق، Pending Model Changes=NO.
 اعداد و statusهای افزوده‌های مراحل پایین، تاریخچهٔ همان Commit/تاریخ‌اند.

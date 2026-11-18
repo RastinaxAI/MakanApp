@@ -1,5 +1,12 @@
 # تحویل Personal AI و Personal Knowledge/RAG
 
+**اصلاح جاری `2026-11-18` از پایهٔ `d397d73`:** در این Release، Mode=`Unmetered` است؛
+Login و Context/Source ACL لازم‌اند، اشتراک/Entitlement تجاری/پرداخت/Payer انتخابی لازم نیستند.
+Remaining=null یعنی unlimited؛ شمارندهٔ درخواست و UI خرید/QuotaExceeded نمایش داده نشود.
+policy محلی ai-chat۲۰/دقیقه و FreeTrial۳/روز فقط در Commercial اعمال می‌شوند؛ خطای429 واقعی
+Upstream همچنان باید نمایش داده شود. [جزئیات و شاهد](AI_UNMETERED_CURRENT_RELEASE_FA.md).
+شمارش‌ها و Smokeهای قدیمی پایین، شاهد تاریخی همان Sourceهای نام‌برده‌اند.
+
 بازبینی: `2026-11-14`؛ مبنای Activation: `a5e24e43b2d458adf532648212caab5bdceee0b2`، شاخهٔ `feature/product-v6-backend-alignment`.
 
 **وضعیت: BE19_AI_GATEWAY=PASS.** حساب عادیِ فعال، بدون نقش سازمانی، با Actor رسمی `Personal` از Generic Chat و مسیرهای مجاز Knowledge/RAG استفاده می‌کند. پذیرش واقعی HTTP Backend محلی → AI Production با پاسخ200، Scope تهی، Individual و یک مصرف موفق انجام شد. Final Regression=1325 Unit +1930 Integration +14 Architecture =3269 PASS، Failed/Skipped=0 و Build صفر Warning/Error است؛114 تست Zibal نیز پاس‌اند. کد و Probe در `31fe34c6dde4526badc43d43e62b8ba185ee6f36` ثبت‌اند. Backend Test/Production Deploy نشده است.
@@ -10,7 +17,7 @@
 |---|---|---|
 | School Workspace | محیط کاری آموزشگاه/نقش جاری رابط | تغییرش Assistant ذخیره‌شده را تغییر نمی‌دهد. |
 | Assistant Data Context | دامنهٔ دادهٔ AI، مستقل و متعلق به نشست | Actor همان حساب؛ OrganizationId، MembershipId، Role، SubjectOrganizationPersonId و ClassId تهی‌اند. |
-| Commercial Payer | مالک هزینه و سهمیه | پیش‌فرض Individual؛ FreeTrial فقط انتخاب صریح؛ Organization نامجاز است. |
+| Commercial Payer | فقط در Mode=Commercial مالک هزینه و سهمیه | در Commercial پیش‌فرض Individual، Trial صریح و Organization نامجاز؛ در Unmetered هر enum معتبر فقط برای سازگاری است و اثر مالی ندارد. |
 
 Payer هیچ حق خواندن منبع، نقش یا مجوز آموزشی ایجاد نمی‌کند. یک حساب در دو Session می‌تواند دو Assistant Context متفاوت داشته باشد؛ Tabهای دارای همان Session، انتخاب همان Session را به اشتراک می‌گذارند. کلاینت نباید با تغییر Workspace، Assistant را خودکار عوض کند.
 
@@ -39,7 +46,8 @@ Content-Type: application/json
 قرارداد فعلی: `POST /api/v1/ai/chat` با `message`، `conversationId` اختیاری، `operationId` اختیاری و `selectedSourceIds` اختیاری. Headerهای موجود:
 
 - `X-AI-Operation-Id`: UUID ثابت intent؛ اگر `operationId` در body هم هست، هر دو یکسان باشند.
-- `X-AI-Payer`: `Individual`، `FreeTrial` یا `Organization`؛ در Personal مقدار Organization خطای `COMMERCE_CONTEXT_NOT_ALLOWED` می‌دهد.
+- `X-AI-Payer`: `Individual`، `FreeTrial` یا `Organization`؛ در Unmetered اختیاری و بدون اثر تجاری است.
+  فقط در Commercial، Personal با Organization خطای `COMMERCE_CONTEXT_NOT_ALLOWED` می‌دهد؛ enum نامعتبر همیشه رد می‌شود.
 
 در Personal بدون منبع انتخابی، Backend پس از مجوز جاری و رزرو معتبر همان Commerce موجود، `PersonalAiChatIntent` را به `AiChatRequest` با `actor.role=Personal` و `actor.userId` حساب احرازشده تبدیل می‌کند. `organizationId/schoolId/classId/studentId` تهی و هر پنج مجموعهٔ Context خالی‌اند؛ Workspace مدرسه در wire قرار نمی‌گیرد. نتیجهٔ موفق200 است. نقش Personal فقط Actor قرارداد AI است و نقش سازمانی یا `User.Role` تازه نیست.
 
@@ -89,14 +97,14 @@ Organization/Class source حتی برای Teacher/Manager دارای Workspace �
 | وضعیت | رفتار Client |
 |---|---|
 | Loading | همان operationId و payload را حفظ کند؛ برای Timeout شناسهٔ تازه نسازد. |
-| `SUBSCRIPTION_INACTIVE` / `ENTITLEMENT_REQUIRED` | اشتراک/حق معتبر لازم است؛ بدون انتخاب صریح به Trial یا سازمان fallback نکند. |
-| `QUOTA_EXCEEDED` | وضعیت سهمیه را تازه بخواند و خرید/تمدید مجاز پیشنهاد دهد؛ Retry خودکار نکند. |
+| `SUBSCRIPTION_INACTIVE` / `ENTITLEMENT_REQUIRED` | فقط AI در Commercial؛ برای AI نامحدود نمایش نیاز به خرید اشتراک ندهد. |
+| `QUOTA_EXCEEDED` | فقط AI در Commercial؛ UI سهمیه و خرید برای AI جاری استفاده نمی‌شود. خطای واقعی Upstream را جدا نشان دهد؛ Retry خودکار نکند. |
 | منبع NotReady / نسخه ناسازگار | وضعیت Processing و نسخهٔ منبع را دوباره بخواند؛ منبع دیگری جایگزین نشود. |
 | `AI_OPERATION_IN_PROGRESS` | اجرای همان intent در جریان است؛ تماس تکراری Provider ساخته نمی‌شود. |
 | `AI_OPERATION_ALREADY_COMPLETED` |409؛ پاسخ خصوصی cache نشده و قابل بازگردانی نیست؛ مصرف تکراری انجام نمی‌شود. |
 | `AI_OPERATION_OUTCOME_UNKNOWN` | نتیجهٔ تولید قطعی نیست؛ رزرو Unknown باقی می‌ماند و همان intent خودکار دوباره اجرا نمی‌شود. |
 | `AI_OPERATION_PREVIOUSLY_FAILED` | عملیات قبلاً Released شده؛ همان intent دوباره اجرا نمی‌شود. |
-| `COMMERCE_USAGE_CONFLICT` / `AI_SOURCE_OPERATION_CONFLICT` | همان شناسه با قصد، Payer یا نسخهٔ متفاوت استفاده شده؛ به‌جای Retry کور، ورودی/Context بررسی شود. |
+| `COMMERCE_USAGE_CONFLICT` / `AI_SOURCE_OPERATION_CONFLICT` | همان شناسه با قصد، Context، نسخه یا Mode متفاوت؛ Payer معتبر در Unmetered canonical می‌شود و به‌تنهایی conflict نمی‌سازد. |
 | `AI_SOURCE_CONTEXT_MISMATCH` /403/404 | انتخاب/مجوز جاری تغییر کرده؛ خروجی خصوصی نمایش داده نشود و Context/منابع دوباره resolve شوند. |
 | Feature Disabled | Runtime محیط خاموش است؛ فعال‌بودن قرارداد Personal مجوز bypass Runtime یا Retry مداوم نیست. |
 
@@ -104,9 +112,9 @@ Organization/Class source حتی برای Teacher/Manager دارای Workspace �
 
 ## امنیت و مشاهده‌پذیری
 
-Service Authentication هر دو مسیر AI و Knowledge **DISABLED** مانده است؛ کلید/JWT/Authorization سرویس اضافه نشده. Authentication نشست Backend، ACL منبع و Commerce همچنان اجباری‌اند. prompt، متن منبع، شماره، مخاطبان، token و secret در metric ثبت نمی‌شوند.
+Service Authentication هر دو مسیر AI و Knowledge **DISABLED** مانده است؛ کلید/JWT/Authorization سرویس اضافه نشده. Authentication نشست Backend و ACL منبع همچنان اجباری‌اند؛ شرط تجاری فقط در Commercial اعمال می‌شود. prompt، متن منبع، شماره، مخاطبان، token و secret در metric ثبت نمی‌شوند.
 
-در تنظیم پایه، دو فلگ `AiService:UseServiceAuthentication` و `AiKnowledge:UseServiceAuthentication` صریحاًfalse هستند؛ فایل‌های خصوصی Test/Production تغییر نکرده‌اند. `AiService:Enabled` و Runtime پیش‌فرض Knowledge همچنان خاموش‌اند. این Task آن‌ها را فعال نمی‌کند؛ پذیرش کنترل‌شدهٔ تست، به معنی فعال‌بودن RAG در سرور نیست. Client در محیط خاموش باید وضعیت Feature Disabled را نشان دهد و Retry یا fallback پنهان انجام ندهد.
+دو فلگ `AiService:UseServiceAuthentication` و `AiKnowledge:UseServiceAuthentication` صریحاًfalse هستند. Test خصوصی از مرحلهٔ قبلی هر دو Runtime را فعال دارد؛ base و Production خاموش‌اند. این مرحله فقط AiUsage را به هر دو private config اضافه می‌کند. پذیرش محلی به معنی Deploy سرور نیست؛ Client در محیط خاموش باید Feature Disabled نشان دهد و Retry یا fallback پنهان انجام ندهد.
 
 سنجه‌های `makan.ai.execution.results` و `makan.ai.execution.duration` در Meter موجود `MakanApp.AiService` با tagهای محدود `operation/contextKind/payerKind/result`، Use Case را از سنجه‌های transport جدا می‌کنند. شکست یا مرز قرارداد success ثبت نمی‌شود. Correlation و OperationId برای پیگیری خطا استفاده شوند؛ متن خصوصی در گزارش خطا کپی نشود.
 
