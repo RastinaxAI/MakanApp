@@ -81,30 +81,52 @@ public sealed partial class MessagingEndpointsTests
         finally { factory.Clock.UseSystemTime(); }
     }
 
-    [Fact]
-    public async Task AccountRealtimeExpiredPublisherCannotCompleteRecoveredClaim()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(OutboxProcessor.BatchSize)]
+    public async Task AccountRealtimeExpiredPublisherCannotCompleteRecoveredClaim(int delayedBacklog)
     {
         using var client = factory.CreateClient(); var owner = await CreateMessagingUserAsync(client);
         await FlushReplayOutboxAsync();
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<MakanDbContext>();
-        var id = AddOwnAccessEvent(scope.ServiceProvider, owner.UserId);
-        await db.SaveChangesAsync();
-        var moved = false; var ownDeliveries = 0;
-        var expired = new CallbackInvalidationNotifier((eventId, _, _) =>
-        {
-            Assert.Null(db.Database.CurrentTransaction);
-            if (eventId == id)
-            {
-                ownDeliveries++;
-                if (!moved) { moved = true; factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(31)); }
-            }
-            return Task.CompletedTask;
-        });
+        var now = factory.Clock.GetUtcNow().UtcDateTime;
+        factory.Clock.SetUtcNow(now);
         try
         {
-            // همان loop، claim منقضی را از token تازه بازیابی می‌کند؛ completion قدیمی پذیرفته نمی‌شود.
-            Assert.True(await ReplayProcessor(scope.ServiceProvider, expired).DispatchBatchAsync(default) >= 2);
+            for (var index = 0; index < delayedBacklog; index++)
+            {
+                var delayed = OutboxMessage.Create(Guid.NewGuid(),
+                    MakanApp.Infrastructure.Realtime.RealtimeInvalidationWriter.MessageType,
+                    System.Text.Json.JsonSerializer.Serialize(new { Key = "access", TargetUserId = owner.UserId }), now.AddMinutes(-1));
+                var token = Guid.NewGuid(); delayed.Claim(token, now.AddMinutes(-1), now.AddSeconds(-1));
+                delayed.ScheduleRetry(token, now.AddSeconds(1), "TEST_DELAYED_BACKLOG");
+                db.OutboxMessages.Add(delayed);
+            }
+            var id = AddOwnAccessEvent(scope.ServiceProvider, owner.UserId);
+            await db.SaveChangesAsync();
+            var moved = false; var ownDeliveries = 0;
+            var expired = new CallbackInvalidationNotifier((eventId, _, _) =>
+            {
+                Assert.Null(db.Database.CurrentTransaction);
+                if (eventId == id)
+                {
+                    ownDeliveries++;
+                    if (!moved) { moved = true; factory.Clock.SetUtcNow(factory.Clock.GetUtcNow().UtcDateTime.AddSeconds(31)); }
+                }
+                return Task.CompletedTask;
+            });
+            // جهش ساعت ممکن است backlog سایر تست‌ها را هم آماده کند؛ سقف یک batch تضمین تکمیل همین کار نیست.
+            var maximumBatches = (await db.OutboxMessages.CountAsync() + OutboxProcessor.BatchSize - 1) / OutboxProcessor.BatchSize + 2;
+            var completed = false;
+            for (var batch = 0; batch < maximumBatches; batch++)
+            {
+                var processed = await ReplayProcessor(scope.ServiceProvider, expired).DispatchBatchAsync(default);
+                completed = await db.OutboxMessages.AsNoTracking().Where(x => x.Id == id).Select(x => x.ProcessedAtUtc != null).SingleAsync();
+                if (completed) break;
+                Assert.True(processed > 0, "کار تست هنوز تکمیل نشده و هیچ کار آماده‌ای پردازش نشده است.");
+            }
+            Assert.True(completed, "کار تست در سقف batchهای متناسب با تعداد رکوردها تکمیل نشد.");
             Assert.Equal(2, ownDeliveries);
             var row = await db.OutboxMessages.AsNoTracking().SingleAsync(x => x.Id == id);
             Assert.NotNull(row.ProcessedAtUtc); Assert.Equal(2, row.AttemptCount);

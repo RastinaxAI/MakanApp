@@ -183,8 +183,8 @@ public sealed partial class MessagingEndpointsTests
         await firstLive.StartAsync(); await secondLive.StartAsync();
         var direct = await StartDirectAndReadAsync(sender, b.UserId, ConversationScope.Personal);
         var sent = await SendMessageAndReadAsync(sender, direct.ConversationId, Guid.NewGuid(), "پیام برای دو نشست مستقل");
-        Assert.Equal(sent.MessageId, (await firstMessage.Task.WaitAsync(TimeSpan.FromSeconds(15))).ResourceId);
-        Assert.Equal(sent.MessageId, (await secondMessage.Task.WaitAsync(TimeSpan.FromSeconds(15))).ResourceId);
+        Assert.Equal(sent.MessageId, (await factory.WaitForRealtimeAsync(firstMessage.Task, sent.MessageId, TimeSpan.FromSeconds(15))).ResourceId);
+        Assert.Equal(sent.MessageId, (await factory.WaitForRealtimeAsync(secondMessage.Task, sent.MessageId, TimeSpan.FromSeconds(15))).ResourceId);
         var newer = await SendMessageAndReadAsync(sender, direct.ConversationId, Guid.NewGuid(), "پیام جدیدتر برای رسید معتبر قدیمی");
         await AdvanceCursorAsync(secondDevice, direct.ConversationId, "read", newer.Sequence);
         Assert.Equal(direct.ConversationId, (await readChanged.Task.WaitAsync(TimeSpan.FromSeconds(15))).ConversationId);

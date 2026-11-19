@@ -101,7 +101,7 @@ public sealed partial class MessagingEndpointsTests
         using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15)))
         {
             MessagingRealtimeNotification item;
-            do { item = await events.Reader.ReadAsync(timeout.Token); } while (item.ResourceId != sent.MessageId);
+            do { item = await factory.WaitForRealtimeAsync(events.Reader.ReadAsync(timeout.Token).AsTask(), sent.MessageId, TimeSpan.FromSeconds(15)); } while (item.ResourceId != sent.MessageId);
             Assert.Equal(personal.ContextRevision, item.ContextRevision);
         }
         var replayCursor = personal.NextCursor;

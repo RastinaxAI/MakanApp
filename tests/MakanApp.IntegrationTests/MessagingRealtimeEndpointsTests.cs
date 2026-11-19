@@ -37,7 +37,7 @@ public sealed partial class MessagingEndpointsTests
             setup.ConversationId,
             Guid.NewGuid(),
             "realtime invalidation");
-        var notification = await notificationReceived.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var notification = await factory.WaitForRealtimeAsync(notificationReceived.Task, sent.MessageId, TimeSpan.FromSeconds(10));
         var recovered = await GetChangesAsync(
             setup.SecondClient,
             setup.ConversationId,

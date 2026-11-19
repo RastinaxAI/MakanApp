@@ -54,6 +54,7 @@ public sealed partial class MakanAppWebApplicationFactory :
         Guid.NewGuid().ToString("N"));
 
     public ControllableTimeProvider Clock { get; } = new();
+    public RealtimeTestDiagnostics RealtimeDiagnostics { get; } = new();
     public OtpProviderTestControl OtpProvider =>
         Services.GetRequiredService<OtpProviderTestControl>();
     public NotificationDeliveryProviderTestControl NotificationDeliveryProvider =>
@@ -117,7 +118,8 @@ public sealed partial class MakanAppWebApplicationFactory :
             var deletionDispatcher = services.FirstOrDefault(d => d.ServiceType == typeof(IHostedService) && d.ImplementationType == typeof(AccountDeletionDispatcher));
             if (deletionDispatcher is not null) services.Remove(deletionDispatcher);
             services.AddDbContext<MakanDbContext>((provider, options) =>
-                options.AddInterceptors(provider.GetRequiredService<RealtimeBoundaryGate>()));
+                options.AddInterceptors(provider.GetRequiredService<RealtimeBoundaryGate>(),
+                    new RealtimeSqlDiagnostics(RealtimeDiagnostics)));
             // فقط drill صریح Ring دیسکی مستقل دارد؛ fixture معمولی ring شخصی توسعه‌دهنده را لمس نمی‌کند.
             if (_recoveryDataProtectionRoot is null)
                 services.AddSingleton<IDataProtectionProvider>(new EphemeralDataProtectionProvider());
@@ -196,6 +198,7 @@ public sealed partial class MakanAppWebApplicationFactory :
                 }
             });
             services.AddSingleton<StorageFailureSwitch>();
+            services.AddSingleton(RealtimeDiagnostics);
             services.AddSingleton<RealtimeFailureSwitch>();
             services.AddSingleton<OtpProviderTestControl>();
             services.AddSingleton<NotificationDeliveryProviderTestControl>();

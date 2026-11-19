@@ -57,9 +57,11 @@ public static class DependencyInjection
         }
 
         services.AddSingleton<EfCoreLoggingSafety>();
+        services.AddSingleton<SqlServerConnectionInitializationInterceptor>();
         services.AddDbContext<MakanDbContext>((provider, options) =>
         {
             options.UseSqlServer(connectionString);
+            options.AddInterceptors(provider.GetRequiredService<SqlServerConnectionInitializationInterceptor>());
             provider.GetRequiredService<EfCoreLoggingSafety>().Configure(options, environmentName);
         });
 

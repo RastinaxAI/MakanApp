@@ -112,7 +112,7 @@ public sealed partial class MessagingEndpointsTests
         { if (notification.ConversationId == setup.ConversationId && notification.Type == MessagingChangeType.MessageCreated) received.TrySetResult(notification); });
         await connection.StartAsync(); await connection.InvokeAsync("SubscribeConversation", setup.ConversationId);
         var sent = await SendMessageAndReadAsync(setup.FirstClient, setup.ConversationId, Guid.NewGuid(), "p1-wire-realtime");
-        var notification = await received.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var notification = await factory.WaitForRealtimeAsync(received.Task, sent.MessageId, TimeSpan.FromSeconds(10));
         Assert.Equal(sent.MessageId, notification.ResourceId);
         Assert.Equal(DateTimeKind.Utc, notification.OccurredAtUtc.Kind);
         Assert.Equal(sent.SentAtUtc, notification.OccurredAtUtc);

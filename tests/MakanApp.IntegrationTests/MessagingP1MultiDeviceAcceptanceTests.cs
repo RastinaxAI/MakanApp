@@ -132,7 +132,7 @@ public sealed partial class MessagingEndpointsTests
         if (denied is InvalidOperationException) Assert.NotEqual(HubConnectionState.Connected, oldHub.State);
         await activeHub.InvokeAsync("SubscribeConversation", setup.ConversationId);
         var sent = await SendMessageAndReadAsync(setup.FirstClient, setup.ConversationId, Guid.NewGuid(), "p1-valid-second-session");
-        Assert.Equal(sent.MessageId, (await received.Task.WaitAsync(TimeSpan.FromSeconds(10))).ResourceId);
+        Assert.Equal(sent.MessageId, (await factory.WaitForRealtimeAsync(received.Task, sent.MessageId, TimeSpan.FromSeconds(10))).ResourceId);
         (await otherDevice.PostAsync($"/api/v1/conversations/{setup.ConversationId}/archive", null)).EnsureSuccessStatusCode();
         var privateChange = (await GetChangesAsync(otherDevice, setup.ConversationId)).Changes.Last(c => c.Type == MessagingChangeType.ConversationUserStateChanged);
         var audience = await ReplayP0NotificationAsync(setup.ConversationId, privateChange);

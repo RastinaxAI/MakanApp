@@ -26,7 +26,7 @@ public sealed partial class MessagingEndpointsTests
             var command = new SendMessageCommand { ClientMessageId = Guid.NewGuid(), Text = "intent مستقل از mute", IsSilent = silent };
             var response = await setup.FirstClient.PostAsJsonAsync($"/api/v1/conversations/{setup.ConversationId}/messages", command, JsonOptions); response.EnsureSuccessStatusCode();
             var receipt = (await response.Content.ReadFromJsonAsync<MessageReceiptResult>(JsonOptions))!;
-            Assert.Equal(receipt.MessageId, (await changed.Task.WaitAsync(TimeSpan.FromSeconds(10))).ResourceId);
+            Assert.Equal(receipt.MessageId, (await factory.WaitForRealtimeAsync(changed.Task, receipt.MessageId, TimeSpan.FromSeconds(10))).ResourceId);
             var history = await setup.SecondClient.GetFromJsonAsync<ConversationMessagePageResult>($"/api/v1/conversations/{setup.ConversationId}/messages", JsonOptions);
             Assert.Equal(silent, Assert.Single(history!.Messages).IsSilent);
             var summary = Assert.Single((await setup.SecondClient.GetFromJsonAsync<ConversationSummaryResult[]>("/api/v1/conversations", JsonOptions))!, c => c.ConversationId == setup.ConversationId);
