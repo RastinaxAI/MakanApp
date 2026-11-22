@@ -13,6 +13,13 @@ public sealed class ModerationCase
     public ModerationCaseSource Source { get; private set; }
     public Guid? AbuseReportId { get; private set; }
     public Guid? SafetyIncidentId { get; private set; }
+    public Guid? MediaFileAssetId { get; private set; }
+    public string? MediaSha256Hash { get; private set; }
+    public string? MediaContentType { get; private set; }
+    public long? MediaSizeBytes { get; private set; }
+    public ContentSafetyDecision? MediaDecision { get; private set; }
+    public Guid? MediaReviewedByUserId { get; private set; }
+    public DateTime? MediaReviewedAtUtc { get; private set; }
     public ModerationQueueScope QueueScope { get; private set; }
     public ModerationPriority Priority { get; private set; }
     public ModerationCaseStatus Status { get; private set; }
@@ -70,6 +77,7 @@ public sealed class ModerationCase
     public void Resolve(Guid reviewerUserId, string? internalNote, DateTime resolvedAtUtc)
     {
         EnsureReviewer(reviewerUserId);
+        EnsureMediaDecisionCompleted();
         EnsureUtc(resolvedAtUtc, nameof(resolvedAtUtc));
         var normalizedNote = NormalizeNote(internalNote);
         InternalNote = normalizedNote;
@@ -81,6 +89,8 @@ public sealed class ModerationCase
     public void Dismiss(Guid reviewerUserId, string? internalNote, DateTime dismissedAtUtc)
     {
         EnsureReviewer(reviewerUserId);
+        if (Source == ModerationCaseSource.MediaReview && MediaDecision != ContentSafetyDecision.Blocked)
+            throw new InvalidOperationException("بستن پرونده جای تصمیم صریح رد رسانه را نمی‌گیرد.");
         EnsureUtc(dismissedAtUtc, nameof(dismissedAtUtc));
         var normalizedNote = NormalizeNote(internalNote);
         InternalNote = normalizedNote;
@@ -92,6 +102,8 @@ public sealed class ModerationCase
     public void Escalate(Guid reviewerUserId, DateTime nowUtc)
     {
         EnsureReviewer(reviewerUserId);
+        if (Source == ModerationCaseSource.MediaReview && MediaDecision != ContentSafetyDecision.ReviewRequired)
+            throw new InvalidOperationException("تصمیم نهایی رسانه با ارجاع عمومی بازنویسی نمی‌شود.");
         EnsureUtc(nowUtc, nameof(nowUtc));
         Priority = ModerationPriority.Critical;
         Status = ModerationCaseStatus.Pending;
@@ -105,6 +117,45 @@ public sealed class ModerationCase
         EnsureReviewer(reviewerUserId);
         EnsureUtc(nowUtc, nameof(nowUtc));
         UpdatedAtUtc = nowUtc;
+    }
+
+    public static ModerationCase CreateForMediaReview(Guid conversationId, Guid fileAssetId,
+        string sha256Hash, string contentType, long sizeBytes, DateTime createdAtUtc)
+    {
+        EnsureUtc(createdAtUtc, nameof(createdAtUtc));
+        if (conversationId == Guid.Empty || fileAssetId == Guid.Empty || sizeBytes <= 0 ||
+            string.IsNullOrWhiteSpace(contentType) || contentType.Length > 200 ||
+            sha256Hash.Length != 64 || !sha256Hash.All(Uri.IsHexDigit))
+            throw new ArgumentException("فراداده بررسی رسانه معتبر نیست.");
+        return new ModerationCase
+        {
+            Id = Guid.NewGuid(), ConversationId = conversationId, Source = ModerationCaseSource.MediaReview,
+            MediaFileAssetId = fileAssetId, MediaSha256Hash = sha256Hash.ToUpperInvariant(),
+            MediaContentType = contentType, MediaSizeBytes = sizeBytes, MediaDecision = ContentSafetyDecision.ReviewRequired,
+            QueueScope = ModerationQueueScope.PlatformSafety, Priority = ModerationPriority.Critical,
+            Status = ModerationCaseStatus.Pending, CreatedAtUtc = createdAtUtc, UpdatedAtUtc = createdAtUtc
+        };
+    }
+
+    public bool MatchesMedia(Guid fileAssetId, string sha256Hash, string contentType, long sizeBytes) =>
+        Source == ModerationCaseSource.MediaReview && MediaFileAssetId == fileAssetId && MediaSizeBytes == sizeBytes &&
+        string.Equals(MediaSha256Hash, sha256Hash, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(MediaContentType, contentType, StringComparison.OrdinalIgnoreCase);
+
+    public void DecideMedia(Guid reviewerUserId, ContentSafetyDecision decision, DateTime nowUtc)
+    {
+        EnsureReviewer(reviewerUserId);
+        EnsureUtc(nowUtc, nameof(nowUtc));
+        if (Source != ModerationCaseSource.MediaReview || MediaDecision != ContentSafetyDecision.ReviewRequired ||
+            decision is not (ContentSafetyDecision.Allowed or ContentSafetyDecision.Blocked))
+            throw new InvalidOperationException("تصمیم رسانه فقط از وضعیت در انتظار و به‌صورت صریح ثبت می‌شود.");
+        MediaDecision = decision; MediaReviewedByUserId = reviewerUserId; MediaReviewedAtUtc = nowUtc; UpdatedAtUtc = nowUtc;
+    }
+
+    private void EnsureMediaDecisionCompleted()
+    {
+        if (Source == ModerationCaseSource.MediaReview && MediaDecision is not (ContentSafetyDecision.Allowed or ContentSafetyDecision.Blocked))
+            throw new InvalidOperationException("بررسی رسانه پیش از بستن پرونده به تصمیم صریح نیاز دارد.");
     }
 
     private static ModerationCase Create(

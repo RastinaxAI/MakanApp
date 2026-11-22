@@ -1,5 +1,6 @@
 using MakanApp.Domain.Identity;
 using MakanApp.Domain.Messaging;
+using MakanApp.Domain.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,14 +12,20 @@ public sealed class ModerationCaseConfiguration : IEntityTypeConfiguration<Moder
     {
         builder.ToTable("ModerationCases", "messaging", table =>
         {
-            table.HasCheckConstraint("CK_ModerationCases_Source", "[Source] IN (1, 2)");
+            table.HasCheckConstraint("CK_ModerationCases_Source", "[Source] IN (1, 2, 3)");
             table.HasCheckConstraint("CK_ModerationCases_QueueScope", "[QueueScope] IN (1, 2)");
             table.HasCheckConstraint("CK_ModerationCases_Priority", "[Priority] IN (1, 2, 3)");
             table.HasCheckConstraint("CK_ModerationCases_Status", "[Status] IN (1, 2, 3, 4)");
             table.HasCheckConstraint(
                 "CK_ModerationCases_SourceShape",
-                "([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL) OR " +
-                "([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL)");
+                "([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NULL) OR " +
+                "([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL AND [MediaFileAssetId] IS NULL) OR " +
+                "([Source] = 3 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NOT NULL)");
+            table.HasCheckConstraint("CK_ModerationCases_MediaReview",
+                "([Source] <> 3 AND [MediaSha256Hash] IS NULL AND [MediaContentType] IS NULL AND [MediaSizeBytes] IS NULL AND [MediaDecision] IS NULL AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR " +
+                "([Source] = 3 AND [QueueScope] = 2 AND [MediaSha256Hash] IS NOT NULL AND LEN([MediaSha256Hash]) = 64 AND [MediaContentType] IS NOT NULL AND [MediaSizeBytes] IS NOT NULL AND [MediaSizeBytes] > 0 AND [MediaDecision] IS NOT NULL AND " +
+                "(([MediaDecision] = 3 AND [Status] IN (1, 2) AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR " +
+                "([MediaDecision] IN (1, 2) AND [Status] IN (2, 3, 4) AND ([Status] <> 4 OR [MediaDecision] = 2) AND [MediaReviewedByUserId] IS NOT NULL AND [MediaReviewedAtUtc] IS NOT NULL AND [MediaReviewedAtUtc] >= [CreatedAtUtc])))");
             table.HasCheckConstraint(
                 "CK_ModerationCases_Lifecycle",
                 "([Status] = 1 AND [AssignedReviewerUserId] IS NULL AND [ReviewStartedAtUtc] IS NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR " +
@@ -35,6 +42,13 @@ public sealed class ModerationCaseConfiguration : IEntityTypeConfiguration<Moder
         builder.Property(item => item.ResolvedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(item => item.DismissedAtUtc).HasColumnType("datetime2(7)");
         builder.Property(item => item.RowVersion).IsRowVersion();
+        builder.Property(item => item.MediaSha256Hash).HasMaxLength(64);
+        builder.Property(item => item.MediaContentType).HasMaxLength(200);
+        builder.Property(item => item.MediaReviewedAtUtc).HasColumnType("datetime2(7)");
+        builder.HasIndex(item => item.MediaFileAssetId).IsUnique().HasFilter("[MediaFileAssetId] IS NOT NULL")
+            .HasDatabaseName("UX_ModerationCases_MediaFileAssetId");
+        builder.HasOne<FileAsset>().WithMany().HasForeignKey(item => item.MediaFileAssetId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<User>().WithMany().HasForeignKey(item => item.MediaReviewedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(item => item.AbuseReportId)
             .IsUnique()
             .HasFilter("[AbuseReportId] IS NOT NULL")

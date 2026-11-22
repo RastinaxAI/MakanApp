@@ -61,6 +61,14 @@ public sealed partial class EfFileAssetBoundAccessResolver(MakanDbContext dbCont
         if (await CanReadProfilePhotoAsync(fileAsset, accessContext, cancellationToken)) return true;
         // استثنای مرجع شخصی فقط برای Avatar است؛ scope قبلی همهٔ مصرف‌کننده‌های دیگر حفظ می‌شود.
         if (!FileAccessPolicy.IsCurrentScope(fileAsset, accessContext)) return false;
+        // بررسی فایلِ خود مالک، نسخهٔ تازه‌ای از شاهد یا حق خواندن پروندهٔ دیگران نمی‌سازد.
+        if (FileAccessPolicy.IsUploader(fileAsset, accessContext) &&
+            await dbContext.ModerationCases.AnyAsync(c => c.MediaFileAssetId == fileAsset.Id, cancellationToken) &&
+            !await FileAssetBindingQuery.IsBoundAsync(dbContext, fileAsset.Id, cancellationToken, includeMessagingBindings: false) &&
+            !await dbContext.MessageAttachments.AnyAsync(a => a.FileAssetId == fileAsset.Id, cancellationToken) &&
+            !await dbContext.Set<ScheduledMessageAttachment>().AnyAsync(a => a.FileAssetId == fileAsset.Id, cancellationToken) &&
+            !await FileAssetBindingQuery.HasBlockingModerationEvidenceAsync(dbContext, fileAsset.Id, cancellationToken))
+            return true;
         if (await dbContext.AssignmentVersionAttachments.AnyAsync(a => a.FileAssetId == fileAsset.Id, cancellationToken))
             return await CanReadAssignmentAttachmentAsync(fileAsset, accessContext, cancellationToken);
         if (fileAsset.PersonalClassId.HasValue) return await CanReadPersonalAcademicAnswerAsync(fileAsset, accessContext, cancellationToken);

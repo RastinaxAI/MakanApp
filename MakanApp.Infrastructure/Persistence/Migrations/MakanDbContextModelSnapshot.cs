@@ -6787,7 +6787,7 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ModerationActions", "messaging", t =>
                         {
-                            t.HasCheckConstraint("CK_ModerationActions_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7, 8)");
+                            t.HasCheckConstraint("CK_ModerationActions_Type", "[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)");
                         });
                 });
 
@@ -6815,6 +6815,29 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                     b.Property<string>("InternalNote")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MediaContentType")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("MediaDecision")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("MediaFileAssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("MediaReviewedAtUtc")
+                        .HasColumnType("datetime2(7)");
+
+                    b.Property<Guid?>("MediaReviewedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MediaSha256Hash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<long?>("MediaSizeBytes")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
@@ -6853,6 +6876,13 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("UX_ModerationCases_AbuseReportId")
                         .HasFilter("[AbuseReportId] IS NOT NULL");
 
+                    b.HasIndex("MediaFileAssetId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ModerationCases_MediaFileAssetId")
+                        .HasFilter("[MediaFileAssetId] IS NOT NULL");
+
+                    b.HasIndex("MediaReviewedByUserId");
+
                     b.HasIndex("SafetyIncidentId")
                         .IsUnique()
                         .HasDatabaseName("UX_ModerationCases_SafetyIncidentId")
@@ -6872,13 +6902,15 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_ModerationCases_Lifecycle", "([Status] = 1 AND [AssignedReviewerUserId] IS NULL AND [ReviewStartedAtUtc] IS NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 2 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 3 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NOT NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 4 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NOT NULL)");
 
+                            t.HasCheckConstraint("CK_ModerationCases_MediaReview", "([Source] <> 3 AND [MediaSha256Hash] IS NULL AND [MediaContentType] IS NULL AND [MediaSizeBytes] IS NULL AND [MediaDecision] IS NULL AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR ([Source] = 3 AND [QueueScope] = 2 AND [MediaSha256Hash] IS NOT NULL AND LEN([MediaSha256Hash]) = 64 AND [MediaContentType] IS NOT NULL AND [MediaSizeBytes] IS NOT NULL AND [MediaSizeBytes] > 0 AND [MediaDecision] IS NOT NULL AND (([MediaDecision] = 3 AND [Status] IN (1, 2) AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR ([MediaDecision] IN (1, 2) AND [Status] IN (2, 3, 4) AND ([Status] <> 4 OR [MediaDecision] = 2) AND [MediaReviewedByUserId] IS NOT NULL AND [MediaReviewedAtUtc] IS NOT NULL AND [MediaReviewedAtUtc] >= [CreatedAtUtc])))");
+
                             t.HasCheckConstraint("CK_ModerationCases_Priority", "[Priority] IN (1, 2, 3)");
 
                             t.HasCheckConstraint("CK_ModerationCases_QueueScope", "[QueueScope] IN (1, 2)");
 
-                            t.HasCheckConstraint("CK_ModerationCases_Source", "[Source] IN (1, 2)");
+                            t.HasCheckConstraint("CK_ModerationCases_Source", "[Source] IN (1, 2, 3)");
 
-                            t.HasCheckConstraint("CK_ModerationCases_SourceShape", "([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL) OR ([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_ModerationCases_SourceShape", "([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NULL) OR ([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL AND [MediaFileAssetId] IS NULL) OR ([Source] = 3 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_ModerationCases_Status", "[Status] IN (1, 2, 3, 4)");
                         });
@@ -11945,6 +11977,16 @@ namespace MakanApp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ConversationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("MakanApp.Domain.Storage.FileAsset", null)
+                        .WithMany()
+                        .HasForeignKey("MediaFileAssetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MakanApp.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("MediaReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("MakanApp.Domain.Messaging.SafetyIncident", null)
                         .WithMany()

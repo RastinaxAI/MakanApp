@@ -9,5 +9,7 @@ public enum ModerationActionType
     Escalated = 5,
     ContentRemoved = 6,
     Warned = 7,
-    MessagingRestricted = 8
+    MessagingRestricted = 8,
+    MediaApproved = 9,
+    MediaRejected = 10
 }

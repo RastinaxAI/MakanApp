@@ -471,11 +471,14 @@ public static class DependencyInjection
         IConfiguration configuration,
         string environmentName)
     {
+        services.AddScoped<IMediaSafetyProvider, ManualMediaSafetyProvider>();
+        services.AddScoped<MediaSafetyService>();
         var defaultProvider = "Internal";
         var provider = configuration["Messaging:ContentSafetyProvider"]?.Trim() ?? defaultProvider;
         if (provider.Equals("Internal", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<IContentSafetyProvider, InternalMakanContentSafetyProvider>();
+            services.AddSingleton<InternalMakanContentSafetyProvider>();
+            services.AddScoped<IContentSafetyProvider, ReviewedMediaContentSafetyProvider>();
             return;
         }
         if (provider.Equals("DevelopmentAllow", StringComparison.OrdinalIgnoreCase))

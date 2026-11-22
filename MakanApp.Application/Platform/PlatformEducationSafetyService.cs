@@ -105,7 +105,8 @@ public sealed class PlatformEducationSafetyService(
         PlatformModerationActionCommand command, string correlationId, CancellationToken ct)
     {
         ValidateMutation(command.ExpectedVersion, command.Reason);
-        if (command.Action is not ModerationActionType.Warned and not ModerationActionType.MessagingRestricted and not ModerationActionType.Escalated ||
+        if (command.Action is not (ModerationActionType.Warned or ModerationActionType.MessagingRestricted or ModerationActionType.Escalated or
+                ModerationActionType.MediaApproved or ModerationActionType.MediaRejected) ||
             command.Action == ModerationActionType.MessagingRestricted &&
             (command.RestrictedUntilUtc?.Kind != DateTimeKind.Utc || command.RestrictedUntilUtc <= timeProvider.GetUtcNow().UtcDateTime)) throw InvalidQuery();
         return store.ApplySafetyActionAsync(Actor(actorUserId, actorSessionId, correlationId), RequireId(caseId), DecodeVersion(command.ExpectedVersion),

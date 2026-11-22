@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> قرارداد جاری رسانه `2026-11-22`: [بازبینی انسانی و تحویل فایل](messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تنظیم Internal اکنون Provider ترکیبی متن و Manual Media است؛ `GET /api/v1/files/{fileId}/messaging-review` وضعیت خصوصی مالک را می‌دهد و `MediaApproved/MediaRejected` در API Moderation موجود، تصمیم صریح محتوا هستند. محدودیت تاریخی نبود workflow رسانه در متن‌های قدیمی زیر با این قرارداد جایگزین شده است. Ready با Approval یکی نیست؛ ACL/Block/Safety و Open Access حفظ‌اند. OpenAPI داخل Release قرارداد runtime جاری است.
+
 > سیاست جاری `2026-11-22`: [Open Access و ارسال فایل](product/OPEN_ACCESS_FILE_DELIVERY_FA.md). سن فقط Metadata است؛ `Commerce:EnforcementEnabled=false` دسترسی عادی را از Subscription/Quota تجاری مستقل می‌کند. سوابق مالی، ACL، Privacy، Block، ظرفیت آموزشی و Safety حفظ‌اند. Ready فایل به معنی تأیید Safety نیست؛ علت واقعی ReviewRequired رسانه و Flow صحیح multipart/Kind/attachmentIds در الحاقیه آمده است. این Policy شاهد عبور Gate رسانه یا Deploy نیست.
 
 > افزودهٔ جاری BE-16 در `2026-11-15`، Source=`f4f4d9feb6184d62e033adfb612e86587fb3c3f6`: [Notification / Deep Link](product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [رویدادها و مجوز](product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md) و [Runbook Push](operations/NOTIFICATION_PUSH_RUNBOOK_FA.md). همهٔ Pushها با `makan://notifications/{notificationId}` و Target جاری باز می‌شوند؛ عضویت/Role/Enrollment/Guardian لغوشده با اعلان قدیمی احیا نمی‌شود. Snapshot=438 مسیر،494 operation،783 schema،151 جدول و75 Migration؛ دو دور کامل3378 PASS، صفر Failed/Skipped و Build نهایی صفر Warning/Error دارند. Push و SMS اعلان عمومی در فایل‌های خصوصی محلی Unavailable و دریافت زندهٔ هر دو کانال Push برابر NOT_RUN هستند؛ OTP ملی‌پیامک تغییر نکرده است. آمار و وضعیت بخش‌های پایین، تاریخچهٔ همان مرحله‌هاست.
@@ -1248,7 +1250,7 @@ Cursor opaque به User/Session/ContextRevision بسته و دارای عمر24�
 
 `RealtimeCursorProtector` از Data Protection استاندارد host با purpose `MakanApp.AccountReplay.v1` استفاده می‌کند؛ پایداری key ring برای ادامهٔ cursor بعد از restart/redeploy لازم است. ring اختصاصی MFA بازنگشته و probe جدید readiness وجود ندارد. چند replica، keyring مشترک، backplane و SLO زیر بار هنوز تأیید نشده‌اند. Outbox منبع خودکار purge نمی‌شود؛ حذف آن پیش از طراحی کف replay/epoch می‌تواند recovery را بشکند.
 
-رسانهٔ Messenger برای Minor/Unknown همچنان ReviewRequired است. پاسخ422 با safetyState=PendingReview یا Rejected، operationState=NotApplied و requiredAction=KEEP_DRAFT_NO_AUTO_RETRY به معنی پیام یا binding تازه نیست. safetyReference opaque مجوز دانلود یا release نمی‌سازد؛ workflow بررسی/انتشار رسانه PRODUCT_DECISION_BLOCKED است. این محدودیت با پیوست آموزشی یکی نیست. [قرارداد Event](product/REALTIME_EVENT_CONTRACT_FA.md)، [اتصال فرانت](product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md)، [عملیات](operations/REALTIME_RUNBOOK_FA.md) و [BE-01](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
+رسانهٔ Messenger برای Minor/Unknown همچنان ReviewRequired است. پاسخ422 با safetyState=PendingReview یا Rejected، operationState=NotApplied و requiredAction=KEEP_DRAFT_NO_AUTO_RETRY به معنی پیام یا binding تازه نیست. safetyReference opaque مجوز دانلود یا release نمی‌سازد؛ workflow جاری رسانه با تصمیم صریح کارشناس و قرارداد الحاقیهٔ بالای سند فعال است؛ Pending همچنان ارسال نمی‌شود. این محدودیت با پیوست آموزشی یکی نیست. [قرارداد Event](product/REALTIME_EVENT_CONTRACT_FA.md)، [اتصال فرانت](product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md)، [عملیات](operations/REALTIME_RUNBOOK_FA.md) و [BE-01](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
 
 <a id="errors"></a>
 ## خطاها و تلاش مجدد
@@ -1682,7 +1684,7 @@ Unit قوانین مدل و سرویس‌های قابل تست را بررسی 
 
 تست Integration داده لازم سناریوها را خودش می‌سازد. برای آزمودن دستی کل جریان سازمانی روی دیتابیس تازه، آماده‌سازی داده اولیه یک کار جدا و نیازمند روش مصوب است؛ این راهنما seed یا SQL تولیدی ارائه نمی‌کند.
 
-افزودهٔ BE-01: پاسخ Safety با code/status قبلی، اکنون state تلاش، نبود اثر تازه، دستور حفظ Draft بدون retry خودکار و safetyReference opaque دارد؛ Ready ذخیره‌سازی تأیید Safety نیست. جزئیات PendingReview/Rejected و تصمیم مسدود Product در [قرارداد ReviewRequired](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md) ثبت است. هیچ API یا Business Flow تأیید انسانی رسانه افزوده نشده است.
+افزودهٔ BE-01: پاسخ Safety با code/status قبلی، اکنون state تلاش، نبود اثر تازه، دستور حفظ Draft بدون retry خودکار و safetyReference opaque دارد؛ Ready ذخیره‌سازی تأیید Safety نیست. جزئیات PendingReview/Rejected و تصمیم انسانی مصوب در [قرارداد ReviewRequired](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md) ثبت است. در تکمیل مصوب ۲۰۲۶-۱۱-۲۲، خواندن وضعیت مالک و تصمیم انسانی رسانه به زیرساخت Moderation موجود افزوده شده است.
 
 ### دیتابیس و منابع کد
 

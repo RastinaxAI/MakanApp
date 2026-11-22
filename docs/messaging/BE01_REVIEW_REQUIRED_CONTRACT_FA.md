@@ -1,67 +1,39 @@
-# BE-01 — قرارداد وضعیت ReviewRequired و ردیابی ایمنی
+# BE-01 — قرارداد جاری ReviewRequired و بازبینی رسانه
 
-> اصلاح `2026-11-01`: [Policy جاری](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) Safety را مستقل از سن برای همه اجرا می‌کند. عبارت «مخاطب محافظت‌شده» در Scope تاریخی زیر دیگر معافیت Adult نمی‌سازد. ReviewRequired، Retention، منع تحویل و نبود workflow تأیید رسانه همچنان معتبرند؛ هیچ Safety bypass اضافه نشده است.
+به‌روزرسانی مصوب `2026-11-22`: درخواست **MEDIA SAFETY REVIEW + FILE DELIVERY COMPLETION** مسیر انسانی را صریحاً مجاز کرد. وضعیت تاریخی `PRODUCT_DECISION_BLOCKED=true` برای انتخاب workflow رسانه با این تصمیم رفع شده است. [قرارداد کامل کلاینت/پلتفرم](MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) مرجع جاری است؛ سیاست `messaging-20261101` و Open Access تغییری نکرده‌اند.
 
-## تصمیم محصول و علت واقعی
+## علت و تصمیم
 
-`PRODUCT_DECISION_BLOCKED=true`. علت شناسایی‌شده، خرابی Upload یا تأییدشدن فایل نیست: `InternalMakanContentSafetyProvider` موتور قواعد متن است و بایت رسانه را اسکن نمی‌کند. اکنون مستقل از سن، رسانه با دلیل داخلی `Other.UnsupportedMedia` و نسخهٔ `makan-child-safety-v1-rules-1`، تصمیم `ReviewRequired` می‌گیرد. این علت داخلی به Client افشا نمی‌شود.
+`InternalMakanContentSafetyProvider` همچنان فقط قواعد متن دارد. `Other.UnsupportedMedia → ReviewRequired` خرابی Upload نیست. Provider واقعیِ تنظیم Internal اکنون `ReviewedMediaContentSafetyProvider` است؛ caption را با همان موتور متن و فایل را با `ManualMediaSafetyProvider` بررسی می‌کند. هیچ موتور خودکار رسانه یا سرویس خارجی ادعا نمی‌شود.
 
-Product هنوز انتخاب نکرده که این فایل‌ها با انسان بررسی شوند، به موتور async دیگری بروند یا برای Messaging رد شوند. هیچ‌یک از این سه گزینه در این مرحله پیاده‌سازی یا قطعی نشده است. وجود `SafetyIncident` و پروندهٔ خصوصی Moderation از قبل، به معنی وجود صف تأیید رسانه، SLA یا حق release نیست. مسیر فعلی و همهٔ Safety/Authorization checkها حفظ شده‌اند.
+نخستین Send مجاز برای فایل Ready بدون تصمیم، یک `ModerationCase` با Source=`MediaReview` ایجاد/بازاستفاده می‌کند. پرونده به فایل، SHA256، MIME و اندازه بسته است. `GET /api/v1/files/{fileId}/messaging-review` فقط برای Uploader مجاز، `NotRequested / PendingReview / Approved / Rejected` و `attachmentAllowed` را برمی‌گرداند؛ GET خودش پرونده نمی‌سازد.
 
-## دو وضعیت مستقل
+## قرارداد عدم تحویل
 
-| وضعیت | معنی واقعی |
-|---|---|
-| FileAsset.Status=Ready | bytes ذخیره و اعتبارسنجی اولیهٔ Storage کامل است؛ تأیید Safety یا مجوز attach/download نیست |
-| HTTP 422 + safetyState=PendingReview | نتیجهٔ ReviewRequired همان تلاش؛ mutation اعمال نشده و فایل برای این تلاش تحویل‌پذیر نیست |
-| HTTP 422 + safetyState=Rejected | تصمیم Blocked همان تلاش؛ با PendingReview یکی نیست |
-| HTTP 200 و receipt معتبر | فقط اثر commit‌شدهٔ عملیات مجاز؛ نه یک Approved سراسری و دائمی برای Asset |
-| HTTP 503 MESSAGE_SAFETY_UNAVAILABLE | بررسی ایمنی در دسترس نیست؛ موفقیت یا PendingReview جعلی تولید نمی‌شود |
+Ready به معنی ذخیرهٔ موفق است؛ Approval Safety نیست. تا Pending یا Rejected، Message/MessageAttachment تازه، unread/preview یا Event ارسال ساخته نمی‌شود. گیرندهٔ فاقد Binding مستقل metadata/content را با404 دریافت می‌کند؛ مالک با Scope معتبر به فایل خودش دسترسی دارد، نه به جزئیات خصوصی Case.
 
-PendingReview وضعیت پاسخ تلاش ارسال است؛ enum جدیدی به FileAsset یا Message اضافه نشده است. Message/MessageAttachment برای تلاش ردشده ساخته نمی‌شوند. تغییر ردشدهٔ Edit هم پیام قبلی را بازنویسی نمی‌کند. فایل Pending که binding مجاز دیگری ندارد، از مسیر عادی metadata/content برای گیرنده 404 می‌گیرد. این قرارداد مجوز معتبر یک binding قدیمی و مستقل را خودکار لغو نمی‌کند.
+برای مسیر رسانه، `422 MESSAGE_SAFETY_REVIEW_REQUIRED` دارای `safetyState=PendingReview`، `mediaReviewAvailable=true` و `requiredAction=WAIT_FOR_MEDIA_REVIEW` است. رد رسانه `422 MESSAGE_SAFETY_BLOCKED`، `safetyState=Rejected` و `requiredAction=MEDIA_REJECTED_KEEP_DRAFT` دارد. `operationState=NotApplied` و Flagهای `newMessageCreated/newAttachmentsBound/recipientDeliveryGranted/recipientDownloadGranted/retryable` همگی false هستند. `safetyReference` رخداد Send با `reviewReference` پرونده یکی نیست؛ هیچ‌یک مجوز دسترسی ایجاد نمی‌کنند. correlation/trace و header موجود `X-Correlation-ID` حفظ‌اند.
 
-## پاسخ امن و قابل اقدام
+## تصمیم صریح و Retry
 
-`POST /api/v1/conversations/{conversationId}/messages` همان route و همان code/status قبلی را حفظ می‌کند. ProblemDetails برای ReviewRequired یا Blocked این افزوده‌ها را دارد:
+همان صف و Routeهای Platform Moderation استفاده می‌شوند. Reviewer باید پرونده را با Version جاری Claim کرده باشد؛ `MediaApproved` یا `MediaRejected` در `/actions` علاوه بر `ModerationReview` به `ModerationEnforce` نیاز دارد. self-approval، مجوز لغوشده، نسخهٔ کهنه و تصمیم دوم رد می‌شوند. بستن اداری پرونده به‌تنهایی Approval نیست؛ Pending قابل Resolve/Dismiss نیست. بعد از تصمیم، وضعیت محتوای فایل مستقل از InReview/Resolved اداری است.
 
-```json
-{
-  "status": 422,
-  "code": "MESSAGE_SAFETY_REVIEW_REQUIRED",
-  "safetyState": "PendingReview",
-  "operationState": "NotApplied",
-  "newMessageCreated": false,
-  "newAttachmentsBound": false,
-  "recipientDeliveryGranted": false,
-  "recipientDownloadGranted": false,
-  "requiredAction": "KEEP_DRAFT_NO_AUTO_RETRY",
-  "retryable": false
-}
-```
+پس از Approval همان فایل و همان ClientMessageId/payload قابل ارسال است؛ نه Upload دوباره لازم است و نه پیام خودکار ساخته می‌شود. payload متفاوت با همان شناسه409 می‌دهد. نقش، نشست، Block، عضویت، Scope، Safety caption و Binding جاری هنگام Send دوباره بررسی می‌شوند. Pending/Rejected با retry یا شناسهٔ جدید Safe نمی‌شوند. تصمیم متنی ReviewRequired همچنان `KEEP_DRAFT_NO_AUTO_RETRY` دارد و این workflow آن را آزاد نمی‌کند.
 
-وقتی رخداد واقعاً ثبت شده باشد، `safetyReference` از نوع UUID و شناسهٔ opaque همان رخداد نیز برمی‌گردد. `correlationId`، `traceId` و header موجود `X-Correlation-ID` برای هر درخواست باقی‌اند. مقادیر نمونهٔ واقعی شناسه‌ها یا credential در این سند درج نشده‌اند.
+SafetyIncidentهای تاریخیِ شناخته‌شدهٔ unsupported-media و ReviewRequired می‌توانند برای همین تصمیم صریح دوباره ارزیابی شوند؛ Resolvedشدن پروندهٔ قدیمی کافی نیست. تصمیم Blocked یا متن بازتفسیر نمی‌شود. SafetyIncident قبلی برای ممیزی immutable باقی می‌ماند؛ برای فایل unique case وجود دارد، نه case تازه در هر Send.
 
-Client پیش‌نویس را نگه دارد، وضعیت Sent/Delivered یا لینک قابل دانلود گیرنده نسازد و retry خودکار نکند. PendingReview وعدهٔ شروع Human Review، تکمیل async یا انتشار خودکار نیست. در Blocked، state برابر Rejected است. `new*` فقط اثر تازهٔ همین تلاش را توصیف می‌کند؛ پیام‌های قدیمی یا bindingهای مجاز قبلی را انکار نمی‌کند.
+## SQL، ممیزی و پذیرش
 
-## Retry و ممیزی
+Migration `20261122085930_AddMessagingMediaReviews` همان ModerationCases را با هفت ستون nullable، Source جدید، FK، unique filtered index فایل و Check Constraint گسترش می‌دهد. rowversion موجود و ترتیب قفل مشترک گفتگو → فایل‌های مرتب → پرونده، رقابت ایجاد و تصمیم/Send را کنترل می‌کنند. Case/Evidence فایل را برای cleanup نگه می‌دارند. Actor، Reason، زمان و ModerationAction در Audit موجود ثبت می‌شوند؛ لاگ عمومی متن، نام فایل، Hash خصوصی، Secret یا ProviderReference خام ندارد.
 
-همان User/Conversation/ClientMessageId با همان payload، تصمیم و safetyReference قبلی را می‌دهد. payload متفاوت با همان شناسه 409 MESSAGE_IDEMPOTENCY_CONFLICT است. SafetyIncident، ModerationCase و EvidenceAttachment موجود، کلید یکتا و transaction قبلی را reuse می‌کنند؛ retry پیام، پیوست قابل ارسال یا مصرف دوم ایجاد نمی‌کند. بستن/Resolved شدن پرونده یا Incident به معنی Allowed نیست؛ retry بعد از بستن هم همان تصمیم محافظتی را می‌گیرد.
-
-ردیابی عملیاتی: correlation/trace درخواست → لاگ کمینهٔ SafetyReference → SafetyIncident → ModerationCase/ModerationEvidenceAttachments → FileAsset. PolicyCodes/ProviderReference خصوصی، نسخه و دلیل را حفظ می‌کنند. لاگ جدید فقط reference، decision، reason محدود `UnsupportedMedia` یا `ContentPolicy`، ContentKind، Replayed، OperationState و نبود اثر تازه را دارد. متن، نام فایل، Hash محتوا، شماره، هویت کودک، provider reference خام، policy codes خام، Token و exception وارد این لاگ نمی‌شوند.
-
-دسترسی case-scoped و audit موجود پلتفرم تغییر نکرده است. School Manager مجوز تازه‌ای نمی‌گیرد. شناسهٔ SafetyReference مجوز خواندن Case/Asset ایجاد نمی‌کند. endpoint تأیید/رد/Release جدیدی ساخته نشده و Migration تازه لازم نشده است.
-
-## وضعیت پذیرش
-
-تست‌های `MessagingSafetyReviewContractTests.cs` از Provider داخلی واقعی استفاده می‌کنند: Minor/Unknown، پاسخ امن و correlation، retry ترتیبی/هم‌زمان، عدم مصرف و binding تکراری، عدم دانلود/تحویل برای گیرنده، concealment برای outsider، بستن پرونده بدون release، تفکیک Blocked از متن Allowed و OpenAPI. آمار نهایی suite و Git در گزارش validation همین مرحله ثبت می‌شود؛ UI یا سرور واقعی از این تست‌ها نتیجه گرفته نمی‌شود.
+۱۹ تست `MessagingMediaReviewAcceptanceTests` جریان PDF/JPEG/PNG، فارسی، caption/فایل‌تنها، تصمیم واقعی از API پلتفرم، Outbox/SignalR، Delta/History و دانلود بایت‌به‌بایت را روی SQL ایزوله می‌سنجند. دوازده تست `MediaSafetyReviewTests` قواعد خالص و Provider را پوشش می‌دهند؛ تست‌های تاریخی BE-01 نیز عدم تبدیل بستن پرونده به release و امنیت لاگ را حفظ می‌کنند. نتیجهٔ نهایی Regression در گزارش همین مرحله ثبت می‌شود؛ این شواهد Deploy سرور نیستند.
 
 ```text
-PRODUCT_DECISION_BLOCKED=true
+PRODUCT_DECISION_BLOCKED=false
 BE01_ROOT_CAUSE_IDENTIFIED=true
 BE01_SAFETY_BYPASSED=false
-BE01_HUMAN_REVIEW_IMPLEMENTED=false
-BE01_PRODUCT_DECISION_REQUIRED=true
-BE01_RELEASE_BLOCKING_FOR_ATTACHMENT=true
+BE01_HUMAN_REVIEW_IMPLEMENTED=true
+BE01_PRODUCT_DECISION_REQUIRED=false
 ```
 
-قابلیت release پیوست در مسیر محافظت‌شده مسدود است؛ اصلاحات مستقل Messaging/Realtime به این تصمیم آینده وابسته نشده‌اند. هیچ Safety switch خاموش نشده و AI یا اسکنر رسانهٔ تازه‌ای فعال نشده است.
+Provider خودکار آینده، SLA عملیاتی و Reopen تصمیم نهایی در این مرحله ساخته نشده‌اند. Academic/Knowledge مستقل‌اند؛ Approval رسانه ingest خودکار ایجاد نمی‌کند.

@@ -123,6 +123,12 @@ public sealed class GlobalExceptionHandler(
             problemDetails.Extensions["recipientDeliveryGranted"] = false;
             problemDetails.Extensions["recipientDownloadGranted"] = false;
             problemDetails.Extensions["requiredAction"] = "KEEP_DRAFT_NO_AUTO_RETRY";
+            if (safetyException.MediaReviewAvailable)
+            {
+                problemDetails.Extensions["mediaReviewAvailable"] = true;
+                problemDetails.Extensions["requiredAction"] = safetyException.Code == MessagingErrorCodes.MessageSafetyReviewRequired
+                    ? "WAIT_FOR_MEDIA_REVIEW" : "MEDIA_REJECTED_KEEP_DRAFT";
+            }
             problemDetails.Extensions["retryable"] = false;
             if (safetyException.SafetyReference is Guid reference && reference != Guid.Empty)
                 problemDetails.Extensions["safetyReference"] = reference;

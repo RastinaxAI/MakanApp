@@ -1,6 +1,27 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
-> سیاست `2026-11-22` بر پایهٔ `source@67417677297d7f46466ad0ed061e26bfc76402dc`: [Open Access و قرارداد Upload/Attachment](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md). Age/DOB و Subscription/Quota تجاری Gate قابلیت‌های عادی نیستند؛ `enforcementEnabled=false` در Summary/Capacity از سوابق واقعی جداست. ACL، Privacy، Block و Safety حفظ‌اند. Provider واقعی رسانه را ReviewRequired می‌کند؛ Ready بودن Upload وعدهٔ Send یا دریافت گیرنده نیست. جزئیات کاتالوگ تاریخی زیر با OpenAPI جاری و این الحاقیه خوانده شوند؛ استقرار انجام نشده است.
+> قرارداد جاری رسانه `2026-11-22`: [بازبینی انسانی و تحویل فایل](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تنظیم Internal اکنون Provider ترکیبی متن و Manual Media است؛ `GET /api/v1/files/{fileId}/messaging-review` وضعیت خصوصی مالک را می‌دهد و `MediaApproved/MediaRejected` در API Moderation موجود، تصمیم صریح محتوا هستند. محدودیت تاریخی نبود workflow رسانه در متن‌های قدیمی زیر با این قرارداد جایگزین شده است. Ready با Approval یکی نیست؛ ACL/Block/Safety و Open Access حفظ‌اند. OpenAPI داخل Release قرارداد runtime جاری است.
+
+> سیاست Open Access `2026-11-22` بر پایهٔ `source@67417677297d7f46466ad0ed061e26bfc76402dc`: [قرارداد Upload/Attachment](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md). Age/DOB و Subscription/Quota تجاری Gate قابلیت‌های عادی نیستند؛ `enforcementEnabled=false` در Summary/Capacity از سوابق واقعی جداست. ACL، Privacy، Block و Safety حفظ‌اند. Ready بودن Upload وعدهٔ Send یا دریافت گیرنده نیست. جزئیات کاتالوگ تاریخی زیر با OpenAPI جاری و الحاقیهٔ رسانه خوانده شوند؛ استقرار انجام نشده است.
+
+## بازبینی رسانه — قرارداد افزایشی جاری
+
+Upload با `POST /api/v1/files?workspaceScope=Personal`، Bearer و multipart فیلد `file` انجام می‌شود؛ Context سازمانی باید Scope واقعی خودش را داشته باشد. از پاسخ201، `id` فایل و Ready را نگه دارید. برای Send از Route موجود `/api/v1/conversations/{conversationId}/messages` با `clientMessageId` پایدار، `kind=File` برای PDF یا `Image` برای JPEG/PNG و `attachmentIds` استفاده کنید. `text=null` پیام فقط‌فایل است؛ caption اختیاری است. نام فارسی مجاز است.
+
+اولین Send مجاز، پروندهٔ یکتای همان فایل را در Moderation موجود ایجاد می‌کند و تا تصمیم422 می‌دهد. `GET /api/v1/files/{fileId}/messaging-review` فقط برای مالک/Uploader و نشست/Scope معتبر،200 با `fileAssetId`, `state`, `attachmentAllowed`, `reviewReference`, `reviewedAtUtc` می‌دهد. GET پرونده نمی‌سازد؛ نامجاز404 است.
+
+| state | رفتار کلاینت |
+|---|---|
+| `NotRequested` | هنوز پرونده ندارد؛ Ready بودن تأیید نیست و AttachmentAllowed=false است |
+| `PendingReview` | «فایل در حال بررسی است»؛ Draft محفوظ، بدون Sent/Delivered/دانلود گیرنده؛ Send خودکار Loop نشود |
+| `Approved` | همان فایل و همان ClientMessageId/payload را بدون Upload دوباره ارسال کنید؛ مجوز جاری دوباره بررسی می‌شود |
+| `Rejected` | «امکان ارسال این فایل وجود ندارد»؛ شناسهٔ تازه یا retry، رد را دور نمی‌زند |
+
+ProblemDetails رسانهٔ Pending:422 `MESSAGE_SAFETY_REVIEW_REQUIRED`, `mediaReviewAvailable=true`, `requiredAction=WAIT_FOR_MEDIA_REVIEW`. رد:422 `MESSAGE_SAFETY_BLOCKED`, `requiredAction=MEDIA_REJECTED_KEEP_DRAFT`. هر دو `operationState=NotApplied` و Flagهای نبود اثر تازه دارند. `safetyReference` رخداد تلاش با `reviewReference` پرونده یکی نیست؛ هر دو فقط ردیابی‌اند. متنِ ReviewRequired همچنان `KEEP_DRAFT_NO_AUTO_RETRY` دارد. payload متفاوت همان عملیات409 می‌دهد.
+
+کارشناس پلتفرم از صف موجود `/api/admin/v1/moderation/cases`، Claim با `/start-review` و فایل Evidence همان Case استفاده می‌کند؛ در `/actions` تصمیم `MediaApproved` یا `MediaRejected` با ExpectedVersion/Reason جاری ثبت می‌شود. تصمیم به Review+Enforce و Reviewer واگذارشدهٔ غیرمالک نیاز دارد؛ صرف Resolve/Dismiss، Approval نیست. Frontend عادی حق خواندن یادداشت/علت خصوصی پرونده را نمی‌گیرد.
+
+پس از Send و Commit، Outbox/SignalR موجود، `ConversationChanged` کمینه می‌دهد؛ metadata پیوست از Delta/History مجاز دریافت می‌شود. دانلود از `GET /api/v1/files/{fileId}/content` فقط با Binding پیام و ACL جاری گیرنده است. Pending/Rejected فاقد پیام برای گیرنده404 می‌ماند. تأیید خودش پیام ارسال یا Knowledge ingest نمی‌کند؛ جریان Academic مستقل است. [جزئیات و شواهد محلی](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md).
 
 > قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [Personal AI](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.
 
@@ -99,7 +120,7 @@ Upload با POST /files و فیلد File، دریافت metadata و Ready، سپ
 
 Attach پاسخ آزمون: POST /academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments با fileAssetId/clientOperationId/writeLeaseVersion/expectedRevisionNumber؛ Detach با DELETE همان مسیر/fileId و queryهای operation/lease/revision. Save فایل قبلی را حفظ می‌کند؛ هر mutation revision و AnswerSetVersion تازه می‌دهد. برای Finalize نسخهٔ جاری و lease را بفرستید؛ زمان دستگاه و پایان Upload deadline را تمدید نمی‌کنند. Teacher/Manager مجاز فقط finalized و Parent/Guardian raw file نمی‌خوانند. [جریان کامل و خطاها](../product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md#frontend_handoff).
 
-BE-01 در Messenger مستقل است:422 با safetyState=PendingReview یا Rejected و operationState=NotApplied اثر جدید پیام/پیوست/تحویل نمی‌سازد. Draft را حفظ و KEEP_DRAFT_NO_AUTO_RETRY را رعایت کنید؛ safetyReference فقط ردیابی است. Human Review یا release خودکار هنوز PRODUCT_DECISION_BLOCKED است؛ بستن case تصمیم Safety را Allowed نمی‌کند. [قرارداد امن](../messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
+BE-01 در Messenger مستقل است:422 با safetyState=PendingReview یا Rejected و operationState=NotApplied اثر جدید پیام/پیوست/تحویل نمی‌سازد. Draft را حفظ و KEEP_DRAFT_NO_AUTO_RETRY را رعایت کنید؛ safetyReference فقط ردیابی است. Human Review رسانه مطابق الحاقیهٔ بالا فعال است؛ انتشار خودکار نداریم و بستن case تصمیم Safety را Allowed نمی‌کند. [قرارداد امن](../messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
 ## Backoffice و مجوز Platform
 
 Platform IAM/permission، organization/user/provisioning، education read model، moderation، commerce/finance و operations API دارند؛ Manager مدرسه Platform Admin نیست. GET /api/admin/v1/me منبع capability است، نه مجوز client-side.

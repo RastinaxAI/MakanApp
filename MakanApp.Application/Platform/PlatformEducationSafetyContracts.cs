@@ -237,7 +237,10 @@ public sealed record PlatformModerationCaseDetail(
     PlatformSafetyIncidentEvidence? SafetyIncident,
     IReadOnlyCollection<PlatformModerationEvidenceItem> Attachments,
     IReadOnlyCollection<PlatformModerationActionItem> Actions,
-    IReadOnlyCollection<PlatformModerationContextMessage>? ContextMessages = null);
+    IReadOnlyCollection<PlatformModerationContextMessage>? ContextMessages = null)
+{
+    public MakanApp.Application.Messaging.MediaReviewStatusResult? MediaReview { get; init; }
+}
 
 public sealed record PlatformModerationContextMessage(Guid MessageId, Guid SenderUserId, long Sequence, MessageKind Kind, string? Text, DateTime SentAtUtc);
 public sealed record PlatformModerationActionCommand(string ExpectedVersion, string Reason, ModerationActionType Action, DateTime? RestrictedUntilUtc = null);

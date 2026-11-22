@@ -23,7 +23,8 @@ public sealed record ContentSafetyResult(
     IReadOnlyCollection<string>? PolicyCodes = null,
     string? ReasonCode = null,
     string? PolicyVersion = null,
-    string? CorrelationId = null);
+    string? CorrelationId = null,
+    bool UsesMediaReview = false);
 
 public interface IContentSafetyProvider
 {

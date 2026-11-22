@@ -36,7 +36,7 @@ PRODUCT_DECISION_REQUIRED است و Family/Shared Subscription یا pooling سا
 - دسترسی Parent به فضای رسمی کلاس از رابطهٔ جاری Guardian و ACL همان فضای رسمی می‌آید؛ این رابطه دسترسی به Direct خصوصی کودک ایجاد نمی‌کند.
 - Refund در این Task `OUT_OF_SCOPE` است؛ اجرای آن ساخته نمی‌شود.
 - Service Authentication هر دو AI Gateway و Knowledge طبق override صریح `DISABLED` باقی می‌ماند؛ کلید یا JWT تازه لازم نمی‌شود.
-- Minor/Unknown و مسیر `ReviewRequired` بدون تصمیم جدید bypass نمی‌شوند. بستن Moderation پرونده، تأیید Attach فایل نیست.
+- مسیر `ReviewRequired` با تصمیم مصوب `2026-11-22` برای رسانه به بازبینی انسانی موجود متصل شد؛ این مورد دیگر تصمیم باز انتخاب workflow نیست. بستن پرونده، Approval نیست: فقط `MediaApproved` توسط Reviewer مجاز، برای اثرانگشت همان فایل، امکان Send بعدی را فراهم می‌کند. Pending/Rejected و قواعد مستقل ایمنی حفظ‌اند. [قرارداد](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). Provider خودکار آینده و SLA عملیاتی تعیین نشده‌اند.
 
 ## موانع اتصال Storeها
 

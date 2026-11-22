@@ -1,5 +1,6 @@
 using MakanApp.Api.Authentication;
 using MakanApp.Application.Storage;
+using MakanApp.Application.Messaging;
 using MakanApp.Domain.Organization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,8 +11,14 @@ namespace MakanApp.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/files")]
-public sealed class FilesController(IStorageService storageService) : ControllerBase
+public sealed class FilesController(IStorageService storageService, MediaSafetyService mediaSafetyService) : ControllerBase
 {
+    [HttpGet("{fileId:guid}/messaging-review")]
+    [ProducesResponseType<MediaReviewStatusResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<MediaReviewStatusResult>> GetMessagingReview(Guid fileId, CancellationToken ct) =>
+        Ok(await mediaSafetyService.GetStatusAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), fileId, ct));
+
     [HttpPost]
     [EnableRateLimiting("file-upload")]
     [Consumes("multipart/form-data")]

@@ -1,6 +1,18 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
+> قرارداد جاری رسانه `2026-11-22`: [بازبینی انسانی و تحویل فایل](messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تنظیم Internal اکنون Provider ترکیبی متن و Manual Media است؛ `GET /api/v1/files/{fileId}/messaging-review` وضعیت خصوصی مالک را می‌دهد و `MediaApproved/MediaRejected` در API Moderation موجود، تصمیم صریح محتوا هستند. محدودیت تاریخی نبود workflow رسانه در متن‌های قدیمی زیر با این قرارداد جایگزین شده است. Ready با Approval یکی نیست؛ ACL/Block/Safety و Open Access حفظ‌اند. OpenAPI داخل Release قرارداد runtime جاری است.
+
 > الحاقیهٔ قرارداد `2026-11-22`: [Open Access و Upload/Attachment](product/OPEN_ACCESS_FILE_DELIVERY_FA.md). دو پاسخ HTTP `CommercialSummaryDto` و `ManagerCommerceSummaryDto` دارای bool افزایشی `enforcementEnabled` هستند؛ نتیجهٔ داخلی `CapacityCheckResult` نیز این Flag را دارد و API تازه‌ای نیست. false یعنی سابقهٔ Plan/Quota Gate عمومی نیست. DTO/Route قدیمی حذف نشده است. برای رسانه، Ready ذخیره‌سازی و PendingReview/تأیید Safety دو محور جدا هستند؛ جدول‌های تاریخی پایین جای این تصمیم و OpenAPI جاری را نمی‌گیرند.
+
+## افزودهٔ قرارداد رسانه — ۲۰۲۶/۱۱/۲۲
+
+`GET /api/v1/files/{fileId}/messaging-review` با Bearer session و ACL/Scope جاری فقط برای Uploader است؛200 با `MediaReviewStatusResult` و404 برای ناموجود/نامجاز. Schema: `fileAssetId:uuid`, `state:NotRequested|PendingReview|Approved|Rejected`, `attachmentAllowed:boolean`, `reviewReference:uuid|null`, `reviewedAtUtc:date-time|null`. GET بدون ایجاد پرونده و بدون افشای یادداشت/کارشناس داخلی است.
+
+`PlatformModerationCaseDetail.mediaReview` فیلد افزایشی برای Source=`MediaReview` است؛ enum `ModerationActionType` اکنون `MediaApproved=9` و `MediaRejected=10` هم دارد. `POST /api/admin/v1/moderation/cases/{caseId}/actions` همان DTO ExpectedVersion/Reason/Action را حفظ می‌کند؛ فقط Reviewer واگذارشده با مجوز جاری Review+Enforce، غیرمالک فایل، تصمیم می‌دهد. Version قدیمی یا تصمیم دوم409 است؛ Resolve کردن Pending مجوز ضمنی نمی‌سازد.
+
+پاسخ Safety422 موجود، برای رسانهٔ Pending/Rejected فیلد اختیاری `mediaReviewAvailable` و دو مقدار افزایشی requiredAction یعنی `WAIT_FOR_MEDIA_REVIEW` و `MEDIA_REJECTED_KEEP_DRAFT` دارد؛ Flagهای عدم اثر تازه و Code قبلی حفظ‌اند. Approval با همان فایل/ClientMessageId/payload قابل استفاده است؛ تغییر payload409، caption ناامن422 و مجوز نامعتبر همچنان رد می‌شوند. جزئیات در Handoff بالای سند و `openapi.json` همین Release است.
+
+## کاتالوگ پایهٔ تاریخی
 
 بازبینی `2026-11-15` با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 

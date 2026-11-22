@@ -52,13 +52,20 @@ public sealed class FileAndMessagingOperationTransformer : IOpenApiOperationTran
         {
             operation.Responses["422"] = new OpenApiResponse
             {
-                Description = "MESSAGE_SAFETY_REVIEW_REQUIRED: وضعیت PendingReview، یا MESSAGE_SAFETY_BLOCKED: وضعیت Rejected. تغییر اعمال نشده و مجوز تحویل/دانلود تازه ایجاد نشده است. Ready فایل تأیید ایمنی نیست. پیش‌نویس حفظ شود و retry خودکار نشود؛ همان شناسه و payload همان نتیجه را می‌دهد. PendingReview وعدهٔ صف انسانی، SLA یا تأیید async نیست. دلیل داخلی و اطلاعات provider عمومی نیستند.",
+                Description = "MESSAGE_SAFETY_REVIEW_REQUIRED: وضعیت PendingReview، یا MESSAGE_SAFETY_BLOCKED: وضعیت Rejected. تغییر اعمال نشده و مجوز تحویل/دانلود تازه ایجاد نشده است. Ready فایل تأیید ایمنی نیست. در MediaReviewAvailable، بررسی دستی فایل در صف PlatformSafety ثبت/بازاست؛ مالک وضعیت را از GET files/{fileId}/messaging-review می‌خواند و پس از Approved همان ClientMessageId و payload را بدون Upload دوباره ارسال می‌کند. متن و ACL جاری همچنان ارزیابی می‌شوند. سایر ReviewRequiredها مجوز تأیید فایل نیستند. دلیل داخلی و اطلاعات provider عمومی نیستند.",
                 Content = new Dictionary<string, OpenApiMediaType>
                 {
                     ["application/problem+json"] = new() { Schema = SafetyFailure() }
                 }
             };
         }
+        if (context.Description.HttpMethod == "GET" && route == "api/v1/files/{fileId}/messaging-review")
+        {
+            operation.Summary = "وضعیت خصوصی بررسی رسانه برای مالک فایل";
+            operation.Description = "NotRequested یعنی هنوز درخواست Send بررسی را آغاز نکرده است؛ PendingReview یعنی پرونده واقعی وجود دارد؛ Approved فقط تصمیم محتوای همان Hash است، نه مجوز منبع؛ Rejected مانع ارسال است. اولین Send مجاز با فایل Ready، Case یکتا می‌سازد. Approval خودکار پیام ارسال نمی‌کند. گیرنده و outsider از این مسیر، وضعیت خصوصی مالک را نمی‌خوانند. از فایل پیام، Source دانش ساخته نمی‌شود.";
+        }
+        if (context.Description.HttpMethod == "POST" && route == "api/admin/v1/moderation/cases/{caseId}/actions")
+            operation.Description = (operation.Description ?? string.Empty) + " MediaApproved و MediaRejected فقط برای Source=MediaReview و بازبین مسئول با مجوز جاری ModerationReview و ModerationEnforce مجازند. مالک/درخواست‌کننده حق خودتأییدی ندارد؛ ExpectedVersion، Reason و Snapshot فایل بررسی می‌شوند. Resolve/Dismiss عمومی، Approval نمی‌سازند.";
         return Task.CompletedTask;
     }
 
@@ -77,7 +84,9 @@ public sealed class FileAndMessagingOperationTransformer : IOpenApiOperationTran
             ["recipientDeliveryGranted"] = DeniedEffect(),
             ["recipientDownloadGranted"] = DeniedEffect(),
             ["retryable"] = DeniedEffect(),
-            ["requiredAction"] = new() { Type = "string", Enum = [new Microsoft.OpenApi.Any.OpenApiString("KEEP_DRAFT_NO_AUTO_RETRY")] },
+            ["mediaReviewAvailable"] = new() { Type = "boolean", Description = "در پاسخ رسانه، بررسی دستی واقعی و قابل پیگیری وجود دارد؛ برای سایر رخدادها این فیلد ارسال نمی‌شود." },
+            ["requiredAction"] = new() { Type = "string", Enum = [new Microsoft.OpenApi.Any.OpenApiString("KEEP_DRAFT_NO_AUTO_RETRY"),
+                new Microsoft.OpenApi.Any.OpenApiString("WAIT_FOR_MEDIA_REVIEW"), new Microsoft.OpenApi.Any.OpenApiString("MEDIA_REJECTED_KEEP_DRAFT")] },
             ["correlationId"] = new() { Type = "string" },
             ["traceId"] = new() { Type = "string" }
         }

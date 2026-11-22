@@ -400,6 +400,7 @@ public sealed partial class EfMessagingStore
                 command.Kind,
                 command.AllowSourceAttachments);
         }
+        await EnsureCurrentMediaReviewAllowsAsync(files, cancellationToken);
         return (files, mentionedUserIds);
     }
 

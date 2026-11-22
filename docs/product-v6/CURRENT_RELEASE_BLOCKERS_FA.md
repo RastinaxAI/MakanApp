@@ -41,7 +41,7 @@ ClientReturnUrl واقعی Frontend Test هنوز مشخص/Deploy نشده اس�
 | Push واقعی و SMS عمومی اعلان | `DEFERRED_CURRENT_RELEASE` | نیاز VAPID/FCM/device یا provider SMS در این نسخه blocker نیست. |
 | Store Billing، iOS، Family، PersonalClass Academic | مطابق Scope مصوب | قابلیت آینده‌اند؛ عدم پیاده‌سازی جدیدشان failure این Audit نیست. |
 | Library عمومی/AI | `PASS_CURRENT_POLICY` | خاموشی Product مصوب است؛ مجوز موجود Platform تغییر نمی‌کند. |
-| تصمیم رسانهٔ ReviewRequired | `PRODUCT_DECISION_REQUIRED` | وضعیت امن و قابل‌ردیابی فعلی حفظ می‌شود؛ تأیید ارسال رسانه ساخته یا Safety bypass نمی‌شود. |
+| تصمیم رسانهٔ ReviewRequired | `CLOSED_IMPLEMENTATION` در 2026-11-22 | مسیر انسانی مصوب در Moderation موجود، تصمیم صریح و اثرانگشت فایل دارد؛ Pending/Rejected ارسال نمی‌شوند. [قرارداد و مرز پذیرش محلی](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). نصب و پذیرش IIS مقصد مستقل باقی است. |
 
 ## پذیرش‌های عملیاتی باقی‌مانده
 

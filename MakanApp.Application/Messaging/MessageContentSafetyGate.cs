@@ -93,7 +93,10 @@ internal static class MessageContentSafetyGate
             return (incidentResult.ExistingMessage, false);
         }
 
-        throw SafetyDecisionError(incidentResult.Decision, incidentResult.SafetyIncidentId);
+        if (safetyResult.UsesMediaReview && incidentResult.Decision == ContentSafetyDecision.Allowed)
+            return (null, true);
+
+        throw SafetyDecisionError(incidentResult.Decision, incidentResult.SafetyIncidentId, safetyResult.UsesMediaReview);
     }
 
     private static void ValidateSafetyResult(ContentSafetyResult result)
@@ -110,16 +113,18 @@ internal static class MessageContentSafetyGate
         }
     }
 
-    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision, Guid? safetyReference) =>
+    private static MessagingException SafetyDecisionError(ContentSafetyDecision decision, Guid? safetyReference, bool mediaReview = false) =>
         decision switch
         {
             ContentSafetyDecision.Blocked => new(
                 MessagingErrorCodes.MessageSafetyBlocked,
-                "ارسال این پیام مجاز نیست.") { SafetyReference = safetyReference },
+                mediaReview ? "امکان ارسال این فایل وجود ندارد." : "ارسال این پیام مجاز نیست.")
+                { SafetyReference = safetyReference, MediaReviewAvailable = mediaReview },
             ContentSafetyDecision.ReviewRequired => new(
                 MessagingErrorCodes.MessageSafetyReviewRequired,
-                "این تغییر اعمال نشد؛ بررسی ایمنی به نتیجهٔ قابل ارسال نرسیده است. پیش‌نویس را نگه دارید و خودکار دوباره ارسال نکنید.")
-                { SafetyReference = safetyReference },
+                mediaReview ? "فایل در حال بررسی است؛ پیش‌نویس را نگه دارید و پس از تأیید وضعیت فایل دوباره ارسال کنید." :
+                    "این تغییر اعمال نشد؛ بررسی ایمنی به نتیجهٔ قابل ارسال نرسیده است. پیش‌نویس را نگه دارید و خودکار دوباره ارسال نکنید.")
+                { SafetyReference = safetyReference, MediaReviewAvailable = mediaReview },
             _ => SafetyUnavailable()
         };
 

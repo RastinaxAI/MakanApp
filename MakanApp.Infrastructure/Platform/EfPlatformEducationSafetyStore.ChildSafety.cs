@@ -10,7 +10,9 @@ public sealed partial class EfPlatformEducationSafetyStore
     public async Task<PlatformModerationCaseDetail> ReadModerationContextAsync(PlatformActorContext actor, Guid caseId,
         bool expanded, string reason, CancellationToken ct, byte[]? expectedVersion = null)
     {
+        var mediaResources = await ReadMediaReviewResourcesAsync(caseId, ct);
         await using var transaction = await BeginSerializableAsync(ct);
+        await LockMediaReviewResourcesAsync(mediaResources, ct);
         await RequireReviewerAsync(actor, expanded, ct);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, ct) ?? throw ModerationNotFound();
         var subjectId = await CaseSubjectAsync(moderationCase, ct);
@@ -47,22 +49,40 @@ public sealed partial class EfPlatformEducationSafetyStore
     public async Task<PlatformModerationCaseDetail> ApplySafetyActionAsync(PlatformActorContext actor, Guid caseId,
         byte[] expectedVersion, string reason, ModerationActionType action, DateTime? restrictedUntilUtc, CancellationToken ct)
     {
+        var mediaAction = action is ModerationActionType.MediaApproved or ModerationActionType.MediaRejected;
+        var mediaResources = await ReadMediaReviewResourcesAsync(caseId, ct);
         await using var transaction = await BeginSerializableAsync(ct);
-        await RequireReviewerAsync(actor, false, ct);
+        await LockMediaReviewResourcesAsync(mediaResources, ct);
+        await RequireReviewerAsync(actor, mediaAction, ct);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, ct) ?? throw ModerationNotFound();
         EnsureVersion(moderationCase, expectedVersion);
         var targetId = await CaseSubjectAsync(moderationCase, ct);
         if (targetId == actor.UserId || moderationCase.Status != ModerationCaseStatus.InReview || moderationCase.AssignedReviewerUserId != actor.UserId)
             throw new PlatformException(PlatformErrorCodes.AccessDenied, "اقدام فقط در پرونده بازبین مسئول مجاز است.");
-        moderationCase.RecordSafetyAction(actor.UserId, actor.OccurredAtUtc);
-        dbContext.Entry(moderationCase).Property(c => c.UpdatedAtUtc).IsModified = true;
-        if (action == ModerationActionType.MessagingRestricted)
+        try
         {
-            var user = await dbContext.Users.SingleAsync(u => u.Id == targetId, ct);
-            user.RestrictMessaging(restrictedUntilUtc!.Value, actor.OccurredAtUtc);
+            moderationCase.RecordSafetyAction(actor.UserId, actor.OccurredAtUtc);
+            dbContext.Entry(moderationCase).Property(c => c.UpdatedAtUtc).IsModified = true;
+            if (mediaAction)
+            {
+                if (!moderationCase.MediaFileAssetId.HasValue || await dbContext.ModerationActions.AnyAsync(a =>
+                        a.ModerationCaseId == caseId && a.Type == ModerationActionType.Created && a.ActorUserId == actor.UserId, ct))
+                    throw new PlatformException(PlatformErrorCodes.AccessDenied, "درخواست‌کننده نمی‌تواند فایل خودش را تأیید کند.");
+                var file = await dbContext.FileAssets.AsNoTracking().SingleAsync(f => f.Id == moderationCase.MediaFileAssetId, ct);
+                if (file.Status != MakanApp.Domain.Storage.FileAssetStatus.Ready ||
+                    !moderationCase.MatchesMedia(file.Id, file.Sha256Hash!, file.ContentType, file.SizeBytes)) throw ModerationConflict();
+                moderationCase.DecideMedia(actor.UserId, action == ModerationActionType.MediaApproved
+                    ? ContentSafetyDecision.Allowed : ContentSafetyDecision.Blocked, actor.OccurredAtUtc);
+            }
+            else if (action == ModerationActionType.MessagingRestricted)
+            {
+                var user = await dbContext.Users.SingleAsync(u => u.Id == targetId, ct);
+                user.RestrictMessaging(restrictedUntilUtc!.Value, actor.OccurredAtUtc);
+            }
+            else if (action == ModerationActionType.Escalated) moderationCase.Escalate(actor.UserId, actor.OccurredAtUtc);
+            else if (action != ModerationActionType.Warned) throw ModerationConflict();
         }
-        else if (action == ModerationActionType.Escalated) moderationCase.Escalate(actor.UserId, actor.OccurredAtUtc);
-        else if (action != ModerationActionType.Warned) throw ModerationConflict();
+        catch (InvalidOperationException) { throw ModerationConflict(); }
         dbContext.ModerationActions.Add(ModerationAction.Create(caseId, action, actor.UserId, actor.OccurredAtUtc));
         dbContext.AdminAuditLogs.Add(await CreateAuditAsync(actor, "platform.moderation.action." + action.ToString().ToLowerInvariant(),
             moderationCase, reason, "InReview", action.ToString(), ct));
@@ -74,7 +94,9 @@ public sealed partial class EfPlatformEducationSafetyStore
     private async Task<Guid> CaseSubjectAsync(ModerationCase moderationCase, CancellationToken ct) =>
         moderationCase.AbuseReportId.HasValue
             ? await dbContext.AbuseReports.Where(r => r.Id == moderationCase.AbuseReportId.Value).Select(r => r.ReportedUserId).SingleAsync(ct)
-            : await dbContext.SafetyIncidents.Where(i => i.Id == moderationCase.SafetyIncidentId!.Value).Select(i => i.ActorUserId).SingleAsync(ct);
+            : moderationCase.MediaFileAssetId.HasValue
+                ? await dbContext.FileAssets.Where(f => f.Id == moderationCase.MediaFileAssetId.Value).Select(f => f.UploadedByUserId).SingleAsync(ct)
+                : await dbContext.SafetyIncidents.Where(i => i.Id == moderationCase.SafetyIncidentId!.Value).Select(i => i.ActorUserId).SingleAsync(ct);
 
     private async Task RequireReviewerAsync(PlatformActorContext actor, bool stronger, CancellationToken ct)
     {

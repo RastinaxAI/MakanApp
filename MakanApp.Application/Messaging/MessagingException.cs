@@ -5,4 +5,5 @@ public sealed class MessagingException(string code, string message, Exception? i
 {
     public string Code { get; } = code;
     public Guid? SafetyReference { get; init; }
+    public bool MediaReviewAvailable { get; init; }
 }

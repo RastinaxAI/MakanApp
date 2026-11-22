@@ -558,7 +558,9 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
         string reason,
         CancellationToken cancellationToken)
     {
+        var mediaResources = await ReadMediaReviewResourcesAsync(caseId, cancellationToken);
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        await LockMediaReviewResourcesAsync(mediaResources, cancellationToken);
         await RequireReviewerAsync(actor, false, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
@@ -607,7 +609,9 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
         bool dismiss,
         CancellationToken cancellationToken)
     {
+        var mediaResources = await ReadMediaReviewResourcesAsync(caseId, cancellationToken);
         await using var transaction = await BeginSerializableAsync(cancellationToken);
+        await LockMediaReviewResourcesAsync(mediaResources, cancellationToken);
         await RequireReviewerAsync(actor, false, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
@@ -638,7 +642,7 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
                     report.Resolve();
                 }
             }
-            else
+            else if (moderationCase.SafetyIncidentId.HasValue)
             {
                 var incident = await dbContext.SafetyIncidents.SingleAsync(
                     item => item.Id == moderationCase.SafetyIncidentId!.Value,
@@ -688,12 +692,12 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
         await RequireReviewerAsync(actor, true, cancellationToken);
         var moderationCase = await LockPlatformSafetyCaseAsync(caseId, cancellationToken)
             ?? throw ModerationNotFound();
-        if (await CaseSubjectAsync(moderationCase, cancellationToken) == actor.UserId) throw ModerationNotFound();
-        EnsureVersion(moderationCase, expectedVersion);
         if (!moderationCase.AbuseReportId.HasValue)
         {
             throw ModerationConflict();
         }
+        if (await CaseSubjectAsync(moderationCase, cancellationToken) == actor.UserId) throw ModerationNotFound();
+        EnsureVersion(moderationCase, expectedVersion);
 
         var report = await dbContext.AbuseReports.SingleAsync(
             item => item.Id == moderationCase.AbuseReportId.Value,
@@ -788,7 +792,7 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
                     report.ReportedContentSnapshot))
                 .SingleAsync(cancellationToken);
         }
-        else
+        else if (row.Case.SafetyIncidentId.HasValue)
         {
             incidentEvidence = await dbContext.SafetyIncidents.AsNoTracking()
                 .Where(incident => incident.Id == row.Case.SafetyIncidentId!.Value)
@@ -835,7 +839,7 @@ public sealed partial class EfPlatformEducationSafetyStore(MakanDbContext dbCont
             abuseEvidence,
             incidentEvidence,
             attachments,
-            actions);
+            actions) { MediaReview = await ReadMediaReviewStatusAsync(row.Case, cancellationToken) };
     }
 
     private async Task<PlatformModerationCaseDetail> LoadRequiredModerationCaseAsync(

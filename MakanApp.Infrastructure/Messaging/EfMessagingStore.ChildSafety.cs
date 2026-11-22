@@ -89,13 +89,12 @@ public sealed partial class EfMessagingStore
         if (existingIncident is not null)
         {
             EnsureSafetyRetryMatches(existingIncident, requestPayloadHash);
-            LogSafetyDecision(existingIncident, true);
-            return new MessageSafetyPreparationStoreResult(
-                null,
-                existingIncident.Decision,
-                false,
-                [],
-                existingIncident.Id);
+            // تصمیم قدیمیِ «موتور رسانه ندارد» تأیید یا رد محتوا نیست؛ Hash درخواست همچنان ثابت می‌ماند.
+            if (!CanReevaluateMediaIncident(existingIncident, command))
+            {
+                LogSafetyDecision(existingIncident, true);
+                return new MessageSafetyPreparationStoreResult(null, existingIncident.Decision, false, [], existingIncident.Id);
+            }
         }
 
         var files = await LoadAndValidateSafetyFilesAsync(
@@ -268,16 +267,33 @@ public sealed partial class EfMessagingStore
         if (existingIncident is not null)
         {
             EnsureSafetyRetryMatches(existingIncident, requestPayloadHash);
-            await transaction.CommitAsync(cancellationToken);
-            LogSafetyDecision(existingIncident, true);
-            return new SafetyIncidentStoreResult(null, existingIncident.Decision, existingIncident.Id);
+            if (!result.UsesMediaReview)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                LogSafetyDecision(existingIncident, true);
+                return new SafetyIncidentStoreResult(null, existingIncident.Decision, existingIncident.Id);
+            }
         }
 
+        if (result.UsesMediaReview)
+        {
+            // قفل پیش از خواندن S گرفته می‌شود تا دو گفتگو روی همان فایل گرفتار ارتقای هم‌زمان نشوند.
+            foreach (var fileId in command.AttachmentIds.Distinct().Order())
+                if (await dbContext.FileAssets.FromSqlInterpolated($"SELECT * FROM [storage].[FileAssets] WITH (XLOCK,HOLDLOCK) WHERE [Id]={fileId}")
+                    .AsNoTracking().SingleOrDefaultAsync(cancellationToken) is null) throw AttachmentNotAllowed();
+        }
         var files = await LoadAndValidateSafetyFilesAsync(
             conversation,
             userId,
             command,
             cancellationToken);
+        if (result.UsesMediaReview)
+        {
+            var mediaResult = await RecordMediaReviewOutcomeAsync(conversation, userId, command, requestPayloadHash,
+                result, existingIncident, files, nowUtc, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return mediaResult;
+        }
         var policyCodes = string.Join(
             ',',
             (result.PolicyCodes ?? [])

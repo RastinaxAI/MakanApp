@@ -55,15 +55,15 @@ AI_SUBSCRIPTION_REQUIRED=NO
 
 فایل باید Ready، متعلق به فرستنده، در Scope مجاز و فاقد Binding ناسازگار باشد. Pending/Rejected/Deleted و فایل متصل‌نشدهٔ منقضی مجاز نیستند. شناسهٔ فایل دیگران مجوز نیست؛ Forward فقط با کنترل مبدأ/مقصدِ مسیر خودش انجام می‌شود. Retry همان ClientMessageId/Payload اثر تکراری نمی‌سازد و Payload متفاوت 409 می‌دهد.
 
-## علت توقف فعلی رسانه و گیت باز
+## تکمیل مسیر رسانه با تصمیم انسانی مصوب
 
-`InternalMakanContentSafetyProvider` برای همهٔ سن‌ها، هر Attachment یا Kind غیر Text را با دلیل `Other.UnsupportedMedia` به ReviewRequired می‌فرستد. `MessageContentSafetyGate` سپس Incident را ثبت و `MESSAGE_SAFETY_REVIEW_REQUIRED` برمی‌گرداند. هفت تست موجودِ BE-01 با Provider واقعی این مسیر را بررسی کرده‌اند.
+در `2026-11-22` مالک، **Manual Moderation Review** را برای رسانه تأیید کرد. علت قبلی واقعی بود: `InternalMakanContentSafetyProvider` فقط متن را بررسی می‌کند و رسانه را `Other.UnsupportedMedia → ReviewRequired` می‌دانست. موتور خام متن تغییر نکرده؛ اکنون تنظیم Internal، `ReviewedMediaContentSafetyProvider` را مصرف می‌کند که caption را با همان موتور و فایل را با `ManualMediaSafetyProvider` می‌سنجد. این مسیر ادعای اسکن خودکار ندارد و Safe فرضی نمی‌سازد.
 
-Ready یعنی ذخیرهٔ موفق؛ به معنی Approved/Attachable از نظر Safety نیست. در PendingReview، Message/MessageAttachment، Unread/Preview و Event پیام ایجاد نمی‌شود و گیرنده Metadata/Content فایل را نمی‌خواند. مالک همچنان Ready خودش را طبق ACL Storage می‌خواند. PendingReview، Rejected و ارسال موفق مستقل‌اند.
+Ready فقط Storage است. اولین Send مجاز پروندهٔ یکتای همان فایل در Moderation موجود می‌سازد و422 PendingReview می‌دهد. مالک از `GET /api/v1/files/{fileId}/messaging-review` وضعیت امن را می‌گیرد. کارشناس دارای Review+Enforce، پس از Claim و مشاهدهٔ Evidence، تصمیم صریح `MediaApproved` یا `MediaRejected` در Route موجود `/api/admin/v1/moderation/cases/{caseId}/actions` ثبت می‌کند. self-approval، نسخهٔ کهنه، مجوز لغوشده و Resolve کردن Pending مجاز نیستند.
 
-پاسخ امن دارای `safetyState=PendingReview`، `safetyReference` و Flagهای عدم ایجاد/تحویل/دانلود است. تکرار همان درخواست Incident جدید نمی‌سازد. `retryable=false` مجوز Loop با شناسهٔ تازه نیست. بستن ModerationCase مجوز انتشار فایل ایجاد نمی‌کند؛ Human Review یا Workflow فرضی ساخته نشده است.
+Pending/Rejected اثر تازهٔ Message/Attachment/Delivery ندارند و برای گیرنده دانلود نمی‌شوند. Approval به اثرانگشت همان فایل گره دارد؛ پس از آن همان ClientMessageId و payload می‌تواند بدون Upload تازه ارسال شود. تأیید پرونده خودش پیام نمی‌فرستد و ACL/Block/Safety caption را دور نمی‌زند. Retry پیام/پرونده/مصرف تکراری نمی‌سازد. تصمیم‌های تاریخیِ بسته‌شده به‌تنهایی Approval محسوب نمی‌شوند.
 
-**موفقیت واقعی ارسال PDF/Image به معرفی موتور Safety رسانه یا تصویب مسیر تأیید قابل اجرا وابسته است.** Signature معتبر جای Safety محتوا نیست. نتیجهٔ مثبت با Provider مجازِ کنترل‌شدهٔ تست، PASS برای Provider واقعی Production محسوب نمی‌شود.
+قرارداد دقیق `NotRequested/PendingReview/Approved/Rejected`، requiredActionها، permissionها، Retry و UX در [Handoff رسانه](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) است. مسیر واقعی PDF/JPEG/PNG، فارسی، caption و فایل‌تنها با Provider اصلی و SQL/Outbox/SignalR محلی تست شده است؛ نتیجهٔ کامل Regression در گزارش همین مرحله ثبت می‌شود و به معنی نصب روی IIS نیست. Open Access این سند بدون تغییر باقی است.
 
 ## Realtime، Download و جدایی دانش
 
@@ -75,4 +75,4 @@ Ready یعنی ذخیرهٔ موفق؛ به معنی Approved/Attachable از ن
 
 بعد از Send موفق، عضو مجاز گفتگو دانلود می‌کند؛ URL قدیمی پایان Membership یا ACL را دور نمی‌زند. PendingReview هنوز Binding پیام ندارد و برای گیرنده 404 است. Upload پیام خودکار Source دانش نیست؛ Publish/ingest/RAG، جریان و ACL مستقل دارند.
 
-خطاهای `FILE_EMPTY`، `FILE_TOO_LARGE`، `FILE_TYPE_NOT_ALLOWED`، `FILE_CONTENT_INVALID` و خطاهای مالکیت/Binding حفظ‌اند. خطای Safety از Upload جدا نمایش داده شود؛ 201 Upload را Send موفق نشان ندهید. Schema سن/Commerce حذف نشده و برای این Policy Migration لازم نیست. نتیجهٔ واقعی Validation و Gate رسانه در گزارش مرحله ثبت می‌شود.
+خطاهای `FILE_EMPTY`، `FILE_TOO_LARGE`، `FILE_TYPE_NOT_ALLOWED`، `FILE_CONTENT_INVALID` و خطاهای مالکیت/Binding حفظ‌اند. خطای Safety از Upload جدا نمایش داده شود؛ 201 Upload را Send موفق نشان ندهید. Schema سن/Commerce حذف نشده و برای Open Access Migration لازم نیست؛ بازبینی رسانه با Migration مستقل `20261122085930_AddMessagingMediaReviews` اضافه شده است. نتیجهٔ واقعی Validation و Gate رسانه در گزارش مرحله ثبت می‌شود.
