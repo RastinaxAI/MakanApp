@@ -89,6 +89,7 @@ public sealed partial class MakanAppWebApplicationFactory :
                 ["Sms:Provider"] = "Development",
                 // مجموعهٔ تاریخی، قرارداد Commercial را صریحاً نگه می‌دارد؛ تست نامحدود override مستقل دارد.
                 ["AiUsage:Mode"] = "Commercial",
+                ["Commerce:EnforcementEnabled"] = "true",
                 ["AccountDeletion:ExecutionEnabled"] = _accountDeletionProbe ? "true" : "false",
                 ["AccountDeletion:GracePeriodHours"] = _accountDeletionProbe ? "0" : null,
                 ["Identity:Otp:MaxRequestsPerWindow"] = "5",

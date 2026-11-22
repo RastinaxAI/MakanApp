@@ -7,7 +7,7 @@ namespace MakanApp.Application.Commerce;
 public sealed class CommerceService(
     IAccessContextResolver accessContextResolver,
     ICommerceStore store,
-    TimeProvider timeProvider) : ICommerceService, IEntitlementService
+    TimeProvider timeProvider, CommercialOptions commercialOptions) : ICommerceService, IEntitlementService
 {
     public async Task<ManagerCommerceSummaryDto> GetManagerSummaryAsync(
         Guid userId,
@@ -38,7 +38,7 @@ public sealed class CommerceService(
                 null,
                 [],
                 [],
-                utcNow);
+                utcNow) { EnforcementEnabled = commercialOptions.EnforcementEnabled };
         }
 
         var subscription = MapSubscription(snapshot);
@@ -50,7 +50,7 @@ public sealed class CommerceService(
                 subscription,
                 [],
                 [],
-                utcNow) { CommercialControlEnabled = snapshot.CommercialControlEnabled,
+                utcNow) { EnforcementEnabled = commercialOptions.EnforcementEnabled, CommercialControlEnabled = snapshot.CommercialControlEnabled,
                     CommercialEnforcementFromUtc = snapshot.CommercialEnforcementFromUtc };
         }
 
@@ -74,7 +74,7 @@ public sealed class CommerceService(
                 .OrderBy(item => item.Key)
                 .Select(item => MapQuota(item.Key, item.Value, usage.GetValueOrDefault(item.Key), snapshot.Reservations?.GetValueOrDefault(item.Key) ?? 0))
                 .ToArray(),
-            utcNow) { CommercialControlEnabled = snapshot.CommercialControlEnabled,
+            utcNow) { EnforcementEnabled = commercialOptions.EnforcementEnabled, CommercialControlEnabled = snapshot.CommercialControlEnabled,
                 CommercialEnforcementFromUtc = snapshot.CommercialEnforcementFromUtc };
     }
 
@@ -100,6 +100,7 @@ public sealed class CommerceService(
         CancellationToken cancellationToken)
     {
         EnsureOrganizationAndEnum(organizationId, key);
+        if (!commercialOptions.EnforcementEnabled) return true;
         var snapshot = await GetEffectiveSnapshotAsync(organizationId, cancellationToken);
         return snapshot is not null && (snapshot.CommercialControlEnabled || CommercePolicy.IsLegacyCompatible(key))
             && snapshot.Entitlements.GetValueOrDefault(key);
@@ -142,6 +143,13 @@ public sealed class CommerceService(
             throw new CommerceException(
                 CommerceErrorCodes.UsageInvalid,
                 "مقدار درخواستی ظرفیت باید مثبت باشد.");
+        }
+
+        if (!commercialOptions.EnforcementEnabled)
+        {
+            var usage = await store.GetCurrentUsageAsync(organizationId, Guid.Empty, [key], cancellationToken);
+            return new CapacityCheckResult(true, null, null, key, requestedAmount, usage.GetValueOrDefault(key),
+                null, null, true, false) { EnforcementEnabled = false };
         }
 
         var snapshot = await store.GetLatestSubscriptionAsync(

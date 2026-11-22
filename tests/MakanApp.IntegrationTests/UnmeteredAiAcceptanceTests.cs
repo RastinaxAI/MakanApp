@@ -10,11 +10,15 @@ namespace MakanApp.IntegrationTests;
 
 public sealed partial class CommercialSubscriptionEndpointsTests
 {
-    [Fact]
-    public async Task UnmeteredTwentyFiveDistinctRequestsWithoutSubscriptionPassActualHttpLimitAndHaveNoFinancialEffect()
+    [Theory]
+    [InlineData(AiUsageMode.Unmetered, true)]
+    [InlineData(AiUsageMode.Commercial, false)]
+    public async Task UnmeteredTwentyFiveDistinctRequestsWithoutSubscriptionPassActualHttpLimitAndHaveNoFinancialEffect(
+        AiUsageMode configuredMode, bool commercialEnforcementEnabled)
     {
         factory.AiService.Reset(); var actor = await ActorAsync(); await ChoosePersonalAsync(actor);
-        using var host = factory.WithAiUsageMode(AiUsageMode.Unmetered, enforceHttpLimits: true);
+        using var host = factory.WithAiUsageMode(configuredMode, enforceHttpLimits: true,
+            commercialEnforcementEnabled: commercialEnforcementEnabled);
         using var client = host.CreateClient(); client.DefaultRequestHeaders.Authorization = actor.Client.DefaultRequestHeaders.Authorization;
         var preflight = await PostAsync<AiQuotaPreflightDto>(client, "/api/v1/commerce/ai/simple-text/preflight", new AiQuotaPreflightCommand(CommerceContextType.Personal));
         Assert.True(preflight.Allowed); Assert.Null(preflight.Remaining); Assert.False(preflight.RequiresExplicitSelection);

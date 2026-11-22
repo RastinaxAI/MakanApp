@@ -50,6 +50,7 @@ public sealed partial class EfCommercialStore
     public async Task<UsageReservationDto?> ReserveReportExportAsync(Guid organizationId, Guid consumerUserId, Guid jobId, byte[] hash,
         DateTime utcNow, CancellationToken ct)
     {
+        if (!db.CommercialEnforcementEnabled) return null;
         if (!await db.Subscriptions.AnyAsync(s => s.OrganizationId == organizationId && s.CommercialControlEnabled, ct)) return null;
         return await ReserveCoreAsync(new CommercialContext(consumerUserId, SubscriptionOwner.Organization(organizationId),
             CommerceContextType.Organization, organizationId, false), QuotaKey.ReportExports, EntitlementKey.Reports, jobId, hash, utcNow, ct);

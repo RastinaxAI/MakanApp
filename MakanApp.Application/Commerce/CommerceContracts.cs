@@ -50,6 +50,7 @@ public sealed record ManagerCommerceSummaryDto(
     IReadOnlyCollection<CommerceQuotaDto> Quotas,
     DateTime DataAsOfUtc)
 {
+    public bool EnforcementEnabled { get; init; } = true;
     public bool CommercialControlEnabled { get; init; }
     public bool HasVerifiedCommercialContract => CommercialControlEnabled && Subscription?.EndsAtUtc is not null;
     public CommercialMigrationStatus MigrationStatus => CommercialControlEnabled
@@ -95,7 +96,10 @@ public sealed record CapacityCheckResult(
     long? Limit,
     long? RemainingAfterOperation,
     bool IsUnlimited,
-    bool IsOverQuota);
+    bool IsOverQuota)
+{
+    public bool EnforcementEnabled { get; init; } = true;
+}
 
 public sealed record UsageRecordResult(
     Guid EntryId,

@@ -124,7 +124,8 @@ public sealed partial class EfPersonalClassStore(MakanDbContext db, EfCommercial
     private async Task RequireHosting(PersonalClass c, DateTime now, CancellationToken ct)
     {
         if (!await db.Users.AnyAsync(u => u.Id == c.HostUserId && u.AccountStatus == UserAccountStatus.Active, ct))
-            throw EfCommercialStore.Error(CommerceErrorCodes.SubscriptionInactive);
+            throw NotFound();
+        if (!db.CommercialEnforcementEnabled) return;
         var subscription = await commerce.CurrentAsync(SubscriptionOwner.Individual(c.HostUserId), now, ct) ?? throw EfCommercialStore.Error(CommerceErrorCodes.SubscriptionInactive);
         var version = await commerce.VersionAsync(subscription.PlanVersionId, ct);
         if (!version.Entitlements.Any(e => e.Key == EntitlementKey.PersonalClassHosting && e.Enabled)) throw EfCommercialStore.Error(CommerceErrorCodes.FeatureNotEntitled);

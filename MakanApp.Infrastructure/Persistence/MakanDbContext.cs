@@ -15,7 +15,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MakanApp.Infrastructure.Persistence;
 
-public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, TimeProvider? timeProvider = null)
+public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, TimeProvider? timeProvider = null,
+    MakanApp.Application.Commerce.CommercialOptions? commercialOptions = null)
     : DbContext(options)
 {
     public DbSet<MakanApp.Domain.Intelligence.AiConversation> AiConversations => Set<MakanApp.Domain.Intelligence.AiConversation>();
@@ -201,7 +202,7 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         CancellationToken cancellationToken = default)
     {
         EnsureAdminAuditIsAppendOnly();
-        var relevant = ChangeTracker.Entries().Any(MakanApp.Infrastructure.Commerce.CommercialWritePolicy.IsRelevant);
+        var relevant = CommercialEnforcementEnabled && ChangeTracker.Entries().Any(MakanApp.Infrastructure.Commerce.CommercialWritePolicy.IsRelevant);
         await using var transaction = relevant && Database.CurrentTransaction is null
             ? await Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken) : null;
         if (relevant) await MakanApp.Infrastructure.Commerce.CommercialWritePolicy.EnsureAsync(this,
@@ -210,6 +211,8 @@ public sealed class MakanDbContext(DbContextOptions<MakanDbContext> options, Tim
         if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return result;
     }
+
+    internal bool CommercialEnforcementEnabled => commercialOptions?.EnforcementEnabled ?? true;
 
     private void EnsureAdminAuditIsAppendOnly()
     {

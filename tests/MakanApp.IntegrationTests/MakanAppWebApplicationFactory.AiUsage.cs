@@ -13,12 +13,18 @@ namespace MakanApp.IntegrationTests;
 public sealed partial class MakanAppWebApplicationFactory
 {
     // Environment=Test سقف واقعی۲۰/دقیقهٔ Commercial را فعال می‌کند؛ guard فقط با Unmetered برداشته می‌شود.
-    public WebApplicationFactory<Program> WithAiUsageMode(AiUsageMode mode, bool enforceHttpLimits = false) =>
+    public WebApplicationFactory<Program> WithAiUsageMode(AiUsageMode mode, bool enforceHttpLimits = false,
+        bool? commercialEnforcementEnabled = null) =>
         WithWebHostBuilder(builder =>
         {
             if (enforceHttpLimits) builder.UseEnvironment("Test");
-            builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
-                new Dictionary<string, string?> { ["AiUsage:Mode"] = mode.ToString() }));
+            builder.ConfigureAppConfiguration((_, configuration) =>
+            {
+                var settings = new Dictionary<string, string?> { ["AiUsage:Mode"] = mode.ToString() };
+                if (commercialEnforcementEnabled.HasValue)
+                    settings["Commerce:EnforcementEnabled"] = commercialEnforcementEnabled.Value.ToString();
+                configuration.AddInMemoryCollection(settings);
+            });
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IIdentitySecurity>(); services.AddSingleton(Services.GetRequiredService<IIdentitySecurity>());

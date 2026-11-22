@@ -27,6 +27,7 @@ public sealed record CommercialSummaryDto(SubscriptionOwnerType OwnerType, Guid 
     IReadOnlyDictionary<EntitlementKey, bool> Entitlements, IReadOnlyList<CommercialQuotaDto> Quotas,
     DateTime ObservedAtUtc)
 {
+    public bool EnforcementEnabled { get; init; } = true;
     public string? Version { get; init; }
     public CommercialMigrationStatus MigrationStatus { get; init; } = CommercialMigrationStatus.NotApplicable;
     public Guid? LegacySubscriptionId { get; init; }

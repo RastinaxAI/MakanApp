@@ -41,7 +41,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
             return new CommercialSummaryDto(owner.Type, owner.Id, subscription is not null ? SubscriptionDisplayState.LegacyPendingContract
                     : pending ? SubscriptionDisplayState.PendingPayment : SubscriptionDisplayState.NoSubscription,
                 false, null, null, null, null, null, null, new Dictionary<EntitlementKey, bool>(), [], utcNow)
-                { HasPendingPayment = pending, LegacySubscriptionId = subscription?.Id,
+                { EnforcementEnabled = db.CommercialEnforcementEnabled, HasPendingPayment = pending, LegacySubscriptionId = subscription?.Id,
                     Version = subscription is null ? null : Convert.ToBase64String(subscription.RowVersion),
                     MigrationStatus = owner.Type == SubscriptionOwnerType.Organization
                         ? CommercialMigrationStatus.AwaitingValidContract : CommercialMigrationStatus.NotApplicable };
@@ -75,7 +75,7 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
             version.Id, subscription.StartsAtUtc, subscription.EndsAtUtc,
             owner.Type == SubscriptionOwnerType.Organization && subscription.CommercialControlEnabled ? subscription.EndsAtUtc?.AddDays(7) : null,
             subscription.ScheduledPlanVersionId, effective || grace ? version.Entitlements.ToDictionary(e => e.Key, e => e.Enabled)
-                : new Dictionary<EntitlementKey, bool>(), quotas, utcNow) { Version = Convert.ToBase64String(subscription.RowVersion),
+                : new Dictionary<EntitlementKey, bool>(), quotas, utcNow) { EnforcementEnabled = db.CommercialEnforcementEnabled, Version = Convert.ToBase64String(subscription.RowVersion),
                     MigrationStatus = subscription.MigrationStatus, CommercialEnforcementFromUtc = subscription.CommercialEnforcementFromUtc,
                     PlanCode = plan.Code, PlanDisplayName = plan.DisplayName, PlanVersionNumber = version.VersionNumber,
                     MonthlyPriceToman = version.Price?.Amount / 10m, HasPendingPayment = pending,
@@ -171,6 +171,8 @@ public sealed partial class EfCommercialStore(MakanDbContext db, MakanApp.Infras
 
     public async Task RequireCapacityAsync(SubscriptionOwner owner, EntitlementKey feature, QuotaKey key, long amount, DateTime utcNow, CancellationToken ct)
     {
+        // این تصمیم فقط تجاری است؛ مجوز منبع و قفل مالک در use case جاری حفظ می‌شوند.
+        if (!db.CommercialEnforcementEnabled) return;
         var subscription = await CurrentAsync(owner, utcNow, ct) ?? throw Error(CommerceErrorCodes.SubscriptionInactive);
         var version = await VersionAsync(subscription.PlanVersionId, ct);
         if (!version.Entitlements.Any(e => e.Key == feature && e.Enabled)) throw Error(CommerceErrorCodes.FeatureNotEntitled);

@@ -171,12 +171,18 @@ public static class DependencyInjection
         services.AddScoped<CommercialSubscriptionService>();
         services.AddScoped<CommercialActorAccess>();
         services.AddOptions<AiUsageOptions>().Bind(configuration.GetSection(AiUsageOptions.SectionName))
+            .Configure<CommercialOptions>((usage, commercial) =>
+            {
+                // مقدار نامعتبر همچنان به Validator می‌رسد؛ Open Access خطای تنظیمات را پنهان نمی‌کند.
+                if (!commercial.EnforcementEnabled && Enum.IsDefined(usage.Mode)) usage.Mode = AiUsageMode.Unmetered;
+            })
             .Validate(o => Enum.IsDefined(o.Mode), "سیاست مصرف AI معتبر نیست.").ValidateOnStart();
         services.AddSingleton(p => p.GetRequiredService<IOptions<AiUsageOptions>>().Value);
         services.AddScoped<CommercialAdminService>();
         services.AddScoped<ICommercialAdminStore, EfCommercialAdminStore>();
         services.AddOptions<CommercialOptions>().Bind(configuration.GetSection("Commerce"))
             .Validate(o => o.QuoteLifetimeMinutes is > 0 and <= 1440, "اعتبار پیش‌فاکتور معتبر نیست.").ValidateOnStart();
+        services.AddSingleton(p => p.GetRequiredService<IOptions<CommercialOptions>>().Value);
         services.AddScoped<IPersonalClassStore, EfPersonalClassStore>();
         services.AddScoped<PersonalClassService>();
         services.AddScoped<IPersonalClassLifecycleStore, EfPersonalClassStore>();

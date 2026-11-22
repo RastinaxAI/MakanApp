@@ -1,5 +1,7 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
+> الحاقیهٔ قرارداد `2026-11-22`: [Open Access و Upload/Attachment](product/OPEN_ACCESS_FILE_DELIVERY_FA.md). دو پاسخ HTTP `CommercialSummaryDto` و `ManagerCommerceSummaryDto` دارای bool افزایشی `enforcementEnabled` هستند؛ نتیجهٔ داخلی `CapacityCheckResult` نیز این Flag را دارد و API تازه‌ای نیست. false یعنی سابقهٔ Plan/Quota Gate عمومی نیست. DTO/Route قدیمی حذف نشده است. برای رسانه، Ready ذخیره‌سازی و PendingReview/تأیید Safety دو محور جدا هستند؛ جدول‌های تاریخی پایین جای این تصمیم و OpenAPI جاری را نمی‌گیرند.
+
 بازبینی `2026-11-15` با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6` و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.
 
 پوشش: **494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema**. Health، Swagger و Hub در این شمارش نیستند.

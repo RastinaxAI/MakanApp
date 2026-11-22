@@ -1,5 +1,7 @@
 # قرارداد جاری Commerce برای Frontend — BE-17
 
+> به‌روزرسانی `2026-11-22`: [سیاست Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) بر توضیحات Enforcement تجاری پایین اولویت دارد. کنترل Subscription/Entitlement/Quota برای قابلیت‌های عادی خاموش است؛ فیلد `enforcementEnabled=false` از وضعیت واقعی قرارداد جداست. دادهٔ مالی و APIهای مدیریت باقی‌اند؛ پرداخت زنده همچنان Deferred است.
+
 **سیاست انتشار `2026-11-18` از پایهٔ `d397d73`:** پرداخت‌های Runtime همه Deferred هستند و
 Provider هر دو محیط `Unavailable` می‌ماند. Purchase، Renew، Upgrade، Downgrade نیازمند
 پرداخت، Pay و Zibal redirect در flow قابل استفاده نمایش داده نشوند. School Quote → Payment

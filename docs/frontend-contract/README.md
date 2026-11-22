@@ -1,5 +1,7 @@
 # قرارداد جاری مصرف Backend برای Web و Mobile
 
+> سیاست `2026-11-22` بر پایهٔ `source@67417677297d7f46466ad0ed061e26bfc76402dc`: [Open Access و قرارداد Upload/Attachment](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md). Age/DOB و Subscription/Quota تجاری Gate قابلیت‌های عادی نیستند؛ `enforcementEnabled=false` در Summary/Capacity از سوابق واقعی جداست. ACL، Privacy، Block و Safety حفظ‌اند. Provider واقعی رسانه را ReviewRequired می‌کند؛ Ready بودن Upload وعدهٔ Send یا دریافت گیرنده نیست. جزئیات کاتالوگ تاریخی زیر با OpenAPI جاری و این الحاقیه خوانده شوند؛ استقرار انجام نشده است.
+
 > قراردادهای تازه در [تحویل v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [Personal AI](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) و [درخواست آموزشگاه](../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.
 
 بازبینی `2026-11-15` با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6` و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.

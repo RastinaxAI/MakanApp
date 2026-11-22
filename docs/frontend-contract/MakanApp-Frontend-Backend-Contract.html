@@ -1593,7 +1593,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 <li><a href="#heading-1389">کدهای خطای تعریف‌شده</a></li>
 </ul>
 </div>
-</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code><br>تاریخ بازبینی: <code>2026-11-15</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
+</aside><main><section class="cover"><div class="brand">MAKANAPP / BACKEND ENGINEERING</div><h1>قرارداد جاری مصرف Backend ماکان</h1><p class="subtitle">راهنمای اتصال Web/Mobile و کاتالوگ کامل HTTP/DTO</p><p class="edition">نسخه بررسی: <code>main @ 67417677297d7f46466ad0ed061e26bfc76402dc</code><br>تاریخ بازبینی: <code>2026-11-22</code></p><p class="reading-note">کتاب فارسی برای توسعه‌دهنده بک‌اند؛ بر مبنای کد واقعی، SQL Server و قراردادهای فعلی. این فایل بدون اینترنت قابل مطالعه است. برای جست‌وجو از Ctrl+F استفاده کنید.</p></section><section class="print-toc"><h2>فهرست کتاب</h2><div class="toc">
 <ul>
 <li><a href="#heading-1">قرارداد مشترک انتقال و مجوز</a></li>
 <li><a href="#heading-2">ورود، نشست و OTP</a></li>
@@ -3172,6 +3172,7 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </div>
 </section><h1 id="backend-web-mobile">قرارداد جاری مصرف Backend برای Web و Mobile</h1>
 <blockquote>
+<p>سیاست <code>2026-11-22</code> بر پایهٔ <code>source@67417677297d7f46466ad0ed061e26bfc76402dc</code>: <a href="../product/OPEN_ACCESS_FILE_DELIVERY_FA.md">Open Access و قرارداد Upload/Attachment</a>. Age/DOB و Subscription/Quota تجاری Gate قابلیت‌های عادی نیستند؛ <code>enforcementEnabled=false</code> در Summary/Capacity از سوابق واقعی جداست. ACL، Privacy، Block و Safety حفظ‌اند. Provider واقعی رسانه را ReviewRequired می‌کند؛ Ready بودن Upload وعدهٔ Send یا دریافت گیرنده نیست. جزئیات کاتالوگ تاریخی زیر با OpenAPI جاری و این الحاقیه خوانده شوند؛ استقرار انجام نشده است.</p>
 <p>قراردادهای تازه در <a href="../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md">تحویل v6</a>، <a href="../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md">Personal AI</a> و <a href="../product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md">درخواست آموزشگاه</a> است. Generic Chat شخصی با Actor رسمی Personal و scope تهی فعال و در اتصال واقعی Backend→AI پذیرفته شده است. تنظیم تجاری آموزشگاه نیازمند Admin، Gate آموزشی PersonalClass و Service Auth هر دو سرویس خاموش‌اند. سیاست مصوب Messaging در 2026-11-01 حفظ است؛ این اسناد شاهد Deploy Backend نیستند.</p>
 </blockquote>
 <p>بازبینی <code>2026-11-15</code> با مبنای Git <code>source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code> و metadata فایل‌های working tree؛ این سند در مخزن Backend است و مجوز ساخت، clone یا تغییر frontend نیست.</p>
@@ -3307,6 +3308,9 @@ code{font:12px/1.7 Consolas,"Courier New",monospace;direction:ltr;unicode-bidi:i
 </tbody>
 </table></div>
 <p>Hub اکنون Subscribe/UnsubscribeConversation، SetTyping، Heartbeat و Subscribe/UnsubscribePresence دارد؛ TypingChanged و PresenceChanged hint با TTL هستند، نه Message/Delta. بعد reconnect subscription تازه و Delta لازم است. default typing TTL=6s، refresh=3s، heartbeat=10s، lease=45s است؛ پیاده‌سازی حافظه‌ای تک‌instance و فاقد backplane است. Hidden اطلاعات private peer را افشا نمی‌کند. مجوز هر Send/Dispatch از وضعیت جاری ساخته می‌شود.</p>
+<blockquote>
+<p>الحاقیهٔ قرارداد <code>2026-11-22</code>: <a href="../product/OPEN_ACCESS_FILE_DELIVERY_FA.md">Open Access و Upload/Attachment</a>. دو پاسخ HTTP <code>CommercialSummaryDto</code> و <code>ManagerCommerceSummaryDto</code> دارای bool افزایشی <code>enforcementEnabled</code> هستند؛ نتیجهٔ داخلی <code>CapacityCheckResult</code> نیز این Flag را دارد و API تازه‌ای نیست. false یعنی سابقهٔ Plan/Quota Gate عمومی نیست. DTO/Route قدیمی حذف نشده است. برای رسانه، Ready ذخیره‌سازی و PendingReview/تأیید Safety دو محور جدا هستند؛ جدول‌های تاریخی پایین جای این تصمیم و OpenAPI جاری را نمی‌گیرند.</p>
+</blockquote>
 <p>بازبینی <code>2026-11-15</code> با مبنای Git <code>source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6</code> و metadata فایل‌های working tree؛ تولید از OpenAPI میزبان Testing و ApiExplorer، بدون SQL connection، worker، SMS یا AI واقعی.</p>
 <p>پوشش: <strong>494 عملیات HTTP، 438 مسیر متمایز، 91 Controller و 783 schema</strong>. Health، Swagger و Hub در این شمارش نیستند.</p>
 <p>این مرجع جایگزین کاتالوگ قدیمی ۱۴۱ عملیات است. نام فیلد، nullable، request/response و enum از سند واقعی runtime آمده‌اند؛ لازم‌بودن کسب‌وکاری، authorization منبع و خطاهای lifecycle علاوه بر schema در Application/Domain بررسی می‌شوند. هیچ نمونه یا تست زنده‌ای از روی وجود schema موفق فرض نمی‌شود.</p>

@@ -264,6 +264,7 @@ builder.Services.AddHsts(options =>
 builder.Services.AddOpenApi(options =>
 {
     options.AddSchemaTransformer<StringEnumSchemaTransformer>();
+    options.AddSchemaTransformer<CommercialAccessSchemaTransformer>();
     options.AddSchemaTransformer<AdaptiveAiSchemaTransformer>();
     options.AddSchemaTransformer<KnowledgeContractTransformer>();
     options.AddSchemaTransformer<PersonalClassInputSchemaTransformer>();
