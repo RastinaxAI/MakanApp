@@ -3,6 +3,19 @@ using MakanApp.Domain.Storage;
 
 namespace MakanApp.Application.Assessment;
 
+public sealed record SubmissionDeadlineFailure(
+    Guid AssignmentId,
+    Guid AssignmentVersionId,
+    Guid ClassId,
+    AcademicClassKind ClassKind,
+    Guid? AttemptId,
+    DateTime RequestTimeUtc,
+    DateTime DueAtUtc,
+    bool AllowLateSubmission,
+    SubmissionAttemptStatus? AttemptStatus,
+    AssignmentStatus AssignmentStatus,
+    bool AssignmentVersionIsPublished);
+
 public sealed record SaveSubmissionDraftCommand(
     string? AnswerText,
     string ExpectedRowVersion);

@@ -84,4 +84,11 @@ public sealed class AssignmentsController(IAssignmentService assignmentService) 
             assignmentId,
             command,
             cancellationToken));
+
+    [HttpPatch("assignments/{assignmentId:guid}/submission-policy")]
+    [ProducesResponseType<AssignmentResult>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AssignmentResult>> UpdateSubmissionPolicy(Guid assignmentId,
+        UpdateAssignmentSubmissionPolicyCommand command, CancellationToken cancellationToken) =>
+        Ok(await assignmentService.UpdateSubmissionPolicyAsync(AuthenticatedSession.GetUserId(User),
+            AuthenticatedSession.GetSessionId(User), assignmentId, command, cancellationToken));
 }

@@ -103,15 +103,24 @@ public sealed partial class SubmissionService
         }
     }
 
-    private static void EnsureDeadlineAllowsDraft(AssignmentVersion version, DateTime nowUtc)
+    private static void EnsureDeadlineAllowsMutation(Assignment assignment, AssignmentVersion version,
+        SubmissionAttempt? attempt, DateTime nowUtc)
     {
-        if (nowUtc > version.DueAtUtc && !version.AllowLateSubmission)
+        try
         {
-            throw Error(
-                AssessmentErrorCodes.SubmissionDeadlinePassed,
-                "مهلت ایجاد یا ذخیره پیش‌نویس این تکلیف گذشته است.");
+            SubmissionDeadlinePolicy.EnsureAllowed(nowUtc, version.DueAtUtc, version.AllowLateSubmission);
         }
+        catch (SubmissionDeadlinePassedException) { throw DeadlinePassed(assignment, version, attempt, nowUtc); }
     }
+
+    private static AssessmentException DeadlinePassed(Assignment assignment, AssignmentVersion version,
+        SubmissionAttempt? attempt, DateTime nowUtc) =>
+        new(AssessmentErrorCodes.SubmissionDeadlinePassed, "مهلت تحویل این تکلیف به پایان رسیده است.")
+        {
+            DeadlineFailure = new(assignment.Id, version.Id, assignment.ClassId, assignment.ContextKind, attempt?.Id, nowUtc,
+                DateTime.SpecifyKind(version.DueAtUtc, DateTimeKind.Utc), version.AllowLateSubmission,
+                attempt?.Status, assignment.Status, version.IsPublished)
+        };
 
     private static void EnsureDraft(SubmissionAttempt attempt)
     {

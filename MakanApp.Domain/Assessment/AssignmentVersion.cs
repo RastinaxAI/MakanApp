@@ -140,6 +140,18 @@ public sealed class AssignmentVersion : IAcademicScoped
         PublishedAtUtc = publishedAtUtc;
     }
 
+    public void UpdatePublishedSubmissionPolicy(DateTime dueAtUtc, bool allowLateSubmission, DateTime nowUtc)
+    {
+        if (!IsPublished) throw new InvalidOperationException("فقط Policy نسخهٔ منتشرشده از این مسیر تغییر می‌کند.");
+        if (nowUtc.Kind != DateTimeKind.Utc || dueAtUtc.Kind != DateTimeKind.Utc ||
+            dueAtUtc < DueAtUtc || dueAtUtc != DueAtUtc && dueAtUtc <= nowUtc)
+            throw new ArgumentException("مهلت منتشرشده فقط به یک زمان UTC در آینده تمدید می‌شود.", nameof(dueAtUtc));
+
+        // تغییر Late به‌تنهایی، به آینده‌بودن مهلت قبلی نیاز ندارد؛ محتوای نسخه ثابت می‌ماند.
+        DueAtUtc = dueAtUtc;
+        AllowLateSubmission = allowLateSubmission;
+    }
+
     public void ReplaceAttachments(IReadOnlyCollection<Guid> fileIds, DateTime now)
     {
         if (IsPublished) throw new InvalidOperationException("پیوست نسخهٔ منتشرشده ثابت است.");

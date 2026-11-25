@@ -98,6 +98,7 @@ public sealed partial class AssignmentService
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(value)) throw new FormatException();
             var rowVersion = Convert.FromBase64String(value);
             if (rowVersion.Length != 8)
             {
@@ -139,7 +140,7 @@ public sealed partial class AssignmentService
             version.VersionNumber,
             version.Title,
             version.Description,
-            version.DueAtUtc,
+            DateTime.SpecifyKind(version.DueAtUtc, DateTimeKind.Utc),
             version.AllowLateSubmission,
             version.MaxAttempts,
             version.MaxScore,

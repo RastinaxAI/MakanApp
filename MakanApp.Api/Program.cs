@@ -275,6 +275,7 @@ builder.Services.AddOpenApi(options =>
     options.AddOperationTransformer<PersonalAcademicOperationTransformer>();
     options.AddOperationTransformer<ApiContractOperationTransformer>();
     options.AddOperationTransformer<CommercePaymentOperationTransformer>();
+    options.AddOperationTransformer<AssignmentSubmissionPolicyOperationTransformer>();
     options.AddDocumentTransformer<ApiContractDocumentTransformer>();
 });
 builder.Services.AddProblemDetails(options =>

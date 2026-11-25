@@ -20,6 +20,7 @@
 | GET | `/personal-classes/{classId}/assignments` | `page/pageSize/search/published` → `AcademicPage<AssignmentResult>` |
 | GET | `/assignments/{assignmentId}` | نسخهٔ قابل مشاهدهٔ مجاز |
 | PATCH | `/assignments/{assignmentId}` | `UpdateAssignmentDraftCommand`؛ دو RowVersion تکلیف/نسخه |
+| PATCH | `/assignments/{assignmentId}/submission-policy` | تمدید مهلت یا تغییر Late نسخهٔ Published؛ دو RowVersion جاری و اختیار صریح AuthorAssignments |
 | POST | `/assignments/{assignmentId}/publish` | `PublishAssignmentCommand` → تکلیف، RecipientCount و PublicationReceipt |
 | POST | `/assignments/{assignmentId}/attempts` | ایجاد/بازیابی Draft همان مخاطب؛ 201 و `SubmissionAttemptResult` |
 | GET | `/assignments/{assignmentId}/attempts/me` | تلاش‌های قابل مشاهدهٔ همان هنرجو |
@@ -35,7 +36,7 @@
 | POST | `/submission-attempts/{attemptId}/evaluation/corrections` | نمره، feedback، دلیل و RowVersion نمرهٔ منتشرشده؛ 201 |
 | GET | `/submission-attempts/{attemptId}/result` | فقط نتیجهٔ Release‌شدهٔ هنرجوی صاحب تلاش |
 
-Draft تکلیف: `title`, `description`, `dueAtUtc`, `allowLateSubmission`, `maxAttempts`, `maxScore`, `attachmentFileIds?`. MaxScore مثبت و دقیقاً متعلق به نسخه است؛ سقف جهانی ۲۰ وجود ندارد. در Update، null بودن `attachmentFileIds` پیوست‌ها را حفظ و آرایهٔ خالی آن‌ها را حذف می‌کند. نسخهٔ منتشرشده قابل تغییر نیست.
+Draft تکلیف: `title`, `description`, `dueAtUtc`, `allowLateSubmission`, `maxAttempts`, `maxScore`, `attachmentFileIds?`. MaxScore مثبت و دقیقاً متعلق به نسخه است؛ سقف جهانی ۲۰ وجود ندارد. در Update، null بودن `attachmentFileIds` پیوست‌ها را حفظ و آرایهٔ خالی آن‌ها را حذف می‌کند. محتوای نسخهٔ منتشرشده ثابت است؛ تنها استثنای عملیاتی، تمدید مهلت و تغییر Late از [قرارداد Submission Policy](ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md) است. این تغییر اختیار تازه‌ای به نقش محلی نمی‌دهد و IsLate رسیدهای قبلی را بازنویسی نمی‌کند.
 
 DTO نمرهٔ evaluator دارای `learnerFeedback`, `guardianVisibleFeedback`, `teacherPrivateNote` است؛ این سه فیلد یکسان نیستند. در PersonalClass مسیر Guardian دسترسی نتیجه ایجاد نمی‌کند. DTO هنرجو فقط `score`, `maxScore`, `learnerFeedback`, شمارهٔ revision و زمان Release دارد. `CreatedByPersonalMembershipId` و `ReleasedByPersonalMembershipId` در پاسخ کارکنان، دورهٔ عضویت عامل را مشخص می‌کنند.
 

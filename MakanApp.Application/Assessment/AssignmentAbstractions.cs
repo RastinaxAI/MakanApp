@@ -27,6 +27,9 @@ public interface IAssignmentService
         PublishAssignmentCommand command,
         CancellationToken cancellationToken);
 
+    Task<AssignmentResult> UpdateSubmissionPolicyAsync(Guid userId, Guid sessionId, Guid assignmentId,
+        UpdateAssignmentSubmissionPolicyCommand command, CancellationToken cancellationToken);
+
     Task<AssignmentResult> GetAsync(
         Guid userId,
         Guid sessionId,
@@ -63,6 +66,7 @@ public interface IAssignmentStore
     Task<IReadOnlyCollection<AssignmentWithVersionRecord>> GetForLearnerAsync(AcademicScope scope, Guid classId, Guid learnerOrganizationPersonId, CancellationToken cancellationToken);
     void SetOriginalRowVersion(Assignment assignment, byte[] rowVersion);
     void SetOriginalRowVersion(AssignmentVersion version, byte[] rowVersion);
+    void MarkSubmissionPolicyChanged(Assignment assignment);
     void Add(Assignment assignment);
     void Add(AssignmentVersion version);
     void AddRange(IEnumerable<AssignmentRecipient> recipients);

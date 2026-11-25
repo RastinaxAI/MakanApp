@@ -1,4 +1,5 @@
 using MakanApp.Domain.Assessment;
+using System.Text.Json.Serialization;
 
 namespace MakanApp.Application.Assessment;
 
@@ -25,6 +26,23 @@ public sealed record UpdateAssignmentDraftCommand(
 public sealed record PublishAssignmentCommand(
     string ExpectedAssignmentRowVersion,
     string ExpectedVersionRowVersion);
+
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed record UpdateAssignmentSubmissionPolicyCommand(
+    [property: JsonRequired] DateTime DueAtUtc,
+    [property: JsonRequired] bool AllowLateSubmission,
+    [property: JsonRequired] string ExpectedAssignmentRowVersion,
+    [property: JsonRequired] string ExpectedVersionRowVersion);
+
+public sealed record AssignmentSubmissionPolicyChange(
+    Guid AssignmentId,
+    Guid AssignmentVersionId,
+    int VersionNumber,
+    DateTime OldDueAtUtc,
+    DateTime NewDueAtUtc,
+    bool OldAllowLateSubmission,
+    bool NewAllowLateSubmission,
+    DateTime ChangedAtUtc);
 
 public sealed record AssignmentResult(
     Guid Id,

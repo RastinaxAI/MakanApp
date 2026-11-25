@@ -117,11 +117,7 @@ public sealed class SubmissionAttempt : IAcademicScoped
         submittedAtUtc = EnsureUtc(submittedAtUtc, nameof(submittedAtUtc));
         dueAtUtc = EnsureUtc(dueAtUtc, nameof(dueAtUtc));
 
-        var isLate = submittedAtUtc > dueAtUtc;
-        if (isLate && !allowLateSubmission)
-        {
-            throw new SubmissionDeadlinePassedException();
-        }
+        var isLate = SubmissionDeadlinePolicy.EnsureAllowed(submittedAtUtc, dueAtUtc, allowLateSubmission);
 
         if (string.IsNullOrWhiteSpace(AnswerText) && !hasReadyAttachment)
         {

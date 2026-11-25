@@ -77,6 +77,10 @@ public sealed partial class EfAssignmentStore : IAssignmentStore
     public void SetOriginalRowVersion(AssignmentVersion version, byte[] rowVersion) =>
         _dbContext.Entry(version).Property(item => item.RowVersion).OriginalValue = rowVersion;
 
+    public void MarkSubmissionPolicyChanged(Assignment assignment) =>
+        // حتی دو تغییر در یک Tick باید نسخهٔ aggregate را عوض کنند؛ rowversion را SQL Server می‌سازد.
+        _dbContext.Entry(assignment).Property(item => item.UpdatedAtUtc).IsModified = true;
+
     public void Add(Assignment assignment) => _dbContext.Assignments.Add(assignment);
     public void Add(AssignmentVersion version) => _dbContext.AssignmentVersions.Add(version);
     public void AddRange(IEnumerable<AssignmentRecipient> recipients) =>

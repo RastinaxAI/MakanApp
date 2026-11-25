@@ -81,4 +81,11 @@ public sealed class Assignment : IAcademicScoped
 
         UpdatedAtUtc = updatedAtUtc;
     }
+
+    public void MarkSubmissionPolicyUpdated(DateTime updatedAtUtc)
+    {
+        if (Status != AssignmentStatus.Published || updatedAtUtc.Kind != DateTimeKind.Utc)
+            throw new InvalidOperationException("تغییر Policy فقط برای تکلیف منتشرشده و زمان UTC مجاز است.");
+        UpdatedAtUtc = updatedAtUtc;
+    }
 }

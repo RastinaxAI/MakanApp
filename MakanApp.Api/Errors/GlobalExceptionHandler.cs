@@ -112,6 +112,24 @@ public sealed class GlobalExceptionHandler(
         if (exception is AiKnowledgeException knowledgeError && knowledgeError.ProcessingFailureCode == "AI_OCR_FAILED")
             problemDetails.Extensions["processingFailureCode"] = "AI_OCR_FAILED";
 
+        if (exception is AssessmentException { Code: AssessmentErrorCodes.SubmissionDeadlinePassed, DeadlineFailure: { } deadline })
+        {
+            problemDetails.Extensions["assignmentId"] = deadline.AssignmentId;
+            problemDetails.Extensions["assignmentVersionId"] = deadline.AssignmentVersionId;
+            problemDetails.Extensions["classId"] = deadline.ClassId;
+            problemDetails.Extensions["classKind"] = deadline.ClassKind.ToString();
+            problemDetails.Extensions["attemptId"] = deadline.AttemptId;
+            problemDetails.Extensions["requestTimeUtc"] = deadline.RequestTimeUtc;
+            problemDetails.Extensions["dueAtUtc"] = deadline.DueAtUtc;
+            problemDetails.Extensions["allowLateSubmission"] = deadline.AllowLateSubmission;
+            problemDetails.Extensions["attemptStatus"] = deadline.AttemptStatus?.ToString();
+            problemDetails.Extensions["assignmentStatus"] = deadline.AssignmentStatus.ToString();
+            problemDetails.Extensions["assignmentVersionIsPublished"] = deadline.AssignmentVersionIsPublished;
+            problemDetails.Extensions["requiredAction"] = "REFETCH_ASSIGNMENT_AND_ATTEMPT";
+            problemDetails.Extensions["operationState"] = "NotApplied";
+            problemDetails.Extensions["retryable"] = false;
+        }
+
         if (exception is MessagingException safetyException && safetyException.Code is
             MessagingErrorCodes.MessageSafetyReviewRequired or MessagingErrorCodes.MessageSafetyBlocked)
         {

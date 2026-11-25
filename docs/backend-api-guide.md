@@ -1,5 +1,7 @@
 # راهنمای جامع پروژه و استفاده از بک‌اند و API ماکان
 
+> الحاقیهٔ تکلیف `2026-11-23` با مبنای `source@ac9a23968c1449c037cd1eb7f4bae6812252b73d` و تغییرات Working Tree: [تمدید مهلت Published و خطای اختصاصی Submission](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md). تغییر Policy از ویرایش محتوای Draft جداست؛ موفقیت Upload با مجازبودن Attach یکی نیست. Full Regression محلی ۳۷۳۸/۳۷۳۸ با صفر Fail/Skip و Build بدون Warning/Error موفق است. علت Runtime منتظر Evidence است؛ Commit/Push/Publish انجام نشده‌اند.
+
 > قرارداد جاری رسانه `2026-11-22`: [بازبینی انسانی و تحویل فایل](messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تنظیم Internal اکنون Provider ترکیبی متن و Manual Media است؛ `GET /api/v1/files/{fileId}/messaging-review` وضعیت خصوصی مالک را می‌دهد و `MediaApproved/MediaRejected` در API Moderation موجود، تصمیم صریح محتوا هستند. محدودیت تاریخی نبود workflow رسانه در متن‌های قدیمی زیر با این قرارداد جایگزین شده است. Ready با Approval یکی نیست؛ ACL/Block/Safety و Open Access حفظ‌اند. OpenAPI داخل Release قرارداد runtime جاری است.
 
 > سیاست جاری `2026-11-22`: [Open Access و ارسال فایل](product/OPEN_ACCESS_FILE_DELIVERY_FA.md). سن فقط Metadata است؛ `Commerce:EnforcementEnabled=false` دسترسی عادی را از Subscription/Quota تجاری مستقل می‌کند. سوابق مالی، ACL، Privacy، Block، ظرفیت آموزشی و Safety حفظ‌اند. Ready فایل به معنی تأیید Safety نیست؛ علت واقعی ReviewRequired رسانه و Flow صحیح multipart/Kind/attachmentIds در الحاقیه آمده است. این Policy شاهد عبور Gate رسانه یا Deploy نیست.
@@ -858,6 +860,10 @@ $published = Invoke-MakanApi -Method POST -Path "/academic/assignments/$($assign
 
 فهرست را با `GET /academic/classes/{classId}/assignments` یا `GET /academic/assignments?classId=...` بخوانید. نقش و رابطه با کلاس بر داده قابل مشاهده اثر دارند.
 
+### تمدید مهلت تکلیف منتشرشده
+
+`PATCH /api/v1/academic/assignments/{assignmentId}/submission-policy` فقط `dueAtUtc`، `allowLateSubmission`، `expectedAssignmentRowVersion` و `expectedVersionRowVersion` صریح را می‌پذیرد. مهلت فقط به UTC آینده تمدید می‌شود؛ برای تغییر Late به‌تنهایی، عین مهلت قبلی حتی اگر گذشته باشد ارسال می‌شود. پاسخ `200 AssignmentResult` دو نسخهٔ تازه دارد. اختیار واقعی همان کلاس و در PersonalClass، Grant جاری AuthorAssignments لازم است. تعارض نسخه همان `412 CONCURRENCY_CONFLICT` فعلی است. عنوان، MaxScore، تلاش و رسیدهای تاریخی ثابت‌اند. [قرارداد کامل مدرس/کلاینت و وضعیت پذیرش](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md).
+
 ### پاسخ و تحویل دانش‌آموز
 
 `$studentToken` در مثال باید توکن نشست Student با workspace سازمانی انتخاب‌شده باشد:
@@ -876,6 +882,8 @@ $receipt = Invoke-MakanApi -Method POST -Path "/academic/submission-attempts/$($
 برای پیوست، ابتدا فایل را با همان حساب و scope مناسب آپلود کنید؛ سپس به `/academic/submission-attempts/{attemptId}/attachments` بدنه `fileAssetId` و `expectedRowVersion` بدهید. پس از هر ذخیره یا اتصال/حذف فایل، از `rowVersion` پاسخ جدید استفاده کنید. حذف پیوست، `expectedRowVersion` را در Query می‌گیرد.
 
 ایجاد Draft، تلاش باز موجود را resume می‌کند. ذخیره Draft تحویل رسمی نیست؛ رسید `SubmissionReceipt` موفقیت Submit را با `submittedAtUtc`، `isLate` و وضعیت `Submitted` نشان می‌دهد. سرور مهلت، سیاست تأخیر، تعداد تلاش و آمادگی فایل را کنترل می‌کند. فیلد `contentVisible` را در پاسخ رعایت کنید؛ وجود metadata تلاش به معنی مجازبودن نمایش محتوای آن نیست.
+
+مقایسهٔ مشترک مهلت با زمان پذیرش UTC سرور است؛ برابری مجاز است. بعد از مهلت و بدون Late، `409 SUBMISSION_DEADLINE_PASSED` با پیام «مهلت تحویل این تکلیف به پایان رسیده است.» و metadata امن Policy برمی‌گردد. این خطا را از generic conflict و Upload Failure جدا کنید؛ تکلیف/تلاش را دوباره بخوانید و متن و FileAsset معتبر را حفظ کنید. پس از تمدید، همان تلاش و فایل قابل ادامه‌اند؛ retention و مجوز فایل همچنان لازم‌اند. Late مجاز مانع زمانی Save/Attach/Remove/Submit را برمی‌دارد، بدون دورزدن سایر قواعد.
 
 ### ارزیابی و انتشار نمره
 

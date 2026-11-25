@@ -1,5 +1,7 @@
 # مرجع جاری Endpointها و قراردادهای API ماکان
 
+> الحاقیهٔ تکلیف `2026-11-23` با مبنای `source@ac9a23968c1449c037cd1eb7f4bae6812252b73d`: [تمدید مهلت Published و Deadline دقیق Submission](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md). یک PATCH جدید با چهار فیلد صریح اضافه شده است؛ `409 SUBMISSION_DEADLINE_PASSED` به معنی رد همان تغییر و حفظ Upload قبلی است. RowVersion stale طبق قرارداد موجود `412 CONCURRENCY_CONFLICT` می‌ماند. OpenAPI Working Tree قرارداد دقیق افزایشی را دارد. Full Regression محلی ۳۷۳۸/۳۷۳۸، Failed=0 و Skipped=0 است؛ علت Runtime منتظر Evidence و Commit/Push/Publish انجام‌نشده‌اند.
+
 > قرارداد جاری رسانه `2026-11-22`: [بازبینی انسانی و تحویل فایل](messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تنظیم Internal اکنون Provider ترکیبی متن و Manual Media است؛ `GET /api/v1/files/{fileId}/messaging-review` وضعیت خصوصی مالک را می‌دهد و `MediaApproved/MediaRejected` در API Moderation موجود، تصمیم صریح محتوا هستند. محدودیت تاریخی نبود workflow رسانه در متن‌های قدیمی زیر با این قرارداد جایگزین شده است. Ready با Approval یکی نیست؛ ACL/Block/Safety و Open Access حفظ‌اند. OpenAPI داخل Release قرارداد runtime جاری است.
 
 > الحاقیهٔ قرارداد `2026-11-22`: [Open Access و Upload/Attachment](product/OPEN_ACCESS_FILE_DELIVERY_FA.md). دو پاسخ HTTP `CommercialSummaryDto` و `ManagerCommerceSummaryDto` دارای bool افزایشی `enforcementEnabled` هستند؛ نتیجهٔ داخلی `CapacityCheckResult` نیز این Flag را دارد و API تازه‌ای نیست. false یعنی سابقهٔ Plan/Quota Gate عمومی نیست. DTO/Route قدیمی حذف نشده است. برای رسانه، Ready ذخیره‌سازی و PendingReview/تأیید Safety دو محور جدا هستند؛ جدول‌های تاریخی پایین جای این تصمیم و OpenAPI جاری را نمی‌گیرند.
@@ -719,6 +721,26 @@ policy: `platform.audit.read`
 | 503 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 422 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
 | 429 | ProblemDetails؛ خانوادهٔ خطاهای مرتبط این حوزه، نه تضمین وقوع همهٔ کدها در هر عملیات. | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+
+### PATCH /api/v1/academic/assignments/{assignmentId}/submission-policy
+
+کد واقعی: [AssignmentsController.UpdateSubmissionPolicy](../MakanApp.Api/Controllers/AssignmentsController.cs) → [AssignmentService.UpdateSubmissionPolicyAsync](../MakanApp.Application/Assessment/AssignmentService.SubmissionPolicy.cs).
+
+احراز هویت: Bearer session معتبر؛ مجوز واقعی کلاس و منبع در هر درخواست بازبینی می‌شود. Manager سازمان یا Teacher منتسب همان کلاس؛ در PersonalClass عضویت و AuthorAssignments صریح و جاری. پنهان‌سازی منبع نامجاز طبق قرارداد قبلی حفظ می‌شود.
+
+پارامتر path: `assignmentId` از نوع UUID. بدنهٔ اجباری JSON: [UpdateAssignmentSubmissionPolicyCommand](#contract-UpdateAssignmentSubmissionPolicyCommand). فیلد اضافی رد می‌شود. فقط تمدید به UTC آینده یا تغییر Late با همان مهلت قبلی مجاز است؛ محتوای Published و رسیدهای قبلی ثابت‌اند.
+
+| HTTP status | معنا | بدنه |
+|---|---|---|
+| 200 | Policy جاری؛ تغییر واقعی دو RowVersion تازه دارد | `application/json`: [AssignmentResult](#contract-AssignmentResult) |
+| 400 | JSON ناقص/اضافی یا ASSIGNMENT_DUE_DATE_INVALID | `application/problem+json`: [MakanProblemDetails](#contract-MakanProblemDetails) |
+| 401 | نشست معتبر نیست | `application/problem+json` |
+| 403 | اختیار واقعی یا TeacherAssignment همان کلاس وجود ندارد | `application/problem+json` |
+| 404 | منبع ناموجود یا طبق مرز جاری نامجاز است | `application/problem+json` |
+| 409 | ASSIGNMENT_NOT_SUBMITTABLE؛ Published لازم نیست | `application/problem+json` |
+| 412 | CONCURRENCY_CONFLICT؛ حداقل یک RowVersion stale/نامعتبر است | `application/problem+json` |
+
+درخواست یکسان با دو نسخهٔ جاری تغییر یا Audit تازه ندارد؛ Retry با نسخهٔ قدیمی پس از موفقیت، نیازمند GET و تصمیم مجدد است. Audit مقادیر قدیم/جدید همراه همان تراکنش ثبت می‌شود. [قرارداد کامل مدرس و کلاینت](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md).
 
 ### POST /api/v1/academic/assignments/{assignmentId}/publish
 
@@ -21761,6 +21783,20 @@ object
 | `expectedAssignmentRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 | `expectedVersionRowVersion` | string / byte | بله | خیر/تصریح نشده | — |
 | `attachmentFileIds` | آرایه از string / uuid | خیر | بله | {"default": null} |
+
+<a id="contract-UpdateAssignmentSubmissionPolicyCommand"></a>
+### UpdateAssignmentSubmissionPolicyCommand
+
+object؛ همهٔ فیلدها صریح و اجباری، `additionalProperties=false`.
+
+| فیلد | نوع | required | nullable | معنا |
+|---|---|---|---|---|
+| `dueAtUtc` | string / date-time | بله | خیر | UTC آینده برای تمدید، یا عین مهلت قبلی برای تغییر Late |
+| `allowLateSubmission` | boolean | بله | خیر | حذف فیلد با false یکسان نیست |
+| `expectedAssignmentRowVersion` | string | بله | خیر | Base64 هشت‌بایتی aggregate از GET جاری |
+| `expectedVersionRowVersion` | string | بله | خیر | Base64 هشت‌بایتی نسخه از همان GET |
+
+در 409 مهلتِ عملیات Submission، metadata افزایشیِ `assignmentId`، `assignmentVersionId`، `classId`، `classKind`، `attemptId`، `requestTimeUtc`، `dueAtUtc`، `allowLateSubmission`، `attemptStatus`، `assignmentStatus` و `assignmentVersionIsPublished` پس از احراز دسترسی موجود است. `requiredAction=REFETCH_ASSIGNMENT_AND_ATTEMPT`، `operationState=NotApplied` و `retryable=false` هستند. این فیلدها برای همهٔ انواع 409 اجباری نیستند؛ متن خصوصی پاسخ/فایل در آن‌ها نیست. [شرح و نگاشت خطا](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md).
 
 <a id="contract-UpdateClassLessonCommand"></a>
 ### UpdateClassLessonCommand

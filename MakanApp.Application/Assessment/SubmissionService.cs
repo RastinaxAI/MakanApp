@@ -39,7 +39,7 @@ public sealed partial class SubmissionService : ISubmissionService
             context.UserId,
             cancellationToken) ?? throw RecipientNotFound();
         EnsureEligibleForMutation(eligibility);
-        EnsureDeadlineAllowsDraft(eligibility.Version, UtcNow());
+        EnsureDeadlineAllowsMutation(eligibility.Assignment, eligibility.Version, null, UtcNow());
 
         var existingDraft = await _store.GetDraftForUpdateAsync(
             eligibility.Recipient.Scope,
@@ -68,6 +68,8 @@ public sealed partial class SubmissionService : ISubmissionService
                 "تعداد تلاش‌های مجاز این تکلیف تمام شده است.");
         }
 
+        var createdAtUtc = UtcNow();
+        EnsureDeadlineAllowsMutation(eligibility.Assignment, eligibility.Version, null, createdAtUtc);
         var attempt = SubmissionAttempt.CreateDraft(
             eligibility.Recipient.Scope,
             eligibility.Assignment.Id,
@@ -75,7 +77,7 @@ public sealed partial class SubmissionService : ISubmissionService
             eligibility.Recipient.Id,
             eligibility.Participation.Reference,
             submittedCount + 1,
-            UtcNow());
+            createdAtUtc);
         _store.Add(attempt);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -95,12 +97,13 @@ public sealed partial class SubmissionService : ISubmissionService
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
-        EnsureDeadlineAllowsDraft(record.Version, UtcNow());
+        var savedAtUtc = UtcNow();
+        EnsureDeadlineAllowsMutation(record.Assignment, record.Version, record.Attempt, savedAtUtc);
         ApplyExpectedRowVersion(record.Attempt, command.ExpectedRowVersion);
 
         try
         {
-            record.Attempt.SaveAnswer(command.AnswerText, UtcNow());
+            record.Attempt.SaveAnswer(command.AnswerText, savedAtUtc);
         }
         catch (ArgumentException exception)
         {
@@ -125,7 +128,7 @@ public sealed partial class SubmissionService : ISubmissionService
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
-        EnsureDeadlineAllowsDraft(record.Version, UtcNow());
+        EnsureDeadlineAllowsMutation(record.Assignment, record.Version, record.Attempt, UtcNow());
 
         if (record.Attachments.Any(item => item.FileAsset.Id == command.FileAssetId))
         {
@@ -140,12 +143,15 @@ public sealed partial class SubmissionService : ISubmissionService
         EnsureFileCanBeAttached(fileAsset, context);
         if (!await _store.IsFileAvailableForAttemptAsync(fileAsset.Id, record.Attempt.Id, cancellationToken)) throw FileNotAllowed();
 
+        // انتظار برای قفل فایل ممکن است از مرز مهلت عبور کند؛ زمان پذیرش پس از گرفتن قفل ملاک است.
+        var attachedAtUtc = UtcNow();
+        EnsureDeadlineAllowsMutation(record.Assignment, record.Version, record.Attempt, attachedAtUtc);
         var attachment = SubmissionAttachment.Create(
             record.Attempt.Scope,
             record.Attempt.Id,
             fileAsset.Id,
-            UtcNow());
-        record.Attempt.MarkAttachmentsChanged(UtcNow());
+            attachedAtUtc);
+        record.Attempt.MarkAttachmentsChanged(attachedAtUtc);
         _store.Add(attachment);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -170,7 +176,8 @@ public sealed partial class SubmissionService : ISubmissionService
         var record = await GetOwnedAttemptForUpdateAsync(context, attemptId, cancellationToken);
         EnsureDraft(record.Attempt);
         EnsureEligibleForMutation(record);
-        EnsureDeadlineAllowsDraft(record.Version, UtcNow());
+        var changedAtUtc = UtcNow();
+        EnsureDeadlineAllowsMutation(record.Assignment, record.Version, record.Attempt, changedAtUtc);
         var existing = record.Attachments.SingleOrDefault(item => item.FileAsset.Id == fileAssetId);
         if (existing is null)
         {
@@ -179,7 +186,7 @@ public sealed partial class SubmissionService : ISubmissionService
         }
 
         ApplyExpectedRowVersion(record.Attempt, expectedRowVersion);
-        record.Attempt.MarkAttachmentsChanged(UtcNow());
+        record.Attempt.MarkAttachmentsChanged(changedAtUtc);
         _store.Remove(existing.Attachment);
         await _store.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -241,9 +248,7 @@ public sealed partial class SubmissionService : ISubmissionService
         }
         catch (SubmissionDeadlinePassedException)
         {
-            throw Error(
-                AssessmentErrorCodes.SubmissionDeadlinePassed,
-                "مهلت ارسال نهایی تکلیف گذشته است.");
+            throw DeadlinePassed(record.Assignment, record.Version, record.Attempt, submittedAtUtc);
         }
         catch (SubmissionEmptyException)
         {
