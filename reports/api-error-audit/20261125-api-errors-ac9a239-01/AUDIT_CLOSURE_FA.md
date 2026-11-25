@@ -4,6 +4,8 @@
 
 `AUDIT_COMPLETE=YES` فقط کامل‌بودن حسابرسی را بیان می‌کند. `LIVE_ACCEPTANCE_COMPLETE=NO` و `LIVE_FAILURE_COUNT=1` باقی می‌مانند. پاسخ زندهٔ 405 فاقد code بود، ولی Allow و routing درست بودند. نداشتن Fix محلی در نسخهٔ مستقر یک توضیح `SUPPORTED` است؛ Commit/Build مستقر معلوم نیست و علت استقرار را CONFIRMED نمی‌نامیم. هیچ ورود زنده، اجرای دوبارهٔ ۱۰۷ سناریو یا تغییر سرور در Closure انجام نمی‌شود.
 
+در کنترل checkout تمیز مشخص شد قاعدهٔ سراسری text=auto و core.autocrlf می‌تواند بایت‌های Evidence را عوض کند و SHA256 مرجع را بشکند. فایل محلی `.gitattributes` فقط در همین پوشه، تبدیل متن را غیرفعال می‌کند. بایت‌های ورودی و Caseها حفظ شده‌اند؛ پس از ثبت این اصلاح، checksumها در checkout نهایی هم بررسی می‌شوند. این تغییر اثری بر line ending کد یا سایر اسناد مخزن ندارد.
+
 `RUNTIME_DEADLINE_ROOT_CAUSE=AWAITING_EVIDENCE` مستقل باقی می‌ماند. قابلیت مصوب تمدید Published Deadline و تغییر مستقل AllowLateSubmission به Evidence تاریخی آن رخداد وابسته نیست. درخواست قبلی Upload موفق بوده و خطا در Attach رخ داده است؛ از این شاهد، dueAtUtc، allowLateSubmission یا وضعیت تاریخی تلاش را حدس نمی‌زنیم.
 
 ## دسته‌بندی تغییرات

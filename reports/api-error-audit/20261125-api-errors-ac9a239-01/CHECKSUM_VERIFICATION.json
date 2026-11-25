@@ -1,9 +1,10 @@
 {
   "result": "PASS",
-  "filesVerified": 559,
+  "filesVerified": 560,
   "includesSourceReferenceManifest": true,
   "includesSanitizedOpenApiByteHash": true,
   "auditComplete": true,
   "liveAcceptanceComplete": false,
-  "original555ChecksumsVerifiedBeforeClosure": true
+  "original555ChecksumsVerifiedBeforeClosure": true,
+  "bytePreservationAttributes": true
 }
