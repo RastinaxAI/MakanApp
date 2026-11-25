@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using MakanApp.Application.Ai;
 using MakanApp.Application.Identity;
 using Microsoft.AspNetCore.DataProtection;
@@ -17,10 +18,24 @@ public sealed partial class MakanAppWebApplicationFactory
         bool? commercialEnforcementEnabled = null) =>
         WithWebHostBuilder(builder =>
         {
-            if (enforceHttpLimits) builder.UseEnvironment("Test");
+            // پیش‌نیازهای bootstrap محیط Test صریح‌اند؛ کلید موقت و Storage ایزوله به فایل خصوصی وابسته نیستند.
+            var bootstrapSecurityKey = enforceHttpLimits
+                ? Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+                : null;
+            if (enforceHttpLimits)
+            {
+                builder.UseEnvironment("Test");
+                builder.UseSetting("Identity:SecurityKey", bootstrapSecurityKey);
+                builder.UseSetting("Storage:RootPath", StorageRootPath);
+            }
             builder.ConfigureAppConfiguration((_, configuration) =>
             {
                 var settings = new Dictionary<string, string?> { ["AiUsage:Mode"] = mode.ToString() };
+                if (bootstrapSecurityKey is not null)
+                {
+                    settings["Identity:SecurityKey"] = bootstrapSecurityKey;
+                    settings["Storage:RootPath"] = StorageRootPath;
+                }
                 if (commercialEnforcementEnabled.HasValue)
                     settings["Commerce:EnforcementEnabled"] = commercialEnforcementEnabled.Value.ToString();
                 configuration.AddInMemoryCollection(settings);
@@ -32,4 +47,5 @@ public sealed partial class MakanAppWebApplicationFactory
                 services.RemoveAll<AiServiceTestControl>(); services.AddSingleton(AiService);
             });
         });
+
 }
