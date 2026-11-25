@@ -108,6 +108,7 @@ public sealed class GlobalExceptionHandler(
 
         httpContext.Response.StatusCode = problemDetails.Status
             ?? StatusCodes.Status500InternalServerError;
+        ApiProblemDetailsContract.PreserveRetryAfter(httpContext, exception);
 
         if (exception is AiKnowledgeException knowledgeError && knowledgeError.ProcessingFailureCode == "AI_OCR_FAILED")
             problemDetails.Extensions["processingFailureCode"] = "AI_OCR_FAILED";

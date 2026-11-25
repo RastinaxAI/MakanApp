@@ -282,6 +282,7 @@ builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
     {
+        ApiProblemDetailsContract.AddFrameworkCode(context);
         if (context.ProblemDetails is ValidationProblemDetails)
             context.ProblemDetails.Extensions.TryAdd("code", ApiErrorCodes.InvalidRequest);
         context.ProblemDetails.Extensions.TryAdd(
@@ -356,6 +357,7 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<HttpRequestMetricsMiddleware>();
 app.UseExceptionHandler();
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseStatusCodePages(ApiProblemDetailsContract.WriteEmptyErrorAsync);
 
 var exposeOpenApi = !(app.Environment.IsProduction() || app.Environment.IsStaging()) ||
                     builder.Configuration.GetValue("Swagger:Enabled", false);
