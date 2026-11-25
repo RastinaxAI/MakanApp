@@ -1,0 +1,18 @@
+{
+  "evidenceKind": "REAL_API",
+  "caseId": "C06",
+  "variantId": "bff-anonymous-shape",
+  "startedAtUtc": "2026-11-25T13:38:15.163786+00:00",
+  "method": "POST",
+  "endpoint": "https://testapp.makanapp.org/api/client/backend/api/v1/ai/chat",
+  "httpStatus": 401,
+  "responseShape": {
+    "status": "int"
+  },
+  "elapsedMs": 1034,
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "BFF_OWN_AUTH_RESPONSE_NOT_BACKEND_PROBLEM_DETAILS",
+  "userExperienceResult": "NOT_RUN_AUTHENTICATED_UI",
+  "credentialsSent": false,
+  "retryCount": 0
+}

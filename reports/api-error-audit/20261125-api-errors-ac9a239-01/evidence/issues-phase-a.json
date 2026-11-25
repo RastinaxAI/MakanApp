@@ -1,0 +1,67 @@
+[
+  {
+    "id": "ERR-001",
+    "severity": "Medium",
+    "owner": "backend",
+    "confidence": "CONFIRMED",
+    "phase": "A",
+    "status": "OPEN",
+    "summary": "پاسخ‌های 404/405 خالی و 415 فریم‌ورک فاقد code پایدار هستند.",
+    "source": [
+      "MakanApp.Api/Program.cs",
+      "MakanApp.Api/Errors/ApiErrorCodes.cs"
+    ],
+    "evidence": [
+      "evidence/public-probes/method.json",
+      "evidence/public-probes/missing-route.json",
+      "evidence/validation/phase-a-http-04.json"
+    ],
+    "scope": "404/405 زنده و محلی؛ 415 محلی. این نقص علت تاریخی Class 403/404 را ثابت نمی‌کند.",
+    "before": "۵ تست قرارداد فریم‌ورک FAIL؛ status اصلی حفظ شده ولی code غایب است."
+  },
+  {
+    "id": "ERR-002",
+    "severity": "Medium",
+    "owner": "backend",
+    "confidence": "CONFIRMED",
+    "phase": "A",
+    "status": "OPEN",
+    "summary": "RetryAfter موجود در Exceptionهای AI/Knowledge در خروجی HTTP حذف می‌شود.",
+    "source": [
+      "MakanApp.Api/Errors/GlobalExceptionHandler.cs"
+    ],
+    "evidence": [
+      "evidence/validation/phase-a-http-04.json",
+      "evidence/local-attempts/phase-a-http-04"
+    ],
+    "scope": "چهار HTTP fixture با 429/503 و بازهٔ مشخص؛ بدون تماس واقعی با AI.",
+    "before": "چهار تست header FAIL؛ status/code صحیح ولی Retry-After غایب است."
+  },
+  {
+    "id": "DEPLOY-001",
+    "severity": "Medium",
+    "owner": "infrastructure",
+    "confidence": "SUPPORTED",
+    "phase": "A",
+    "status": "EXTERNAL_PENDING",
+    "summary": "قرارداد زنده با Working Tree یکسان نیست؛ deadline policy منتشر نشده است.",
+    "evidence": [
+      "api-contract-map.json"
+    ],
+    "scope": "۴۹۷ عملیات زنده در برابر ۴۹۸ محلی؛ Build/Commit واقعی زنده UNKNOWN."
+  },
+  {
+    "id": "RUNTIME-001",
+    "severity": "High",
+    "owner": "unknown",
+    "confidence": "UNKNOWN",
+    "phase": "A",
+    "status": "AWAITING_OWNER_EVIDENCE",
+    "summary": "Root Cause تاریخی Deadline و Class 403/404 بدون Evidence SQL/Runtime هنوز قطعی نیست.",
+    "scope": "assignment-incident-01 / attempt-incident-01 / file-incident-01؛ صرفاً Evidence تاریخیِ مرحله Attach، نه خطای Upload.",
+    "correlationId": "2b00c7c1fb1fbd13916ed88dd2df0320",
+    "evidence": [
+      "docs/product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md"
+    ]
+  }
+]

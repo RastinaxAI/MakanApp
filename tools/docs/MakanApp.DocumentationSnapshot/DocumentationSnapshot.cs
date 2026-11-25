@@ -119,6 +119,8 @@ internal static class DocumentationSnapshot
             };
         }).OrderBy(item => item.Schema).ThenBy(item => item.Table).ToArray();
         var migrations = context.Database.GetMigrations().ToArray();
+        // این مقایسهٔ رسمی EF فقط metadata مدل و snapshot را می‌خواند و به SQL متصل نمی‌شود.
+        var pendingModelChanges = context.Database.HasPendingModelChanges();
         var sourceFiles = new SortedDictionary<string, string>(StringComparer.Ordinal);
         foreach (var directory in new[] { "MakanApp.Api", "MakanApp.Application", "MakanApp.Domain", "MakanApp.Infrastructure" })
         {
@@ -154,7 +156,7 @@ internal static class DocumentationSnapshot
             }).OrderBy(item => item.Name).ToArray();
         if (!enums.Single(item => item.Name == "MessageKind").Values.All(value => value.ValueKind == JsonValueKind.String))
             throw new InvalidOperationException("قرارداد serializer Enum تغییر کرده؛ مرجع رشته‌ای باید بازبینی شود.");
-        var snapshot = new { SourceCommit = sourceCommit, SourceFiles = sourceFiles, Operations = operations, Tables = tables, Migrations = migrations, Enums = enums, DatabaseConnected = false, HostedWorkersEnabled = false, SmsEnabled = false, AiEnabled = false };
+        var snapshot = new { SourceCommit = sourceCommit, SourceFiles = sourceFiles, Operations = operations, Tables = tables, Migrations = migrations, Enums = enums, PendingModelChanges = pendingModelChanges, DatabaseConnected = false, HostedWorkersEnabled = false, SmsEnabled = false, AiEnabled = false };
         await File.WriteAllTextAsync(Path.Combine(output, "repository-inventory.json"), JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true }));
         Console.WriteLine(JsonSerializer.Serialize(new { Operations = operations.Length, Controllers = operations.Select(item => item.Controller).Distinct().Count(), Tables = tables.Length, Migrations = migrations.Length, DatabaseConnected = false, HostedWorkersEnabled = false }));
     }

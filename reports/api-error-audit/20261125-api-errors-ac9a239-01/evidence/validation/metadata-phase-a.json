@@ -1,0 +1,20 @@
+{
+  "label": "metadata-phase-a",
+  "command": [
+    "dotnet",
+    "run",
+    "--project",
+    "tools/docs/MakanApp.DocumentationSnapshot/MakanApp.DocumentationSnapshot.csproj",
+    "--configuration",
+    "Release",
+    "--",
+    "reports/api-error-audit/20261125-api-errors-ac9a239-01/evidence/current-contract"
+  ],
+  "startedAtUtc": "2026-11-25T13:07:22.813801+00:00",
+  "elapsedMs": 23155,
+  "exitCode": 0,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

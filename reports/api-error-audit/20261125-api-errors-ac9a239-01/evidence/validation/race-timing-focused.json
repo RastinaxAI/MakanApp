@@ -1,0 +1,57 @@
+{
+  "label": "race-timing-focused",
+  "command": [
+    "dotnet",
+    "test",
+    "tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj",
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName~ErrorAuditSameIntentAtObservedPendingState",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "startedAtUtc": "2026-11-25T13:26:02.259243+00:00",
+  "elapsedMs": 195381,
+  "exitCode": 0,
+  "summaries": [
+    {
+      "result": "Passed!",
+      "total": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "assembly": "MakanApp.IntegrationTests.dll"
+    }
+  ],
+  "tests": [
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ErrorAuditSameIntentAtObservedPendingStateNeverDuplicatesOrSilentlyReplays"
+    }
+  ],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

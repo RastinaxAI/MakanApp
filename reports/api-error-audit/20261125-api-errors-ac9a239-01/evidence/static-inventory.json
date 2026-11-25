@@ -1,0 +1,34 @@
+{
+  "constants": 476,
+  "uniqueCodes": 475,
+  "explicitStatusMappings": 414,
+  "multiStatusCodes": {},
+  "localOperations": 498,
+  "liveOperations": 497,
+  "changedOperations": 8,
+  "semanticChangedOperations": 5,
+  "intentionalCrossEnvelopeStatusDifferences": [
+    {
+      "code": "AI_SOURCE_RETRIEVAL_NOT_AVAILABLE",
+      "statuses": [
+        200,
+        409
+      ],
+      "classification": "EXPECTED_CAPABILITY_REPORT_VS_INVOCATION_FAILURE_NOT_DEFECT",
+      "source": "MakanApp.Application/Ai/AiSourceSelectionService.cs"
+    }
+  ],
+  "changedSchemas": [
+    "AcademicClassKind2",
+    "ConversationListFilter",
+    "ConversationListFilter2",
+    "UpdateAssignmentSubmissionPolicyCommand"
+  ],
+  "backendActions": 14,
+  "migrations": 78,
+  "latestMigration": "20261122085930_AddMessagingMediaReviews",
+  "standards": [
+    "https://www.rfc-editor.org/rfc/rfc9110.html#section-15",
+    "https://www.iana.org/assignments/http-status-codes"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "label": "metadata-final",
+  "command": [
+    "dotnet",
+    "run",
+    "--project",
+    "tools/docs/MakanApp.DocumentationSnapshot/MakanApp.DocumentationSnapshot.csproj",
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "--",
+    "reports/api-error-audit/20261125-api-errors-ac9a239-01/evidence/final-contract"
+  ],
+  "startedAtUtc": "2026-11-25T13:49:26.130690+00:00",
+  "elapsedMs": 19452,
+  "exitCode": 0,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [],
+  "namespaceCounts": {},
+  "rawOutputPersisted": false
+}

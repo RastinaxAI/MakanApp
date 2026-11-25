@@ -1,0 +1,19 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "createdAtUtc": "2026-11-25T14:53:46.892874+00:00",
+  "scope": "SANITIZED_AUDIT_CLOSURE_PRE_COMMIT_SNAPSHOT",
+  "sourceHead": "ac9a23968c1449c037cd1eb7f4bae6812252b73d",
+  "commitCreated": false,
+  "publishCreated": false,
+  "finalResult": "FINAL_RESULT.json",
+  "privacyReview": "evidence/final-scope-and-privacy-review.json",
+  "caseIdsUnmodified": true,
+  "realUiAuthenticatedAcceptance": "BLOCKED",
+  "realServerDeployment": "NOT_RUN",
+  "hashAlgorithm": "SHA256",
+  "auditComplete": true,
+  "liveAcceptanceComplete": false,
+  "liveFailureCount": 1,
+  "liveFailureStatus": "SUPPORTED",
+  "releaseExecutionEvidence": ".artifacts/close-api-error-audit-20261125/release/RELEASE_MANIFEST.json"
+}

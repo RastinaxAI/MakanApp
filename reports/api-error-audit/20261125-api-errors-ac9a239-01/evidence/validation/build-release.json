@@ -1,0 +1,26 @@
+{
+  "label": "build-release",
+  "command": [
+    "dotnet",
+    "build",
+    "MakanApp.sln",
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "--nologo"
+  ],
+  "startedAtUtc": "2026-11-25T13:32:02.579640+00:00",
+  "elapsedMs": 24952,
+  "exitCode": 0,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [
+    {
+      "summary": "0 Warning(s)"
+    },
+    {
+      "summary": "0 Error(s)"
+    }
+  ],
+  "rawOutputPersisted": false
+}

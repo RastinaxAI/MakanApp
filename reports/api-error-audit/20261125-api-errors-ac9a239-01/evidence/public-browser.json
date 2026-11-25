@@ -1,0 +1,24 @@
+{
+  "evidenceKind": "REAL_UI_BACKEND",
+  "scope": "ANONYMOUS_LOGIN_PAGE_ONLY_NO_AUTHENTICATED_BACKEND_ACTION",
+  "provider": "TinyFish",
+  "runId": "148174fd-cc95-4394-b841-90d4b907297b",
+  "finalUrl": "https://testapp.makanapp.org/enter",
+  "title": "ورود | ماکان اپ",
+  "signInRequired": true,
+  "aiActionCardsObservable": false,
+  "visibleControls": [
+    "شماره همراه",
+    "دریافت کد تأیید",
+    "بازگشت",
+    "راهنمای ورود"
+  ],
+  "credentialsEntered": false,
+  "formSubmitted": false,
+  "uiScenariosPassed": 0,
+  "transportResult": "PUBLIC_PAGE_LOADED",
+  "businessResult": "NOT_RUN_AUTHENTICATED",
+  "userExperienceResult": "LOGIN_PAGE_ONLY",
+  "durationSeconds": 33,
+  "retrievedAtUtc": "2026-11-25T13:20:31.340009+00:00"
+}

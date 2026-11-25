@@ -1,0 +1,47 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "caseId": "N05",
+  "variantId": "bff-ai-with-origin",
+  "evidenceKind": "REAL_API",
+  "attempt": 1,
+  "repetition": 1,
+  "requestSequence": 10,
+  "interactionId": "public-bff-ai-with-origin",
+  "startedAtUtc": "2026-11-25T13:35:17.290005+00:00",
+  "method": "POST",
+  "endpoint": "https://testapp.makanapp.org/api/client/backend/api/v1/ai/chat",
+  "credentialsSent": false,
+  "requestHeaders": {
+    "Accept": "application/json",
+    "X-Correlation-ID": "audit-public-bff-ai-with-origin",
+    "Content-Type": "application/json",
+    "Origin": "https://testapp.makanapp.org"
+  },
+  "requestPayload": {},
+  "retryCount": 0,
+  "retrySource": "NONE",
+  "backoffMs": 0,
+  "stateBefore": "ANONYMOUS_NO_FIXTURE",
+  "userExperienceResult": "NOT_RUN_NO_BROWSER",
+  "expected": "فقط مشاهدهٔ پاسخ عمومی؛ هیچ تغییر داده یا ورود انجام نشود.",
+  "httpStatus": 401,
+  "responseHeaders": {
+    "Content-Type": "application/json"
+  },
+  "responsePayload": {
+    "status": 401,
+    "code": null,
+    "traceId": null,
+    "correlationId": null,
+    "requestId": null
+  },
+  "businessCode": null,
+  "traceId": null,
+  "correlationId": null,
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "NOT_EVALUATED",
+  "stateAfter": "PUBLIC_RESPONSE_NO_AUTH_OR_MUTATION",
+  "verdict": "OBSERVED",
+  "causeConfidence": "OBSERVED_ONLY",
+  "elapsedMs": 798.26
+}

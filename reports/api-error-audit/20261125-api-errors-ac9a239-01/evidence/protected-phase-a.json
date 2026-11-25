@@ -1,0 +1,234 @@
+{
+  "passed": true,
+  "count": 57,
+  "files": [
+    {
+      "path": "MakanApp.Api/Controllers/AssignmentsController.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/Errors/GlobalExceptionHandler.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/Program.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssessmentException.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentAbstractions.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentContracts.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentService.Helpers.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/IAcademicAuditWriter.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionContracts.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionService.Helpers.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionService.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/Assignment.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/AssignmentVersion.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/SubmissionAttempt.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Assessment/EfAcademicAuditWriter.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Assessment/EfAssignmentStore.cs",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-guide.html",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-guide.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-guide.pdf",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-reference.html",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-reference.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/backend-api-reference.pdf",
+      "unchanged": true
+    },
+    {
+      "path": "docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html",
+      "unchanged": true
+    },
+    {
+      "path": "docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf",
+      "unchanged": true
+    },
+    {
+      "path": "docs/frontend-contract/README.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/product/PERSONAL_CLASS_V2_ACADEMIC_FRONTEND_HANDOFF_FA.md",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/DevelopmentTestUsersTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/OpenApi/AssignmentSubmissionPolicyOperationTransformer.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentService.SubmissionPolicy.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/SubmissionDeadlinePolicy.cs",
+      "unchanged": true
+    },
+    {
+      "path": "docs/product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/PersonalAssignmentPolicyEndpointsTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/PublishedAssignmentPolicyEndpointsTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/SubmissionDeadlinePolicyEndpointsTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/PublishedAssignmentPolicyTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/SubmissionDeadlinePolicyTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/SubmissionPolicyContractTests.cs",
+      "unchanged": true
+    },
+    {
+      "path": "tools/ai/provider_diagnostic.py",
+      "unchanged": true
+    },
+    {
+      "path": "tools/ai/run_exact_ai.py",
+      "unchanged": true
+    },
+    {
+      "path": "tools/ai/test_provider_diagnostic.py",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/appsettings.json",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/appsettings.Development.json",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/appsettings.Test.json",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/appsettings.Production.json",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/web.config",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/Properties/PublishProfiles/TestIis.pubxml",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/Properties/PublishProfiles/ProductionIis.pubxml",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Identity/Otp/MeliPayamak/MeliPayamakOtpProvider.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Identity/Otp/MeliPayamak/MeliPayamakOtpOptions.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Persistence/SqlServerConnectionInitializationInterceptor.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Messaging/ManualMediaSafetyProvider.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Messaging/ReviewedMediaContentSafetyProvider.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Messaging/EfMessagingStore.MediaReviews.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Infrastructure/Platform/EfPlatformEducationSafetyStore.MediaReviews.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Domain/Messaging/ModerationCase.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Application/Messaging/MediaSafetyContracts.cs",
+      "unchanged": true
+    },
+    {
+      "path": "MakanApp.Api/Controllers/FilesController.cs",
+      "unchanged": true
+    }
+  ]
+}

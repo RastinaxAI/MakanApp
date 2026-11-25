@@ -1,0 +1,1314 @@
+{
+  "label": "focused-integration",
+  "command": [
+    "dotnet",
+    "test",
+    "tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj",
+    "--configuration",
+    "Release",
+    "--no-build",
+    "--no-restore",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName~ApiErrorAuditEndpointsTests|FullyQualifiedName~Adaptive|FullyQualifiedName~AiV1ControlledTransport|FullyQualifiedName~Unmetered|FullyQualifiedName~KnowledgeIntegration|FullyQualifiedName~OpenAccess|FullyQualifiedName~FileStorageEndpoints|FullyQualifiedName~FileAcceptance|FullyQualifiedName~MessagingMediaReview|FullyQualifiedName~MessagingSafetyReviewContract|FullyQualifiedName~PublishedAssignmentPolicy|FullyQualifiedName~SubmissionDeadlinePolicy|FullyQualifiedName~ProductionObservability|FullyQualifiedName~SessionAuthentication|FullyQualifiedName~OtpAuthentication|FullyQualifiedName~ProductionConfiguration|FullyQualifiedName~Outbox|FullyQualifiedName~RealtimeInvalidation|FullyQualifiedName~Stabilization",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "startedAtUtc": "2026-11-25T13:32:33.935178+00:00",
+  "elapsedMs": 155303,
+  "exitCode": 0,
+  "summaries": [
+    {
+      "result": "Passed!",
+      "total": 320,
+      "passed": 320,
+      "failed": 0,
+      "skipped": 0,
+      "assembly": "MakanApp.IntegrationTests.dll"
+    }
+  ],
+  "tests": [
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeStagingConfigurationFailsWithoutPrintingSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ApprovedExceptionsDoNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ProductionExceptionsCannotWeakenStaging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ProductionExceptionsCannotWeakenStaging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ExplicitOpenCorsAcceptsEmptyOriginsAndWildcardHosts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ExplicitOpenCorsAcceptsEmptyOriginsAndWildcardHosts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.EachExceptionRequiresItsOwnExplicitOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.EachExceptionRequiresItsOwnExplicitOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ValidProductionLikeConfigurationIsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ValidProductionLikeConfigurationIsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ValidProductionLikeConfigurationIsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeProductionConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeProductionConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeProductionConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeProductionConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UnsafeProductionConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.OpenCorsDoesNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.OpenCorsDoesNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.OpenCorsDoesNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.OpenCorsDoesNotBypassOtherProductionGuards"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.HttpWithoutExplicitExceptionRemainsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ExplicitProductionExceptionsAllowApprovedHttpAndUntrustedCertificate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.DevelopmentLikeEnvironmentsRetainExistingConfigurationBehavior"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.DevelopmentLikeEnvironmentsRetainExistingConfigurationBehavior"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.OpenCorsDoesNotValidateUnusedOriginValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ExplicitWildcardHostsAreAcceptedWithoutOpeningRestrictedCors"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.ExplicitWildcardHostsAreAcceptedWithoutOpeningRestrictedCors"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionConfigurationValidationTests.UntrustedSqlCertificateConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RetryAfterIsNumericAndNeverShortensProviderDelay"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RetryAfterIsNumericAndNeverShortensProviderDelay"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ControlledTimeoutUsesApprovedMappingAndNoRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.InvalidControlledResponsesAreRejectedWithoutPartialResult"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.InvalidControlledResponsesAreRejectedWithoutPartialResult"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.InvalidControlledResponsesAreRejectedWithoutPartialResult"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.InvalidControlledResponsesAreRejectedWithoutPartialResult"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ValidExistingServiceCredentialReachesBodyValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RetryAfterIsNumericAndNeverShortensProviderDelay"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AuthAndHeaderNegativesNeverReachBusiness"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ControlledFailuresMapSafelyWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ControlledFailuresMapSafelyWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ControlledFailuresMapSafelyWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.ControlledFailuresMapSafelyWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AllTwelveOperationsSupportExplicitNoAuthContractWithNoSigningKey"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.AllTwelveOperationsExecuteRealClientAndServiceJwtAgainstLoopbackContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiV1ControlledTransportTests.PersonalContractUsesRealHttpSerializerAndValidatorWithoutServiceCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.EmptyErrorWriterPreservesHeadAndNonApiBehavior"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.EmptyErrorWriterPreservesHeadAndNonApiBehavior"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.AlreadyWrittenErrorBodyIsNotOverwrittenOrAppended"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnknownExceptionIs500WithSafeDetailsAndNeverSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AccountDeletionAcceptanceTests.AdaptiveAiHistoryIsPurgedByExistingAccountDeletionAndCannotPassToReusedPhone"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.ChildSafetyBlockedAttemptCreatesNoMessageNotificationOutbox"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.P2PollOutboxFailureRollsBackWholeDefinitionBeforeSafeRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveProcessingFallbackRequiresExplicitGeneralIntent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveProcessingFallbackRequiresExplicitGeneralIntent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveProcessingFallbackRequiresExplicitGeneralIntent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveGroundedStreamingRequiresNonStreamAndDoesNotGenerateOrFakeDeltas"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.UnmeteredKnowledgeRechecksCurrentSourceAfterRetrievalAndConcealsEvidence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveSourceFocusedRequestWithoutSourceDoesNotSilentlyGenerateGeneral"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveSourceFocusedRequestWithoutSourceDoesNotSilentlyGenerateGeneral"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.Be16MessagingInvitationAndJoinOutboxRollbackWithOwnerTransaction"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.Be16MessagingInvitationAndJoinOutboxRollbackWithOwnerTransaction"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationDeepLinkSummaryFindsArchivedDirectAndConcealsOutsider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.P2ScheduledOutboxFailureRollsBackMessageAndReceiptBeforeSafeRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveSourcesOnlyUsesExactAuthorizedRagAndHistoryCannotOutliveSourceAcl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInvalidProfileIsRejectedBeforeConversationOrProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleContactFirstMessageReachesUnopenedInboxWithoutConversationSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleContactFirstMessageReachesUnopenedInboxWithoutConversationSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleContactFirstMessageReachesUnopenedInboxWithoutConversationSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleAdultAttachmentHasPrivateBinaryHashRangeAndOneRetryEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleAdultAttachmentHasPrivateBinaryHashRangeAndOneRetryEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleAdultAttachmentHasPrivateBinaryHashRangeAndOneRetryEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationEligibleAdultAttachmentHasPrivateBinaryHashRangeAndOneRetryEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveRoleStreamsUseCurrentScopeAndRevocationCutsFutureHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveRoleStreamsUseCurrentScopeAndRevocationCutsFutureHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveRoleStreamsUseCurrentScopeAndRevocationCutsFutureHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveRoleStreamsUseCurrentScopeAndRevocationCutsFutureHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AccountReplayRolledBackOutboxIsNeverVisibleAndInvalidLimitIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveAutoDefaultIsSourceFocusedAndNeverFallsBackOnForeignSource"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationDirectDenialHasSafeInternalCategoryWithoutDisclosingPrivateReason"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.P2ChecklistOutboxFailureRollsBackMessageDefinitionAndItemsBeforeSafeRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveOwnerNewSessionCanContinueSamePersonalConversationWithoutPhoneBasedInheritance"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveTenConcurrentStreamsShareOneReservationCanonicalConversationAndInvocation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationOfflineThreeMessagesAndEditRecoverFromDurableConversationCursor"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveClassSwitchDuringStreamStopsFollowingDeltasAndHistoryCommit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInsufficientEvidenceNeverInventsCitationOrHiddenSourcesOnlyFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInsufficientEvidenceNeverInventsCitationOrHiddenSourcesOnlyFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveInsufficientEvidenceNeverInventsCitationOrHiddenSourcesOnlyFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveAutoGeneralFallbackStreamsRealDeltasWithExplicitProvenance"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationTwoIndependentReceiverSessionsSynchronizeReadWithoutRegression"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationAssignedTeacherCannotCreateOfficialClassAndStudentCannotReadFullRoster"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.RealtimeInvalidationUsesUtcTimestampAfterSqlReload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveStreamingDonePersistsOnePairAndCompletedReplayNeverInvokesAgain"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.OfficialSpacesClassCommitRecordsIntentAndReadWaitsForExistingOutboxWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptivePartialFailureIsErrorUnknownAndNeverEntersHistoryOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveOpenApiPublishesStreamingProfileBoundsAndOwnerHistoryWithoutInvocationHeaders"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationFileOpenApiDescribesBinaryAndRangeWithoutJsonSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveHttpClientDisconnectCancelsUpstreamAndDoesNotPersistPartialAnswer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveForeignAndCrossContextConversationAreConcealedWithoutProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptivePlainChatCreatesCanonicalConversationAndDatabaseOwnedHistoryAcrossSession"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationManagedConversationOpenApiDoesNotPromiseGeneralDirectDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.OpenAccessCreatesAndUsesPersonalKnowledgeWithoutAnyPlanButPreservesSourceAclAndReplay"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.AdaptiveHistoryIgnoresClientAuthorityAndSkipsOversizedSqlPairsInBoundedWindow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationParentManagerPersonalDirectDoesNotDependOnOrganizationRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.UnmeteredKnowledgeWithoutActiveSubscriptionPreservesPrivateSourceAclAndRagIdempotency"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.MessagingEndpointsTests.StabilizationPhoneFormatsResolveOneAccountAndOneContact"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AdaptiveAiMigrationTests.AdaptiveAiSqlConcurrentSameOperationCreatesOnePendingPairAndCompletionIsIdempotent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AdaptiveAiMigrationTests.AdaptiveAiConcurrentSameClientGuidAcrossOwnersConcealsLoserWithoutOverwriting"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AdaptiveAiMigrationTests.AdaptiveAiFreshAndUpgradePreserveUsersEnforceIntegrityAndRejectDestructiveRollback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AdaptiveAiMigrationTests.AdaptiveAiFreshAndUpgradePreserveUsersEnforceIntegrityAndRejectDestructiveRollback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredOrganizationRoleWithoutSubscriptionInvokesAndRevokedMembershipCannotInvoke"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredOrganizationRoleWithoutSubscriptionInvokesAndRevokedMembershipCannotInvoke"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredOrganizationRoleWithoutSubscriptionInvokesAndRevokedMembershipCannotInvoke"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredOrganizationRoleWithoutSubscriptionInvokesAndRevokedMembershipCannotInvoke"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredForeignClassAndUnenrolledStudentAreDeniedBeforeReservation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredForeignClassAndUnenrolledStudentAreDeniedBeforeReservation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredForeignClassAndUnenrolledStudentAreDeniedBeforeReservation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.AiChatEndpointsTests.UnmeteredForeignClassAndUnenrolledStudentAreDeniedBeforeReservation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredTwentyFiveDistinctRequestsWithoutSubscriptionPassActualHttpLimitAndHaveNoFinancialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredTwentyFiveDistinctRequestsWithoutSubscriptionPassActualHttpLimitAndHaveNoFinancialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.OpenAccessPersonalClassNeedsNoHostPlanButRetainsReviewManagerConsentAndEducationalCapacity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredValidPayerHasNoCommercialEffectOrReplayIdentityEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredValidPayerHasNoCommercialEffectOrReplayIdentityEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredValidPayerHasNoCommercialEffectOrReplayIdentityEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredValidPayerHasNoCommercialEffectOrReplayIdentityEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredStillRejectsMissingSessionOrSuspendedAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredStillRejectsMissingSessionOrSuspendedAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredFailureKeepsDurableOutcomeAndNeverRetriesProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredFailureKeepsDurableOutcomeAndNeverRetriesProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredFailureKeepsDurableOutcomeAndNeverRetriesProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredFailureKeepsDurableOutcomeAndNeverRetriesProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.OpenAccessDoesNotHideInvalidAiUsageConfiguration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.OpenAccessDoesNotHideInvalidAiUsageConfiguration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.OpenAccessOrganizationWritesIgnoreCancelledCommercialContractButPreserveManagerAuthorization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredTwentyConcurrentDuplicatesInvokeOnceAndChangedIntentConflicts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.OpenAccessOpenApiSeparatesEnforcementFromHistoricalSubscriptionData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredDoesNotDebitExistingCommercialQuotaAndModeChangeDoesNotReinvokeSameOperation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.ProductV6InvitationOutboxRollsBackWithOwnerTransactionAndOldNotificationCannotAcceptExpiredInvitation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredPersonalClassPreflightStillRequiresCurrentOwnershipOrMembership"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.CommercialSubscriptionEndpointsTests.UnmeteredInvalidPayerAndOversizedMessageNeverReserveOrInvoke"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ZibalPaymentEndpointsTests.PaidOrderSurvivesActivationFailureAndOutboxRetryDoesNotRecharge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ZibalPaymentEndpointsTests.ConcurrentCallbackAndOwnerRecoveryProduceOnePaymentAndOneOutbox"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockSession_DoesNotGrantPlatformRoleAndRespectsExplicitAssignment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockVerify_RequiresNeitherChallengeNorMatchingCode_AndUsesNormalTokens"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockVerify_RequiresNeitherChallengeNorMatchingCode_AndUsesNormalTokens"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockVerify_RequiresNeitherChallengeNorMatchingCode_AndUsesNormalTokens"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockAuthentication_DoesNotBypassAccountSuspension"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockStillRejectsInvalidPhone_AndDoesNotExposeCodeInLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockRequest_AcceptsNormalizedFictionalPhone_WithoutSmsOrChallenge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockRequest_AcceptsNormalizedFictionalPhone_WithoutSmsOrChallenge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.RepeatedMockLogin_ResolvesExistingAccountWithoutDuplicateRegistration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockRequestIdentifier_IsNotOtpProofWhenRealModeIsEnabled"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ConfigurableOtpAuthenticationTests.MockVerify_IgnoresAnExpiredRealChallengeWithoutMutatingIt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRevokedSessionCannotUploadOrReuseExistingDownloadUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.AuthenticatedUserUploadsValidFile"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRejectsExtensionMimeMismatchWithoutPersistence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRejectsExtensionMimeMismatchWithoutPersistence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRejectsExtensionMimeMismatchWithoutPersistence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UploadPersistsMetadataAndTemporaryExpiry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FailedStorageWriteLeavesRejectedMetadataAndNoBytes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.DatabaseRejectsDuplicateStorageKey"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRealBytesMetadataRangeAndDeletion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRealBytesMetadataRangeAndDeletion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceRealBytesMetadataRangeAndDeletion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UnrelatedUserCannotReadPrivateUnattachedFile"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.StaleLifecycleUpdateReturnsConcurrencyConflict"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UnsafeOriginalNameCannotControlStoragePath"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.FileAcceptanceBoundaryUnicodeAndDuplicateNamesNeverOverwriteBytes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.PersonalUploaderKeepsAccountFileAccessWhileOrganizationWorkspaceIsSelected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UnsupportedContentTypeIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.EmptyFileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.DownloadStreamsOriginalBytesAndHeaders"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.MetadataDoesNotExposeStorageKeyOrPhysicalPath"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UnauthenticatedUploadIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.DeletedFileCannotBeDownloadedAndBytesAreRemoved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.OversizedFileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.UploadWritesBytesToIsolatedStorage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.ClaimedImageWithInvalidSignatureIsRejectedBeforeMetadataCreation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.OrganizationScopeComesFromCurrentContextNotFormData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.FileStorageEndpointsTests.RepeatedDeleteReturnsAlreadyDeletedConflict"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.NotificationEndpointsTests.PublishingAssignmentCommitsOutboxAndCreatesLearnerNotification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.NotificationEndpointsTests.FailedOutboxMessageRemainsRecoverableAndCanBeRetried"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.NotificationEndpointsTests.DurableOutboxPersistsProcessesOnceAndConcurrentProcessorsDoNotDuplicate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OrderPaymentEndpointsTests.TenDuplicateVerificationsCreateOneSettlementOutboxAndSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.PlatformCommerceOperationsEndpointsTests.JobsSeparatePendingActiveLeaseAndExhaustedOutboxWithoutExposingPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.PlatformCommerceOperationsEndpointsTests.JobsSeparatePendingActiveLeaseAndExhaustedOutboxWithoutExposingPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.KnownFailuresPreserveContractsAndLogSafeCodeStatusIdsAndSeverity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.MetricsUseFinalMappedStatusAndOriginalRouteTemplate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.MetricsUseFinalMappedStatusAndOriginalRouteTemplate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.MetricsUseFinalMappedStatusAndOriginalRouteTemplate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.MetricsUseFinalMappedStatusAndOriginalRouteTemplate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.NarrowPolicyCannotBeReenabledByProviderOverrideAndDoesNotHideOtherOperationalLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.OversizedAndMultipleCorrelationHeadersAreReplaced"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.OversizedAndMultipleCorrelationHeadersAreReplaced"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.SensitiveRequestInputsAreAbsentFromFailureLogsAndPublicUnexpectedProblem"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.SensitiveRequestInputsAreAbsentFromFailureLogsAndPublicUnexpectedProblem"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.DevelopmentKeepsOriginalDiagnosticsWithoutChangingPublicProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.ProductionSqlReadinessFailureLogsDoNotExposeConnectionDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.DirectBoundaryPreservesRequestedCancellationWithoutOriginalMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.DirectBoundaryPreservesRequestedCancellationWithoutOriginalMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.SensitiveOuterAndInnerExceptionNeverReachFrameworkOrApplicationLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.SensitiveOuterAndInnerExceptionNeverReachFrameworkOrApplicationLogs"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.CorrelationIsConsistentInResponseActivityAndLogScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.CorrelationIsConsistentInResponseActivityAndLogScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.CorrelationIsConsistentInResponseActivityAndLogScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.ExistingKnownErrorKeepsCodeAndStatusWithMatchingProblemCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.CompletionLogUsesOnlyTemplateAndNormalizedMethodNotBodyOrQuery"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.DirectBoundaryPropagatesSafeFailureWithoutOriginalInnerAndMeasuresFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionObservabilityTests.StartedResponseStillFailsButServerOnlyReceivesSanitizedFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ProductionReadinessTests.InvalidRequiredProductionConfigurationIsUnhealthyWithoutAnExceptionPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredTestHost_LogsInWithoutPriorChallengeOrSms_AndPreservesSessionRules"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredTestHost_LogsInWithoutPriorChallengeOrSms_AndPreservesSessionRules"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RejectsInvalidCodeFormatWithoutCreatingAnAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RejectsInvalidCodeFormatWithoutCreatingAnAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RejectsInvalidCodeFormatWithoutCreatingAnAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.EffectiveModeIsLoggedWithoutCodePhoneOrSessionCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RequestAndVerifyArbitraryCode_UsesRealRegistrationAndExistingAccountFlow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RequestAndVerifyArbitraryCode_UsesRealRegistrationAndExistingAccountFlow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RequestAndVerifyArbitraryCode_UsesRealRegistrationAndExistingAccountFlow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RequestAndVerifyArbitraryCode_UsesRealRegistrationAndExistingAccountFlow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredMock_RequestAndVerifyArbitraryCode_UsesRealRegistrationAndExistingAccountFlow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredTestHost_RequestDoesNotCreateOtp_AndSwaggerIsReachable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredTestHost_ExistingPlatformOwnerUsesAssignedPermission"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.EffectiveRealOverride_ReproducesUnknownPhoneOtpFailure_AndCannotBeChangedByRequestHeaders"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ServerMockOtpAuthenticationTests.ConfiguredTestHost_RefusesMockWithoutExplicitOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.UnmeteredAiMigrationTests.UnmeteredMigrationFreshAndUpgradePreserveHistoryAndEnforceAccounting"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.UnmeteredAiMigrationTests.UnmeteredMigrationFreshAndUpgradePreserveHistoryAndEnforceAccounting"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxRcsiConcurrentWorkersClaimOneAtATimeWithoutExpiringFollowingWork"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxCancellationRollsBackBusinessEffectAndNewScopeRecoversDurableClaim"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxCancellationRollsBackBusinessEffectAndNewScopeRecoversDurableClaim"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxPoisonLastAttemptBecomesTerminalAndFollowingHealthyWorkProgresses"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxNormalBatchClaimsAtMostFiftyAndLeavesFollowingWorkUnclaimed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxNormalBatchClaimsAtMostFiftyAndLeavesFollowingWorkUnclaimed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxSqlBackoffProgressionTerminalCeilingAndPoisonProgressAreDeterministic"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.OperationsWorkerRecoveryTests.OutboxSqlBackoffProgressionTerminalCeilingAndPoisonProgressAreDeterministic"
+    }
+  ],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

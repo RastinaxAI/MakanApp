@@ -1,0 +1,299 @@
+{
+  "backendActionsInventoried": true,
+  "uiCardsInventoried": "BLOCKED_AUTHORIZED_FIXTURES",
+  "interpretation": "endpoint به معنی کارت UI یا template مصوب نیست؛ هیچ کارت یا prompt حدس زده نشده است.",
+  "actions": [
+    {
+      "actionId": "Chat",
+      "title": "Chat",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Personal",
+        "Student",
+        "Parent",
+        "Teacher",
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": "CONDITIONAL_BY_MODE_AND_SOURCE_INTENT",
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/chat",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "StreamChat",
+      "title": "StreamChat",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Personal",
+        "Student",
+        "Parent",
+        "Teacher",
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": "CONDITIONAL_BY_MODE_AND_SOURCE_INTENT",
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/chat/stream",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "PrepareExam",
+      "title": "PrepareExam",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Student"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/exams/{examId}/prepare",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "ExplainHomework",
+      "title": "ExplainHomework",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Student"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/homeworks/{assignmentId}/explain",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "GetManagerClassInsight",
+      "title": "GetManagerClassInsight",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/managers/classes/{classId}/insight",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "GetManagerStudentInsight",
+      "title": "GetManagerStudentInsight",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/managers/classes/{classId}/students/{studentId}/insight",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "SummarizeManagerSchool",
+      "title": "SummarizeManagerSchool",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/managers/school-summary",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "SummarizeChild",
+      "title": "SummarizeChild",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Parent"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/parents/child-summary",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "SourcePreflight",
+      "title": "SourcePreflight",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Personal",
+        "Student",
+        "Parent",
+        "Teacher",
+        "Manager"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/sources/preflight",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "AnalyzeStudent",
+      "title": "AnalyzeStudent",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Student"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/students/analyze",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "CreateStudyPlan",
+      "title": "CreateStudyPlan",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Student"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/study-plan",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "SuggestTeacherActivities",
+      "title": "SuggestTeacherActivities",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Teacher"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/teachers/classes/{classId}/activity-suggestions",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "GetTeacherStudentInsight",
+      "title": "GetTeacherStudentInsight",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Teacher"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/teachers/classes/{classId}/students/{studentId}/insight",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    },
+    {
+      "actionId": "SummarizeTeacherClass",
+      "title": "SummarizeTeacherClass",
+      "template": null,
+      "templateSource": "NOT_DEFINED_BY_BACKEND; UI_CATALOG_BLOCKED_AUTH",
+      "role": [
+        "Teacher"
+      ],
+      "requiresFile": false,
+      "requiresSource": false,
+      "requiresFileMeaning": "payload این endpoint فایل multipart نمی‌گیرد؛ نیاز کارت UI به انتخاب فایل قابل مشاهده نیست.",
+      "sourceBehavior": "SourcesOnly و Auto+SourceFocused منبع لازم دارند؛ General/Auto+General با قواعد fallback موجود. در عملیات نقش‌محور، SelectedSourceIds طبق GuardAsync و preflight جاری است؛ قابلیت Retrieval از Authorized جداست.",
+      "endpoint": "POST /api/v1/ai/teachers/classes/{classId}/summary",
+      "enabledCondition": "نشست معتبر + کانتکست مجاز جاری + AI فعال؛ منبع انتخابی باید قابل دسترسی و آماده باشد.",
+      "source": [
+        "MakanApp.Api/Controllers/AiController.cs",
+        "MakanApp.Api/Controllers/AiController.Streaming.cs",
+        "MakanApp.Application/Ai/AiRoleContextService.cs"
+      ]
+    }
+  ]
+}

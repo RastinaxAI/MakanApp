@@ -1,0 +1,40 @@
+{
+  "startedAtUtc": "2026-11-25T13:31:59.181034+00:00",
+  "completed": [
+    {
+      "step": "clean-release",
+      "exitCode": 0
+    },
+    {
+      "step": "restore",
+      "exitCode": 0
+    },
+    {
+      "step": "build-release",
+      "exitCode": 0
+    },
+    {
+      "step": "focused-unit",
+      "exitCode": 0
+    },
+    {
+      "step": "focused-integration",
+      "exitCode": 0
+    },
+    {
+      "step": "full-01",
+      "exitCode": 0
+    },
+    {
+      "step": "final-build",
+      "exitCode": 0
+    },
+    {
+      "step": "full-final",
+      "exitCode": 0
+    }
+  ],
+  "status": "PASS",
+  "current": "full-final",
+  "completedAtUtc": "2026-11-25T14:50:28.737192+00:00"
+}

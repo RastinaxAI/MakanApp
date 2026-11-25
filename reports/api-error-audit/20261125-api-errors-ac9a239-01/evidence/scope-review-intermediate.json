@@ -1,0 +1,14 @@
+{
+  "headUnchanged": true,
+  "stagedPaths": [],
+  "protectedFiles": 57,
+  "unchangedProtectedFiles": 55,
+  "changedOnlyForConfirmedFix": [
+    "MakanApp.Api/Errors/GlobalExceptionHandler.cs",
+    "MakanApp.Api/Program.cs"
+  ],
+  "preexistingProgramContentPreserved": true,
+  "preexistingHandlerContentPreserved": true,
+  "aiDirtyAndPrivateConfigurationHashesPreserved": true,
+  "newStatusEntries": 448
+}

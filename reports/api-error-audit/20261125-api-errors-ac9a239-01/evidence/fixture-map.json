@@ -1,0 +1,47 @@
+{
+  "liveCredentialsAvailable": false,
+  "browserProfileUsed": false,
+  "source": "MakanAppWebApplicationFactory + helperهای Integration موجود؛ هیچ TestUserBuilder یا seed موازی ساخته نشد.",
+  "fixtures": [
+    {
+      "alias": "fixture-personal-01",
+      "helpers": [
+        "CreateMessagingUserAsync",
+        "PersonalKnowledgeContext",
+        "AdaptiveHost"
+      ]
+    },
+    {
+      "alias": "fixture-student-01",
+      "helpers": [
+        "CreateOfficialScenarioAsync",
+        "CreateMembershipAsync",
+        "CreateEnrollmentAsync"
+      ]
+    },
+    {
+      "alias": "fixture-parent-01",
+      "helpers": [
+        "CreateMessagingUserAsync",
+        "CreateMembershipAsync",
+        "CreateGuardianRelationAsync"
+      ]
+    },
+    {
+      "alias": "fixture-teacher-01",
+      "helpers": [
+        "CreateOfficialScenarioAsync",
+        "CreateTeacherAssignmentAsync"
+      ]
+    },
+    {
+      "alias": "fixture-manager-01",
+      "helpers": [
+        "CreateOfficialScenarioAsync",
+        "CreateMembershipAsync"
+      ]
+    }
+  ],
+  "roleStreamVariantsPassed": 4,
+  "rolesDoNotGrantResourceAccessAlone": true
+}

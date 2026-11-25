@@ -1,0 +1,25 @@
+{
+  "label": "ef-pending-model",
+  "command": [
+    "dotnet",
+    "ef",
+    "migrations",
+    "has-pending-model-changes",
+    "--project",
+    "MakanApp.Infrastructure/MakanApp.Infrastructure.csproj",
+    "--startup-project",
+    "MakanApp.Api/MakanApp.Api.csproj",
+    "--configuration",
+    "Release",
+    "--no-build",
+    "--no-color"
+  ],
+  "startedAtUtc": "2026-11-25T13:47:16.735283+00:00",
+  "elapsedMs": 1728,
+  "exitCode": 1,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [],
+  "namespaceCounts": {},
+  "rawOutputPersisted": false
+}

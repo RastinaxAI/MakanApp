@@ -1,0 +1,50 @@
+{
+  "firstFull": [
+    {
+      "assembly": "MakanApp.UnitTests.dll",
+      "total": 1496,
+      "passed": 1496,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "assembly": "MakanApp.IntegrationTests.dll",
+      "total": 2274,
+      "passed": 2274,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "assembly": "MakanApp.ArchitectureTests.dll",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "finalFull": [
+    {
+      "assembly": "MakanApp.UnitTests.dll",
+      "total": 1499,
+      "passed": 1499,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "assembly": "MakanApp.IntegrationTests.dll",
+      "total": 2274,
+      "passed": 2274,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "assembly": "MakanApp.ArchitectureTests.dll",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "source": "نام namespace تک‌تک تست‌ها با summary اعداد مقایسه شد؛ stdout خام ذخیره نشده است.",
+  "firstRunAssemblyHeaderInterleaving": "label قدیمی console در full-01 قابل اتکا نیست؛ خود فایل اصلی بدون دستکاری حفظ شده است."
+}

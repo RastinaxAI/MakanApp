@@ -1,0 +1,22 @@
+{
+  "label": "web",
+  "url": "https://testapp.makanapp.org/",
+  "retrievedAtUtc": "2026-11-25T13:05:13.085870+00:00",
+  "evidenceKind": "REAL_API",
+  "requestHeaders": {
+    "Accept": "text/html"
+  },
+  "credentialsSent": false,
+  "retryCount": 0,
+  "redirectFollowed": false,
+  "httpStatus": 307,
+  "contentSha256": "9bb4d6d78ebe8cf2fc8ecfc15547f10139d5ffbc2c58212b2aa3b0622bc3b300",
+  "contentBytes": 7446,
+  "responseHeaders": {
+    "Content-Type": "text/html; charset=utf-8"
+  },
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "NOT_EVALUATED",
+  "userExperienceResult": "NOT_RUN_BROWSER",
+  "elapsedMs": 1329.3
+}

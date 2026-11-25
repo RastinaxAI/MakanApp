@@ -1,0 +1,45 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "caseId": "N10",
+  "variantId": "bff-health",
+  "evidenceKind": "REAL_API",
+  "attempt": 1,
+  "repetition": 1,
+  "requestSequence": 8,
+  "interactionId": "public-bff-health",
+  "startedAtUtc": "2026-11-25T13:17:42.996372+00:00",
+  "method": "GET",
+  "endpoint": "https://testapp.makanapp.org/api/client/backend/health/live",
+  "credentialsSent": false,
+  "requestHeaders": {
+    "Accept": "application/json",
+    "X-Correlation-ID": "audit-public-bff-health"
+  },
+  "requestPayload": null,
+  "retryCount": 0,
+  "retrySource": "NONE",
+  "backoffMs": 0,
+  "stateBefore": "ANONYMOUS_NO_FIXTURE",
+  "userExperienceResult": "NOT_RUN_NO_BROWSER",
+  "expected": "فقط مشاهدهٔ پاسخ عمومی؛ هیچ تغییر داده یا ورود انجام نشود.",
+  "httpStatus": 404,
+  "responseHeaders": {
+    "Content-Type": "application/json"
+  },
+  "responsePayload": {
+    "status": 404,
+    "code": null,
+    "traceId": null,
+    "correlationId": null,
+    "requestId": null
+  },
+  "businessCode": null,
+  "traceId": null,
+  "correlationId": null,
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "NOT_EVALUATED",
+  "stateAfter": "PUBLIC_RESPONSE_NO_AUTH_OR_MUTATION",
+  "verdict": "OBSERVED",
+  "causeConfidence": "OBSERVED_ONLY",
+  "elapsedMs": 708.14
+}

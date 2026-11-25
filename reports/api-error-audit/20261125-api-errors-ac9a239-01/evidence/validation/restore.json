@@ -1,0 +1,16 @@
+{
+  "label": "restore",
+  "command": [
+    "dotnet",
+    "restore",
+    "MakanApp.sln",
+    "--nologo"
+  ],
+  "startedAtUtc": "2026-11-25T13:32:01.457817+00:00",
+  "elapsedMs": 1055,
+  "exitCode": 0,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

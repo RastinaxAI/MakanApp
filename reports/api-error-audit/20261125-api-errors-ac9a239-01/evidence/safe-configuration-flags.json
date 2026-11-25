@@ -1,0 +1,16 @@
+{
+  "appsettings.json": {
+    "Commerce:EnforcementEnabled": false,
+    "AiUsage:Mode": "Unmetered",
+    "AiService:Enabled": false
+  },
+  "appsettings.Test.json": {
+    "Commerce:EnforcementEnabled": false,
+    "AiService:Enabled": true,
+    "AiUsage:Mode": "Unmetered"
+  },
+  "appsettings.Production.json": {
+    "Commerce:EnforcementEnabled": false,
+    "AiUsage:Mode": "Unmetered"
+  }
+}

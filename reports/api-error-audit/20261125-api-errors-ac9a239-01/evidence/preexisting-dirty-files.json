@@ -1,0 +1,246 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "count": 40,
+  "files": [
+    {
+      "path": "MakanApp.Api/Controllers/AssignmentsController.cs",
+      "status": " M",
+      "sha256": "52b6b07614e6585f1b8ade9e2ccf29355f8888a9a240247486990109e002722b",
+      "bytes": 4076
+    },
+    {
+      "path": "MakanApp.Api/Errors/GlobalExceptionHandler.cs",
+      "status": " M",
+      "sha256": "a52209dd0bb14a90d7e327c89778e1f27359bac2528c8074f639fcedc380adee",
+      "bytes": 47686
+    },
+    {
+      "path": "MakanApp.Api/Program.cs",
+      "status": " M",
+      "sha256": "a140500e269719e796db86d50bfb212aadcdc92db1e78f1e6e5ccde61209ef4e",
+      "bytes": 20602
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssessmentException.cs",
+      "status": " M",
+      "sha256": "3c587ab55abfe7aa5a004035d7f28a95759b427f8936444ccd90d43b251e41c9",
+      "bytes": 247
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentAbstractions.cs",
+      "status": " M",
+      "sha256": "596408a1ab68fcf3ce67dbc5ff0ff397c0f0f355f887f97e9aad733f86740131",
+      "bytes": 4367
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentContracts.cs",
+      "status": " M",
+      "sha256": "59b3a2a9ae6146b236f1f7d24b7b2fd3eadae72222c3e6cc1faad8db3527f403",
+      "bytes": 2523
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentService.Helpers.cs",
+      "status": " M",
+      "sha256": "bcdb2749490f14b1a583ce10f524038925a444c72f6dea0d7418d1a073bebee0",
+      "bytes": 5630
+    },
+    {
+      "path": "MakanApp.Application/Assessment/IAcademicAuditWriter.cs",
+      "status": " M",
+      "sha256": "69bb1bc78618bdf4f4067fb530458dee868f0ff9234297a21f14ec5e3f3f23a6",
+      "bytes": 683
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionContracts.cs",
+      "status": " M",
+      "sha256": "262128d9cf5797762e7220364b85055f0cb74964e67153d2561926c32987dde8",
+      "bytes": 2666
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionService.Helpers.cs",
+      "status": " M",
+      "sha256": "4e1dfb2320675ab42c7424dfae72c5e40ad04da674dbbcd632180f13af992c48",
+      "bytes": 10821
+    },
+    {
+      "path": "MakanApp.Application/Assessment/SubmissionService.cs",
+      "status": " M",
+      "sha256": "ffe1e243aa161951986471032bb3c637d1442a0839c5dc2a3a2b7cf2af84d89f",
+      "bytes": 12150
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/Assignment.cs",
+      "status": " M",
+      "sha256": "28c4cfa4a3b16bbb758d40d6bd7949645d083e2150a6efd4883f869e491093b9",
+      "bytes": 3357
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/AssignmentVersion.cs",
+      "status": " M",
+      "sha256": "c707ca4fc16cf87c750485fbb7382bfcaf1efdbddea05a2e4b2f8ec0e8cf3a99",
+      "bytes": 8260
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/SubmissionAttempt.cs",
+      "status": " M",
+      "sha256": "4d115eec568fd06e67181d851a962b744f1a6cd458ccd0bb92d2c76d4d0c2dcf",
+      "bytes": 6137
+    },
+    {
+      "path": "MakanApp.Infrastructure/Assessment/EfAcademicAuditWriter.cs",
+      "status": " M",
+      "sha256": "db3c4c240de9cd3a1f814fc12b310cf7cca435d7d052ef9250c283b20e3a9f5e",
+      "bytes": 3595
+    },
+    {
+      "path": "MakanApp.Infrastructure/Assessment/EfAssignmentStore.cs",
+      "status": " M",
+      "sha256": "111933e20248d6412520b35e3bdf9256677dae36931e2fa78fd8d42d442b375b",
+      "bytes": 7246
+    },
+    {
+      "path": "docs/backend-api-guide.html",
+      "status": " M",
+      "sha256": "256f3d4c5b5efddf13fedb353bd3e1496586993f484eb200434fe1ff5d1d1a8a",
+      "bytes": 318129
+    },
+    {
+      "path": "docs/backend-api-guide.md",
+      "status": " M",
+      "sha256": "d5d24df652890bc2127a1f0c46f1b513ba083ca6a7946569f86fcdd07832cb4d",
+      "bytes": 248704
+    },
+    {
+      "path": "docs/backend-api-guide.pdf",
+      "status": " M",
+      "sha256": "b620fe4a04eb9bc37289d4585ee922d8221fd3de26454babb2c35f0d5c34326b",
+      "bytes": 2493661
+    },
+    {
+      "path": "docs/backend-api-reference.html",
+      "status": " M",
+      "sha256": "99dfce36f86c4df979829c1b94111c77653f1b1872617d33e231fa6c89b351a3",
+      "bytes": 2618599
+    },
+    {
+      "path": "docs/backend-api-reference.md",
+      "status": " M",
+      "sha256": "3f14b800dfda66c7c029f8b4a135576a8960e427cd4b98ce143250b050d77a0d",
+      "bytes": 1667956
+    },
+    {
+      "path": "docs/backend-api-reference.pdf",
+      "status": " M",
+      "sha256": "c1b1f72b0c5a264c89ac22e0386f7ae2fbd3c04bd35a3ce03a70914249faff50",
+      "bytes": 29041782
+    },
+    {
+      "path": "docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html",
+      "status": " M",
+      "sha256": "a7b010b6296354c3587c4dddf9765ee7133f2a1f6c37221bbeb03d3016280f64",
+      "bytes": 2664203
+    },
+    {
+      "path": "docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf",
+      "status": " M",
+      "sha256": "313f433c5241e1e83e0d922b881b859a0df3e4f37cb1223a85d8741e47e22b6d",
+      "bytes": 29269931
+    },
+    {
+      "path": "docs/frontend-contract/README.md",
+      "status": " M",
+      "sha256": "2a6028424d7f619c88b29e5fde8cf3ffebfe8da371cdd1ac3d3342ddea504e76",
+      "bytes": 37744
+    },
+    {
+      "path": "docs/product/PERSONAL_CLASS_V2_ACADEMIC_FRONTEND_HANDOFF_FA.md",
+      "status": " M",
+      "sha256": "04d465b5a419ffa67af10f741199e132cec1c4865113868765543800a4a20513",
+      "bytes": 13275
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/DevelopmentTestUsersTests.cs",
+      "status": " M",
+      "sha256": "b40fbb64cdee4b5ff2c6e6368791e26a890915b81c227e5394db32660160c5f9",
+      "bytes": 35397
+    },
+    {
+      "path": "MakanApp.Api/OpenApi/AssignmentSubmissionPolicyOperationTransformer.cs",
+      "status": "??",
+      "sha256": "dcf40a875663d100a41d47a3d11240244c26d4266cce26dab40a894a0a8c619d",
+      "bytes": 7652
+    },
+    {
+      "path": "MakanApp.Application/Assessment/AssignmentService.SubmissionPolicy.cs",
+      "status": "??",
+      "sha256": "b7db8809b235b64268e3a39ff92ad523ec24781af500e0851b1bceb0519dc08c",
+      "bytes": 3212
+    },
+    {
+      "path": "MakanApp.Domain/Assessment/SubmissionDeadlinePolicy.cs",
+      "status": "??",
+      "sha256": "647b216994f07a33aff44bbea32125845491cf5ef22e244fe368c1a0b8bdfb3e",
+      "bytes": 1127
+    },
+    {
+      "path": "docs/product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md",
+      "status": "??",
+      "sha256": "37537f8ef3fc98875220b53de70c83d06dce917085a417d315d95d8861116948",
+      "bytes": 13671
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/PersonalAssignmentPolicyEndpointsTests.cs",
+      "status": "??",
+      "sha256": "9be5f9ac79c64d7dd9e01e2fc6f985fa180ca128fc04c4766e2c8f6bc68e5976",
+      "bytes": 6320
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/PublishedAssignmentPolicyEndpointsTests.cs",
+      "status": "??",
+      "sha256": "3ce9f116dae4579c2b9829ea0b841c876270fb41bc261c427056dab97dcbcf47",
+      "bytes": 26027
+    },
+    {
+      "path": "tests/MakanApp.IntegrationTests/SubmissionDeadlinePolicyEndpointsTests.cs",
+      "status": "??",
+      "sha256": "82946f28365417fefe98be7a57b64ff1d136b02a4c819eacb2dee89478662473",
+      "bytes": 8467
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/PublishedAssignmentPolicyTests.cs",
+      "status": "??",
+      "sha256": "8537b2ad18b499f983f47f841d72c51c2afb986d5dacdad1f9d22dca61f80052",
+      "bytes": 4253
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/SubmissionDeadlinePolicyTests.cs",
+      "status": "??",
+      "sha256": "189f132f26e8d76ce748e9e766906b5003c1e16f9b78e922ec2aaefe07d96d34",
+      "bytes": 2368
+    },
+    {
+      "path": "tests/MakanApp.UnitTests/Assessment/SubmissionPolicyContractTests.cs",
+      "status": "??",
+      "sha256": "f1b514f63d9cb289a61bf8c2789243fe3c2fb8189b6027f25525f2391186ed4b",
+      "bytes": 1955
+    },
+    {
+      "path": "tools/ai/provider_diagnostic.py",
+      "status": "??",
+      "sha256": "45c38ce47c6937112dcdb70a76e57973884b7ca7a59cd2b3e6f83166e8926512",
+      "bytes": 12792
+    },
+    {
+      "path": "tools/ai/run_exact_ai.py",
+      "status": "??",
+      "sha256": "252eb83451a3bd2a561241bd9ff8e21d704b29aadb00f323594178e10f87190a",
+      "bytes": 6645
+    },
+    {
+      "path": "tools/ai/test_provider_diagnostic.py",
+      "status": "??",
+      "sha256": "fe2e584f3ce6185c03ef2e1e0e859853f8faf96a12d738980b2d1551301b8efb",
+      "bytes": 2893
+    }
+  ]
+}

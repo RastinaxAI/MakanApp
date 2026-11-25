@@ -1,0 +1,20 @@
+{
+  "attemptsTotal": 961,
+  "evidenceKinds": {
+    "REAL_API": 15,
+    "LOCAL_INTEGRATION_FAULT": 945,
+    "REAL_UI_BACKEND": 1
+  },
+  "http4xx": 536,
+  "http5xx": 54,
+  "transportErrors": 0,
+  "businessErrorResponses": 580,
+  "localFailedUpstream200": 3,
+  "partialRequestTimingRecords": 720,
+  "fixtureSetupAuthRequestsIncluded": false,
+  "excludedHarnessVersions": [
+    "phase-a-http-02: نگاشت Case اولیه ناقص؛ شواهد محفوظ.",
+    "phase-a-http-03: RateLimiter نامعتبرِ fixture؛ Issue محصول نیست."
+  ],
+  "interpretation": "تعداد attempt برابر تعداد Case یا تعداد تست نیست؛ rawOutputPersisted=false."
+}

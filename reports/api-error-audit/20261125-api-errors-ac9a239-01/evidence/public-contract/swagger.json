@@ -1,0 +1,30 @@
+{
+  "label": "swagger",
+  "url": "http://94.184.32.84:8090/swagger/index.html",
+  "retrievedAtUtc": "2026-11-25T13:04:56.226744+00:00",
+  "evidenceKind": "REAL_API",
+  "requestHeaders": {
+    "Accept": "text/html"
+  },
+  "credentialsSent": false,
+  "retryCount": 0,
+  "redirectFollowed": false,
+  "httpStatus": 200,
+  "contentSha256": "f487c68ed1c141ff127869a6c357dce38a9b1486ff37c9113ba04e96dc4fa812",
+  "contentBytes": 735,
+  "responseHeaders": {
+    "Content-Type": "text/html;charset=utf-8",
+    "X-Correlation-Id": "c575d7011b4c2e8c5178a1934b799b93"
+  },
+  "transportResult": "HTTP_RESPONSE",
+  "title": "Swagger UI",
+  "scriptPaths": [
+    "./swagger-ui-bundle.js",
+    "./swagger-ui-standalone-preset.js",
+    "index.js"
+  ],
+  "openapiPaths": [],
+  "businessResult": "PUBLIC_HTML_RECEIVED",
+  "userExperienceResult": "NOT_RUN_BROWSER",
+  "elapsedMs": 635.73
+}

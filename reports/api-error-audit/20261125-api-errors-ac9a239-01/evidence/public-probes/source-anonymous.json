@@ -1,0 +1,47 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "caseId": "C06",
+  "variantId": "source-anonymous",
+  "evidenceKind": "REAL_API",
+  "attempt": 1,
+  "repetition": 1,
+  "requestSequence": 4,
+  "interactionId": "public-source-anonymous",
+  "startedAtUtc": "2026-11-25T13:17:41.187478+00:00",
+  "method": "POST",
+  "endpoint": "http://94.184.32.84:8090/api/v1/ai/sources/preflight",
+  "credentialsSent": false,
+  "requestHeaders": {
+    "Accept": "application/json",
+    "X-Correlation-ID": "audit-public-source-anonymous",
+    "Content-Type": "application/json"
+  },
+  "requestPayload": {},
+  "retryCount": 0,
+  "retrySource": "NONE",
+  "backoffMs": 0,
+  "stateBefore": "ANONYMOUS_NO_FIXTURE",
+  "userExperienceResult": "NOT_RUN_NO_BROWSER",
+  "expected": "فقط مشاهدهٔ پاسخ عمومی؛ هیچ تغییر داده یا ورود انجام نشود.",
+  "httpStatus": 401,
+  "responseHeaders": {
+    "Content-Type": "application/problem+json; charset=utf-8",
+    "X-Correlation-Id": "audit-public-source-anonymous"
+  },
+  "responsePayload": {
+    "status": 401,
+    "code": "AUTH_REQUIRED",
+    "traceId": "00-2e04e2e308a5c7a10571eec46b2a8532-6e0d9daf02a735ca-00",
+    "correlationId": "audit-public-source-anonymous",
+    "requestId": null
+  },
+  "businessCode": "AUTH_REQUIRED",
+  "traceId": "00-2e04e2e308a5c7a10571eec46b2a8532-6e0d9daf02a735ca-00",
+  "correlationId": "audit-public-source-anonymous",
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "AUTH_REQUIRED",
+  "stateAfter": "PUBLIC_RESPONSE_NO_AUTH_OR_MUTATION",
+  "verdict": "OBSERVED",
+  "causeConfidence": "OBSERVED_ONLY",
+  "elapsedMs": 399.21
+}

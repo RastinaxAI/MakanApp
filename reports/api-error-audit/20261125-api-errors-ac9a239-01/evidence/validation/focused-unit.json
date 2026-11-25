@@ -1,0 +1,4802 @@
+{
+  "label": "focused-unit",
+  "command": [
+    "dotnet",
+    "test",
+    "tests/MakanApp.UnitTests/MakanApp.UnitTests.csproj",
+    "--configuration",
+    "Release",
+    "--no-build",
+    "--no-restore",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName~Ai|FullyQualifiedName~Knowledge|FullyQualifiedName~Commerce|FullyQualifiedName~Messaging|FullyQualifiedName~Identity|FullyQualifiedName~Assessment",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "startedAtUtc": "2026-11-25T13:32:27.609598+00:00",
+  "elapsedMs": 6191,
+  "exitCode": 0,
+  "summaries": [
+    {
+      "result": "Passed!",
+      "total": 1192,
+      "passed": 1192,
+      "failed": 0,
+      "skipped": 0,
+      "assembly": "MakanApp.UnitTests.dll"
+    }
+  ],
+  "tests": [
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.IdentityCryptographyTests.DifferentKeyCannotVerifyPersistedOtpHash"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpProviderTests.RequestOtpDoesNotCaptureCodeWhenRequestIsCancelled"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.TeacherAndStudentRequireSharedActiveClassRelationship"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.ScoreAboveMaximumIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.ProfileBioTests.BioIsOptionalTrimmedAndCanBeClearedWithoutChangingIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.UnsupportedMediaNeverSilentlyBecomesAllowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.PrivacyDefaultsAreApprovedContactsAndLegacyMutationPreservesNewSettings"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.UnsupportedMediaNeverSilentlyBecomesAllowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.UnsupportedMediaNeverSilentlyBecomesAllowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.UnsupportedMediaNeverSilentlyBecomesAllowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.UnsupportedMediaNeverSilentlyBecomesAllowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.OrganizationConversationRequiresMatchingAccessContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.IdentityCryptographyTests.PersistentKeyKeepsOtpHashVerifiableAcrossInstances"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.HistoryReadContextConcealsMissingCurrentConversationGrant"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.PersonalGroupInviteUsesSeparateTargetAudience"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.InvalidSnapshotIntervalFailsWithNoConfiguredValueDisclosure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.PrivateNoteIsNeverCopiedToAudienceFeedback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.PersonalConversationUsesPrivacyWithoutAgeDerivedRelationshipRequirements"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.PersonalHistoryRemainsReadableAfterEligibilityChanges"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.CommunicationEligibilityPolicyTests.StudentCannotStartConversationWithStudent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicContractBoundaryTests.AssignmentDefinitionAttachmentBoundaryIsEnforcedBeforePublication"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.SummaryConcealsEmptyOrMissingResourceWithoutConsultingSelectedWorkspace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.VerifiedBirthdayDeterminesClassification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicContractBoundaryTests.AssignmentDefinitionAttachmentBoundaryIsEnforcedBeforePublication"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpProviderTests.RequestOtpGeneratesAndCapturesSixDigitDevelopmentCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.SummaryConcealsEmptyOrMissingResourceWithoutConsultingSelectedWorkspace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.VerifiedBirthdayDeterminesClassification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicContractBoundaryTests.AssignmentDefinitionAttachmentBoundaryIsEnforcedBeforePublication"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.VerifiedBirthdayDeterminesClassification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.SummaryRejectsInactiveSessionBeforeResourceLookup"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.ScoreEqualToMaximumIsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EnabledKnowledgeRejectsInvalidConfigurationShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.HistoryReadContextUsesAuthoritativeConversationContextWithoutSelectingWorkspace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.FuturePaidPeriodDoesNotReleaseQuotaBeforeStart"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.HistoryReadContextRejectsInactiveSessionBeforeLookup"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.BothExplicitGatesAreRequiredAndDoNotSelectPhysicalModelOrVectorDatabase"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.HistoryReadContextRechecksSessionAfterLookup"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EitherDisabledGatePreventsKnowledgeTraffic"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EitherDisabledGatePreventsKnowledgeTraffic"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeOptionsTests.EitherDisabledGatePreventsKnowledgeTraffic"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AccountInboxSummaryTests.SummaryRechecksSessionAfterResourceLookup"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InternalRulesReturnStableOutcomeAndSafeMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaKindIsExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.MonthlyAnchorRecoversAfterShortGregorianMonth"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.NormalizationAndPersianDigitsCannotBypassKnownRules"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.AcademicActivityReferencesExactlyOneTypedSource"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicModelTests.AcademicGrantRevocationIsIdempotentAndDoesNotMutateGrantedCapabilities"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.ExtendingPolicyDoesNotRewriteHistoricalReceiptLateFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.AcademicActivityReferencesExactlyOneTypedSource"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.AcademicActivityReferencesExactlyOneTypedSource"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.LatePermissionCanBeEnabledAndDisabledWithoutReplacingExpiredDeadline"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.CorrectionRequiresReasonAndCreatesNewRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.PublishedDeadlineCannotBeShortened"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.DecimalScoreWithinRangeIsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.PublishedDeadlineCannotBeShortened"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.ScoreWithMoreThanTwoDecimalPlacesIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.NewExtendedDeadlineMustBeInTheFuture"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.NegativeScoreIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.UnknownReservationHoldsOriginalPeriodAndCannotRewriteFinalResult"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.NewDeadlineMustExplicitlyRepresentUtc"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.ReleasedEvaluationCannotBeEditedDirectly"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.NewDeadlineMustExplicitlyRepresentUtc"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.OfficialClassBindingCannotBeChangedOrAppliedToPersonalConversation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicModelTests.PersonalAssignmentUsesRealClassAndMembershipWithoutOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.NewEvaluationIsDraftAndNotReleased"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.DraftCannotUseThePublishedPolicyMutation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.VersionWithMaximumTwentyAcceptsEighteen"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.EvaluationRevisionTests.VersionWithMaximumTenRejectsEleven"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageProcessorCancellationTests.CallerCancellationDoesNotPersistFailureEvenWhenStoreThrowsAnotherException"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.TestCleanupAllowsOnlyTheExactNewQaIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageProcessorCancellationTests.CallerCancellationDoesNotPersistFailureEvenWhenStoreThrowsAnotherException"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.TestCleanupAllowsOnlyTheExactNewQaIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.PriceRoundingAggregatesExactFractionsBeforeRounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.ExpectedAnswerSetVersionMustMatch"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.ClassGroupAndChannelHaveSameSourceAndIndependentConversationIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.TransferIncrementsLeaseVersionAndInvalidatesOldLease"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.AcceptedMutationsIncreaseAnswerSetVersionMonotonically"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.FinalizedAttemptCannotMutateOrAcquireLease"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.ClassGroupAndChannelHaveSameSourceAndIndependentConversationIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.WriteRequiresLeaseAndOwnerSession"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.SecondSessionCannotAcquireWithoutExplicitTransfer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicModelTests.DeadlineFinalizationUsesServerDeadlineAndHasNoFabricatedSessionOrOperation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.OversizedDescriptiveAnswerIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.EmptyDescriptiveRevisionIsFrozenButNotCountedAsAnswered"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.UserMessageFactoryCannotCreateSystemOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.InProgressAttemptFinalizesWithServerValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.StaleAnswerRevisionCannotReplaceCurrentPointer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.FinalizeAtExactDeadlineIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.TestCleanupAllowsOnlyTheExactNewQaIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.NonCurrentRevisionCannotBecomeOfficialFinalAnswer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PersonalAcademicModelTests.PublishedAssignmentAttachmentSnapshotCannotBeChanged"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.PublishedAssignmentPolicyTests.PublishedExtensionChangesOnlySubmissionPolicy"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.StudentAnswerContractsContainNoAnswerKeyOrGradeFields"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.ObjectiveOptionFromAnotherQuestionIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.FinalReceiptContractContainsNoGradingFields"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.DeadlinePassedAnswerIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamFinalizationModelTests.FinalAnswerReferencesExactCurrentRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.SaveCommandDoesNotAcceptClientTimestampOrServerControlledVersions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.ConflictUsesUnknownProtectionWithoutDeletingAccount"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.SupportTicketTests.TicketMessageHasBoundedPlainTextContent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.FrozenLifecycleNeverReachesUpstream"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.ValidObjectiveAnswerCreatesImmutableRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.FutureOrUnrealisticBirthDateIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAnswerModelTests.DescriptiveAnswerPreservesExactTextIncludingEmptyAnswer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.IncompletePublicationDistinguishesUnsetZeroAndUnlimited"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.TestCleanupDoesNotAuthorizeOtherLifecycleCommands"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.TestCleanupDoesNotAuthorizeOtherLifecycleCommands"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.AcceptanceAllowsOnlyRequiredTransportOperations"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.AcceptanceAllowsOnlyRequiredTransportOperations"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.AcceptanceAllowsOnlyRequiredTransportOperations"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.AcceptanceAllowsOnlyRequiredTransportOperations"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.CallerCancellationIsPreserved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.OtpChallengeTests.VerifyReturnsExpiredAfterExpiry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.KnownCode_IsPreservedWithoutReturningSensitiveMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.OfficialBindingIsServerBackedAndKeepsOrganizationScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.OtpChallengeTests.VerifyConsumesCodeAndPreventsReuse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.OfficialBindingIsServerBackedAndKeepsOrganizationScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.OtpChallengeTests.VerifyLocksChallengeAtAttemptLimit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.KnowledgeAcceptanceHandlerTests.CurrentNoAuthAcceptanceRejectsAuthorizationBeforeAnyUpstreamRequest"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.OrganizationCreationAllowsOnlyManagerOrTeacher"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.OrganizationCreationAllowsOnlyManagerOrTeacher"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.OrganizationCreationAllowsOnlyManagerOrTeacher"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.OrganizationCreationAllowsOnlyManagerOrTeacher"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.LegacyMigrationStatusDoesNotInventDatesAndManagedEnforcementStartsWhenRegistered"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.OwnerAndAdminHaveDifferentMembershipAuthority"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ApprovedChildSafetyPolicyTests.InvitationRequiresExplicitAcceptanceAndCannotAcceptAfterExpiry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.PersonalCreationAllowsAuthenticatedAgeCategoriesInPersonalWorkspace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationManagementPolicyTests.ChannelPublishingIsLimitedToOwnerAndAdmin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.NonContractResponse_IsSafeAndDoesNotThrow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiErrorContractTests.MissingMessage_DoesNotPassErrorSchema"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.TypingIsAggregatedAcrossConnectionsAndFalseOnlyStopsItsOwnerConnection"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Academic.PersonalClassRequestTests.NeedsChangesCanBeEditedAndResubmittedWithStableRequestIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.InvalidLeaseAndRefreshConfigurationIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.RefreshTokenTests.RawTokenIsNotPartOfPersistedModelAndTokenCanBeUsedOnlyOnce"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.PendingGroupDoesNotMakeChannelReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.OfficialProvisionRejectsNonPairPurposes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.RefreshTokenTests.ExpiredOrRevokedTokenIsNotUsable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.OfficialProvisionRejectsNonPairPurposes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.PendingHintsAreBoundedAndDispatcherOwnershipIsExclusive"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.DeliveredActivityCannotBeRedirectedOrDuplicatedToAnotherMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.RefreshIsThrottledAndTypingDoesNotRenewPresenceLease"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.OneDisconnectDoesNotMakeAnotherSessionOfflineAndLeaseEventuallyExpires"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.TypingExpiresOnServerClockWithoutDurableState"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.SystemEndedParticipantDoesNotPretendAHumanRemovedThem"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.ExplicitReleasePreservesServerCalculatedTotal"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.OrganizationBindingCannotBeReboundToClass"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.ExplicitDevelopmentEnvironments_AcceptValidatedOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.OfficialSpaceDomainTests.SupersededActivityCannotBecomeCurrentAgain"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.IncompleteManualReviewCannotBecomeReadyOrRelease"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.ExplicitDevelopmentEnvironments_AcceptValidatedOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.ExplicitDevelopmentEnvironments_AcceptValidatedOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingEphemeralStateTests.CommandBudgetConnectionOwnerAndSubscriptionCapsAreEnforced"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.RealIsTheDefault_WithoutDevelopmentSecrets"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.CredentialFileAccessFailureIsConfigurationFailureNotInvalidDeviceOrAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSyncModelTests.MessageAndChangeSequencesAdvanceIndependently"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.DefinitionRejectsOptionCountOutsideBounds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSyncModelTests.DeliveryAndReadCursorsNeverRegress"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.ParentReportRequiresSelectedChildAndTeacherClassIsConcealed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.DefinitionRejectsOptionCountOutsideBounds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSyncModelTests.ReadCursorAlsoAdvancesDeliveryCursor"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.QuizRequiresOneValidCorrectOptionAndSingleChoice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSyncModelTests.ChangeCursorIsConversationScopedAndOpaque"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.QuizRequiresOneValidCorrectOptionAndSingleChoice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.QuizRequiresOneValidCorrectOptionAndSingleChoice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.QuizRequiresOneValidCorrectOptionAndSingleChoice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.CorrectObjectiveAnswerReceivesFullPoints"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.InvalidPaginationIsRejectedBeforeReader"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.DescriptiveScoreBelowZeroIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.InvalidPaginationIsRejectedBeforeReader"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.InvalidPaginationIsRejectedBeforeReader"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.RequestOtpPostsOnlyRecipientAsJsonAndParsesResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RuntimeOverlay_DoesNotHideExtraOrMistypedKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RuntimeOverlay_DoesNotHideExtraOrMistypedKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.ValidStudentQueryUsesNormalizedPaginationAndSingleServerTimestamp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSyncModelTests.ChangeEventCarriesMinimalStableMetadata"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.VoteAndCloseUseServerUtcAndNonemptyActor"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_DetectsMissingExtraNestedAndMistypedValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonSuccessHttpStatusMapsToSafeFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonSuccessHttpStatusMapsToSafeFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonSuccessHttpStatusMapsToSafeFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonSuccessHttpStatusMapsToSafeFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonSuccessHttpStatusMapsToSafeFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.FutureDateDoesNotMutatePerson"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.CorrectionCreatesNewRevisionWithoutMutatingReleasedHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.TestSecretSlots_RemainEmptyRatherThanCopyingProductionCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.ObjectiveGradeCannotBeOverriddenManually"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.MissingOrNonStringCodeFailsSafely"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.TestSecretSlots_RemainEmptyRatherThanCopyingProductionCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.WrongRoleCannotCallAnotherAudienceReport"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.MissingOrNonStringCodeFailsSafely"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.TotalScoreIsCalculatedFromQuestionGrades"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.MissingOrNonStringCodeFailsSafely"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.MissingOrNonStringCodeFailsSafely"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.TestSecretSlots_RemainEmptyRatherThanCopyingProductionCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.QuotaJsonRequiresExplicitLimitAndDistinguishesZeroFromUnlimited"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_IgnoresValuesAndPropertyOrderButNotStructure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.StudentAndGuardianResultContractsContainNoPrivateNoteOrAnswerKey"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.OrganizationGraceDoesNotExtendIndividualAndNeverBlocksSecurityOrMessaging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.CompletedGradeIsStillNotReleasedUntilExplicitRelease"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.IncorrectObjectiveAnswerReceivesZero"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.SelfDeclaredDateHasNoInventedMinimumAge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RuntimeOverlay_RetainsInheritedKeysAndReplacesEnvironmentValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.UnansweredObjectiveQuestionReceivesZeroWithoutFabricatedRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.SelfDeclaredDateHasNoInventedMinimumAge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.SelfDeclaredDateHasNoInventedMinimumAge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.SelfDeclaredDateHasNoInventedMinimumAge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamGradingModelTests.DescriptiveScoreAboveQuestionMaximumIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.UpdatingNamesPreservesDeclaredDate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_RejectsDuplicateKeysIncludingConfigurationCasing"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PersonDateOfBirthTests.ExistingProfileDoesNotRequireDateOfBirth"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.SingleChoiceAndMultiChoiceValidatePersistableOptionNumbers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.CallerCancellationIsNotReportedAsAWorkerFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_RejectsDuplicateKeysIncludingConfigurationCasing"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_RejectsDuplicateKeysIncludingConfigurationCasing"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.SenderMutationWindowUsesOriginalSentTime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_AcceptsMatchingNullAndNestedArraySchemas"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.InvalidProfileIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.RecursiveComparison_AcceptsMatchingNullAndNestedArraySchemas"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.SenderMutationWindowUsesOriginalSentTime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.SenderMutationWindowUsesOriginalSentTime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.DefinitionUsesImmutableNormalizedSnapshot"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.PersonalContextNeverResurrectsRevokedSession"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.TrialResetUsesTehranMidnightNotUtcDate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.ChannelRejectsGroupOnlyHistoryAndMemberCapabilities"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.OrganizationResourceRetainsExactSelectedOrganizationAndRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.OptionalValidProfileNeedsNoOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.OptionalValidProfileNeedsNoOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommercialProductRulesTests.UpgradePreservesFractionAndMatchesDirectUpgrade"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.OptionalValidProfileNeedsNoOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.ExplicitOrganizationScopeStillUsesCurrentContextResolver"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.OptionalValidProfileNeedsNoOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.PersonalStateKeepsArchivePinMuteAndManualUnreadIndependent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.CloseIsFinalIdempotentAndStopsVoteChanges"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.PublishedPollQuestionCannotBeEditedOrUsedAsMedia"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.VersionedSettings_AreValidJsonWithoutDuplicateKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.OrdinaryPollCannotCarryAnswerKeyOrExplanation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.PollMustMatchRealMessageAndFingerprintShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.VersionedSettings_AreValidJsonWithoutDuplicateKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.AnswerKeyBelongsOnlyToQuizAndValidOption"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.VersionedSettings_AreValidJsonWithoutDuplicateKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.DefinitionRejectsBlankDuplicateControlAndOversizedOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.VersionedSettings_AreValidJsonWithoutDuplicateKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.GeneratedBufferBoundIsExplicitAndPartialCompletionIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.ParticipantHistoryBoundaryAndAdminPermissionsAreStableSnapshots"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.FailedPromptContainsMetadataOnlyAndCompletionIsAnAtomicPair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.NonAdminCannotReceiveAdminPermissions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationPollTests.QuizVoteIsFinalWhileOrdinaryVoteHasRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.BindingExcludesSessionButIncludesOwnerContextRoleClassAndLearner"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.TestTemplate_MatchesEveryProductionTemplatePathAndJsonType"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationAdvancedManagementTests.LinkRejectsInvalidLimitsHashesAndCreatorContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.ExplicitPersonalOperationDoesNotChangeSelectedTeacherContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.BatchAndFailureMeasurementsUseOnlyFixedWorkerAndStageLabels"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.AuthorizedPersonalResourceUsesTransientAccountContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationAdvancedManagementTests.JoinRequestTerminalStateIsIdempotentButCannotBeRewritten"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingOperationContextTests.NonparticipantCannotObtainPersonalResourceProjection"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.HistoryKeepsNewestTenCompletedPairsInChronologicalOrder"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationAdvancedManagementTests.LinkEnforcesExpiryRevocationAndMaximumUses"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationAdvancedManagementTests.GranularCapabilitiesDoNotEscalateAndOwnerCannotBeRestricted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushUnavailableOrInvalidConfigurationCannotReturnAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.AvailableEffectiveRuntimeSettings_MatchBidirectionallyAndKeepEnvironmentSpecificOtp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationAdvancedManagementTests.IndividualRestrictionOverridesCapabilityUntilExpiryAndClearingDoesNotRejoin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.TestConfigurationSchemaTests.ExistingTestOtpAndSwaggerValues_ArePreserved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.BoundSourceVersionsCannotSilentlyMoveToLatest"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.StudentContext_UsesOrganizationPersonAndReleasedScoreWithVersionMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.NewUserHasNoPhotoAndPhotoDoesNotCompleteIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingBehaviorHardeningModelTests.GroupSettingsAreExplicitAndValidated"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.PhotoChangesRequireUtc"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.PhotoChangesRequireUtc"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_UsesServerResolvedRoleAndOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.StudentContext_UsesOrganizationPersonAndReleasedScoreWithVersionMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.StudentContext_UsesOrganizationPersonAndReleasedScoreWithVersionMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.RepeatingTheSameSelectionIsIdempotent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.HistorySkipsOversizedPairsAndEnforcesTwelveThousandCodePoints"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.DescriptorUsesFileIdentityWithoutStorageLocationOrCredential"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_UsesServerResolvedRoleAndOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_UsesServerResolvedRoleAndOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.EmptyIdentifierIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_UsesServerResolvedRoleAndOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.UnboundedInputIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.SuspensionAndAgeChangesDoNotDeletePhoto"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.CompletingPersonalProfilePreservesPhoto"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.ParentContext_RevokedRelationRejectedByResolver_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.UserProfilePhotoTests.ReplaceAndRemoveChangeOnlyCurrentPhotoReference"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.LocalClockValuesAreRejectedRatherThanConvertedImplicitly"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_PersonalWorkspaceWithDifferentActor_IsDeniedBeforeClientCall"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiAdaptiveContractsTests.GoalBoundsCountUnicodeCodePointsAndNotUtf16Units"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.LocalClockValuesAreRejectedRatherThanConvertedImplicitly"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessengerCompletionModelTests.MessageNotificationUsesMessagesPreferenceAndSafeExternalPreview"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessengerCompletionModelTests.ClearHistoryWatermarkIsMonotonicAndClearsManualUnread"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.BoundaryAndLatePermissionUseOneUtcRule"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_InvalidMessage_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_InvalidMessage_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.ExactDeadlineCanProduceANonLateFinalReceipt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessengerCompletionModelTests.SavedConversationHasDedicatedPersonalOwnerShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionDeadlinePolicyTests.SqlDatetime2WithoutKindRetainsItsPersistedUtcMeaning"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessengerCompletionModelTests.ContactCardUsesTypedSnapshotWithoutPhone"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.DevelopmentSeedIranianPhones_NormalizeToTheirCanonicalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeRejectsInvalidValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeRejectsInvalidValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeRejectsInvalidValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeRejectsInvalidValues"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.TeacherStudent_OutsideAssignedClass_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeAcceptsSupportedMobileFormats"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeAcceptsSupportedMobileFormats"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeAcceptsSupportedMobileFormats"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.PhoneNumberNormalizerTests.TryNormalizeAcceptsSupportedMobileFormats"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.LegacyQuestionHasNoGuessedAttachmentLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRejectsMalformedMime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.PlatformOwnerWithoutManagerMembership_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.SelectionHistoryCopiesHashAndRejectsDuplicatePins"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRejectsMalformedMime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRejectsMalformedMime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRejectsMalformedMime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRequiresExplicitPositiveLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRequiresExplicitPositiveLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRequiresExplicitPositiveLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_OrdinaryPersonalAccount_UsesOfficialPersonalActorWithoutSchoolScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyRequiresExplicitPositiveLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.NotificationDeliveryRecoveryTests.ExhaustedExpiredClaimBecomesTerminalWithoutClaimingAgain"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_StudentWithoutActiveOrganizationPerson_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmittedAnswerIsImmutable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.ManagerClass_CrossOrganizationClass_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.ReviewRequiresAnActualValidFingerprint"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.EmptySubmissionIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Platform.PlatformSchemaRemovalTests.RemovalMigrationDropsOnlyTheApprovedTablesColumnsAndConstraint"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.PublisherFailureMarksCacheStaleAndNeverLogsTheSourceException"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.LateSubmissionIsMarkedWhenPolicyAllowsIt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.ReviewRequiresAnActualValidFingerprint"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.ReviewRequiresAnActualValidFingerprint"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.EmptyAnswerIsStoredAsNull"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsNonPositiveMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.StudentContext_WithoutActiveEnrollment_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmissionAttachmentRejectsLocalTimestamp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsNonPositiveMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.DraftVersionNormalizesContent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmissionBeforeDeadlineUsesServerTimestamp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiChatServiceTests.ChatAsync_ClassSwitchAfterProviderIsDeniedEvenWhenClassIsHiddenFromJson"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.AttachmentOnlyRevisionIsAnsweredAndHasImmutableBindingIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmittedAttemptCannotTransitionTwice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.LateSubmissionIsRejectedWhenPolicyDisallowsIt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.NewAttemptStartsAsDraftAndIsNotOfficiallySubmitted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnsafeEnvironment_RejectsBypassAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Observability.WorkerTelemetryTests.FailedRefreshKeepsLastValuesAndExposesIncreasingSnapshotAge"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmissionAttachmentCapturesServerUtcTimestamp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.ReadyAttachmentCanBeTheOnlySubmissionContent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.SubmittedAttachmentsAreImmutable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.ActualRestrictionsAndRevocationOverrideOfficialManagement"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnsafeEnvironment_RejectsBypassAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.DraftSaveNormalizesAnswerWithoutSubmitting"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.NewAssignmentStartsAsDraftWithFirstVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.ActualRestrictionsAndRevocationOverrideOfficialManagement"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.ActualRestrictionsAndRevocationOverrideOfficialManagement"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.ActualRestrictionsAndRevocationOverrideOfficialManagement"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsNonUtcDueDate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionAttemptTests.OversizedAnswerIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.MediaDecisionIsActuallyRequiredAndNeverAssumed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnsafeEnvironment_RejectsBypassAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.MediaDecisionIsActuallyRequiredAndNeverAssumed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.MediaDecisionIsActuallyRequiredAndNeverAssumed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.MediaDecisionIsActuallyRequiredAndNeverAssumed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.TeacherClass_UnassignedClass_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContractTests.RoleRequest_SerializesAsCamelCaseMinimumContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.InitialInvitationAcceptanceUsesStoredExpirationBoundary"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.RecipientCapturesEnrollmentIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnsafeEnvironment_RejectsBypassAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.InitialInvitationAcceptanceUsesStoredExpirationBoundary"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.EmptyOrControlFolderNamesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.InitialInvitationAcceptanceUsesStoredExpirationBoundary"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsNonPositiveMaxAttempts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.EmptyOrControlFolderNamesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.MissingOrInvalidCode_FailsWithoutDisclosingValue"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.EmptyOrControlFolderNamesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.StudentContext_WithoutOwnOrganizationPerson_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsNonPositiveMaxAttempts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.MissingOrInvalidCode_FailsWithoutDisclosingValue"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.MissingOrInvalidCode_FailsWithoutDisclosingValue"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.DraftIsNotRecipientVisibleButPublishedAssignmentIsVisible"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.PersonalAuthorizationUsesPrivacyAndAccountsForEveryAgePair"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.AssignmentCannotBePublishedTwice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.QuotaSupportsExplicitUnlimitedLimitAndRejectsNegativeLimit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.EmptyOrDuplicateNormalizedAllowlist_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.ApprovalMatchesExactFileContentAndCannotApproveAnotherBlob"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnknownMode_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.PublishedVersionCannotBeEdited"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnknownMode_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnknownMode_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.UnknownMode_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.AssignmentModelTests.VersionRejectsPastDueDate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.UsageLedgerRequiresPositiveRetryIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.InvalidAccountBinding_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.InvalidAccountBinding_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.InvalidAccountBinding_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.SelectedMeliPayamakOtpProviderValidatesSecretDuringRegistration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiRoleContextBuilderTests.ManagerStudent_CrossOrganizationStudent_IsDenied"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.ApprovedMediaDoesNotApproveUnsafeCaption"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.OptionsRequireServiceTokenAndSecureOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.MediaMessageRequiresAttachment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiInvocationTests.ConflictingOrEmptyOperationIdsAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.MediaMessageRequiresAttachment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.MediaMessageRequiresAttachment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.MediaMessageRequiresAttachment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiInvocationTests.DisabledRuntimeIsRejectedBeforeCommerce"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.OfficialManagementIsRelationshipDerivedWithoutRosterOrOwnershipPowers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.EditPreservesIdentityAndSequenceWhileAdvancingRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Platform.PlatformOperationsModelTests.ProvisioningStagesRemainExplicitAndPayloadCanBeMatchedForRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.OfficialManagementIsRelationshipDerivedWithoutRosterOrOwnershipPowers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.StudentGroupSendDoesNotGrantOfficialAdministrationOrChannelPublishing"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.DevelopmentOtpBypassTests.LegacyBypassComposition_IsRejectedInsteadOfCompetingWithOtpEnabled"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.MalformedJsonFailsSafely"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.SuccessfulStartUsesServerAllocatedAttemptAndFrozenVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.PinRemovalPreservesWhoAndWhen"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.AttemptBeyondMaxAttemptsIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiInvocationTests.LegacyCallGetsNewIdentityWithoutInventingIndividualPayer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.NonStringStatusIsIgnoredWithoutRejectingValidCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PublishedPolicyCannotMutateAndNewVersionPreservesOriginalSnapshot"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.StartBeforeAvailableFromIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttachmentModelTests.PolicyNormalizesAndOwnsImmutableContentTypeCollection"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.ReactionRemovalPreservesTombstoneLifecycle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.SessionRevisionChangesOnlyForRealLifecycleMutations"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.StudentAttemptContractsContainNoAnswerKeyProperty"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.DeleteCreatesTombstoneAndPreventsNormalEdit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.AttemptCannotExpireBeforeDeadline"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.DeadlineIsCappedByPublishedWindow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.FolderTypeMaskAndRevisionRemainExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.SessionPublicationRequiresExplicitActionAndCannotPretendToBeLesson"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.StartAtOrAfterAvailableUntilIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.DeadlineUsesDurationWhenItEndsFirst"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.UnknownTypeBitsAndInvalidOverrideAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamAttemptModelTests.FrozenQuestionKeepsAttemptVersionAndDisplayOrder"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.OfficialDescriptionAndSourceRenamePreserveSystemOwnershipAndPersonalBoundary"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.ScheduleRejectsPastAndNonUtcDeadline"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPresentationTests.SavedLabelNormalizationIsStableAndRejectsInvalidInput"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.VoiceIsStoredMediaMessageAndDoesNotModelACall"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.AdvancedMessagingModelTests.RevisionStoresExplicitHistoricalContent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.PendingCaseCannotBeResolvedOrDismissedIntoAnApproval"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.DevelopmentProviderDoesNotRequireMeliPayamakOtpSecret"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.OrderFreezesPublishedPlanVersionPrice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.SubscriptionUsesInclusiveStartAndExclusiveEndBoundary"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.CancelledSubscriptionIsNeverEffective"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PaymentRequiresSucceededAttempt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.PublishedContentAndGradingFieldsAreRejectedByThePolicyContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PlanVersionPriceRejectsInvalidAmounts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.TransientFailureUsesBoundedBackoffAndMaximumAttempts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.OnlyAssignedReviewerMakesOneExplicitTerminalContentDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.PublishedContentAndGradingFieldsAreRejectedByThePolicyContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.PublishedContentAndGradingFieldsAreRejectedByThePolicyContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MediaSafetyReviewTests.OnlyAssignedReviewerMakesOneExplicitTerminalContentDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PublishedPlanVersionTermsAreImmutable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.PublishedContentAndGradingFieldsAreRejectedByThePolicyContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.PublishedContentAndGradingFieldsAreRejectedByThePolicyContract"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.ExpiredWorkerCannotDispatchAfterNewClaimOrCancellation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.ReportExportJobTests.ActiveLeaseCannotBeClaimedButExpiredLeaseCanBeRecovered"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.EveryPolicyAndConcurrencyFieldMustBeExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnknownPayerIsRejectedInEveryMode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnknownPayerIsRejectedInEveryMode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.EveryPolicyAndConcurrencyFieldMustBeExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.EveryPolicyAndConcurrencyFieldMustBeExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.ClaimRequiresDueTimeAndLeaseAndDispatchHasOneTerminalEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Organization.PersonalVisibilityTests.SuspendedVisibilityRemainsAnExplicitOpenDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.EveryPolicyAndConcurrencyFieldMustBeExplicit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.ReportExportJobTests.NewJobIsQueuedAndCanCompleteOnlyAfterClaim"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.SilentIsAnImmutableSendIntentNotDeletionOrMissingStorage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Organization.PersonalVisibilityTests.SuspendedVisibilityRemainsAnExplicitOpenDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.CatalogCoversEveryAtomicPermissionAndExplainsOfficialDelegationLimits"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ScheduledMessageTests.ExhaustedCrashLeaseCanBeTerminalizedInsteadOfStickingForever"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.ReportExportJobTests.RetryAndFailureTransitionsRemainFinite"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.InitialInvitationReceiptDoesNotClaimActiveMembershipAndUsesApprovedSevenDays"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PeriodicReportAndAiKeysUseLedgerAccounting"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.WireGuardOptInCannotPermitArbitraryRemoteHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PlanVersionRejectsInvalidVersionNumber"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.UserManagedPermissionsAndMemberRestrictionsRemainEffective"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.WireGuardOptInCannotPermitArbitraryRemoteHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.WireGuardOptInCannotPermitArbitraryRemoteHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingPolicyRevisionTests.InitialInvitationDefaultDoesNotRewriteExplicitStoredLifetime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.SubscriptionCannotUseDraftPlanVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Loopback_IsAllowedWithoutRemoteOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiInvocationTests.LogicalHashIgnoresTransportAndChangingServerReportsButBindsIntentAndScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Loopback_IsAllowedWithoutRemoteOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Loopback_IsAllowedWithoutRemoteOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.NewPlanVersionDoesNotChangePublishedVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.SubmissionPolicyContractTests.ExplicitFalseIsDistinctFromAnOmittedLatePermission"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalContextRejectsForeignIdentityAndEveryOrganizationSelector"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_RegistersNewFakePhoneWithoutPriorChallengeOrComparingTheCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SourceHasTypedOwnerAndIndependentStableIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.Remote_RequiresExplicitFlagAndExactApprovedOrigin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.RevocationBetweenPlanAndExecutionFailsClosed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SourceHasTypedOwnerAndIndependentStableIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SourceHasTypedOwnerAndIndependentStableIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SourceHasTypedOwnerAndIndependentStableIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiInvocationTests.CurrentContextComparisonIsStructuralAndFailClosedOnPrivateDataChange"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.UnsafeOrMissingTarget_IsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.RemoteHttp_IsRejectedEvenWhenApproved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.ApprovedWireGuardRequiresExplicitFlagAndBackendInterface"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.LiveAiTargetPolicyTests.ApprovedRemoteHttps_IsAccepted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockVerify_ExistingPhoneReusesUserWithoutGrantingAdditionalIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PaymentTimeoutRemainsRecoverableAndDoesNotSettleOrder"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.CommerceDomainTests.PlanCanExistWithStableCodeAndDisplayName"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PublishedRevisionCannotRewriteHistoricalMetadataAndNewRevisionKeepsSourceIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredOperationIsExplicitDurableAndNeverPretendsToBeTrial"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredPayerHasNoCommercialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredPayerHasNoCommercialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredPayerHasNoCommercialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredPayerHasNoCommercialEffect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OutboxRecoveryStateTests.InvalidTerminalErrorDoesNotClearCurrentClaim"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OutboxRecoveryStateTests.StaleClaimCannotTerminalizeReplacementClaim"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.LegacyActivationCannotOverrideTheSingleFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OutboxRecoveryStateTests.TerminalFailureClearsClaimAndRetryWithoutPretendingProcessed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRequest_AcceptsUnregisteredPhonesWithoutAnyOtpSideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalPayerDefaultsToIndividualAndNeverAllowsOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.LegacyActivationCannotOverrideTheSingleFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.MessageRejectsEmptyText"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRequest_AcceptsUnregisteredPhonesWithoutAnyOtpSideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.MessageRejectsEmptyText"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRequest_AcceptsUnregisteredPhonesWithoutAnyOtpSideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.LegacyActivationCannotOverrideTheSingleFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.LegacyActivationCannotOverrideTheSingleFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidCodeFormatWithoutDoingRealOtpValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidCodeFormatWithoutDoingRealOtpValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidCodeFormatWithoutDoingRealOtpValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.MissingConfigurationRetainsCommercialCompatibility"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ArchivePreservesVersionIdentityAndRejectsLaterMutation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SafetyDecisionCannotBeSilentlyApproved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SafetyDecisionCannotBeSilentlyApproved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiUsagePolicyTests.UnmeteredOperationStillRequiresIdentityHashAndUtc"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceAuthenticationConfigurationTests.RepositoryBaseExplicitlyDisablesBothServiceCredentialsWithoutEnablingRuntime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.InvalidIngestNeverSendsHttp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveDuration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveDuration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.ExecutionMetricsContainOnlyBoundedContextPayerOperationAndResultLabels"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.ExplicitTestOptIn_BindsOptionsAndNeverRegistersSmsAdapter"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveMaxScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.OwnershipTransferChangesStateOnlyAfterDestinationAcceptance"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.FingerprintIgnoresTransportButBindsAccountConversationAndMessage"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceAuthenticationConfigurationTests.RepositoryBaseExplicitlyDisablesBothServiceCredentialsWithoutEnablingRuntime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.ExplicitTestOptIn_BindsOptionsAndNeverRegistersSmsAdapter"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SafetyHoldCannotBeResetToPendingAndThenLaunderedIntoApproval"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.SupportedPersonalContractMapsOnlyOfficialActorAndEmptyScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.SafetyHoldCannotBeResetToPendingAndThenLaunderedIntoApproval"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.PublicReportContractsDoNotExposeSensitiveFields"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.RealOtp_StillEnforcesFailedAttemptLimit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ContradictoryOwnershipIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceAuthenticationConfigurationTests.DependencyInjectionHonorsExplicitAuthenticationModeAndPreservesLegacyDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Reports.DetailedReportServiceTests.InvalidUtcRangeAndUnknownSortAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PhysicalReadinessNeverBypassesSafety"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.ExplicitTestOptIn_BindsOptionsAndNeverRegistersSmsAdapter"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.DirectPairIsCanonicalRegardlessOfInputOrder"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PhysicalReadinessNeverBypassesSafety"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PhysicalReadinessNeverBypassesSafety"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PhysicalReadinessNeverBypassesSafety"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.NextVersionCopyDoesNotMutatePublishedQuestionHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RequiresIndependentTestOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.DirectPairRejectsConversationWithSelf"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.EmptyTitleIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RequiresIndependentTestOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RequiresIndependentTestOptIn"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.PersonalIntentHasOnlyAccountIdentityAndEmptyScopeWithoutWireRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.EmptyTitleIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.MessageRejectsTextAboveConfiguredLimit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.DescriptiveQuestionDoesNotAcceptAnswerKeyOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.PlanAndManifestCannotClaimRetrievalOrContainFileCredentials"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceAuthenticationConfigurationTests.DependencyInjectionHonorsExplicitAuthenticationModeAndPreservesLegacyDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveMaxAttempts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.PersonalAiInvocationTests.IntentCannotSmuggleSchoolOrStudentScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsNonPositiveMaxAttempts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.ParticipantLifecyclePreservesEndedMembershipAndRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.QuestionRejectsNonPositiveScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidPhoneBeforeRequestOrVerifySideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceAuthenticationConfigurationTests.DependencyInjectionHonorsExplicitAuthenticationModeAndPreservesLegacyDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.QuestionRejectsNonPositiveScore"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.UserManagedConversationRequiresTitleAndTracksCreationIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidPhoneBeforeRequestOrVerifySideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.MessagePreservesExactText"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsInvalidPhoneBeforeRequestOrVerifySideEffects"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingModelTests.ConversationAllocatesStrictlyIncreasingSequences"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.PublicationRequiresAtLeastOneQuestion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.PrivacyAudienceUsesTargetOwnedOneWayContact"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.PublicationRejectsQuestionScoreTotalMismatch"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.PrivacyAudienceUsesTargetOwnedOneWayContact"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.StorageModelTests.ReadyFileCanBeRetainedIdempotently"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.PrivacyAudienceUsesTargetOwnedOneWayContact"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.PrivacyAudienceUsesTargetOwnedOneWayContact"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.StorageModelTests.NonReadyFileCannotBeRetained"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.RealOtp_StillEnforcesExpiry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockRejectsOversizedCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.VersionRejectsInvalidWindow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.UserContactRejectsSelfAndNormalizesPrivateSavedName"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.ProcessingFailureKeepsNonAiFileUsableWithoutInventingSuccessfulAiProcessing"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.UserContactRejectsSavedNameBeyondStorageLimit"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.ObjectiveQuestionRequiresValidDistinctOptions"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.MessagingPrivacySettingsRejectInvalidAudience"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.EducationalSourceTests.PersianTitleNormalizationPreservesDisplayAndSupportsCatalogSearch"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.ReportStartsAsSubmittedAllegationWithOnlySelectedMessageSnapshot"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.SelectionIsDeduplicatedAndSorted"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.ObjectiveQuestionRequiresExactlyOneCorrectOption"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.EmptySelectionNeverExpandsSources"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingDirectoryModelTests.MessagingPrivacyDefaultsAreExplicitProductDefaultsWithoutRow"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.PersianSearchNormalizationPreservesOriginalAndNormalizesVariants"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.ReportStatusChangesOnlyThroughReviewLifecycle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.RealOtp_UsesProviderHashAndChallenge_RejectsWrongCodeAndAcceptsCorrectCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Assessment.ExamModelTests.DraftIsEditableButPublishedVersionIsLocked"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Academic.AcademicModelTests.CompletedEnrollmentDoesNotRemainActive"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.MalformedStreamNeverYieldsSuccessOrRetries"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Academic.AcademicModelTests.EndingEnrollmentPreservesIdentityAndHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.ModerationCaseRejectsInvalidTransitionAndDifferentResolver"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MockOtpIdentityServiceTests.MockPreservesAccountSuspension"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.PersistedEnumValuesRemainCompatibleAndReviewReportsUsesNextFlag"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.UnusableStatesAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.UnavailableSelectionPinsAndRechecksWithoutAnyCommerceOrProviderDependency"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.PaymentRecoveryDomainTests.HistoryExcludesUnsafeCodesAndCallbackTimestampIsFirstReceipt"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.SameOrganizationIsCompatible"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.LibraryIsDisabledEvenForManager"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.UnblockPreservesHistoricalLifecycleAndIsIdempotent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.PaymentRecoveryDomainTests.UncertainVerificationCannotClearActiveInitiationClaimOrReplaceDefinitiveFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.EditedMessageSearchUsesOnlyCurrentText"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.CrossOrganizationIsConcealed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.DeletedMessageClearsSearchableContent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.ForeignPersonalIsConcealedEvenForManager"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.PaymentRecoveryDomainTests.ExpiredInitiationLeaseBecomesUnknownAndCannotIssueSecondPost"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.PersonalOwnerIsAllowedRegardlessOfEducationalRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.MessagingSafetyModelTests.UserCannotBlockSelf"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.SameClassAndOrganizationContextIsCompatible"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.OtherClassCannotEnterCurrentContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.SchoolInitialManagerTests.ExplicitManagerSelectionIsFrozenAndHistoryContainsActualDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.TechnicalReadinessNeverClaimsRetrievalExists"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.PaymentAvailabilityTests.UnavailableGatewayNeverClaimsConfiguredOrVerifiedPayment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourcePolicyTests.TechnicalReadinessNeverClaimsRetrievalExists"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.SchoolInitialManagerTests.ExplicitManagerSelectionIsFrozenAndHistoryContainsActualDecision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.PreflightDoesNotWriteHistoryAndExplainsCommerceGate"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.HashCanonicalizesSetButBindsPayloadAndContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Guardian.GuardianRelationTests.DuplicateActivationIsRejectedByDomainLifecycle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.EmptyGuidIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.SafetyIncidentAcceptsOnlyNonDeliveryDecisionsAndStableHashes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.PaymentRecoveryDomainTests.BankReferenceIsCopiedIntoImmutableReceiptAndSuccessCannotBeDowngraded"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Guardian.GuardianRelationTests.RelationRetainsItsOrganizationScope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationTopicTests.TopicPermissionIsIndependentAndNotGrantedToLegacyAdmin"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.ModerationCaseFollowsExplicitReviewLifecycle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ExecutionRequiresExplicitValidGrace"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.InvalidOperationOrMissingOperationIdIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiSourceSelectionTests.EmptySelectionDoesNotResolveContextOrWriteIntent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationTopicTests.TopicRejectsNonGroupEmptyTitleInvalidStatusAndNonUtcTime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsUnexpectedContentTypeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.SchedulingUsesExplicitGraceWithoutAHiddenLegalDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.SchedulingUsesExplicitGraceWithoutAHiddenLegalDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.SchedulingUsesExplicitGraceWithoutAHiddenLegalDefault"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Organization.OrganizationPersonTests.EndingOrganizationPersonPreservesItsIdentityAndHistory"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.OpenAccessFeatureDecisionDoesNotRequireOrInventSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationTopicTests.TopicLifecyclePreservesIdentityAndSupportsExplicitReopen"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.DisabledOtp_RejectsNonTestEnvironmentAtComposition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.FailureEvidenceCaptureTests.Request_RejectsSensitiveTraceBeforeItCanBecomeEvidence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.OpenAccessFeatureDecisionDoesNotRequireOrInventSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.OpenAccessFeatureDecisionDoesNotRequireOrInventSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationTopicTests.MessageTopicIsExplicitAndCannotBeEmpty"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.FailureEvidenceCaptureTests.Request_RejectsSensitiveTraceBeforeItCanBecomeEvidence"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.AutomatedSafetyCaseIsAlwaysCriticalPlatformQueue"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.PhoneChangeHistoryIsDetachedAndSanitizedWithoutFabricatingACredential"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.OmittedRequiredQuotaBlocksPublicationButExplicitZeroAndUnlimitedAreDifferent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ModerationChildSafetyModelTests.ModerationCaseCanBeDismissedByAssignedReviewer"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.PhoneChangeHistoryIsDetachedAndSanitizedWithoutFabricatingACredential"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.OpenCircuit_RecordsRejectionWithoutAnotherHttpCallOrSensitiveMetricLabels"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.KnownRequestErrorsNeverProducePaymentUrl"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.InvalidBooleanFailsClosed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.KnowledgeDeletionNeverUsesCreatedByAsOwnership"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.MissingConfiguration_DefaultsToRealOtp"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.KnowledgeDeletionNeverUsesCreatedByAsOwnership"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.KnowledgeDeletionNeverUsesCreatedByAsOwnership"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.RealOtp_PreservesExistingDevelopmentDeliveryAdapter"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OperationalMetricsPublisherLifecycleTests.FailedRefreshRemainsVisibleAndBoundedWithoutLeakingExceptionOrBlockingShutdown"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.ReenabledEnforcementStillRejectsMissingSubscription"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.Production_RejectsMockPermissionEvenIfOtpIsEnabled"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.KnownErrorsPreserveCodeAndStatusWithoutRetryOrPrivateBodyLogging"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.Production_RejectsMockPermissionEvenIfOtpIsEnabled"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UncertainRequestIsUnknownWithoutBlindRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Platform.PlatformModelTests.RoleAssignmentUsesUserIdentityAndHasExplicitLifecycle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.EveryPublishedCommercialTermRequiresANewVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.EveryPublishedCommercialTermRequiresANewVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.EveryPublishedCommercialTermRequiresANewVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Platform.PlatformModelTests.Step15ACatalogContainsOnlyServerOwnedPermissionKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.EveryPublishedCommercialTermRequiresANewVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.EveryPublishedCommercialTermRequiresANewVersion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.TransportFailureDuringInitiationIsUnknownAndPostsExactlyOnce"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.TransportFailureDuringInitiationIsUnknownAndPostsExactlyOnce"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.TransportFailureDuringInitiationIsUnknownAndPostsExactlyOnce"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.PersianMonthlyPeriodsPreserveTehranTimeAndOriginalAnchor"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OperationalMetricsPublisherLifecycleTests.StopDuringPollingCompletesWithoutASecondSnapshotOrFalseFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.Be17CommercialPolicyTests.PersianMonthlyPeriodsPreserveTehranTimeAndOriginalAnchor"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ConflictingFlags_AreRejectedEvenInTestEnvironments"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ConfigurableOtpOptionsTests.OptionsPattern_RejectsUnsafePostConfiguration"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.TerminalFileCleanupOptionsTests.ObjectDefaultsAlsoRemainDisabledWithoutGracePeriod"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.OpenAccessCapacityPreservesActualCounterWithoutCreatingCommercialData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ConflictingFlags_AreRejectedEvenInTestEnvironments"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.BoundedRecoveryNeedsAttentionAndResumePreservesOriginalDeadline"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRejectsEmptyAndUnboundedLists"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRejectsEmptyAndUnboundedLists"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ConflictingFlags_AreRejectedEvenInTestEnvironments"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.InvalidSelectorAndAmountRemainInvalidInBothModes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.PersonalKnowledgeReceiptHasAStableCommandIdAndAcceptsOnlyDefinitiveDeletion"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_RejectsWeakKey"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.OpenAccessCommerceTests.InvalidSelectorAndAmountRemainInvalidInBothModes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.FailureEvidenceCaptureTests.ExistingSelfCheck_RunsWithoutSecretsConfigurationOrNetwork"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.SchoolApplicationTests.PaidSchoolIntentRequiresManagerPolicyAndCannotBeResumedAsGenericProvisioning"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ServerTestSettings_EnableMockWithoutRegisteringSms"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.ChecklistRequiresMatchingRealMessageAndCreationHash"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRejectsUnknownMode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRejectsUnknownMode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRejectsUnknownMode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.AgeFactsDoNotRestrictGeneralDiscoveryCreationOrDirect"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.RestrictionDoesNotDeleteHistoryAndExpiredRestrictionDoesNotRemainEffective"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.VerifiedAdultHasPersonalCapabilitiesWithoutAnySchoolRole"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.CurrentlySupportedMediaSignaturesAreAcceptedWithoutClaimingDecoderOrMalwareValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.CurrentlySupportedMediaSignaturesAreAcceptedWithoutClaimingDecoderOrMalwareValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.CurrentlySupportedMediaSignaturesAreAcceptedWithoutClaimingDecoderOrMalwareValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.CurrentlySupportedMediaSignaturesAreAcceptedWithoutClaimingDecoderOrMalwareValidation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ServerTestSettings_EnableMockWithoutRegisteringSms"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.CollaborativeItemHasOneIdempotentSharedStateNotPersonalRows"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.ClaimedPngWithExecutableContentIsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_EachRequestGetsUniqueTokenAndJti"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_StrictResponseRejectsInvalidShapeAndGrounding"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.IncompleteProfileNeverGrantsCreationDiscoveryOrAgeVerification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ServerTestSettings_DoNotAuthorizeMockInProductionLikeEnvironments"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.RetirementPreservesStableTextAndStateButRefusesFutureInteraction"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.IncompleteProfileNeverGrantsCreationDiscoveryOrAgeVerification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.IncompleteProfileNeverGrantsCreationDiscoveryOrAgeVerification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.IncompleteProfileNeverGrantsCreationDiscoveryOrAgeVerification"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ServerTestSettings_DoNotAuthorizeMockInProductionLikeEnvironments"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_HonorsCancellation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.PersonalStateIsUserOwnedAndEquivalentMutationDoesNotAdvanceRevision"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OperationalMetricsPublisherLifecycleTests.StopDuringActiveRefreshPreservesCancellationAndDoesNotMarkPreviousSnapshotFailed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.PlatformInitialEvidenceUsesExistingAgeModelAndCannotClaimSchoolOrganization"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.InvalidUtf8InsideTruncatedSampleRemainsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.VersionedSettings_ContainEnvironmentSpecificBooleanOtpKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.SelectedOrganizationDoesNotRemoveIndependentPersonalCapabilities"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_RejectsOutOfBoundsLifetime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.PersonalMessagingStatusTests.ProfileCompletionIsNotAgeVerificationAndIncompleteProfileKeepsReadOnlyAccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_RejectsOutOfBoundsLifetime"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.VersionedSettings_ContainEnvironmentSpecificBooleanOtpKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.CompletionRequiresEveryDistinctDurableCheckpoint"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Failure_PreservesStatusAndLogsErrorWithoutExceptionOrPayload"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Options_DoNotChooseAnEnvironmentAddressInCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.ClaimHonorsDeadlineLeaseAndFencesThePreviousWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.HmacAiServiceCredentialProviderTests.GetCredential_CreatesShortLivedSignedServiceTokenWithoutUserContext"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsUpstreamStatusWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.FileSignatureValidatorTests.IncompleteUtf8AtActualEndOfFileRemainsRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.VersionedSettings_ContainEnvironmentSpecificBooleanOtpKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.PublishedOwnershipModeCannotRewriteHistoricalMeaning"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMalformedOrSchemaInvalidResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.SuccessAndAlreadyVerifiedInquiryRequireAuthoritativeFullData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.VersionedSettings_ContainEnvironmentSpecificBooleanOtpKeys"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMalformedOrSchemaInvalidResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.SuccessAndAlreadyVerifiedInquiryRequireAuthoritativeFullData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionRequiresStableUniqueIdsAndBoundedPlainText"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.AccountDeletionStateTests.AnonymizationRetainsRootIdsAndIsIrreversibleAndIdempotent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMalformedOrSchemaInvalidResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionUsesServerUtcAndAdvancesOnlyExplicitly"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.OperationalMetricsPublisherLifecycleTests.StopDuringActiveRefreshPreservesCancellationAndDoesNotMarkPreviousSnapshotFailed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMalformedOrSchemaInvalidResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMalformedOrSchemaInvalidResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.GenericEditAndAttachmentCannotBypassChecklistDefinition"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.TimeoutFailsSafelyWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ProductionPublishProfile_SelectsProductionAndExcludesMockTestSettings"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Messaging.ConversationChecklistTests.DefinitionNormalizesAndCopiesImmutableItems"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ExplicitOverrides_CanRestoreRealOtpWithoutChangingApiContracts"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.SelectedMeliPayamakOtpProviderRequiresPersistentSecurityKeyInDevelopment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.TerminalFileCleanupDispatcherTests.FailureIsVisibleAndSafeWithoutHotLoopAndStopInterruptsPolling"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.TestPublishProfile_SelectsTestAndExcludesPrivateProductionSettings"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.TransportExceptionDoesNotExposeSecretUrlData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.ServerMockOtpConfigurationTests.ServerTestSettings_StillRequireTheIndependentGuard"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.FrozenBusinessErrorEnvelopePreservesSafeUpstreamCodeWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiOperationalTelemetryTests.Success_CreatesChildActivityAndSafeStructuredLog"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsMismatchedCorrelationEvenWhenRequestIdMatches"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Identity.MeliPayamakOtpProviderTests.SelectedMeliPayamakOtpProviderAcceptsPersistentSecurityKeyInDevelopment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RejectsNonJsonContentType"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InquiryStatusNeverTurnsPendingFailedOrRefundIntoSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.ProductionRejectsCaseVariantsOfTestMerchantAndHttpEvenWithRealMerchantShape"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsafeOriginRedirectAndTimeoutAreRejected"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_BrokenBodyTransportIsSanitized"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.AlreadyVerifiedWithoutValidInquiryIsNotSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.AlreadyVerifiedWithoutValidInquiryIsNotSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.AlreadyVerifiedWithoutValidInquiryIsNotSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ExplicitNoAuthenticationDoesNotResolveCredentialAndPreservesContractHeaders"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.AlreadyVerifiedWithoutValidInquiryIsNotSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.AlreadyVerifiedWithoutValidInquiryIsNotSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.TestConfigurationIsValidAndUnconfiguredUnavailableRemainsSupported"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.PersonalScopeCannotCarryAnyOrganizationSelectorBeforeProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.PersonalScopeCannotCarryAnyOrganizationSelectorBeforeProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.PersonalScopeCannotCarryAnyOrganizationSelectorBeforeProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.PersonalScopeCannotCarryAnyOrganizationSelectorBeforeProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InvalidAmountsNeverCallProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InvalidAmountsNeverCallProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InvalidAmountsNeverCallProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InvalidAmountsNeverCallProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.MismatchedOrIncompleteProofCannotSettle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.MismatchedOrIncompleteProofCannotSettle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.MismatchedOrIncompleteProofCannotSettle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.MismatchedOrIncompleteProofCannotSettle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.OfficialTestMerchantIsRejectedOutsideDedicatedTestEnvironment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.OfficialTestMerchantIsRejectedOutsideDedicatedTestEnvironment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.OfficialTestMerchantIsRejectedOutsideDedicatedTestEnvironment"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.FailureEvidenceCaptureTests.Export_PreservesSafeEvidenceWithoutPrivateTextCredentialsOrOriginalIdentifiers"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.InvalidTrackIdFailsBeforeNetworkAnd203IsNotPaid"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.UnsupportedCurrencyDoesNotCallProvider"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.FailureEvidenceCaptureTests.Export_RejectsUnsafeMetadataInsteadOfReturningSensitiveOutput"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.CallerCancellationIsNotSwallowed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Commerce.ZibalPaymentGatewayTests.RequestUsesFrozenIntegerRialAndAttemptCorrelationWithoutOptionalPersonalData"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Operations.WorkerDispatcherLogSafetyTests.WorkerFailureRemainsVisibleWithoutRawExceptionAndShutdownCompletes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.WebPushClassifiesFailureAndLeavesRetryToDurableWorker"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.OAuthFailureIsClassifiedWithoutSendingOrRevokingDevice"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.FcmDistinguishesInvalidTokenFromAuthRateLimitAndTransientFailure"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Notification.PushTransportProviderTests.VapidPairMustMatchAndInvalidShapeIsSafelyUnavailable"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Storage.TerminalFileCleanupDispatcherTests.FailureIsVisibleAndSafeWithoutHotLoopAndStopInterruptsPolling"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.CallerCancellationAndTimeoutRemainDistinct"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.PollingReturnsTerminalStateWithoutTreatingItAsReady"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.UnknownTransportErrorsAreSanitizedAndNeverRetried"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.UnknownTransportErrorsAreSanitizedAndNeverRetried"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.UnknownTransportErrorsAreSanitizedAndNeverRetried"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.LifecycleCommandsUseFrozenRoutesAndSameIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.LifecycleCommandsUseFrozenRoutesAndSameIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.LifecycleCommandsUseFrozenRoutesAndSameIdentity"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.StatusPollingStopsAtReadyAndIsBoundedWhenProcessingNeverFinishes"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_TimeoutIncludesResponseBodyAfterHeaders"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.EmptyOrWildcardAllowlistNeverMakesNetworkCall"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SourceIdsAreGroundedWithoutInventedAliasFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_Disabled_DoesNotResolveCredentialOrCallNetwork"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.AnalyzeStudentAsync_UsesFrozenRouteAndParsesStrictResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.UnexpectedErrorCodeOrStatusPairCannotInjectPublicCode"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StreamParsesFragmentedUtf8AndCrLfWithoutCredentialOrBuffering"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StreamParsesFragmentedUtf8AndCrLfWithoutCredentialOrBuffering"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StreamParsesFragmentedUtf8AndCrLfWithoutCredentialOrBuffering"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RagAcceptsOnlyClaimsCitedFromActualRetrievalAndDoesNotReturnSilentFallback"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StreamParsesFragmentedUtf8AndCrLfWithoutCredentialOrBuffering"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.NonObjectErrorEnvelopeIsUnavailableAndNeverRetriedOrLoggedRaw"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.NonObjectErrorEnvelopeIsUnavailableAndNeverRetriedOrLoggedRaw"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.NonObjectErrorEnvelopeIsUnavailableAndNeverRetriedOrLoggedRaw"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.RetrievalRejectsForgedSourceVersionCitationAndEnvelope"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.IngestUsesExactMultipartBytesHashAndIdentityAndPreservesReplayStatus"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Knowledge.AiKnowledgeClientTests.StatusAndBoundedPollingPreserveCorrelationWithoutBodyOrRetryingWrites"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_PreservesCallerCancellationDuringResponseBodyRead"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RecoversCircuitAfterDependencyRestored"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.DefaultTimeout_PreservesExistingLocalBudget"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StudentInsight_GroundsOnlyExplicitSelectedStudent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StudentInsight_GroundsOnlyExplicitSelectedStudent"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_ConnectionRefusedIsSanitizedWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.NonObjectErrorEnvelopePreservesStatusMappingWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.NonObjectErrorEnvelopePreservesStatusMappingWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.NonObjectErrorEnvelopePreservesStatusMappingWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_ResponseBodyConnectionFailureIsSanitizedWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ParentUpcomingItem_RequiresMatchingAuthorizedTitle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ParentUpcomingItem_RequiresMatchingAuthorizedTitle"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.CorrelationIsRejectedRatherThanSilentlyTrimmedOrInsertedIntoHeader"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.CorrelationIsRejectedRatherThanSilentlyTrimmedOrInsertedIntoHeader"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ConfiguredTimeout_AllowsCurrentQueueAndInferenceBudget"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.PartialProviderErrorIsTerminalFailureAndSanitized"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.EveryOperation_UsesExactContractRouteHeadersAndResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_TimeoutAlsoCoversResponseBody"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_CredentialFailure_IsSanitizedAndDoesNotCallNetwork"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_PreservesCallerCancellation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.InvalidUtf8AndOversizedFrameFailClosed"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_SendsCredentialCorrelationAndContract_AndParsesResponse"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_OpensCircuitAfterConfiguredTransientFailures"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_RecoversCircuitAndResetsFailuresAfterBreak"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_CallerCancellationDuringBodyReadIsPreserved"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_ConnectionFailureIsSanitizedWithoutRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.StreamCancellationReachesUpstreamAndDoesNotRetry"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.UnitTests.Ai.AiServiceClientTests.ChatAsync_MapsInternalTimeout"
+    }
+  ],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

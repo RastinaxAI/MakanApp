@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "filesVerified": 559,
+  "includesSourceReferenceManifest": true,
+  "includesSanitizedOpenApiByteHash": true,
+  "auditComplete": true,
+  "liveAcceptanceComplete": false,
+  "original555ChecksumsVerifiedBeforeClosure": true
+}

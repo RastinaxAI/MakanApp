@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "files": [
+    {
+      "file": "MAKAN_API_ERROR_AUDIT_PROMPT_FA.md",
+      "expected": "61dfee97bb3934a4823a64aaadfc69cf8586de0df75164c81bef1fb8dcb90f41",
+      "actual": "61dfee97bb3934a4823a64aaadfc69cf8586de0df75164c81bef1fb8dcb90f41",
+      "match": true
+    },
+    {
+      "file": "START_FA.txt",
+      "expected": "e1530a1e6c51f684483f21cc8e02c9459c41a49b670d877c2dfa2963c3891134",
+      "actual": "e1530a1e6c51f684483f21cc8e02c9459c41a49b670d877c2dfa2963c3891134",
+      "match": true
+    },
+    {
+      "file": "cases-template.csv",
+      "expected": "29d52122a0940d3758476225b3d4646cd368a3157ded079bd9405586439a7072",
+      "actual": "29d52122a0940d3758476225b3d4646cd368a3157ded079bd9405586439a7072",
+      "match": true
+    }
+  ],
+  "manifestSha256": "d913cfa42760a74b8c0764b3bdf03d37dfbb6bb4e8ae3fec3d7da99ae7ebca47",
+  "otherPrimaryCopyIdentical": true,
+  "suffixedCopyFound": false,
+  "baseCases": 107,
+  "sourceLocationAlias": "OWNER_DOWNLOADS_VERIFIED_AUDIT_PACKAGE"
+}

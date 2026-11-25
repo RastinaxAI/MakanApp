@@ -1,0 +1,165 @@
+{
+  "label": "phase-b-http",
+  "command": [
+    "dotnet",
+    "test",
+    "tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj",
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName~ApiErrorAuditEndpointsTests",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "startedAtUtc": "2026-11-25T13:23:15.313058+00:00",
+  "elapsedMs": 18779,
+  "exitCode": 0,
+  "summaries": [
+    {
+      "result": "Passed!",
+      "total": 33,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "assembly": "MakanApp.IntegrationTests.dll"
+    }
+  ],
+  "tests": [
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.FrameworkErrorsHaveStableProblemDetails"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnauthenticatedAccessIs401WithSafeContractForAnyAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.BusinessFailuresPreserveSpecificCodeStatusAndIds"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.ModelBindingKeepsFieldErrorsAndCorrelation"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UnknownExceptionIs500WithSafeDetailsAndNeverSuccess"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.UpstreamRetryAfterSurvivesHttpMapping"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    },
+    {
+      "status": "Passed",
+      "name": "MakanApp.IntegrationTests.ApiErrorAuditEndpointsTests.RateLimitFailureKeepsProblemDetailsForNonJsonAccept"
+    }
+  ],
+  "compilerDiagnostics": [],
+  "rawOutputPersisted": false
+}

@@ -1,0 +1,39 @@
+{
+  "runId": "20261125-api-errors-ac9a239-01",
+  "caseId": "C03",
+  "variantId": "missing-route",
+  "evidenceKind": "REAL_API",
+  "attempt": 1,
+  "repetition": 1,
+  "requestSequence": 1,
+  "interactionId": "public-missing-route",
+  "startedAtUtc": "2026-11-25T13:17:38.015460+00:00",
+  "method": "GET",
+  "endpoint": "http://94.184.32.84:8090/api/v1/audit-public-resource-does-not-exist",
+  "credentialsSent": false,
+  "requestHeaders": {
+    "Accept": "application/json",
+    "X-Correlation-ID": "audit-public-missing-route"
+  },
+  "requestPayload": null,
+  "retryCount": 0,
+  "retrySource": "NONE",
+  "backoffMs": 0,
+  "stateBefore": "ANONYMOUS_NO_FIXTURE",
+  "userExperienceResult": "NOT_RUN_NO_BROWSER",
+  "expected": "فقط مشاهدهٔ پاسخ عمومی؛ هیچ تغییر داده یا ورود انجام نشود.",
+  "httpStatus": 404,
+  "responseHeaders": {
+    "X-Correlation-Id": "audit-public-missing-route"
+  },
+  "responsePayload": {},
+  "businessCode": null,
+  "traceId": null,
+  "correlationId": "audit-public-missing-route",
+  "transportResult": "HTTP_RESPONSE",
+  "businessResult": "NOT_EVALUATED",
+  "stateAfter": "PUBLIC_RESPONSE_NO_AUTH_OR_MUTATION",
+  "verdict": "OBSERVED",
+  "causeConfidence": "OBSERVED_ONLY",
+  "elapsedMs": 1474.69
+}

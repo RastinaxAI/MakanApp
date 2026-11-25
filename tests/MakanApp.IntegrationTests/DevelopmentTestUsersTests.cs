@@ -31,6 +31,7 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
     private readonly MakanAppWebApplicationFactory _factory = new("MakanApp_DevelopmentTestUsers_" + Guid.NewGuid().ToString("N"));
     private readonly string _code = RandomNumberGenerator.GetInt32(1_000_000).ToString("D6");
     private WebApplicationFactory<Program> _bypass = null!;
+    private bool _disposed;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
@@ -38,17 +39,69 @@ public sealed class DevelopmentTestUsersTests : IAsyncLifetime
     private static Guid UserId(int number) => Guid.Parse($"d3700000-0000-0000-0000-{number:D12}");
     private static string Phone(int number) => "+989120000" + (100 + number).ToString("D3");
 
-    public async Task InitializeAsync()
+    public Task InitializeAsync() => InitializeAsync(() => ((IAsyncLifetime)_factory).InitializeAsync());
+
+    private async Task InitializeAsync(Func<Task> initializeFactory)
     {
-        await ((IAsyncLifetime)_factory).InitializeAsync();
-        await ExecuteSeedAsync();
-        _bypass = CreateApplication();
+        try
+        {
+            await initializeFactory();
+            await ExecuteSeedAsync();
+            _bypass = CreateApplication();
+        }
+        catch (Exception initializationFailure)
+        {
+            // شکست Setup نباید selector دیتابیس موقت را برای میزبان‌های بعدی باقی بگذارد.
+            try { await DisposeAsync(); }
+            catch (Exception cleanupFailure)
+            {
+                throw new AggregateException("آماده‌سازی و پاک‌سازی تست هر دو ناموفق بودند.", initializationFailure, cleanupFailure);
+            }
+            throw;
+        }
     }
 
     public async Task DisposeAsync()
     {
-        _bypass.Dispose();
-        await ((IAsyncLifetime)_factory).DisposeAsync();
+        if (_disposed) return;
+        _disposed = true;
+        try { _bypass?.Dispose(); }
+        finally { await ((IAsyncLifetime)_factory).DisposeAsync(); }
+    }
+
+    [Fact]
+    public async Task CleanupBeforeBypassInitializationIsIdempotentAndRestoresAmbientConfiguration()
+    {
+        var connection = Environment.GetEnvironmentVariable("ConnectionStrings__MakanDatabase");
+        var otpEnabled = Environment.GetEnvironmentVariable("Otp__Enabled");
+        var allowMock = Environment.GetEnvironmentVariable("Otp__AllowMockAuthentication");
+        var interrupted = new DevelopmentTestUsersTests();
+        await interrupted.DisposeAsync();
+        await interrupted.DisposeAsync();
+        AssertAmbientConfigurationRestored(connection, otpEnabled, allowMock);
+    }
+
+    [Fact]
+    public async Task InitializationFailureRestoresAmbientConfigurationAndPreservesTheOriginalFailure()
+    {
+        var connection = Environment.GetEnvironmentVariable("ConnectionStrings__MakanDatabase");
+        var otpEnabled = Environment.GetEnvironmentVariable("Otp__Enabled");
+        var allowMock = Environment.GetEnvironmentVariable("Otp__AllowMockAuthentication");
+        var interrupted = new DevelopmentTestUsersTests();
+        var expectedFailure = new InvalidOperationException("خطای کنترل‌شدهٔ آماده‌سازی Fixture");
+        var actualFailure = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            interrupted.InitializeAsync(() => Task.FromException(expectedFailure)));
+        Assert.Same(expectedFailure, actualFailure);
+        await interrupted.DisposeAsync();
+        AssertAmbientConfigurationRestored(connection, otpEnabled, allowMock);
+    }
+
+    private static void AssertAmbientConfigurationRestored(string? connection, string? otpEnabled, string? allowMock)
+    {
+        // Assert.Equal ممکن است مقدار خصوصی selector را در خطای تست چاپ کند؛ فقط نتیجهٔ مقایسه گزارش می‌شود.
+        Assert.True(string.Equals(connection, Environment.GetEnvironmentVariable("ConnectionStrings__MakanDatabase"), StringComparison.Ordinal), "selector دیتابیس اولیه باید بازیابی شود.");
+        Assert.True(string.Equals(otpEnabled, Environment.GetEnvironmentVariable("Otp__Enabled"), StringComparison.Ordinal), "تنظیم اولیهٔ OTP باید بازیابی شود.");
+        Assert.True(string.Equals(allowMock, Environment.GetEnvironmentVariable("Otp__AllowMockAuthentication"), StringComparison.Ordinal), "محافظ Mock اولیه باید بازیابی شود.");
     }
 
     private WebApplicationFactory<Program> CreateApplication(Dictionary<string, string?>? overrides = null) =>

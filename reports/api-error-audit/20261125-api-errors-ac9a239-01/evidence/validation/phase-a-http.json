@@ -1,0 +1,36 @@
+{
+  "label": "phase-a-http",
+  "command": [
+    "dotnet",
+    "test",
+    "tests/MakanApp.IntegrationTests/MakanApp.IntegrationTests.csproj",
+    "--configuration",
+    "Release",
+    "--no-restore",
+    "--nologo",
+    "--filter",
+    "FullyQualifiedName~ApiErrorAuditEndpointsTests",
+    "--logger",
+    "console;verbosity=normal"
+  ],
+  "startedAtUtc": "2026-11-25T13:10:04.233843+00:00",
+  "elapsedMs": 4539,
+  "exitCode": 1,
+  "summaries": [],
+  "tests": [],
+  "compilerDiagnostics": [
+    {
+      "codes": [
+        "CS0117"
+      ],
+      "source": "D:\\Project\\MakanApp\\MakanApp-Backend\\tests\\MakanApp.IntegrationTests\\ApiErrorAuditEndpointsTests.cs(88,60)"
+    },
+    {
+      "codes": [
+        "CS0117"
+      ],
+      "source": "D:\\Project\\MakanApp\\MakanApp-Backend\\tests\\MakanApp.IntegrationTests\\ApiErrorAuditEndpointsTests.cs(89,54)"
+    }
+  ],
+  "rawOutputPersisted": false
+}

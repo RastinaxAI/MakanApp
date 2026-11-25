@@ -1,0 +1,31 @@
+{
+  "completedAtUtc": "2026-11-25T13:20:31.342008+00:00",
+  "phaseAAvailableEvidenceComplete": true,
+  "auditReleaseGateComplete": false,
+  "baseCasesAccountedFor": 107,
+  "protectedFilesUnchanged": true,
+  "productLogicChanged": false,
+  "confirmedBackendIssues": [
+    "ERR-001",
+    "ERR-002"
+  ],
+  "failingTestsBeforeFix": {
+    "total": 33,
+    "passed": 24,
+    "failed": 9,
+    "skipped": 0
+  },
+  "filesSha256": {
+    "action-catalog.json": "ac6f2fb938a456e00f105c4891aea979f3ebe8105e1a824d05bbcbd1608fae58",
+    "api-contract-map.json": "07aee570112c0436f0146b1f8920c58750ff55cebf4d7470051621ac8cf37c43",
+    "api-error-ledger.json": "d217855a096fd4e4f847b169b5dcee2eb82b41c69fd03a37e27bc917c1de1d66",
+    "attempts.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "BACKEND_TICKETS_FA.md": "5fd56bd6a9e8f6992c5c899d4ca3e451f48b63bd36d6ed67d52b696ca1d72ea9",
+    "cases.csv": "c681afb4f9b0afe8ba2fa0d0558e843cdb9a4b569ca76926eb7bc9fe99395931",
+    "coverage.md": "972106566a6631baad1dcefefa311686504f3145ffd4675f3a9b547e10f3034b",
+    "errors.csv": "c376a7e7e5317b14b58119430db2e1d15ed61521c6aab86f56b25d032fb135fe",
+    "FRONTEND_AI_FINDINGS_FA.md": "aef7377c4c50304244b73954d2224d8c505f8dc6136cc94f1dc8a79a5a897ce9",
+    "REPORT_FA.md": "8ae33d6ad663cae484ee0bc58fb82593c75d37cce1b5d0c12eef2296efa33906",
+    "RESUME_FA.md": "98998d18f3da7d131335af8ebc8088abeb3031b08bf98f15e5b7486f127863b1"
+  }
+}

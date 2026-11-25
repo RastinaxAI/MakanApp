@@ -1,0 +1,17 @@
+{
+  "protectedCount": 57,
+  "unchangedProtectedCount": 55,
+  "changedOnlyForConfirmedFix": [
+    "MakanApp.Api/Errors/GlobalExceptionHandler.cs",
+    "MakanApp.Api/Program.cs"
+  ],
+  "preexistingHunksPreserved": true,
+  "privateConfigurationAndAiUnchanged": true,
+  "secretLeakage": false,
+  "sensitiveMatches": 0,
+  "casesUnique": 107,
+  "finalFrozenSourceFiles": 1618,
+  "finalSourceUnchanged": true,
+  "headUnchanged": true,
+  "stagedPaths": []
+}
