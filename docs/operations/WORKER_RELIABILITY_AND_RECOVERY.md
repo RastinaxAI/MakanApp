@@ -1,5 +1,14 @@
 # قابلیت اطمینان و بازیابی Workerها
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## افزوده‌های Runtime جاری
+
+Knowledge processing و AccountDeletion lifecycle از State/Claim/Checkpoint موجود استفاده می‌کنند؛ فعال‌سازی حذف به config مصوب نیاز دارد. AI stream پیش از done موفق نیست و Unknown نباید خودکار invocation تازه بسازد. Media Approval در تراکنش پرونده ثبت می‌شود و خودش Message/Outbox ارسال نمی‌سازد؛ فقط Send مجاز پس از تصمیم وارد همان Outbox پیام می‌شود. Notification target با ACL جاری resolve می‌شود؛ Push بیرونی برای نسخه جاری Deferred است.
+
+نامحدودبودن AI و خاموشی Commerce enforcement، idempotency، lease/fencing یا recovery را حذف نمی‌کند. DB restore و drain نسخه قبلی باید این وضعیت‌های پایدار را حفظ کنند؛ exactly-once در شبکه تضمین نمی‌شود.
+
+
 ## BE-23 — موجودی واقعی Product v6
 
 مبنای `00bd8a9` اکنون **۱۰ BackgroundService** دارد: هشت مورد تاریخی همین سند به‌علاوهٔ

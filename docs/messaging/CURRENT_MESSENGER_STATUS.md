@@ -1,12 +1,18 @@
 # وضعیت جاری Messenger: P0، P1، P2 و مرز P3
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+Home از صندوق account-wide، History با ACL جاری خود گفتگو و Replay صندوق مستقل از scoped replay است. سن gate عمومی نیست؛ Privacy/Block/Safety و پروفایل معتبر لازم‌اند. [قرارداد History](../product-v6/MESSENGER_HISTORY_FRONTEND_HANDOFF_FA.md).
+
+MediaReview اکنون با Provider ترکیبی متن/Manual و تصمیم اثرانگشت‌دار در Moderation موجود است؛ Ready تأیید Safety نیست. مالک وضعیت messaging-review و کارشناس Claim/Evidence/MediaApproved/MediaRejected را مصرف می‌کنند؛ Approval خود پیام نمی‌فرستد و Pending/Rejected تحویل ندارد. [قرارداد جاری](MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). محدودیت نبود workflow انسانی در گزارش‌های قدیمی superseded است.
+
 > سیاست جاری عمومی `2026-11-01`: [پیاده‌سازی](../product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [Handoff](../product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). منع سنیِ عمومی گزارش‌های P0/P1/P2 تاریخی/superseded است؛ Safety/Privacy/Block و مجوز واقعی منبع باقی‌اند. AccountInbox/Replay، capability رسمی، دعوت اولیهٔ هفت‌روزه، Photo و Receipt افزوده‌اند. مقدار هفت روز در `ConversationInvitation.DefaultInitialLifetime` است و retry همان عملیات مهلت را تمدید نمی‌کند. این تغییر شاهد اجرای Media/P3، Push واقعی یا پذیرش سرور نیست.
 
 افزودهٔ جاری `2026-10-30` / `main@e11d4ec`: replay حساب با GET /api/v1/realtime/changes و ClientInvalidated، ContextRevision، bootstrap پیش از Snapshot و resync/backoff موجودند. مجوز read فعلی، نه گروه قدیمی Hub، مخاطب را تعیین می‌کند. Direct/Saved از summary خوانده می‌شود. [Handoff جاری](../product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [قرارداد Event](../product/REALTIME_EVENT_CONTRACT_FA.md).
 
-BE-01 همچنان PRODUCT_DECISION_BLOCKED است: رسانهٔ Minor/Unknown با ReviewRequired پیام یا binding تازه نمی‌سازد؛422 قرارداد امن NotApplied/KEEP_DRAFT_NO_AUTO_RETRY دارد. پیوست آموزشی مسیر جدا دارد و Safety پیام‌رسان را Approved نمی‌کند. [قرارداد و ردیابی](BE01_REVIEW_REQUIRED_CONTRACT_FA.md).
+MediaReview مستقل از سن در Moderation موجود پیاده شده است. PendingReview دارای WAIT_FOR_MEDIA_REVIEW و Rejected دارای MEDIA_REJECTED_KEEP_DRAFT است؛ NotApplied و retryable=false و بدون اثر تازهٔ Message/Binding/Delivery. پس از Approval، ارسال مجدد صریح همان intent با ACL و Safety caption بررسی می‌شود؛ ReviewRequired متن همچنان KEEP_DRAFT_NO_AUTO_RETRY دارد. پیوست آموزشی مجوز ارسال پیام نمی‌سازد. [قرارداد جاری](MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md).
 
-بازبینی جاری `2026-10-30` / `main@e11d4ec`: Personal Messaging بدون نقش مدرسه و با guardهای سن/رابطه/privacy موجود است. Profile ناقص فقط ReadExistingConversations در hint می‌گیرد؛ role loss حساب/عکس/گفتگوی شخصی را حذف نمی‌کند. profilePhoto در هویت امن افزایشی است و مجوز Send/Discovery نمی‌سازد. MFA حذف شده، ولی permission و نشست جاری عملیات ایمنی همچنان بررسی می‌شوند. [جریان شخصی](../product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) و [عکس/دانلود](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
+بازبینی جاری `2026-10-30` / `main@e11d4ec`: Personal Messaging بدون نقش مدرسه و با guardهای پروفایل/Privacy/Block و مجوز منبع موجود است. Profile ناقص فقط ReadExistingConversations در hint می‌گیرد؛ role loss حساب/عکس/گفتگوی شخصی را حذف نمی‌کند. profilePhoto در هویت امن افزایشی است و مجوز Send/Discovery نمی‌سازد. MFA حذف شده، ولی permission و نشست جاری عملیات ایمنی همچنان بررسی می‌شوند. [جریان شخصی](../product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md) و [عکس/دانلود](../product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
 
 این بخش وضعیت کد ثبت‌شده تا `main@701cba0` در `2026-10-29` است. جدول‌های MISSING ابتدای ممیزی P2 و تعویق اولیه Checklist تاریخچهٔ شروع همان مرحله‌اند؛ وضعیت نهایی از [تحویل P2](MESSENGER_P2_FRONTEND_HANDOFF.md) و [ممیزی نهایی](MESSENGER_P2_DELIVERY_AUDIT.md) خوانده شود. پذیرش محلی Backend با deployment یا دریافت Push روی دستگاه یکی نیست.
 
@@ -16,7 +22,7 @@ BE-01 همچنان PRODUCT_DECISION_BLOCKED است: رسانهٔ Minor/Unknown �
 |---|---|
 | سن و شروع ارتباط | Profile لازم و Privacy/Block/Safety و مجوز جاری منبع بررسی می‌شوند؛ طبق سیاست مصوب 2026-11-01، سن یا Unverified به‌تنهایی منع عمومی Messaging نیست. OTP/DOB خوداظهاری اثبات سن نیست |
 | Peer Read | read-state مجاز Direct در P1؛ Group/Channel رسید per-member ندارند و Hidden علت خصوصی را افشا نمی‌کند |
-| Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ `P1_PUSH_RUNTIME_PENDING` باقی است؛ SMS عمومی اعلان provider واقعی ندارد |
+| Web Push / FCM | transport واقعی و رجیستری خصوصی دستگاه در P1؛ Runtime Push برای این انتشار Deferred است؛ SMS عمومی اعلان provider واقعی ندارد |
 | Typing / Presence | lease و TTL واقعی با subscription و privacy جاری در P2؛ state گذرا در حافظه و تک‌instance، نه تاریخچه دائمی یا توزیع‌شده |
 | Folder / Saved Labels | سازمان‌دهی خصوصی کاربر و قرارداد نسخه‌دار در P2؛ انتخاب پوشه/برچسب اجازه خواندن تازه نمی‌سازد |
 | Invite / Join / Restriction | لینک دعوت، درخواست عضویت و محدودیت عضو طبق نقش و current policy در P2؛ token دعوت credential محرمانه است |

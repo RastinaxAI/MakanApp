@@ -1,5 +1,9 @@
 # تحویل Personal AI و Personal Knowledge/RAG
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 **تکمیل Adaptive v1 از پایهٔ `95cef1b` در `2026-11-18`:** قرارداد جاری Chat شامل Profile
 اختیاری، History مالک/Context در SQL، Mode/SourceIntent و SSE واقعی است. مرجع اجرایی جدید:
 [تحویل Adaptive Assistant](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md). توضیحات پایین دربارهٔ

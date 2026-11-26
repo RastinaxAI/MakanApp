@@ -1,160 +1,149 @@
-# گزارش به‌روزرسانی اسناد پروژه
+# گزارش به‌روزرسانی اسناد Backend — ۲۰۲۶-۱۱-۲۶
 
-افزودهٔ BE-16 در `2026-11-15`: [Handoff اعلان](product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [ماتریس رویدادها](product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md)، [Runbook](operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) و [گزارش توسعه‌دهنده](product-v6/NOTIFICATION_DEVELOPER_REPORT_FA.md). Source کد=`f4f4d9feb6184d62e033adfb612e86587fb3c3f6`، Snapshot=494 operation،783 schema،151 جدول و75 Migration و inventory=208 مدخل است. قرارداد Push بر NotificationId canonical و Target جاری بنا شده است؛ فایل‌های خصوصی و OTP ملی‌پیامک تغییر نکرده‌اند. دو دور کامل3378 PASS و Build نهایی صفر Warning/Error دارند. این آمار، دریافت واقعی Push، اجرای Migration عادی یا Deploy را اثبات نمی‌کند؛ گزارش‌های پایین تاریخچهٔ همان مرحله‌ها هستند.
-
-کنترل نهایی BE-16: لینک شکسته/اختلاف Enum صفر؛13 تست ابزار اسناد موفق. کتاب‌های HTML/PDF راهنما، مرجع، دیتابیس و Frontend به‌ترتیب79،796،240 و804 صفحه، بدون صفحهٔ خالی یا متن خارج صفحه و با SHA متناظر HTML تأیید شدند. لینک نسبی اشتباه در Template Frontend اصلاح و کتاب مربوط بازتولید شد. اسناد اصلی Product و گزارش‌های تاریخی بازنویسی نشدند؛ خروجی‌های محلیِ ignored دیتابیس خارج Commit می‌مانند.
-
-افزودهٔ `2026-11-14` برای BE-22: قرارداد حذف حساب، ماتریس اقدام داده، Runbook و گزارش توسعه‌دهندهٔ [حذف حساب](product-v6/ACCOUNT_DELETION_DEVELOPER_REPORT_FA.md) اضافه شده‌اند. مرجع API/SQL، قرارداد Frontend و خروجی‌های HTML/PDF با snapshot کد `a639319` همگام شدند؛۴۹۴ operation،۷۸۳ schema،۱۵۱ جدول و۷۴ Migration پوشش دارند و لینک شکسته/اختلاف Enum صفر است. نتیجه و Source Commit در گزارش BE-22 است. متن بعدی گزارش تاریخیِ همگام‌سازی `2026-10-30` است و شمارنده‌ها یا ادعای «عدم تغییر کد» آن مربوط به همان مرحله‌اند.
-
-بازبینی `2026-10-30` از `main@e11d4ec22d499eb47f256e49ff2f1a81f2ea66f9`. این تحویل مستندات موجود را با دو commit جدید `8084485` و `e11d4ec` تطبیق می‌دهد. **فایل مستند/کد تازه‌ای برای محصول ایجاد نشده است**؛ کتاب‌های HTML/PDF موجود بازسازی و اسناد مرتبط اصلاح شده‌اند. مبنای مقایسهٔ کاتالوگ، آخرین تحویل اسناد `bf9a819` است.
+مبنای کد `source@f8178a47de94eae0ec2431adebcb9256a9789786` روی `feature/product-v6-backend-alignment`؛ تحویل فقط مستندات و ابزار تولید آن‌هاست. شواهد ممیزی `reports/api-error-audit` و فایل‌های شخصی کاربر بازنویسی نشده‌اند.
 
 ## ۱. خلاصه مرحله
 
-پیش‌تر راهنماها332 عملیات/570 schema و107 جدول/52 migration را توصیف می‌کردند و Commerce/Realtime/پیوست تازه در کاتالوگ عمومی نبود. اکنون365 عملیات،322 مسیر،63 Controller،608 schema،113 جدول و55 migration پوشش دارند؛ رفتار جاری با پیشنهادهای Product و شواهد تاریخی تفکیک شده است.
+راهنماهای عمومی با الحاقیه‌های متعدد، بعضی قواعد سن/اشتراک، نبود Media Review، تعویق Source/RAG و رفتار قدیمی خطا را تکرار می‌کردند. اکنون روایت اصلی، مرجع API، قرارداد فرانت، بیزینس و استقرار بر اساس Source جاری هماهنگ‌اند. 41 فایل موجود به‌روزرسانی شد؛ فایل تازهٔ tracked ساخته نشد. HTML/PDF دو کتاب اصلی و قرارداد فرانت بازسازی و HTML/PDF دیتابیس طبق ignore قبلی محلی تولید شدند.
 
 ## ۲. معماری
 
-هیچ لایهٔ محصول، business rule یا Dependency flow تغییر نکرده است. تنها اسناد و قالب sync_repository_docs.py ویرایش شدند. جهت Api → Application و Infrastructure، Application → Domain و Infrastructure → Application/Domain همان Onion در Modular Monolith است. توضیح معماری از کلاس‌های واقعی CommercialSubscriptionService، PersonalClassService، RealtimeSyncService و ExamAnswerService گرفته شده است.
+کد Domain/Application/Infrastructure/Api تغییر نکرد. Source فعلی همچنان .NET9/EF9/SQL Server و Onion داخل Modular Monolith است. ابزار Snapshot میزبان Testing بدون HostedService و مدل طراحی EF را می‌خواند؛ تولید سند هیچ SQL connection، SMS یا AI call نمی‌سازد. آزمون‌های Integration جداگانه روی SQL تست ایزوله اجرا شدند.
 
 ## ۳. فایل‌های مهم ایجادشده
 
-فایل tracked جدید نداریم. JSON/OpenAPI snapshot، لاگ، TRX و preview فقط در .artifacts نادیده‌گرفته‌شده‌اند. HTML/PDF دیتابیس نیز مطابق ignore موجود محلی‌اند؛ policy ignore تغییر نکرده است.
+هیچ فایل تازه‌ای وارد Git نمی‌شود. فایل‌های اجرایی موقت، log/TRX و پیش‌نمایش‌ها در `.artifacts/docs-sync-20261126` محلی‌اند. دو خروجی Database HTML/PDF محلی/ignored می‌مانند. سه فایل از قبل موجود ابزار AI کاربر خارج این تغییر و بدون stage محفوظ‌اند.
 
-## ۴. فایل‌های مهم تغییرکرده
+## ۴. فایل‌های تغییرکرده
 
-| فایل موجود | دلیل و اثر |
+| مسیر | مسئولیت تغییر |
 |---|---|
-| [README.md](../README.md) | آمار جاری و مسیر مطالعهٔ قراردادهای جدید |
-| [docs/CURRENT_PROJECT_STATUS.md](CURRENT_PROJECT_STATUS.md) | وضعیت واقعی قابلیت‌ها، gateها و نتیجهٔ اجرای همین بازبینی |
-| [docs/DOCUMENTATION_UPDATE_REPORT.md](DOCUMENTATION_UPDATE_REPORT.md) | فهرست تغییرها و گزارش آموزشی همین مرحله |
-| [docs/backend-api-guide.html](backend-api-guide.html) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/backend-api-guide.md](backend-api-guide.md) | شرح Commerce/PersonalClass، replay، پیوست آزمون و اصلاح ادعاهای قدیمی |
-| [docs/backend-api-guide.pdf](backend-api-guide.pdf) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/backend-api-reference.html](backend-api-reference.html) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/backend-api-reference.md](backend-api-reference.md) | کاتالوگ365 operation و608 schema به‌همراه خطاها و literal واقعی Enum |
-| [docs/backend-api-reference.pdf](backend-api-reference.pdf) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/database-current-structure.md](database-current-structure.md) | فرهنگ113 جدول،55 migration و قیود مدل فعلی |
-| [docs/deployment-windows-linux-docker.md](deployment-windows-linux-docker.md) | schema جدید، Data Protection cursor و smoke هدف |
-| [docs/documentation-inventory.csv](documentation-inventory.csv) | فهرست154 سند با baseline و تاریخ بازبینی جدید |
-| [docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html](frontend-contract/MakanApp-Frontend-Backend-Contract.html) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf](frontend-contract/MakanApp-Frontend-Backend-Contract.pdf) | خروجی بازتولیدشده از Markdown جاری با فهرست و hash منبع |
-| [docs/frontend-contract/README.md](frontend-contract/README.md) | مصرف صحیح Snapshot/replay، قرارداد تجاری، فایل آموزشی و422 Safety |
-| [docs/messaging/CURRENT_MESSENGER_STATUS.md](messaging/CURRENT_MESSENGER_STATUS.md) | وضعیت ClientInvalidated/replay و Product blocker رسانه |
-| [docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md](operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/operations/RETENTION_AND_CLEANUP_POLICY.md](operations/RETENTION_AND_CLEANUP_POLICY.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md](operations/WORKER_RELIABILITY_AND_RECOVERY.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/platform/BACKOFFICE_FRONTEND_HANDOFF.md](platform/BACKOFFICE_FRONTEND_HANDOFF.md) | permission و workflow قرارداد تجاری Admin |
-| [docs/product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md](product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) | اصلاح Current vs Proposed بدون بازنویسی ممیزی اولیه |
-| [docs/production/BACKUP_RESTORE.md](production/BACKUP_RESTORE.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/production/DEPLOYMENT_IIS.md](production/DEPLOYMENT_IIS.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/production/OBSERVABILITY.md](production/OBSERVABILITY.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/production/PRODUCTION_READINESS.md](production/PRODUCTION_READINESS.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/production/PUBLISH_GUIDE_FA.md](production/PUBLISH_GUIDE_FA.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [docs/production/RELEASE_CHECKLIST.md](production/RELEASE_CHECKLIST.md) | همگام‌سازی قراردادهای استقرار/پشتیبان‌گیری/retention/worker و metric جدید |
-| [tools/docs/sync_repository_docs.py](../tools/docs/sync_repository_docs.py) | حفظ متن قابلیت‌های جاری در بازتولید بعدی |
+| [README.md](../README.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/CURRENT_PROJECT_STATUS.md](../docs/CURRENT_PROJECT_STATUS.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/DOCUMENTATION_UPDATE_REPORT.md](../docs/DOCUMENTATION_UPDATE_REPORT.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/ai-handoff/05_AI_ERROR_AND_RESILIENCE_CONTRACT.md](../docs/ai-handoff/05_AI_ERROR_AND_RESILIENCE_CONTRACT.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md](../docs/ai-handoff/08_AI_BACKEND_IMPLEMENTATION_STATUS.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/backend-api-guide.html](../docs/backend-api-guide.html) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/backend-api-guide.md](../docs/backend-api-guide.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/backend-api-guide.pdf](../docs/backend-api-guide.pdf) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/backend-api-reference.html](../docs/backend-api-reference.html) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/backend-api-reference.md](../docs/backend-api-reference.md) | کاتالوگ۴۹۸ عملیات و۷۹۶ schema از OpenAPI واقعی |
+| [docs/backend-api-reference.pdf](../docs/backend-api-reference.pdf) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/database-current-structure.md](../docs/database-current-structure.md) | فرهنگ۱۵۳ جدول و۷۸ Migration از مدل طراحی EF |
+| [docs/deployment-windows-linux-docker.md](../docs/deployment-windows-linux-docker.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/documentation-inventory.csv](../docs/documentation-inventory.csv) | فهرست۲۳۲ سند و مبنای بازبینی |
+| [docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html](../docs/frontend-contract/MakanApp-Frontend-Backend-Contract.html) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf](../docs/frontend-contract/MakanApp-Frontend-Backend-Contract.pdf) | خروجی بازسازی‌شده از Markdown جاری؛ RTL، فهرست، نشانک و SHA منبع |
+| [docs/frontend-contract/README.md](../docs/frontend-contract/README.md) | قرارداد مصرف Client و Platform با مجوز، خطا، Retry و stateهای جاری |
+| [docs/messaging/CURRENT_MESSENGER_STATUS.md](../docs/messaging/CURRENT_MESSENGER_STATUS.md) | راهنمای یکپارچه، وضعیت جاری یا گزارش آموزشی/Validation |
+| [docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md](../docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/operations/RETENTION_AND_CLEANUP_POLICY.md](../docs/operations/RETENTION_AND_CLEANUP_POLICY.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md](../docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/platform/BACKOFFICE_FRONTEND_HANDOFF.md](../docs/platform/BACKOFFICE_FRONTEND_HANDOFF.md) | قرارداد مصرف Client و Platform با مجوز، خطا، Retry و stateهای جاری |
+| [docs/product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md](../docs/product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/BACKEND_V6_ADMIN_HANDOFF_FA.md](../docs/product-v6/BACKEND_V6_ADMIN_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md](../docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md](../docs/product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/COMMERCE_PRODUCT_MATRIX_FA.md](../docs/product-v6/COMMERCE_PRODUCT_MATRIX_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md](../docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md](../docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md](../docs/product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md](../docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md](../docs/product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) | تفکیک سیاست جاری Open Access/AI/MediaReview از قرارداد مالی و شواهد تاریخی |
+| [docs/production/BACKUP_RESTORE.md](../docs/production/BACKUP_RESTORE.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/production/DEPLOYMENT_IIS.md](../docs/production/DEPLOYMENT_IIS.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/production/OBSERVABILITY.md](../docs/production/OBSERVABILITY.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/production/PRODUCTION_READINESS.md](../docs/production/PRODUCTION_READINESS.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/production/PUBLISH_GUIDE_FA.md](../docs/production/PUBLISH_GUIDE_FA.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [docs/production/RELEASE_CHECKLIST.md](../docs/production/RELEASE_CHECKLIST.md) | تنظیم مؤثر انتشار، Smoke هدف، Migration و مرز شواهد/بازیابی |
+| [tools/docs/build_backend_docs.py](../tools/docs/build_backend_docs.py) | رفع تولید قرارداد Controller چندفایلی، قالب‌های جاری یا آزمون و چاپ قابل نگه‌داری |
+| [tools/docs/sync_repository_docs.py](../tools/docs/sync_repository_docs.py) | رفع تولید قرارداد Controller چندفایلی، قالب‌های جاری یا آزمون و چاپ قابل نگه‌داری |
+| [tools/docs/test_documentation_tools.py](../tools/docs/test_documentation_tools.py) | رفع تولید قرارداد Controller چندفایلی، قالب‌های جاری یا آزمون و چاپ قابل نگه‌داری |
 
-خروجی‌های محلی بازسازی‌شدهٔ خارج Git: `docs/database-current-structure.html` و `docs/database-current-structure.pdf`. Handoffهای تخصصی که در دو commit جدید ایجاد شده بودند خوانده و به راهنماها متصل شدند؛ آمار اجرا و تصمیم‌های مرحله‌ای داخل آن‌ها به نتیجهٔ امروز تبدیل نشده است.
+## ۵. جریان واقعی که مستند شد
 
-## ۵. جریان اجرای قابلیت
+`AiController → AiChatService → AiInvocationExecutor → AiServiceClient / IAiChatSources → EfAiConversationStore → SQL Server → JSON یا SSE`؛ Context و Source ACL پیش از تماس/ادامه کنترل می‌شوند و فقط زوج کامل وارد History می‌شود.
 
-`DocumentationSnapshot.cs → میزبان Testing با IHostedService حذف‌شده → OpenAPI/ApiExplorer و IDesignTimeModel → openapi.json/repository-inventory.json → sync_repository_docs.py → Markdown → build_backend_docs.py → HTML/PDF → validate_repository_docs.py`.
-
-استخراج metadata هیچ اتصال SQL، SMS، AI یا worker تجاری اجرا نمی‌کند. تست‌های محصول جدا با SQL LocalDB ایزوله اجرا می‌شوند. کاتالوگ transport جای مجوز رابطه، context و قانون دامنه نیست.
+`FilesController → FileService` برای Upload/Ready از ارسال جداست. در ارسال رسانه، `ReviewedMediaContentSafetyProvider → ManualMediaSafetyProvider` تصمیم اثرانگشت‌دار Moderation موجود را مصرف می‌کند؛ Approval به‌تنهایی Message نمی‌سازد. `AssignmentsController → AssignmentService` تغییر محدود Policy Published را از ویرایش Draft جدا می‌کند. این کلاس‌ها از قبل وجود داشتند؛ این مرحله آن‌ها را پیاده‌سازی نکرد.
 
 ## ۶. دیتابیس
 
-این کار migration یا مدل تازه نساخت. مدل خوانده‌شده113 جدول،1162 ستون،266 FK،332 index مستقل از key و298 CHECK دارد. آخرین migration AddExamAnswerAttachments است.
+مدل جاری۱۵۳ جدول،۷۸ Migration تا `20261122085930_AddMessagingMediaReviews` دارد. جدول هر schema در راهنما نیز از همین مدل هماهنگ شد. PK/FK/index/CHECK/rowversion در فرهنگ SQL کامل آمده است. AI History، SourceVersion، AccountDeletion checkpoints و MediaReview باید با Blob و Evidence سازگار نگه‌داری شوند. Migration تازه ساخته یا روی دیتابیس عادی/سرور اجرا نشد؛ pending model changes وجود ندارد.
 
-سه migration جدید، مالکیت/دوره/رزرو و PersonalClass، اتصال ReportExport به رزرو و policy سؤال/AnswerRevisionAttachments را می‌آورند. شش جدول افزوده و قیود، FK مرکب، rowversion و filtered unique index در فرهنگ SQL مستندند. قفل مالک برای quota/ظرفیت و قفل Attempt برای revision/Finalize توضیح داده شدند. ثبت Job+رزرو اتمیک و تماس شبکه خارج transaction است. blob Retained با Detach حذف نمی‌شود. applied schema سرور تأیید نشده است.
+## ۷. Endpointهای مهم
 
-## ۷. Endpointها
+کاتالوگ۴۹۸ operation،۴۴۲ مسیر،۹۱ Controller و۷۹۶ schema، Request/Response/Authentication/Policy منتشرشده را پوشش می‌دهد. قواعد دامنه فراتر از schema در راهنما توضیح داده شده‌اند:
 
-نسبت به کاتالوگ قبلی 33 عملیات افزوده و 0 حذف شده است. Method/route، request/response، nullable/enum و status منتشرشدهٔ هرکدام در مرجع API بازتولید شده‌اند؛ validation و auth منبع در راهنما/Handoff تخصصی آمده‌اند.
+- `POST /api/v1/ai/chat` و `/chat/stream`: Bearer و Context/Source مجاز، OperationId پایدار؛ SSE با done کامل است، RAG stream409 و Unknown بدون retry خودکار.
+- `GET /api/v1/ai/conversations/{conversationId}/history`: فقط Owner/Context جاری؛ پنجرهٔ زوج کامل، no-store و نامنطبق404.
+- `GET /api/v1/files/{fileId}/messaging-review`: وضعیت امن مالک؛ Pending/Rejected اثر تازهٔ تحویل ندارند. actions موجود Moderation با Claim/Review+Enforce/expectedVersion/reason تصمیم صریح می‌گیرد.
+- `PATCH /api/v1/academic/assignments/{assignmentId}/submission-policy`: چهار فیلد اجباری، مجوز جاری مدرس/مدیر یا اختیار صریح PersonalClass و دو RowVersion؛412 برای نسخهٔ کهنه. خطای409 SUBMISSION_DEADLINE_PASSED در مسیرهای ثبت/پیوست پاسخ از SubmissionService می‌آید و Client باید Draft/FileAssetId را حفظ کند.
+- framework `/api`:400/404/405/413/415 با code پایدار؛ کد دامنه محفوظ، HEAD بدون body و Retry-After معتبر AI/Knowledge روی429/503 منتقل می‌شود.
 
-| Method و Route افزوده | قرارداد مصرف |
-|---|---|
-| `DELETE /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments/{fileAssetId}` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `DELETE /api/v1/personal-classes/{classId}/participants/{participantId}` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/admin/v1/commerce/history/{targetId}` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/admin/v1/commerce/organizations/{ownerId}/subscription` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/admin/v1/commerce/plan-versions/{versionId}/validation` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/admin/v1/commerce/users/{ownerId}/subscription` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/commerce/catalog` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/commerce/organization/subscription` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/commerce/personal/orders` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/commerce/personal/orders/{orderId}` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/commerce/personal/subscription` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/conversations/{conversationId}/summary` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/personal-classes` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/personal-classes/invitations` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/personal-classes/{classId}` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/personal-classes/{classId}/participants` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `GET /api/v1/realtime/changes` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/admin/v1/commerce/organizations/{ownerId}/commercial-contracts` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/admin/v1/commerce/users/{ownerId}/commercial-contracts` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/academic/exam-attempts/{attemptId}/answers/{attemptQuestionId}/attachments` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/ai/simple-text/preflight` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/organization/quote` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/organization/subscription/downgrade` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/personal/orders` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/personal/orders/{orderId}/payments` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/personal/quote` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/commerce/personal/subscription/downgrade` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/personal-classes` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/personal-classes/invitations/{invitationId}/accept` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/personal-classes/{classId}/archive` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `POST /api/v1/personal-classes/{classId}/invitations` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `PUT /api/admin/v1/commerce/plan-versions/{versionId}/draft` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-| `PUT /api/admin/v1/commerce/plans/{planId}/availability` | request/response دقیق در مرجع؛ مجوز و خطا در Handoff همان حوزه |
-
-Commercial API نشست/مالک مجاز و Admin permission می‌خواهد؛ خرید role نمی‌سازد. RealtimeChanges با bootstrap، limit با پیش‌فرض100/حداکثر200، cursor همان نشست/بافت و409/503 resync/retry تعریف شده است؛ limit معتبر1..200 است. Attach آزمون policy صریح، Ready، uploader/org، lease و revision می‌خواهد؛400 policy،404 concealment و409 نسخه/lease/deadline واقعی‌اند.endpoint ساختگی برای release رسانه ساخته نشده است.422 Safety پیام‌رسان NotApplied است.
+هیچ Endpoint تازه‌ای در این مرحله اضافه نشد.
 
 ## ۸. مفاهیم فنی استفاده‌شده
 
-Metadata snapshot، تفاوت schema و business validation، قرارداد نسخه‌دار، reserve/settle، idempotency، Snapshot boundary، invalidation/refetch، cursor opaque و hash همبستگی PDF/HTML در همین اسناد توضیح داده شده‌اند. claim/rowversion Outbox ترتیب جهانی کسب‌وکاری نیست؛ event تکراری با EventId تشخیص داده می‌شود.
+Source snapshot، استخراج ApiExplorer/OpenAPI، مدل طراحی EF، تفکیک سیاست Runtime از مدل مالی، Markdown به HTML RTL/PDF، نشانک و SHA منبع، و SQL تست ایزوله. Renderer شمارش صفحه، متن بیرون صفحه و مقصد لینک داخلی را کنترل می‌کند.
 
 ## ۹. تصمیم‌های طراحی
 
-بازتولید کاتالوگ از کد به‌جای شمارش دستی، از حذف API/DTO جلوگیری می‌کند. متن جریان‌ها دستی و مرتبط باقی ماند تا قواعد کسب‌وکاری فقط از nullable/required حدس زده نشوند. ممیزی‌های اولیهٔ Product و نتایج تست تاریخی حفظ شدند، ولی Current vs Proposed و راهنمای خواندن آن‌ها اصلاح شدند. Data Protection cursor مصرف جدا از MFA حذف‌شده دارد؛ تنظیم خصوصی جدید یا probe ساختگی اختراع نشد.
+روایت جاری در کتاب‌ها یکپارچه شد و شواهد تاریخی مرحله‌ها دست‌نخورده ماند؛ صرف اضافه‌کردن هشدار بالای راهنما برای تناقض‌های اجرایی کافی نبود. قالب generator هم اصلاح شد تا بازتولید، سیاست قدیمی را برنگرداند. AiController اکنون partial است؛ لینک هر Action به فایل واقعی آن و لینک فهرست Controller به فایل اصلی می‌رود. جلد source را نشان می‌دهد و شاخهٔ feature را main معرفی نمی‌کند. فاصلهٔ فهرست چاپ کاهش یافت تا تک‌سطر آخر به صفحهٔ تقریباً خالی منتقل نشود؛ کنترل کیفیت PDF حذف نشد.
 
 ## ۱۰. تست‌ها
 
-تست تازهٔ محصول به کار مستندات اضافه نشد. suite موجود Unit قوانین Domain/Application، Integration میزبان/SQL/مجوز/idempotency و Architecture جهت وابستگی‌ها را بررسی می‌کند.12 تست موجود ابزار اسناد نیز اجرا می‌شوند. کیفیت PDF با کنترل page bounds/blank/bookmark/hash و بازبینی بصری صفحات مرتبط بررسی می‌شود؛ این‌ها جای UI/سرور واقعی نیستند.
+یک آزمون خالص ابزار افزوده شد: `test_partial_controller_uses_primary_source_file` هم فایل اصلی و هم Action داخل AiController.Streaming.cs را کنترل می‌کند؛ این Regression برای خرابی واقعی تولید مرجع است. مجموع۱۴ آزمون Python موفق‌اند. تست محصول تازه نوشته نشد؛ suiteهای موجود Unit/Integration/Architecture برای سلامت مبنا اجرا شدند.
 
-## ۱۱. Validation
+## ۱۱. Validation واقعی
 
-Restore موفق؛ Build اولیه و نهایی هر دو با **صفر warning و صفر error** موفق شدند. suite کامل اولیه و نهایی هر کدام **2478 تست موفق** داشتند:922 Unit،1542 Integration و14 Architecture؛ failed/skipped صفر. شمارنده‌های شش TRX کنترل شدند.12 تست ابزار اسناد هم موفق‌اند؛ تست تازهٔ محصول به کار مستندات اضافه نشد.
+Restore موفق؛ Build اولیه و نهایی با صفر Warning و Error موفق. دو دور کامل هر کدام 3789 تست موفق، صفر Failed و Skipped دارند؛ Counters هر شش TRX خوانده شد:
 
-اجرای محصول روی checkout مستقل و LocalDB یکتای `MakanApp_DocsSync_20261030_c817e6d9` بود؛ نام موقت fixture پس از suite نهایی به bytes اصلی برگشت و وارد تحویل نیست. EF has-pending-model-changes تغییر معلق ندارد؛ هیچ migration روی دیتابیس معمول یا سرور اجرا نشده است.
+| دور | مجموعه | اجراشده | موفق | شکست | ردشده |
+|---|---|---:|---:|---:|---:|
+| initial | Unit | 1499 | 1499 | 0 | 0 |
+| initial | Integration | 2274 | 2274 | 0 | 0 |
+| initial | Architecture | 16 | 16 | 0 | 0 |
+| final | Unit | 1499 | 1499 | 0 | 0 |
+| final | Integration | 2274 | 2274 | 0 | 0 |
+| final | Architecture | 16 | 16 | 0 | 0 |
 
-کنترل365 operation،608 schema،113 جدول،55 migration و154 ورودی inventory موفق است؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب 78 / 458 / 466 / 172 صفحه دارند؛ bookmark و SHA متناظر HTML کنترل شدند. کنترل صفحهٔ خالی و متن خارج صفحه موفق و صفحات Commerce/Replay/Attachment/SQL بصری بازبینی شدند. این‌ها پذیرش UI، دستگاه یا سرور واقعی نیستند.
+۱۴ آزمون ابزار موفق؛ EF has-pending-model-changes بدون تغییر معلق؛ پوشش۴۹۸ عملیات/۷۹۶ schema/۱۵۳ جدول/۷۸ Migration و۲۳۲ ورودی inventory کامل؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. نشانک‌ها و SHA HTML داخل PDF تطبیق دارند؛ صفحهٔ خالی و متن خارج صفحه صفر. صفحات فارسی جریان AI و فهرست SQL بصری بازبینی شدند.
+
+| خروجی | صفحه | نشانک |
+|---|---:|---:|
+| backend-api-guide | 79 | 139 |
+| backend-api-reference | 800 | 1390 |
+| database-current-structure | 243 | 157 |
+| frontend-contract | 804 | 1399 |
+
+تلاش نخست به علت آماده‌سازی محیط موفق نبود: نام دیتابیس انتخابی عبارت IntegrationTests مورد انتظار محافظ NotificationAcademicFixture را نداشت. پس از۱۵۵۸ تست Integration (۱۵۴۰ موفق و۱۸ شکست همین guard)، اجرای متعلق به این کار متوقف شد؛ این دور Aborted است و PASS گزارش نمی‌شود. محافظ تغییر نکرد؛ نام دیتابیس مستقل اصلاح،۱۸ تست آسیب‌دیده جدا پذیرفته و سپس دو دور کامل بالا اجرا شدند. log/TRX ناموفق برای شواهد محفوظ است.
+
+اجرای صحیح در checkout جدا و LocalDB اختصاصی `MakanApp_DocsSync_IntegrationTests_20261126_f8178a4` بود. تغییر موقت نام fixture پس از آزمون‌ها به bytes اصلی برگشت و وارد تحویل نمی‌شود. محیط عادی توسعه و سرور مقصد تغییر نکردند. شواهد این مرحله در `.artifacts/docs-sync-20261126/validation-summary.json` محلی‌اند.
+
+برای کاهش حجم بسیار زیاد TRX، فقط در process دور نهایی، سطح `Microsoft.EntityFrameworkCore.Database.Command` روی Warning گذاشته شد؛ لاگ اطلاعاتی SQL کم شد و Warning/Error و همهٔ تست‌ها/assertionها حفظ شدند. config پروژه یا کاربر تغییر نکرد و مقدار قبلی process در finally بازگردانده شد. دور کامل اصلاح‌شدهٔ اول با تنظیم Logging قبلی نیز موفق بود.
 
 ## ۱۲. Git
 
-Source baseline برابر e11d4ec است و با hash commit اسناد تفاوت دارد. سه فایل untracked قبلی tools/ai/provider_diagnostic.py، run_exact_ai.py و test_provider_diagnostic.py با hash اولیه حفظ و خارج stage هستند. تغییر موقت نام DatabaseName در fixture فقط checkout ایزوله است و پیش از تحویل bytes اصلی برمی‌گردد. فقط فایل‌های جدول بخش۴ stage می‌شوند؛ local commit و push طبق قواعد AGENTS فقط پس از موفقیت همهٔ بررسی‌ها و بازبینی انجام می‌شود. hash/message/branch/remote و نتیجهٔ واقعی Git در پاسخ تحویل ثبت می‌شوند؛ این سند خود hash آینده را حدس نمی‌زند. Publish/Deploy یا migration سرور انجام نشده است.
+پیام commit این مرحله: `docs: refresh current backend frontend and deployment contracts`؛ فقط فایل‌های جدول بالا stage می‌شوند. شاخهٔ مقصد `feature/product-v6-backend-alignment` و remote=`origin` است. شناسه و نتیجهٔ واقعی Push پس از ثبت موفق در پیام نهایی تحویل اعلام می‌شود؛ Source hash بالای سند شناسهٔ commit اسناد نیست. هیچ Merge به main، Force push یا Deploy انجام نمی‌شود.
 
 ## ۱۳. محدودیت‌های فعلی
 
-gateway پرداخت واقعی، قیمت/سقف تجاری نهایی، Runtime AI و lifecycle Source/RAG، Learning Profile/Badge، چرخهٔ مستقل Assignment/Exam کلاس شخصی، workflow release رسانه BE-01، Push دستگاه، backplane/keyring چند replica و SLO/storm واقعی در این کار ساخته یا تأیید نشده‌اند. تداوم key ring cursor، IIS/TLS/Proxy و restore/load هدف gate جدا دارند.
+Runtime پرداخت، Paid Provisioning و Push بیرونی Deferred، آموزش مستقل PersonalClass خاموش و Library عمومی/AI بسته‌اند. AI/Knowledge Enabled تابع config محیط است؛ Service Auth دو سرویس false. RAG Streaming رسمی upstream موجود نیست. اجرای حذف حساب/cleanup نیازمند تنظیم مصوب؛ چند replica، Load/SLO، TLS، backup/restore، ring/restart و alert محیط هدف از تست محلی پذیرفته نمی‌شوند. Manual Review اسکن جامع خودکار AV/CDR نیست.
 
 ## ۱۴. نکات آموزشی
 
-1. Entitlement اجازهٔ مصرف قابلیت است؛ Authorization داده هنوز به رابطه و context نیاز دارد.
-2. Legacy با تاریخ نامعلوم را نباید Unlimited یا منقضی حدسی کرد؛ enforcement نقطهٔ ثبت واقعی دارد.
-3. Capacity با ماه جدید reset نمی‌شود؛ reservation از مصرف قطعی و Unknown جداست.
-4. SignalR hint است؛ Snapshot و replay با EventId و ContextRevision مانع اعمال دوباره یا دادهٔ بافت قدیمی می‌شوند.
-5. Ready فایل به معنی Attach/Submit/Send یا Safety Approved نیست؛ هر binding مجوز جاری خود را دارد.
-6. Detach revision را عوض می‌کند؛ حفظ blob تاریخچه به معنی grant دانلود تاریخچهٔ detached نیست.
-7. ring حذف‌شدهٔ MFA با Data Protection مصرف‌شده برای cursor یکی نیست؛ readiness هم تداوم cursor را اثبات نمی‌کند.
+1. Open Access شرط مالی را برمی‌دارد؛ ACL و Safety و Feature flag مستقل پابرجا هستند.
+2. Ready فایل، Approval رسانه و Message Sent سه وضعیت متفاوت‌اند.
+3. RowVersion برای تضاد داده و OperationId برای تکرار همان intent است؛ جای هم را نمی‌گیرند.
+4. در SSE، HTTP200 پیش از تکمیل اتفاق می‌افتد؛ فقط done پاسخ کامل را تأیید می‌کند.
+5. مدل طراحی EF و OpenAPI قرارداد Source را ثابت می‌کنند؛ applied schema و readiness سرور شاهد جدا می‌خواهند.
+6. PDF باید با HTML هم‌نسخه باشد؛ Hash، نشانک، صفحه‌بندی و خوانایی فارسی همگی بخشی از تحویل‌اند.
+7. پاسخ200 در preflight فقط گزارش قابلیت است؛ authorized=true بدون retrievalAvailable، موفقیت اجرای RAG نیست. خطای شبکه بدون HTTP نیز نباید به500 ساختگی تبدیل شود.
 
-## ۱۵. مسیر پیشنهادی مطالعه کد
+## ۱۵. مسیر پیشنهادی مطالعه
 
-CommercialSubscriptionsController → CommercialSubscriptionService/CommercialActorAccess → Subscription.Monthly.cs/UsageReservation → EfCommercialStore و EfReportExportJobStore → migrationهای29اکتبر → CommercialSubscriptionEndpointsTests.
-
-RealtimeController/MessagingHub → RealtimeSyncService/RealtimeInvalidationWriter → RealtimeCursorProtector/SignalRInvalidationNotifier → OutboxDispatcher → AccountRealtimeReplayTests و AccountRealtimeConcurrentReplayTests.
-
-ExamsController → ExamAnswerService.Attachments.cs → ExamAnswerAttachmentValidator → AnswerRevisionAttachment/ExamAnswerAttachmentPolicy → EfExamAnswerStore → AnswerRevisionAttachmentConfiguration و AddExamAnswerAttachments → AcademicExamAttachmentTests و AcademicExamAttachmentSecurityTests.
+[راهنمای بک‌اند](backend-api-guide.md) → [مرجع API](backend-api-reference.md) → [قرارداد فرانت](frontend-contract/README.md) → [AiController.Streaming.cs](../MakanApp.Api/Controllers/AiController.Streaming.cs) → [AiChatService.cs](../MakanApp.Application/Ai/AiChatService.cs) → [EfAiConversationStore.cs](../MakanApp.Infrastructure/Ai/EfAiConversationStore.cs) → [ManualMediaSafetyProvider.cs](../MakanApp.Infrastructure/Messaging/ManualMediaSafetyProvider.cs) → [ساختار SQL](database-current-structure.md) → [MessagingMediaReviewAcceptanceTests.cs](../tests/MakanApp.IntegrationTests/MessagingMediaReviewAcceptanceTests.cs) → [Runbook استقرار](deployment-windows-linux-docker.md).
 
 ## ۱۶. مرحله بعد
 
-با اسناد و نسخهٔ تأییدشده، ابتدا اتصال واقعی Frontend به bootstrap/replay و جریان Upload/Attach/Finalize در محیط مجاز تست شود؛ سپس smoke استقرار هدف و custody کلید cursor با درخواست مستقل انجام شود. تصمیم محصول BE-01 و آماده‌سازی درگاه/AI را با کار اسناد یا دورزدن Safety مخلوط نکنید.
+در صورت درخواست انتشار، از همین Source بسته و SQL تازه ساخته و Smoke مقصد طبق Runbook اجرا شود؛ فعال‌سازی پرداخت/Push، تغییر سیاست حذف و کار Frontend در آن مرحله خودکار ادغام نشوند. به‌روزرسانی مستندات مجوز Deploy نیست.

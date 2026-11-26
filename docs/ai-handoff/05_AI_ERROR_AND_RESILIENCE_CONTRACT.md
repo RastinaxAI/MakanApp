@@ -1,5 +1,7 @@
 # قرارداد Error، Timeout و Resilience
 
+بازبینی قرارداد جاری `2026-11-26`: AI/Knowledge در حالت Unmetered نیز OperationId/ACL و وضعیت Unknown را حفظ می‌کنند. خطای قبل SSE start همان ProblemDetails است؛ پس از شروع، event:error شکست نهایی و EOF بدون done پاسخ ناقص است. [Streaming/Retry](../product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) و [خطاهای مشترک HTTP](../backend-api-guide.md) مرجع‌اند؛ body خام Provider و Secret عمومی نمی‌شوند.
+
 <!-- DOC-SYNC:BEGIN -->
 > راهنمای خواندن، بازبینی `2026-10-15` از `main@80d6a14`: این فایل قرارداد/شاهد موضوعی AI است. تصمیم‌های دامنه و اعداد validation/commit داخل آن متعلق به همان scope و تاریخ‌اند و با این به‌روزرسانی بازنویسی نشده‌اند. برای کاتالوگ و شمارش جاری از [README مخزن](../../README.md) و برای gateهای سرور از [آمادگی جاری](../production/PRODUCTION_READINESS.md) استفاده کنید؛ وجود کد یا تست، اثبات استقرار/ارسال واقعی provider نیست.
 <!-- DOC-SYNC:END -->
@@ -85,4 +87,4 @@ Backend موارد زیر را strict بررسی می‌کند:
 - Backend metricها: `makan.ai.client.requests`، `makan.ai.client.duration` و `makan.ai.client.circuit.rejections`؛ ActivitySource برابر `MakanApp.AiService` است.
 - labelها فقط operation، outcome و stable error code هستند.
 - token، payload، prompt، PII و provider body در metric ثبت نمی‌شوند.
-- `Retry-After` upstream در exception داخلی خوانده می‌شود، ولی public ProblemDetails فعلی header جدیدی تولید نمی‌کند؛ client نباید وجود آن را فرض کند.
+- در نسخهٔ جاری، `ApiProblemDetailsContract.PreserveRetryAfter` برای پاسخ429/503 از AiServiceException/AiKnowledgeException دارای delay نامنفی، Retry-After با ثانیهٔ صحیح رو به بالا می‌سازد؛ header موجود بازنویسی و مقدار raw upstream عبور داده نمی‌شود. نبود delay یعنی header تضمین نیست؛ وجود آن مجوز retry کور POST نیست.

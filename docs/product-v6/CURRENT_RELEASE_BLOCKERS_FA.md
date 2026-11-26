@@ -1,5 +1,9 @@
 # موانع و تصمیم آمادگی Release جاری
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 به‌روزرسانی سیاست مالک `2026-11-18` از Source پایه
 `d397d73c5f532f7492614e95925ceaa1850a8150`؛ [گزارش AI نامحدود](AI_UNMETERED_CURRENT_RELEASE_FA.md)
 مرجع تغییر این مرحله و شواهد نهایی آن است. پرداخت برای نسخهٔ جاری Deferred است.

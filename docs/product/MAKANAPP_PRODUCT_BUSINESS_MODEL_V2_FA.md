@@ -1,8 +1,32 @@
 # MakanApp — مدل محصول، قواعد کسب‌وکار و جهت معماری نسخهٔ ۲
 
+## سیاست اجرایی جاری — ۲۰۲۶-۱۱-۲۶
+
+این سند طرح محصول و تاریخچهٔ تصمیم‌ها را نگه می‌دارد؛ قابلیت اجراشده از [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) و [Scope انتشار](../product-v6/CURRENT_RELEASE_SCOPE_FA.md) خوانده شود. `Commerce:EnforcementEnabled=false` شرط مالی را از gate قابلیت عادی خارج می‌کند؛ حذف شرط عمومی سن تصمیم مستقل سیاست Messaging است. ACL، Privacy، Block، Safety و ظرفیت واقعی آموزشی محفوظ‌اند. `AiUsage:Mode=Unmetered` با عملیات پایدار و مجوز Source همراه است؛ قرارداد مالی و سوابق واقعی حذف نشده‌اند و Plan/Quota فرضی ساخته نمی‌شود.
+
+Chat/Profile اختیاری، History و SSE عمومی و Source/Knowledge/RAG مجاز پیاده شده‌اند؛ RAG Streaming پشتیبانی upstream ندارد. [Adaptive AI](../product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md). کلاس مستقل lifecycle و engine آموزشی دارد، ولی AssignmentsEnabled/ExamsEnabled در این انتشار false هستند. پرداخت Runtime، Paid Provisioning و Push بیرونی Deferred و Library عمومی/AI بسته‌اند.
+
+فایل پیام پس از Ready به تصمیم انسانی اثرانگشت‌دار نیاز دارد؛ Approval خودش ارسال نیست. [رسانه](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md). تکلیف Published تغییر محدود deadline/Late با دو RowVersion دارد؛ محتوا از مسیر Draft ویرایش می‌شود. [Policy تکلیف](ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md).
+
 > اولویت تصمیم جدید: [سیاست Messaging مصوب ۲۰۲۶/۱۱/۰۱](MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) بر محدودیت‌های سنیِ امکانات عمومی در این نسخه مقدم است. سایر قواعد کسب‌وکار این سند با این اصلاح بازنویسی نمی‌شوند؛ برای Student Plan آستانه/مدرک سن جدیدی حدس زده نشده است.
 
-بازبینی تکمیلی `2026-10-30` از `main@e11d4ec`: پروفایل، مدرسه، اشتراک Individual/Organization، دورهٔ ماهانه، reserve/settle و بنیاد PersonalClass در کد موجودند. replay حساب و پیوست آزمون هم افزوده شده‌اند. ممیزی baseline بخش۲۴ و طرح‌های۲۶..۳۳ مربوط به قبل از اجرا هستند؛ قسمت‌های تحقق‌یافتهٔ آن‌ها با قراردادهای [اشتراک](SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md)، [Realtime](REALTIME_EVENT_CONTRACT_FA.md) و [پیوست](ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) جایگزین می‌شوند. Learning Profile، Badge، Source lifecycle/RAG، AI Runtime شخصی و چرخهٔ کامل آموزشی PersonalClass همچنان خارج از قابلیت جاری‌اند؛ نام/قیمت/سقف پولی یا Refund نهایی از این سند استنتاج نشود.
+بازبینی تکمیلی `2026-10-30` از `main@e11d4ec`: پروفایل، مدرسه، اشتراک Individual/Organization، دورهٔ ماهانه، reserve/settle و بنیاد PersonalClass در کد موجودند. replay حساب و پیوست آزمون هم افزوده شده‌اند. ممیزی baseline بخش۲۴ و طرح‌های۲۶..۳۳ مربوط به قبل از اجرا هستند؛ قسمت‌های تحقق‌یافتهٔ آن‌ها با قراردادهای [اشتراک](SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md)، [Realtime](REALTIME_EVENT_CONTRACT_FA.md) و [پیوست](ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) جایگزین می‌شوند. این ارزیابی متعلق به۲۰۲۶-۱۰-۳۰ بود؛ وضعیت Source/RAG، AI شخصی و PersonalClass اکنون از قراردادهای v6 و افزودهٔ جاری بالای سند خوانده شود؛ نام/قیمت/سقف پولی یا Refund نهایی از این سند استنتاج نشود.
+
+### راهنمای جایگزینی وضعیت‌های ممیزی قدیمی
+
+| موضوع در طرح تاریخی پایین | وضعیت جاری و مرجع اجرایی |
+|---|---|
+| Unknown/Minor و Verified Adult به‌عنوان شرط عمومی Messenger | لغو شده؛ Profile/Privacy/Block/ACL/Safety جاری معتبرند؛ [سیاست Messaging](MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md) |
+| Source lifecycle و RAG به‌عنوان پیشنهاد اجرا‌نشده | Educational Source/Version، مجوز retrieval و RAG غیرجریانی موجودند؛ [اتصال Knowledge](../architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md) |
+| Personal AI نیازمند Organization Role | Actor رسمی Personal مستقل با Context/Payer مجاز موجود است؛ [AI شخصی](../product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) |
+| تاریخچه/پروفایل یادگیری/Streaming پیشنهادی | History خصوصی، learningProfile اختیاری و General SSE موجودند؛ [Adaptive AI](../product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) |
+| سهمیهٔ تجاری به‌عنوان مانع عمومی AI/Source | Enforcement=false و Unmetered؛ OperationId، ACL و محدودیت فنی مستقل پابرجا هستند؛ [Commerce](../product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md) |
+| PersonalClass فقط foundation | چرخهٔ درخواست/تأیید و نقش محلی موجود؛ engine تکلیف/آزمون با Feature flag مستقل فعلاً خاموش؛ [v6](../product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) |
+| نبود callback در کد | Zibal/Callback/Verify/Recovery موجود؛ Runtime پرداخت و Paid Provisioning همچنان Deferred؛ [Scope](../product-v6/CURRENT_RELEASE_SCOPE_FA.md) |
+
+## بایگانی طرح و ممیزی اولیه — وضعیت زمان نگارش
+
+بخش‌های شماره‌دار زیر سابقهٔ تحلیل محصولند؛ برچسب‌های CURRENTLY IMPLEMENTED و PROPOSED و عبارت «کد موجود» در آن‌ها به تاریخ ممیزی مربوط‌اند، نه وضعیت امروز. برای تصمیم پیاده‌سازی یا نمایش UI از جدول جایگزینی بالا و قراردادهای جاری استفاده شود. شواهد و پیشنهادهای تاریخی برای حفظ مسیر تصمیم بازنویسی نشده‌اند.
 
 تاریخ ممیزی: `2026-10-28` — مخزن: `MakanApp-Backend` — شاخه: `main` — مبنای Git: `b87fbd89cef33f26315fddd4a1e57116b44cc781`.
 

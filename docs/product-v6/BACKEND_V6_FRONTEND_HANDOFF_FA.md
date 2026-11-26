@@ -1,5 +1,9 @@
 # تحویل قرارداد Backend v6 به Frontend
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 > تکمیل `2026-11-18` از پایهٔ `95cef1b`: [Adaptive Assistant v1](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md)
 > مرجع جاری `POST /ai/chat`، `POST /ai/chat/stream` و History خود مالک است. Profile اختیاری
 > است؛ History از SQL مجاز می‌آید؛ Auto/SourceIntent و SourcesOnly نسخهٔ دقیق/ACL را حفظ

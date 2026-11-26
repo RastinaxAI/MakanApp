@@ -23,6 +23,21 @@ class DocumentationToolsTests(unittest.TestCase):
                     self.assertEqual(expected, sync.controller_source('PlatformSupportTickets'))
             finally:
                 sync.controller_source.cache_clear()
+    def test_partial_controller_uses_primary_source_file(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            controllers = root / 'MakanApp.Api/Controllers'
+            controllers.mkdir(parents=True)
+            (controllers / 'AiController.cs').write_text('partial class AiController {}', encoding='utf-8')
+            (controllers / 'AiController.Streaming.cs').write_text('partial class AiController { void History() {} }', encoding='utf-8')
+            sync.controller_source.cache_clear()
+            try:
+                with patch.object(sync, 'ROOT', root):
+                    self.assertEqual('../MakanApp.Api/Controllers/AiController.cs', sync.controller_source('Ai'))
+                    self.assertEqual('../MakanApp.Api/Controllers/AiController.Streaming.cs', sync.controller_source('Ai', 'History'))
+            finally:
+                sync.controller_source.cache_clear()
+
     def test_reference_is_linked_to_exact_contract(self):
         self.assertEqual('[VerifyOtpResult](#contract-VerifyOtpResult)', sync.schema_label({'$ref': '#/components/schemas/VerifyOtpResult'}))
 

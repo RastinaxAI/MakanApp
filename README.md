@@ -1,140 +1,28 @@
 # ماکان‌اپ — MakanApp Backend
 
-Adaptive Assistant v1 از پایهٔ `95cef1b`: [قرارداد Chat/Profile/History/Streaming](docs/product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md)
-شامل History مستقل AI با مالک/Context جاری، SSE واقعی و SourceVersion دقیق است. مسیر
-RAG فقط غیرجریانی است. AI نامحدود و Service Auth خاموش حفظ‌اند؛ هیچ تست، SQL یا Deploy
-روی سرور Backend در این مرحله انجام نمی‌شود. شمارش‌های مراحل پایین تاریخی‌اند.
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786` روی شاخهٔ `feature/product-v6-backend-alignment`.
 
-این مخزن فقط Backend ماکان را نگه می‌دارد. ساختار فعلی یک Modular Monolith با Onion Architecture روی ASP.NET Core و .NET 9 است. Persistence بر Entity Framework Core 9 و Microsoft SQL Server بنا شده است. Frontend در این workspace وجود ندارد.
+498 عملیات HTTP، 442 مسیر، 91 Controller، 796 schema، 153 جدول و 78 Migration؛ snapshot سورس و مدل طراحی، نه تأیید schema سرور.
 
-اسناد مرجع در `docs/project-context` و قواعد کار در `AGENTS.md` قرار دارند.
+این مخزن Backend ماکان است: .NET 9، ASP.NET Core Controllers، EF Core 9، SQL Server و Onion Architecture داخل Modular Monolith. Frontend workspace مستقلی دارد.
 
-سیاست جاری AI نامحدود از پایهٔ `d397d73`: هر دو دور کامل **1386 Unit +2098 Integration
-+14 Architecture =3498 PASS**، Failed/Skipped=0 و Build بدون Warning/Error؛۳۷ تست تازه،
-۱۱۷ Zibal و۸۲ Realtime موفق. Migration افزایشی `AddUnmeteredAiOperations` روی SQL موقت
-Fresh/Upgrade پذیرفته شد؛ دیتابیس عادی/سرور تغییر نکرد. نتیجه `READY_FOR_TEST_DEPLOY` است؛
-Deploy یا Merge به main اجرا نشده است. [گزارش آموزشی و شواهد](docs/product-v6/AI_UNMETERED_CURRENT_RELEASE_FA.md).
+## راهنمای استفاده و تغییرات جاری
 
-مرجع نهایی محدودهٔ Release جاری: [Audit همهٔ BE01–BE25](docs/product-v6/FINAL_BE01_BE25_AUDIT_FA.md)،
-[قابلیت‌های داخل محدوده و Deferred](docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md) و
-[موانع واقعی Configuration/Operations](docs/product-v6/CURRENT_RELEASE_BLOCKERS_FA.md)، از
-Source نهایی MKN-BE-001=`14b0271a9d3aea840e23413dacae5300fc68ebed`.
-Store Billing، Push Runtime، iOS، Family و PersonalClass Assignment/Exam طبق تصمیم مالک
-Deferred هستند؛ طبق [سیاست جدید نسخهٔ جاری](docs/product-v6/AI_UNMETERED_CURRENT_RELEASE_FA.md)،
-Runtime همهٔ پرداخت‌ها از جمله Zibal و Paid Provisioning آموزشگاه هم Deferred است؛ کد و Regression آن‌ها حفظ می‌شود.
-پیگیری [Test Runtime](docs/operations/TEST_RUNTIME_READINESS_FA.md) از `f704a5c`، AI/Knowledge
-خصوصی Test را فعال و با اتصال واقعی محلی پذیرفت؛ Service Auth هر دو خاموش است. درگاه هنوز
-`Unavailable` است؛ URL بازگشت کلاینت فقط برای انتشار آیندهٔ پرداخت لازم است و blocker نصب Test نیست.
-AI با `AiUsage:Mode=Unmetered` به اشتراک/Entitlement تجاری/Quota/Trial یا سقف محلی ai-chat نیاز
-ندارد؛ ورود، Context و Source ACL و عملیات پایدار الزامی‌اند. فقط این Mode در هر دو private config اضافه شده است.
+[وضعیت جاری و مسیر مطالعه](docs/CURRENT_PROJECT_STATUS.md) → [راهنمای بک‌اند](docs/backend-api-guide.md) → [مرجع کامل API](docs/backend-api-reference.md) → [قرارداد فرانت](docs/frontend-contract/README.md) → [دیتابیس](docs/database-current-structure.md) → [استقرار](docs/deployment-windows-linux-docker.md). HTML/PDF دو کتاب اصلی و قرارداد فرانت کنار Markdown به‌روز می‌شوند.
 
-مسیر عملیات BE-23: [گزارش آمادگی محلی](docs/product-v6/BE23_OPERATIONS_READINESS_REPORT_FA.md) و
-[Manifest بسته‌های Test/Production، SQL و rollback](docs/product-v6/BE23_RELEASE_ARTIFACT_MANIFEST_FA.md).
-Publish محلی با Deploy و پذیرش Production یکی نیست؛ مقادیر خصوصی محیط‌ها و فایل‌های ناتمام AI محفوظ‌اند.
-
-قرارداد جاری BE-17: [Frontend/Admin Commerce](docs/product-v6/COMMERCE_CURRENT_POLICY_FRONTEND_HANDOFF_FA.md)،
-[ماتریس مالک/پرداخت‌کننده/سهمیه](docs/product-v6/COMMERCE_PRODUCT_MATRIX_FA.md) و
-[گزارش توسعه‌دهنده و Validation](docs/product-v6/COMMERCE_BE17_DEVELOPER_REPORT_FA.md).
-Individual فقط متعلق به همان User است؛ رابطهٔ Guardian اشتراک یا سهمیهٔ مشترک ایجاد نمی‌کند.
-
-تاریخچهٔ Messenger در MKN-BE-001: [قرارداد Home/History و Reconnect](docs/product-v6/MESSENGER_HISTORY_FRONTEND_HANDOFF_FA.md)
-و [بازتولید، اصلاح مجوز خواندن و گزارش توسعه‌دهنده](docs/product-v6/MESSENGER_HISTORY_FIX_REPORT_FA.md).
-Home از صندوق account-wide خوانده می‌شود؛ مجوز History از خود گفتگو و دسترسی جاری حساب می‌آید.
-
-مسیر مطالعهٔ BE-15: [قرارداد فایل و منبع آموزشی](docs/product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md)، [ماتریس اتصال و مجوز جاری](docs/product-v6/FILES_LIBRARY_ACCESS_MATRIX_FA.md) و [گزارش توسعه‌دهنده و Validation](docs/product-v6/FILES_LIBRARY_DEVELOPER_REPORT_FA.md). شناسهٔ فایل مجوز دائمی دانلود نیست؛ Hidden برای خوانندهٔ عادی پنهان است و دانلود/AI عمومی Library و تأیید رسانهٔ ReviewRequired همچنان فعال نشده‌اند.
-
-مسیر مطالعهٔ BE-16: [قرارداد Notification و Deep Link](docs/product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [ماتریس رویداد و مجوز](docs/product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md)، [Runbook کانال‌های بیرونی](docs/operations/NOTIFICATION_PUSH_RUNBOOK_FA.md) و [گزارش توسعه‌دهنده و نتیجهٔ واقعی Validation](docs/product-v6/NOTIFICATION_DEVELOPER_REPORT_FA.md). دریافت زندهٔ WebPush/FCM جدا از موفقیت implementation است؛ OTP ملی‌پیامک تغییر نکرده است.
-
-افزودهٔ BE-22: [حذف حساب و قرارداد API](docs/product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md)، [ماتریس نگه‌داری/پاک‌سازی](docs/product-v6/ACCOUNT_DELETION_DATA_MATRIX_FA.md) و [Runbook بازیابی](docs/operations/ACCOUNT_DELETION_RUNBOOK_FA.md). اجرای حذف پیش‌فرض خاموش و مهلت null است؛ User/Person و تاریخچه‌های مشترک حفظ، هویت جاری خنثی و دادهٔ خصوصیِ مصوب پاک می‌شوند. این مرحله Deploy، حذف زندهٔ Knowledge یا فعال‌سازی Production نیست.
-
-قرارداد جاری حساب عادی در [Personal AI و Knowledge/RAG](docs/product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) است: Assistant و Payer از Workspace مدرسه جدا هستند. Generic Personal Chat با Actor رسمی Personal و Scope تهی به همان رزرو/AI v1 متصل است؛ پذیرش واقعی Backend محلی→AI Production با200 و یک مصرف انجام شد. Knowledge و ACL موجود مستقل‌اند؛ Service Auth دو سرویس false و Runtime پیش‌فرض/Backend Deployment دست‌نخورده‌اند.
-
-## وضعیت جاری Product v6
-
-ممیزی مبنا در `2026-11-17` از `14b0271` در [گزارش BE01–BE25](docs/product-v6/FINAL_BE01_BE25_AUDIT_FA.md):
-**1369 Unit +2068 Integration +14 Architecture =3451 PASS** در هر دو دور کامل؛ صفر
-Failed/Skipped،117 Zibal موفق و Build بدون Warning/Error. کد/تست/config تغییر نکرد؛
-438 path،494 operation،783 schema،91 Controller،151 جدول و75 Migration، Pending=NO.
-محدودهٔ Release Freeze شده و Full Future Product جداست. پیگیری Runtime پس از این ممیزی،
-AI/Knowledge Test را با Personal Chat و Ingest/Ready/Retrieve/RAG واقعی پذیرفت؛ نتیجهٔ جدید
-Regression در [گزارش Runtime](docs/operations/TEST_RUNTIME_READINESS_FA.md) است. سیاست تازه،
-مانع تنظیم زیبال را از Current Release خارج کرده است؛ دو پذیرش عملیاتی Test از چهار مورد Production جدا هستند.
-در پیگیری Runtime، هر دو دور کامل **1377 Unit +2070 Integration +14 Architecture =3461 PASS**
-شدند؛ Failed/Skipped و Warning/Error صفر،117 Zibal و82 Realtime موفق، Pending Model Changes=NO.
-اعداد و statusهای افزوده‌های مراحل پایین، تاریخچهٔ همان Commit/تاریخ‌اند.
-
-افزودهٔ BE-15 از مبنای `54d07d2`: **1348 Unit +2026 Integration +14 Architecture =3388 PASS**،
-صفر Failed/Skipped و117 تست Zibal موفق؛ Build نهایی صفر Warning/Error دارد. فهرست مشترک binding،
-guard حذف و reuse فایل، Scheduled retention/rowversion و جلوگیری از دورزدن Safety کامل شدند.
-`BE15_FILES_LIBRARY=PASS_CURRENT_POLICY`؛ دانلود/AI عمومی Library، تأیید ReviewRequired و purge
-فایل Ready فعال نشده‌اند. شش Realtime timeout دور اول و شکست Lookup دور دوم در گزارش مرحله
-ثبت‌اند؛ اجرای نهایی کامل موفق است و علت قطعی ناپایداری دور اول ادعا نمی‌شود.
-شمارش API/schema در پاراگراف بعد Snapshot مرحلهٔ BE-16 است؛ BE-15 قرارداد یا schema تازه ندارد.
-Commit کد/تست BE-15: `d0b2c3085b12a07798c7f3f70f16e20146d68458`؛ Push روی شاخهٔ
-`feature/product-v6-backend-alignment` و تطبیق Remote موفق‌اند. main و Deploy اجرا نشده‌اند.
-
-بازبینی `2026-11-15` از Commit کد و پذیرش `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6`، با مبنای BE-16 برابر `76acf20` و شاخهٔ `feature/product-v6-backend-alignment`: **494 عملیات، 438 مسیر، 91 Controller، 783 schema، 151 جدول و 75 Migration**. شمارش از میزبان مستندسازی بدون SQL/Worker/SMS/AI استخراج شده است؛ اعداد و نتیجهٔ مراحل پایین تاریخی‌اند.
-
-Bio، تغییر شماره با OTP واقعی مستقل از Mock Login، دفترچهٔ خصوصی چندشماره‌ای، Support، چرخهٔ حذف حساب با اجرای پیش‌فرض غیرفعال و انتخاب مستقل Assistant موجودند. PersonalClass Assignment/Exam پیش‌فرض خاموش و engine سازمانی محفوظ است. School Application انتخاب صریح مدیر در Approval، Quote/Order با قیمت سرور، Zibal/Verify، Outbox و Provisioning مرحله‌ای سازمان/اشتراک/دعوت مدیر دارد. متقاضی فقط مدیر پیشنهادی است؛ مدیر جایگزین مجاز و Membership پس از Accept دعوت است. بازیابی Paid بدون پرداخت دوباره و با شناسه‌های قبلی انجام می‌شود. قیمت واقعی نیازمند تنظیم Platform است. رگرسیون کامل پس از اصلاح و دور نهایی هر دو **1346 Unit + 2018 Integration + 14 Architecture = 3378 PASS، صفر Failed/Skipped** و117 تست Zibal پاس‌اند؛ Build نهایی صفر Warning/Error دارد. Actor Personal در upstream و Backend پشتیبانی می‌شود؛ `BE19_AI_GATEWAY=PASS`، Service Auth دو سرویس خاموش و تنظیمات خصوصی/SMS/AI/Storage محفوظ‌اند. BE16 کد کامل است؛ Push/SMS عمومی `BLOCKED_CONFIGURATION` و دریافت واقعی Push اجرا نشده است. Backend Deploy نشده است.
-
-[گزارش پیاده‌سازی v6](docs/product-v6/BACKEND_V6_IMPLEMENTATION_REPORT_FA.md)، [تحویل Frontend](docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md)، [تحویل Admin](docs/product-v6/BACKEND_V6_ADMIN_HANDOFF_FA.md)، [تصمیم‌های باز](docs/product-v6/BACKEND_V6_OPEN_DECISIONS_FA.md) و [ماتریس Audit اولیه/نهایی](docs/product-v6/BACKEND_V6_GAP_MATRIX_FA.md) مرجع این مرحله‌اند. قرارداد دعوت اولیهٔ Messaging جاری هفت‌روزه است؛ اعداد گزارش تاریخی را Policy جاری نگیرید.
-
-تحویل اختصاصی آموزشگاه: [قرارداد متقاضی](docs/product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md)، [قرارداد Platform/Admin](docs/product-v6/SCHOOL_APPLICATION_ADMIN_HANDOFF_FA.md) و [تنظیم تجاری](docs/product-v6/SCHOOL_COMMERCIAL_CONFIGURATION_FA.md). `BE03_SCHOOL_APPLICATION_IMPLEMENTATION=PASS` و تنظیم واقعی Production=`BLOCKED_CONFIGURATION`؛ `BE24_FULL_ACCEPTANCE=FAIL` در هدف کامل Product، با وجود رگرسیون موفق محلی.
-
-اصلاح Messaging در `2026-11-01`: سن/DOB/تأیید سن دیگر مجوز عمومی نیست؛ Privacy/Block/Safety و مجوز جاری منبع حفظ شده‌اند. دعوت اولیهٔ Personal با انقضای مصوب ۳۰روزه نیازمند پذیرش است. صندوق و Replay یکپارچهٔ حساب، capability مؤثر، مدیریت محتوای رسمی Manager/Teacher، Receipt انتشار/جلسه و عکس گفتگو افزوده‌اند. [پیاده‌سازی و تست‌ها](docs/product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md) و [قرارداد Frontend](docs/product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). OpenAPI محلی این Build شامل **۳۸۸ عملیات، ۳۴۲ مسیر و ۶۵۱ schema** و Source دارای **۵۹ Migration** است؛ آمار گزارش‌های قدیمی زیر تاریخی‌اند. این مرحله Publish/Deploy ندارد.
-
-آخرین بازبینی Consolidation در ۲۰۲۶-۱۰-۲۲: [گزارش نهایی Backend](docs/release/BACKEND_FINAL_CONSOLIDATION_FA.md).
-نتیجهٔ Build/Regression محلی از پذیرش واقعی AI جداست؛ Parent Provider Timeout و Full-12 واقعی فعلاً Deferred هستند.
-
-## راهنمای استفاده از بک‌اند و API
-
-- [راهنمای جامع پروژه و بک‌اند](docs/backend-api-guide.md) — [HTML](docs/backend-api-guide.html) / [PDF](docs/backend-api-guide.pdf): شناخت مدل و معماری، راه‌اندازی، نقشه سرویس‌ها، جریان واقعی کد، تراکنش، امنیت، تست و ادامه توسعه.
-- [مرجع جاری Endpointها و قراردادها](docs/backend-api-reference.md) — [HTML](docs/backend-api-reference.html) / [PDF](docs/backend-api-reference.pdf): ۳۳۲ عملیات، ۵۹ Controller و ۵۷۰ schema واقعی، همراه پارامتر/بدنه/پاسخ و metadata مجوز.
-- [قرارداد فرانت‌اند و بک‌اند برای React و React Native](docs/frontend-contract/README.md): سند مستقل HTML و PDF شامل قرارداد API، stateها، مجوزها، سناریوها، کاتالوگ صفحات و شکاف‌های UX با بک‌اند فعلی.
-- [راهنمای استقرار Windows، Linux و Docker](docs/deployment-windows-linux-docker.md): تنظیمات Production، OTP ملی‌پیامک، storage پایدار، CORS/SignalR، migration، smoke test و rollback.
-- [قرارداد داشبوردهای نقش‌محور STEP 11A](docs/architecture/STEP_11A_ROLE_BASED_DASHBOARDS.md): چهار endpoint موجود، مجوز سروری، بافت فرزند، نمره نسخه منتشرشده، حضور رسمی، حالت خالی و مرز مستقل از AI/Commerce؛ بازبینی `2026-10-15` بدون migration.
-- [پیاده‌سازی اشتراک، حق استفاده و سهمیه](docs/product/SUBSCRIPTION_ENTITLEMENT_QUOTA_IMPLEMENTATION_FA.md): مالکیت Individual/Organization، بنیاد PersonalClass، دوره و تغییر پلن، رزرو اتمیک و قراردادهای جدید کاربر/Admin.
-
-بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در 63 Controller و 322 مسیر؛ 608 schema، 113 جدول و 55 migration**. آخرین migration `20261030060025_AddExamAnswerAttachments` است. شمارش از metadata کد و مدل طراحی EF است؛ [وضعیت جاری و validation](docs/CURRENT_PROJECT_STATUS.md).
-
-آمار این بازبینی Foundation اشتراک و تغییرات Realtime/پیوست پاسخ را پوشش می‌دهد؛ [قرارداد Event](docs/product/REALTIME_EVENT_CONTRACT_FA.md)، [Handoff فرانت](docs/product/MESSAGING_REALTIME_FRONTEND_HANDOFF_FA.md) و [پیوست آموزشی](docs/product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) مرجع جزئیات‌اند. Source Commit، نتیجهٔ Validation و بسته‌های Test/Production از گزارش Release مربوط خوانده شوند؛ [راهنمای انتشار جاری](docs/production/PUBLISH_GUIDE_FA.md).
-
-سازمان Legacy تا ثبت قرارداد معتبر توسط Platform Admin، Commercial Enforcement تازه نمی‌گیرد و دادهٔ تجاری برای آن حدس زده نمی‌شود. گزارش جدید، LegacyPendingContract/AwaitingValidContract را از قرارداد واقعی جدا می‌کند؛ API قدیمی با metadata مهاجرت، رفتار قبلی را حفظ می‌کند. تاریخ و مصرف قدیمی برای Audit باقی می‌مانند.
-
-Markdownها منبع دو کتاب و ساختار دیتابیس‌اند؛ HTML/PDF با ابزار `tools/docs/build_backend_docs.py` بازتولید می‌شوند. [فهرست و وضعیت نگه‌داری همه اسناد](docs/documentation-inventory.csv) فرق سند جاری، قرارداد مرحله‌ای، گزارش تاریخی، مرجع اصلی محصول و فایل dirty خارج تحویل را مشخص می‌کند. اعداد تست/commit گزارش‌های قدیمی تاریخچهٔ همان اجرا هستند و نباید به‌جای نتیجهٔ جاری خوانده شوند.
-
-## تغییرات پروفایل و مدیریت مدرسه
-
-DOB خوداظهاری date-only و عکس شخصی User اکنون موجودند؛ عکس با upload موجود، انتخاب/حذف مرجع و دانلود Bearer مصرف می‌شود. DOB مدرک سن و عکس مجوز ارتباط نیست. [پروفایل](docs/product/PROFILE_AND_PERSONAL_MESSAGING_IMPLEMENTATION_FA.md)، [عکس](docs/product/PROFILE_PHOTO_IMPLEMENTATION_FA.md).
-
-Directory سازمان، roster فراگیر/مدرس، دعوت والد با رضایت صاحب حساب و Lesson/Handout کلاس اضافه شده‌اند؛ [قرارداد فرانت مدرسه](docs/product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). ساخت Class سازمانی فقط Manager و نوشتن Lesson برای Manager/Teacher منتسب است. اشتراک فردی، قرارداد سهمیهٔ AI/Source و بنیاد PersonalClass اکنون در کد موجودند؛ چرخهٔ کامل آموزشی کلاس مستقل، lifecycle منابع، Badge و Learning Profile همچنان جدا هستند. AI Runtime فعال نشده است.
-
-MFA/step-up و probe/config صرفاً key ring حذف شده‌اند؛ OTP/session/permission فعال‌اند. CORS مستقل از نام محیط و تابع AllowAnyOrigin است؛ [تنظیم جاری](docs/production/CORS_CONFIGURATION_FA.md).
-
-## وضعیت جاری قابلیت‌ها و استقرار
-
-| حوزه | وضعیت کد و مرز عملیاتی |
+| حوزه | رفتار جاری و مرجع |
 |---|---|
-| Identity / OTP | Real با true/false و Mock مجاز فقط در Development/Test/Testing با false/true؛ Production/Staging fail-closed؛ نشست access/refresh و مجوز Platform مستقل از Mock هستند؛ MFA حذف شده است |
-| Organization / Guardian | onboarding پرونده، دعوت اتصال حساب با رضایت، lifecycle سرپرستی؛ بدون merge یا ساخت ضمنی حساب |
-| Academic / Assessment | دوره، درس، کلاس، ثبت‌نام، جلسات/حضور، تکلیف، آزمون و انتشار/اصلاح نمره |
-| Messaging | Contacts/privacy، Direct/group/channel، نسخه پیام، sync و سیاست مصوب Child Safety؛ Guardian/Manager حق مرور Direct خصوصی ندارند |
-| Reports / Notification | داشبورد، گزارش، export غیرهم‌زمان، اعلان/outbox/preferences؛ Web Push/VAPID و FCM واقعی در کد، runtime دستگاه pending؛ SMS اعلان unavailable |
-| Commerce / Backoffice | اشتراک Individual/Organization، نسخهٔ پلن و دورهٔ ماهانه، رزرو/ledger، Trial و Upgrade/Downgrade؛ فعال‌شدن کنترل سازمان با ثبت قرارداد معتبر Admin؛ Adapter زیبال با فعال‌سازیِ وابسته به تنظیمات خصوصی و پذیرش واقعی؛ عامل دوم حذف شده و OTP/Session و permission واقعی برقرارند |
-| AI | ۱۲ API v1 و Knowledge شامل ingest/status/lifecycle/retrieve/RAG، ACL و نسخهٔ pinشده؛ پذیرش Backend محلی → AI واقعی موفق، اما Worker/Queue و مسیر سرور Production تأیید نشده و Cutover انجام نشده است؛ [قرارداد جاری](docs/architecture/AI_KNOWLEDGE_INTEGRATION_20261108_FA.md) |
-| Production | آماده‌سازی کد با آمادگی عملیاتی سرور یکی نیست؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md) و gateهای باز ملاک‌اند |
+| هویت و بافت | OTP، نشست opaque، Refresh چرخشی، Bio/DOB/Avatar و تغییر شماره؛ Assistant context از School Workspace مستقل است؛ [v6](docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) |
+| دسترسی محصول | `Commerce:EnforcementEnabled=false`؛ سن شرط عمومی قابلیت نیست؛ ACL، Privacy، Block، ظرفیت واقعی آموزشی و Safety پابرجا هستند؛ [Open Access](docs/product/OPEN_ACCESS_FILE_DELIVERY_FA.md) |
+| آموزش | سازمان، مدیریت نقش با محافظ آخرین مدیر، کلاس، Lesson، حضور، Assignment/Exam و گزارش؛ تکلیف Published فقط Policy مهلت/Late را با دو RowVersion تغییر می‌دهد؛ [Policy](docs/product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md) |
+| کلاس مستقل | درخواست/تأیید، عضویت، نقش محلی و انتقال مسئولیت موجود؛ engine آموزشی در Source هست ولی دو Feature flag تکلیف/آزمون فعلاً false؛ [v6](docs/product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) |
+| Messenger | Home حساب و History پایدار با ACL جاری، Official Spaces، دفترچهٔ خصوصی، P0/P1/P2 و Replay؛ [History](docs/product-v6/MESSENGER_HISTORY_FRONTEND_HANDOFF_FA.md) |
+| فایل پیام | Upload→Ready→Send/Review→تصمیم صریح کارشناس→ارسال مجدد مجاز؛ تأیید به اثرانگشت فایل متصل است؛ [رسانه](docs/messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) |
+| AI و Knowledge | Chat، Profile اختیاری، History مستقل و SSE واقعی؛ SourceVersion و RAG مجاز؛ AI نامحدود و Library عمومی/AI بسته؛ [Adaptive AI](docs/product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) |
+| Notification / Privacy | Outbox و Deep Link با مجوز مقصد فعلی؛ workflow حذف حساب checkpoint/recovery دارد و اجرای آن پیش‌فرض خاموش است؛ [اعلان](docs/product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [حذف](docs/product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) |
+| پرداخت و انتشار | کد Zibal/Verify/Recovery محفوظ؛ Runtime پرداخت، Paid Provisioning و Push بیرونی برای نسخهٔ جاری Deferred؛ [Scope](docs/product-v6/CURRENT_RELEASE_SCOPE_FA.md) |
 
-انتشار IIS دو profile مستقل TestIis و ProductionIis دارد؛ [راهنمای دو بسته](docs/production/PUBLISH_GUIDE_FA.md) و [نتیجهٔ محلی انتشار](docs/production/BACKEND_RELEASE_READINESS_FA.md). Test فقط داده/secret/Storage/ring آزمایشی و Mock false/true، Production OTP واقعی true/false دارد. انتخاب پیشین Production/HTTP با دو استثنای مستقل Hosting:AllowInsecureHttp و Database:AllowUntrustedServerCertificate، تأیید TLS یا انتشار عمومی نیست. فایل‌های خصوصی ignored و نمونه‌ها بدون secret هستند؛ [IIS](docs/production/DEPLOYMENT_IIS.md) مرجع حفظ Identity key، Storage و ring است.
-
-بخش‌های معرفی مراحل توسعه در ادامه سابقهٔ تکمیل همان مرحله‌اند؛ برای قرارداد جاری از مرجع API، مدل دیتابیس و اسناد عملیاتی بالا استفاده کنید. PDFهای اصلی محصول در project-context دست‌نخورده و فقط مرجع نیازمندی‌اند؛ MySQL قدیمی همچنان منسوخ است.
-
-## عملیات و نگه‌داری جاری
-
-PH شامل key ring پایدار و readiness، logging امن، snapshot متریک صف، fencing/repair worker، shutdown محدود IIS و مکانیزم opt-in پاک‌سازی bytes terminal است. schema عوض نشده؛ cleanup پیش‌فرض خاموش و purge تاریخچه SQL وجود ندارد. [پیکربندی](docs/operations/PRODUCTION_CONFIGURATION_RUNBOOK.md)، [worker recovery](docs/operations/WORKER_RELIABILITY_AND_RECOVERY.md)، [retention](docs/operations/RETENTION_AND_CLEANUP_POLICY.md) و [Observability](docs/production/OBSERVABILITY.md) مسیر مطالعه‌اند.
-
-## تغییرات جاری Messenger
-
-P0/P1/P2 تا Checklist در کد موجودند: Peer Read، Typing/Presence، Folder/Labels، Invite/Join، Topic، Scheduled/Silent، Poll/Quiz و Checklist. [وضعیت یکپارچه و منابع](docs/messaging/CURRENT_MESSENGER_STATUS.md). P1_PUSH_RUNTIME_PENDING و PENDING_SCALE_INFRA برقرارند؛ رسانه P3 در انتظار زیرساخت S است و runtime پذیرفته‌شده ندارد. اختلاف قدیمی Enum/OpenAPI در snapshot جاری دیده نشد.
+هیچ UserId، OrganizationId، Role یا FileAssetId مجوز نیست. School Manager ادمین Platform نیست و رابطهٔ Guardian حق خواندن چت خصوصی کودک نمی‌دهد. گزارش‌های مرحله‌ای، اعداد تست و وضعیت استقرار همان مرحله را ثبت می‌کنند؛ [وضعیت جاری](docs/CURRENT_PROJECT_STATUS.md) نقطهٔ شروع یکپارچه است.
 
 ## مسیرها
 
@@ -409,7 +297,7 @@ Invoke-RestMethod -Method Post -Uri "https://localhost:7063/api/v1/auth/otp/chal
 
 ماژول `Messaging` زیرساخت پایدار گفت‌وگوی مستقیم دو `User` را در Scope شخصی یا سازمانی فراهم می‌کند. زوج کاربران به شکل canonical ذخیره می‌شود؛ بنابراین A+B و B+A در Scope یکسان یک Conversation هستند. Scope سازمانی فقط از `AccessContext` معتبر نشست تعیین می‌شود و Client نمی‌تواند `OrganizationId` را به‌عنوان مجوز تحمیل کند.
 
-شروع تماس Personal فقط برای دو حساب Adult با `PersonalCommunicationGrant` فعال مجاز است. ارتباط سازمانی نیز بر Membership و Role فعال و در نقش‌های آموزشی بر Enrollment، TeacherAssignment و GuardianRelation معتبر متکی است. شماره تلفن در پاسخ‌های Messaging وجود ندارد و رد مخاطب محافظت‌شده با خطای عمومی انجام می‌شود. جزئیات کامل policy در `docs/architecture/STEP_7A_DIRECT_MESSAGING_FOUNDATION.md` ثبت شده است.
+Direct شخصی طبق سیاست messaging-20261101 از سن مستقل است؛ Profile، Privacy مقصد، Block و Safety معتبر لازم‌اند. سازمان از عضویت/نقش جاری و منبع آموزشی مجوز می‌گیرد؛ Guardian حق مرور خصوصی ندارد. [قرارداد جاری پیام‌رسان](docs/product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md).
 
 | متد | مسیر | کاربرد |
 |---|---|---|
@@ -502,14 +390,8 @@ Search، Block و Report پس از STEP 7D اضافه شده‌اند و در ر
 4. Solution را build و اجرا کنید.
 5. `/health` یا Swagger UI را بررسی کنید.
 
-## محدودیت‌ها
+## محدودیت‌ها و مرز شواهد
 
-قرارداد جدید [پذیرش Gapها، Summary و فایل](docs/product/BACKEND_FINAL_GAP_ACCEPTANCE_20261106_FA.md) رفتار `BE-404-A` را توضیح می‌دهد: Summary از مجوز Global Inbox حساب استفاده می‌کند و تغییر Workspace مجوز تاریخچه، فایل یا Hub نمی‌سازد. رسانه با Internal Safety فعلی همچنان `ReviewRequired` است؛ [راهنمای Test candidate](docs/production/BACKEND_MASTER_TEST_DEPLOYMENT_20261106_FA.md) پذیرش محلی را از استقرار سرور و gate انتشار Production جدا می‌کند.
+پرداخت Runtime، Paid Provisioning، Store Billing و Push بیرونی در این انتشار Deferred هستند؛ آموزش PersonalClass با Feature flag مستقل خاموش است. Library برای دانلود/AI عمومی بسته می‌ماند. اجرای حذف حساب و terminal cleanup به تنظیم صریح مصوب نیاز دارند. Approval انسانی رسانه موجود است؛ اسکن خودکار جامع AV/CDR ادعا نمی‌شود.
 
-انتخاب و مجوزدهی منابع برای چهار مسیر AI و Preflight خواندنی اضافه شده است؛ [شرح Backend](docs/ai-handoff/AI_SOURCE_SELECTION_AND_AUTHORIZATION_FA.md) و [قرارداد Frontend](docs/product/AI_SOURCE_SELECTION_FRONTEND_HANDOFF_FA.md). انتخاب معتبر فعلاً با `AI_SOURCE_RETRIEVAL_NOT_AVAILABLE` پیش از Provider و مصرف سهمیه متوقف می‌شود؛ Contract v1 و Service JWT تغییر نکرده‌اند و RAG واقعی همچنان deferred است.
-
-هر ۱۲ عملیات source-less اکنون از `AiInvocationExecutor` به entitlement، reservation و finalize موجود وصل‌اند؛ [سند اتصال AI v1](docs/ai-handoff/AI_V1_BACKEND_INTEGRATION_FA.md). پذیرش محلی با Kestrel و SQL ایزوله و AI کنترل‌شده ۱۲/۱۲ موفق بود، با صفر تماس Provider واقعی. AI در تنظیمات خصوصی Test/Production خاموش مانده است؛ [Runbook فعال‌سازی سرور](docs/ai-handoff/AI_V1_SERVER_ACTIVATION_RUNBOOK_FA.md) فقط برای مرحلهٔ بعد است. پذیرش Full12 واقعی و timeout قبلی Provider هنوز با این نتیجهٔ محلی بسته نمی‌شوند.
-
-بنیاد منابع آموزشی چندبافتی در [سند پیاده‌سازی](docs/product/EDUCATIONAL_SOURCES_IMPLEMENTATION_FA.md) و [قرارداد Frontend](docs/product/EDUCATIONAL_SOURCES_FRONTEND_HANDOFF_FA.md) توضیح داده شده است. Source از FileAsset جداست؛ Personal/Class/Organization/Library، revision منتشرشدهٔ immutable، quota واقعی SourceCount و ACL جاری فایل/منبع دارد. OCR، Index و runtime AI در این مرحله فعال نشده‌اند.
-
-محدودیت‌های جاری: gateway مالی واقعی، دریافت Push دستگاه واقعی، SMS عمومی اعلان، AV/CDR، limiter/backplane چند instance، P3 media و پذیرش عملیاتی TLS/restore/load بازند. Web Push/VAPID و FCM در کد موجودند؛ P1_PUSH_RUNTIME_PENDING تحویل واقعی را تفکیک می‌کند. Service Auth واقعی AI قبلاً PASS، Parent Provider Timeout و Full-12 Deferred است. auto-finalize آزمون و Rubric ساختاریافته بسته نشده‌اند؛ [ماتریس جاری](docs/production/PRODUCTION_READINESS.md).
+AI/Knowledge و Source lifecycle پیاده شده‌اند؛ Chat عمومی، RAG مجاز، History و SSE عمومی قراردادهای جدا دارند. RAG Streaming پشتیبانی رسمی upstream ندارد. محدودیت چند replica/backplane، Load/SLO، TLS/Restore و پذیرش مقصد از تست محلی قابل نتیجه‌گیری نیست. [وضعیت جاری](docs/CURRENT_PROJECT_STATUS.md) و [آمادگی](docs/production/PRODUCTION_READINESS.md) را بخوانید.

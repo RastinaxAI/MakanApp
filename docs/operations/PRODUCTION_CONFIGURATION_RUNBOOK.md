@@ -1,14 +1,42 @@
 # قرارداد کانفیگ Production
 
-## تنظیمات افزودهٔ مبنای ۲۰۲۶-۱۰-۳۰
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
 
-Commerce:QuoteLifetimeMinutes پیش‌فرض15 و Commerce:RenewalAfterGraceStartsAtPayment پیش‌فرضtrue است؛ این تنظیم‌ها نام/قیمت/سقف فروش یا مجوز پرداخت دستی نیستند. قرارداد Legacy بدون ثبت معتبر Admin خودکار enforce نمی‌شود. AiService:Enabled همچنان false است؛ Preflight یا Trial foundation تماس AI نمی‌سازد.
+## مبنای جاری انتشار و تنظیمات
+
+قرارداد این نسخه۴۹۸ عملیات/۴۴۲ مسیر/۷۹۶ schema و مدل۱۵۳ جدول/۷۸ Migration دارد؛ آخرین `20261122085930_AddMessagingMediaReviews`. مدل طراحی و Build موفق، applied schema یا بستهٔ نصب‌شدهٔ سرور نیست. Manifestهای بستهٔ قبلی تاریخچه‌اند؛ برای این Source باید artifact/SQL تازه ساخته و hash مقصد با همان بسته کنترل شود.
+
+| تنظیم | سیاست این انتشار |
+|---|---|
+| Commerce:EnforcementEnabled | false؛ کنترل مالی قابلیت عادی خاموش، ACL/ظرفیت آموزشی و Safety محفوظ |
+| AiUsage:Mode | Unmetered؛ OperationId و Unknown/Retry و ACL منابع پابرجا |
+| Payments:Provider | Unavailable؛ Zibal/Store/Paid Provisioning در Runtime Deferred |
+| AiService:Enabled / AiKnowledge:Enabled | تابع override محیط؛ base=false. شاهد Test محلی تاریخ‌دار است و وضعیت IIS مقصد را اثبات نمی‌کند |
+| AiService:UseServiceAuthentication / AiKnowledge:UseServiceAuthentication | false طبق سیاست جاری؛ User Bearer به upstream منتقل نمی‌شود |
+| Features:PersonalClass:AssignmentsEnabled / ExamsEnabled | false؛ Open Access این gateهای مستقل را باز نمی‌کند |
+| AccountDeletion:ExecutionEnabled / Storage:TerminalCleanup:Enabled | execution/cleanup پیش‌فرض خاموش؛ بدون سیاست مصوب روشن نشوند |
+
+تنظیم مؤثر پس از JSON و environment override کنترل شود؛ نبود Commerce:EnforcementEnabled در Options برابرtrue است. Secret، ConnectionString و کلید خصوصی در سند یا Git درج نشود. فایل‌های خصوصی محیط را با example یا فایل محیط دیگر جایگزین نکنید.
+
+### Smoke پس از نصب مجاز
+
+1. Environment، Source/Artifact hash، EF history، Health/live/ready و نسخهٔ قرارداد مقصد ثبت شود؛ startup Migration خودکار ندارد.
+2. OTP mode، Bearer/refresh، CORS و مجوز منفی منابع؛ false بودن Enforcement و عدم قفل UI از Quota قدیمی کنترل شود.
+3. AI معمولی و SSE: header Bearer، عدم buffer پاسخ در Proxy، flush واقعی delta، cancellation و done/error؛ HTTP200 تنها کافی نیست. RAG فقط غیرجریانی و ACL Source جاری است. timeout را برای پنهان‌کردن خطا افزایش ندهید.
+4. فایل: Upload→Ready، PendingReview، تصمیم انسانی مجاز، Send/Retry و دریافت بایت با ACL جاری. Approval خودکار یا Resolve به‌جای تصمیم صریح مجاز نیست. Migration AddMessagingMediaReviews قبل binary وابسته اعمال شود.
+5. تکلیف Published: Policy با دو RowVersion،412 کهنه،409 مهلت و حفظ Draft/FileAssetId؛ code خطا و X-Correlation-ID/Retry-After از Proxy عبور کنند.
+6. Replay، restart و Data Protection ring پایدار، Worker recovery و Backup/Restore هدف مستقل بررسی شوند؛ مقادیر خصوصی در log نریزند.
+
+این به‌روزرسانی هیچ Publish/Deploy، تماس Provider یا SQL سرور اجرا نمی‌کند. پذیرش Backend مقصد با اجرای تست ایزوله یکی نیست.
+
+
+## تنظیمات پایدار Commerce و Replay
+
+Commerce:QuoteLifetimeMinutes پیش‌فرض15 و Commerce:RenewalAfterGraceStartsAtPayment پیش‌فرضtrue است؛ این تنظیم‌ها نام/قیمت/سقف فروش یا مجوز پرداخت دستی نیستند. قرارداد Legacy بدون ثبت معتبر Admin خودکار enforce نمی‌شود. AiService/AiKnowledge در base غیرفعال و در هر محیط تابع override هستند؛ AI Unmetered و Enforcement=false سیاست انتشارند. Preflight به‌تنهایی تماس AI نیست.
 
 Program.cs از AddDataProtection استاندارد برای cursor حساب استفاده می‌کند؛ ring اختصاصی MFA حذف مانده است. مسیر خصوصی کلیدها/ACL/persistence باید متناسب host بررسی شود و تنظیم حذف‌شدهٔ Security:DataProtection دوباره اختراع نشود. Identity:SecurityKey جای ring cursor نیست. از دست‌رفتن ring، context change یا cursor بیش از24ساعت409/resync می‌خواهد؛ readiness فقط config/SQL/Storage است. [قرارداد و عملیات](REALTIME_RUNBOOK_FA.md).
 
 Account replay پیش‌فرض100 و حداکثر200 رکورد و budget عادی120 درخواست در دقیقه برای حساب دارد؛ limiter درون process است. Cache-Control=no-store و عدم log cursor حفظ شوند. keyring مشترک/backplane/Load چند instance به‌صورت عملیاتی تأیید نشده‌اند.
-
-بازبینی `2026-10-30` از `main@e11d4ec`: CORS از Configuration و مستقل از Environment است؛ [دو mode و overrideها](../production/CORS_CONFIGURATION_FA.md). OTP/Identity/Storage قرارداد فعال‌اند، نه تنظیمات صرفاً MFA حذف‌شده. ProfilePhoto/Lesson Storage همان زیرساخت موجود را مصرف می‌کنند و secret/مسیر جدیدی لازم ندارند.
 
 این سند مرجع تنظیم‌های سخت‌سازی PH است؛ اجرای IIS، providerهای موجود و rollout در
 [راهنمای canonical IIS](../production/DEPLOYMENT_IIS.md) و بازیابی در

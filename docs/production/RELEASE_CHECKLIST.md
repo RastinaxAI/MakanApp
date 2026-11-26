@@ -1,5 +1,17 @@
 # Release Checklist
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## کنترل‌های نسخهٔ جاری
+
+- [ ] artifact/hash از همین Source و SQL همه۷۸ Migration تا 20261122085930_AddMessagingMediaReviews با EF history مقصد تطبیق دارد.
+- [ ] Commerce:EnforcementEnabled=false، AiUsage:Mode=Unmetered و Payments:Provider=Unavailable در config مؤثر کنترل شده‌اند؛ Feature flagهای مستقل خودکار روشن نشده‌اند.
+- [ ] Chat/History و SSE با done/error، RAG غیرجریانی، Source ACL و409 عملیات تکراری آزموده شده‌اند.
+- [ ] Ready/PendingReview/Approval/Send و Download مجاز و Evidence retention آزموده شده‌اند؛ Resolve جای Approval نیست.
+- [ ] تکلیف Published با دو RowVersion، خطای deadline و حفظ Draft، و ProblemDetails/code/Retry-After/Allow پس از Proxy کنترل شده‌اند.
+- [ ] پذیرش endpointهای اختیاری، Push واقعی، حذف حساب، ring/restart، Backup/Restore و Load مستقل ثبت شده‌اند؛ نتیجهٔ محلی جای سرور ننشسته است.
+
+
 ## BE-23 — مرز جاری Product v6
 
 مبنا `00bd8a9` روی `feature/product-v6-backend-alignment`؛ موجودی جاری۷۵ Migration تا
@@ -27,19 +39,19 @@ Exporter/Alert و RPO/RTO هنوز پذیرش زیرساخت/عملیات می�
 
 ## کنترل نسخهٔ ۲۰۲۶-۱۰-۳۰
 
-- [ ] binary/schema مربوط به e11d4ec و55 migration تا AddExamAnswerAttachments، history مقصد و SQL export تازه بررسی شده‌اند.
+- [ ] binary/schema مربوط به f8178a4 و78 Migration تا AddMessagingMediaReviews، history مقصد و SQL export تازه بررسی شده‌اند.
 - [ ] persistence و ACL کلیدهای Data Protection cursor و رفتار409 resync پس از restart بررسی شده‌اند؛ ring MFA بازنگشته و ready تداوم cursor را probe نمی‌کند.
 - [ ] listener → bootstrap → Snapshot → replay، duplicate EventId، ContextRevision و503/backoff همان cursor با دو نشست مجاز آزموده شده‌اند.
 - [ ] قرارداد معتبر Admin/Legacy، Grace سازمان و رزرو/settlement Export بدون فعال‌سازی حدسی قیمت/AI/provider بررسی شده‌اند.
 - [ ] Upload/Ready/Attach/Save/Reload/Finalize/Download و revoke معلم/Enrollment، Parent concealment و backup bytes پیوست آزمون بررسی شده‌اند.
-- [ ]422 Safety در Messenger به Sent یا release تبدیل نشده و PRODUCT_DECISION_BLOCKED رسانه ثبت است.
+- [ ]422 Safety در Messenger به Sent یا release تبدیل نشده و رسانهٔ Pending/Rejected تحویل ندارد و تصمیم انسانی مصوب لازم است.
 
 این موارد با ساخت مستندات تیک نمی‌خورند؛ پذیرش محیط هدف جدا است. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
 
 کنترل بازبینی۲۰۲۶-۱۰-۳۰: نسخه migration55 با آخرین AddExamAnswerAttachments، consent دعوت والد، Draft/Published Lesson، دریافت احرازشده عکس/جزوه و سلب مجوز منبع بررسی شود. mode واقعی CORS از AllowAnyOrigin و Host filtering مستقل خوانده شود؛ wildcard در mode=true تصمیم تنظیم است، نه permission. هیچ تیک این سند با ساخت PDF یا regression محلی پر نمی‌شود.
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-30` از `main@e11d4ec`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 بازبینی جاری ۲۰۲۶-۱۰-۱۵ از main@80d6a14: این چک‌لیست gate انتشار امن/عمومی است؛ پذیرش استثنای HTTP توسط مالک، تیک TLS یا closure GAP-02 نیست. فایل Staging برای انتشار جاری نداریم. راهنمای اجرایی [IIS](DEPLOYMENT_IIS.md) و [ماتریس وضعیت جاری](PRODUCTION_READINESS.md) را کنار این فهرست بخوانید.
@@ -50,7 +62,7 @@ Exporter/Alert و RPO/RTO هنوز پذیرش زیرساخت/عملیات می�
 - [ ] Production true/false و Test false/true است؛ overrideهای IIS/environment با JSON تعارض ندارند؛ Mock به داده و key/ring Production وصل نیست.
 - [ ] نخستین rollout report-export fencing جدید با drain/stop تأییدشدهٔ process legacy انجام شود؛ [مرجع worker](../operations/WORKER_RELIABILITY_AND_RECOVERY.md).
 - [ ] cleanup پیش‌فرض خاموش باقی بماند، مگر grace صریح و [سیاست مصوب](../operations/RETENTION_AND_CLEANUP_POLICY.md) وجود داشته باشد؛ Enabled شاهد اجرا نیست.
-- [ ] Service Auth قبلی AI، Parent Provider Timeout و Full-12 Deferred جدا ثبت شوند؛ موفقیت regression جای E2E واقعی نیست.
+- [ ] Enabled و Service Auth جاری AI/Knowledge، General SSE و RAG غیرجریانی و پذیرش مقصد جدا ثبت شوند؛ موفقیت regression جای E2E واقعی نیست.
 
 ## پیش از انتشار
 

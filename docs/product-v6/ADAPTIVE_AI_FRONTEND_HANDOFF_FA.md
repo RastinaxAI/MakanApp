@@ -1,5 +1,9 @@
 # تحویل Adaptive Universal Assistant v1
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 مبنای Backend: `95cef1b72695e51a6c851c9958ac5a026adba387`، شاخهٔ
 `feature/product-v6-backend-alignment`؛ قرارداد upstream با بررسی فایل‌های دقیق commit
 `8bd0c8981dc49f339773ced6024e70e47c4ebdd2` از `RastinaxAI/MakanApp-AI` تطبیق داده شده است.
@@ -114,8 +118,7 @@ SourcesOnly یا Auto/SourceFocused بدون منبع انتخاب‌شده، د
 `selectedSourceIds` قدیمی نیز در اولین انتخاب، نسخهٔ منتشرشدهٔ مجاز را pin می‌کند. Retry همان
 Operation نسخه را عوض نمی‌کند. هر دو selector اگر غیرخالی باشند باید همان SourceIdها را
 معرفی کنند؛ exact version مثبت، SourceId یکتا و سقف منابع۳۲ است. Library باز نشده است.
-SourceCount/PersonalSources تجاریِ ذخیرهٔ منبع تغییر نکرده‌اند؛ AI نامحدود به معنی Storage
-رایگان یا حق ایجاد منبع بدون مجوز نیست.
+پس از سیاست Open Access در۲۰۲۶-۱۱-۲۲، Enforcement=false کنترل مالی SourceCount/PersonalSources را نیز از استفادهٔ عادی خارج می‌کند؛ ACL، حدود فنی Storage و Safety همچنان لازم‌اند. هیچ Quota یا پلن فرضی ثبت نمی‌شود.
 
 پاسخ Chat، فیلدهای قبلی را حفظ و `provenance:{kind,reason?}` و `citations` را اضافه می‌کند:
 `General`، `GeneralFallback` یا `KnowledgeRag`. Citationهای RAG شامل SourceId/Version/Chunk

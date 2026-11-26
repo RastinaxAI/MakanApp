@@ -1,5 +1,9 @@
 # محدودهٔ قطعی Release جاری Backend
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 به‌روزرسانی Adaptive Assistant v1 از پایهٔ `95cef1b` در `2026-11-18`:
 [Chat/Profile/History/SSE/Source orchestration](ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) به BE19
 اضافه شده است. History از Messenger مستقل، متعلق به مالک/Context و فقط completed است.
@@ -59,9 +63,7 @@ UserId/ResourceId انتخاب‌گر است؛ مجوز از حساب، نشست
 | Library AI | `PRODUCT_POLICY_DISABLED`؛ Library از انتخاب منبع AI حذف می‌ماند |
 
 این وضعیت‌ها نقص کد نسخهٔ جاری نیستند. BE25 برابر `DEFERRED_APPROVED` است و engine/داده‌های
-موجود آن باقی می‌مانند. گسترش گزارش PersonalClass، Reopen تیکت/کلاس/پرونده و workflow تأیید
-رسانه نیز در این ممیزی اختراع نمی‌شوند. `ReviewRequired` به Approved یا Rejected تبدیل
-نمی‌شود؛ بستن پروندهٔ Moderation به معنی قابل‌ارسال‌شدن رسانه نیست.
+موجود آن باقی می‌مانند. گسترش گزارش PersonalClass، Reopen تیکت/کلاس/پرونده در آن ممیزی خارج scope بودند. در تکمیل مصوب۲۰۲۶-۱۱-۲۲، workflow انسانی MediaReview روی Moderation موجود پیاده شد؛ تبدیل Pending به Approved/Rejected فقط با تصمیم صریح کارشناس و اثرانگشت معتبر است. بستن اداری پرونده به‌تنهایی قابل‌ارسال‌شدن رسانه نیست.
 
 ```text
 CURRENT_RELEASE_PAYMENTS=DEFERRED_CURRENT_RELEASE

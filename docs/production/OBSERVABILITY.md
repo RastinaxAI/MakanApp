@@ -1,5 +1,14 @@
 # Observability و عملیات
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## قرارداد مشاهده‌پذیری جاری HTTP و AI
+
+خطاهای خالی API برای400/404/405/413/415 code پایدار دارند؛ کد دامنه override نمی‌شود. correlationId/traceId و X-Correlation-ID و headerهای Allow/Retry-After باید در مسیر Proxy حفظ شوند. AI/Knowledge delay معتبر در429/503 به ثانیهٔ رو به بالا منتقل می‌شود. SSE بعد از start خطای event:error دارد؛ HTTP200 بدون done و EOF ناقص در آمار محصول موفق نیستند.
+
+prompt، پاسخ خصوصی، cursor، Token و Evidence رسانه را log نکنید. MediaReview reference و Safety incident دو شناسهٔ متفاوت‌اند و هیچ‌کدام مجوز دسترسی نیستند. Approval انسانی با Audit موجود ثبت می‌شود؛ metric ارسال و دریافت دستگاه یا مطالعهٔ کاربر یک مفهوم نیستند.
+
+
 ## Realtime، replay و Safety — ۲۰۲۶-۱۰-۳۰
 
 Meter جدید MakanApp.Realtime شامل makan.realtime.replay.requests، makan.realtime.resync.required، makan.realtime.authorization.rejections، makan.realtime.invalidation.deliveries، makan.realtime.connections.started، makan.realtime.connections.active و makan.realtime.replay.duration است. outcome محدود و بدون User/Session/Child/Token label است. connections.active تعداد transport و deliveries پایان invocation به گروه نشست است؛ read receipt، reconnect مستقل یا SLO تولید محسوب نمی‌شوند. cursor، پیام، پاسخ آزمون و موجودی مالی log نشوند.

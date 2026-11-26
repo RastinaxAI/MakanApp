@@ -1,5 +1,9 @@
 # تحویل عملیاتی Admin برای Backend v6
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 بازبینی `2026-11-12`؛ مبنای Source: `e5bd3eae658991585ca09f581f6236351857b3b8` + شاخهٔ `feature/product-v6-backend-alignment`. هیچ Deploy یا تغییر دیتابیس عادی در این Task انجام نشده است. این سند به‌جای تعریف نقش جدید، permissionهای واقعی را توضیح می‌دهد.
 
 ## مجوزها و مرز مسئولیت

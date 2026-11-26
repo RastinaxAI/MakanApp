@@ -1,14 +1,14 @@
 # ساختار فعلی دیتابیس MakanApp
 
-مدل طراحی EF Core از working tree با مبنای Git `source@f4f4d9feb6184d62e033adfb612e86587fb3c3f6`؛ بازبینی `2026-11-15`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
+مدل طراحی EF Core از working tree با مبنای Git `source@f8178a47de94eae0ec2431adebcb9256a9789786`؛ بازبینی `2026-11-26`. این سند metadata سورس است، نه گزارش اتصال یا تأیید schema یک سرور.
 
-**151 جدول، 1625 ستون، 406 FK، 467 index مستقل از key و 421 CHECK؛ 75 Migration.**
+**153 جدول، 1653 ستون، 410 FK، 473 index مستقل از key و 428 CHECK؛ 78 Migration.**
 
 ## مفاهیم و مرزها
 
-مدل جاری شامل چهار migration پس از Checklist است: RemovePlatformMfa دو جدول MFA و ستون‌های AssuranceLevel/StepUpAtUtc نشست را حذف می‌کند؛ AddSelfDeclaredProfileDateOfBirth ستون date nullable به Persons، AddUserProfilePhoto مرجع nullable و unique filtered به Users، و CompleteSchoolManagement جدول‌های ClassLessons/ClassLessonAttachments و توسعه Invitation والد را می‌افزاید. آخرین migration 20261028202239_CompleteSchoolManagement است. اجرا روی دیتابیس عادی/سرور مرحلهٔ مستقل است؛ Down اطلاعات حذف‌شدهٔ MFA را بازنمی‌گرداند.
+آخرین Migration سورس 20261122085930_AddMessagingMediaReviews است. جدول کامل پایین مرجع ترتیب است؛ افزوده‌های v6 شامل School application، PersonalClass، Source/Knowledge، Account deletion و AI history هستند. AddMessagingMediaReviews همان ModerationCases را با تصمیم اثرانگشت‌دار توسعه داده است. RemovePlatformMfa تاریخی حذف داده دارد و Down داده را بازیابی نمی‌کند. Migration خودکار startup نداریم؛ applied schema سرور مستقل بررسی شود.
 
-cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذف می‌کند؛ مرجع فعال ProfilePhoto و Lesson attachment هم محافظت می‌شوند. metadata SQL پاک نمی‌شود و Ready-orphan reaper وجود ندارد. [سیاست retention](operations/RETENTION_AND_CLEANUP_POLICY.md).
+Blob، metadata، نسخهٔ Source، Evidence رسانه و History AI باید با سیاست retention ماژول خود نگه‌داری شوند. terminal cleanup عمومی جای حذف حساب، حذف Knowledge یا purge تاریخچه نیست. [retention](operations/RETENTION_AND_CLEANUP_POLICY.md).
 
 - SQL Server پایگاه اصلی و MakanDbContext مرجع مدل است؛ schema مرز نام‌گذاری ماژول است، نه مجوز کاربر.
 - PK همهٔ جدول‌ها الزاماً Id نیست؛ کلید واقعی هر جدول پایین آمده است. Alternate Key با index یکتا فرق دارد.
@@ -28,7 +28,7 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | commerce | 15 |
 | guardian | 1 |
 | identity | 10 |
-| intelligence | 1 |
+| intelligence | 3 |
 | knowledge | 5 |
 | messaging | 52 |
 | notification | 4 |
@@ -117,6 +117,9 @@ cleanup terminal فقط bytes مجاز بدون reference را با opt-in حذ�
 | 73 | 20261113103326_FinalizeSchoolManagerAndPaidProvisioning | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261113103326_FinalizeSchoolManagerAndPaidProvisioning.cs) |
 | 74 | 20261114140323_AddAccountDeletionLifecycle | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261114140323_AddAccountDeletionLifecycle.cs) |
 | 75 | 20261114183321_ExtendProductNotificationCoverage | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261114183321_ExtendProductNotificationCoverage.cs) |
+| 76 | 20261118065656_AddUnmeteredAiOperations | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261118065656_AddUnmeteredAiOperations.cs) |
+| 77 | 20261118164500_AddAdaptiveAiConversations | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261118164500_AddAdaptiveAiConversations.cs) |
+| 78 | 20261122085930_AddMessagingMediaReviews | [کد](../MakanApp.Infrastructure/Persistence/Migrations/20261122085930_AddMessagingMediaReviews.cs) |
 
 آخرین شناسه باید در history محیط هدف جدا بررسی شود؛ برنامه migration را خودکار اجرا نمی‌کند. فایل SQL اصلاح‌شدهٔ idempotent فقط پس از Backup و بازبینی اپراتور اجرا می‌شود.
 
@@ -2704,6 +2707,7 @@ Entity: `MakanApp.Domain.Commerce.UsageLedgerEntry`؛ مالک نگاشت: [EF C
 | ContextId | `uniqueidentifier` | بله | خیر | Never |
 | ContextType | `int` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
+| IsUnmetered | `bit` | خیر | خیر | Never |
 | OccurredAtUtc | `datetime2(7)` | خیر | خیر | Never |
 | OrganizationId | `uniqueidentifier` | بله | خیر | Never |
 | OwnerId | `uniqueidentifier` | خیر | خیر | Never |
@@ -2754,6 +2758,7 @@ CHECKها:
 | CK_UsageLedger_QuotaKey | `[QuotaKey] BETWEEN 1 AND 7` |
 | CK_UsageLedger_Reservation | `[ReservationId] IS NULL OR ([ConsumerUserId] IS NOT NULL AND [ContextType] IS NOT NULL AND [ContextId] IS NOT NULL AND [PeriodStartsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc] IS NOT NULL AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc])` |
 | CK_UsageLedger_Status | `[Status] BETWEEN 1 AND 4` |
+| CK_UsageLedger_Unmetered | `[IsUnmetered]=0 OR ([ReservationId] IS NOT NULL AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [ConsumerUserId] IS NOT NULL AND [QuotaKey]=5 AND [Amount]=1)` |
 
 ### commerce.UsageReservations
 
@@ -2770,6 +2775,7 @@ Entity: `MakanApp.Domain.Commerce.UsageReservation`؛ مالک نگاشت: [EF C
 | FinalizedAtUtc | `datetime2` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | IsTrial | `bit` | خیر | خیر | Never |
+| IsUnmetered | `bit` | خیر | خیر | Never |
 | OperationId | `uniqueidentifier` | خیر | خیر | Never |
 | OwnerId | `uniqueidentifier` | خیر | خیر | Never |
 | OwnerType | `int` | خیر | خیر | Never |
@@ -2810,7 +2816,7 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_UsageReservations_Finalization | `([Status] IN (1,4) AND [FinalizedAtUtc] IS NULL) OR ([Status] IN (2,3) AND [FinalizedAtUtc] IS NOT NULL)` |
-| CK_UsageReservations_Trial | `([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL)` |
+| CK_UsageReservations_Trial | `([IsUnmetered]=0 AND (([IsTrial]=1 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1) OR ([IsTrial]=0 AND [SubscriptionId] IS NOT NULL AND [PlanVersionId] IS NOT NULL))) OR ([IsUnmetered]=1 AND [IsTrial]=0 AND [SubscriptionId] IS NULL AND [PlanVersionId] IS NULL AND [OwnerType]=1 AND [OwnerId]=[ConsumerUserId] AND [QuotaKey]=5 AND [Amount]=1)` |
 | CK_UsageReservations_Values | `[Amount]>0 AND [Status] BETWEEN 1 AND 4 AND [OwnerType] IN (1,2) AND [ContextType] BETWEEN 1 AND 3 AND [QuotaKey] BETWEEN 1 AND 7 AND [PeriodEndsAtUtc]>[PeriodStartsAtUtc]` |
 
 ### guardian.GuardianRelations
@@ -3283,6 +3289,93 @@ Indexها:
 | ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
 |---|---|---|---|
 | UserId | identity.Users | Id | Cascade |
+
+### intelligence.AiConversations
+
+Entity: `MakanApp.Domain.Intelligence.AiConversation`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| ContextFingerprint | `binary(32)` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| NextSequence | `bigint` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| RowVersion | `rowversion` | خیر | بله | OnAddOrUpdate |
+| SourcePins | `nvarchar(4000)` | خیر | خیر | Never |
+| UpdatedAtUtc | `datetime2` | خیر | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AiConversations | PK | Id |
+| AK_AiConversations_Id_OwnerUserId | Alternate Key | Id, OwnerUserId |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AiConversations_OwnerUserId_UpdatedAtUtc_Id | OwnerUserId, UpdatedAtUtc, Id | False | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| OwnerUserId | identity.Users | Id | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AiConversations_Sequence | `[NextSequence] >= 1 AND [NextSequence] % 2 = 1` |
+| CK_AiConversations_Sources | `ISJSON([SourcePins]) = 1` |
+
+### intelligence.AiConversationTurns
+
+Entity: `MakanApp.Domain.Intelligence.AiConversationTurn`؛ مالک نگاشت: [EF Configurations](../MakanApp.Infrastructure/Persistence/Configurations).
+
+| ستون | SQL type | NULL | Concurrency | تولید مقدار / SQL default |
+|---|---|---|---|---|
+| CompletedAtUtc | `datetime2` | بله | خیر | Never |
+| ConversationId | `uniqueidentifier` | خیر | خیر | Never |
+| CreatedAtUtc | `datetime2` | خیر | خیر | Never |
+| Id | `uniqueidentifier` | خیر | خیر | Never |
+| IntentHash | `binary(32)` | خیر | خیر | Never |
+| IsCompleted | `bit` | خیر | خیر | Never |
+| OperationId | `uniqueidentifier` | خیر | خیر | Never |
+| OwnerUserId | `uniqueidentifier` | خیر | خیر | Never |
+| Role | `int` | خیر | خیر | Never |
+| Sequence | `bigint` | خیر | خیر | Never |
+| Text | `nvarchar(max)` | بله | خیر | Never |
+
+کلیدها:
+
+| نام | نوع | ستون‌ها |
+|---|---|---|
+| PK_AiConversationTurns | PK | Id |
+
+Indexها:
+
+| نام | ستون‌ها | Unique | Filter |
+|---|---|---|---|
+| IX_AiConversationTurns_ConversationId_OwnerUserId | ConversationId, OwnerUserId | False | — |
+| IX_AiConversationTurns_ConversationId_Sequence | ConversationId, Sequence | True | — |
+| IX_AiConversationTurns_OwnerUserId_OperationId_Role | OwnerUserId, OperationId, Role | True | — |
+
+روابط:
+
+| ستون‌ها | مقصد | کلید مقصد | DeleteBehavior |
+|---|---|---|---|
+| ConversationId, OwnerUserId | intelligence.AiConversations | Id, OwnerUserId | Restrict |
+
+CHECKها:
+
+| نام | SQL |
+|---|---|
+| CK_AiConversationTurns_Completion | `([IsCompleted]=0 AND [Role]=1 AND [Text] IS NULL AND [CompletedAtUtc] IS NULL) OR ([IsCompleted]=1 AND [Text] IS NOT NULL AND DATALENGTH([Text])>0 AND [CompletedAtUtc] IS NOT NULL)` |
+| CK_AiConversationTurns_RoleSequence | `([Role]=1 AND [Sequence]>0 AND [Sequence]%2=1) OR ([Role]=2 AND [Sequence]>0 AND [Sequence]%2=0)` |
+| CK_AiConversationTurns_TextBound | `[Text] IS NULL OR ([Role]=1 AND DATALENGTH([Text])<=16000) OR ([Role]=2 AND DATALENGTH([Text])<=131072)` |
 
 ### intelligence.AssistantContextSelections
 
@@ -5257,7 +5350,7 @@ CHECKها:
 
 | نام | SQL |
 |---|---|
-| CK_ModerationActions_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7, 8)` |
+| CK_ModerationActions_Type | `[Type] IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)` |
 
 ### messaging.ModerationCases
 
@@ -5272,6 +5365,13 @@ Entity: `MakanApp.Domain.Messaging.ModerationCase`؛ مالک نگاشت: [EF Co
 | DismissedAtUtc | `datetime2(7)` | بله | خیر | Never |
 | Id | `uniqueidentifier` | خیر | خیر | OnAdd |
 | InternalNote | `nvarchar(1000)` | بله | خیر | Never |
+| MediaContentType | `nvarchar(200)` | بله | خیر | Never |
+| MediaDecision | `int` | بله | خیر | Never |
+| MediaFileAssetId | `uniqueidentifier` | بله | خیر | Never |
+| MediaReviewedAtUtc | `datetime2(7)` | بله | خیر | Never |
+| MediaReviewedByUserId | `uniqueidentifier` | بله | خیر | Never |
+| MediaSha256Hash | `nvarchar(64)` | بله | خیر | Never |
+| MediaSizeBytes | `bigint` | بله | خیر | Never |
 | Priority | `int` | خیر | خیر | Never |
 | QueueScope | `int` | خیر | خیر | Never |
 | ResolvedAtUtc | `datetime2(7)` | بله | خیر | Never |
@@ -5293,6 +5393,8 @@ Indexها:
 | نام | ستون‌ها | Unique | Filter |
 |---|---|---|---|
 | UX_ModerationCases_AbuseReportId | AbuseReportId | True | [AbuseReportId] IS NOT NULL |
+| UX_ModerationCases_MediaFileAssetId | MediaFileAssetId | True | [MediaFileAssetId] IS NOT NULL |
+| IX_ModerationCases_MediaReviewedByUserId | MediaReviewedByUserId | False | — |
 | UX_ModerationCases_SafetyIncidentId | SafetyIncidentId | True | [SafetyIncidentId] IS NOT NULL |
 | IX_ModerationCases_Assigned_Status | AssignedReviewerUserId, Status | False | [AssignedReviewerUserId] IS NOT NULL |
 | IX_ModerationCases_Conversation_Status_Created | ConversationId, Status, CreatedAtUtc | False | — |
@@ -5305,6 +5407,8 @@ Indexها:
 | AbuseReportId | messaging.AbuseReports | Id | Restrict |
 | AssignedReviewerUserId | identity.Users | Id | Restrict |
 | ConversationId | messaging.Conversations | Id | Restrict |
+| MediaFileAssetId | storage.FileAssets | Id | Restrict |
+| MediaReviewedByUserId | identity.Users | Id | Restrict |
 | SafetyIncidentId | messaging.SafetyIncidents | Id | Restrict |
 
 CHECKها:
@@ -5312,10 +5416,11 @@ CHECKها:
 | نام | SQL |
 |---|---|
 | CK_ModerationCases_Lifecycle | `([Status] = 1 AND [AssignedReviewerUserId] IS NULL AND [ReviewStartedAtUtc] IS NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 2 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 3 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NOT NULL AND [DismissedAtUtc] IS NULL) OR ([Status] = 4 AND [AssignedReviewerUserId] IS NOT NULL AND [ReviewStartedAtUtc] IS NOT NULL AND [ResolvedAtUtc] IS NULL AND [DismissedAtUtc] IS NOT NULL)` |
+| CK_ModerationCases_MediaReview | `([Source] <> 3 AND [MediaSha256Hash] IS NULL AND [MediaContentType] IS NULL AND [MediaSizeBytes] IS NULL AND [MediaDecision] IS NULL AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR ([Source] = 3 AND [QueueScope] = 2 AND [MediaSha256Hash] IS NOT NULL AND LEN([MediaSha256Hash]) = 64 AND [MediaContentType] IS NOT NULL AND [MediaSizeBytes] IS NOT NULL AND [MediaSizeBytes] > 0 AND [MediaDecision] IS NOT NULL AND (([MediaDecision] = 3 AND [Status] IN (1, 2) AND [MediaReviewedByUserId] IS NULL AND [MediaReviewedAtUtc] IS NULL) OR ([MediaDecision] IN (1, 2) AND [Status] IN (2, 3, 4) AND ([Status] <> 4 OR [MediaDecision] = 2) AND [MediaReviewedByUserId] IS NOT NULL AND [MediaReviewedAtUtc] IS NOT NULL AND [MediaReviewedAtUtc] >= [CreatedAtUtc])))` |
 | CK_ModerationCases_Priority | `[Priority] IN (1, 2, 3)` |
 | CK_ModerationCases_QueueScope | `[QueueScope] IN (1, 2)` |
-| CK_ModerationCases_Source | `[Source] IN (1, 2)` |
-| CK_ModerationCases_SourceShape | `([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL) OR ([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL)` |
+| CK_ModerationCases_Source | `[Source] IN (1, 2, 3)` |
+| CK_ModerationCases_SourceShape | `([Source] = 1 AND [AbuseReportId] IS NOT NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NULL) OR ([Source] = 2 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NOT NULL AND [MediaFileAssetId] IS NULL) OR ([Source] = 3 AND [AbuseReportId] IS NULL AND [SafetyIncidentId] IS NULL AND [MediaFileAssetId] IS NOT NULL)` |
 | CK_ModerationCases_Status | `[Status] IN (1, 2, 3, 4)` |
 
 ### messaging.ModerationEvidenceAttachments

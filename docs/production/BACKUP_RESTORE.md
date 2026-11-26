@@ -1,5 +1,14 @@
 # Runbook پشتیبان‌گیری و بازیابی
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## داده‌های افزودهٔ نسخهٔ جاری
+
+مدل۱۵۳ جدول و۷۸ Migration تا 20261122085930_AddMessagingMediaReviews دارد. AI Conversations/Turns و Unmetered operations، SourceVersion و processing، درخواست/مرحله‌های حذف حساب، Official Spaces/PersonalClass و تصمیم رسانه در ModerationCases همراه دادهٔ قبلی backup شوند. فایل Evidence و FileId/SHA256/MIME/Size تأییدشده باید با Blob سازگار باقی بمانند؛ بازیابی metadata به نسخه‌ای با Blob متفاوت Approval معتبر نمی‌سازد.
+
+Data Protection ring cursor و کلید Identity با custody امن و جدا نگه‌داری شوند. پس از Restore، Replay cursor قدیمی ممکن است resync بخواهد. Unknown عملیات AI/پرداخت را موفق یا قابل اجرای خودکار دوباره فرض نکنید. backup policy مجوز purge تاریخچه، حذف شواهد یا فعال‌سازی اجرای حذف حساب نیست.
+
+
 ## BE-23 — وضعیت جاری و شواهد محلی
 
 Source مبنا `00bd8a9`،۷۵ Migration تا ExtendProductNotificationCoverage است؛ داده‌های جدید
@@ -35,14 +44,14 @@ Windows profile و کلیدهای محافظ مستقل همچنان برای ا
 
 ## افزودهٔ بازیابی نسخهٔ جاری — ۲۰۲۶-۱۰-۳۰
 
-schema جاری55 migration تا AddExamAnswerAttachments و113 جدول دارد. UsageReservations، SubscriptionAmendments و PersonalClassها همراه کل دادهٔ Commerce backup می‌شوند؛ Job و reservation را جدا به نقطهٔ زمانی ناسازگار نبرید. policy سؤال و AnswerRevisionAttachments به bytes Retained آزمون وابسته‌اند؛ DB+Storage سازگار و کنترل مجوز پس از restore لازم است. Detach مجوز حذف فایل تاریخی نیست.
+schema جاری78 Migration تا AddMessagingMediaReviews و153 جدول دارد. UsageReservations، SubscriptionAmendments و PersonalClassها همراه کل دادهٔ Commerce backup می‌شوند؛ Job و reservation را جدا به نقطهٔ زمانی ناسازگار نبرید. policy سؤال و AnswerRevisionAttachments به bytes Retained آزمون وابسته‌اند؛ DB+Storage سازگار و کنترل مجوز پس از restore لازم است. Detach مجوز حذف فایل تاریخی نیست.
 
 Data Protection استاندارد host اکنون cursor حساب را محافظت می‌کند. persistence/custody کلیدهای جاری و هویت host در backup/restart بررسی شوند؛ ring MFA منسوخ با ring cursor یکی فرض نشود. بدون کلید معتبر، cursor قدیمی resync می‌خواهد و Client باید Snapshot مجاز تازه بگیرد؛ این مسیر را در drill هدف بررسی کنید. Identity key پایدار جایگزین ring نیست. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
 
 بازبینی `2026-10-29`: RemovePlatformMfa حذف داده دارد؛ سه migration جدید بعدی DOB/Photo/School را اضافه می‌کنند. DB و bytes عکس/جزوه یک snapshot سازگار می‌خواهند؛ applied migration سرور از این سند تأیید نشده. [مسیر استقرار](../deployment-windows-linux-docker.md).
 
 <!-- CURRENT-REVIEW:BEGIN -->
-بازبینی `2026-10-30` از `main@e11d4ec`؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md)، [ماتریس آمادگی](PRODUCTION_READINESS.md) و [runbook IIS](DEPLOYMENT_IIS.md) مبنای gateها هستند. این بازبینی deployment، credential واقعی یا load/restore محیط هدف را اثبات نمی‌کند.
 <!-- CURRENT-REVIEW:END -->
 
 ## مرزبندی جدید Test و Production

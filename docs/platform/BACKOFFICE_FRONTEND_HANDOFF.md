@@ -1,5 +1,16 @@
 # قرارداد تحویل Backoffice به Frontend
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## تغییرات جاری Platform
+
+Open Access کنترل مالی قابلیت عادی را خاموش می‌کند؛ Catalog/Plan/Order/Admin و سوابق واقعی باقی‌اند و Admin پلن نامحدود ساختگی ثبت نمی‌کند. MediaReview از صف موجود Moderation با source=MediaReview استفاده می‌کند: start-review، evidence، actions با MediaApproved/MediaRejected، expectedVersion و reason. Review+Enforce، Reviewer فعلی و منع self-approval لازم‌اند؛ Resolve اداری تصمیم Safety نیست. [قرارداد دقیق رسانه](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md).
+
+School application با مدیر اولیهٔ صریح و workflow موجود است؛ Paid Provisioning فعلاً Deferred. PersonalClass lifecycle و permissionهای ریزدانه موجود، آموزش مستقل با flag خاموش؛ حذف حساب با request/detail/retry و checkpoint موجود ولی execution پیش‌فرض خاموش است. [Admin v6](../product-v6/BACKEND_V6_ADMIN_HANDOFF_FA.md)، [حذف](../product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md).
+
+کدهای framework و Retry-After/Correlation در مرجع API جاری آمده‌اند؛ 404 می‌تواند پنهان‌سازی باشد و412 RowVersion نیاز به GET تازه دارد. School Manager مجوز Platform پیدا نمی‌کند.
+
+
 > افزودهٔ `2026-11-05`: [مدیریت نقش سازمانی School](../product/ORGANIZATION_ROLE_MANAGEMENT_20261105_FA.md) به API مستقل School افزوده شده است. مسیرها و permissionهای Platform تغییر نکرده‌اند؛ هر دو مسیر با قفل مشترک سازمان، آخرین مدیر فعال را حفظ می‌کنند. سیاست Grant آموزشی PersonalClass همچنان Platform → Manager → Teacher است.
 
 > افزودهٔ `2026-11-04`: [B01/B02، B04 و قرارداد جاری رفع Gap](../product/BACKEND_GAP_RESOLUTION_20261104_FA.md). Platform با PersonalClassesRead فهرست Membership و نسخهٔ همان دوره را می‌گیرد؛ Grant مستقیم فقط Manager، تفویض Teacher توسط Manager. Provisioning یک فیلتر string اختیاری `clientOperationId` دارد و unknown صفحهٔ خالی ۲۰۰ می‌دهد. `activeLearners` همان PlatformClassPerson نام‌دار است.
@@ -12,7 +23,7 @@ School Manager مجوز Global Plan ندارد. Limit باید در JSON حاض�
 
 ClientInvalidated کلید commerce یا access فقط refetch مجاز می‌خواهد؛ تغییر زمان‌محور پایان دوره event مستقل جدید ندارد. [قرارداد Realtime](../product/REALTIME_EVENT_CONTRACT_FA.md).
 
-بازبینی `2026-10-30` از `main@e11d4ec`: ورود Platform فقط OTP/Session و permission جاری دارد؛ MFA/step-up و endpointهای آن حذف شده‌اند و UI نباید آن‌ها را فراخوانی کند. Directory مدرسه، roster و Lesson APIهای School با Workspace Manager/Teacher هستند؛ Platform role جای نقش آموزشی نیست. DOB شخصی و عکس مجوز admin یا تماس با فرد ایجاد نمی‌کنند. [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) و [حذف عامل دوم](PLATFORM_AUTHENTICATION_CHANGE_FA.md).
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.: ورود Platform فقط OTP/Session و permission جاری دارد؛ MFA/step-up و endpointهای آن حذف شده‌اند و UI نباید آن‌ها را فراخوانی کند. Directory مدرسه، roster و Lesson APIهای School با Workspace Manager/Teacher هستند؛ Platform role جای نقش آموزشی نیست. DOB شخصی و عکس مجوز admin یا تماس با فرد ایجاد نمی‌کنند. [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) و [حذف عامل دوم](PLATFORM_AUTHENTICATION_CHANGE_FA.md).
 
 ## افزودهٔ عملیات PH و ورود دو محیط
 

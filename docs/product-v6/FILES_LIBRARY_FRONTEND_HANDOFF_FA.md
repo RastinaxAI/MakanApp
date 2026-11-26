@@ -1,5 +1,9 @@
 # قرارداد فایل، Library و چرخهٔ منبع آموزشی — BE-15
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+> سیاست جاری `2026-11-26`: [Open Access](../product/OPEN_ACCESS_FILE_DELIVERY_FA.md) با Commerce:EnforcementEnabled=false شرط تجاری استفادهٔ عادی و ذخیرهٔ Source را حذف کرده است؛ AI Unmetered و OperationId/ACL برقرارند. پرداخت/Push بیرونی و PersonalClass Academic مستقل Deferred هستند. [Media Review](../messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) اکنون تصمیم انسانی مصوب دارد؛ Pending/Rejected تحویل ندارد و Approval خودکار پیام نمی‌فرستد. شواهد و اعداد تاریخی این سند متعلق به زمان خود هستند.
+
 مبنا: `54d07d2b2aaf1c19a3780f00dcd1cd5c51dec2e5`؛ تاریخ `2026-11-15`.
 این سند رفتار Backend را توضیح می‌دهد؛ شاهد Deploy یا آزمون روی سرور نیست.
 

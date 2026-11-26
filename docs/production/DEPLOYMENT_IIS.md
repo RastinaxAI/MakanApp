@@ -1,5 +1,35 @@
 # استقرار MakanApp روی IIS
 
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786`.
+
+## مبنای جاری انتشار و تنظیمات
+
+قرارداد این نسخه۴۹۸ عملیات/۴۴۲ مسیر/۷۹۶ schema و مدل۱۵۳ جدول/۷۸ Migration دارد؛ آخرین `20261122085930_AddMessagingMediaReviews`. مدل طراحی و Build موفق، applied schema یا بستهٔ نصب‌شدهٔ سرور نیست. Manifestهای بستهٔ قبلی تاریخچه‌اند؛ برای این Source باید artifact/SQL تازه ساخته و hash مقصد با همان بسته کنترل شود.
+
+| تنظیم | سیاست این انتشار |
+|---|---|
+| Commerce:EnforcementEnabled | false؛ کنترل مالی قابلیت عادی خاموش، ACL/ظرفیت آموزشی و Safety محفوظ |
+| AiUsage:Mode | Unmetered؛ OperationId و Unknown/Retry و ACL منابع پابرجا |
+| Payments:Provider | Unavailable؛ Zibal/Store/Paid Provisioning در Runtime Deferred |
+| AiService:Enabled / AiKnowledge:Enabled | تابع override محیط؛ base=false. شاهد Test محلی تاریخ‌دار است و وضعیت IIS مقصد را اثبات نمی‌کند |
+| AiService:UseServiceAuthentication / AiKnowledge:UseServiceAuthentication | false طبق سیاست جاری؛ User Bearer به upstream منتقل نمی‌شود |
+| Features:PersonalClass:AssignmentsEnabled / ExamsEnabled | false؛ Open Access این gateهای مستقل را باز نمی‌کند |
+| AccountDeletion:ExecutionEnabled / Storage:TerminalCleanup:Enabled | execution/cleanup پیش‌فرض خاموش؛ بدون سیاست مصوب روشن نشوند |
+
+تنظیم مؤثر پس از JSON و environment override کنترل شود؛ نبود Commerce:EnforcementEnabled در Options برابرtrue است. Secret، ConnectionString و کلید خصوصی در سند یا Git درج نشود. فایل‌های خصوصی محیط را با example یا فایل محیط دیگر جایگزین نکنید.
+
+### Smoke پس از نصب مجاز
+
+1. Environment، Source/Artifact hash، EF history، Health/live/ready و نسخهٔ قرارداد مقصد ثبت شود؛ startup Migration خودکار ندارد.
+2. OTP mode، Bearer/refresh، CORS و مجوز منفی منابع؛ false بودن Enforcement و عدم قفل UI از Quota قدیمی کنترل شود.
+3. AI معمولی و SSE: header Bearer، عدم buffer پاسخ در Proxy، flush واقعی delta، cancellation و done/error؛ HTTP200 تنها کافی نیست. RAG فقط غیرجریانی و ACL Source جاری است. timeout را برای پنهان‌کردن خطا افزایش ندهید.
+4. فایل: Upload→Ready، PendingReview، تصمیم انسانی مجاز، Send/Retry و دریافت بایت با ACL جاری. Approval خودکار یا Resolve به‌جای تصمیم صریح مجاز نیست. Migration AddMessagingMediaReviews قبل binary وابسته اعمال شود.
+5. تکلیف Published: Policy با دو RowVersion،412 کهنه،409 مهلت و حفظ Draft/FileAssetId؛ code خطا و X-Correlation-ID/Retry-After از Proxy عبور کنند.
+6. Replay، restart و Data Protection ring پایدار، Worker recovery و Backup/Restore هدف مستقل بررسی شوند؛ مقادیر خصوصی در log نریزند.
+
+این به‌روزرسانی هیچ Publish/Deploy، تماس Provider یا SQL سرور اجرا نمی‌کند. پذیرش Backend مقصد با اجرای تست ایزوله یکی نیست.
+
+
 ## BE-23 — قرارداد انتشار جاری
 
 مبنای این مرحله `00bd8a9` روی feature/product-v6-backend-alignment است؛۷۵ Migration تا
@@ -24,19 +54,15 @@ ApplicationName/discriminator قبلی حفظ شوند. فقط جابه‌جای
 را تضمین نمی‌کند. physical/content-root path جدید را بدون rehearsal به دادهٔ قبلی متصل نکنید.
 setting حذف‌شدهٔ MFA بازنمی‌گردد. custody واقعی Ring/Storage فعلاً OPERATIONAL_VALIDATION_PENDING است.
 
-## مبنای جاری Realtime، اشتراک و پیوست پاسخ — ۲۰۲۶-۱۰-۳۰
-
-مبنای کد `main@e11d4ec`، 365 عملیات HTTP، 608 schema، 113 جدول و55 migration است؛ آخرین `20261030060025_AddExamAnswerAttachments`. سه migration پس از CompleteSchoolManagement به‌ترتیب AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments هستند. اولی مالکیت/دوره/رزرو و PersonalClass، دومی اتصال Export به رزرو و سومی policy سؤال و AnswerRevisionAttachments را می‌افزاید. از SQL export تازه و history واقعی مقصد استفاده کنید؛ بستهٔ قدیمی خودکار schema/binary جدید ندارد. در این بازبینی Publish/Deploy یا migration سرور اجرا نشده است.
+## ملاحظات پایدار Realtime و پیوست پاسخ
 
 Data Protection استاندارد host اکنون برای cursor حساب در RealtimeCursorProtector مصرف می‌شود. تداوم cursor پس از restart/redeploy به persistence و دسترسی درست key ring وابسته است؛ Identity:SecurityKey جای آن را نمی‌گیرد. در IIS پروفایل/هویت App Pool و مسیر امن کلیدها، و در Linux/Docker مکان پایدار خارج از filesystem موقت container بررسی شوند. کد AddDataProtection پیش‌فرض دارد و setting خصوصی تازه‌ای برای محل ring یا ApplicationName اضافه نشده است؛ متغیر ساختگی Security:DataProtection نسازید. از دست‌رفتن کلید یا context/epoch ناسازگار،409 REALTIME_RESYNC_REQUIRED و Snapshot تازه می‌خواهد؛ readiness این تداوم را probe نمی‌کند. این مصرف جدید، بازگشت MFA/Step-Up نیست. چند replica/backplane و اشتراک کلیدها هنوز gate مستقل‌اند. [Runbook Realtime](../operations/REALTIME_RUNBOOK_FA.md).
 
 Outbox عمومی اکنون invalidation را پس از Commit و بیرون transaction ارسال می‌کند؛ crash می‌تواند همان EventId را تکرار کند. replay به Outboxهای موجود تکیه دارد؛ processed بودن مجوز purge نیست. bootstrap پیش از Snapshot، قطع/وصل و replay همان cursor، ContextRevision، صفحهٔ خالی با HasMore=true و RetryAfterMilliseconds و خطای503 با حفظ cursor در smoke هدف بررسی شوند. cursor/credential/payload در log نباشند.
 
-کنترل تجاری Legacy خودکار فعال نمی‌شود؛ ثبت قرارداد معتبر Admin نقطهٔ enforcement است. دورهٔ ماهانه، Grace هفت‌روزهٔ سازمان، رزرو ReportExport و تفاوت meter unavailable/Unlimited در smoke بررسی شوند؛ بدون درخواست مستقل قرارداد واقعی نسازید. قیمت/سقف پولی یا gateway واقعی و AI runtime با این اسناد فعال نمی‌شوند.
+در انتشار جاری `Commerce:EnforcementEnabled=false` است؛ ثبت قرارداد Admin یا وجود دوره/Grace به‌تنهایی gate مالی قابلیت عادی را فعال نمی‌کند. Summary باید خاموشی Enforcement را نشان دهد؛ ACL، ظرفیت واقعی آموزشی و Safety مستقل بررسی شوند. مدل دوره، رزرو و سوابق مالی محفوظ است؛ فعال‌سازی Enforcement، gateway یا قرارداد واقعی نیازمند تصمیم مستقل است.
 
-DB و Storage پیوست آزمون، تکلیف، Lesson و Photo با هم backup/restore شوند. AnswerRevision تاریخی و فایل Retained با Detach حذف فیزیکی نمی‌شوند؛ Parent/Guardian و Teacher لغوشده grant raw attachment ندارند. BE-01 رسانهٔ Messenger همچنان Product-blocked است. [پیوست آموزشی](../product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) و [اشتراک](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
-
-بازبینی هماهنگی `2026-10-30` / `main@e11d4ec`: آخرین schema مخزن `20261030060025_AddExamAnswerAttachments`،۵۵ migration است؛ Profile/School، Commerce، Realtime و پیوست پاسخ آزمون به binary/schema سازگار نیاز دارند. بسته‌های قبلی خودبه‌خود این تغییرات را ندارند. MFA و ring اختصاصی آن حذف، CORS تابع AllowAnyOrigin و OTP Test=false/true، Production=true/false است. [استقرار نسخهٔ جاری](../deployment-windows-linux-docker.md) و [مدرسه](../product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md). پذیرش سرور یا اجرای migration با این بازبینی انجام نشده است.
+DB و Storage پیوست آزمون، تکلیف، Lesson و Photo با هم backup/restore شوند. AnswerRevision تاریخی و فایل Retained با Detach حذف فیزیکی نمی‌شوند؛ Parent/Guardian و Teacher لغوشده grant raw attachment ندارند. MediaReview انسانی در Moderation موجود است؛ Pending/Rejected همچنان تحویل ندارد. [پیوست آموزشی](../product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) و [اشتراک](../product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md).
 
 > مبنای بازبینی جاری `2026-10-23` / `main@5885d11` است. برای انتخاب و حفظ کانفیگ دو بسته از [Publish Guide](PUBLISH_GUIDE_FA.md) و برای نتیجهٔ محلی از [Release Readiness](BACKEND_RELEASE_READINESS_FA.md) استفاده کنید. Production OTP=true/false و Test=false/true؛ schema یکسان به معنی secret/مقدار یکسان نیست. health و worker و ring این runbook به [شاخص وضعیت جاری](../CURRENT_PROJECT_STATUS.md) ارجاع دارند.
 
@@ -300,8 +326,6 @@ publish بررسی‌شده Web SDK، `web.config` را با `AspNetCoreModuleV2
 
 
 ## تغییرات عملیاتی Messenger و Push — بازبینی 2026-10-29
-
-مبنای جاری این بخش `2026-10-30` / `main@e11d4ec`؛ ۳۶۵ عملیات،۶۳ Controller،۶۰۸ schema،۱۱۳ جدول و۵۵ migration. آخرین20261030060025_AddExamAnswerAttachments است. schema با delivery provider یا applied migration سرور یکی نیست؛ [وضعیت جاری](../CURRENT_PROJECT_STATUS.md) و Handoffهای P1/P2 مرجع‌اند.
 
 ### انتخاب transport اعلان
 

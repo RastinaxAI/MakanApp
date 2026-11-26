@@ -1,6 +1,14 @@
 # وضعیت نهایی پیاده‌سازی Backend برای AI
 
-## وضعیت جاری در 2026-10-23 از main@5885d11
+## وضعیت جاری در ۲۰۲۶-۱۱-۲۶
+
+Chat عمومی/شخصی و عملیات نقش‌محور، History مستقل Owner/Context، SSE عمومی واقعی و Source/Knowledge/RAG در کد موجودند. [Adaptive AI](../product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) قرارداد جاری و [Test Runtime](../operations/TEST_RUNTIME_READINESS_FA.md) مرز شاهد Backend محلی→upstream مستقر است. Source lifecycle/RAG دیگر Deferred عمومی نیست؛ Library عمومی/AI و RAG Streaming همچنان پشتیبانی فعال ندارند.
+
+Open Access با Enforcement=false و AI Unmetered شرط مالی/Trial را حذف می‌کند؛ ACL/SourceVersion، OperationId و Unknown/Retry پایدار محفوظ‌اند. Service Auth دو سرویس false طبق سیاست انتشار است؛ HMAC موجود به معنی الزام JWT در Runtime جاری نیست. Enabled و URL واقعی از config محیط resolve می‌شوند؛ سند config خصوصی را افشا یا سرور را فعال نمی‌کند.
+
+`ApiProblemDetailsContract` برای429/503 دارای delay معتبر AI/Knowledge، Retry-After را با ثانیهٔ رو به بالا نگه می‌دارد. SSE پس از start از event:error و فقط done برای تکمیل استفاده می‌کند. نتایج Timeout/Deferred و Service Auth زیر متعلق به همان تاریخ‌اند؛ نتیجهٔ تست یا استقرار امروز از آن‌ها استنتاج نشود.
+
+## سابقهٔ وضعیت در 2026-10-23 از main@5885d11
 
 | حوزه | نتیجه و معنای دقیق |
 |---|---|

@@ -1,62 +1,36 @@
 # وضعیت جاری پروژه و مسیر مطالعه اسناد
 
-> وضعیت جاری BE-16، `2026-11-15` از Commit کد `f4f4d9feb6184d62e033adfb612e86587fb3c3f6`: [اعلان و Deep Link](product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [پوشش Producerها](product-v6/NOTIFICATION_EVENT_COVERAGE_FA.md) و [گزارش Validation](product-v6/NOTIFICATION_DEVELOPER_REPORT_FA.md). کد PASS و Runtime Push/SMS عمومی BLOCKED_CONFIGURATION است؛ Live Push/Deploy اجرا نشد. دو دور کامل3378 PASS، صفر Failed/Skipped و Build نهایی صفر Warning/Error؛ مدل438 مسیر،494 operation،783 schema،151 جدول و75 Migration دارد. آمار پایین تاریخچهٔ مرحله‌های قبلی است.
+بازبینی `2026-11-26` از `source@f8178a47de94eae0ec2431adebcb9256a9789786` روی `feature/product-v6-backend-alignment`.
 
-> افزودهٔ BE-22 در `2026-11-14` از کد `a639319b70d7c07db3588cd91d674aed339c1756`: [حذف حساب](product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) دارای state machine، هشت checkpoint، claim/fencing، recovery و حذف نسخه‌های Knowledge با receipt پایدار است. پیش‌فرض اجرا خاموش و مهلت null؛ فعال‌سازی Production نیازمند تنظیم صریح مصوب است. مدل جاری۴۳۸ مسیر،۴۹۴ operation،۷۸۳ schema،۱۵۱ جدول و۷۴ Migration دارد. رگرسیون کامل پس از اصلاح و دور نهایی، هر دو۳۳۲۳ PASS با صفر Failed/Skipped و Build نهایی صفر Warning/Error هستند. [گزارش و Validation این مرحله](product-v6/ACCOUNT_DELETION_DEVELOPER_REPORT_FA.md)، [ماتریس داده](product-v6/ACCOUNT_DELETION_DATA_MATRIX_FA.md) و [Runbook](operations/ACCOUNT_DELETION_RUNBOOK_FA.md) مرجع‌اند؛ هیچ حذف زنده، Migration عادی یا Deploy اجرا نشده است.
+**۴۹۸ عملیات HTTP،۴۴۲ مسیر،۹۱ Controller،۷۹۶ schema،۱۵۳ جدول و۷۸ Migration** از OpenAPI/ApiExplorer و مدل طراحی EF استخراج شد. آخرین Migration `20261122085930_AddMessagingMediaReviews` است؛ استخراج بدون SQL connection/worker/SMS/AI انجام شد. این شمارش، applied schema یا نسخهٔ سرور نیست.
 
-> افزودهٔ پیشین `2026-11-14`: [Personal AI Activation](product-v6/PERSONAL_AI_FRONTEND_HANDOFF_FA.md) با Actor رسمی Personal و Scope تهی و همان Payer/رزرو موجود فعال است. پذیرش واقعی Backend محلی→AI Production با200 و یک مصرف و replay بدون تماس دوم پاس شد؛ `BE19_AI_GATEWAY=PASS` و Final Regression آن مرحله=3269 PASS با صفر Failed/Skipped است. D11 بسته،۱۲ تصمیم Product/Legal محفوظ و BE24 همچنانFAIL است. Runtime پیش‌فرض و Deploy Backend تغییر نکرده‌اند.
+## تغییرات مهم نسبت به کتاب‌های قبلی
 
-> بازبینی `2026-11-14` شاخهٔ `feature/product-v6-backend-alignment` از Commit کد و پذیرش `31fe34c6dde4526badc43d43e62b8ba185ee6f36`، مبنای این مرحله `a5e24e4`: ۴۳۶ مسیر، ۴۹۲ operation، ۷۸۰ schema،۱۴۹ جدول و۷۳ Migration؛ [نتیجه و محدودیت‌های v6](product-v6/BACKEND_V6_IMPLEMENTATION_REPORT_FA.md)، [قرارداد آموزشگاه](product-v6/SCHOOL_APPLICATION_FRONTEND_HANDOFF_FA.md) و [تنظیم تجاری](product-v6/SCHOOL_COMMERCIAL_CONFIGURATION_FA.md). انتخاب صریح مدیر، Quote→Order→Zibal→Outbox و سازمان/اشتراک/دعوت از همان Provisioning متصل‌اند؛ Paid در failure/retry محفوظ و کد BE03 پاس است. قیمت/Quota/قرارداد واقعی Production هنوز نیازمند Admin است. منبع آخر۳۲۶۹تست PASS با صفر Failed/Skipped و صفر Build Warning/Error دارد. Generic Personal Chat با Actor رسمی پذیرفته شده؛ حذف واقعی و خرید Store همچنان محدود، آموزش PersonalClass و Service Auth دو سرویس AI خاموش‌اند. اعداد مراحل پایین تاریخی و هیچ‌کدام شاهد Deploy این شاخه نیستند.
-
-> اصلاح جاری `2026-11-01` بر مبنای `166a4aa`: [سیاست Messaging و پیاده‌سازی](product/MESSAGING_POLICY_20261101_IMPLEMENTATION_FA.md)، [Handoff جاری](product/MESSAGING_POLICY_20261101_FRONTEND_HANDOFF_FA.md). OpenAPI واقعی محلی: ۳۸۸ عملیات، ۳۴۲ مسیر و ۶۵۱ schema؛ Source: ۵۹ Migration، آخرین `20261101202642_ExpandMessagingAccountPolicyAndMedia`. سن/DOB دیگر gate عمومی نیست؛ Safety/Privacy/Block باقی‌اند. صندوق/Replay حساب، قابلیت مدیریت محتوای رسمی و Photo/Receipt افزوده شده‌اند. آمار و وضعیت‌های زیر Snapshot تاریخی‌اند و این افزوده به معنی Deploy یا پذیرش سرور نیست.
-
-بازبینی `2026-10-30` از `main@e11d4ec`؛ **365 عملیات HTTP در63 Controller و322 مسیر؛608 schema،113 جدول و55 migration**. آخرین migration `20261030060025_AddExamAnswerAttachments` است. شمارش از OpenAPI/ApiExplorer و مدل طراحی EF بدون اتصال SQL، worker، SMS یا AI استخراج شده است؛ applied schema یا پذیرش سرور از آن معلوم نمی‌شود.
-
-## تغییرات کد و بیزینس
-
-| حوزه | وضعیت جاری و مرجع |
+| حوزه | قرارداد جاری و مسیر مطالعه |
 |---|---|
-| Identity / Platform | opaque session و refresh چرخشی؛ MFA/Step-Up حذف مانده، permission/reason/audit فعال؛ [قرارداد Platform](platform/PLATFORM_AUTHENTICATION_CHANGE_FA.md) |
-| Profile / School | DOB خوداظهاری، Photo با grant احرازشده، Directory/roster، Guardian consent و Lesson موجود؛ [مدرسه](product/SCHOOL_MANAGEMENT_FRONTEND_HANDOFF_FA.md) |
-| Commerce | مالک Individual/Organization، PlanVersion immutable، Quote/Order، دورهٔ ماهانه و Upgrade/Downgrade؛ [Handoff کاربر](product/SUBSCRIPTION_FRONTEND_HANDOFF_FA.md) و [Admin](product/SUBSCRIPTION_ADMIN_HANDOFF_FA.md) |
-| Legacy | تا قرارداد معتبر Admin، AwaitingValidContract؛ LegacyPendingContract نامحدود نیست؛ enforcement از زمان واقعی ثبت و Grace هفت‌روزهٔ سازمان |
-| Quota / Export | CurrentCapacity بدون reset ماهانه، reservation/ledger و اتصال واقعی ReportExport با settlement و recovery؛ Unknown نتیجهٔ مالی قطعی نیست |
-| PersonalClass | میزبان User، دعوت/پذیرش/عضویت/archive و ظرفیت؛ CanCreateEducationalContent=false، بدون Assignment/Exam مستقل |
-| Realtime | bootstrap پیش از Snapshot، account replay و ClientInvalidated با مجوز جاری؛ cursor24ساعت وابسته به Session/Context و Data Protection host؛ [قرارداد Event](product/REALTIME_EVENT_CONTRACT_FA.md) |
-| پاسخ آموزشی | تکلیف workflow موجود را حفظ کرده؛ آزمون policy نسخه‌دار سؤال، Attach/Detach revision و Finalize/Download مجاز دارد؛ [قرارداد](product/ACADEMIC_ANSWER_ATTACHMENTS_IMPLEMENTATION_FA.md) |
-| Safety Messenger |422 PendingReview/Rejected، NotApplied و KEEP_DRAFT_NO_AUTO_RETRY؛ workflow انتشار رسانه هنوز PRODUCT_DECISION_BLOCKED؛ [BE-01](messaging/BE01_REVIEW_REQUIRED_CONTRACT_FA.md) |
-| Hosting | CORS از config مستقل از محیط؛ OTP Test=false/true و Production=true/false؛ ready=config/SQL/Storage، تداوم کلید cursor جدا بررسی می‌شود؛ [استقرار](deployment-windows-linux-docker.md) |
+| دسترسی | Commerce:EnforcementEnabled=false و AI Unmetered؛ سن gate عمومی نیست، ACL/Privacy/Block/Safety محفوظ؛ [Open Access](product/OPEN_ACCESS_FILE_DELIVERY_FA.md) |
+| AI | Chat/Profile اختیاری، History مستقل Owner/Context و SSE واقعی؛ RAG غیرجریانی، SourceVersion/citations و Retry پایدار؛ [Adaptive](product-v6/ADAPTIVE_AI_FRONTEND_HANDOFF_FA.md) |
+| فایل پیام | Ready≠Approval؛ ManualMediaReview، تصمیم کارشناس اثرانگشت‌دار، Send مجدد صریح و Download با ACL؛ [رسانه](messaging/MEDIA_SAFETY_REVIEW_FRONTEND_HANDOFF_FA.md) |
+| تکلیف | PATCH Published submission-policy با چهار فیلد اجباری و دو RowVersion؛ deadline metadata، حفظ Draft و isLate تاریخی؛ [قرارداد](product/ASSIGNMENT_SUBMISSION_POLICY_FRONTEND_HANDOFF_FA.md) |
+| HTTP | code پایدار خطاهای400/404/405/413/415، حفظ کد دامنه و Retry-After معتبر AI/Knowledge روی429/503؛ [ممیزی](../reports/api-error-audit/20261125-api-errors-ac9a239-01/FRONTEND_ERROR_HANDOFF_FA.md) |
+| حساب و مدرسه | Bio/DOB/Avatar، تغییر شماره، مدیریت نقش و آخرین مدیر، School application و مدیر اولیهٔ صریح؛ [v6](product-v6/BACKEND_V6_FRONTEND_HANDOFF_FA.md) |
+| PersonalClass | درخواست/تأیید، نقش محلی، عضویت، انتقال مسئولیت و Official Spaces؛ آموزش مستقل با Feature flag خاموش |
+| Messenger | Home حساب و History SQL مستقل از سوییچ Workspace، Replay صندوق و scoped جدا، Safety/Privacy جاری؛ [History](product-v6/MESSENGER_HISTORY_FRONTEND_HANDOFF_FA.md) |
+| Source / Library | چرخهٔ منبع/نسخه/Knowledge و ACL جاری؛ Library عمومی/AI بسته؛ [قرارداد](product-v6/FILES_LIBRARY_FRONTEND_HANDOFF_FA.md) |
+| Notification / Privacy | target با مجوز فعلی؛ حذف حساب پایدار با checkpoint/recovery و execution پیش‌فرض خاموش؛ [اعلان](product-v6/NOTIFICATION_FRONTEND_HANDOFF_FA.md)، [حذف](product-v6/ACCOUNT_DELETION_FRONTEND_HANDOFF_FA.md) |
 
-خرید نقش آموزشی یا مجوز داده ایجاد نمی‌کند. Trial و AI preflight بنیاد قراردادند؛ Runtime AI فعال نشده است. meter ناموجود مصرف صفر یا Unlimited قطعی نیست. پایان نقش حساب، عکس یا پیام‌رسانی شخصی مجاز را حذف نمی‌کند.
+## مرز انتشار و عملیات
 
-## محدودیت‌ها و gateهای مستقل
+پرداخت Runtime شامل Zibal، Paid Provisioning، Store Billing و Push بیرونی Deferred هستند؛ کد و تست‌هایشان حفظ‌اند. PersonalClass AssignmentsEnabled/ExamsEnabled=false و Library برای دانلود/AI عمومی بسته‌اند. Open Access این gateها را روشن نمی‌کند. [Scope](product-v6/CURRENT_RELEASE_SCOPE_FA.md) و [آمادگی](production/PRODUCTION_READINESS.md).
 
-| موضوع | وضعیت |
-|---|---|
-| درگاه پرداخت واقعی / قیمت و سقف تجاری | Adapter زیبال، Callback/Verify/Inquiry، رسید و بازیابی پیاده شده؛ پیش‌فرض Unavailable و پذیرش Production وابسته به Merchant/HTTPS/Smoke مقصد است. [راهنما](commerce/ZIBAL_OPERATIONS_FA.md)؛ مقدار تجاری حدسی Seed نشده است |
-| Learning Profile / Badge / Source lifecycle / RAG | هنوز پیاده‌شده فرض نمی‌شوند؛ [تفکیک محصول](product/MAKANAPP_PRODUCT_BUSINESS_MODEL_V2_FA.md) |
-| AI واقعی | پیش‌فرض خاموش؛ Service Auth قبلی PASS، Parent Provider Timeout و Full-12 Deferred |
-| Push دستگاه واقعی | P1_PUSH_RUNTIME_PENDING |
-| چند replica، backplane، keyring مشترک و Load/SLO | PENDING_SCALE_INFRA؛ replay محلی اثبات topology هدف نیست |
-| P3/LiveKit/TURN | P3_S_INFRA_REQUIRED؛ rejoin NOT_TESTED و Production approval NOT_GRANTED |
-| IIS/TLS/Proxy، restart/reboot، backup/restore/alert | پذیرش محیط هدف جدا؛ این مرحله Deploy/Publish یا migration سرور نیست |
+Enabled و URLهای واقعی AI/Knowledge از config هر محیط می‌آید؛ Service Auth دو سرویس طبق سیاست جاری false است. پذیرش‌های Test محلی تاریخ‌دار در [Runbook Test](operations/TEST_RUNTIME_READINESS_FA.md) هستند. این به‌روزرسانی Deploy/Publish، فعال‌سازی Provider، SQL عادی/سرور یا تغییر Frontend انجام نداده است.
 
-## دیتابیس و نگه‌داری
+DB و Blob و SourceVersion و Evidence رسانه و AI History باید سازگار backup شوند. حذف حساب و terminal cleanup دو workflow مستقل و نیازمند config مصوب‌اند؛ terminal cleanup مجوز purge SQL نیست. Data Protection استاندارد برای Replay cursor از Identity key جداست؛ استمرار ring، backplane، Load/SLO، TLS/Restore/alert مقصد مستقل پذیرفته شوند.
 
-سه migration پس از CompleteSchoolManagement: AddCommercialOwnershipPeriodsAndPersonalClasses، BindReportExportsToCommercialReservations و AddExamAnswerAttachments. شش جدول افزوده: سه PersonalClass، UsageReservations، SubscriptionAmendments و AnswerRevisionAttachments. migration خودکار startup نداریم. RemovePlatformMfa قدیمی حذف داده دارد و Down داده را برنمی‌گرداند؛ rollout و backup هدف مستقل است.
+## مسیر مطالعه و خروجی‌ها
 
-DB و Storage پیوست آزمون/تکلیف/Lesson/Photo سازگار backup شوند؛ Detach blob تاریخی را حذف نمی‌کند. Outboxهای منبع replay خودکار purge نمی‌شوند و cleanup terminal همچنان opt-in و خاموش است. key ring اختصاصی MFA حذف است، ولی Data Protection استاندارد حفاظت cursor مصرف جدید دارد؛ Identity key جای آن نیست. [Runbook](operations/REALTIME_RUNBOOK_FA.md)، [retention](operations/RETENTION_AND_CLEANUP_POLICY.md) و [Backup](production/BACKUP_RESTORE.md).
+[راهنمای بک‌اند](backend-api-guide.md) جریان و معماری را توضیح می‌دهد؛ [مرجع API](backend-api-reference.md) Method/Route/DTO را کامل فهرست می‌کند. سپس [قرارداد فرانت](frontend-contract/README.md)، Handoff تخصصی جدول بالا، [فرهنگ دیتابیس](database-current-structure.md) و [استقرار](deployment-windows-linux-docker.md) را بخوانید. HTML/PDF دو کتاب و قرارداد فرانت از متن‌های همین بازبینی بازسازی می‌شوند؛ HTML/PDF دیتابیس طبق ignore قبلی محلی می‌مانند.
 
-## مسیر مطالعه
+## Validation این بازبینی
 
-[راهنمای بک‌اند](backend-api-guide.md) → [مرجع API](backend-api-reference.md) → [قرارداد فرانت](frontend-contract/README.md) → Handoffهای تخصصی جدول بالا → [فرهنگ SQL](database-current-structure.md) → [استقرار](deployment-windows-linux-docker.md). HTML/PDF چهار کتاب از همین Markdownها ساخته می‌شوند؛ نسخهٔ Database مطابق ignore قبلی محلی است. [فهرست اسناد](documentation-inventory.csv) و [گزارش تغییرها](DOCUMENTATION_UPDATE_REPORT.md).
-
-## Validation بازبینی جاری
-
-Restore موفق؛ Build اولیه و نهایی هر دو با **صفر warning و صفر error** موفق شدند. suite کامل اولیه و نهایی هر کدام **2478 تست موفق** داشتند:922 Unit،1542 Integration و14 Architecture؛ failed/skipped صفر. شمارنده‌های شش TRX کنترل شدند.12 تست ابزار اسناد هم موفق‌اند؛ تست تازهٔ محصول به کار مستندات اضافه نشد.
-
-اجرای محصول روی checkout مستقل و LocalDB یکتای `MakanApp_DocsSync_20261030_c817e6d9` بود؛ نام موقت fixture پس از suite نهایی به bytes اصلی برگشت و وارد تحویل نیست. EF has-pending-model-changes تغییر معلق ندارد؛ هیچ migration روی دیتابیس معمول یا سرور اجرا نشده است.
-
-کنترل365 operation،608 schema،113 جدول،55 migration و154 ورودی inventory موفق است؛ لینک شکسته و اختلاف Enum/OpenAPI صفر. PDFهای Guide/Reference/Frontend/Database به‌ترتیب 78 / 458 / 466 / 172 صفحه دارند؛ bookmark و SHA متناظر HTML کنترل شدند. کنترل صفحهٔ خالی و متن خارج صفحه موفق و صفحات Commerce/Replay/Attachment/SQL بصری بازبینی شدند. این‌ها پذیرش UI، دستگاه یا سرور واقعی نیستند.
-
-فایل‌های محلی قبلی ابزار AI خارج scope و بدون stage/تغییر باقی‌اند. فایل خصوصی تنظیمات، کد Frontend، دیتابیس معمول توسعه و سرور تغییر نکرده‌اند. Source baseline گزارش با commit اسناد متفاوت است؛ نتیجهٔ Commit/Push پس از موفقیت validation در گزارش تحویل Git ارائه می‌شود.
+Restore و Build اولیه/نهایی موفق با صفر Warning/Error؛ هر دو دور کامل 3789 تست موفق (1499 Unit، 2274 Integration و 16 Architecture)، صفر Failed/Skipped.۱۴ آزمون ابزار، تطابق EF/Migration، لینک‌ها و PDF/HTML نیز موفق‌اند. [گزارش کامل و فایل‌های تغییرکرده](DOCUMENTATION_UPDATE_REPORT.md). اعداد آزمون و وضعیت‌های تاریخ‌دار اسناد مرحله‌ای، نتیجهٔ اجرای امروز نیستند. [فهرست کامل اسناد](documentation-inventory.csv) مسیر و طبقه‌بندی فایل‌ها را نگه می‌دارد.
